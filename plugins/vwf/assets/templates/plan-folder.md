@@ -62,12 +62,18 @@ exposure: dark # cycle plans only, optional — the slice ships behind a flag
 | After landing: <step>                             | run                          |
 | Release <project> publicly                        | none / patch / minor / major |
 | LSP <language>                                    | installed / proceed without  |
+| End an `all` run after landing                    | yes / no                     |
 
 <one `After landing:` row per step, in order, each reading `run`; one
 `Release` row per project the units touch, each naming the command that bumps
 its version; one `LSP` row per language `/vwf:doctor`
 flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
-gate. That row is what `/vwf:execute`'s preflight reads instead of asking.>
+gate. That row is what `/vwf:execute`'s preflight reads instead of asking. The
+End an `all` run after landing row is always present: `yes` when the interview
+(item 18a) found the plan edits a plugin the run itself loads and the user
+chose to end there — `/vwf:execute all` then stops after this plan and reports
+"restart, then `/vwf:execute all`" — and `no` otherwise, written unasked when
+the plan touches no such plugin.>
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt, and `run` is the only mode — a step the interview did not
@@ -270,15 +276,20 @@ cycle end.>
 ## Launch
 
 This folder is already committed and pushed on the branch it was planned on, so
-the fresh session's worktree — cut from the integration branch — can see it.
+the run's worktree — cut from the integration branch — can see it.
 
-Run in a fresh session, whichever kind the plan is:
+Run in a fresh context — a fresh session, or a runner that `all` dispatches —
+whichever kind the plan is:
 
 /vwf:execute docs/plans/<date>-<name>
 
 or let the queue pick it, by priority:
 
 /vwf:execute next
+
+or run every runnable plan, highest priority first:
+
+/vwf:execute all
 ```
 
 ## NN-<unit>.md

@@ -155,6 +155,14 @@ table says why.
     one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
     `x.y.18`; those two integers are never issued on any version line, and the
     consent row names the version the bump actually reaches.
+    - **18a. End an `all` run after landing.** Asked only when the plan's
+      Owns include a plugin the run itself loads — a plugin installed in the
+      session that runs `/vwf:execute all`, whose edits that session goes on
+      running stale until it restarts: should an `all` run end after this
+      plan lands, yes or no? The answer is the Consent row End an `all` run
+      after landing; on yes, `all` ends after this plan and reports "restart,
+      then `/vwf:execute all`". When the Owns touch no such plugin the row is
+      written `no`, unasked.
 
 The executor asks nothing at run time — it follows the plan, and only a runtime
 stop ends a run. So the interview is not done while any question the run would

@@ -4,7 +4,8 @@ description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint (a flow or an entity). Reads desired (blueprint) vs actual (code),
   writes only the delta as a plan folder, docs/plans/<date>-<HHMM>-<slice>/ (an
   index.md plus one file per unit), that /vwf:execute runs unattended in a fresh
-  session. Resolves the slice's transitive dependency chain and plans each
+  context — a fresh session, or a runner that /vwf:execute all dispatches.
+  Resolves the slice's transitive dependency chain and plans each
   unimplemented dependency as its own plan folder first, in order; routes any
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
   cycle builds on a gap. Requires the blueprint coverage stamp to read complete,
@@ -21,7 +22,8 @@ Produce reviewable cycle plans for a chosen slice of the blueprint. A plan is a
 **diff**: it reads the blueprint (desired state) and the actual code (actual
 state) for one slice and writes only the delta — what exists, what is missing,
 what changes, and in what order — as a **plan folder** ordered for TDD, one
-unit per step, that `/vwf:execute` runs unattended in a fresh session.
+unit per step, that `/vwf:execute` runs unattended in a fresh context — a
+fresh session, or a runner that `all` dispatches.
 
 A slice is never planned over unbuilt ground: the slice's **dependency chain**
 is resolved first, and every dependency with an unimplemented delta gets **its
@@ -338,7 +340,10 @@ ruling recorded in the decisions table. Items 16–18 produce the Consent block:
 the landing answer, the after-landing steps each carrying `run` — a step not
 confirmed `run` is dropped — and the release intent per project the units
 touch — a release step recorded `run` is authorised by item 18's answer; the
-LSP rows come from §2.
+LSP rows come from §2. Item 18a writes the End an `all` run after landing row:
+asked only when the units' Owns include a plugin the run itself loads — on
+yes, `/vwf:execute all` ends after this plan and reports "restart, then
+`/vwf:execute all`" — and written `no` unasked otherwise.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -349,7 +354,8 @@ the assumed-decisions table, every ruling with its rejected alternative and
 every drift row; the unit map — id, wave, owns, depends-on, the failing test
 each names; every new dependency (package, what for, which unit); the wave
 gate, the after-landing steps, the gates the orchestrator keeps, and the
-derived priority with its arithmetic; the consent block, LSP rows included; the
+derived priority with its arithmetic; the consent block, LSP rows and the
+End an `all` run after landing row included; the
 acceptance criteria the units cover; the blind spots and the visual-review
 advisory, when any; the parked list. Then wait for explicit approval. Offer:
 
@@ -420,8 +426,8 @@ is the member holding the chain element's project — resolve it from `members:`
 per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A chain spanning two members already
 produces one plan per element, so each simply lands in its own repo; a plan is
 never split across repos. The folder is written **in place on the current
-branch** — this skill cuts no worktree; the fresh session that runs the plan
-cuts its own.
+branch** — this skill cuts no worktree; the fresh context that runs the plan —
+a fresh session, or a runner that `all` dispatches — cuts its own.
 
 **The dependency gate does not move.** `execute` halts until every `requires:`
 plan's `covers:` docs read `implementation: complete`, and those stamps live in
@@ -465,10 +471,10 @@ In this order.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
-     declined" path. Say why: the fresh session's worktree is cut from the
-     integration branch, so it can see the folder only once the folder is
-     committed there; a folder still untracked at hand-off gets swept into some
-     later wave's commit. The index row rides the same commit for the same
+     declined" path. Say why: the run's worktree is cut from the integration
+     branch, so it can see the folder only once the folder is committed there;
+     a folder still untracked at hand-off gets swept into some later wave's
+     commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
    - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
      else — the `plan-management` edit rides this commit and that skill never
@@ -488,16 +494,20 @@ In this order.
 Then end with exactly this, and nothing after it:
 
 ```text
-Run in a fresh session:
+Run in a fresh context — a fresh session, or a runner that `all` dispatches:
 
 /vwf:execute docs/plans/<date>-<HHMM>-<slice>
 
 or let the queue pick it, by priority:
 
 /vwf:execute next
+
+or run every runnable plan, highest priority first:
+
+/vwf:execute all
 ```
 
-Do not start executing. The fresh session is the point — this session's context
+Do not start executing. The fresh context is the point — this session's context
 is the survey and the interview, and the run should carry none of it.
 
 **Mid-chain**, after the push, continue to the next element (§3) — each element

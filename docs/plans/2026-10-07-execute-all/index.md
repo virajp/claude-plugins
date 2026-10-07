@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**COMPLETE**
 
-APPROVED 2026-10-07 by the user
+COMPLETE 2026-10-07 — 0278b026 c330c702 34dd25ac 063fa056 6224a0eb
 
 ## Consent
 
@@ -110,14 +110,14 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                                | Kind | Owns                                                                                                                                                                                                                                                   | Depends on     | Status  | Commit |
-| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | ------- | ------ |
-| U1 | 1    | [01-runner-agent.md](01-runner-agent.md) | edit | `plugins/vwf/agents/execute-runner.md` (new)                                                                                                                                                                                                           | —              | pending |        |
-| U2 | 1    | [02-execute.md](02-execute.md)           | edit | `plugins/vwf/skills/execute/**`                                                                                                                                                                                                                        | —              | pending |        |
-| U3 | 1    | [03-planners.md](03-planners.md)         | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/assets/plan-interview.md`, `plugins/vwf/assets/templates/plan-folder.md`                                                                                   | —              | pending |        |
-| U4 | 1    | [04-vwf-passages.md](04-vwf-passages.md) | edit | `plugins/vwf/skills/plan-management/**`, `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/handoff/SKILL.md`, `plugins/vwf/skills/feedback/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/templates/project-claude.md` | —              | pending |        |
-| U5 | 2    | [05-docs.md](05-docs.md)                 | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all.md` (new)                                                                                       | U1, U2, U3, U4 | pending |        |
-| U6 | 3    | [06-gates.md](06-gates.md)               | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                                                                                                  | U5             | pending |        |
+| Id | Wave | Unit file                                | Kind | Owns                                                                                                                                                                                                                                                   | Depends on     | Status | Commit   |
+| -- | ---- | ---------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------- | ------ | -------- |
+| U1 | 1    | [01-runner-agent.md](01-runner-agent.md) | edit | `plugins/vwf/agents/execute-runner.md` (new)                                                                                                                                                                                                           | —              | green  |          |
+| U2 | 1    | [02-execute.md](02-execute.md)           | edit | `plugins/vwf/skills/execute/**`                                                                                                                                                                                                                        | —              | green  |          |
+| U3 | 1    | [03-planners.md](03-planners.md)         | edit | `plugins/vwf/skills/change-plan/SKILL.md`, `plugins/vwf/skills/plan/SKILL.md`, `plugins/vwf/assets/plan-interview.md`, `plugins/vwf/assets/templates/plan-folder.md`                                                                                   | —              | green  |          |
+| U4 | 1    | [04-vwf-passages.md](04-vwf-passages.md) | edit | `plugins/vwf/skills/plan-management/**`, `plugins/vwf/skills/recall/SKILL.md`, `plugins/vwf/skills/handoff/SKILL.md`, `plugins/vwf/skills/feedback/SKILL.md`, `plugins/vwf/assets/execute-stages.md`, `plugins/vwf/assets/templates/project-claude.md` | —              | green  |          |
+| U5 | 2    | [05-docs.md](05-docs.md)                 | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all.md` (new)                                                                                       | U1, U2, U3, U4 | green  | 6224a0eb |
+| U6 | 3    | [06-gates.md](06-gates.md)               | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                                                                                                  | U5             | green  | —        |
 
 ## Shared-file rule
 
@@ -195,10 +195,43 @@ never commits. A unit deletes with plain `rm`, never `git rm`. A unit never runs
   run-level questions, asked once before the first plan, each answer an override
   of the plans' steps for that run only.
 
+## Gaps surfaced during execution
+
+- **U3 GAP (non-blocking):** the plan does not define "a plugin the run itself
+  loads" — U3 took it as a plugin installed in the session running
+  `/vwf:execute all`, which keeps its stale copy until restarted.
+- **R1 contested (cap):** `plugins/vwf/skills/execute/references/all.md:16`
+  still says "as with any execute run", which the reversal now contradicts.
+- **U4 DOCS FALSIFIED:** `docs/plans/index.md`'s intro names only
+  `/vwf:execute next`; the index never rides a run branch, so it is left for a
+  hand edit on the integration branch.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit         | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                | Commit   |
+| ---- | ------------ | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | format-check | —     | —     | skipped     | no `covers:` — the plan reads no blueprint artifact                                                                                                                                                                                                                                                   | —        |
+| 0    | preflight    | —     | —     | green       | mise + graphify present, graph reachable from the main checkout; all 7 wave-gate lines green on develop 14572e2d; no `code` unit — LSP read and conventions fetch skipped                                                                                                                             | —        |
+| 1    | U1           | opus  | 1     | green       | execute-runner.md written; rule-7 orphan expected until U2; DECIDED: handed SKILL.md wins over the agent file                                                                                                                                                                                         | —        |
+| 1    | U4           | opus  | 1     | green       | 7 files; DECIDED: handoff :186 left (recall, not a launch line); handoff says resume is `<folder>`, never `next`/`all`; DOCS FALSIFIED: docs/plans/index.md intro (names only `next`) — never edited on a run branch, carried to the report                                                           | —        |
+| 1    | U3           | opus  | 1     | green       | 4 files; DECIDED: interview item numbered 18a (19 taken); GAP: "a plugin the run itself loads" undefined — taken as a plugin installed in the session running `all`, stale until restart                                                                                                              | —        |
+| 1    | U2           | opus  | 1     | green       | SKILL.md + new references/all.md; DECIDED: a malformed runner return is recorded STOPPED, never re-dispatched; consent `no` and a failed after-landing step are STOPPED; runner pre-answers skill calls, stops if a skill asks anyway                                                                 | —        |
+| 1    | R1           | opus  | 1     | findings(7) | U2: all.md:37,:131 past fold; SKILL.md:5 still "fresh session"; SKILL.md:863 paraphrases reversal. U3: plan-interview.md:159 18a not a list item; plan-folder.md:65 row lacks backticks on `all`. U4: handoff:128 adds an unnamed rule. CONTRACT clean, RULINGS clean on substance; no-ask gate clean | —        |
+| 1    | U4           | opus  | 2     | green       | R1 loop-back: handoff/SKILL.md reverted to no diff; :126/:186 keep "fresh session" (pasted prompt / recall, not a launch line)                                                                                                                                                                        | —        |
+| 1    | U3           | opus  | 2     | green       | R1 loop-back: 18a now a sub-bullet of item 18; row name backticked as End an `all` run after landing in all four files                                                                                                                                                                                | —        |
+| 1    | U2           | opus  | 2     | green       | R1 loop-back: all.md :37/:131 refolded; SKILL.md description and chain-forward take the reversal wording (dash in the description, strict YAML); row name verbatim in all.md                                                                                                                          | —        |
+| 1    | R1           | opus  | 2     | findings(1) | round-1 findings all resolved; contested (cap of 2 reached): execute/references/all.md:16 [U2] "as with any execute run" now contradicts the reversal — drop that clause. CONTRACT clean, RULINGS clean, no-ask gate clean                                                                            | —        |
+| 1    | gate         | —     | —     | green       | all 7 wave-gate lines green (code:precommit green on its second pass — the first re-padded this run log); no UNRESOLVED                                                                                                                                                                               | —        |
+| —    | reconcile    | —     | —     | skipped     | no `covers:` — no stamps, registry or environment edit; no `code` unit — nothing to persist                                                                                                                                                                                                           | —        |
+| 2    | U5           | opus  | 1     | green       | docs-sync over develop..HEAD applied: CLAUDE.md, readme.md, ci-and-releases.md, vwf-plugin skill + 2 references (execute-runner row), site vwf.md + 6 how-tos, decision file; DECIDED: multi-repo.md untouched (defers to single-repo); recall keeps fresh session                                    | —        |
+| 2    | R2           | opus  | 1     | findings(2) | how-to/index.md:69 and how-to/operate/ad-hoc-change.md:16 still "unattended in a fresh session" beside `all` — reversal not carried. CONTRACT clean, RULINGS clean otherwise                                                                                                                          | —        |
+| 2    | U5           | opus  | 2     | green       | R2 loop-back: how-to/index.md:69 and ad-hoc-change.md:16 now "fresh context"                                                                                                                                                                                                                          | 6224a0eb |
+| 2    | R2           | opus  | 2     | pass        | both findings fixed; no split spans from the reflow; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                    | —        |
+| 2    | gate         | —     | —     | green       | all 7 wave-gate lines green                                                                                                                                                                                                                                                                           | —        |
+| 3    | U6           | opus  | 1     | green       | plugin.json reads 21.0.0, unchanged; marketplace.json unchanged; all 7 wave-gate lines green (code:precommit on its second pass) — no commit                                                                                                                                                          | —        |
+| 3    | R3           | —     | —     | pass        | not dispatched: wave 3 changed no file, so there is no diff to review                                                                                                                                                                                                                                 | —        |
+| —    | reconcile    | —     | —     | green       | orchestrator gates: rule 7 green with `execute-runner` declared and backticked from skills/execute/ (R1); no runner-asks passage under skills/execute/ (R1 rounds 1–2)                                                                                                                                | —        |
+| —    | final gate   | —     | —     | green       | all 7 wave-gate lines green over the finished tree; folder left live — 3 non-blocking gaps open; backlog lists empty                                                                                                                                                                                  | —        |
 
 ## Launch
 

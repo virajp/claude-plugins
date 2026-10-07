@@ -336,7 +336,7 @@ installed. See [`/vwf:plan`](../../plugins/vwf.md#vwfplan) and
 ```
 
 From here nothing is brownfield-specific: the run works the approved plan folder
-in a dedicated worktree, in a fresh session, and lands per the consent the
+in a dedicated worktree, in a fresh context, and lands per the consent the
 folder recorded. Both are covered in the spine —
 [`/vwf:execute`](../greenfield/single-repo.md#vwfexecute) and
 [the execute merge gate](../greenfield/single-repo.md#the-execute-merge-gate) —

@@ -24,6 +24,12 @@ the plan carries `covers:` — a plan without it skips both, journaled.
 | security   | Security Review  | opus   | `execute-security-reviewer`   | at each `review` row, ‖ `review`, after `/security-review` over the row's scope  |
 | acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all units                                                            |
 | ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                                                         |
+| run        | One whole plan   | opus   | `execute-runner`              | once per plan, dispatched only by `/vwf:execute all`, never by a plain run       |
+
+The `run` row is not a stage within a plan and has no dispatch contract here:
+it is the runner `/vwf:execute all` dispatches for each plan it picks, which
+follows execute's own `SKILL.md` for that one folder and dispatches the stages
+above itself.
 
 `review` and `security` are **independent read-only passes over the same
 range** — neither reads the other's output. They run only at a `review` row,

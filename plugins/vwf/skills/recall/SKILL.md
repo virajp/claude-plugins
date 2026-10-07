@@ -133,8 +133,10 @@ the user whether to run it now**:
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
   command — `blueprint` / `plan` — when it names one). A prompt naming
   `/vwf:execute <folder>` is the exception: `execute` is launched only by a
-  person in a fresh session, so print that launch line and stop — the run
-  resumes from the folder's Run log, which records every unit that returned.
+  person in a fresh context — a fresh session, or a runner that
+  `/vwf:execute all` dispatches — so print that launch line and stop — the
+  run resumes from the folder's Run log, which records every unit that
+  returned.
   Resuming a cap-paused run that way is the primary use of this command.
 - **No** → stop after the summary; the user drives from here.
 

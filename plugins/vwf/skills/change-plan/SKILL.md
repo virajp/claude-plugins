@@ -2,13 +2,14 @@
 name: change-plan
 description: Turn an ad-hoc change request — work outside the blueprint — into a
   plan folder under docs/plans/<date>-<name>/ that /vwf:execute runs unattended
-  in a fresh session. Recall and survey the repo, split a request
+  in a fresh context — a fresh session, or a runner that /vwf:execute all
+  dispatches. Recall and survey the repo, split a request
   that is really several plans, interview the user one question at a time until
   the checklist is discharged, present the shape behind a hard gate, agree the
   wave gate, the after-landing steps and the release intent, record consent,
   write index.md plus one file per subagent unit, mark the backlog items it
   covers planned, add its row to the plan index with a derived priority, and
-  commit and push the folder so the fresh session sees it.
+  commit and push the folder so the fresh context sees it.
   Run when the user wants to plan a change that is not a blueprint slice —
   tooling, docs, CI, a refactor, a tree the blueprint does not describe; a
   blueprint slice is /vwf:plan.
@@ -148,8 +149,8 @@ table is what they review.
 
 ### 4. Agree the gate, the after-landing steps and the release intent
 
-Three sub-steps, each proposed from the survey and confirmed by the user. All
-three are written into `index.md`, and `/vwf:execute` runs **what is written
+Four sub-steps, each proposed from the survey and confirmed by the user. All
+four are written into `index.md`, and `/vwf:execute` runs **what is written
 and nothing it infers**.
 
 **(a) The wave gate.** Propose the exact commands the run must pass, one per
@@ -193,6 +194,13 @@ by hand. Record every answer including "not this time" — a changed project wit
 no public release recorded is a valid answer, and it means the change waits for
 the next one.
 
+**(d) Ending an `all` run.** Write the Consent row
+End an `all` run after landing (interview item 18a). Ask it only when the
+units' Owns include a plugin the run itself loads — one installed in the
+session that runs `/vwf:execute all`, which keeps running the stale copy until
+it restarts; on yes, `all` ends after this plan and reports "restart, then
+`/vwf:execute all`". When the plan touches no such plugin, write `no` unasked.
+
 ### 5. Present the shape — the hard gate
 
 **Nothing is written to disk before this gate.** Present, in sections scaled to
@@ -214,7 +222,8 @@ their weight and confirmed one at a time:
    index, naming the row it stands on, or "requires nothing active → 10". It
    is never asked; the one thing that changes it is a required plan the user
    names here that the interview missed — then the verb is run again
-6. the consent block and the release intent
+6. the consent block — the End an `all` run after landing row among it — and
+   the release intent
 7. the parked list
 
 Then ask once: **approve**, **revise** or **abandon**. Revise loops back to the
@@ -338,10 +347,10 @@ In this order.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
    these declared preferences, so it asks nothing:
    - **work in place on the current branch, no worktree** — its Step 1 "if
-     declined" path. Say why: the fresh session's worktree is cut from the
-     integration branch, so it can see the folder only once the folder is
-     committed there; a folder still untracked at hand-off gets swept into some
-     later wave's commit. The index row rides the same commit for the same
+     declined" path. Say why: the run's worktree is cut from the integration
+     branch, so it can see the folder only once the folder is committed there;
+     a folder still untracked at hand-off gets swept into some later wave's
+     commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
    - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
      else — the `plan-management` edit rides this commit and that skill never
@@ -355,16 +364,20 @@ In this order.
 Then end with exactly this, and nothing after it:
 
 ```text
-Run in a fresh session:
+Run in a fresh context — a fresh session, or a runner that `all` dispatches:
 
 /vwf:execute docs/plans/<date>-<name>
 
 or let the queue pick it, by priority:
 
 /vwf:execute next
+
+or run every runnable plan, highest priority first:
+
+/vwf:execute all
 ```
 
-Do not start executing. The fresh session is the point — this session's context
+Do not start executing. The fresh context is the point — this session's context
 is the survey and the interview, and the run should carry none of it.
 
 ## What this skill never does

@@ -10,8 +10,9 @@ per plan — the diffs to apply, and the ad-hoc changes).
 **Order:** `/vwf:setup` → `/vwf:product` → `/vwf:architecture` →
 `/vwf:design-system` (once a UI exists) → `/vwf:blueprint` (a full-product sweep
 — `plan` halts until its coverage stamp reads complete) → `/vwf:plan <slice>` →
-`/vwf:execute <folder>` — a landed plan is archived by the run, and a folder
-left live is archived by asking — then, after you deploy, `/vwf:verify <env>`
+`/vwf:execute <folder>` (or `next`, or `all` for every runnable plan, each in
+its own runner) — a landed plan is archived by the run, and a folder left live
+is archived by asking — then, after you deploy, `/vwf:verify <env>`
 and `/vwf:feedback` route what production says back into
 product/blueprint/plan.
 
