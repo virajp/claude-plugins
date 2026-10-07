@@ -14,11 +14,12 @@ That work has its own planner:
 **[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan)** writes a plan
 folder and queues it in `docs/plans/index.md`, and the one executor,
 **[`/vwf:execute`](../../plugins/vwf.md#vwfexecute)**, runs it unattended in a
-fresh session — by name, or `next` to take the queue's pick. The planner sits
-beside the chain rather than in it, and reads neither the blueprint nor the
-architecture registry; the executor reads the blueprint only for a plan that
-covers a slice. The folder it writes and the index it queues in are the same
-ones `/vwf:plan` uses; what differs is what runs over a unit.
+fresh context — by name, `next` to take the queue's pick, or `all` to run every
+runnable plan in turn. The planner sits beside the chain rather than in it, and
+reads neither the blueprint nor the architecture registry; the executor reads
+the blueprint only for a plan that covers a slice. The folder it writes and the
+index it queues in are the same ones `/vwf:plan` uses; what differs is what runs
+over a unit.
 
 The worked example picks up **Relay**, the team task manager from
 [start a product from an empty repo](../greenfield/single-repo.md), some months
@@ -133,6 +134,12 @@ recorded `run`, in which case this answer is the consent and the run ships it on
 a green landing. Saying `minor` with no step authorizes nothing: the change
 waits for a later release, cut by hand.
 
+One more consent row is asked only when the plan edits a plugin your session
+itself has loaded: **End an `all` run after landing**. Say `yes` and a
+`/vwf:execute all` run stops after this plan, telling you to restart before the
+next, since the running session would otherwise go on using the old copy.
+Relay's change touches no plugin, so the row is written `no` without asking.
+
 ### 3. Approve the shape, then walk away
 
 Nothing has been written to disk yet. The plan is presented as a shape first:
@@ -188,10 +195,22 @@ you had named it. With Relay's one plan in the queue the two lines do the same
 thing; with several, `next` is how a chain runs in order without you typing each
 folder.
 
-The fresh session is the whole point: the planning session's context was a
-survey and an interview, and none of it should ride along into the run. The
-skill is user-only for the same reason — nothing else can promise you a clean
-window.
+To run the whole queue in one go:
+
+```text
+/vwf:execute all
+```
+
+`all` takes `next`'s pick, hands it to an `execute-runner` subagent that runs it
+exactly as a named run would, waits for its one-line result, and picks again —
+one plan at a time, until nothing is runnable or a plan stops. It ends with a
+table, a row per plan, the reason it stopped, and the command that continues.
+
+The fresh context is the whole point: the planning session's context was a
+survey and an interview, and none of it should ride along into the run. Under
+`all`, each runner is that fresh context, and your session keeps only the
+results. The skill is user-only for the same reason — nothing else can promise
+you a clean window.
 
 It refuses a folder that is not committed on the integration branch, which after
 a normal approval it always is. If you wrote or moved one by hand, commit and
@@ -200,13 +219,13 @@ push it first — or re-run `/vwf:change-plan` on it — then re-launch.
 The first thing it does is **claim the plan**: the row in `docs/plans/index.md`
 is set to `RUNNING` in a commit pushed on the integration branch, before any
 worktree exists. That pushed row is what makes a second session safe: another
-`/vwf:execute next` running at the same time sees the row taken and picks
-something else, and if two sessions race for the same row, the push that lands
-second is rejected, so that session re-reads the queue and re-picks — or, for a
-named folder, stops and tells you another session has it. A `RUNNING` row is
-never taken over, however long it has sat there; if the session that claimed it
-is gone, set the row back to `APPROVED` by hand in a commit on the integration
-branch, and the plan is runnable again.
+`/vwf:execute next` or `all` running at the same time sees the row taken and
+picks something else, and if two sessions race for the same row, the push that
+lands second is rejected, so that session re-reads the queue and re-picks — or,
+for a named folder, stops and tells you another session has it. A `RUNNING` row
+is never taken over, however long it has sat there; if the session that claimed
+it is gone, set the row back to `APPROVED` by hand in a commit on the
+integration branch, and the plan is runnable again.
 
 From there you are not needed. It creates one worktree, runs `/vwf:doctor` and
 the plan's gate once as a preflight (a red line here is the branch's problem,

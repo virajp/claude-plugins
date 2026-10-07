@@ -94,7 +94,7 @@ offer is a fix cycle against that slice:
 ```
 
 Every route closes the same way, with the remaining path in one line — here
-`then /vwf:execute`, the folder `plan` pushes, run in a fresh session — so you
+`then /vwf:execute`, the folder `plan` pushes, run in a fresh context — so you
 see the whole way to production before the single hand-off. Take it and you are
 back on the spine at [`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers
 instead — the ownership number is due this week, and the re-rank in step 3 is

@@ -45,24 +45,24 @@ Both are discovered through the base repo's `docs/plans/index.md`, which holds
 **one table** per `skills/plan-management/references/plan-index.md` — columns
 `Folder`, `Kind`, `Plan`, `Target repo`, `Priority`, `Status`, `Requires`,
 `Backlog`, statuses `APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct
-commit on the integration branch — the queue `/vwf:execute next` reads with no
-`Kind` filter. Every row, every folder's Status block and the archive move are
-written by one skill-invoked skill, `plan-management`, whose verbs the planners
-and `/vwf:execute` call: the landing moves the folder into `archived/` and
-re-points the row when no gap is open, and leaves it live with the row
-`COMPLETE` when one is; the `archive` verb, invoked when the user asks in prose,
-moves a folder of either kind whole, only its Status line rewritten, and
-re-points the row, after which the sweep drops a `COMPLETE` row nobody's
-`Requires` names — its `Backlog` column carries the `Bnn` ids of the backlog
-project's items, a piece id written `Bnn (piece)`, since 2026-09-18 the backlog
-is **not in the tree**: it is a project on the base repo's forge, a GitHub
-Project named for the base repo under its account, one per product, which
-`/vwf:backlog` alone writes and `change-plan`, `plan`, `execute` and
-`plan-management`'s `archive` verb call with the ids their plan's `backlog:` and
-`backlog_pieces:` frontmatter lists carry — the ids it finishes and the ids it
-lands a piece of), `docs/runbooks/` (per-project operational runbooks plus
-`postmortems.md`, seeded by the incident-response foundation and appended to by
-`/vwf:feedback incident`), and `docs/prompts/`
+commit on the integration branch — the queue `/vwf:execute next` and
+`/vwf:execute all` read with no `Kind` filter. Every row, every folder's Status
+block and the archive move are written by one skill-invoked skill,
+`plan-management`, whose verbs the planners and `/vwf:execute` call: the landing
+moves the folder into `archived/` and re-points the row when no gap is open, and
+leaves it live with the row `COMPLETE` when one is; the `archive` verb, invoked
+when the user asks in prose, moves a folder of either kind whole, only its
+Status line rewritten, and re-points the row, after which the sweep drops a
+`COMPLETE` row nobody's `Requires` names — its `Backlog` column carries the
+`Bnn` ids of the backlog project's items, a piece id written `Bnn (piece)`,
+since 2026-09-18 the backlog is **not in the tree**: it is a project on the base
+repo's forge, a GitHub Project named for the base repo under its account, one
+per product, which `/vwf:backlog` alone writes and `change-plan`, `plan`,
+`execute` and `plan-management`'s `archive` verb call with the ids their plan's
+`backlog:` and `backlog_pieces:` frontmatter lists carry — the ids it finishes
+and the ids it lands a piece of), `docs/runbooks/` (per-project operational
+runbooks plus `postmortems.md`, seeded by the incident-response foundation and
+appended to by `/vwf:feedback incident`), and `docs/prompts/`
 (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
 prompt type → registry project → flow, one brief per platform regenerated in
 place (the filename carries the platform, mirroring the flows tree exactly),

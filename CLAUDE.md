@@ -50,17 +50,18 @@ the tree they govern; `release` is a slash command; a change to this repo is
 planned with `/vwf:plan` (a blueprint slice) or `/vwf:change-plan` (anything
 else), each of which **commits and pushes the approved folder** on the branch it
 was planned on together with its row in `docs/plans/index.md`'s **one table**,
-and run, in a fresh session, by the one executor, `/vwf:execute <folder>` — or
+and run, in a fresh context, by the one executor, `/vwf:execute <folder>` — or
 `/vwf:execute next`, which reads that table alone, of either kind, and picks the
-runnable plan with the lowest `Priority` value — which refuses a folder that is
-not on that branch, claims the row `RUNNING` with a pushed commit before it cuts
-a worktree, and marks it `COMPLETE` once the merge lands (archiving the folder
-there and re-pointing the row when no gap is open; leaving it live when one is,
-archived once you ask) — each plan folder carries this repo's gate lines, and
-`mise run p:plugins:local` and `/release` as after-landing steps, each recorded
-`run` at the interview or dropped: `/vwf:execute` runs them on a green landing
-without a prompt, and asks nothing at run time — every stop is a report with its
-resume command.
+runnable plan with the lowest `Priority` value, or `/vwf:execute all`, which
+runs every runnable plan in turn, each in its own `execute-runner` subagent,
+until one stops — which refuses a folder that is not on that branch, claims the
+row `RUNNING` with a pushed commit before it cuts a worktree, and marks it
+`COMPLETE` once the merge lands (archiving the folder there and re-pointing the
+row when no gap is open; leaving it live when one is, archived once you ask) —
+each plan folder carries this repo's gate lines, and `mise run p:plugins:local`
+and `/release` as after-landing steps, each recorded `run` at the interview or
+dropped: `/vwf:execute` runs them on a green landing without a prompt, and asks
+nothing at run time — every stop is a report with its resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

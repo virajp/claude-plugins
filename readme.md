@@ -250,17 +250,19 @@ ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
 CI, docs, a refactor) — an `index.md` plus one file per unit, which each commits
 and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
 the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
-runs a folder of either kind unattended in that fresh session — a `code` unit
+runs a folder of either kind unattended in a fresh context — a `code` unit
 through TDD and coverage, the code and security review at the plan's `review`
 rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
 runnable plan with the lowest `Priority` value from that table, of either kind,
 and runs it, running each after-landing step the plan recorded `run` and asking
-nothing at run time. Beside both sits `/vwf:backlog`, the sole writer of the
-backlog project on the repo's forge — a GitHub Project named for the base repo,
-the prioritised list of work that cannot be picked up now, which every planning
-and landing command calls to move an item. It names **no** technology — no
-language, no framework, no cloud — which is what lets the rest of this list
-exist. `vwf@virajp-plugins`
+nothing at run time. `/vwf:execute all` runs every runnable plan in turn,
+highest priority first, each in its own `execute-runner` subagent, and stops at
+the first plan that stops — keeping one line per plan in the session. Beside
+both sits `/vwf:backlog`, the sole writer of the backlog project on the repo's
+forge — a GitHub Project named for the base repo, the prioritised list of work
+that cannot be picked up now, which every planning and landing command calls to
+move an item. It names **no** technology — no language, no framework, no cloud —
+which is what lets the rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
