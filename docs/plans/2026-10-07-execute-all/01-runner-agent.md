@@ -22,15 +22,14 @@
 
 ## Edits
 
-1. **`plugins/vwf/agents/execute-runner.md`** — frontmatter:
-   `name:
-   execute-runner`; a folded `description` saying it is invoked only
-   by `/vwf:execute all`, one plan per dispatch — do not delegate to it for
-   general tasks; `tools:` per E1, the mempalace names copied from
-   `execute-coder.md`; `model: opus`. Body: read the `SKILL.md` path the prompt
-   names, top to bottom, and run it as the orchestrator for the one folder named
-   — runner mode as that file defines it; ask the user nothing; never read unit
-   work inline; return exactly E6's five lines and nothing else.
+1. **`plugins/vwf/agents/execute-runner.md`** — frontmatter: the name
+   `execute-runner`; a folded `description` saying it is invoked only by
+   `/vwf:execute all`, one plan per dispatch — do not delegate to it for general
+   tasks; `tools:` per E1, the mempalace names copied from `execute-coder.md`;
+   `model: opus`. Body: read the `SKILL.md` path the prompt names, top to
+   bottom, and run it as the orchestrator for the one folder named — runner mode
+   as that file defines it; ask the user nothing; never read unit work inline;
+   return exactly E6's five lines and nothing else.
 
 ## Verification
 
