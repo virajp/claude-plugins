@@ -350,7 +350,7 @@ ritual itself is the [`release`][rel] skill — run `/release`.
 
 What ships as a plugin hook today is vwf's only — the guarded `rtk` Bash hook
 and the two mempalace auto-save hooks — and is the [`vwf-plugin`][vwf] skill's.
-Two more scripts ship as **stackgen pack payloads** copied into a target repo
+One more script ships as a **stackgen pack payload** copied into a target repo
 rather than discovered here, covered by the [`stackgen-plugin`][sg] skill. The
 three host rules that bite any hook — BSD `sed`, never in `settings.json`, the
 per-event verdict shape — are the [`plugin-authoring`][auth] skill's.

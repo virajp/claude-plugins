@@ -3,7 +3,7 @@ summary: The account-level secrets a deployed Worker or Container reads at
   run time through a binding — the staging and production values, held
   once for the account and never in the repo, the laptop or a per-Worker
   secret list.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: secrets-manager
 # `capability` is deliberately unset: `secrets-manager` has no vwf
@@ -12,9 +12,9 @@ category: secrets-manager
 # The category name is shared with `capability-provider/fnox` on purpose,
 # and the two do not compete. This component is the RUNTIME store a
 # deployed Worker or Container reads in staging and production; fnox is
-# the developer-machine and CI provider that injects secrets on the way
-# in. A repo pins both, for different environments, and neither replaces
-# the other.
+# the developer-machine provider that injects secrets on the way in, and
+# CI takes its own from the forge. A repo pins both, for different
+# environments, and neither replaces the other.
 kind: cloud-provider
 axis: backing
 harness:

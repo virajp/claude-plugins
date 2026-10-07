@@ -2,7 +2,7 @@ name: Cloudflare
 summary: The provider-wide judgment behind Cloudflare's private plane — the
   account and role model, seat-shaped billing, and why an origin reachable
   without the proxy makes the whole arrangement decorative.
-version: 0.1.0
+version: 0.1.1
 type: cloud-provider
 kind: cloud-provider
 # No `axis:` — a cloud-provider component composes into Cloud-Bundles on BOTH the

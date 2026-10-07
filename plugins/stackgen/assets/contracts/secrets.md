@@ -28,22 +28,39 @@ shape is `<injector> -- <the repo's own task>`, and everything downstream of
 that boundary — the app, its tests, its tooling — knows only that the variables
 are set.
 
+## The environment split
+
+**The secrets manager a repo pins serves `development` alone.** Each of vwf's
+delivery-pipeline environments, and CI beside them, takes its secrets from
+exactly one place:
+
+- **`development`** — the secrets manager, on a developer's machine, injecting
+  at the process boundary.
+- **CI** — the forge's own secret store (GitHub or GitLab secrets, say),
+  handed to the pipeline as variables. CI never authenticates to the
+  development manager.
+- **`staging` and `production`** — the cloud provider's secret store, read by
+  the deployed service. Neither the toolchain manager nor the development
+  manager runs there.
+
+The **same variable name** is the join between the three, catalogued once in
+`environment.md`; a value is set in each place it is needed, never copied
+from one store to another by a tool.
+
 ## What a manager must be able to do
 
-1. **Resolve a distinct set per environment.** `development` / `staging` /
-   `production`, vwf's delivery-pipeline vocabulary, selected explicitly.
-   Resolving the wrong environment's set must **fail** rather than fall back to
-   a default — a silent fallback is how a staging job reaches production data.
-2. **Authenticate CI non-interactively**, with a credential scoped to one
-   environment, read-only where the pipeline only reads, and rotatable without
-   a code change. A pipeline that needs a human to log in is a pipeline that
-   does not run.
+1. **Resolve the development set, and nothing else.** A manager resolves the
+   values a developer's processes need and must never hand a development value
+   to a process outside development — a development store reached from a
+   pipeline or a deployed service is how a test credential ends up in front of
+   production data.
+2. **Stay out of CI.** CI does not authenticate to the development manager at
+   all: the forge's variables reach the task directly, under the same names,
+   so a pipeline needs no credential that reads the credentials.
 3. **Onboard and offboard a person at a stated cost.** Both directions, and
    offboarding is the one that matters: a manager must be able to make a
-   departed member's access stop. Where the mechanism is re-keying rather than
-   revocation, the pack states plainly that **re-keying does not un-compromise
-   what that person already read** — the secrets they held are rotated, not
-   merely re-encrypted.
+   departed member's access stop. Stopping access does not un-compromise what
+   that person already read — the secrets they held are rotated.
 4. **Enumerate names without printing values.** `environment.md` catalogs the
    names of every variable and secret a project needs and **never a value**;
    that stays true whichever tool is picked, so the tool has to make the
@@ -54,10 +71,10 @@ are set.
    than the repo.
 
 A clause a tool cannot satisfy is **stated as such** in its pack's contract-
-satisfaction topic (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`), never omitted. A
-tool that serves only `development` is a legitimate pick with a named gap: the
-product then answers clause 1 and 2 for its deployed environments somewhere
-else, and the pack says where.
+satisfaction topic (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`), never omitted.
+Serving only `development` is **every** manager's shape now, not a gap one
+tool carries: CI is answered by the forge and the deployed environments by the
+cloud provider, and each pack says so rather than claiming either.
 
 ## The naming convention
 
@@ -90,47 +107,21 @@ The **values** stay where the manager keeps them, and the **names** are
 catalogued in `docs/blueprint/environment.md` — clause 4 above is what makes
 that catalogue possible without printing anything.
 
-## The encrypt-into-git allowance
+## No repo carries an encrypted secret
 
-Some managers store the encrypted value **in the repository** rather than
-behind a service. That collides head-on with two rules this repo already
-enforces — the secret scanner, and the memory palace's denylist — and both are
-right to be suspicious: an encrypted secret in a tracked file is
-indistinguishable, to a scanner, from the plaintext one it exists to catch.
-
-**The mode is offered**, under four conditions. A pack that cannot meet all
-four does not offer it.
-
-1. **The scanner is allowlisted by path, never by rule.** The allowlist covers
-   exactly the encrypted file the tool's config names, and nothing else. A
-   rule-level exemption turns off detection for every future real instance of
-   that credential type across the whole repo, and nothing reports that it
-   happened.
-2. **No allowlist entry may cover a decryption identity.** What makes the
-   ciphertext safe to commit is that the key is not in the repo — so the
-   private key, the identity file and the keyring stay fully scanned, fully
-   gitignored, and are the one thing a hit on which is always real.
-3. **A gate proves the committed file holds no plaintext.** Encrypt-into-git
-   fails *open*: a value written to the file before it is encrypted is a real
-   leak, at a path the scanner has just been told to ignore. So the pack emits
-   a pre-commit check that verifies every secret in that file is ciphertext.
-   Without it, condition 1 is a hole rather than an allowance.
-4. **The committed file is excluded from mining.** Its path goes into
-   `mempalace.yaml`'s `exclude_patterns` unconditionally — the palace is a
-   published surface, a drawer outlives the file that produced it, and
-   encryption is a bet on time that an index nobody re-reviews should not be
-   holding. Nothing a recall needs is inside a secrets file.
-
-Conditions 1 and 4 are **repo-wide edits the pack must emit**, not advice: the
-scanner config and the memory config both live outside the pack's own tree, and
-a pack that lands the tool without them leaves the repo failing its own gates
-on every commit.
+**No secret enters a tracked file, encrypted or not.** Committed ciphertext is
+permanent in history, and the secret scanner, the memory palace and review
+would all have to be told to look away from it — an allowance that is a hole
+the day a value lands before it is encrypted. A value lives in the keychain, a
+cloud store, the forge or the cloud provider, never in the repository, so no
+pack emits a scanner allowlist or a mining exclusion for a secrets file, and a
+committed secrets file is a finding whichever pack is pinned.
 
 ## What this contract does not decide
 
-- **Which tool.** That is the user's pick from the menu — a hosted platform
-  where a vendor holds the secrets, a local-first tool where you hold them, or
-  a managed flavour from the project's cloud plugin. The axis that separates
+- **Which tool.** That is the user's pick from the menu — a local-first tool
+  where you hold the development values, or a managed flavour from the
+  project's cloud plugin. The axis that separates
   them is **where the secret lives and what onboarding a teammate costs**, and
   each pack's pick-and-trade topic is where that argument belongs.
 - **Which secrets the product has.** That is `environment.md`, authored per

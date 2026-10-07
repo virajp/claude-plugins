@@ -48,8 +48,9 @@ issued at the source, in their own local store.
 Not from the account store, and not from a teammate pasting them into
 chat. They come from the repo's **developer-side secrets provider** —
 `capability-provider/fnox`, or whichever provider the repo picked when it
-was shaped — which is what holds a developer's and CI's secrets and
-injects them as environment variables at the process boundary.
+was shaped — which is what holds a developer's secrets and injects them
+as environment variables at the process boundary. CI takes its own from
+the forge and never reaches this provider.
 
 The shape is: the provider injects the development credential into the
 shell, and the project's own seeding step feeds it into

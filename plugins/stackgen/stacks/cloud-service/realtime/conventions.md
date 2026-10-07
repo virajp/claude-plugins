@@ -36,8 +36,9 @@ Where the app secret lives is the provider's rule, not a new one: a
 secret injected at the process boundary and catalogued by name in
 `docs/blueprint/environment.md`, per the `cloudflare` skill's identity
 and IAM reference. Its **runtime** home in a hosted environment is the
-`cloud-service/secrets-store` component; on a laptop and in CI it is
-whatever `capability-provider/` the repo already pinned.
+`cloud-service/secrets-store` component; on a laptop it is whatever
+`capability-provider/` the repo already pinned, and in CI the forge's
+own secret store.
 
 **The app secret is server-side and stays there.** A browser never holds
 it. The Worker calls the API; the client negotiates WebRTC with the SFU

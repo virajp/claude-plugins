@@ -96,12 +96,14 @@ changes where the product's mail goes without touching a line of code.
 
 If the design ends up with a credential this service needs — the REST
 token for a non-Worker caller, most likely — it is a secret under the
-provider's secrets doctrine, and it has two homes for two environments,
-which is deliberate:
+provider's secrets doctrine, and it has a home per environment, which
+is deliberate:
 
-- **On a developer machine and in CI**,
-  `capability-provider/fnox` on the capability axis holds it and injects
-  it at the process boundary as an environment variable.
+- **On a developer machine**, `capability-provider/fnox` on the
+  capability axis holds it and injects it at the process boundary as an
+  environment variable.
+- **In CI**, the forge's own secrets (GitHub or GitLab) hand it to the
+  pipeline as an environment variable.
 - **In staging and production**, `cloud-service/secrets-store` is the
   account-level store a deployed Worker reads through its own binding.
   That component's doctrine states which clause of stackgen's secrets

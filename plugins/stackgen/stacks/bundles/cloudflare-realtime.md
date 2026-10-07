@@ -3,8 +3,8 @@ name: Cloudflare Realtime
 axis: backing
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
-- cloud-service/realtime@0.1.0
+- cloud-provider/cloudflare@0.1.1
+- cloud-service/realtime@0.1.1
 ---
 
 # Backing — Cloudflare Realtime

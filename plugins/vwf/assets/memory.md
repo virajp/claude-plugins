@@ -159,7 +159,6 @@ exclude_patterns: # secrets first, then trees not worth mining
   - "*.p12"
   - "*credentials*"
   - "*secret*"
-  - .doppler/
   - .git/
   - node_modules/
   - dist/

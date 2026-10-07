@@ -3,8 +3,8 @@ name: Cloudflare Secrets Store
 axis: backing
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
-- cloud-service/secrets-store@0.1.0
+- cloud-provider/cloudflare@0.1.1
+- cloud-service/secrets-store@0.1.1
 ---
 
 # Backing — Cloudflare Secrets Store
@@ -12,8 +12,8 @@ components:
 **The account-level secrets a deployed Worker or Container reads at run
 time.** Staging and production values, held once for the account, reached
 through a binding the platform resolves — so the running code carries no
-credential, the repo carries no ciphertext, and a value that two services
-share is rotated in one place instead of three.
+credential, and a value that two services share is rotated in one place
+instead of three.
 
 **The composition is the provider plus one service**, which is what a
 Cloud-Bundle is. The provider component carries what spans services — the
@@ -56,14 +56,15 @@ pinned a store with no reader.
 **And it is pinned beside the repo's secrets provider, never instead of
 it.** The `capability-provider` pick made when the repo was shaped —
 `fnox` in a repo that took the default — holds and injects the secrets a
-**developer's machine and CI** need. This component holds the values a
+**developer's machine** needs; CI takes its own from the forge. This
+component holds the values a
 **deployed** Worker or Container reads in staging and production. They
 share the `secrets-manager` category name on purpose and neither replaces
 the other; a repo running on Cloudflare pins both, on different axes, for
 different environments. Treating one as the other in either direction is
 the mistake with the largest blast radius available here: reaching the
-developer-side provider into production puts a long-lived decryption
-identity wherever the product runs, and reaching this store onto a laptop
+developer-side provider into production puts a long-lived credential
+wherever the product runs, and reaching this store onto a laptop
 is the thing Cloudflare refuses outright.
 
 **Environment isolation is a naming decision, and it is per project.**

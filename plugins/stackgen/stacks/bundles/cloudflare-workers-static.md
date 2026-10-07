@@ -3,7 +3,7 @@ name: Cloudflare Workers Static Assets
 axis: deploy
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
+- cloud-provider/cloudflare@0.1.1
 - cloud-service/workers-static-assets@0.1.3
 artifact: static-assets
 ---

@@ -75,10 +75,10 @@ in mitigation:
   actually confers. A secret disappearing between deploys is the signal.
 
 The token itself is a secret and is held where every other pipeline
-credential is held — the repo's `capability-provider` secrets pick,
-injected as an environment variable and catalogued by name, never value,
-in `docs/blueprint/environment.md`, exactly as the provider's identity
-reference requires.
+credential is held — the forge's own secrets (GitHub or GitLab), handed
+to the pipeline as an environment variable and catalogued by name, never
+value, in `docs/blueprint/environment.md`. The repo's
+`capability-provider` pick serves development alone and never holds it.
 
 ## The binding is the runtime identity, and there is nothing to issue
 

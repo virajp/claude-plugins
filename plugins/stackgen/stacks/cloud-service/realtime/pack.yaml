@@ -3,7 +3,7 @@ summary: A selective forwarding unit and TURN service for WebRTC audio,
   video and data tracks — the media plane behind calls, live rooms and
   low-latency control channels, driven from a Worker over an HTTPS API
   rather than through a binding.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: realtime
 # `capability` is deliberately unset: `realtime` realizes no vwf

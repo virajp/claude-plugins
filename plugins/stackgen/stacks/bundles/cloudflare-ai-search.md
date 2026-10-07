@@ -3,7 +3,7 @@ name: Cloudflare AI Search
 axis: backing
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
+- cloud-provider/cloudflare@0.1.1
 - cloud-service/ai-search@0.1.0
 ---
 

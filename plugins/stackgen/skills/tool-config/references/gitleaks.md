@@ -70,9 +70,9 @@ Only the staged gate reads them, and one already committed — a tracked
 fingerprint silences one known finding at one location; disabling the rule
 that found it blinds the scanner across the whole repo, including the file
 someone adds next week, and nothing reports that it happened. A test fixture,
-an example value, the committed ciphertext of an encrypt-into-git secret —
-each is the repo's own line, by hand, outside the marker pair, and **every
-entry carries why**: an unexplained fingerprint is indistinguishable from a
+an example value — each is the repo's own line, by hand, outside the marker
+pair, and **every entry carries why**: an unexplained fingerprint is
+indistinguishable from a
 real secret somebody got tired of looking at.
 
 ## 3. Running it

@@ -71,8 +71,11 @@ reviewable shape.
 credential in a thrown error's message reaches the deployment logs, which
 are more widely readable than the store the value came from.
 
-### Clause 1 — a distinct set per environment, no silent fallback
+### Clause 1 — one environment's set, and nothing else
 
+The contract asks the development manager to resolve the development set
+and never hand it to a process outside development. The runtime analogue
+is a binding that resolves its own environment's value and no other.
 **Half satisfied by the platform, half by a naming discipline the project
 keeps — and the split is worth being precise about.**
 
@@ -109,12 +112,13 @@ to a resource — and the naming rule above is what stands in for it until
 then. Recording that as a known temporary shape is the point of writing it
 down.
 
-### Clause 2 — CI authenticates non-interactively
+### Clause 2 — stay out of CI
 
-**Satisfied, with one named gap.** A pipeline deploying a Worker that
-carries a Secrets Store binding authenticates with an account API token
-and needs no human. It also never reads a value: no permission grants
-that, so the pipeline handles the binding and not the secret.
+**Satisfied, with one named gap.** CI reads no value from this store. A
+pipeline deploying a Worker that carries a Secrets Store binding
+authenticates with an account API token, held in the forge's secrets, and
+needs no human. It also never reads a value: no permission grants that,
+so the pipeline handles the binding and not the secret.
 
 The gap is the permission level. Binding a secret to a resource counts as
 a **write** against the secret, so the deploy token needs **Account
@@ -129,17 +133,12 @@ in [identity shape](identity-shape.md).
 
 ### Clause 3 — onboard and offboard a person at a stated cost
 
-**Satisfied, and better than a re-keying scheme — with one thing that
-still has to be rotated.**
+**Satisfied — with one thing that still has to be rotated.**
 
 Onboarding is granting a role; offboarding is removing it, and the removal
-is a genuine revocation rather than a re-encrypt
+is a genuine revocation
 ([Access control](https://developers.cloudflare.com/secrets-store/access-control/)).
-There is no key to withdraw, no history to re-key, and no earlier commit
-that still decrypts. The contract asks a manager whose mechanism is
-re-keying to say plainly that re-keying does not un-compromise what was
-already read; here the mechanism is revocation, so that caveat does not
-apply.
+There is no key to withdraw.
 
 **What does apply**: a value is typed in by whoever created it. Nobody can
 read it back afterwards — not through the API, not on the dashboard
@@ -179,16 +178,6 @@ The second half is the application's: the resolved value is an ordinary
 string in memory once `.get()` returns, and nothing about the platform
 stops it being logged. That is the discipline named under the cardinal
 rule above.
-
-### The encrypt-into-git allowance
-
-**Not applicable, and that is the useful statement.** Nothing this
-component involves is committed except a `store_id` and a `secret_name`,
-neither of which is a value, so the contract's four conditions — the
-scanner allowlist, the identity exclusion, the plaintext gate, the mining
-exclusion — have nothing to attach to. A repo that also runs a
-provider which commits ciphertext meets those conditions on that
-provider's account, not on this one's.
 
 ## Naming, in one place
 

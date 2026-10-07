@@ -615,10 +615,12 @@ rather than by name, and says in the plan that the settings survive the move. So
 a pack whose correctness depends on a repo-wide edit it genuinely does not own —
 a scanner allowlist, a `.gitignore` block, a mining exclude — carries that edit
 as a literal block in the reference that owns it, and ships a gate that fails
-the first commit naming whichever block is missing. `capability-provider/fnox`
-is the first: three of the four conditions the secrets contract's
-encrypt-into-git allowance sets sit outside the boundary, and its
-`fnox-ciphertext-guard.sh` is the first hook script any pack ships.
+the first commit naming whichever block is missing. No pack needs one today.
+`capability-provider/fnox` did until 2026-10-07, when the secrets contract
+retired its encrypted mode: fnox now serves the development environment alone,
+from the OS keychain or a cloud store it references, and no repo carries an
+encrypted secret. Its guard hook went with the mode; a copy an earlier
+materialization landed in `.claude/hooks/` is inert and may be deleted by hand.
 
 The **lockfile** is the ownership boundary: `.claude/` also holds your own
 hand-written skills, so sync diffs only what the lockfile lists — anything else

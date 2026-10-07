@@ -2,7 +2,7 @@ name: Cloudflare Images
 summary: Transform, optimize and deliver images at the edge — from objects
   the product already stores or from Images' own storage — the media layer
   a site or app reads rather than a bucket it writes.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: media
 # `capability` is deliberately unset: `media` realizes no vwf capability

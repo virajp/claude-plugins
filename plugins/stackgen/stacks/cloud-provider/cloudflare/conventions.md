@@ -46,10 +46,11 @@ name and a decision to reopen, not an oversight to route around.
 different things, and they coexist.** **Secrets Store** is the
 account-level store a deployed Worker or Container reads through a
 binding in staging and production; `capability-provider/fnox`, on the
-capability axis, is what holds a developer's and CI's secrets on the
-way in. A repo pins both, for different environments, and neither
-replaces the other. Which clause of the secrets contract each satisfies
-is the `secrets-store` component's doctrine to state, not this one's.
+capability axis, is what holds a developer's secrets on the way in;
+CI takes its own from the forge. A repo pins both, for different
+environments, and neither replaces the other. Which clause of the
+secrets contract each satisfies is the `secrets-store` component's
+doctrine to state, not this one's.
 
 **Declined, and they are not coming.** Pages is superseded by Workers
 Static Assets in Cloudflare's own guidance; Workers Sites is deprecated

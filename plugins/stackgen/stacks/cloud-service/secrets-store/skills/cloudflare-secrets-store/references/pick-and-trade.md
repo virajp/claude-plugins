@@ -11,15 +11,15 @@ question with a different answer.
 The repo's `capability-provider` secrets pick —
 `capability-provider/fnox` in a repo that took the default — is not an
 alternative to this store, and picking one does not settle the other. It
-holds and injects what a **developer's machine and CI** need; this store
-holds what a **deployed Worker or Container** reads. A repo that runs on
-Cloudflare pins both.
+holds and injects what a **developer's machine** needs; CI takes its own
+from the forge; this store holds what a **deployed Worker or Container**
+reads. A repo that runs on Cloudflare pins both.
 
 The failure this separation prevents is specific and expensive: reaching
 the developer-side provider into production. That means a long-lived
-decryption identity or platform credential present wherever the product
-runs, a bootstrap credential to read the credentials, and a laptop that
-can decrypt production by construction. The store's model gives the
+platform credential present wherever the product runs, a bootstrap
+credential to read the credentials, and a laptop that can read
+production by construction. The store's model gives the
 running code no credential at all — the platform resolves the binding —
 so there is nothing on the deployed side to steal, rotate or leak.
 

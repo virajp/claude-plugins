@@ -1,41 +1,36 @@
 # fnox — conventions
 
-The secrets manager you host yourself. Configuration is a **committed
-`fnox.toml`**; each secret is either encrypted in place (age, AWS KMS) or a
-reference into a remote manager, and the two mix freely per secret. There is
-no vendor account, no monthly bill and no third party in the loop — the trade
-is that offboarding is your job rather than a revoke button.
+The secrets manager for **the development environment, and nothing else**.
+Configuration is a **committed `fnox.toml`** holding names and lookups only;
+each secret's value lives in the **OS keychain** by default, or any single
+secret may instead be a reference into a fnox-supported cloud store (AWS
+Secrets Manager, Azure Key Vault, 1Password, Vault and the rest), and the two
+mix freely per secret. **Nothing encrypted ever enters the repo** — no age, no
+KMS, no encrypted value in any tracked file.
+
+**Each environment takes its secrets from the system that runs it.** A
+developer's machine resolves them through fnox. CI takes the forge's own
+variables (GitHub or GitLab) and does not run fnox. Staging and production run
+neither mise nor fnox: their secrets come from the cloud provider's own store.
+stackgen's secrets contract states that split; this pack is its development
+half.
 
 **Secrets reach a process as environment variables, injected by
 `fnox exec -- <the repo's own task>`.** This is the rule that outranks the
 rest in stackgen's secrets contract, and fnox satisfies it without an SDK:
-nothing downstream of that boundary knows fnox exists.
+nothing downstream of that boundary knows fnox exists. CI runs the same task
+with the forge's variables already in its environment, so one task definition
+serves both callers.
 
-**Every environment is a named profile, and every secret is declared in every
-profile.** `[secrets]` is the `default` profile and the other profiles inherit
-from it, so a secret missing from `[profiles.production.secrets]` silently
-resolves to the development value. Naming the profiles `development`,
-`staging` and `production` — vwf's delivery-pipeline vocabulary — turns a
-wrong-environment resolution into a missing name rather than a near-miss.
+**Nothing in `fnox.toml` is a value.** Every entry carries `provider = "…"`
+and names a keychain entry or a cloud-store lookup; a bare `default = "…"`
+value is not permitted, even for a throwaway. Non-secret configuration — an
+API URL, a log level — belongs in the mise env, not in the secrets file.
 
-**Nothing in `fnox.toml` is plaintext.** Every entry carries `provider = "…"`;
-a bare `default = "…"` value is not permitted, even for a throwaway, because
-the committed-ciphertext gate cannot tell a throwaway from a real credential.
-Non-secret configuration — an API URL, a log level — belongs in the mise env,
-not in the secrets file.
-
-**The decryption identity never enters the repo.** It lives at
-`~/.config/fnox/age.txt` or arrives as `FNOX_AGE_KEY`; a provider `key_file`
-pointing inside the working tree voids the entire scheme, since what makes the
-ciphertext safe to commit is that the key is not beside it.
-
-**One age recipient set per environment.** A single recipient shared across
-profiles means the staging CI key decrypts production — the CI credential is
-environment-scoped only if the recipients are.
-
-**Offboarding is rotation, not re-encryption.** `fnox reencrypt` re-keys the
-current file; every earlier commit still decrypts with the old key. A departed
-member's secrets are rotated.
+**The profile shape is the setup tool's, not this pack's.** A development
+profile and a `ci` profile, selected by `FNOX_PROFILE`, are rendered by the
+repo's setup tool (bootstrap); this pack ships a single root `[secrets]` block
+and states no profile of its own.
 
 ## What this pack writes
 
@@ -43,12 +38,10 @@ member's secrets are rotated.
 | ---------------------------------- | ------------------------------------------- |
 | `fnox.toml`                        | the providers and the declared secret names |
 | `.config/mise/tasks/setup/secrets` | the fill for the toolchain manager's slot   |
-| `hooks/fnox-ciphertext-guard.sh`   | the gate the encrypt-into-git mode requires |
 
 The CLI pin is the pack's template, not a copied file:
 `templates/.config/mise/conf.d/fnox/mise.toml`, which `stackgen:tool-config`
-renders into the repo, pinning `fnox` exactly since every environment loads
-it.
+renders into the repo, pinning `fnox` exactly.
 
 **`fnox.toml` at the repository root is an accepted exception**, and the only
 one this pack takes. fnox searches upward from the working directory; a copy
@@ -62,36 +55,15 @@ the universal `#PLACEHOLDER` task at that path — the one file a pack may ship
 where tool-config ships its own — and checks
 that the CLI and the config are both present and reports the keychain service
 and prefix. It never runs a command whose normal output is a secret — `get` is
-that command, and a scrollback and a CI log are both more widely readable than
-the repo.
+that command, and a scrollback is more widely readable than the repo.
 
-## The shipped default is the keychain, not ciphertext
-
-The configuration this pack lands declares **one provider, the OS keychain**,
-with `if_missing = "warn"` so a contributor whose keychain is not yet
-populated can still run the repo's tasks; a deployed or release path that
-must not run half-configured overrides it per command, with
-`fnox exec --if-missing error -- <task>`. Every secret is declared in
-`[secrets]` even before its keychain entry exists — the name is the
-contract, and `docs/blueprint/environment.md` catalogs the same names. The
-material stays in the OS keychain, so there is no ciphertext in the
-repository and no decryption identity to lose. Nothing is encrypted into
-the tree, so the encrypt-into-git allowance and its four conditions do not
-apply to a repo that leaves the default alone — and the shipped ciphertext
-guard sits inert until an `age` or KMS provider is added. Adding one is
-the moment the four conditions start applying, all at once.
-
-**The guard checks all four, not only its own.** Encrypt-into-git fails
-open — a value written before it is encrypted is a real leak at the one
-path the scanner was told to ignore — so the guard proves every entry
-carries a provider (condition 3). Conditions 1, 2 and 4 are repo-wide
-config edits, and a repo that lands fnox without them has an allowlisted
-path nothing checks, so the guard asserts those too. A scanner hit on a
-decryption identity is always real and is never allowlisted, and the
-mining exclusion has to be explicit: the seeded `*secret*` and
-`*credentials*` patterns do not match `fnox.toml`. The hook is a
-repo-local pre-commit entry, written in POSIX sh for BSD tools; its exact
-entry is the `fnox` skill's contract-satisfaction reference.
+**The shipped config declares one provider, the OS keychain**, with
+`if_missing = "warn"` so a contributor whose keychain is not yet populated can
+still run the repo's tasks. Every secret is declared in `[secrets]` even
+before its keychain entry exists — the name is the contract, and
+`docs/blueprint/environment.md` catalogs the same names. A secret better held
+in a cloud store gets a second provider entry and a reference; the keychain
+stays the default.
 
 ## Naming — one set per repo
 
@@ -106,7 +78,15 @@ service; a repository with its own material declares a second provider with
 its own prefix rather than widening that one. Machine-local additions go in
 `fnox.local.toml`, which is gitignored.
 
-Committing ciphertext requires the repo-wide gate edits the contract's
-encrypt-into-git allowance mandates. Full judgment, and the exact blocks: the
-`fnox` skill's references. The contract it cites is stackgen's secrets
-contract.
+## Moving from the encrypted mode
+
+An earlier version of this pack offered committed ciphertext; it is retired.
+A repo that materialized that version keeps an inert
+`.claude/hooks/fnox-ciphertext-guard.sh` — delete it by hand, and
+`/stackgen:stackgen-sync` then drops its lock record. A hand-added
+`fnox-ciphertext` pre-commit entry, a gitleaks allowlist line naming
+`fnox.toml` and the `.gitignore` age lines are removed by hand too. Any value
+once committed, even as ciphertext, is rotated at its source.
+
+Full judgment: the `fnox` skill's references. The contract it cites is
+stackgen's secrets contract.

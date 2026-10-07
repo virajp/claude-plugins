@@ -183,10 +183,12 @@ judged against; a second secrets manager lands as a second pack in the same
 category, judged against the same clauses.
 
 One thing is worth knowing here rather than discovering later. The contract
-carries an **encrypt-into-git allowance** under four conditions, and `fnox`
-engages it — a pack storing nothing in the repository emits no scanner
-allowlist and claims no exemption, so a committed plaintext secrets file stays
-a finding whichever pack is pinned.
+splits secrets by environment: `fnox` serves **development** alone — the OS
+keychain by default, any single secret referencing a cloud store instead — CI
+takes its secrets from the forge, and staging and production from the cloud
+provider's store. No repo carries an encrypted secret, so no pack emits a
+scanner allowlist or claims an exemption, and a committed secrets file stays a
+finding whichever pack is pinned.
 
 The since-dissolved `devtools` plugin lost its secrets skill in the same
 landing — the second pack to retire its source skill on arrival. That plugin
@@ -345,8 +347,9 @@ an HTTPS API reached with an app id and secret, so it has no row on the
 per-binding table and no local form. And `secrets-store` shares the category
 noun `secrets-manager` with `capability-provider/fnox` on purpose — this one
 is the **runtime** store a deployed Worker or Container reads in staging and
-production, fnox the developer-machine and CI provider that injects on the
-way in, so a repo pins both and neither replaces the other. The reasoning is
+production, fnox the developer-machine provider that injects on the way in,
+and CI takes the forge's secrets, so a repo pins both and neither replaces the
+other. The reasoning is
 `docs/memory/decisions/2026-09-06-secrets-store-is-runtime-not-development.md`.
 
 Every landing that brings a service nothing already classifies mints its

@@ -10,13 +10,12 @@ has no state to wait for. Its `pack.yaml` declares `harness: n/a` for exactly
 that reason, and a repo pinning fnox composes no extra container.
 
 What fnox contributes to the harness is not a service but a **wrapper**: it
-sits outside every harness task, on the same boundary the secrets contract
-mandates for the application.
+sits outside every harness task on a developer's machine, on the same
+boundary the secrets contract mandates for the application.
 
 ```sh
 fnox exec -- mise run stack:up
 fnox exec -- mise run e2e:local
-fnox exec --profile staging -- mise run e2e:staging
 ```
 
 The wrapping is one level deep and belongs at the outermost invocation. The
@@ -24,39 +23,28 @@ tasks it wraps — including `stack:up` and whatever readiness gate it holds —
 are stackgen's local-stack contract's business, and nothing about them changes
 because fnox is present.
 
-## The development profile
+## Development only
 
-Every value the local stack needs is declared in
-`[profiles.development.secrets]`, encrypted like any other. They are
-throwaways — a database password nobody outside the machine can reach — and
-they are **still ciphertext**, because the pre-commit guard admits no
-plaintext in the file and cannot tell a throwaway from a real credential.
+Every value the local stack needs is declared in `fnox.toml` by name, and its
+value sits in the developer's keychain or behind a cloud reference. They are
+throwaways — a database password nobody outside the machine can reach.
 
-The corollary is worth stating: **a fresh clone needs an identity before the
-local stack will start.** Onboarding order is the age key first, then
-`mise run stack:up`. A joiner whose key has not yet been added to
-`recipients` cannot run anything, which is a clearer failure than a stack
-that starts with half its configuration missing — but it does mean the
-re-encrypt commit is a blocking step in someone's first hour, not a
-follow-up.
+A fresh clone runs as soon as the keychain is populated: the shipped
+`if_missing = "warn"` lets a task start with a missing entry reported rather
+than refused, so the first hour is `mise install`, `mise run setup:secrets`,
+then a `fnox set` per declared name.
 
 ## Tests need no manager
 
 A test reads the environment. The harness sets the variables it needs — a
 fixture, a compose file, a `.env` the runner loads — and never shells out to
 fnox. This is the property the contract's outranking rule buys, and it is the
-one to defend: the moment a test invokes the manager, the suite has a
-dependency on a decryption key and stops running for anyone who does not hold
-one.
+one to defend: the moment a test invokes the manager, the suite depends on a
+developer's keychain and stops running anywhere else.
 
 ## CI
 
-`FNOX_AGE_KEY` for the environment the job serves, set as that pipeline's own
-secret variable, and the same `fnox exec --profile <env> --` wrapper around
-the same task the developer runs. One definition, two callers — the CI
-workflow does not restate what the task does, per vwf's delivery-pipeline
-contract.
-
-There is no daemon on a runner, so every job resolves afresh. That costs
-nothing in encrypt-into-git mode and is the request-count line to watch in
-remote-reference mode — [cost shape](cost-shape.md).
+CI does not run fnox. The job runs **the same task** the developer runs, with
+the forge's own secret variables (GitHub or GitLab) already in its
+environment — one definition, two callers, and the CI workflow does not
+restate what the task does, per vwf's delivery-pipeline contract.

@@ -3,7 +3,7 @@ name: Cloudflare Vectorize
 axis: backing
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
+- cloud-provider/cloudflare@0.1.1
 - cloud-service/vectorize@0.1.0
 ---
 

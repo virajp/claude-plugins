@@ -11,7 +11,8 @@ tags: [ config, secrets ]
 
 > The authoritative inventory of every environment variable and secret the
 > system needs — names, purpose, issuer, and consumers. **No values**: values
-> live only in the secrets manager / deployment env and are injected at runtime.
+> live only in the secrets manager (development), the forge's secrets (CI) or
+> the cloud provider's secret store (staging, production), injected at runtime.
 > The injection mechanism (the decision) is [config](./conventions.md#config).
 
 <!-- Conformance example (blueprint-format 24). A worked, format-valid catalog:
@@ -73,14 +74,17 @@ secret is ever used or committed for local dev.
 
 ## Rotation
 
-Secrets are rotated at the issuer and updated in the secrets manager; no code
-change is needed (values are env-injected). `PAYMENTS_WEBHOOK_KEY` must be
-rotated in lock-step with the provider's webhook endpoint config.
+Secrets are rotated at the issuer and updated where each environment keeps
+them — the secrets manager, the forge's secrets, the cloud provider's secret
+store; no code change is needed (values are env-injected).
+`PAYMENTS_WEBHOOK_KEY` must be rotated in lock-step with the provider's webhook
+endpoint config.
 
 ## Adding a variable
 
 1. Obtain/create the value at the issuer.
-2. Store it in the secrets manager for each environment (dev/staging/prod).
+2. Store it in the secrets manager for development, the forge's secrets for CI,
+   and the cloud provider's secret store for staging and production.
 3. Wire it into the consuming project's config loading (realization — see
    `plan`).
 4. Add a row here — name, purpose, issuer, used-by, required, secret — **no

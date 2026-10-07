@@ -41,10 +41,12 @@ to the relevant anchors rather than repeating.
 ## Config {#config}
 
 <!-- The injection *mechanism* only (the decision): how configuration and secrets
-     reach each project — e.g. env vars from the deployment env, secrets from a
-     secrets manager, injected at runtime/build; nothing committed. The per-project
-     inventory of the variables themselves lives in environment.md — link it, do
-     not list variables here. Omit environment.md (and this anchor's inventory
+     reach each project — e.g. env vars from the deployment env; development
+     secrets from the secrets manager, CI's from the forge's secrets, staging
+     and production's from the cloud provider's secret store; injected at
+     runtime/build; nothing committed. The per-project inventory of the
+     variables themselves lives in environment.md — link it, do not list
+     variables here. Omit environment.md (and this anchor's inventory
      pointer) if the system has no external integration or secret. -->
 
 ## API conventions {#api}

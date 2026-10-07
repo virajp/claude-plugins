@@ -3,14 +3,16 @@
 **Two tools hold this product's secrets, and they hold different ones.**
 The repo's `capability-provider` pick — `capability-provider/fnox`, or
 whichever provider the repo chose when it was shaped — holds and injects
-the secrets a **developer's machine and CI** need, on the way in.
+the secrets a **developer's machine** needs, on the way in; CI takes its
+own from the forge (GitHub or GitLab).
 **Secrets Store holds the values a deployed Worker or Container reads in
 staging and production.** A repo pins both, on different axes, for
 different environments; neither replaces the other, and a sentence that
 treats one as the other is the mistake this component exists to prevent.
 
 The seam is where the secret is *consumed*. Something running on a laptop
-or in a pipeline consumes it as an environment variable the injector set;
+or in a pipeline consumes it as an environment variable the injector or
+the forge set;
 something running on Cloudflare consumes it through a binding the platform
 resolved. Same value, sometimes the same name, two entirely different read
 paths — and only the second one is this component's.
@@ -67,9 +69,7 @@ the block is identical
 ([Env vars and secrets](https://developers.cloudflare.com/containers/examples/env-vars-and-secrets/)).
 
 Neither `store_id` nor `secret_name` is a value. They are identifiers, and
-committing them commits nothing sensitive — which is the reason this
-component lands no ciphertext and the secrets contract's encrypt-into-git
-allowance has nothing to apply to here.
+committing them commits nothing sensitive.
 
 **The read is asynchronous and happens on the binding**, not on
 `process.env`:
@@ -124,9 +124,10 @@ has nothing to return to.
 The neutral contract this product's secrets owe is stackgen's secrets
 contract. This component satisfies part of it and
 does not satisfy the rest — which is the correct outcome for a runtime
-store, because the clauses about a developer's machine and a pipeline are
-the `capability-provider` pack's to answer. The walk is clause by clause
-in the `cloudflare-secrets-store` skill's
+store, because the clauses about a developer's machine are the
+`capability-provider` pack's to answer and a pipeline's are the
+forge's. The walk is clause by clause in the
+`cloudflare-secrets-store` skill's
 [service doctrine](skills/cloudflare-secrets-store/references/service-doctrine.md),
 including the one place the platform's model genuinely differs from the
 contract's cardinal rule, stated as a difference rather than explained
@@ -134,9 +135,9 @@ away.
 
 ## What this component does not cover
 
-- **A developer's secrets, and CI's.** Those are the repo's
-  `capability-provider` pick — `capability-provider/fnox` in a repo that
-  took the default. Nothing here holds them or injects them.
+- **A developer's secrets.** Those are the repo's `capability-provider`
+  pick — `capability-provider/fnox` in a repo that took the default.
+  CI's come from the forge. Nothing here holds them or injects them.
 - **TLS keys and certificates.** Those belong to the zone, not to an
   account secrets store.
 - **Which secrets the product has.** That is `docs/blueprint/environment.md`

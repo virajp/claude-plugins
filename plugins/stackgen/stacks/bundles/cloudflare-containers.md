@@ -3,7 +3,7 @@ name: Cloudflare Containers
 axis: deploy
 kind: cloud-provider
 components:
-- cloud-provider/cloudflare@0.1.0
+- cloud-provider/cloudflare@0.1.1
 - cloud-service/containers@0.2.1
 artifact: container-image
 ---
