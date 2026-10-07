@@ -32,5 +32,14 @@ overrides:
   # GHSA-ch52-4w7c-c8xp — via astro (site); first fixed version.
   "http-cache-semantics": "4.3.0"
 
+  # GHSA-238p-pmpm-9mq7 — via mermaid (site); first fixed version.
+  "katex": "0.18.2"
+
   # GHSA-f23m-r3pf-42rh, GHSA-r5fr-rjxr-66jc — via mermaid → dagre-d3-es (site).
   "lodash-es": "4.18.1"
+
+  # GHSA-wq5f-xc86-pv6w — via astro and wrangler → miniflare (site); first fixed version.
+  "sharp": "0.35.5"
+
+  # GHSA-68fv-2mgg-jv7q — via postcss, css-tree and magicast; first fixed version.
+  "source-map-js": "1.2.2"
