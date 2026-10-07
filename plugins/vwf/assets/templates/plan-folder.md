@@ -70,10 +70,11 @@ its version; one `LSP` row per language `/vwf:doctor`
 flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
 gate. That row is what `/vwf:execute`'s preflight reads instead of asking. The
 End an `all` run after landing row is always present: `yes` when the interview
-(item 18a) found the plan edits a plugin the run itself loads and the user
-chose to end there — `/vwf:execute all` then stops after this plan and reports
-"restart, then `/vwf:execute all`" — and `no` otherwise, written unasked when
-the plan touches no such plugin.>
+(item 18a) found the plan edits a plugin the run itself loads — one installed
+in the session that runs `/vwf:execute all`, which keeps running the stale copy
+until it restarts — and the user chose to end there — `/vwf:execute all` then
+stops after this plan and reports "restart, then `/vwf:execute all`" — and `no`
+otherwise, written unasked when the plan touches no such plugin.>
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt, and `run` is the only mode — a step the interview did not

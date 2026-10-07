@@ -13,9 +13,9 @@ it never reads a plan folder, a unit report or a Run log itself. Plain
 
 ## The loop
 
-Run it in a session that has done nothing else, as with any execute run: it
-cannot check that, so it trusts it. Each runner is the fresh context its plan
-runs in; the loop's own context grows only by the five-line return of each.
+Run it in a session that has done nothing else: it cannot check that, so it
+trusts it. Each runner is the fresh context its plan runs in; the loop's own
+context grows only by the five-line return of each.
 
 Each iteration, in order:
 

@@ -341,9 +341,11 @@ the landing answer, the after-landing steps each carrying `run` — a step not
 confirmed `run` is dropped — and the release intent per project the units
 touch — a release step recorded `run` is authorised by item 18's answer; the
 LSP rows come from §2. Item 18a writes the End an `all` run after landing row:
-asked only when the units' Owns include a plugin the run itself loads — on
-yes, `/vwf:execute all` ends after this plan and reports "restart, then
-`/vwf:execute all`" — and written `no` unasked otherwise.
+asked only when the units' Owns include a plugin the run itself loads — one
+installed in the session that runs `/vwf:execute all`, which keeps running the
+stale copy until it restarts; on yes, `/vwf:execute all` ends after this plan
+and reports "restart, then `/vwf:execute all`" — and written `no` unasked
+otherwise.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
