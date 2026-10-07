@@ -155,9 +155,11 @@ release; `COMPLETE` — landed, `archive` is the verb; no row — no row. A seco
 checkout. Its detail line normally names the run's worktree —
 `RUNNING since <ts> in <path>` — but whether it does or not, derive the run's
 worktree from `git worktree list --porcelain`: a listed path whose basename
-is the folder's basename, or whose branch is named for it. When such a
-worktree is listed, **refuse**: print the path and the one line the user runs
-to prove the run is gone — `git worktree remove <path>`. Note that git
+is the folder's basename, or whose branch is named for it, or which is the
+path the detail line names — a run under `/vwf:execute all`'s shared
+worktree sits in an `all-<date>-<HHMM>` worktree named for neither. When
+such a worktree is listed, **refuse**: print the path and the one line the
+user runs to prove the run is gone — `git worktree remove <path>`. Note that git
 refuses to remove a dirty worktree, so nothing uncommitted is lost silently,
 and that a live session in another window is exactly what this refusal
 protects. The verb never removes a worktree.

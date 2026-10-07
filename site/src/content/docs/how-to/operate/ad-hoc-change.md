@@ -206,6 +206,17 @@ exactly as a named run would, waits for its one-line result, and picks again —
 one plan at a time, until nothing is runnable or a plan stops. It ends with a
 table, a row per plan, the reason it stopped, and the command that continues.
 
+Before its first plan, `all` asks you its **run-level questions** once, one at a
+time, each a yes or no — questions about the run of several plans, which no
+single folder can answer: whether every plan runs in **one shared worktree**,
+each landing in turn; whether an after-landing step several plans record runs
+**once**, after the last plan that landed; whether each release a plan records
+is **held** and run once at the end; and, for each plan whose Consent says not
+to merge, whether to **land it this run**. Each is asked only when it applies,
+the shared worktree always. A yes is an override for this run only, written to
+each folder's Run log; a folder's Consent block never changes. After the last
+answer it asks nothing until it ends.
+
 The fresh context is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. Under
 `all`, each runner is that fresh context, and your session keeps only the
@@ -227,9 +238,10 @@ is never taken over, however long it has sat there; if the session that claimed
 it is gone, set the row back to `APPROVED` by hand in a commit on the
 integration branch, and the plan is runnable again.
 
-From there you are not needed. It creates one worktree, runs `/vwf:doctor` and
-the plan's gate once as a preflight (a red line here is the branch's problem,
-not the plan's, and it says so rather than fixing it), then works wave by wave:
+From there you are not needed. It creates one worktree (or, under `all` with the
+shared worktree answered yes, reuses the run's), runs `/vwf:doctor` and the
+plan's gate once as a preflight (a red line here is the branch's problem, not
+the plan's, and it says so rather than fixing it), then works wave by wave:
 every unit in a wave — all `edit` units, in a change plan — dispatched at once
 as its own subagent, a reviewer over the wave's diff with at most two rounds of
 findings, the gate again, and one commit per green unit. Each of those commits

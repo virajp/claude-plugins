@@ -257,12 +257,15 @@ runnable plan with the lowest `Priority` value from that table, of either kind,
 and runs it, running each after-landing step the plan recorded `run` and asking
 nothing at run time. `/vwf:execute all` runs every runnable plan in turn,
 highest priority first, each in its own `execute-runner` subagent, and stops at
-the first plan that stops — keeping one line per plan in the session. Beside
-both sits `/vwf:backlog`, the sole writer of the backlog project on the repo's
-forge — a GitHub Project named for the base repo, the prioritised list of work
-that cannot be picked up now, which every planning and landing command calls to
-move an item. It names **no** technology — no language, no framework, no cloud —
-which is what lets the rest of this list exist. `vwf@virajp-plugins`
+the first plan that stops — keeping one line per plan in the session, and asking
+its run-level questions (one shared worktree, deduped after-landing steps, one
+release at the end, landing a plan recorded not to merge) once, before the first
+plan. Beside both sits `/vwf:backlog`, the sole writer of the backlog project on
+the repo's forge — a GitHub Project named for the base repo, the prioritised
+list of work that cannot be picked up now, which every planning and landing
+command calls to move an item. It names **no** technology — no language, no
+framework, no cloud — which is what lets the rest of this list exist.
+`vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

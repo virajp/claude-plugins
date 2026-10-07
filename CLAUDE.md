@@ -61,7 +61,8 @@ row when no gap is open; leaving it live when one is, archived once you ask) —
 each plan folder carries this repo's gate lines, and `mise run p:plugins:local`
 and `/release` as after-landing steps, each recorded `run` at the interview or
 dropped: `/vwf:execute` runs them on a green landing without a prompt, and asks
-nothing at run time — every stop is a report with its resume command.
+nothing at run time, save the run-level questions `/vwf:execute all` asks once,
+before its first plan — every stop is a report with its resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
