@@ -1,6 +1,6 @@
 {
   "name": "@virajp.dev/claude-plugins",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "@virajp.dev/claude-plugins — installs and uninstalls the virajp-plugins plugins for Claude Code. The plugins install through Claude Code's own marketplace commands",
   "keywords": [
     "claude",
