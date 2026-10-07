@@ -6,6 +6,9 @@
 · **Extends** the `secrets-manager`-under-two-types placement recorded in
 [`2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md`](./2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md)
 
+**Superseded in part** — CI no longer takes secrets from fnox — by
+[`2026-10-07-fnox-development-only.md`](./2026-10-07-fnox-development-only.md).
+
 ## What was decided before
 
 `secrets-manager` has been a `capability-provider` category since the packs that

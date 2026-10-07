@@ -116,26 +116,28 @@ not this.
 capability has a neutral contract — what any provider must guarantee — beside
 the providers that realize it. Vendor-free: `postgres` for the datastore, `oidc`
 for identity, `otel-lgtm` for observability, `temporal` for orchestration,
-`fnox` for secrets. That is the **developer-machine and CI** provider; the
-runtime secrets a deployed Worker or Container reads in staging and production
-are a backing pin of their own, Cloudflare's being `cloudflare-secrets-store`,
-and a repo pins both. The **audit store** is the one capability whose providers
-ride the datastore you already pinned rather than composing an engine of their
-own — `audit-store-postgres` on Postgres, `audit-store-d1` on D1 — so it is a
-pin you make beside the datastore, never instead of it. The **workspace** is the
-odd one on this axis: `notion` pins the place your team's docs, specs and
-tickets already live, and what it lands is the wiring that lets the agent reach
-them — no part of the product runs against it, which is why the category
-realizes no capability at all. Managed: a cloud's own services — `gcp` bringing
-Firestore, Cloud SQL and the Firebase services, and `cloudflare` bringing
-Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines, Analytics Engine, Durable
-Objects, Workflows, Queues, Workers AI, AI Gateway, AI Search, Browser
-Rendering, Images, Realtime, Email Service and Secrets Store. Each managed
-service is its own bundle, so they are pinned side by side rather than chosen
-between. Object storage is the one to know about — **it has no vendor-free
-provider by design**, because every object store belongs to a cloud, so its
-contract states the requirement and points at whichever cloud you have pinned
-rather than offering a neutral one.
+`fnox` for secrets. That is the **development-only** provider: a developer's
+secrets sit in the OS keychain, or in a cloud store fnox references, and never
+in the repo, encrypted or not. CI takes its secrets from the forge (GitHub or
+GitLab), and the runtime secrets a deployed Worker or Container reads in staging
+and production are a backing pin of their own, Cloudflare's being
+`cloudflare-secrets-store`, so a repo pins both. The **audit store** is the one
+capability whose providers ride the datastore you already pinned rather than
+composing an engine of their own — `audit-store-postgres` on Postgres,
+`audit-store-d1` on D1 — so it is a pin you make beside the datastore, never
+instead of it. The **workspace** is the odd one on this axis: `notion` pins the
+place your team's docs, specs and tickets already live, and what it lands is the
+wiring that lets the agent reach them — no part of the product runs against it,
+which is why the category realizes no capability at all. Managed: a cloud's own
+services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
+`cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
+Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
+Search, Browser Rendering, Images, Realtime, Email Service and Secrets Store.
+Each managed service is its own bundle, so they are pinned side by side rather
+than chosen between. Object storage is the one to know about — **it has no
+vendor-free provider by design**, because every object store belongs to a cloud,
+so its contract states the requirement and points at whichever cloud you have
+pinned rather than offering a neutral one.
 
 **The deploy axis has a provider-neutral default that is a real answer**, not a
 placeholder: `deploy-target/container-image` is an OCI image on any registry and

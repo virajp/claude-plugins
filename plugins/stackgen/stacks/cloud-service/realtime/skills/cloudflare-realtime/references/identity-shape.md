@@ -52,9 +52,9 @@ an environment variable at the process boundary and catalogued by name,
 never by value, in `docs/blueprint/environment.md`. In a hosted staging
 or production environment the runtime home is
 `cloud-service/secrets-store`, whose doctrine that component owns; on a
-laptop and in CI it is whatever `capability-provider/` the repo already
-pinned. This component states which secret exists, not how the
-environment resolves it.
+laptop it is whatever `capability-provider/` the repo already pinned,
+and in CI the forge's own secret store. This component states which
+secret exists, not how the environment resolves it.
 
 ## The account token permission
 

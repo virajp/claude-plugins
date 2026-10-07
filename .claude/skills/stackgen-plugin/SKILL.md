@@ -2,7 +2,7 @@
 name: stackgen-plugin
 description: The stackgen plugin's own shape — the dispatch rule, the pack and
   bundle model, the kind vocabulary, where a materialization lands and the
-  consent tiers around it, the two scripts it ships as pack payloads, and the
+  consent tiers around it, the one script it ships as a pack payload, and the
   one contract vwf holds it to. Auto-applies when editing anything under
   plugins/stackgen/.
 user-invocable: false
@@ -403,21 +403,20 @@ CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
   keeps that repo's own `.claude/stackgen/lock.yaml`, so two members pinning the
   same slug hold two independent materializations.
 
-## Two scripts that are not plugin hooks
+## A script that is not a plugin hook
 
-Two hook scripts ship here as **pack payloads**, copied into the target repo by
-a materialization rather than discovered from a `hooks/hooks.json`:
+One hook script ships here as a **pack payload**, copied into the target repo by
+a materialization rather than discovered from a `hooks/hooks.json`: the
+`package-manager/pnpm` pack's npm→pnpm/bun normalizer (`PreToolUse` on `Bash`,
+via `updatedInput`), which moved here from the retired `typescript` plugin with
+the package manager it rewrites for — a JS/TS rewrite has no business in vwf.
+The `capability-provider/fnox` pack's ciphertext guard was the second, and was
+deleted on 2026-10-07 with the encrypted mode it gated.
 
-- the `capability-provider/fnox` pack's git pre-commit gate;
-- the `package-manager/pnpm` pack's npm→pnpm/bun normalizer (`PreToolUse` on
-  `Bash`, via `updatedInput`), which moved here from the retired `typescript`
-  plugin with the package manager it rewrites for — a JS/TS rewrite has no
-  business in vwf.
-
-Both are still gated here, as payload rather than as hooks: rule 11 asserts each
+It is still gated here, as payload rather than as a hook: rule 11 asserts the
 script's exec bit and its shebang; nothing lints the body. What no rule reads is
-the `hooks.yaml` beside them — `checkHookScripts`, the older rule, follows only
-a plugin's own `hooks/hooks.json`, so the event and matcher a payload hook is
+the `hooks.yaml` beside it — `checkHookScripts`, the older rule, follows only a
+plugin's own `hooks/hooks.json`, so the event and matcher a payload hook is
 wired to are asserted by nothing in this repo.
 `mise run p:plugins:npm-normalize-test` covers the normalizer's behaviour: it
 table-tests the script through the **system sed** for both package managers,

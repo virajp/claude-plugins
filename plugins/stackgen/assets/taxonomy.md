@@ -169,8 +169,8 @@ line it up against a blob store or ask it to satisfy a blob-storage
 contract it cannot meet. And `secrets-manager` now sits under both
 `cloud-service` and `capability-provider` on purpose — the first names
 the runtime secrets binding a hosted service reads, the second the
-developer-machine and CI secrets provider; they share a noun and neither
-replaces the other.
+development-only secrets provider (CI takes its secrets from the forge);
+they share a noun and neither replaces the other.
 
 ## Bundles — how types compose
 
