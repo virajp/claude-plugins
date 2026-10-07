@@ -1,7 +1,7 @@
 name: fnox
-summary: The local-first secrets manager — you hold them, encrypted into git
-  or referenced in your own cloud, and onboarding is a public key plus a
-  re-encrypt.
+summary: The development-only secrets manager — values live in the OS
+  keychain or behind a reference into your own cloud store, and nothing
+  secret is ever in the repo.
 version: 1.2.1
 type: capability-provider
 category: secrets-manager

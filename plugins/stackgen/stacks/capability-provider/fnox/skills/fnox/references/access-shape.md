@@ -12,41 +12,30 @@ The seam is one line in the task runner:
 
 ```sh
 fnox exec -- mise run dev
-fnox exec --profile production -- mise run deploy
 ```
 
 Everything the product does downstream reads `process.env` — including its
 tests, which therefore need no secrets manager at all. A test that shells out
 to fnox has moved the boundary into the product.
 
-## The identity, and where it must not be
+## Which environment, which source
 
-The age identity is the one thing that must never be in the repository. Its
-resolution order, highest first:
+fnox serves the **development** environment alone. CI reads the forge's own
+secret variables (GitHub or GitLab) and runs the same task without fnox;
+staging and production read the cloud provider's store and run neither mise
+nor fnox. So there is no deploy-time `fnox exec`, no production profile and
+no fnox credential on a runner.
 
-1. `FNOX_AGE_KEY` — the key content inline. This is the CI path.
-2. An `identity` resolved from another provider in the config.
-3. A provider `key_file` path.
-4. `~/.config/fnox/age.txt` — the default, outside any working tree.
+## The credentials fnox itself uses
 
-**Leave it at 1 or 4.** A `key_file` pointing inside the working tree is the
-mistake that voids the scheme: what makes committed ciphertext safe is that
-the key is not committed beside it. The `.gitignore` block in
-[contract satisfaction](contract-satisfaction.md) is the backstop, and the
-scanner allowlist deliberately does not cover any of those paths — a hit on
-an identity is always real.
+**The keychain** needs none beyond the developer's own login session: values
+sit in the OS keychain under the shipped provider's `service` and `prefix`,
+and `fnox.toml` holds only the entry names.
 
-## CI credentials
-
-One `FNOX_AGE_KEY` per environment, set as that pipeline's own secret
-variable, matching the recipient set declared for that profile. Sharing one
-key across environments is what makes the staging pipeline able to decrypt
-production, and nothing in the config announces it.
-
-In remote-reference mode the pipeline authenticates to the referenced manager
-instead — an IAM role, a workload identity, an OIDC federation — and fnox
-carries no credential of its own. That is the better shape where it is
-available, because there is then no key to rotate on offboarding.
+**A cloud reference** authenticates the way that store's own CLI does — the
+developer's cloud login, an SSO session, a vault token in their shell. fnox
+carries no credential of its own, and none is ever written into the repo.
+Revoking that login is how a developer's cloud-referenced access ends.
 
 ## What `environment.md` records
 
@@ -55,22 +44,20 @@ true whichever tool is picked, and `fnox list` makes it cheap
 ([contract satisfaction](contract-satisfaction.md), clause 4).
 
 The **issuer** is the one place a real product name belongs, because it is a
-fact about the world rather than a stack decision. So an entry reads
-`fnox (age, committed)` or `fnox → AWS Secrets Manager`, and the distinction
-matters: it tells a reader which secrets are permanent in the history and
-which are not, which is exactly the split
-[permanent ciphertext](permanent-ciphertext.md) turns on.
+fact about the world rather than a stack decision. So a development entry
+reads `fnox (keychain)` or `fnox → <cloud store>` — for example
+`fnox → AWS Secrets Manager` — and the CI and deployed entries name the forge
+and the cloud provider's store respectively.
 
 Blueprint prose still says **the secrets manager** and names nothing.
 
 ## Local and throwaway credentials
 
-Development-profile values are throwaways pointing at the local stack, and
-they are **still encrypted** — the guard cannot tell a throwaway from a real
-credential, so the file admits no plaintext at all. Non-secret configuration
-that merely varies by environment (a base URL, a log level, a port) is not a
-secret and does not belong in `fnox.toml`; it goes in the mise env, where it
-is readable without a key.
+Development values are throwaways pointing at the local stack, and they are
+**still declared by name only** — `fnox.toml` admits no value, throwaway or
+not. Non-secret configuration that merely varies by environment (a base URL,
+a log level, a port) is not a secret and does not belong in `fnox.toml`; it
+goes in the mise env.
 
 That split is worth holding: a secrets file containing things that are not
 secrets is a file people stop treating carefully.

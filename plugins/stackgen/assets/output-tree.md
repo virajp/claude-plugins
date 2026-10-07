@@ -274,9 +274,9 @@ plain reason rather than an oversight: no `cloud-provider` or
 theirs to compose. `cloud-service/workers-static-assets` is the first that
 does, and is what put them on it.
 
-**Precedent, and its limit.** The `capability-provider/fnox` and
-`package-manager/pnpm` packs already ship hook scripts copied into a target
-repo, so packs already write outside `.claude/`. This generalizes that from
+**Precedent, and its limit.** The `package-manager/pnpm` pack already ships
+a hook script copied into a target repo, so packs already write outside
+`.claude/`. This generalizes that from
 `hooks/` to a declared tree, the same move `.mcp.json` got at Wave D, and for
 the same reason: the alternative is that the one thing which writes a repo's
 config lives in a plugin that exists for no other reason.
