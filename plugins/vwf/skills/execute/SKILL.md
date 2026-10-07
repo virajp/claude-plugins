@@ -2,7 +2,8 @@
 name: execute
 description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   a change plan from /vwf:change-plan — to completion in a dedicated worktree,
-  in a fresh session. The one executor for every plan folder, reading each
+  in a fresh context — a fresh session, or a runner that `all` dispatches.
+  The one executor for every plan folder, reading each
   unit's Kind from the Units table; a code unit runs TDD, coverage and its
   commit one unit at a time, the edit units of a wave are dispatched together
   and judged by the wave review, and a review row runs the code and security
@@ -15,9 +16,10 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   It asks the user nothing at run time — every answer is in the folder.
   Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter asks
   plan-management for the runnable plan of highest priority in
-  docs/plans/index.md, of either kind. Requires an approved plan folder in
-  docs/plans/.
-argument-hint: "<plan-folder, its index.md, or next>"
+  docs/plans/index.md, of either kind — or /vwf:execute all, which runs every
+  runnable plan in turn, highest priority first, each in its own runner
+  subagent, until one stops. Requires an approved plan folder in docs/plans/.
+argument-hint: "<plan-folder, its index.md, next, or all>"
 model: opus
 
 disable-model-invocation: true
@@ -55,8 +57,9 @@ rules below do not decide, the run reports what is missing and stops — it
 never offers a choice, waits for a yes, or asks how to proceed. A fix goes
 into the folder, and the person re-runs `/vwf:execute <folder>`.
 
-Run it in a session that has done nothing else. It cannot check that, so the
-plan's launch line says it and this skill trusts it.
+Run it in a fresh context: a fresh session, or a runner that `all`
+dispatches. It cannot check that, so the plan's launch line says it and this
+skill trusts it.
 
 Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
 rules, isolate all work in one worktree, document what you can't resolve, and
@@ -65,7 +68,7 @@ land only what the plan's Consent block already authorised.
 ## References
 
 The rules that hold on every run — the halts, the pause conditions, the
-autonomous rules — stay here. The three pipelines and three conditional
+autonomous rules — stay here. The three pipelines and four conditional
 branches load on demand, each named where it applies — never upfront.
 
 | Reference                                                   | When to read                                                                                           |
@@ -76,10 +79,21 @@ branches load on demand, each named where it applies — never upfront.
 | [Blocking and resume](references/blocking.md)               | On failure — what a failure skips, what it blocks, how a re-run picks up                               |
 | [The `code`-unit preflight](references/preflight.md)        | Setup steps 2 and 3, when the Units table holds a `code` unit — the LSP rule and the conventions fetch |
 | [Acceptance & UX](references/acceptance-and-ux.md)          | when `covers:` is present and the acceptance or ux stage returns short of a pass                       |
+| [`all` and runner mode](references/all.md)                  | Resolve, when `$ARGUMENTS` is `all` — and when you are an `execute-runner` handed one folder           |
 
 ## Halt Conditions
 
 ### 1. Resolve and refuse early
+
+**`all`.** When `$ARGUMENTS` is `all`, this session is the loop, not an
+orchestrator: follow [`all` and runner mode](references/all.md) and nothing
+below. It picks with `plan-management next`, dispatches one `execute-runner`
+per pick — handed the folder and this file's absolute path — waits for its
+five-line return, and repeats until nothing is runnable, a runner returns
+`STOPPED`, a plan's return reads `ENDS RUN: yes`, or a cap directive has
+reached the session; then it prints one table and the stop reason. A runner
+reads this file and runs it for its one folder, in that reference's *Runner
+mode* — as if that folder had been named here.
 
 **`next`.** When `$ARGUMENTS` is `next`, invoke `plan-management next` — the
 pick is that skill's, per *Reading the queue* in
@@ -847,8 +861,8 @@ here — for rows whose `Requires` names the folder just completed. For each one
 now unblocked (`plan-management resolve <that folder>` returns *runnable*, per
 the contract's *Resolution* in
 `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`),
-print its launch line, `/vwf:execute <next-folder>`, for a fresh session —
-chained plans land one focused run at a time — and launch nothing.
+print its launch line, `/vwf:execute <next-folder>`, for a fresh context: a
+fresh session, or a runner that `all` dispatches — and launch nothing.
 
 ## After landing — every step runs as the plan recorded it
 
