@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-05 by the user
+ARCHIVED 2026-10-07 — not run; was APPROVED
 
 ## Consent
 

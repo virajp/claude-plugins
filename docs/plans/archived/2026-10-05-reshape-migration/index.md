@@ -2,7 +2,7 @@
 type: vwf-change-plan
 title: vwf setup reshape migrates stackgen-v2.0.0 repos onto the template layout
 requires: [ docs/plans/2026-10-05-vwf-callers-on-templates ]
-backlog: [ B55 ]
+backlog: []
 backlog_pieces: []
 ---
 
@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-05 by the user
+ARCHIVED 2026-10-07 — not run; was APPROVED
 
 ## Consent
 
