@@ -206,6 +206,10 @@ never commits. A unit deletes with plain `rm`, never `git rm`. A unit never runs
   `/vwf:execute next`; the index never rides a run branch, so it is left for a
   hand edit on the integration branch.
 
+All three were closed by hand on 2026-10-07 after the landing: U3's definition
+was confirmed by the user and written into `plan/SKILL.md` and the plan-folder
+template; the clause was removed from `all.md`; the index intro names `all`.
+
 ## Run log
 
 | Wave | Unit         | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                | Commit   |
