@@ -164,11 +164,13 @@ table says why.
       then `/vwf:execute all`". When the Owns touch no such plugin the row is
       written `no`, unasked.
 
-The executor asks nothing at run time — it follows the plan, and only a runtime
-stop ends a run. So the interview is not done while any question the run would
-otherwise raise is unanswered: every Consent row carries an answer, every
-after-landing step reads `run`, and every decision a unit or the executor
-would otherwise have to pause on is a ruling in the plan.
+The executor asks nothing at run time — every answer is in the folder, save
+the run-level questions /vwf:execute all asks once, before its first plan. It
+follows the plan, and only a runtime stop ends a run. So the interview is not
+done while any question the run would otherwise raise is unanswered: every
+Consent row carries an answer, every after-landing step reads `run`, and
+every decision a unit or the executor would otherwise have to pause on is a
+ruling in the plan.
 
 ## F. Parked
 

@@ -72,12 +72,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                      | Kind | Owns                                                                                                                                                                       | Depends on | Status  | Commit   |
-| -- | ---- | ------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
-| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                            | —          | green   | a1ab74f0 |
-| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                     | —          | green   |          |
-| U3 | 2    | [03-docs.md](03-docs.md)       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all-overrides.md` (new) | U1, U2     | pending |          |
-| U4 | 3    | [04-gates.md](04-gates.md)     | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                      | U3         | pending |          |
+| Id | Wave | Unit file                      | Kind | Owns                                                                                                                                                                                                                                                                                                                            | Depends on | Status  | Commit   |
+| -- | ---- | ------------------------------ | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                                                                                                                                                                                 | —          | green   | a1ab74f0 |
+| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                                                                                                                                                                          | —          | green   | b1db57ed |
+| U3 | 2    | [03-docs.md](03-docs.md)       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all-overrides.md` (new), widened: `plugins/vwf/skills/plan-management/SKILL.md` (unclaim worktree lookup), `plugins/vwf/assets/plan-interview.md` (the asks-nothing passage) | U1, U2     | green   |          |
+| U4 | 3    | [04-gates.md](04-gates.md)     | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                                                                                                                                                                           | U3         | pending |          |
 
 ## Shared-file rule
 
@@ -146,6 +146,23 @@ never commits. A unit deletes with plain `rm`, never `git rm`. A unit never runs
 
 none
 
+## Gaps surfaced during execution
+
+- **G1 (plan hole, U1)** — O2 says the loop's exit removes the shared worktree;
+  a run that ends on `STOPPED` keeps it, since the stopped plan's resume runs in
+  the worktree its status line names. Assumption: removed on every exit except a
+  `STOPPED` one. Close by confirming or amending O2.
+- **G2 (plan hole, U1)** — "release step" is undefined in O4. Assumption: any
+  step that publishes — a tag, a package, a deploy, `/release`. Held releases
+  run only when no stop came first.
+- **G3 (Owns widened, R1 rule 5)** —
+  `plugins/vwf/skills/plan-management/SKILL.md`: `unclaim` finds a run's
+  worktree by folder basename or branch, so it misses an `all-<date>-<HHMM>`
+  shared worktree. Handed to U3.
+- **G4 (Owns widened, R1 rule 5)** — `plugins/vwf/assets/plan-interview.md:167`:
+  "the executor asks nothing at run time" is unqualified now that `all` asks its
+  run-level questions. Handed to U3.
+
 ## Run log
 
 | Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Commit |
@@ -157,6 +174,12 @@ none
 | 1    | U2        | opus  | 2     | green       | aligned Overrides block to all.md literal lines and DETAIL shape; removal left to all.md                                                                                                                                                                                                                                                                                                                                                                             | —      |
 | 1    | U1        | opus  | 2     | green       | refresh = plain git merge of the integration branch in the clean shared worktree (conflict = hard halt); exit removal = plain git worktree remove, asks nothing; all.md:119 reworded; STOPPED exception made explicit; O5 lists all no-merge plans first                                                                                                                                                                                                             | —      |
 | 1    | R1        | opus  | 2     | findings(1) | 8→1 converging; round-1 items resolved; contested (cap 2): SKILL.md:543 [U1] the override: Run log row instruction sits inside the shared-worktree paragraph only (all.md:72 and runner step 5 cover it). CONTRACT clean, RULINGS clean, orchestrator gate clean                                                                                                                                                                                                     | —      |
+| 1    | gate      | —     | 1     | green       | 7 wave-gate lines green (code:precommit green on the second pass, after the formatter re-padded the run log); no UNRESOLVED. GAP: U3 Owns widened to plan-management/SKILL.md and assets/plan-interview.md per R1 rule 5 (G3, G4)                                                                                                                                                                                                                                    | —      |
+| 2    | U3        | opus  | 1     | green       | manual, readme, CLAUDE.md, vwf-plugin skill, decision record; G3 unclaim also matches the status-line worktree path; G4 plan-interview qualified. DECIDED: single-repo.md, sessions-and-handoff.md, ci-and-releases.md left — they describe one run                                                                                                                                                                                                                  | —      |
+| 2    | R2        | opus  | 1     | findings(4) | plan-interview.md:170 111-char line not re-folded; skills-and-agents.md:36 override clause runs into the report sentence; ci-and-releases.md:96 and single-repo.md:315 name all but omit deduped steps / shared worktree. CONTRACT clean, RULINGS clean                                                                                                                                                                                                              | —      |
+| 2    | U3        | opus  | 2     | green       | 4 R2 findings fixed; DECIDED: release hold in ci-and-releases.md conditioned on the one-release answer, per all.md                                                                                                                                                                                                                                                                                                                                                   | —      |
+| 2    | R2        | opus  | 2     | findings(1) | 4→1 converging; round-1 items resolved; contested (cap 2, style): plan-interview.md:168 /vwf:execute all without backticks. CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                                                            | —      |
+| 2    | gate      | —     | 1     | green       | 7 wave-gate lines green (code:precommit green on the second pass after the dprint reflow of ci-and-releases.md); no UNRESOLVED                                                                                                                                                                                                                                                                                                                                       | —      |
 
 ## Launch
 

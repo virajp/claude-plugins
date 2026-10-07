@@ -2445,25 +2445,48 @@ the release that wrote it, or its slice is re-run through `/vwf:plan` — the
 stamp-heal drops what already conforms.
 
 `all` runs the whole queue, one plan at a time. The session that typed it is
-**the loop**: it picks with `next`, prints one line — the folder, its `Kind`,
-its priority — and dispatches one `execute-runner` subagent, handed the folder
-and the path of this skill's own file, which the runner reads and runs for that
-one folder exactly as a named run would, asking nothing. Each runner is the
-fresh context its plan runs in, and returns five lines — `PLAN:`, `OUTCOME:`
-(`COMPLETE`, `COMPLETE with gaps` or `STOPPED`), `DETAIL:` (the folder's Status
-block detail line), `RESUME:` and `ENDS RUN:` — so the loop's context grows by
-one row per plan. Runners never run in parallel, and nothing is skipped past:
-the loop ends at the first `STOPPED`; after a plan whose Consent row End an
-`all` run after landing reads `yes`, because it edited a plugin the loop's
-session has loaded and the next plan must start in a restarted one; once a
-resource-cap directive has reached the session; or when nothing is runnable. It
-ends by printing one table, a row per plan, the stop reason, and the one command
-that continues — the stopped plan's `/vwf:execute <folder>`, or
-`/vwf:execute all` in a restarted session. A reply that is not those five lines
-is recorded `STOPPED`, never re-dispatched. Plain `/vwf:execute <folder>` and
-`next` are unchanged. Under `all` the subagents sit one layer deeper — the
-runner at one, its units and reviewers at two, the docs-sync surveyor at three —
-which is the default nesting limit.
+**the loop**. Before its first plan it asks the **run-level questions** once,
+one per turn, each a yes or no — questions about the run of several plans, which
+no single folder can answer — then nothing more until it ends:
+
+- **One shared worktree** — always asked: every plan runs in one worktree on
+  branch `all-<date>-<HHMM>`, brought up to date from the integration branch
+  before each plan, each plan landing in turn while the worktree is kept; the
+  exit removes it, unless the run ends on a `STOPPED` plan, whose resume runs
+  there.
+- **Deduped after-landing steps** — asked when two or more plans the loop will
+  reach record the same step command `run`: it runs once, after the last plan
+  that landed, on an early stop too.
+- **One release at the end** — asked when a plan records a release step `run`
+  (anything that publishes — a tag, a package, a deploy, `/release`): each is
+  held and runs once after the last plan; on an early stop it stays held and the
+  exit lists its command.
+- **Landing** — asked once per plan whose Consent records merge `no`: land it
+  this run? A no leaves it to stop at its landing, which ends the run.
+
+Each yes is an **override** for this run only: the loop hands it to each runner
+in its dispatch prompt, the runner writes it as one `override:` row in that
+folder's Run log, and no folder's Consent block changes. A no leaves the plans'
+steps as recorded. Then it picks with `next`, prints one line — the folder, its
+`Kind`, its priority — and dispatches one `execute-runner` subagent, handed the
+folder, the path of this skill's own file and that folder's overrides, which the
+runner reads and runs for that one folder exactly as a named run would, asking
+nothing. Each runner is the fresh context its plan runs in, and returns five
+lines — `PLAN:`, `OUTCOME:` (`COMPLETE`, `COMPLETE with gaps` or `STOPPED`),
+`DETAIL:` (the folder's Status block detail line), `RESUME:` and `ENDS RUN:` —
+so the loop's context grows by one row per plan. Runners never run in parallel,
+and nothing is skipped past: the loop ends at the first `STOPPED`; after a plan
+whose Consent row End an `all` run after landing reads `yes`, because it edited
+a plugin the loop's session has loaded and the next plan must start in a
+restarted one; once a resource-cap directive has reached the session; or when
+nothing is runnable. It ends by running what the overrides deferred, from the
+main checkout, then printing one table, a row per plan, the stop reason, a line
+per deferred step, and the one command that continues — the stopped plan's
+`/vwf:execute <folder>`, or `/vwf:execute all` in a restarted session. A reply
+that is not those five lines is recorded `STOPPED`, never re-dispatched. Plain
+`/vwf:execute <folder>` and `next` are unchanged. Under `all` the subagents sit
+one layer deeper — the runner at one, its units and reviewers at two, the
+docs-sync surveyor at three — which is the default nesting limit.
 
 The first thing it does, named or picked, is **claim the row**: the folder's row
 is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
@@ -2537,7 +2560,9 @@ What it does, by rule:
 - **One plan, one worktree.** Isolates all work in a dedicated git worktree and
   commits every unit itself — the folder's Run log rows, Units table cells and
   gap section ride the same commits. It merges only at the landing, per the
-  plan's consent. No unit gets a worktree of its own.
+  plan's consent. No unit gets a worktree of its own. Under `/vwf:execute all`
+  with the shared worktree answered yes, the plans share one instead, each
+  landing in turn.
 - **Chain order enforced.** A plan whose `requires:` prerequisites haven't
   landed — a cycle plan's covered docs stamped `implementation: complete`, a
   change plan's row `COMPLETE` or its folder archived — halts with the plan to
@@ -2651,12 +2676,13 @@ inline** — every edit is a subagent's, so the session's context stays the size
 of the reports rather than the size of the diff.
 
 It **asks nothing at run time** — every answer it needs was recorded by the
-planner. It **stops** mid-run only on: a hard halt (no plan, a missing blueprint
-for a covered slice, a missing target repo — named with its clone command — a
-test harness that can't run when a `code` unit is planned, an unresolvable git
-conflict); a stage subagent dying twice on the same unit; a **resource cap** —
-context > 65%, 5-hour > 90%, or 7-day > 80% — where it writes the pending Run
-log rows, commits what is green, sets the status to
+planner, save the run-level questions `/vwf:execute all` asks once, before its
+first plan. It **stops** mid-run only on: a hard halt (no plan, a missing
+blueprint for a covered slice, a missing target repo — named with its clone
+command — a test harness that can't run when a `code` unit is planned, an
+unresolvable git conflict); a stage subagent dying twice on the same unit; a
+**resource cap** — context > 65%, 5-hour > 90%, or 7-day > 80% — where it writes
+the pending Run log rows, commits what is green, sets the status to
 `RUNNING — paused at unit <n> for context`, hands off and stops with the launch
 line (`/vwf:recall next` surfaces it; you re-run `/vwf:execute <folder>` in a
 fresh session — the skill is user-only, so nothing launches it for you); a gap

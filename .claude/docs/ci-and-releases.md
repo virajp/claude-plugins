@@ -95,11 +95,15 @@ mise run p:plugins:release                                 → creates + pushes 
 The third line is the **local half** of a release: it publishes nothing, commits
 nothing and cuts no tag. `/vwf:execute` — the folder named, `next`, or each plan
 `all` runs — runs it as the plan folder's after-landing step, recorded `run` at
-the interview: it runs on a green landing without a prompt — and the author's
-next **restarted** session is on the plugin that just landed — which is why a
-plan editing a plugin the session running `/vwf:execute all` loads is asked, at
-its interview, for the Consent row End an `all` run after landing — `yes` ends
-the run there. Only the last line reaches users, and it is the one `CLAUDE.md`'s
+the interview: it runs on a green landing without a prompt — except that under
+`all`, when the run's deduped-steps question is answered yes, an identical step
+runs once, from the main checkout, after the last plan that landed, and, when
+its one-release question is answered yes, a release step is held to the loop's
+exit (`references/all.md` in the execute skill) — and the author's next
+**restarted** session is on the plugin that just landed — which is why a plan
+editing a plugin the session running `/vwf:execute all` loads is asked, at its
+interview, for the Consent row End an `all` run after landing — `yes` ends the
+run there. Only the last line reaches users, and it is the one `CLAUDE.md`'s
 hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest

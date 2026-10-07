@@ -83,7 +83,10 @@ row `COMPLETE` after the merge lands — moving the folder to `archived/` and
 re-pointing the row when no gap is open, leaving it live when one is, for the
 `archive` verb once the user asks in prose — and runs each after-landing step
 without a prompt on a green landing — every one is recorded `run` at the
-interview, and it asks nothing at run time. `init` is not a command on that
+interview, and it asks nothing at run time, save the run-level questions
+`execute all` asks once, before its first plan — one shared worktree, deduped
+after-landing steps, one release at the end, landing a plan recorded not to
+merge — each an override for that run only. `init` is not a command on that
 line: since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0,
 or alone via `/vwf:setup reshape`. `init` shapes the **base repo and every
 member repo the product has** and `setup` sets up **vwf** in the base — two

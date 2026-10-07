@@ -315,11 +315,13 @@ This is the unattended stage, run in a **fresh session** — or, with
 `/vwf:execute all`, every runnable plan in turn, each in its own runner
 subagent, until one stops. `next` reads `docs/plans/index.md` and takes the
 runnable cycle plan of lowest priority — the entity plan first, since the flow
-plan requires it. It claims the row, cuts a dedicated worktree and works the
-folder's units in dependency order, each code unit through TDD and coverage, and
-the review rows the plan places through code and security review, looping
-findings back into the code. After all units land, one acceptance and UX pass
-runs against the whole slice. Nothing asks you anything unless it hits a pause
+plan requires it. It claims the row, cuts a dedicated worktree — under `all`,
+the run may share one worktree across its plans, if you answer yes to its
+one-shared-worktree question before the first plan — and works the folder's
+units in dependency order, each code unit through TDD and coverage, and the
+review rows the plan places through code and security review, looping findings
+back into the code. After all units land, one acceptance and UX pass runs
+against the whole slice. Nothing asks you anything unless it hits a pause
 condition — those are listed under
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
