@@ -72,12 +72,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                      | Kind | Owns                                                                                                                                                                       | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                            | —          | green   |        |
-| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                     | —          | green   |        |
-| U3 | 2    | [03-docs.md](03-docs.md)       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all-overrides.md` (new) | U1, U2     | pending |        |
-| U4 | 3    | [04-gates.md](04-gates.md)     | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                      | U3         | pending |        |
+| Id | Wave | Unit file                      | Kind | Owns                                                                                                                                                                       | Depends on | Status  | Commit   |
+| -- | ---- | ------------------------------ | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-execute.md](01-execute.md) | edit | `plugins/vwf/skills/execute/**`                                                                                                                                            | —          | green   | a1ab74f0 |
+| U2 | 1    | [02-runner.md](02-runner.md)   | edit | `plugins/vwf/agents/execute-runner.md`                                                                                                                                     | —          | green   |          |
+| U3 | 2    | [03-docs.md](03-docs.md)       | edit | `CLAUDE.md`, `readme.md`, `.claude/skills/vwf-plugin/**`, `.claude/docs/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-07-execute-all-overrides.md` (new) | U1, U2     | pending |          |
+| U4 | 3    | [04-gates.md](04-gates.md)     | edit | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` (both expected unchanged)                                                                      | U3         | pending |          |
 
 ## Shared-file rule
 
