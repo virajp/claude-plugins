@@ -10,9 +10,9 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   and UX pass and the blueprint reconcile run when the plan has a covers list.
   It claims the plan's row in docs/plans/index.md through plan-management,
   keeps a run log the final report renders, lands per the plan's recorded
-  consent — archiving the folder when no gap is open — and runs every
-  after-landing step the plan recorded, each `run`. It asks the user nothing
-  at run time — every answer is in the folder.
+  consent — archiving the folder when no gap is open and archive raises no
+  warning — and runs every after-landing step the plan recorded, each `run`.
+  It asks the user nothing at run time — every answer is in the folder.
   Invoke as /vwf:execute <plan-folder> or /vwf:execute next — the latter asks
   plan-management for the runnable plan of highest priority in
   docs/plans/index.md, of either kind. Requires an approved plan folder in
@@ -43,11 +43,11 @@ Acceptance and UX conformance run once after all units when the plan has
 **Autonomous Rules** below, and the run stops only at a runtime stop — the
 **Pause Conditions**, or the **final report** when something stands in the way
 of the landing — each reported with its resume command. You own the
-orchestration and dispatch the five stage subagents —
-`execute-coder` for `code` units, `execute-code-reviewer` and
-`execute-security-reviewer` at `review` rows, `execute-acceptance-verifier`
-and `execute-ux-reviewer` once per plan — the unit agents for `edit` units,
-and the wave reviewer for every wave.
+orchestration and dispatch the five stage subagents — `execute-coder` for
+`code` units, `execute-code-reviewer` and `execute-security-reviewer` at
+`review` rows, `execute-acceptance-verifier` and `execute-ux-reviewer` once
+per plan — the unit agents for `edit` units, and the wave reviewer for every
+wave.
 
 **Execute asks the user nothing.** Every answer a run could need was asked by
 the planner and recorded in the folder; where the folder is silent and the
@@ -195,11 +195,10 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   step included, a mode no longer issued — naming the planner that wrote it,
   `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`, to re-run and
   record the step `run` or drop it; a section reading `none`, with no table,
-  is valid and exempt. The last three read the backlog
-  lists against Parked, since a landing turns `backlog:` into `Done` and
-  `backlog_pieces:` into `Partially done` and checks nothing else; each names
-  the id, and the fix is to move the id to the list its Parked lines say it
-  belongs on. **An id on both `backlog:` and `backlog_pieces:`** — the plan
+  is valid and exempt. The last three read the backlog lists against Parked,
+  since a landing turns `backlog:` into `Done` and `backlog_pieces:` into
+  `Partially done` and checks nothing else; each names the id, and the fix is
+  to move the id to the list its Parked lines say it belongs on. **An id on both `backlog:` and `backlog_pieces:`** — the plan
   cannot both finish the item and land a piece of it. **An id on `backlog:`
   with a `- Bnn:` Parked line for it** — the plan says it finishes an item it
   also says it leaves a remainder of; the refusal quotes each such line, and
@@ -249,9 +248,8 @@ offer — the run asks nothing. If the format drift is **non-blocking**, log it
 and continue; if it is **blocking** (the run needs an artifact the old format
 lacks), it is a **blocking-gap stop** per the Pause Conditions: report the
 drift, name `/vwf:setup` as what reconciles it, and give the resume command —
-never migrate autonomously. Without `covers:` the check is
-skipped — one Run log row saying so, journaled — since the plan reads no
-blueprint artifact.
+never migrate autonomously. Without `covers:` the check is skipped — one Run
+log row saying so, journaled — since the plan reads no blueprint artifact.
 
 ## Doc Paths
 
@@ -784,16 +782,16 @@ the gap list holding no blocking gap, prepare the landing commit:
    below is made instead, the Status block still reads `COMPLETE`, the row
    still goes `COMPLETE` at the merge, and the final report names the warning
    and the `plan-management archive <folder>` request to make once it is
-   settled. Archived, it moves the folder to
-   `docs/plans/archived/`, leaves the `COMPLETE` block as written, closes the
-   `backlog:` ids through `/vwf:backlog done` and records the
-   `backlog_pieces:` ids through `/vwf:backlog partial`, marks the run's
-   mempalace drawer archived, and edits no row, since the index never rides a
-   run branch. The folder is finished and the archive is its record. When any
-   gap is **open**, or on `no`, `archive` is not invoked — and when it warned,
-   it archived nothing: the folder stays live
-   at its path — as the working record of what needs reconciling, or for the
-   hand merge — and the same split is made here instead: when index.md's
+   settled. Archived, it moves the folder to `docs/plans/archived/`, leaves
+   the `COMPLETE` block as written, closes the `backlog:` ids through
+   `/vwf:backlog done` and records the `backlog_pieces:` ids through
+   `/vwf:backlog partial`, marks the run's mempalace drawer archived, and
+   edits no row, since the index never rides a run branch. The folder is
+   finished and the archive is its record. When any gap is **open**, or on
+   `no`, `archive` is not invoked — and when it warned, it archived nothing:
+   the folder stays live at its path — as the working record of what needs
+   reconciling, or for the hand merge — and the same split is made here
+   instead: when index.md's
    `backlog:` names ids, invoke `/vwf:backlog done <ids> <folder>`, and when
    its `backlog_pieces:` names ids, invoke
    `/vwf:backlog partial <ids> <folder>` — that skill is the only writer of
