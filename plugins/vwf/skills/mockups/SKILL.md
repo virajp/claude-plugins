@@ -111,7 +111,9 @@ stamps nothing.
      Each server reads its peer's file at every request, so the two start in
      any order; the overlay of each page links the same route and state on the
      other port, in a new window. With no mockups, the render server runs
-     alone and shows no window link.
+     alone and shows no window link. On every platform, a missing or invalid
+     `__mockups/routes.json` means no mockup is shown — no frame, no window
+     link — and the server warns on stderr.
 
    Each server prints exactly one stdout line, `URL: http://127.0.0.1:<port>/`.
 4. **Give every URL** in one message, one sentence each: which serves the
@@ -121,8 +123,9 @@ stamps nothing.
    screen, with the plan and date of each image); click an element to leave a
    comment; and Done for each server when the review is over.
 5. **Wait for every process to exit** — each stops on its own Done, with exit
-   `0`. Do not poll the comments files while they run. Then delete both
-   `server.url` files of every platform.
+   `0`, removing its own `server.url` file as it goes. Do not poll the
+   comments files while they run. Then delete any `server.url` file that
+   remains — left only by a server that died without removing it.
 6. **Hand the comments to `/vwf:feedback`.** Read each
    `renders/<platform>/__renders/comments.yaml` (the `__mockups/` item shape
    plus `plan`) and list every `status: open` item, one line each —
