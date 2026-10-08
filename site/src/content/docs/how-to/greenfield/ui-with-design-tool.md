@@ -239,6 +239,17 @@ reaches you as an explicit unrendered result rather than a quietly code-only
 review. Centwise's first slice takes one round of findings — a hardcoded colour
 where a token existed — and merges clean.
 
+When the gate names the images it rendered, execute keeps them in the main
+checkout's `docs/scratchpad/<project>/renders/<platform>/` at the same routes as
+the mockups, and the final report names `/vwf:mockups renders`. That serves the
+built app beside the mockups: on `mobile`, `watch` and `auto` one page per
+route, mockup on the left and render on the right; on the browser and
+large-screen platforms two servers on two ports, each page linking the same
+route on the other in a new window. Comments go to `/vwf:feedback` as UX issues,
+one at a time. No shipped gate names its images yet, Flutter's included, so for
+now nothing is kept. Reference:
+[`/vwf:mockups`](../../plugins/vwf.md#vwfmockups).
+
 ### 11. /vwf:verify, then the canvas conversation
 
 Verification is the spine's ([`/vwf:verify`](./single-repo.md#vwfverify)). What
