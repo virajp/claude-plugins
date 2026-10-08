@@ -481,9 +481,15 @@ platform has none), the pass approval (§7) **gates on a visual review** of thos
 screens. Screens are contracts with happy *and* sad paths; the user must see
 them before approving the flow.
 
-The procedure — the `mockup-generator` dispatch per platform file, the hand-over
-and the `design.flows_rendered` stamp, how review remarks route, the
-design-first alternative, and the explicit skip — is in
+The review is a **connected mockup site for each platform**, served at a local
+`http://127.0.0.1:<port>/` URL: every flow's screens at their production routes,
+linked to each other. A link check passes before the user is asked to look —
+broken links that survive two repair rounds stop the review with no URL and no
+stamp — and each screen takes comments, which come back as proposed
+Screens-contract changes the user confirms one at a time. The procedure — the
+route map, the `mockup-generator` dispatch per platform file, the link check,
+the servers and the `design.flows_rendered` stamp, the comments and how review
+remarks route, the design-first alternative, and the explicit skip — is in
 [screen render & review](references/screen-review.md). Read it now. Whichever
 path the user takes, a deferred or declined review records
 `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining`, and
