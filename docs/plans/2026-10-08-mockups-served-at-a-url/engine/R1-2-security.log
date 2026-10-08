@@ -1,0 +1,18 @@
+/security-review — loop R1, round 2 — range 7bb533f8..d0aa95ae (branch 2026-10-08-mockups-served-at-a-url)
+
+No vulnerabilities at confidence >= 8.
+
+All five fixes from d0aa95ae hold in serve.mjs and lib/routes.mjs, and none of them opens a new hole:
+- Host check (DNS rebinding): runs on every request, a rebound hostname gets 403.
+- Cross-site POSTs: a JSON POST from another site needs a CORS preflight, which gets 404 and no CORS headers. Browsers always send Origin on cross-origin POSTs, so the Origin check catches the rest, including Origin: null.
+- Path containment: every path is realpath'd before serving, and the reserved first segment is checked after realpath with toLowerCase (also catches a symlink into __mockups and the Kelvin-sign spelling). ., .. and NUL are rejected after decoding.
+- YAML injection: every user field goes through JSON.stringify; id and timestamp are built by the server.
+- XSS: list and placeholder pages escape what they print; state limited to [A-Za-z0-9_-]; overlay config escapes < and is written with textContent.
+- Command injection: no subprocess or eval in any of the four scripts.
+
+Dropped:
+- //host open-redirect link built by sampleRoute from a routes.json path starting with / (3, routes.json is local and trusted)
+- Reading __mockups/ through a non-ASCII case fold (2, the post-realpath toLowerCase check catches it)
+- A no-Origin cross-site POST to /done (2, the preflight blocks it)
+- The 64 KB body limit and comment flooding (1, DoS excluded)
+- Path traversal in the routes.mjs and links.mjs CLIs (1, CLI flags are trusted)

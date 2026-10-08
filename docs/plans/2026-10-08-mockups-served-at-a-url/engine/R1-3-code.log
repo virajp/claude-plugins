@@ -1,0 +1,68 @@
+/code-review high — loop R1, round 3 — range 7bb533f8..a695ad88 (branch 2026-10-08-mockups-served-at-a-url)
+
+I found 9 issues. The first two are logic defects that can stop or derail a review. The other seven are low-severity edge cases or cleanup items. Nothing was fixed, and the three vitest suites pass (35 tests). I left out the gaps the plan already records (G1–G6). Two findings were checked directly: `new URL("/\\evil.com/x", "http://127.0.0.1")` gives `http://evil.com/x`, and `matchPath`'s `?state=` path returns a 404 for a screen that isn't rendered yet.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 319,
+    "summary": "A `?state=` link to a screen that is in routes.json but has no file yet returns `none` (\"no state file\") instead of the D10 placeholder, so the link check reports it as BROKEN and the server returns 404.",
+    "failure_scenario": "Generator rule: link with `?state=<s>` whenever the contract names a target state; a target in another flow 'is linked the same way — the server serves a placeholder'. In `/vwf:mockups <flow>` or blueprint §6a on a fresh tree, flow 100 links to `/orders/1042?state=error` (owned by flow 200, not rendered). matchPath finds the screen, hasState → `{kind:'none'}` → links.mjs BROKEN. The generator cannot fix it without breaking its own rules, so 2 rounds fail → D12 stop: no server, no URL, no flows_rendered stamp. A state request on an unrendered screen should fall back to the placeholder like the default view."
+  },
+  {
+    "file": "plugins/vwf/skills/blueprint/references/screen-review.md",
+    "line": 74,
+    "summary": "§6a Review takes every `open` item in the platform-wide comments.yaml as a proposed change for this pass, but the server serves every flow and the file survives renders. Comments on other flows' screens, and ones `/vwf:mockups` deliberately left open, get applied inside this flow's pass.",
+    "failure_scenario": "User runs `/vwf:mockups` and leaves comments on flow 200 screens (status stays open, since mockups only lists them). Later `/vwf:blueprint 100` §6a reads `<root>/__mockups/comments.yaml` and proposes flow 200 Screens edits inside flow 100's pass, outside its scope. Its reviewer and render stamp cover only flow 100. Items should be filtered to codes whose `flow` in routes.json is the flow under review."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 87,
+    "summary": "An href starting with `/\\` passes the root-absolute check, but WHATWG URL parsing (here and in the browser) treats it as protocol-relative, so the link check validates a local path while the browser goes off-site.",
+    "failure_scenario": "href=\"/\\example.com/\" → startsWith('/') and not '//' → `new URL` gives http://example.com/ with pathname '/' → matchPath('/') finds the root screen → counted OK. Clicking it in the review leaves the loopback server. Check `url.origin` against the base, or reject a backslash in the href."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 81,
+    "summary": "HREF_RE (`\\bhref\\s*=`) matches every href-like attribute, not just links: `data-href=`, `<link href>`, SVG `<image href=\"data:...\">`, and href text inside comments or `<style>`. A self-contained page can fail the check with no broken link.",
+    "failure_scenario": "A generator inlines an icon as `<image href=\"data:image/svg+xml,...\">` or adds `<link rel=\"icon\" href=\"data:,\">` → verdict 'not a link inside the mockups' → BROKEN → re-dispatch rounds → D12 stop on a page whose navigation is correct."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/routes.mjs",
+    "line": 130,
+    "summary": "routeToken takes the first whitespace token that begins with `/`, verbatim. Punctuation around a route ends up in the path, or hides the route completely.",
+    "failure_scenario": "Route cell `/orders/:id, /o/:id` → token `/orders/:id,` → path `orders/[id,]`; the generator writes that folder and links get `[id,]`-shaped dirs. Cell `(/settings)` → no token starts with '/' → screen silently becomes unrouted `/<code>-<slug>` (only a NO ROUTE line). Trim trailing punctuation and look for '/' inside tokens."
+  },
+  {
+    "file": "plugins/vwf/skills/blueprint/references/screen-review.md",
+    "line": 59,
+    "summary": "The §6a hand-over URL is 'the root URL plus the route of this flow's first screen', using routes.json's raw `route`, which keeps `:id` / `{id}` placeholders instead of a sample value (sampleRoute).",
+    "failure_scenario": "First screen route `/orders/{orderId}` → user is handed `http://127.0.0.1:p/orders/{orderId}`. The browser percent-encodes the braces and it only renders because the param folder matches anything. Comments record path `/orders/%7BorderId%7D`, and the URL differs from what the list page and the generated links use (`/orders/1`, `/orders/1042`)."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 72,
+    "summary": "pages() skips only an exact-case `__mockups` directory, while lib/routes.mjs treats the reserved segment as case-insensitive (isReserved, 'APFS folds case'). The link check and the server disagree on which pages exist.",
+    "failure_scenario": "A stray `__Mockups/x.html` at the root is scanned and can fail the check, yet matchPath refuses to serve anything under it. Use isReserved(entry.name) so both scripts share one rule, which is the D20 intent."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 411,
+    "summary": "The server parses request targets with its own hand-rolled target(), while links.mjs uses `new URL`, which normalizes dot segments and backslashes. D20 wanted one shared matcher so the two agree, but URL parsing is still duplicated and divergent.",
+    "failure_scenario": "Any href where WHATWG normalization differs from raw parsing (e.g. `/a/./b`, backslashes, see the `/\\` finding) is judged by different rules in the check and the server. Moving the path/query split into lib/routes.mjs and using it in both would remove the divergence."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 221,
+    "summary": "splitPath repeats pathError's NUL and dot-segment checks, so the two validators have to be kept in step by hand.",
+    "failure_scenario": "A future rule added to pathError (route validation) but not to splitPath (URL validation), or the other way round, lets routes.json name a path the server rejects, or the reverse. Have one function return the segments or an error."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 97,
+    "summary": "matchPath is called once per href with no memo, and each call repeats realpath, stat and readdir walks. Shared nav links on every page are re-resolved for every page.",
+    "failure_scenario": "A platform with 60 pages, each with a 10-link nav bar, makes 600 full filesystem walks for about 10 distinct (pathname, state) pairs. Cache verdicts by `pathname + state`."
+  }
+]
+```
