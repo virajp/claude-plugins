@@ -1,0 +1,26 @@
+/security-review — loop R1, round 2 — range 554a7d40..2bfde1db (branch 2026-10-08-execute-renders-served-at-a-url)
+
+# Security review, round 2: `554a7d40..2bfde1db` (excluding `docs/plans`)
+
+No finding reached confidence 8. Round 1's fixes hold for every path I traced.
+
+**Dropped candidates:**
+- **`renders.mjs:420-421` (confidence about 4).** `writeJson` calls `writeFileSync` on `__renders/renders.json` and `routes.json`, and that follows a symlink sitting at the file name. Images get the opposite treatment: `copyFresh` unlinks whatever is at the target before copying. Exploiting this needs someone to plant a symlink in the user's own main checkout under `docs/scratchpad`. Even then, what gets written is JSON with structure the attacker doesn't control. Worth hardening the same way as the images, but there's no concrete exploit.
+- **`removeImage` against a crafted `renders.json` entry (confidence about 2).** The entry's `file` is realpath'd through `inRoot(realRoot)`, must end in `.png`, must sit outside `__renders/`, must be a regular file, and the platform root itself is refused. A symlink pointing outside resolves outside and is refused. The worst case is deleting another PNG inside the same platform's render tree.
+- **`--peer-file` link (confidence about 2).** The origin must be `http:` on 127.0.0.1 or localhost, with no credentials. The path part comes from the parsed request pathname, which always starts with `/`, so the link cannot reach another host.
+
+**Checked clean:**
+- **Stdin `RENDER:` lines.** The source file is realpath'd under the worktree, must be a regular file, and must have a `.png` extension. Platform must match `NAME_RE` and not start with a dot, and state must match `STATE_RE`. The destination file is only ever `index.png` or `index--<state>.png`.
+- **Route paths written to disk.** Paths come from `buildRouteMap`, and any map with a `pathError` error (`.`, `..`, NUL, `__mockups`, `__renders`) is refused. `ensureDir` creates and realpath-checks one level at a time, so a symlinked folder can't lead outside the tree. `--project` is limited to `NAME_RE`.
+- **Overwriting an existing file.** `copyFresh` unlinks a symlink rather than following it, refuses a directory, and copies with `COPYFILE_EXCL`.
+- **`--url-file` removal.** The path is fixed at startup under the realpath of `docs/scratchpad`. The file is removed only when its content equals this server's own URL, and `rmSync` on a symlink removes only the link.
+- **Image serving.** `splitPath` rejects `..`. The image path then gets the same `inRoot` and PNG checks as `removeImage`, plus an `isFile` check.
+- **`/__mockups/` frame.** It reuses `matchPath` and `mockRoot` must resolve under the scratchpad. Without a valid mockup `routes.json`, no mockup is served at all.
+- **Frame-click check.** Links starting `//` or `/\` are refused, and the resolved URL's origin must equal the page's.
+- **XSS.** Every page field goes through `escapeHtml`. Overlay config goes through `scriptJson` with `<` escaped, and `meta` and `peer` are set with `textContent` and `href`.
+- **YAML injection.** `plan` is written through `yamlString`.
+- **CSRF and DNS rebinding.** The Host allow-list applies to every method. POST also needs a loopback Origin and `application/json`.
+- **Command injection.** None found: neither script spawns a process.
+
+# Report
+No vulnerabilities at confidence >= 8.
