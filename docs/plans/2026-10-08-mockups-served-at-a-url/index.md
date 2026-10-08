@@ -298,10 +298,11 @@ the unit could not proceed without; it blocks the unit and its dependents.
   and a `/vwf:mockups ux <plan>` mode that serves them with image support. The
   person reviews after the run; execute stays unattended. Requires this folder;
   its folder is not yet written.
-- B91: plan 2b (stackgen) — the three `ux-gate` payloads (TypeScript web
-  captures, Flutter goldens, SwiftUI `.build/snapshot-artifacts/`) report their
-  render files in the 2a field; each pack bumps, with its bundle pins and
-  `inventory.md`. Requires 2a; finishes B91.
+- B91: plan 2b (stackgen) — `docs/plans/2026-10-08-typescript-ux-gate-renders`:
+  the TypeScript `ux-gate` names its captures `<code>--<state>.png` and returns
+  the 2a `renders:` list; the pack bumps, with its 13 bundle pins and
+  `inventory.md`. Requires 2a; finishes B91. The Flutter and SwiftUI gates
+  (golden images) are backlog item B94.
 - `.claude/skills/vwf-plugin/references/docs-tree.md:71-75` — the stale claim
   that vwf auto-adds the scratchpad `.gitignore` line.
 - `site/src/content/docs/plugins/vwf.md:2635` — the "code-level pass" claim for

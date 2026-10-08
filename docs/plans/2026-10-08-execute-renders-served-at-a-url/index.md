@@ -244,10 +244,12 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Parked
 
-- B91: plan 2b (stackgen) — the three `ux-gate` payloads (TypeScript web
-  captures, Flutter goldens, SwiftUI `.build/snapshot-artifacts/`) return the E3
-  `renders:` list, one item per screen and state they render; each pack bumps,
-  with its bundle pins and `inventory.md`. Requires this folder; finishes B91.
+- B91: plan 2b (stackgen) — `docs/plans/2026-10-08-typescript-ux-gate-renders`:
+  the TypeScript `ux-gate` names its captures `<code>--<state>.png` and returns
+  the E3 `renders:` list; the pack bumps, with its 13 bundle pins and
+  `inventory.md`. Requires this folder; finishes B91. The Flutter and SwiftUI
+  gates (golden images) are backlog item B94; until it lands, they return no
+  `renders:` list and keep no images.
 - `.claude/skills/vwf-plugin/references/docs-tree.md:71-75` — the stale claim
   that vwf auto-adds the scratchpad `.gitignore` line (parked by plan 1).
 
