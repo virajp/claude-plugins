@@ -26,6 +26,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { runInNewContext } from "node:vm";
 import {
   afterEach,
   beforeEach,
@@ -114,6 +115,7 @@ function write(rel: string, text: string) {
 interface Server {
   url: string;
   stdout: () => string;
+  stderr: () => string;
   exited: Promise<number | null>;
 }
 
@@ -121,6 +123,10 @@ function start(args = ["--root", root]): Promise<Server> {
   const proc = spawn("node", [SCRIPT, ...args], { cwd: repo });
   child = proc;
   let out = "";
+  let err = "";
+  proc.stderr.on("data", chunk => {
+    err += String(chunk);
+  });
   const exited = new Promise<number | null>(done => {
     proc.on("exit", code => done(code));
   });
@@ -129,7 +135,12 @@ function start(args = ["--root", root]): Promise<Server> {
       out += String(chunk);
       const line = out.split("\n")[0];
       if (out.includes("\n") && line !== undefined) {
-        resolve({ url: line.replace(/^URL: /, ""), stdout: () => out, exited });
+        resolve({
+          url: line.replace(/^URL: /, ""),
+          stdout: () => out,
+          stderr: () => err,
+          exited,
+        });
       }
     });
     proc.on("exit", code => reject(new Error(`exited ${code} before URL`)));
@@ -528,6 +539,10 @@ describe("serve.mjs --renders", () => {
     renderTree("mobile");
     renderTree("web");
     put(
+      join(mockRoot("mobile"), "__mockups", "routes.json"),
+      JSON.stringify({ ...ROUTES, platform: "mobile" }),
+    );
+    put(
       join(mockRoot("mobile"), "orders", "[id]", "index.html"),
       "<!doctype html><html><body><p>mobile mockup</p></body></html>\n",
     );
@@ -689,5 +704,91 @@ describe("serve.mjs --renders", () => {
     const bare = await (await fetch(plain.url)).text();
     expect(bare).toContain("\"peer\":null");
     expect(bare).toContain("home page");
+  });
+
+  it("moves the top page only for a same-origin single-slash link", async () => {
+    const { url } = await startRenders("mobile");
+    const html = await (await fetch(new URL("/__mockups/orders/7", url)))
+      .text();
+    const script = /<script>(document\.addEventListener[\s\S]*?)<\/script>/
+      .exec(html)
+      ?.[1];
+    expect(script).toBeDefined();
+    const origin = "http://127.0.0.1:1234";
+    let handler: (event: unknown) => void = () => {};
+    const top = { location: { href: "unchanged" } };
+    runInNewContext(script ?? "", {
+      URL,
+      location: { href: `${origin}/__mockups/orders/7`, origin },
+      window: { top },
+      document: {
+        addEventListener: (_: string, fn: (event: unknown) => void) => {
+          handler = fn;
+        },
+      },
+    });
+    const click = (href: string) => {
+      let prevented = false;
+      handler({
+        altKey: false,
+        preventDefault: () => {
+          prevented = true;
+        },
+        target: { closest: () => ({ getAttribute: () => href }) },
+      });
+      return prevented;
+    };
+    expect(click("//evil.example/x")).toBe(false);
+    expect(click("/\\evil.example/x")).toBe(false);
+    expect(top.location.href).toBe("unchanged");
+    expect(click("/orders/8?state=error")).toBe(true);
+    expect(top.location.href).toBe("/orders/8?state=error");
+  });
+
+  it("shows no mockup, with a warning, when --mockups has no routes.json", async () => {
+    rmSync(join(mockRoot("mobile"), "__mockups", "routes.json"));
+    const server = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders/7", server.url))).text();
+    expect(body).not.toContain("<iframe");
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    expect((await fetch(new URL("/__mockups/orders/7", server.url))).status)
+      .toBe(404);
+    expect(server.stderr()).toMatch(/no valid __mockups\/routes\.json/);
+  });
+
+  it("sees a routes.json rewritten while it runs", async () => {
+    const { url } = await startRenders("web");
+    expect((await fetch(new URL("/history", url))).status).toBe(404);
+    const dir = renderRoot("web");
+    const screens = ROUTES.screens.map(s =>
+      s.code === "200a" ? { ...s, route: "/history", path: "history" } : s
+    );
+    put(
+      join(dir, "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform: "web", screens }),
+    );
+    put(join(dir, "history", "index.png"), "PNG-HISTORY");
+    const body = await (await fetch(new URL("/history", url))).text();
+    expect(body).toContain("src=\"/history/index.png\"");
+    expect((await fetch(new URL("/orders", url))).status).toBe(404);
+  });
+
+  it("removes its --url-file on Done and on exit", async () => {
+    const file = join(scratch(), "renders-web.url");
+    const done = await startRenders("web", ["--url-file", file]);
+    expect(existsSync(file)).toBe(true);
+    const res = await fetch(new URL("/done", done.url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(204);
+    expect(await done.exited).toBe(0);
+    expect(existsSync(file)).toBe(false);
+    const killed = await startRenders("web", ["--url-file", file]);
+    expect(existsSync(file)).toBe(true);
+    child?.kill();
+    await killed.exited;
+    expect(existsSync(file)).toBe(false);
   });
 });

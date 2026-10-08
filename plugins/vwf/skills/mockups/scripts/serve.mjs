@@ -16,11 +16,12 @@
 //
 //   URL: http://127.0.0.1:<port>/
 //
-// --url-file writes that URL to a file once the server listens; --peer-file
-// names the other server's URL file, read at every request, and when it holds
-// a loopback URL the overlay links the same route and state there in a new
-// window — so a mockup server and a render server, started in any order, link
-// each other. Both paths must resolve under <cwd>/docs/scratchpad/.
+// --url-file writes that URL to a file once the server listens, and removes it
+// on Done and on exit; --peer-file names the other server's URL file, read at
+// every request, and when it holds a loopback URL the overlay links the same
+// route and state there in a new window — so a mockup server and a render
+// server, started in any order, link each other. Both paths must resolve under
+// <cwd>/docs/scratchpad/.
 //
 // Renders mode — the built app's images that /vwf:execute copied (renders.mjs):
 //
@@ -28,12 +29,13 @@
 //                  [--url-file <path>] [--peer-file <path>] [--port <n>]
 //
 // where <render dir> is docs/scratchpad/<project>/renders/<platform> and holds
-// __renders/renders.json and __renders/routes.json. Each route is a page built
-// in memory around index.png or index--<state>.png of the route's folder. On
-// mobile, watch and auto the page sets the mockup of the same route and state
-// (served from --mockups under the reserved /__mockups/ prefix, with the same
-// guards) in a frame on the left of the image; elsewhere it shows the image
-// alone and the --peer-file link. /__renders/ lists every render; nothing else
+// __renders/renders.json and __renders/routes.json, both read again at each
+// request. Each route is a page built in memory around index.png or
+// index--<state>.png of the route's folder. On mobile, watch and auto the page
+// sets the mockup of the same route and state (served from --mockups under the
+// reserved /__mockups/ prefix, with the same guards; a --mockups tree with no
+// valid __mockups/routes.json shows none) in a frame on the left of the image;
+// elsewhere it shows the image alone and the --peer-file link. /__renders/ lists every render; nothing else
 // under it is served. Comments go to __renders/comments.yaml with the plan of
 // the image. The images themselves are served as image/png.
 //
@@ -73,10 +75,12 @@ import {
   existsSync,
   readFileSync,
   realpathSync,
+  rmSync,
   statSync,
   writeFileSync,
 } from "node:fs";
 import { createServer } from "node:http";
+import { constants as osConstants } from "node:os";
 import {
   basename,
   dirname,
@@ -160,6 +164,23 @@ try {
 }
 catch (error) {
   fail(`--root holds no valid ${OWN}/routes.json: ${error.message}`);
+}
+
+// Renders mode: routes.json is read again at each request, so a copy made while
+// the server runs — a new screen, a moved route — is seen; a file that cannot
+// be read then keeps the last good map, with one stderr line.
+function refreshRoutes() {
+  if (!RENDER_MODE) {
+    return;
+  }
+  try {
+    routes = readRoutes(root, OWN);
+  }
+  catch (error) {
+    process.stderr.write(
+      `serve.mjs: keeping the last route map: ${error.message}\n`,
+    );
+  }
 }
 
 // Renders mode: renders.json, read at start to refuse a tree with none, and
@@ -279,8 +300,13 @@ if (RENDER_MODE && args.mockups !== undefined) {
     try {
       mockRoutes = readRoutes(mockRoot);
     }
-    catch {
-      mockRoutes = routes;
+    catch (error) {
+      // Never fall back to the render route map: a mockup matched through the
+      // wrong map could be shown beside another screen's render.
+      process.stderr.write(
+        `serve.mjs: --mockups has no valid ${RESERVED}/routes.json, so no mockup is shown: ${error.message}\n`,
+      );
+      mockRoot = null;
     }
   }
   else if (!wanted.startsWith(scratchpad + sep)) {
@@ -339,41 +365,47 @@ function send(res, status, type, body) {
   res.end(buffer);
 }
 
-// The overlay script, inserted before </body>.
-function withOverlay(html, overlay) {
-  const injection = `${MARKER}\n<script>(${OVERLAY})(${
-    scriptJson(overlay)
-  });</script>\n`;
+// Inserts `injection` before the last </body>, or appends it when there is none.
+function beforeBodyClose(html, injection) {
   const close = html.lastIndexOf("</body>");
   return close === -1
     ? html + injection
     : html.slice(0, close) + injection + html.slice(close);
 }
 
+// The overlay script, inserted before </body>.
+function withOverlay(html, overlay) {
+  return beforeBodyClose(
+    html,
+    `${MARKER}\n<script>(${OVERLAY})(${scriptJson(overlay)});</script>\n`,
+  );
+}
+
 // A mockup inside a render page's frame: a click on a root-absolute link moves
 // the whole review page to that route, so the frame and the image stay on one
-// screen.
+// screen. Only a single-slash path of this origin moves it — a protocol-
+// relative //host (or /\host) link resolves to another origin and is left
+// alone.
 const FRAME_SCRIPT = "<script>document.addEventListener(\"click\",function(e){"
   + "var a=e.target.closest&&e.target.closest(\"a[href^='/']\");"
-  + "if(!a||e.altKey)return;e.preventDefault();"
-  + "window.top.location.href=a.getAttribute(\"href\");});</script>\n";
+  + "if(!a||e.altKey)return;var h=a.getAttribute(\"href\");"
+  + "if(/^\\/[\\/\\\\]/.test(h))return;"
+  + "var u=new URL(h,location.href);if(u.origin!==location.origin)return;"
+  + "e.preventDefault();"
+  + "window.top.location.href=u.pathname+u.search+u.hash;});</script>\n";
 
 // overlay: the overlay config, or null for none; frame: inject FRAME_SCRIPT.
 function serveFile(res, file, overlay, frame = false) {
   const type = TYPES[extname(file).toLowerCase()] ?? "application/octet-stream";
   let body = readFileSync(file);
   if (type.startsWith("text/html") && (overlay !== null || frame)) {
-    let html = body.toString("utf8");
-    if (overlay !== null) {
-      html = withOverlay(html, overlay);
-    }
-    else {
-      const close = html.lastIndexOf("</body>");
-      html = close === -1
-        ? html + FRAME_SCRIPT
-        : html.slice(0, close) + FRAME_SCRIPT + html.slice(close);
-    }
-    body = Buffer.from(html, "utf8");
+    const html = body.toString("utf8");
+    body = Buffer.from(
+      overlay !== null
+        ? withOverlay(html, overlay)
+        : beforeBodyClose(html, FRAME_SCRIPT),
+      "utf8",
+    );
   }
   res.writeHead(200, {
     "content-type": type,
@@ -706,6 +738,7 @@ async function postComment(req, res) {
 }
 
 function postDone(res) {
+  removeUrlFile();
   appendComments(`# done: ${new Date().toISOString()}\n`);
   process.stderr.write(`done — ${counter} comment(s) recorded\n`);
   // Close only once the 204 has left, so the overlay sees the answer; then
@@ -801,6 +834,7 @@ async function handle(req, res) {
     res.writeHead(400).end();
     return;
   }
+  refreshRoutes();
   if ((req.method === "GET" || req.method === "HEAD") && RENDER_MODE) {
     getRender(res, url);
     return;
@@ -945,12 +979,38 @@ function getRender(res, url) {
   );
 }
 
+// The URL this server wrote to --url-file, or null before it listens.
+let ownUrl = null;
+
+// Removes --url-file on Done and on exit, so a peer never links a server that
+// is gone — only while it still holds this server's URL, so a later server's
+// file is left alone.
+function removeUrlFile() {
+  if (urlFile === null || ownUrl === null) {
+    return;
+  }
+  try {
+    if (readFileSync(urlFile, "utf8").trim() === ownUrl) {
+      rmSync(urlFile);
+    }
+  }
+  catch {
+    // already gone
+  }
+}
+process.on("exit", removeUrlFile);
+// A signal ends the process without the exit event unless it is handled.
+for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
+  process.on(signal, () => process.exit(128 + osConstants.signals[signal]));
+}
+
 server.listen(port, "127.0.0.1", () => {
   const { port: bound } = server.address();
   boundPort = bound;
   // The URL file first, so whoever has read the URL: line finds it written.
   if (urlFile !== null) {
-    writeFileSync(urlFile, `http://127.0.0.1:${bound}/\n`);
+    ownUrl = `http://127.0.0.1:${bound}/`;
+    writeFileSync(urlFile, `${ownUrl}\n`);
   }
   process.stdout.write(`URL: http://127.0.0.1:${bound}/\n`);
   process.stderr.write(

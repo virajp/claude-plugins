@@ -162,7 +162,7 @@ function servable(root, path) {
   return isReserved(real.slice(root.length + 1).split(sep)[0]) ? null : real;
 }
 
-function isFile(path) {
+export function isFile(path) {
   try {
     return statSync(path).isFile();
   }
@@ -171,7 +171,7 @@ function isFile(path) {
   }
 }
 
-function isDir(path) {
+export function isDir(path) {
   try {
     return statSync(path).isDirectory();
   }

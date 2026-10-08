@@ -11,6 +11,7 @@ import {
   readFileSync,
   realpathSync,
   rmSync,
+  symlinkSync,
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
@@ -215,6 +216,79 @@ describe("renders.mjs", () => {
     expect(status).toBe(0);
     expect(stdout.trimEnd()).toBe("COPIED: 0");
     expect(stderr.match(/not a RENDER: line/g)).toHaveLength(2);
+  });
+
+  it("drops the entries and images of a code that moved or left the map", () => {
+    run(SMOKE);
+    run("RENDER: 200a mobile default shots/b.png\n");
+    expect(rendersJson("mobile").renders).toHaveLength(3);
+    // 200b moves to /order/:id; 200a stays.
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/mobile.md",
+      DOC.replace("`/orders/:id`", "`/order/:id`"),
+    );
+    const { stdout } = run("RENDER: 200a mobile empty shots/a.png\n");
+    expect(stdout.trimEnd()).toBe("COPIED: 1");
+    const json = rendersJson("mobile");
+    expect(json.renders.map(e => [e.code, e.state])).toEqual([
+      ["200a", "default"],
+      ["200a", "empty"],
+    ]);
+    expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
+      false,
+    );
+    expect(existsSync(tree("mobile", "orders", "[id]", "index--error.png")))
+      .toBe(false);
+    expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
+      "PNG-B",
+    );
+    const routes = JSON.parse(
+      readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
+    );
+    expect(
+      routes.screens.find((s: { code: string; }) => s.code === "200b").route,
+    )
+      .toBe("/order/:id");
+  });
+
+  it("replaces a symlinked image, never writing through it", () => {
+    put(base, "outside.png", "OUTSIDE");
+    mkdirSync(tree("mobile", "orders"), { recursive: true });
+    symlinkSync(
+      join(base, "outside.png"),
+      tree("mobile", "orders", "index.png"),
+    );
+    const { stdout } = run("RENDER: 200a mobile default shots/a.png\n");
+    expect(stdout.trimEnd()).toBe("COPIED: 1");
+    expect(readFileSync(join(base, "outside.png"), "utf8")).toBe("OUTSIDE");
+    expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
+      "PNG-A",
+    );
+  });
+
+  it("skips a route folder that is a symlink out of the tree, making nothing there", () => {
+    const outside = join(base, "elsewhere");
+    mkdirSync(outside);
+    mkdirSync(tree("mobile"), { recursive: true });
+    symlinkSync(outside, tree("mobile", "orders"));
+    const { stdout } = run("RENDER: 200b mobile default shots/a.png\n");
+    expect(stdout).toMatch(/^SKIPPED: 200b mobile default — .*escapes/m);
+    expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 0");
+    expect(existsSync(join(outside, "[id]"))).toBe(false);
+  });
+
+  it("turns a failed copy into a SKIPPED line and still writes the json", () => {
+    mkdirSync(tree("mobile", "orders", "[id]", "index.png"), {
+      recursive: true,
+    });
+    const { status, stdout } = run(SMOKE);
+    expect(status).toBe(0);
+    expect(stdout).toMatch(/^SKIPPED: 200b mobile default — cannot copy: /m);
+    expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 2");
+    expect(rendersJson("mobile").renders.map(e => e.state)).toEqual(["error"]);
+    expect(rendersJson("web").renders).toHaveLength(1);
+    expect(existsSync(tree("mobile", "__renders", "routes.json"))).toBe(true);
   });
 
   it("refuses a --main with no .git entry", () => {

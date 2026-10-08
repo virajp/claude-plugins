@@ -30,26 +30,36 @@
 //   { "project", "platform",
 //     "renders": [ { "code", "state", "route", "file", "plan", "date" } ] }
 //
-// merged — an existing { code, state } is replaced, every other entry kept;
+// merged — an existing { code, state } is replaced, every other entry kept
+// while its code keeps the same route and file in the new route map; an entry
+// whose code left the map or moved is dropped, and its image removed.
 // `file` is relative to the platform root, `date` ISO 8601 UTC, `plan` the
 // plan folder's name. `__renders/routes.json` keeps a copy of the route map,
 // in routes.mjs's shape, for the render server.
 //
+// Every folder is made one level at a time, each checked to sit under the
+// tree before the next, and an image replaces whatever sits at its name — a
+// symlink is removed, never followed.
+//
 // stdout: one `SKIPPED: <code> <platform> <state> — <reason>` line per line it
 // could not copy (an unknown code, a missing file, a file outside the
-// worktree, a platform with no route map), then one `COPIED: <n>` line. Exit 0
+// worktree, a platform with no route map, a folder or copy that failed), then
+// one `COPIED: <n>` line; the json of every platform that copied is written
+// whatever failed. Exit 0
 // once the arguments hold; a bad argument, or a --main with no .git entry, is
 // stderr and exit 2 with nothing copied.
 //
 // Zero dependencies — node: modules only.
 
 import {
+  constants,
   copyFileSync,
   existsSync,
+  lstatSync,
   mkdirSync,
   readFileSync,
   realpathSync,
-  statSync,
+  rmSync,
   writeFileSync,
 } from "node:fs";
 import {
@@ -57,10 +67,11 @@ import {
   extname,
   join,
   resolve,
-  sep,
 } from "node:path";
 import {
   inRoot,
+  isDir,
+  isFile,
   RENDERS,
   STATE_RE,
 } from "./lib/routes.mjs";
@@ -100,22 +111,48 @@ function parseArgs(argv) {
   return out;
 }
 
-function isDir(path) {
-  try {
-    return statSync(path).isDirectory();
+// Creates each segment under the (realpath'd) base one level at a time, each
+// level checked to resolve under the base before the next is made, so a
+// symlinked folder never leads a mkdir outside it. The realpath of the last
+// level, or null when one escapes or is not a directory.
+function ensureDir(base, segments) {
+  let dir = base;
+  for (const segment of segments) {
+    const next = join(dir, segment);
+    try {
+      mkdirSync(next);
+    }
+    catch (error) {
+      if (error.code !== "EEXIST") {
+        throw error;
+      }
+    }
+    const real = inRoot(base, next);
+    if (!real || !isDir(real)) {
+      return null;
+    }
+    dir = real;
   }
-  catch {
-    return false;
-  }
+  return dir;
 }
 
-function isFile(path) {
+// Copies onto a fresh file: whatever sits at the target — a symlink included —
+// is removed first, so the copy never follows a link out of the tree.
+function copyFresh(source, target) {
+  let existing = null;
   try {
-    return statSync(path).isFile();
+    existing = lstatSync(target);
   }
   catch {
-    return false;
+    // nothing there
   }
+  if (existing?.isDirectory()) {
+    throw new Error(`a directory sits at ${target}`);
+  }
+  if (existing) {
+    rmSync(target);
+  }
+  copyFileSync(source, target, constants.COPYFILE_EXCL);
 }
 
 function readStdin() {
@@ -239,29 +276,35 @@ for (const item of items) {
     continue;
   }
 
-  const platformRoot = join(
-    main,
-    "docs",
-    "scratchpad",
-    args.project,
-    "renders",
-    item.platform,
-  );
-  const dir = join(
-    platformRoot,
-    ...(screen.path ? screen.path.split("/") : []),
-  );
-  mkdirSync(dir, { recursive: true });
-  const realRoot = realpathSync(platformRoot);
-  const realDir = realpathSync(dir);
-  if (realDir !== realRoot && !realDir.startsWith(realRoot + sep)) {
-    skip(item, `the route folder escapes the render tree: ${screen.path}`);
-    continue;
-  }
   const name = item.state === "default"
     ? "index.png"
     : `index--${item.state}.png`;
-  copyFileSync(source, join(realDir, name));
+  try {
+    const realRoot = ensureDir(main, [
+      "docs",
+      "scratchpad",
+      args.project,
+      "renders",
+      item.platform,
+    ]);
+    if (!realRoot) {
+      skip(item, "the render tree escapes the main checkout");
+      continue;
+    }
+    const realDir = ensureDir(
+      realRoot,
+      screen.path ? screen.path.split("/") : [],
+    );
+    if (!realDir) {
+      skip(item, `the route folder escapes the render tree: ${screen.path}`);
+      continue;
+    }
+    copyFresh(source, join(realDir, name));
+  }
+  catch (error) {
+    skip(item, `cannot copy: ${error.message}`);
+    continue;
+  }
   count += 1;
 
   if (!copied.has(item.platform)) {
@@ -301,31 +344,91 @@ function writeJson(file, value) {
   writeFileSync(file, JSON.stringify(value, null, 2) + "\n");
 }
 
+// The file an entry of `code` and `state` sits at under the route map now, or
+// null when the code is in no Screens table any more.
+function currentFile(screens, code, state) {
+  const screen = screens.find(s => s.code === code);
+  if (!screen) {
+    return null;
+  }
+  const name = state === "default" ? "index.png" : `index--${state}.png`;
+  return {
+    route: screen.route,
+    file: screen.path ? `${screen.path}/${name}` : name,
+  };
+}
+
+// Removes an image an old entry named, when it is a PNG under the platform
+// root and outside __renders/.
+function removeImage(realRoot, file) {
+  const real = inRoot(realRoot, join(realRoot, ...String(file).split("/")));
+  if (
+    !real
+    || real === realRoot
+    || !real.toLowerCase().endsWith(".png")
+    || real.slice(realRoot.length + 1).split(/[\\/]/)[0].toLowerCase()
+      === RENDERS
+    || !isFile(real)
+  ) {
+    return;
+  }
+  rmSync(real);
+}
+
+// renders.json and routes.json are written for every platform that copied,
+// whatever failed before; a platform that cannot be written is one stderr line.
 for (const [platform, entries] of copied) {
-  const reserved = join(
-    main,
-    "docs",
-    "scratchpad",
-    args.project,
-    "renders",
-    platform,
-    RENDERS,
-  );
-  mkdirSync(reserved, { recursive: true });
-  const file = join(reserved, "renders.json");
-  const kept = readRenders(file).filter(old =>
-    !entries.some(e => e.code === old.code && e.state === old.state)
-  );
-  const renders = [...kept, ...entries].sort((a, b) =>
-    String(a.code).localeCompare(String(b.code))
-    || String(a.state).localeCompare(String(b.state))
-  );
-  writeJson(file, { project: args.project, platform, renders });
-  writeJson(join(reserved, "routes.json"), {
-    project: args.project,
-    platform,
-    screens: routeMap(platform).screens,
-  });
+  try {
+    const screens = routeMap(platform).screens;
+    const realRoot = ensureDir(main, [
+      "docs",
+      "scratchpad",
+      args.project,
+      "renders",
+      platform,
+    ]);
+    const reserved = realRoot && ensureDir(realRoot, [RENDERS]);
+    if (!reserved) {
+      throw new Error("the render tree escapes the main checkout");
+    }
+    const file = join(reserved, "renders.json");
+    // An old entry stays only while its code still has the same route and
+    // file in the route map; routes.json is rewritten from that map, and the
+    // server finds an image through it, so a stale image would show as
+    // another screen's render.
+    const dropped = [];
+    const kept = readRenders(file).filter(old => {
+      if (entries.some(e => e.code === old.code && e.state === old.state)) {
+        return false;
+      }
+      const now = currentFile(screens, old.code, old.state);
+      if (now === null || now.route !== old.route || now.file !== old.file) {
+        dropped.push(old);
+        return false;
+      }
+      return true;
+    });
+    const renders = [...kept, ...entries].sort((a, b) =>
+      String(a.code).localeCompare(String(b.code))
+      || String(a.state).localeCompare(String(b.state))
+    );
+    for (const old of dropped) {
+      if (!renders.some(e => e.file === old.file)) {
+        removeImage(realRoot, old.file);
+      }
+    }
+    writeJson(file, { project: args.project, platform, renders });
+    writeJson(join(reserved, "routes.json"), {
+      project: args.project,
+      platform,
+      screens,
+    });
+  }
+  catch (error) {
+    process.stderr.write(
+      `renders.mjs: ${platform}: cannot write ${RENDERS}/: ${error.message}\n`,
+    );
+  }
 }
 
 for (const line of skipped) {
