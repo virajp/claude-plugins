@@ -1,0 +1,10 @@
+/security-review — loop R1, round late1-2 — range 7bb533f8..4e4f7884 (branch 2026-10-08-mockups-served-at-a-url)
+
+No vulnerabilities at confidence >= 8.
+
+Dropped candidates:
+- **C1 numeric refs (2/10):** `&#x80;`–`&#x9F;` decode to raw C1 controls, where a browser uses windows-1252. None of those characters is `/`, `\`, a tab or a line break, so a link can't escape.
+- **Legacy-name prefix matching (2/10):** browsers match the longest legacy name (`&notx`). In an attribute, a following letter, digit or `=` keeps it literal. links.mjs reads the whole name run instead, so the results agree, or it fails closed on an unknown name ending in `;`.
+- **Attribute confusion in HREF_RE (3/10):** e.g. `title="href='/ok"`. This predates the diff, a swallowed value doesn't resolve to a valid route, and it is low impact.
+- **`<base href>` (1/10):** it is flagged as broken.
+- **serve.mjs dropping `path` (0/10):** it narrows what gets written.
