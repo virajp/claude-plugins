@@ -219,7 +219,10 @@ was taken.
      live path is one `archive` has yet to move, and the sweep leaves it alone
      until `archive`'s own landing edit re-points it.
 5. `git add -- docs/plans/index.md` — that file alone; nothing else the
-   checkout carries rides this commit.
+   checkout carries rides this commit. The one exception is a completion
+   whose folder has a `## Release levels` section and raised a key:
+   `/vwf:execute` stages `.config/releases.yaml` too, per its release-levels
+   write, and nothing else.
 6. `mise x -- git commit -m "docs: plan queue — <folder> running"` for a
    claim, `… — <folder> unclaimed` for an unclaim, `… — <folder> complete`
    for a completion. `<folder>` is the basename.
@@ -235,7 +238,8 @@ was taken.
      `git pull --ff-only`. Then, by kind of edit:
      - A **completion** re-applies the same row from step 4 and pushes again —
        a completion never re-picks; it repeats until the push lands, then
-       reaches step 8.
+       reaches step 8. When it carried `.config/releases.yaml`, that file is
+       restored from the new tip the same way and its levels raised again.
      - A **claim** goes to step 8 first — the checkout is restored before
        anything else is decided — and then back to *Reading the queue*: for
        `next`, a re-pick, which either starts this procedure over at step 1

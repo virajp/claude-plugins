@@ -1,4 +1,26 @@
-# The `code`-unit preflight (Setup steps 2 and 3)
+# The preflight reads (Resolve; Setup steps 2 and 3)
+
+## The release levels (Resolve, every plan)
+
+Read at Resolve, before the claim, on a fresh run and a resume alike. The
+folder's `index.md` carries a `## Release levels` section after its Consent
+block — a table with the columns Project, Level, Reason, one row per project
+the units touch, `NONE` rows included. The landing reads it to raise
+`.config/releases.yaml`, per *The release-levels write* in `SKILL.md`.
+
+- **No `## Release levels` section** → an old-shape folder, written before
+  levels were recorded. **Not a refusal**: its units run as written, the
+  landing writes nothing to `.config/releases.yaml`, and the final report says
+  *old-shape folder — no release levels recorded* in one line.
+- **A row whose Level cell is not one of `NONE`, `PATCH`, `MINOR`, `MAJOR`** →
+  a refusal naming the row and its cell; the fix is the cell corrected in the
+  folder, then the folder re-approved, or, on a resume, edited by hand in the
+  worktree and the run re-launched.
+- **A `Release <project>` row in an old-shape folder's Consent block** →
+  ignored. It is neither a bump nor a release step; the run bumps no version
+  and releases nothing, whatever that row reads.
+
+## The `code`-unit preflight (Setup steps 2 and 3)
 
 Read this at Setup step 2 **only when the Units table holds a `code` unit** — a
 plan of `edit` units alone writes no code, so neither branch below applies to
@@ -6,7 +28,7 @@ it: a missing LSP server is a Run log detail there, and no conventions are
 fetched. A `blocking` doctor finding is a hard halt handled in `SKILL.md`, not
 here, whatever the plan's units.
 
-## The LSP rule (Setup step 2)
+### The LSP rule (Setup step 2)
 
 Applies **only when `doctor` reports a missing LSP server**. A clean preflight,
 or one whose only findings are non-LSP, never needs it.
@@ -36,7 +58,7 @@ row in the folder's **Consent** block — `LSP <language>`, reading `installed` 
 Everything else doctor reports is noted and carried into the run's gap list, not
 blocked on.
 
-## Stack conventions (Setup step 3)
+### Stack conventions (Setup step 3)
 
 Fetch the `conventions:` prose for every template this plan's projects pin, per
 *Resolving the conventions* in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`

@@ -336,16 +336,21 @@ state what it returns: `10 + max` over the `Priority` column of every unarchived
 `requires:` row in the base repo's `docs/plans/index.md`, or `10` when the plan
 requires none of them — and which row it stands on. Item 10a places the `review`
 row(s) — one after the last code unit by default, an earlier one only on a
-ruling recorded in the decisions table. Items 16–18 produce the Consent block:
-the landing answer, the after-landing steps each carrying `run` — a step not
-confirmed `run` is dropped — and the release intent per project the units
-touch — a release step recorded `run` is authorised by item 18's answer; the
-LSP rows come from §2. Item 18a writes the End an `all` run after landing row:
-asked only when the units' Owns include a plugin the run itself loads — one
-installed in the session that runs `/vwf:execute all`, which keeps running the
-stale copy until it restarts; on yes, `/vwf:execute all` ends after this plan
-and reports "restart, then `/vwf:execute all`" — and written `no` unasked
-otherwise.
+ruling recorded in the decisions table. Items 16–17 produce the Consent block:
+the landing answer and the after-landing steps each carrying `run` — a step not
+confirmed `run` is dropped; a cycle plan carries no release step, as a release
+is always a hand step with `/release`; the LSP rows come from §2. Item 18 — the
+**release levels** — is stated as a fact, never asked, as the priority is: one
+row per project the units touch, `NONE` included, each level derived from the
+change — breaks users → `MAJOR`, new behaviour → `MINOR`, a fix → `PATCH`, no
+user-visible change → `NONE` — with its reason. A slice lands blueprint
+behaviour, so its levels are normally `MINOR` or `MAJOR`, but that rule decides,
+not the habit; the user changes a level at the §6 gate. Item 18a writes the
+End an `all` run after landing row: asked only when the units' Owns include a
+plugin the run itself loads — one installed in the session that runs
+`/vwf:execute all`, which keeps running the stale copy until it restarts; on
+yes, `/vwf:execute all` ends after this plan and reports "restart, then
+`/vwf:execute all`" — and written `no` unasked otherwise.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -357,7 +362,8 @@ every drift row; the unit map — id, wave, owns, depends-on, the failing test
 each names; every new dependency (package, what for, which unit); the wave
 gate, the after-landing steps, the gates the orchestrator keeps, and the
 derived priority with its arithmetic; the consent block, LSP rows and the
-End an `all` run after landing row included; the
+End an `all` run after landing row included; the release levels, each with its
+reason; the
 acceptance criteria the units cover; the blind spots and the visual-review
 advisory, when any; the parked list. Then wait for explicit approval. Offer:
 
@@ -382,7 +388,8 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
 [Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
 (`type: vwf-plan`, `covers:`, `requires:`, `backlog:`, `backlog_pieces:`), the
-Status block at `DRAFT`, the Consent block, the cycle-only sections (Slice,
+Status block at `DRAFT`, the Consent block, the `## Release levels` table
+(Project, Level, Reason), the cycle-only sections (Slice,
 Acceptance criteria (from blueprint), Gaps surfaced during execution), the
 assumed decisions, the units table — plus one `NN-<unit>.md` per unit. Every
 slice unit is `Kind: code`, on Model `opus` unless the interview recorded
@@ -402,8 +409,10 @@ transitively through Depends on, every `code` unit in an earlier wave that no
 earlier `review` row already covers, so the commit range it reviews and the
 units it covers are one set. No code unit triggers a review by itself, and
 `/vwf:execute` refuses a plan whose code units no later `review` row covers, or
-whose rows break either placement rule. The two fixed final units — docs,
-gates-and-bump — are written as the template says.
+whose rows break either placement rule. The two fixed final units — the docs
+unit and the gates unit, `NN-gates.md`, which runs the generators the plan names
+and passes the full wave gate and bumps nothing — are written as the template
+says.
 
 **`backlog:` and `backlog_pieces:`.** The frontmatter also carries two lists of
 the `Bnn` ids of the backlog project's items §2's recall matched to this
@@ -524,7 +533,8 @@ per folder and the chain's first unexecuted plan is the one to run first.
   repo already answers
 - Settles a *what* question — behaviour, contract, data shape, acceptance — that
   belongs to `/vwf:blueprint`
-- Records a release or landing consent it did not explicitly ask for
+- Records a landing consent it did not explicitly ask for, or records a release
+  step
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits the backlog itself — it calls `/vwf:backlog`, which owns the project
 - Edits `docs/plans/index.md` or a folder's Status block itself — `add` is the

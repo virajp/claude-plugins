@@ -3,8 +3,7 @@
 ## Rules
 
 - ALWAYS ask user before running a `p:i:release`, `p:plugins:release` or
-  `p:site:release` task — the one exception is a plan folder whose After landing
-  table records that release as `run`, consented at its interview
+  `p:site:release` task
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
   `readme.md`, this file, and the manual under `site/src/content/docs/` in the
   same commit — stale docs are more harmful than no docs
@@ -58,11 +57,13 @@ until one stops — which refuses a folder that is not on that branch, claims th
 row `RUNNING` with a pushed commit before it cuts a worktree, and marks it
 `COMPLETE` once the merge lands (archiving the folder there and re-pointing the
 row when no gap is open; leaving it live when one is, archived once you ask) —
-each plan folder carries this repo's gate lines, and `mise run p:plugins:local`
-and `/release` as after-landing steps, each recorded `run` at the interview or
-dropped: `/vwf:execute` runs them on a green landing without a prompt, and asks
-nothing at run time, save the run-level questions `/vwf:execute all` asks once,
-before its first plan — every stop is a report with its resume command.
+each plan folder carries this repo's gate lines, `mise run p:plugins:local` as
+an after-landing step, recorded `run` at the interview or dropped, and the
+release levels it derives per project, which `/vwf:execute` writes to
+`.config/releases.yaml` at landing: it runs the step on a green landing without
+a prompt, bumps no version, releases nothing, and asks nothing at run time, save
+the run-level questions `/vwf:execute all` asks once, before its first plan —
+every stop is a report with its resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -333,13 +334,14 @@ not a component.
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
-no tag, so `/vwf:execute` takes it as the plan's first after-landing step — run
+no tag, so `/vwf:execute` takes it as the plan's after-landing step — run
 without a prompt on a green landing, as the plan records it `run` — and a staged
 plugin loads in the next **restarted** session. Public second — the tags.
 
 **Ask the user before running `p:plugins:release`, `p:i:release` or
-`p:site:release`** — unless the plan folder being landed records that release as
-a `run` step, consented at its interview.
+`p:site:release`** — always; no plan carries a release step. A plan records each
+project's release level, and `/vwf:execute` raises it in `.config/releases.yaml`
+at landing; the release tasks do not read that file yet.
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the

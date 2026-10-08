@@ -105,8 +105,8 @@ puts two or three approaches in front of you with their trade-offs and a
 recommendation, and records the one you pick **with the alternative it
 rejected** — which is what stops the next plan re-opening the same argument.
 
-Three of the questions are the ones that make the run unattended later, and they
-are worth answering carefully:
+Two of the questions are the ones that make the run unattended later, and they
+are worth answering carefully; a third thing is stated rather than asked:
 
 - **The wave gate.** The exact commands the run must pass, proposed from your
   repo's own task list and its `harness:` stamp. Relay's is its lint task, its
@@ -119,20 +119,22 @@ are worth answering carefully:
   the repo has no task runner and no stamp, the answer is `none`, and the plan
   says plainly that the wave review is then the only gate.
 - **The after-landing steps.** What happens once the branch is in. Each one is
-  recorded `run`, here, or dropped, whether it stages something on your machine
-  or ships a release: a `run` step runs on a green landing without a prompt —
-  the yes you give now is the consent. A step you want to check first is
-  dropped, and you run it by hand later; the run never stops to ask. An empty
-  list is a perfectly good answer.
-- **The release intent.** Per project the change touches: does a user see a
-  difference, and what command ships it. Recorded as `none`, `patch`, `minor` or
-  `major`. Relay's answer is `none` — CI plumbing, no user-visible change — so
-  nothing ships and the version stays put.
+  recorded `run`, here, or dropped: a `run` step runs on a green landing without
+  a prompt — the yes you give now is the consent. A step you want to check first
+  is dropped, and you run it by hand later; the run never stops to ask. No step
+  ever ships a release, and a command your `.config/vwf.yaml` already lists
+  under `after_landing:` is not proposed, since it runs after every landing. An
+  empty list is a perfectly good answer.
+- **The release levels.** Per project the change touches, the planner derives
+  how far the version must move — `MAJOR` when it breaks users, `MINOR` for new
+  behaviour, `PATCH` for a fix, `NONE` when no user sees it — with a one-line
+  reason, and shows it at the approval gate, where you change a level you
+  disagree with. Relay's is `NONE` — CI plumbing, no user-visible change.
 
-A release recorded here is **intent only** — unless its after-landing step is
-recorded `run`, in which case this answer is the consent and the run ships it on
-a green landing. Saying `minor` with no step authorizes nothing: the change
-waits for a later release, cut by hand.
+A level is a record, not a release. No unit bumps a version; at landing the run
+raises each project's key in `.config/releases.yaml` — the highest level wins —
+and the release itself is always a later hand step, `/release` or your repo's
+own.
 
 One more consent row is asked only when the plan edits a plugin your session
 itself has loaded: **End an `all` run after landing**. Say `yes` and a
@@ -145,7 +147,7 @@ Relay's change touches no plugin, so the row is written `no` without asking.
 Nothing has been written to disk yet. The plan is presented as a shape first:
 the goal and any standing decision it reverses, the assumed-decisions table, the
 unit map with each unit's owned paths, every new third-party dependency any unit
-would add, the gates, the consent block and the parked list.
+would add, the gates, the consent block, the release levels and the parked list.
 
 Read the **unit map** and the **decisions table** properly; they are the review
 surface. A unit is one subagent with one commit and no memory of this
@@ -252,8 +254,9 @@ back to, so it goes to the docs unit, which is given that passage to own for the
 rest of the run, and you see it in the report as a `GAP:`. The last two units
 are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
-a gates-and-bump unit. Relay's docs unit is what actually deletes the
-hand-written step from the contributing guide.
+a gates unit, which runs the generators and the full gate and bumps nothing.
+Relay's docs unit is what actually deletes the hand-written step from the
+contributing guide.
 
 The orchestrator never reads a unit's files itself, so a long run costs you the
 size of the reports, not the size of the diff.
@@ -275,14 +278,16 @@ instead, to be archived when you ask), and lands per the consent you recorded.
 Once the merge is in, one more commit on the integration branch sets the plan's
 row to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE`
 row that no waiting plan still requires — the queue only ever holds what is
-waiting, running, or still needed. Then it runs the after-landing steps, every
-one recorded `run`, in order and without a prompt — where a step stages
-something, only a **restarted** session will pick it up. A step that fails stops
-the rest, and the report names it, its exit code and each step not run. If the
-branch did not merge, no step runs; the report lists each with its command, for
-after your hand merge. If the archive raises a completion warning, the folder
-stays live, the row still goes `COMPLETE`, and the report names the warning and
-the archive to ask for once it is settled.
+waiting, running, or still needed. The same commit raises the plan's release
+levels in `.config/releases.yaml`. Then it runs the after-landing steps, every
+one recorded `run`, in order and without a prompt, then each command your
+`.config/vwf.yaml` lists under `after_landing:` that the plan did not already
+run — where a step stages something, only a **restarted** session will pick it
+up. A step that fails stops the rest, and the report names it, its exit code and
+each step not run. If the branch did not merge, no step runs; the report lists
+each with its command, for after your hand merge. If the archive raises a
+completion warning, the folder stays live, the row still goes `COMPLETE`, and
+the report names the warning and the archive to ask for once it is settled.
 
 ## When it stops early
 
@@ -332,9 +337,10 @@ the next plan's recall still reads it.
 - **It will not pick up an item from *Out of scope* or *Parked***, however
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.
-- **It will not release anything you did not consent to.** A publishing step
-  recorded `run` ships because you said so at the interview; a release intent
-  with no step behind it ships nothing, and the run does not ask.
+- **It will not release anything.** No plan carries a release step; the run
+  records each project's release level in `.config/releases.yaml` and bumps no
+  version. A release is `/release`, or your repo's own release step, run by
+  hand.
 
 ## Where to go next
 

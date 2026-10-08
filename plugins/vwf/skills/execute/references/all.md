@@ -10,7 +10,8 @@ needs the user. The session that typed it is **the loop**: it asks the run's
 questions once, it picks, it dispatches, it keeps a one-line result per plan,
 it runs what the answers deferred to its exit, and it does nothing else — it
 never reads a unit report or a Run log itself, and of a plan folder it reads
-the Consent block and the After landing table alone, once, for the questions.
+the Consent block and the After landing table alone, once, for the questions
+— and of `.config/vwf.yaml`, the `after_landing:` key alone.
 Plain `/vwf:execute <folder>` and `/vwf:execute next` are unchanged by any of
 this.
 
@@ -28,7 +29,8 @@ changed.
    `APPROVED` row whose each `requires:` entry is satisfied or is a row
    already in the set, repeating until no row joins. None → ask nothing; the
    loop's first pick ends it as before. Read each reached folder's Consent
-   block and After landing table, and nothing else of it.
+   block and After landing table, and nothing else of it, and the
+   `after_landing:` key of `.config/vwf.yaml`, when there is one.
 2. **Ask the questions that apply, one per turn**, each a yes or no, holding
    the answers:
    - **One shared worktree** — always asked. All the reached plans run in one
@@ -36,15 +38,13 @@ changed.
      refreshed from the integration branch before each plan, each plan landing
      in turn while the worktree is kept; the loop's exit removes it, except
      on a `STOPPED` end.
-   - **Deduped after-landing steps** — asked when one step command, a release
-     step excepted, is recorded `run` by two or more reached plans. List each
-     such command and its plans. Yes → each runs once, from the main checkout,
-     after the last plan that landed — on an early stop too — and no runner
-     runs it.
-   - **One release at the end** — asked when a reached plan records a release
-     step `run`: a step that publishes beyond this machine — a tag, a package,
-     a deploy, `/release`. List each distinct one and its plans. Yes → no
-     runner runs it; each is held and runs once after the last plan.
+   - **Deduped after-landing steps** — asked when one step command would run
+     after two or more reached plans: a plan step recorded `run` by two or
+     more of them, or a command in `.config/vwf.yaml`'s `after_landing:` list,
+     which runs after every landing, whenever two or more plans are reached.
+     List each such command and its plans. Yes → each runs once, from the
+     main checkout, after the last plan that landed — on an early stop too —
+     and no runner runs it.
    - **Landing** — asked when a reached plan's Consent row *Merge to the
      integration branch and push on green* reads `no`. List every such plan
      together first, then ask once per plan, one per turn: land `<folder>`
@@ -65,7 +65,6 @@ this folder, and `Overrides: none` when no line does:
 Overrides:
 - shared worktree: <branch>
 - skip as deduped: <command>; <command>
-- hold release: <command>; <command>
 - land: yes
 ```
 
@@ -126,16 +125,13 @@ steps and the worktree removal below.
 On any end, first run what the answers deferred, from the main checkout, in
 this order and asking nothing:
 
-1. **The deduped steps** — each command the deduped answer named that a plan
-   which landed this run (`COMPLETE` or `COMPLETE with gaps`) recorded, once,
-   in the order the first such plan's table lists them — on an early stop
-   too. None landed → none runs.
-2. **The held releases** — only when the run reached its last plan: it ended
-   with nothing runnable, not on a `STOPPED` row, an `ENDS RUN: yes` or a
-   cap. Then each distinct held release a landed plan recorded runs once. On
-   an early stop every held release stays held, and the exit lists each with
-   its command, to run by hand.
-3. **The shared worktree** — removed with a plain
+1. **The deduped steps** — each command the deduped answer named that would
+   have run after a plan which landed this run (`COMPLETE` or
+   `COMPLETE with gaps`) — recorded in its table, or in the `after_landing:`
+   key — once, in the order the first such plan's table lists them, then the
+   key's commands in list order — on an early stop too. None landed → none
+   runs.
+2. **The shared worktree** — removed with a plain
    `git worktree remove <path>` from the main checkout, asking nothing, on
    every exit except a `STOPPED` one — the stopped plan's resume runs in the
    worktree its status line names — and then the exit names its path and
@@ -155,7 +151,7 @@ by a person in a fresh session — `/vwf:execute all` in a restarted session
 after an `ENDS RUN: yes`, the stopped row's `RESUME:` after a cap (the
 runner's own `/vwf:handoff` wrote the reserved `next` handoff; the loop
 writes none), and nothing when no plan was runnable. Below the table, one
-line per deferred step — ran, failed, not run, or held — with its command. A
+line per deferred step — ran, failed or not run — with its command. A
 run that dispatched no runner prints the stop reason alone. The exit asks
 nothing.
 
@@ -205,11 +201,11 @@ RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
 ```
 
-Under an override, `DETAIL:` adds `; skipped: <commands>` and
-`; held: <commands>` for the steps the block deferred to the loop's exit.
+Under an override, `DETAIL:` adds `; skipped: <commands>` for the steps the
+block deferred to the loop's exit.
 
 - **`COMPLETE`** — the branch merged and pushed, the row went `COMPLETE`, and
-  every after-landing step ran, save those the overrides skipped or held;
+  every after-landing step ran, save those the overrides skipped;
   the gap list was empty. `RESUME: none`.
 - **`COMPLETE with gaps`** — the same landing with a gap open, or with
   `plan-management archive` raising a warning, so the folder stayed live.

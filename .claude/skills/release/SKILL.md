@@ -11,9 +11,7 @@ allowed-tools: Read Grep Glob Bash
 
 **Ask the user before running `p:i:release`, `p:plugins:release` or
 `p:site:release`.** It is the repo's hard rule, and all three tasks tag and
-push. The one exception is a plan folder whose After landing table records that
-release as `run`, consented at its interview — `/vwf:execute` runs it on a green
-landing without a second ask.
+push. There is no exception: no plan folder carries a release step.
 
 **There are three independent things to release, and one tag family each.** Ask
 which is meant before doing anything; the answer is usually visible in what

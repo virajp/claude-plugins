@@ -8,9 +8,9 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — `index.md` plus one
 `NN-<unit>.md` per unit. The template's sections are all required, the
 cycle-only ones included; the frontmatter, the Status block, the Consent block,
-the Units table, the Wave gate, the After landing table and the Run log have a
-fixed shape because `/vwf:execute` parses and rewrites them — the Status block
-through `plan-management`, the rest itself.
+the Release levels table, the Units table, the Wave gate, the After landing
+table and the Run log have a fixed shape because `/vwf:execute` parses and
+rewrites them — the Status block through `plan-management`, the rest itself.
 
 **Frontmatter.** `type: vwf-plan`, `title`, **`covers:`** (the blueprint doc(s)
 this element implements — one path, or the cycle element's set; the list the
@@ -44,8 +44,8 @@ Verification names the gate lines it must pass; its Commit line's type is one
 the repo's convention file allows. A harness bootstrap unit orders before the
 units whose verification depends on it; expand / backfill / contract units
 order as `delta-checks.md` spells them. Waves are ordering only — `execute`
-runs the units serially. The docs unit and the gates-and-bump unit close the
-table, as the template says.
+runs the units serially. The docs unit and the gates unit close the table, as
+the template says.
 
 **Acceptance criteria.** Copy the Acceptance blocks of the flow docs this
 element touches **verbatim** into `index.md`'s "Acceptance criteria (from

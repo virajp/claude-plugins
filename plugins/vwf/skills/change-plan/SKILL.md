@@ -6,10 +6,10 @@ description: Turn an ad-hoc change request — work outside the blueprint — in
   dispatches. Recall and survey the repo, split a request
   that is really several plans, interview the user one question at a time until
   the checklist is discharged, present the shape behind a hard gate, agree the
-  wave gate, the after-landing steps and the release intent, record consent,
-  write index.md plus one file per subagent unit, mark the backlog items it
-  covers planned, add its row to the plan index with a derived priority, and
-  commit and push the folder so the fresh context sees it.
+  wave gate and the after-landing steps, derive the release levels, record
+  consent, write index.md plus one file per subagent unit, mark the backlog
+  items it covers planned, add its row to the plan index with a derived
+  priority, and commit and push the folder so the fresh context sees it.
   Run when the user wants to plan a change that is not a blueprint slice —
   tooling, docs, CI, a refactor, a tree the blueprint does not describe; a
   blueprint slice is /vwf:plan.
@@ -147,11 +147,12 @@ before. If the user says "just decide", record the decision in the assumed
 decisions table with your reasoning and the alternative you rejected — that
 table is what they review.
 
-### 4. Agree the gate, the after-landing steps and the release intent
+### 4. Agree the gate and the after-landing steps, derive the release levels
 
-Four sub-steps, each proposed from the survey and confirmed by the user. All
-four are written into `index.md`, and `/vwf:execute` runs **what is written
-and nothing it infers**.
+Four sub-steps. (a), (b) and (d) are proposed from the survey and confirmed by
+the user; (c) is derived and stated, never confirmed here — the user changes a
+level at the §5 gate. All four are written into `index.md`, and `/vwf:execute`
+runs **what is written and nothing it infers**.
 
 **(a) The wave gate.** Propose the exact commands the run must pass, one per
 line, drawn from the survey's gate list — the repo's own task runner tasks, the
@@ -160,7 +161,7 @@ touched trees. Confirm them. These become `index.md`'s **Wave gate** section,
 and `/vwf:execute` runs them before wave 1 and after every wave. A check
 that only holds once a particular unit has landed is **not** a wave-gate line —
 the gate runs before wave 1 and must be green then — it is that unit's
-*Verification*, repeated in the gates-and-bump unit's. A repo with no task
+*Verification*, repeated in the gates unit's. A repo with no task
 runner and no harness stamp records `none` — say plainly, in that case, that the
 run has no automated gate and the wave review is the only check. The wave
 review is the only review a change plan runs by default: a `Kind: review` row
@@ -171,28 +172,26 @@ decisions table.
 **(b) After landing.** Propose the ordered steps that follow a consented
 landing, and confirm each. Each step is confirmed at the interview (item 17) as
 `run` or dropped, and `run` is written to the After landing table: a `run` step
-runs on a green landing without a prompt — a local staging step and a release
-step alike. A step the user wants to check first is dropped and run by hand
-later; the executor never stops before a step to ask. Where a step stages
-something the session already loaded, say plainly that it is picked up only by
-a **restarted** session.
+runs on a green landing without a prompt. A plan never carries a release step —
+a release is always a later hand step, `/release`. A step the user wants to
+check first is dropped and run by hand later; the executor never stops before a
+step to ask. A command already in `.config/vwf.yaml`'s `after_landing:` list is
+not proposed: `/vwf:execute` runs it after every green landing. Where a step
+stages something the session already loaded, say plainly that it is picked up
+only by a **restarted** session.
 
 Empty is a valid answer. These become `index.md`'s **After landing** section.
 
-**(c) Release intent.** For each project the units touch, ask two things: does a
-user of that project see a difference, and how does that project ship — the
-command that bumps its version, the tag, the publish step. Record the answer as
-a `Release <project>` consent row reading `none`, `patch`, `minor` or `major`,
-together with the command that bumps it, and as the step in (b) that ships it.
-The gates-and-bump unit bumps with the command the plan names.
+**(c) Release levels.** For each project the units touch, derive its level from
+the change — never ask it (interview item 18 is stated, as item 12's priority
+is): breaks users → `MAJOR`, new behaviour → `MINOR`, a fix → `PATCH`, no
+user-visible change → `NONE`. Give each a one-line reason, and write them as
+`index.md`'s `## Release levels` table — columns Project, Level, Reason, after
+the Consent block, one row per project the units touch, `NONE` included.
 
-This question doubles as the consent for a release step recorded `run`: a
-release the user names here and (b) records `run` is authorised, and the
-executor runs it on a green landing without asking again. A release with no
-after-landing step is intent only — the change waits for a later release, cut
-by hand. Record every answer including "not this time" — a changed project with
-no public release recorded is a valid answer, and it means the change waits for
-the next one.
+No unit bumps a version and no plan releases. `/vwf:execute` raises each level
+in `.config/releases.yaml` at landing — one key per project, the highest level
+wins — and `/release` is a later hand step that reads that file.
 
 **(d) Ending an `all` run.** Write the Consent row
 End an `all` run after landing (interview item 18a). Ask it only when the
@@ -223,7 +222,8 @@ their weight and confirmed one at a time:
    is never asked; the one thing that changes it is a required plan the user
    names here that the interview missed — then the verb is run again
 6. the consent block — the End an `all` run after landing row among it — and
-   the release intent
+   the release levels, each with its reason, stated as a fact like the
+   priority; the user may change a level here
 7. the parked list
 
 Then ask once: **approve**, **revise** or **abandon**. Revise loops back to the
@@ -275,9 +275,9 @@ Rules the plan must obey, learned from the plans that came before:
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
   no unit's deletion can ride another unit's commit.
 - **Shared-file rule.** Any file two units would write is owned by exactly one,
-  or by the orchestrator. Version files, generated files, and every doc are
-  always the orchestrator's or the final units'. Units in one wave own disjoint
-  paths.
+  or by the orchestrator. Version files are nobody's — the release task bumps
+  them; generated files and every doc are always the orchestrator's or the
+  final units'. Units in one wave own disjoint paths.
 - **Gate deltas are units.** A change that needs a new or altered check, test,
   or task plans that as an owned edit, never as "update the gates".
 - **`requires:` names a folder by its basename.** A required plan is written as
@@ -288,9 +288,9 @@ Rules the plan must obey, learned from the plans that came before:
   `vwf:docs-sync` over the run's branch delta
   (`${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`) and applies its findings
   plus every `DOCS FALSIFIED:` line the earlier units returned; and the
-  **gates-and-bump unit**, which bumps each released project's version with the
-  command the plan names, runs the generators the plan names, and passes the
-  full wave gate. Nothing else touches docs or versions.
+  **gates unit**, `NN-gates.md`, which runs the generators the plan names and
+  passes the full wave gate. Nothing else touches docs; no unit bumps a
+  version.
 - **Assumed decisions are a table**, one row per ruling you made, with the unit
   it changes and the alternative rejected. It is the review surface.
 - **Out of scope and Parked are explicit.** What the user declined, with the
@@ -323,6 +323,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:` Parked
   line
 - the derived priority equals what `plan-management priority <folder>` returns
+- every project the units touch has a `## Release levels` row with a reason,
+  and the Consent block has no `Release` row
 - every Consent row carries an answer, and no After landing step carries a mode
   other than `run` — `/vwf:execute` asks nothing at run time
 - the launch line names this folder
@@ -385,7 +387,7 @@ is the survey and the interview, and the run should carry none of it.
 - Writes anything to disk before the hard gate in §5 is approved
 - Executes a unit, edits a file the plan names, or bumps a version
 - Asks two things in one turn, or asks what the repo already answers
-- Records a release or landing consent it did not explicitly ask for
+- Records a landing consent it did not explicitly ask for, or a release step
 - Writes a plan whose unit prompts depend on this conversation
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits the backlog itself — it calls `/vwf:backlog`, which owns the project

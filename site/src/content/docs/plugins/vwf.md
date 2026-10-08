@@ -2429,13 +2429,17 @@ code units no review row covers, or whose rows break either placement rule, is
 refused at its preflight. Three things are always agreed before anything is
 written: the **wave gate** (the exact commands the run must pass), the
 **after-landing steps** (each recorded `run`, or dropped), and the **consent
-block** — whether the run may merge and push on green, the release intent per
-project the units touch (the consent for a release step recorded `run`; intent
-alone when no release step is recorded), the LSP rows, and End an `all` run
-after landing — asked only when the plan edits a plugin the session running
-`/vwf:execute all` has loaded, `no` otherwise. The **priority** is stated, never
-asked: `10 + max` over the `Priority` of every unarchived plan its `requires:`
-names, or `10` when it requires none — the order `/vwf:execute next` picks in.
+block** — whether the run may merge and push on green, the LSP rows, and End an
+`all` run after landing — asked only when the plan edits a plugin the session
+running `/vwf:execute all` has loaded, `no` otherwise. No after-landing step
+releases anything: a release is always a hand step, `/release` or the repo's
+own. The **priority** is stated, never asked: `10 + max` over the `Priority` of
+every unarchived plan its `requires:` names, or `10` when it requires none — the
+order `/vwf:execute next` picks in. The **release levels** are stated the same
+way: one row per project the units touch in the folder's `## Release levels`
+table — `MAJOR` when the change breaks users, `MINOR` for new behaviour, `PATCH`
+for a fix, `NONE` when no user sees it — each with its reason, shown at the
+approval gate, where you change a level you disagree with.
 
 Its recall also reads the base repo's [backlog project](#vwfbacklog) through
 `/vwf:backlog list`, since the slice in front of it is often already an item
@@ -2541,13 +2545,11 @@ no single folder can answer — then nothing more until it ends:
   before each plan, each plan landing in turn while the worktree is kept; the
   exit removes it, unless the run ends on a `STOPPED` plan, whose resume runs
   there.
-- **Deduped after-landing steps** — asked when two or more plans the loop will
-  reach record the same step command `run`: it runs once, after the last plan
-  that landed, on an early stop too.
-- **One release at the end** — asked when a plan records a release step `run`
-  (anything that publishes — a tag, a package, a deploy, `/release`): each is
-  held and runs once after the last plan; on an early stop it stays held and the
-  exit lists its command.
+- **Deduped after-landing steps** — asked when one step command would run after
+  two or more plans the loop will reach: a step two or more of them record
+  `run`, or a command in `.config/vwf.yaml`'s `after_landing:` list, which runs
+  after every landing. It runs once, after the last plan that landed, on an
+  early stop too.
 - **Landing** — asked once per plan whose Consent records merge `no`: land it
   this run? A no leaves it to stop at its landing, which ends the run.
 
@@ -2670,8 +2672,12 @@ What it does, by rule:
   its folder says and takes neither placement refusal; it refuses two things of
   its own — a non-green `code` unit with no covering `review` row ahead of it,
   and an After landing table with no mode column or a step whose mode is not
-  `run` — each with the fix: edit the folder by hand in the worktree, then
-  re-launch.
+  `run`, and a `## Release levels` Level cell that is not one of the four levels
+  — each with the fix: edit the folder by hand in the worktree, then re-launch.
+- **The release levels are read, never inferred.** A fresh run refuses a
+  `## Release levels` row whose Level is not `NONE`, `PATCH`, `MINOR` or
+  `MAJOR`, naming the row. A folder with no such section is an older folder: it
+  runs as written, records no level, and the final report says so in one line.
 - **Every after-landing step is `run`.** The `ask` mode is retired: a fresh run
   refuses a folder whose After landing table has no mode column or a step whose
   mode is not `run` — an `ask` step included — naming the planner that wrote it,
@@ -2758,9 +2764,10 @@ What it does, by rule:
   after the acceptance pass and after the reconcile, and only when nothing was
   skipped: the docs unit runs [`/vwf:docs-sync`](#vwfdocs-sync) over the run's
   branch delta and applies its findings plus every `DOCS FALSIFIED:` line the
-  units returned — the executor runs no docs-sync of its own — and the
-  gates-and-bump unit bumps each released project's version with the command the
-  plan names, runs the generators the plan names, and passes the full gate.
+  units returned — the executor runs no docs-sync of its own — and the gates
+  unit runs the generators the plan names and passes the full gate. It bumps no
+  version: the landing records each project's release level, and a person's
+  release step bumps it later.
 
 The orchestrator **decides, reviews and verifies, and never reads unit work
 inline** — every edit is a subagent's, so the session's context stays the size
@@ -2801,7 +2808,7 @@ attempt stay, and the new rows continue the numbering.
 flowchart TD
     W["per wave: review rows first (engines → review ‖ security, findings loop back<br/>to the unit whose commit touched the file) → edit units together → code units one at a time (TDD, commit)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
     R --> AX["with covers: acceptance (E2E) + ux (rendered, renders kept)<br/>once, after all unit waves; then the blueprint reconcile"]
-    AX --> F["fixed final waves — the docs unit (docs-sync),<br/>the gates-and-bump unit"]
+    AX --> F["fixed final waves — the docs unit (docs-sync),<br/>the gates unit"]
     F --> G{"final report — rendered from the Run log,<br/>read against the Consent block"}
     G -->|consent yes, all green| M["merge + push (git-workflow), folder archived<br/>when no gap is open, row COMPLETE, after-landing steps run"]
     G -->|red gate, blocking gap, or no| S["stops at the report — what failed<br/>and the resume command; worktree left intact"]
@@ -2810,7 +2817,7 @@ flowchart TD
 The final report presents everything: per-unit commits, every `GAP:` with the
 assumption it proceeded on (including every owned-path widening and the finding
 that caused it), the review findings that survived the cap, model downgrades,
-the gate results, the versions bumped and the worktree path — and with
+the gate results, the release levels recorded and the worktree path — and with
 `covers:`, the coverage, the acceptance and ux results, `/vwf:mockups renders`
 when renders were kept, the implementation stamps written, and the consolidated
 gap list marked by cap or guard. It **reads this back out of the folder's Run
@@ -2834,20 +2841,27 @@ is merged and pushed through [`/vwf:git-workflow`](#vwfgit-workflow) without a
 further prompt, and one more integration-branch commit —
 `docs: plan queue — <folder> complete` — sets the row `COMPLETE` and **sweeps**:
 every `COMPLETE` row already under `archived/` that no `APPROVED` or `RUNNING`
-row still requires leaves the table, its archived folder being the record.
-**Where the folder ends up depends on the gap list.** When no gap is open, the
-landing moves the folder whole to `docs/plans/archived/` and the row's `Folder`
-points there — it is finished and the archive is its record. When any gap is
-open, the folder stays live at its path as the working record of what needs
-reconciling, the row keeps the live path, and the report says to ask for the
-archive — [`plan-management`](#vwfplan-management)'s `archive` verb — after
-reconciliation. The archive is asked not to prompt: when it raises a completion
-warning, the folder stays live, the row still goes `COMPLETE`, and the report
-names the warning and the archive request to make once it is settled. When any
-condition fails, or consent said `no`, it **stops at the report** with what
-failed and the resume command, and asks nothing: the worktree stays intact and
-nothing merges. A fix goes into the folder — a ruling into the unit file or the
-decisions table, a finding appended to the unit — and you re-run
+row still requires leaves the table, its archived folder being the record. The
+same commit carries the **release levels**: for each row of the folder's
+`## Release levels` table, the run raises that project's key in
+`.config/releases.yaml` to the row's level when it is higher — the order is
+`NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR` stays `MAJOR` — and
+never lowers one; an absent key or file reads `NONE`, and only a release step
+clears a key. The run bumps no version. The file is written on the integration
+branch after the merge, never on the run branch, so two runs landing at once do
+not conflict on it. **Where the folder ends up depends on the gap list.** When
+no gap is open, the landing moves the folder whole to `docs/plans/archived/` and
+the row's `Folder` points there — it is finished and the archive is its record.
+When any gap is open, the folder stays live at its path as the working record of
+what needs reconciling, the row keeps the live path, and the report says to ask
+for the archive — [`plan-management`](#vwfplan-management)'s `archive` verb —
+after reconciliation. The archive is asked not to prompt: when it raises a
+completion warning, the folder stays live, the row still goes `COMPLETE`, and
+the report names the warning and the archive request to make once it is settled.
+When any condition fails, or consent said `no`, it **stops at the report** with
+what failed and the resume command, and asks nothing: the worktree stays intact
+and nothing merges. A fix goes into the folder — a ruling into the unit file or
+the decisions table, a finding appended to the unit — and you re-run
 `/vwf:execute <folder>`, whose resume loops the affected units back through
 their pipeline (a `code` unit's coder re-dispatched with the finding and the
 last review row that covers it re-run over the fix commits as a new loop, an
@@ -2856,16 +2870,19 @@ leaves the row `RUNNING` until your hand merge is followed by asking for the
 folder to be archived, which makes the row edit a landing would have made. Then
 the **after-landing steps**, every one recorded `run`: on a green landing each
 runs in table order with no prompt — the `run` in the folder is its
-authorisation, consented at the interview that wrote it, a release step
-included. A step that exits non-zero stops the rest, and the report names it,
-its exit code and each step not run. When the branch did not merge, no step
-runs; the report lists each with its command, to run after the hand merge. With
-`covers:`, whatever the landing decision, the report lists each gap with the
-command that closes it at the source — fix the blueprint (`/vwf:blueprint`,
-which re-stamps coverage) or re-derive the plan (`/vwf:plan`) — and prints the
-launch line of each plan its landing unblocked, launching nothing. The repo's
-human docs were already reconciled by the docs unit, in this run's worktree
-(stale docs are more harmful than no docs).
+authorisation, consented at the interview that wrote it. No step releases: a
+release is always run by hand, `/release` or the repo's own. After the plan's
+own steps run the repo's default ones — each command in `.config/vwf.yaml`'s
+optional `after_landing:` list, which you keep by hand, on the same terms; a
+command the plan already ran is not run twice. A step that exits non-zero stops
+the rest, and the report names it, its exit code and each step not run. When the
+branch did not merge, no step runs; the report lists each with its command, to
+run after the hand merge. With `covers:`, whatever the landing decision, the
+report lists each gap with the command that closes it at the source — fix the
+blueprint (`/vwf:blueprint`, which re-stamps coverage) or re-derive the plan
+(`/vwf:plan`) — and prints the launch line of each plan its landing unblocked,
+launching nothing. The repo's human docs were already reconciled by the docs
+unit, in this run's worktree (stale docs are more harmful than no docs).
 
 **It reads the blueprint only when the plan covers one.** A cycle plan maps its
 slice to a registry project, enforces TDD and a coverage gate, and stamps the
@@ -3261,27 +3278,29 @@ things are always agreed before anything is written:
   Every line has to be green **before wave 1**, since the gate runs as the
   preflight too — so a check that only starts holding once a particular unit has
   landed is not a gate line at all. It goes in that unit's *Verification*, and
-  again in the gates-and-bump unit's. A repo with neither task runner nor stamp
-  records `none`, and the plan says plainly that the wave review is then the
-  only check.
+  again in the gates unit's. A repo with neither task runner nor stamp records
+  `none`, and the plan says plainly that the wave review is then the only check.
 - **The after-landing steps** — each recorded `run` or dropped, decided here and
   written to the folder's After landing table. A `run` step runs on a green
-  landing with no prompt — the consent given at the interview is the consent, a
-  local staging step and a release step alike. A step you want to check first is
-  dropped and run by hand later; the executor never stops before a step to ask.
-  An empty list is a valid answer.
+  landing with no prompt — the consent given at the interview is the consent. A
+  plan never carries a release step: a release is always a later hand step,
+  `/release` or the repo's own. A step you want to check first is dropped and
+  run by hand later; the executor never stops before a step to ask. A command
+  already in `.config/vwf.yaml`'s `after_landing:` list is not proposed, since
+  the executor runs it after every green landing. An empty list is a valid
+  answer.
 - **The priority** — stated, never asked: `10 + max` over the `Priority` of
   every unarchived plan its `requires:` names, or `10` when it requires none. It
   is the order [`/vwf:execute next`](#vwfexecute) picks in, derived from the
   dependency chain in blocks of ten — over rows of either kind, since a change
   plan may require a cycle plan.
-- **The release intent** — per project the units touch, whether a user sees a
-  difference and how that project ships, recorded as a consent row reading
-  `none`, `patch`, `minor` or `major` together with the command that bumps it.
-  This answer doubles as the consent for a release step recorded `run` above —
-  the executor then ships it on a green landing without asking again. A release
-  with no after-landing step is **intent only** — the change waits for a later
-  release, cut by hand.
+- **The release levels** — derived and stated, never asked, like the priority.
+  Per project the units touch: `MAJOR` when the change breaks users, `MINOR` for
+  new behaviour, `PATCH` for a fix, `NONE` when no user sees it, each with a
+  one-line reason, written as the folder's `## Release levels` table and shown
+  at the hard gate, where you change a level you disagree with. No unit bumps a
+  version: `/vwf:execute` raises each level in `.config/releases.yaml` at
+  landing, and a later release, cut by hand, reads it.
 - **End an `all` run after landing** — asked only when the units edit a plugin
   the session running `/vwf:execute all` has loaded, which keeps running its
   stale copy until restarted: `yes` ends an `all` run after this plan, reporting
@@ -3290,9 +3309,10 @@ things are always agreed before anything is written:
 
 Nothing reaches disk before a **hard gate**: the goal and any reversal, the
 assumed-decisions table, the unit map, every new third-party dependency a unit
-would introduce, the gates, the consent block and the parked list — presented
-for approve / revise / abandon. Only *approve* writes the folder; *abandon* ends
-with nothing on disk and a one-line note the next attempt can recall.
+would introduce, the gates, the consent block, the release levels and the parked
+list — presented for approve / revise / abandon. Only *approve* writes the
+folder; *abandon* ends with nothing on disk and a one-line note the next attempt
+can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.md` with
@@ -3312,8 +3332,9 @@ security finding is routed to that unit all the same. The sections the template
 marks *cycle plans only* — the slice, the acceptance criteria, the gaps — are
 omitted. Units in a wave own **disjoint paths** (the shared-file rule), a change
 that needs a new or altered check plans that as an owned edit rather than
-"update the gates", and the last two units are fixed: a docs unit and a
-gates-and-bump unit.
+"update the gates", and the last two units are fixed: a docs unit and a gates
+unit, `NN-gates.md`, which runs the generators and the full gate and bumps
+nothing.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —

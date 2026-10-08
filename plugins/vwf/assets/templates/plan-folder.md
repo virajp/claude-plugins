@@ -18,10 +18,11 @@ writes it, and the `archive` verb of `plan-management` moves it with the
 folder.
 
 Every section below is required unless marked *cycle plans only*. The
-frontmatter and the **Status**, **Consent**, **Units**, **Wave gate**, **After
-landing** and **Run log** blocks have a fixed shape the executor parses, so keep
-the headings and the column order exactly. The **Status** block is the one
-status a plan has — there is no `status:` key in the frontmatter.
+frontmatter and the **Status**, **Consent**, **Release levels**, **Units**,
+**Wave gate**, **After landing** and **Run log** blocks have a fixed shape the
+executor parses, so keep the headings and the column order exactly. The
+**Status** block is the one status a plan has — there is no `status:` key in the
+frontmatter.
 
 <!-- Where the retired cycle template's sections went: "Current state (actual)"
      and "Target state (per blueprint)" fold into Facts the survey established;
@@ -56,33 +57,45 @@ exposure: dark # cycle plans only, optional — the slice ships behind a flag
 
 ## Consent
 
-| Action                                            | Granted                      |
-| ------------------------------------------------- | ---------------------------- |
-| Merge to the integration branch and push on green | yes / no                     |
-| After landing: <step>                             | run                          |
-| Release <project> publicly                        | none / patch / minor / major |
-| LSP <language>                                    | installed / proceed without  |
-| End an `all` run after landing                    | yes / no                     |
+| Action                                            | Granted                     |
+| ------------------------------------------------- | --------------------------- |
+| Merge to the integration branch and push on green | yes / no                    |
+| After landing: <step>                             | run                         |
+| LSP <language>                                    | installed / proceed without |
+| End an `all` run after landing                    | yes / no                    |
 
-<one `After landing:` row per step, in order, each reading `run`; one
-`Release` row per project the units touch, each naming the command that bumps
-its version; one `LSP` row per language `/vwf:doctor`
-flagged without a server — cycle plans only, answered at `/vwf:plan`'s stack
-gate. That row is what `/vwf:execute`'s preflight reads instead of asking. The
-End an `all` run after landing row is always present: `yes` when the interview
-(item 18a) found the plan edits a plugin the run itself loads — one installed
-in the session that runs `/vwf:execute all`, which keeps running the stale copy
-until it restarts — and the user chose to end there — `/vwf:execute all` then
-stops after this plan and reports "restart, then `/vwf:execute all`" — and `no`
-otherwise, written unasked when the plan touches no such plugin.>
+<one `After landing:` row per step, in order, each reading `run`; one `LSP`
+row per language `/vwf:doctor` flagged without a server — cycle plans only,
+answered at `/vwf:plan`'s stack gate. That row is what `/vwf:execute`'s
+preflight reads instead of asking. The End an `all` run after landing row is
+always present: `yes` when the interview (item 18a) found the plan edits a
+plugin the run itself loads — one installed in the session that runs
+`/vwf:execute all`, which keeps running the stale copy until it restarts — and
+the user chose to end there — `/vwf:execute all` then stops after this plan and
+reports "restart, then `/vwf:execute all`" — and `no` otherwise, written unasked
+when the plan touches no such plugin.>
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt, and `run` is the only mode — a step the interview did not
 confirm `run` (item 17) is not in the plan, and `/vwf:execute` asks nothing at
-run time. A release step recorded `run` is authorised by the interview's
-release question (item 18); a release with no step is intent only, and waits
-for a later release cut by hand. Where a step stages something this session
-already loaded, it is picked up only by a **restarted** session.
+run time. Where a step stages something this session already loaded, it is
+picked up only by a **restarted** session.
+
+## Release levels
+
+| Project   | Level                        | Reason                            |
+| --------- | ---------------------------- | --------------------------------- |
+| <project> | NONE / PATCH / MINOR / MAJOR | <why the change earns that level> |
+
+<one row per project the units touch, `NONE` included. Level is `NONE`,
+`PATCH`, `MINOR` or `MAJOR`, derived by the planner (interview item 18) —
+breaks users → `MAJOR`, new behaviour → `MINOR`, a fix → `PATCH`, no
+user-visible change → `NONE` — and shown at the gate, where the user may change
+it; it is never a consent. The plan bumps no version and releases nothing: at
+landing `/vwf:execute` raises each level in `.config/releases.yaml` — the
+highest wins, a key is never lowered — and a release is cut later, by hand. A
+folder with no such section is an old-shape folder: it runs as written, and
+nothing is written to the file.>
 
 ## Goal
 
@@ -121,13 +134,13 @@ the unit that adds it — or "none". A unit adds nothing not listed here.>
 
 ## Units
 
-| Id   | Wave   | Unit file              | Kind   | Owns                                              | Depends on                                             | Status  | Commit |
-| ---- | ------ | ---------------------- | ------ | ------------------------------------------------- | ------------------------------------------------------ | ------- | ------ |
-| U1   | 1      | [01-x.md](01-x.md)     | code   | `path/a`, `path/b`                                | —                                                      | pending |        |
-| …    |        |                        |        |                                                   |                                                        |         |        |
-| Un-2 | last-1 | `NN-review.md`         | review | —                                                 | <every unit in an earlier wave no earlier row covers>  | pending |        |
-| Un-1 | last   | `NN-docs.md`           | edit   | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all                                                    | pending |        |
-| Un   | last+1 | `NN-gates-and-bump.md` | edit   | version files, generated files                    | Un-1                                                   | pending |        |
+| Id   | Wave   | Unit file          | Kind   | Owns                                              | Depends on                                             | Status  | Commit |
+| ---- | ------ | ------------------ | ------ | ------------------------------------------------- | ------------------------------------------------------ | ------- | ------ |
+| U1   | 1      | [01-x.md](01-x.md) | code   | `path/a`, `path/b`                                | —                                                      | pending |        |
+| …    |        |                    |        |                                                   |                                                        |         |        |
+| Un-2 | last-1 | `NN-review.md`     | review | —                                                 | <every unit in an earlier wave no earlier row covers>  | pending |        |
+| Un-1 | last   | `NN-docs.md`       | edit   | the repo's docs (README, CLAUDE.md, `docs/**`, …) | all                                                    | pending |        |
+| Un   | last+1 | `NN-gates.md`      | edit   | generated files                                   | Un-1                                                   | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -167,12 +180,11 @@ covers is refused at preflight.
 
 ## Shared-file rule
 
-| File                                   | Why it collides                                    | Owner                    |
-| -------------------------------------- | -------------------------------------------------- | ------------------------ |
-| <each version file>                    | several units bumping one version is a lost update | gates-and-bump unit only |
-| <each generated file>                  | generated; regenerating mid-wave races             | gates-and-bump unit only |
-| <each human-facing doc>                | n units editing one doc                            | docs unit only           |
-| <any other file two units would touch> |                                                    |                          |
+| File                                   | Why it collides                        | Owner           |
+| -------------------------------------- | -------------------------------------- | --------------- |
+| <each generated file>                  | generated; regenerating mid-wave races | gates unit only |
+| <each human-facing doc>                | n units editing one doc                | docs unit only  |
+| <any other file two units would touch> |                                        |                 |
 
 ## Waves
 
@@ -381,16 +393,12 @@ also lands here, as a
 `docs/memory/decisions/<date>-<slug>.md` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
-**Gates and bump.** Bumps each released project's version per the consent block,
-using the command that block names, runs the generators the plan names, and
-passes the full wave gate. A bump that would land on a component equal to 13 or
-17 goes one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
-`x.y.18`; those two integers are never issued on any version line, and the
-consent block names the version the bump actually reaches. Its report is the
-run's final gate. It does not write the `implementation:` stamps on a cycle
-plan's `covers:` docs — those are the executor's Reconcile step, gated on
-`covers:` and run before the docs unit's wave, so the docs unit's delta is
-complete.
+**Gates.** Runs the generators the plan names and passes the full wave gate. It
+bumps no version — the plan's **Release levels** table is what `/vwf:execute`
+records at landing. Its report is the run's final gate. It does not write the
+`implementation:` stamps on a cycle plan's `covers:` docs — those are the
+executor's Reconcile step, gated on `covers:` and run before the docs unit's
+wave, so the docs unit's delta is complete.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
 after the landing, because an after-landing step mutates the machine rather than

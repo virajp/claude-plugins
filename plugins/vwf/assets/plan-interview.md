@@ -54,7 +54,7 @@ plan of a chain moves the id to `backlog:`.
    *Cycle plans:* the concrete edits are the delta the surveyor returned —
    `PARTIAL:` and `ABSENT:` lines — sized by the minimalism ladder into units.
 7. **Behaviour change or not.** Per project: does a user of that project see a
-   difference? Drives the release intent.
+   difference? Drives the release level (item 18).
    *Cycle plans:* always yes — a slice lands blueprint behaviour by definition.
 8. **New dependencies.** Does any edit need a package the tree does not already
    have? Name it, what for, and the existing thing it was preferred over. A unit
@@ -142,19 +142,20 @@ table says why.
     the consent given here is the consent. A step the user wants to check
     first is dropped, and run by hand later; the executor never stops before a
     step to ask. Where a step stages something this session already loaded,
-    say that a **restarted** session is what picks it up. No steps at all is a
-    valid answer.
-18. **Release intent, per affected project.** Release to users or not, and
-    `none` / `patch` / `minor` / `major`, together with the command that bumps
-    the version. Record every answer including "not this time". This question
-    doubles as the consent for a release step recorded `run` in item 17: a
-    release the user names here and records `run` is authorised, and the
-    executor runs it on a green landing without asking again. A release with no
-    after-landing step is intent only — the change waits for a later release,
-    cut by hand. A bump that would land on a component equal to 13 or 17 goes
-    one further — `x.12.0` minor becomes `x.14.0`, `x.y.16` patch becomes
-    `x.y.18`; those two integers are never issued on any version line, and the
-    consent row names the version the bump actually reaches.
+    say that a **restarted** session is what picks it up. A command that
+    `.config/vwf.yaml`'s `after_landing:` already lists is not proposed as a
+    plan step: `/vwf:execute` runs it after every green landing
+    (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` is the doctrine). No steps at
+    all is a valid answer.
+18. **Release level, per affected project.** Stated, never asked: the planner
+    derives each level from the change — breaks users → `MAJOR`, new behaviour
+    → `MINOR`, a fix → `PATCH`, no user-visible change → `NONE` — and writes
+    one **Release levels** row per project the units touch, `NONE` included,
+    each with its reason. It shows the table at the gate, as it shows the
+    priority; the user may change a level there, and nothing else changes it.
+    The plan never bumps a version and never releases: at landing
+    `/vwf:execute` raises each level in `.config/releases.yaml` (the highest
+    wins), and a release is cut later, by hand.
     - **18a. End an `all` run after landing.** Asked only when the plan's
       Owns include a plugin the run itself loads — a plugin installed in the
       session that runs `/vwf:execute all`, whose edits that session goes on
