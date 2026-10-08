@@ -89,7 +89,15 @@ function verdict(href) {
       ? "not a link inside the mockups"
       : "not root-absolute";
   }
-  const url = new URL(href, "http://127.0.0.1");
+  // A browser reads a backslash as / and drops tab/CR/LF: /\evil.com is another host.
+  if (/[\\\t\r\n]/.test(href)) {
+    return "not a link inside the mockups";
+  }
+  const base = "http://127.0.0.1";
+  const url = new URL(href, base);
+  if (url.origin !== new URL(base).origin) {
+    return "not a link inside the mockups";
+  }
   const states = url.searchParams.getAll("state");
   if (states.length > 1) {
     return "more than one state";

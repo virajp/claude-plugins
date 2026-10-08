@@ -164,6 +164,17 @@ describe("links.mjs", () => {
     );
   });
 
+  it("refuses an href a browser reads as another host", () => {
+    for (const href of ["/\\evil.com", "/\t/evil.com", "/\\\\evil.com/"]) {
+      write("index.html", html(href));
+      const { status, stdout } = run();
+      expect(status).toBe(1);
+      expect(stdout).toBe(
+        `BROKEN: index.html -> ${href} — not a link inside the mockups\n`,
+      );
+    }
+  });
+
   it("reads unquoted hrefs too", () => {
     write("index.html", "<a href=/signin>a</a> <a href=nowhere>b</a>\n");
     const { status, stdout } = run();
