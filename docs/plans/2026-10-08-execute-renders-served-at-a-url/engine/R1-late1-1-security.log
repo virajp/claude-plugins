@@ -1,0 +1,14 @@
+/security-review — loop R1-late1, round 1 — range 26bfccee..d3ed8616 (branch 2026-10-08-execute-renders-served-at-a-url)
+
+I found no vulnerabilities at confidence 8 or higher in this delta. The code change is in `plugins/vwf/skills/mockups/scripts/renders.mjs` and `serve.mjs`; 4abd6b4e and d3ed8616 are prose only.
+
+Dropped candidates:
+- **Path traversal or arbitrary read via a crafted renders.json `file` (serve.mjs:952-962), confidence 2.** `entry.file` is never turned into a filesystem path. It is only compared as a string against the URL-derived path (`entry.file === rel`), so it can only narrow what gets served. The served path is still built from the URL segments and still has to pass all the existing guards: `inRoot` (realpath confinement), not the root itself, a `.png` extension, not under `__renders/`, and `isFile`.
+- **Route page image path (serve.mjs:973-976), confidence 1.** The image is still built from `screen.path` in routes.json plus `renderName(state)`, then checked by `inRoot`. The entry is only used as a yes/no condition, so no path comes from renders.json.
+- **XSS via entry `plan`/`date`/`state` in pages and the overlay, confidence 2.** Those fields were already rendered before this delta and go through `escapeHtml` and `encodeURIComponent` (lines 556-559, 616). The new `renders()` filter only removes entries; it adds no new output.
+- **renders.mjs merge change, confidence 1.** It removes the `removeImage`/`rmSync` deletion path, which shrinks the file-deletion surface. The kept entries are written back as data, and the server re-checks them against the route map.
+
+Checked clean: realpath confinement of `/<…>.png` serving, the placeholder/404 branching, the state switcher and `/__renders/` list (both read only the filtered entries), the renders.json merge and write (`wx` flag, inside the reserved directory), and no new command or shell use anywhere.
+
+# Report
+No vulnerabilities at confidence >= 8.
