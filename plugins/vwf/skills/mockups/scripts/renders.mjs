@@ -340,8 +340,12 @@ function readRenders(file) {
   }
 }
 
+// Writes onto a fresh file, as copyFresh does: whatever sits at the name — a
+// symlink included — is unlinked first, and the exclusive create refuses
+// anything that reappears there, so the write never follows a link.
 function writeJson(file, value) {
-  writeFileSync(file, JSON.stringify(value, null, 2) + "\n");
+  rmSync(file, { force: true });
+  writeFileSync(file, JSON.stringify(value, null, 2) + "\n", { flag: "wx" });
 }
 
 // The file an entry of `code` and `state` sits at under the route map now, or

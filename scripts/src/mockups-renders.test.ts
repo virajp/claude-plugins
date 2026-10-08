@@ -267,6 +267,37 @@ describe("renders.mjs", () => {
     );
   });
 
+  it("replaces a symlinked renders.json and routes.json, never writing through them", () => {
+    put(base, "outside-renders.json", "OUTSIDE-R");
+    put(base, "outside-routes.json", "OUTSIDE-S");
+    mkdirSync(tree("mobile", "__renders"), { recursive: true });
+    symlinkSync(
+      join(base, "outside-renders.json"),
+      tree("mobile", "__renders", "renders.json"),
+    );
+    symlinkSync(
+      join(base, "outside-routes.json"),
+      tree("mobile", "__renders", "routes.json"),
+    );
+    const { stdout } = run("RENDER: 200a mobile default shots/a.png\n");
+    expect(stdout.trimEnd()).toBe("COPIED: 1");
+    expect(readFileSync(join(base, "outside-renders.json"), "utf8")).toBe(
+      "OUTSIDE-R",
+    );
+    expect(readFileSync(join(base, "outside-routes.json"), "utf8")).toBe(
+      "OUTSIDE-S",
+    );
+    expect(rendersJson("mobile").renders.map(e => e.code)).toEqual(["200a"]);
+    expect(
+      JSON
+        .parse(
+          readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
+        )
+        .platform,
+    )
+      .toBe("mobile");
+  });
+
   it("skips a route folder that is a symlink out of the tree, making nothing there", () => {
     const outside = join(base, "elsewhere");
     mkdirSync(outside);
