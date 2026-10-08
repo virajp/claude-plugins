@@ -73,7 +73,10 @@ committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 `<project>/mockups/<platform>/<route>/index[--<state>].html` plus the reserved
 `__mockups/` (`routes.json`, `comments.yaml`), written by `/vwf:mockups` and
 blueprint §6a, overwritten in place per screen and served at one local URL per
-platform; vwf auto-adds the `.gitignore` line when missing). Superseded
+platform; and the render tree execute keeps,
+`<project>/renders/<platform>/<route>/index[--<state>].png` plus `__renders/`
+(`renders.json`, `comments.yaml`), served by `/vwf:mockups renders`; vwf
+auto-adds the `.gitignore` line when missing). Superseded
 commands/agents/templates are archived under `archived/vwf-<date>/`
 (`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
 `autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the

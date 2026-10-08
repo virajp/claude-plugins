@@ -852,7 +852,7 @@ record.
 | `/vwf:architecture`                     | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                                                                                                 |
 | `/vwf:design-system`                    | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                                                                                                    |
 | `/vwf:blueprint [flow]`                 | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                                                                                            |
-| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups on the production routes, served at one local URL per platform (blueprint passes render in-pass)                                                                                                                                                                                                                                      |
+| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups on the production routes, served at one local URL per platform (blueprint passes render in-pass); `renders` serves execute's renders of the built app beside them                                                                                                                                                                     |
 | `/vwf:screens <mode>`                   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                                                                                                      |
 | `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                                                                                               |
 | `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh context — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan; `all` runs every runnable plan, each in its own runner, until one stops |
@@ -2205,12 +2205,13 @@ the line is in `/stackgen:tool-config`'s universal `.gitignore`, landed by
 ```text
 /vwf:mockups                # sweep every flow with a Screens section
 /vwf:mockups place-order    # just one flow's screens
+/vwf:mockups renders        # review the built app's renders beside the mockups
 ```
 
-**It needs `node`.** Three single-file Node scripts ship with the skill — a
-route map, a link check and a review server — with no dependencies. Without
-`node` on the path it renders nothing and stops, naming the remedy:
-`MISE_ENV=dev mise run setup:all`.
+**It needs `node`.** Four single-file Node scripts ship with the skill — a route
+map, a link check, a review server and the render copy `/vwf:execute` runs —
+with no dependencies. Without `node` on the path it renders nothing and stops,
+naming the remedy: `MISE_ENV=dev mise run setup:all`.
 
 **The tree is the app's routes.** Every flow's screens of one platform render
 into one root, `docs/scratchpad/<project>/mockups/<platform>/`. A screen whose
@@ -2270,6 +2271,30 @@ advisory reads, and what `blueprint` drops when a flow's Screens change
 unrendered. Renders from before this layout sit in per-flow
 `docs/scratchpad/<project>/<NNN>-<flow>/` directories, which nothing reads any
 more; delete them.
+
+**`renders` reviews the built app.** A mockup is the Screens contract drawn
+before any code; a **render** is an image of the built app, taken by the repo's
+`ux-gate` skill in [`/vwf:execute`](#vwfexecute)'s ux stage. Execute keeps the
+images that gate names in the main checkout's
+`docs/scratchpad/<project>/renders/<platform>/<route>/` — `index.png`, or
+`index--<state>.png` — at the same routes as the mockups, replacing only the
+screens and states a run rendered and recording each image's code, state, route,
+plan and date in `__renders/renders.json`. The command that serves them is
+`/vwf:mockups renders [project]`; with nothing on disk it says so and names
+`/vwf:execute`. How the two views meet depends on the platform:
+
+| Platform                                               | View                                                                                                                                               |
+| ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `mobile`, `watch`, `auto`                              | One server; each route is one page — the mockup of the same route and state in a frame on the left, the render on the right                        |
+| `site`, `webapp`, `tablet`, `desktop`, `tv`, `spatial` | Two servers on two ports with the same routes — the mockups and the renders; each page's overlay opens the same route on the other in a new window |
+
+A route with no mockup shows the render alone. Each page carries the state
+switcher, the plan and date of the image, a link to **`/__renders/`** (every
+rendered screen) and the comment overlay. Comments land in
+`__renders/comments.yaml`; after Done, each `open` one goes to
+[`/vwf:feedback`](#vwffeedback) as a UX issue, one at a time, for you to confirm
+or decline. Today no stackgen `ux-gate` returns the image list yet, so no
+renders are kept until it does.
 
 ### /vwf:screens
 
@@ -2594,13 +2619,13 @@ context; its report and the wave review are its whole pipeline. Then each `code`
 unit runs **one at a time** through the `code` stage to its commit. Each stage
 is a fresh purpose-built subagent:
 
-| Stage      | Runs at              | Model  | What happens                                                                  |
-| ---------- | -------------------- | ------ | ----------------------------------------------------------------------------- |
-| code       | each `code` unit     | opus   | Implements the unit under TDD (RED → GREEN → REFACTOR) to the coverage gate   |
-| review     | each `review` row    | opus   | Adversarial code review against the plan, blueprint, conventions, and stack   |
-| security   | each `review` row    | opus   | Threat-models the change against the project's declared capabilities          |
-| acceptance | once, with `covers:` | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them   |
-| ux         | once, with `covers:` | opus   | Renders changed screens, judges them against the design system, axe a11y scan |
+| Stage      | Runs at              | Model  | What happens                                                                                     |
+| ---------- | -------------------- | ------ | ------------------------------------------------------------------------------------------------ |
+| code       | each `code` unit     | opus   | Implements the unit under TDD (RED → GREEN → REFACTOR) to the coverage gate                      |
+| review     | each `review` row    | opus   | Adversarial code review against the plan, blueprint, conventions, and stack                      |
+| security   | each `review` row    | opus   | Threat-models the change against the project's declared capabilities                             |
+| acceptance | once, with `covers:` | sonnet | Independently maps the blueprint's flow criteria to E2E tests and runs them                      |
+| ux         | once, with `covers:` | opus   | Renders changed screens, judges them against the design system, axe a11y scan; keeps the renders |
 
 Then, for every wave of either kind, a **wave review**: one reviewer subagent
 over the wave's diff against the unit files, scoped to the contract — rulings
@@ -2691,10 +2716,14 @@ What it does, by rule:
   waves, one `acceptance + ux` pass runs (E2E criteria + rendered-UI review),
   with the same 4-round cap. `acceptance` runs when the slice touches a flow
   with acceptance criteria; `ux` when it changes screens in a UI project (web
-  gets the full screenshot review; Flutter a code-level pass) — each skip
-  explicit, never silent. Without `covers:` both are skipped, said in the Run
-  log: a plan with no slice has no criteria and no Screens contract to verify
-  against.
+  gets the full screenshot review; Flutter its golden tests and accessibility
+  guideline checks) — each skip explicit, never silent. After the last ux round,
+  execute copies the images the reviewer names into the main checkout's
+  `docs/scratchpad/<project>/renders/` tree, and the final report names
+  [`/vwf:mockups renders`](#vwfmockups) to review them; with no image it copies
+  nothing, says so in the Run log, and names no command. Without `covers:` both
+  are skipped, said in the Run log: a plan with no slice has no criteria and no
+  Screens contract to verify against.
 - **Loops stop when they stop converging.** A round cap bounds how long a fix
   loop runs, but it can't tell *converging slowly* from *not converging at all*.
   Every finding loop — a review row's rounds and the wave review's two rounds
@@ -2771,7 +2800,7 @@ attempt stay, and the new rows continue the numbering.
 ```mermaid
 flowchart TD
     W["per wave: review rows first (engines → review ‖ security, findings loop back<br/>to the unit whose commit touched the file) → edit units together → code units one at a time (TDD, commit)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
-    R --> AX["with covers: acceptance (E2E) + ux (rendered)<br/>once, after all unit waves; then the blueprint reconcile"]
+    R --> AX["with covers: acceptance (E2E) + ux (rendered, renders kept)<br/>once, after all unit waves; then the blueprint reconcile"]
     AX --> F["fixed final waves — the docs unit (docs-sync),<br/>the gates-and-bump unit"]
     F --> G{"final report — rendered from the Run log,<br/>read against the Consent block"}
     G -->|consent yes, all green| M["merge + push (git-workflow), folder archived<br/>when no gap is open, row COMPLETE, after-landing steps run"]
@@ -2782,18 +2811,18 @@ The final report presents everything: per-unit commits, every `GAP:` with the
 assumption it proceeded on (including every owned-path widening and the finding
 that caused it), the review findings that survived the cap, model downgrades,
 the gate results, the versions bumped and the worktree path — and with
-`covers:`, the coverage, the acceptance and ux results, the implementation
-stamps written, and the consolidated gap list marked by cap or guard. It **reads
-this back out of the folder's Run log** rather than recalling the run — by then
-the run may have spanned dozens of dispatches, a compaction, or a
-handoff-and-resume, and the log is the only account that survived all three.
-Each node or report left a row there when it returned (which unit, which round,
-what outcome, and *why* if it was skipped), so round counts are counted rather
-than remembered and a skipped stage is visible as a row instead of an absence;
-the mempalace journal (room `runs`) is a mirror of that table, read only when
-the folder cannot be. If the report had to come from the mirror it says so and
-marks itself **reconstructed** — you should know whether you're reading a record
-or a recollection.
+`covers:`, the coverage, the acceptance and ux results, `/vwf:mockups renders`
+when renders were kept, the implementation stamps written, and the consolidated
+gap list marked by cap or guard. It **reads this back out of the folder's Run
+log** rather than recalling the run — by then the run may have spanned dozens of
+dispatches, a compaction, or a handoff-and-resume, and the log is the only
+account that survived all three. Each node or report left a row there when it
+returned (which unit, which round, what outcome, and *why* if it was skipped),
+so round counts are counted rather than remembered and a skipped stage is
+visible as a row instead of an absence; the mempalace journal (room `runs`) is a
+mirror of that table, read only when the folder cannot be. If the report had to
+come from the mirror it says so and marks itself **reconstructed** — you should
+know whether you're reading a record or a recollection.
 
 **Then it lands per the consent block.** When the plan's *Merge to the
 integration branch and push on green* row reads `yes`, every gate line is green,
@@ -3643,7 +3672,8 @@ start step 1; it runs none of them.)
 #    → the plan's review row, first in its wave: engines → review ‖ security
 #      (findings loop back to the unit whose commit touched the file;
 #      breaking a released API is always fixed)
-#    → acceptance (E2E) + ux (rendered) once, after all units
+#    → acceptance (E2E) + ux (rendered) once, after all units;
+#      the renders kept for /vwf:mockups renders
 #    → reconcile registry + docs + implementation stamps
 #    → final report from the Run log → lands per the plan's consent
 #    → runs each after-landing step, every one recorded run;

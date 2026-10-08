@@ -703,6 +703,28 @@ last `review` row: each fix re-runs the row covering its unit over the fix
 delta before the stages re-verify — *Late loop-backs re-run the last row* in
 [review-unit.md](references/review-unit.md).
 
+**Keep the renders.** After the ux stage's last round, before the landing, take
+the `RENDER: <code> <platform> <state> <file>` lines that round's reviewer
+returned and pipe them, on stdin, into one run per project the stage reviewed:
+
+```sh
+node ${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/renders.mjs --worktree <worktree> --main <main checkout> --project <project> --plan <folder>
+```
+
+It copies each image into the main checkout's
+`docs/scratchpad/<project>/renders/<platform>/<route>/` — `index.png`, or
+`index--<state>.png` — overwriting only the screens and states it was given,
+and records them in that platform's `__renders/renders.json`. A line it cannot
+copy — an unknown code, a missing or non-PNG file, a failed copy — is one
+`SKIPPED:` stdout line; the rest are copied, and stdout ends with one
+`COPIED: <n>` line. Write one Run log row —
+`wave —`, unit `renders`, the `COPIED:` count and each `SKIPPED:` line as its
+detail — mirrored to the journal. With no `RENDER:` line, or `RENDERED: n/a`,
+run no copy: the `renders` row reads `skipped` with that reason. The copy
+writes only into the main checkout's gitignored `docs/scratchpad/` — it is not
+a git edit, and it never blocks the landing: a non-zero exit of the script is a
+gap, recorded with its stderr, and the run continues.
+
 Without `covers:` both stages are skipped — one Run log row each with that
 `why`, journaled — a plan with no blueprint slice has no acceptance criteria
 and no Screens contract to verify against.
@@ -781,6 +803,9 @@ With `covers:`, also:
 - **coverage** vs the configured target, and the **acceptance** (per-criterion
   pass/fail) and **ux** (findings + a11y) results — each from its row, or its
   `skipped` row's `why`
+- **the renders kept** — from the `renders` row: the count per platform and
+  the line "review them with `/vwf:mockups renders`", or, when the row reads
+  `skipped`, its reason and no review command
 - **the implementation stamps written** — each `covers:` doc and the state it
   was set to, with why anything is short of `complete`
 - **the consolidated gap list** from the "Gaps surfaced during execution"
@@ -933,7 +958,8 @@ pause to re-ask a ruling, confirm a unit's scope, report progress between units
 or waves, ask whether to continue after a green gate, ask before a commit, ask
 before the claim or the landing row, ask about a missing LSP server, or ask
 what to do about a gap or a `GAP:` — a gap is recorded and the stated
-assumption stands until the final report. It stops at the Pause Conditions —
+assumption stands until the final report — or ask before it copies the ux
+renders into the main checkout's scratchpad. It stops at the Pause Conditions —
 an inherited red preflight, a merge conflict, a resource cap among them — and
 at the final report, nowhere else, and at neither does it ask: each stop is a
 report with its resume command. Everything else is recorded in the Run log

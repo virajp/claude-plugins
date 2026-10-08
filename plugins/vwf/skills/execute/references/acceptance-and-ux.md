@@ -21,3 +21,7 @@ held, never needs it — the stage contracts themselves live in
 - **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) →
   the "Gaps surfaced during execution" section of the folder's `index.md` +
   room `gaps`, per the gap rules.
+- **The renders of the last round are kept whatever the ux verdict** — copied
+  into the main checkout's scratchpad per *Keep the renders* in the skill's
+  Acceptance & UX section, so a person can see, with `/vwf:mockups renders`,
+  what a residual finding looks like.

@@ -11,6 +11,7 @@ import {
 } from "node:child_process";
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -26,6 +27,7 @@ import {
   dirname,
   join,
 } from "node:path";
+import { runInNewContext } from "node:vm";
 import {
   afterEach,
   beforeEach,
@@ -114,6 +116,7 @@ function write(rel: string, text: string) {
 interface Server {
   url: string;
   stdout: () => string;
+  stderr: () => string;
   exited: Promise<number | null>;
 }
 
@@ -121,6 +124,10 @@ function start(args = ["--root", root]): Promise<Server> {
   const proc = spawn("node", [SCRIPT, ...args], { cwd: repo });
   child = proc;
   let out = "";
+  let err = "";
+  proc.stderr.on("data", chunk => {
+    err += String(chunk);
+  });
   const exited = new Promise<number | null>(done => {
     proc.on("exit", code => done(code));
   });
@@ -129,7 +136,12 @@ function start(args = ["--root", root]): Promise<Server> {
       out += String(chunk);
       const line = out.split("\n")[0];
       if (out.includes("\n") && line !== undefined) {
-        resolve({ url: line.replace(/^URL: /, ""), stdout: () => out, exited });
+        resolve({
+          url: line.replace(/^URL: /, ""),
+          stdout: () => out,
+          stderr: () => err,
+          exited,
+        });
       }
     });
     proc.on("exit", code => reject(new Error(`exited ${code} before URL`)));
@@ -468,5 +480,376 @@ describe("serve.mjs", () => {
     });
     expect(result.status).not.toBe(0);
     expect(result.stderr).toMatch(/routes\.json/);
+  });
+});
+
+describe("serve.mjs --renders", () => {
+  const scratch = () => join(repo, "docs", "scratchpad", "demo");
+  const renderRoot = (platform: string) => join(scratch(), "renders", platform);
+  const mockRoot = (platform: string) => join(scratch(), "mockups", platform);
+
+  function put(file: string, text: string) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, text);
+  }
+
+  function renderTree(platform: string) {
+    const dir = renderRoot(platform);
+    const screens = ROUTES.screens.map(s => ({ ...s }));
+    put(
+      join(dir, "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform, screens }),
+    );
+    const entry = (code: string, state: string, file: string) => ({
+      code,
+      state,
+      route: code === "200a" ? "/orders" : "/orders/:id",
+      file,
+      plan: "demo-plan",
+      date: "2026-10-09T00:00:00.000Z",
+    });
+    put(
+      join(dir, "__renders", "renders.json"),
+      JSON.stringify({
+        project: "demo",
+        platform,
+        renders: [
+          entry("200a", "default", "orders/index.png"),
+          entry("200b", "default", "orders/[id]/index.png"),
+          entry("200b", "error", "orders/[id]/index--error.png"),
+        ],
+      }),
+    );
+    put(join(dir, "orders", "index.png"), "PNG-LIST");
+    put(join(dir, "orders", "[id]", "index.png"), "PNG-DETAIL");
+    put(join(dir, "orders", "[id]", "index--error.png"), "PNG-ERROR");
+  }
+
+  function startRenders(platform: string, extra: string[] = []) {
+    return start([
+      "--renders",
+      "--root",
+      renderRoot(platform),
+      "--mockups",
+      mockRoot(platform),
+      ...extra,
+    ]);
+  }
+
+  beforeEach(() => {
+    renderTree("mobile");
+    renderTree("web");
+    put(
+      join(mockRoot("mobile"), "__mockups", "routes.json"),
+      JSON.stringify({ ...ROUTES, platform: "mobile" }),
+    );
+    put(
+      join(mockRoot("mobile"), "orders", "[id]", "index.html"),
+      "<!doctype html><html><body><p>mobile mockup</p></body></html>\n",
+    );
+    put(
+      join(mockRoot("mobile"), "orders", "[id]", "index--error.html"),
+      "<!doctype html><html><body><p>mobile mockup error</p></body></html>\n",
+    );
+  });
+
+  it("sets the mockup frame beside the image on mobile", async () => {
+    const { url } = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders/7", url))).text();
+    expect(body).toContain("<iframe id=\"mockup\"");
+    expect(body).toContain("src=\"/__mockups/orders/7\"");
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    expect(body).toContain("<!-- mockup-review-overlay -->");
+    const error = await (await fetch(new URL("/orders/7?state=error", url)))
+      .text();
+    expect(error).toContain("src=\"/__mockups/orders/7?state=error\"");
+    expect(error).toContain("index--error.png");
+    expect(error).toContain("\"states\":[\"error\"]");
+    const frame = await fetch(new URL("/__mockups/orders/7?state=error", url));
+    expect(await frame.text()).toContain("mobile mockup error");
+    const image = await fetch(new URL("/orders/%5Bid%5D/index.png", url));
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toBe("image/png");
+    expect(await image.text()).toBe("PNG-DETAIL");
+  });
+
+  it("shows the render alone where no mockup exists", async () => {
+    const { url } = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders", url))).text();
+    expect(body).toContain("src=\"/orders/index.png\"");
+    expect(body).not.toContain("<iframe");
+  });
+
+  it("links the peer route in a new window once the peer file exists", async () => {
+    const peer = join(scratch(), "mockups-web.url");
+    const { url } = await startRenders("web", ["--peer-file", peer]);
+    const before = await (await fetch(new URL("/orders", url))).text();
+    expect(before).toContain("\"peer\":null");
+    writeFileSync(peer, "http://127.0.0.1:9/\n");
+    const after = await (await fetch(new URL("/orders?x=1", url))).text();
+    expect(after).toContain("\"peer\":\"http://127.0.0.1:9/orders\"");
+    expect(after).toContain("peer.target = \"_blank\"");
+    const state = await (await fetch(new URL("/orders/7?state=error", url)))
+      .text();
+    expect(state).toContain(
+      "\"peer\":\"http://127.0.0.1:9/orders/7?state=error\"",
+    );
+    expect(state).not.toContain("<iframe");
+  });
+
+  it("gives no link for a peer file with a non-loopback URL", async () => {
+    const peer = join(scratch(), "mockups-web.url");
+    writeFileSync(peer, "http://evil.example:9/\n");
+    const { url } = await startRenders("web", ["--peer-file", peer]);
+    const body = await (await fetch(new URL("/orders", url))).text();
+    expect(body).toContain("\"peer\":null");
+  });
+
+  it("writes its own URL to --url-file", async () => {
+    const file = join(scratch(), "renders-web.url");
+    const server = await startRenders("web", ["--url-file", file]);
+    expect(readFileSync(file, "utf8").trim()).toBe(server.url);
+  });
+
+  it("replaces a symlink at --url-file rather than writing through it", async () => {
+    const target = join(repo, "victim.txt");
+    writeFileSync(target, "untouched\n");
+    const file = join(scratch(), "renders-web.url");
+    symlinkSync(target, file);
+    const server = await startRenders("web", ["--url-file", file]);
+    expect(readFileSync(target, "utf8")).toBe("untouched\n");
+    expect(lstatSync(file).isSymbolicLink()).toBe(false);
+    expect(readFileSync(file, "utf8").trim()).toBe(server.url);
+  });
+
+  it("refuses a --url-file outside docs/scratchpad/", () => {
+    const result = spawnSync(
+      "node",
+      [
+        SCRIPT,
+        "--renders",
+        "--root",
+        renderRoot("web"),
+        "--url-file",
+        join(repo, "url.txt"),
+      ],
+      { cwd: repo, encoding: "utf8" },
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/--url-file must resolve under/);
+  });
+
+  it("404s a state with no image, renders.json, and a traversal", async () => {
+    const { url } = await startRenders("mobile");
+    expect((await fetch(new URL("/orders?state=error", url))).status).toBe(404);
+    expect((await fetch(new URL("/__renders/renders.json", url))).status).toBe(
+      404,
+    );
+    writeFileSync(join(repo, "secret.html"), "secret");
+    expect(await rawGet(url, "/__mockups/../../../../secret.html")).toBe(404);
+    expect(await rawGet(url, "/__mockups/%2e%2e/%2e%2e/secret.html")).toBe(404);
+    expect(await rawGet(url, "/../../../etc/passwd")).toBe(404);
+    expect((await fetch(new URL("/__mockups/__mockups/x", url))).status).toBe(
+      404,
+    );
+  });
+
+  it("lists every render at /__renders/", async () => {
+    const { url } = await startRenders("mobile");
+    const list = await (await fetch(new URL("/__renders/", url))).text();
+    expect(list).toContain("200a");
+    expect(list).toContain("200b");
+    expect(list).toContain("demo-plan");
+    expect(list).toContain("2026-10-09T00:00:00.000Z");
+    expect(list).not.toContain("100a");
+  });
+
+  it("records a comment with the plan of the image", async () => {
+    const { url } = await startRenders("web");
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: "/orders/7",
+        state: "error",
+        selector: "#render",
+        text: "Wrong colour",
+      }),
+    });
+    expect(res.status).toBe(204);
+    const file = join(renderRoot("web"), "__renders", "comments.yaml");
+    const parsed = parseYaml(readFileSync(file, "utf8")) as Array<
+      Record<string, unknown>
+    >;
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({
+      code: "200b",
+      plan: "demo-plan",
+      state: "error",
+      status: "open",
+    });
+    expect(existsSync(join(renderRoot("web"), "__mockups"))).toBe(false);
+  });
+
+  it("refuses a render root with no renders.json", () => {
+    rmSync(join(renderRoot("web"), "__renders", "renders.json"));
+    const result = spawnSync(
+      "node",
+      [SCRIPT, "--renders", "--root", renderRoot("web")],
+      { cwd: repo, encoding: "utf8" },
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/renders\.json/);
+  });
+
+  it("adds the peer link to a mockup page, and nothing without the flags", async () => {
+    const peer = join(repo, "docs", "scratchpad", "renders-web.url");
+    writeFileSync(peer, "http://localhost:9/\n");
+    const linked = await start(["--root", root, "--peer-file", peer]);
+    const body = await (await fetch(new URL("/signin?state=error", linked.url)))
+      .text();
+    expect(body).toContain(
+      "\"peer\":\"http://localhost:9/signin?state=error\"",
+    );
+    child?.kill();
+    const plain = await start();
+    const bare = await (await fetch(plain.url)).text();
+    expect(bare).toContain("\"peer\":null");
+    expect(bare).toContain("home page");
+  });
+
+  it("moves the top page only for a same-origin single-slash link", async () => {
+    const { url } = await startRenders("mobile");
+    const html = await (await fetch(new URL("/__mockups/orders/7", url)))
+      .text();
+    const script = /<script>(document\.addEventListener[\s\S]*?)<\/script>/
+      .exec(html)
+      ?.[1];
+    expect(script).toBeDefined();
+    const origin = "http://127.0.0.1:1234";
+    let handler: (event: unknown) => void = () => {};
+    const top = { location: { href: "unchanged" } };
+    runInNewContext(script ?? "", {
+      URL,
+      location: { href: `${origin}/__mockups/orders/7`, origin },
+      window: { top },
+      document: {
+        addEventListener: (_: string, fn: (event: unknown) => void) => {
+          handler = fn;
+        },
+      },
+    });
+    const click = (href: string) => {
+      let prevented = false;
+      handler({
+        altKey: false,
+        preventDefault: () => {
+          prevented = true;
+        },
+        target: { closest: () => ({ getAttribute: () => href }) },
+      });
+      return prevented;
+    };
+    expect(click("//evil.example/x")).toBe(false);
+    expect(click("/\\evil.example/x")).toBe(false);
+    expect(top.location.href).toBe("unchanged");
+    expect(click("/orders/8?state=error")).toBe(true);
+    expect(top.location.href).toBe("/orders/8?state=error");
+  });
+
+  it("shows no mockup, with a warning, when --mockups has no routes.json", async () => {
+    rmSync(join(mockRoot("mobile"), "__mockups", "routes.json"));
+    const server = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders/7", server.url))).text();
+    expect(body).not.toContain("<iframe");
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    expect((await fetch(new URL("/__mockups/orders/7", server.url))).status)
+      .toBe(404);
+    expect(server.stderr()).toMatch(/no valid __mockups\/routes\.json/);
+  });
+
+  it("sees a routes.json rewritten while it runs", async () => {
+    const { url } = await startRenders("web");
+    expect((await fetch(new URL("/history", url))).status).toBe(404);
+    const dir = renderRoot("web");
+    const screens = ROUTES.screens.map(s =>
+      s.code === "200a" ? { ...s, route: "/history", path: "history" } : s
+    );
+    put(
+      join(dir, "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform: "web", screens }),
+    );
+    put(join(dir, "history", "index.png"), "PNG-HISTORY");
+    const moved = await (await fetch(new URL("/history", url))).text();
+    expect(moved).toContain("No render yet");
+    expect(moved).not.toContain("<img");
+    put(
+      join(dir, "__renders", "renders.json"),
+      JSON.stringify({
+        project: "demo",
+        platform: "web",
+        renders: [{
+          code: "200a",
+          state: "default",
+          route: "/history",
+          file: "history/index.png",
+          plan: "demo-plan",
+          date: "2026-10-09T00:00:00.000Z",
+        }],
+      }),
+    );
+    const body = await (await fetch(new URL("/history", url))).text();
+    expect(body).toContain("src=\"/history/index.png\"");
+    expect((await fetch(new URL("/orders", url))).status).toBe(404);
+  });
+
+  it("never shows a moved screen's old image for the screen now at its route", async () => {
+    const { url } = await startRenders("web");
+    // 200a leaves /orders for /history; 200d takes /orders. renders.json still
+    // holds 200a's old entry, and orders/index.png is still on disk.
+    const screens = ROUTES.screens.map(s =>
+      s.code === "200a"
+        ? { ...s, route: "/history", path: "history" }
+        : s.code === "200d"
+        ? { ...s, route: "/orders", path: "orders" }
+        : s
+    );
+    put(
+      join(renderRoot("web"), "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform: "web", screens }),
+    );
+    const page = await (await fetch(new URL("/orders", url))).text();
+    expect(page).toContain("200d");
+    expect(page).toContain("No render yet");
+    expect(page).not.toContain("<img");
+    expect((await fetch(new URL("/orders/index.png", url))).status).toBe(404);
+    expect(existsSync(join(renderRoot("web"), "orders", "index.png"))).toBe(
+      true,
+    );
+    const history = await (await fetch(new URL("/history", url))).text();
+    expect(history).toContain("No render yet");
+    const list = await (await fetch(new URL("/__renders/", url))).text();
+    expect(list).not.toContain("200a");
+    expect(list).not.toContain("200d");
+    expect(list).toContain("200b");
+  });
+
+  it("removes its --url-file on Done and on exit", async () => {
+    const file = join(scratch(), "renders-web.url");
+    const done = await startRenders("web", ["--url-file", file]);
+    expect(existsSync(file)).toBe(true);
+    const res = await fetch(new URL("/done", done.url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(204);
+    expect(await done.exited).toBe(0);
+    expect(existsSync(file)).toBe(false);
+    const killed = await startRenders("web", ["--url-file", file]);
+    expect(existsSync(file)).toBe(true);
+    child?.kill();
+    await killed.exited;
+    expect(existsSync(file)).toBe(false);
   });
 });
