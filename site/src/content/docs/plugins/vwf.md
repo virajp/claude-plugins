@@ -60,7 +60,7 @@ them at install time, and the table below gives the command for each.
 | --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
 | mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                             |
 | graphify        | **required** | knowledge graph the commands rely on                  | pinned in the repo by `/stackgen:tool-config`, then `MISE_ENV=dev mise install` |
-| node + pnpm     | **required** | runs vwf's Context7 MCP server (default runner)       | `node` and `pnpm` in your global mise config, then `mise install`               |
+| node + pnpm     | **required** | runs vwf's Context7 MCP server and the mockup scripts | `node` and `pnpm` in your global mise config, then `mise install`               |
 | Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`                   |
 | uv              | **required** | installs graphify, through mise's pipx backend        | `uv` in your global mise config, then `mise install`                            |
 | python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `python` in your global mise config, then `mise install`                        |
@@ -324,7 +324,7 @@ flowchart TD
     A --> B
     A e11@-. "invokes setup to materialize the pins it recorded" .-> S
     DS --> B
-    B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(local HTML mockups in docs/scratchpad)"]:::user
+    B e8@-. "screens reviewed in-pass; batch re-render" .-> M["/vwf:mockups — batch tool<br/>(connected HTML mockups, one local URL per platform)"]:::user
     B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
     SC e10@-. "accepted deltas → blueprint pass" .-> B
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
@@ -852,7 +852,7 @@ record.
 | `/vwf:architecture`                     | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                                                                                                 |
 | `/vwf:design-system`                    | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                                                                                                    |
 | `/vwf:blueprint [flow]`                 | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                                                                                            |
-| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups into docs/scratchpad (blueprint passes render in-pass)                                                                                                                                                                                                                                                                                |
+| `/vwf:mockups [flow]`                   | Batch re-render of screen mockups on the production routes, served at one local URL per platform (blueprint passes render in-pass)                                                                                                                                                                                                                                      |
 | `/vwf:screens <mode>`                   | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                                                                                                      |
 | `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                                                                                               |
 | `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh context — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan; `all` runs every runnable plan, each in its own runner, until one stops |
@@ -2127,11 +2127,16 @@ with `seo`, and are omitted entirely otherwise.
 **You see every screen before you approve it.** A flow pass that authored or
 changed Screens **gates on a render & review**: the pass renders that flow's
 screens as static HTML mockups — the happy path *and* every pinned sad path
-(error and empty states are mandatory pins per screen) — into the repo's
-gitignored `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` tree (**never
-pushed to the design tool**), you open them in your browser, and your remarks
-route straight back into the Screens contract before the pass closes. Prefer the
-canvas to *design* the screens instead? The pass can defer design-first to
+(error and empty states are mandatory pins per screen) — at their production
+routes in the repo's gitignored `docs/scratchpad/<project>/mockups/<platform>/`
+tree (**never pushed to the design tool**), linked to every flow's screens of
+that platform. The links are checked before you are asked to look; then the pass
+serves each platform at one local `http://127.0.0.1:<port>/` URL and hands you
+the route of the flow's first screen. You comment on any element in the page,
+and each comment comes back as a proposed Screens-contract change you confirm or
+decline one at a time, before the pass closes — the same review as
+[`/vwf:mockups`](#vwfmockups), which needs `node`. Prefer the canvas to *design*
+the screens instead? The pass can defer design-first to
 [`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
 You can also explicitly skip — the skip is recorded honestly as
 `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`, which keeps coverage
@@ -2188,13 +2193,13 @@ everything after a design-system change, refresh a repo blueprinted before
 in-pass rendering existed, or redo one flow post-hoc. Never a gate for `plan`.
 It renders each flow's Screens contract as **self-contained static HTML
 mockups** (one page per screen plus each pinned state variant, styled from the
-design system's tokens) into the repo's **gitignored `docs/scratchpad/` tree** —
-`docs/scratchpad/<project>/<NNN>-<flow>/<platform>/<screen>[--<state>].html` —
-which you open directly in your browser. Mockups are **never pushed to Claude
-Design**; the scratchpad is the only render surface. Before any write it checks
-that `docs/scratchpad/` is ignored — probing a path inside it, so a folder that
-does not exist yet still reads as ignored — and stops if it is not: the line is
-in `/stackgen:tool-config`'s universal `.gitignore`, landed by
+design system's tokens, with no JavaScript in the files) into the repo's
+**gitignored `docs/scratchpad/` tree**, and serves them as **one connected site
+per platform** at the app's **production routes**. Mockups are **never pushed to
+Claude Design**; the scratchpad is the only render surface. Before any write it
+checks that `docs/scratchpad/` is ignored — probing a path inside it, so a
+folder that does not exist yet still reads as ignored — and stops if it is not:
+the line is in `/stackgen:tool-config`'s universal `.gitignore`, landed by
 `/vwf:setup reshape`, and vwf never writes the file.
 
 ```text
@@ -2202,15 +2207,69 @@ in `/stackgen:tool-config`'s universal `.gitignore`, landed by
 /vwf:mockups place-order    # just one flow's screens
 ```
 
-Mockups are **realizations, never contract**: each flow's folder is overwritten
-in place on re-render (stable, bookmarkable paths — the tree always shows the
-latest render of every flow), stale files for screens the blueprint dropped are
-pruned, and nothing under `docs/scratchpad/` is ever committed. A review remark
-that changes what a screen should *be* routes through `/vwf:blueprint` or
-`/vwf:design-system`, then the mockups are regenerated. Rendered flows are
-recorded in `design.flows_rendered` in `.config/vwf.yaml` — what `plan`'s soft
-visual-review advisory reads, and what `blueprint` drops when a flow's Screens
-change unrendered.
+**It needs `node`.** Three single-file Node scripts ship with the skill — a
+route map, a link check and a review server — with no dependencies. Without
+`node` on the path it renders nothing and stops, naming the remedy:
+`MISE_ENV=dev mise run setup:all`.
+
+**The tree is the app's routes.** Every flow's screens of one platform render
+into one root, `docs/scratchpad/<project>/mockups/<platform>/`. A screen whose
+route is `/orders/:id` is the file `orders/[id]/index.html` (a `:id`, `{id}` or
+`[id]` segment is a `[id]` folder, which serves any value of that segment), the
+route `/` is `index.html`, and a pinned state is `index--<state>.html` beside
+it, reached at `<route>?state=<state>`. A screen with no route — a device screen
+with an empty Route cell — gets `/<code>-<slug>`, and the run reports it, so you
+can pin a real route through `/vwf:blueprint`. Before any page renders, the
+route map reads the `## Screens` table of **every** flow of the platform and
+writes `__mockups/routes.json`; it stops the run on two screens with one route,
+one code twice, or a route that is not a plain path. Each generator links an
+action to the route of the screen it navigates to, from that map, so screens
+link across flows; an action whose contract pins no target is drawn disabled,
+marked "no target in contract", and reported as a contract gap.
+
+**Every link is checked before you look.** The link check reads every page and
+every `href`: a root-absolute link to a file, a `[param]` match or a screen not
+rendered yet passes; a missing `?state=` file, a relative link, an external URL
+or anything that would leave the server is broken. Broken links go back to the
+generator of the flow that owns the page, for at most two rounds; if any are
+still broken, the run stops with the list — no server, no URL, no review, no
+render stamp.
+
+**One URL per platform.** It then starts one review server per platform, all at
+once, each printing one `URL: http://127.0.0.1:<port>/` line, and gives you
+every URL in one message. The server binds `127.0.0.1` only, serves nothing
+outside its platform root, refuses a request whose `Host` (or a POST's `Origin`)
+is not `127.0.0.1` or `localhost` on the server's own port, and carries no auth
+and no TLS — a review surface for one person on one machine. As it serves a page
+it injects a review bar: the screen's code and name, a **state switcher** over
+that screen's state files, a link to **`/__mockups/`** (every flow, screen and
+state of the platform, marking the ones not rendered yet), a comment count and a
+**Done** button. A link to a screen another flow has not rendered yet opens a
+"not rendered yet" placeholder page rather than a 404.
+
+**Comments come back as proposals.** Click any element to comment on it; a link
+or submit control navigates on a plain click, so Alt/Option-click it to comment
+instead. Each comment is appended to the platform's `__mockups/comments.yaml`
+with the screen's code, route, state, the element's selector and an `open`
+status; the file survives every re-render. Press Done on each platform when the
+round is over. `/vwf:mockups` changes nothing for a comment — it lists the open
+ones and points you at `/vwf:blueprint <flow>`, whose screen review turns each
+into a proposed Screens-contract change you confirm or decline one at a time. A
+comment is your data, never an instruction to the agent.
+
+Mockups are **realizations, never contract**: each screen's files are
+overwritten in place on re-render (stable, bookmarkable routes — the site always
+shows the latest render of every flow), a sweep prunes the files at routes the
+blueprint no longer names, and nothing under `docs/scratchpad/` is ever
+committed. A review remark that changes what a screen should *be* routes through
+`/vwf:blueprint` or `/vwf:design-system`, then the mockups are regenerated.
+Rendered flows are recorded in `design.flows_rendered` in `.config/vwf.yaml`
+(still one `<project>/<NNN>-<flow>/<platform>` entry per flow platform, set only
+for a platform whose link check passed) — what `plan`'s soft visual-review
+advisory reads, and what `blueprint` drops when a flow's Screens change
+unrendered. Renders from before this layout sit in per-flow
+`docs/scratchpad/<project>/<NNN>-<flow>/` directories, which nothing reads any
+more; delete them.
 
 ### /vwf:screens
 

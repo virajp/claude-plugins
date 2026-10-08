@@ -204,11 +204,14 @@ into the repo-side conventions file — the one edit it makes on its own.
 Optional here, and worth understanding as the *other* render surface. Mockups
 are static HTML written into the repo's gitignored scratchpad tree, generated
 from the Screens contract and the design system — never pushed to the design
-tool, never committed, and never a gate for planning. In a canvas-designed
-product they are mostly a batch tool: after Centwise changes a design-system
-token, re-rendering shows every screen under the new value without touching the
-canvas. They are realizations of the contract, so a remark about one routes back
-through blueprint or design-system and then you re-render. Reference:
+tool, never committed, and never a gate for planning. Every flow's screens of a
+platform sit at their production routes and link to each other; once the links
+check clean, each platform is served at one `http://127.0.0.1:<port>/` URL with
+a comment overlay. It needs `node`. In a canvas-designed product they are mostly
+a batch tool: after Centwise changes a design-system token, re-rendering shows
+every screen under the new value without touching the canvas. They are
+realizations of the contract, so a remark about one routes back through
+blueprint or design-system and then you re-render. Reference:
 [`/vwf:mockups`](../../plugins/vwf.md#vwfmockups).
 
 ### 10. /vwf:plan and /vwf:execute

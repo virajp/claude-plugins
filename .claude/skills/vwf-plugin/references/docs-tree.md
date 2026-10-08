@@ -70,19 +70,21 @@ plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,
-`<project>/<NNN>-<flow>/<platform>/<screen-slug>[--<state>].html`, written by
-`/vwf:mockups` and blueprint §6a, overwritten in place per flow; vwf auto-adds
-the `.gitignore` line when missing). Superseded commands/agents/templates are
-archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
-`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
-into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
-dissolved into the flow templates). The single-file cycle plan `/vwf:plan` wrote
-until 2026-09-16 was retired with nothing archived and no compatibility reader:
-a plan in that shape still in flight is finished on the vwf release that wrote
-it, or its slice is re-run through `/vwf:plan`, whose stamp-heal drops what
-already conforms. The change plan's own executor was retired the same day,
-2026-09-16, absorbed into `/vwf:execute` — the one executor, switching on each
-unit's `Kind` — with nothing archived, no alias and no redirect; the record is
+`<project>/mockups/<platform>/<route>/index[--<state>].html` plus the reserved
+`__mockups/` (`routes.json`, `comments.yaml`), written by `/vwf:mockups` and
+blueprint §6a, overwritten in place per screen and served at one local URL per
+platform; vwf auto-adds the `.gitignore` line when missing). Superseded
+commands/agents/templates are archived under `archived/vwf-<date>/`
+(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
+`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
+format-8 `integration.md` template, dissolved into the flow templates). The
+single-file cycle plan `/vwf:plan` wrote until 2026-09-16 was retired with
+nothing archived and no compatibility reader: a plan in that shape still in
+flight is finished on the vwf release that wrote it, or its slice is re-run
+through `/vwf:plan`, whose stamp-heal drops what already conforms. The change
+plan's own executor was retired the same day, 2026-09-16, absorbed into
+`/vwf:execute` — the one executor, switching on each unit's `Kind` — with
+nothing archived, no alias and no redirect; the record is
 `docs/memory/decisions/2026-09-16-one-executor.md`.
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
