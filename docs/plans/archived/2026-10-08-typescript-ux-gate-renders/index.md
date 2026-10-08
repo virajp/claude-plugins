@@ -10,10 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-10-09 01:20 in
-.worktrees/2026-10-08-typescript-ux-gate-renders
+COMPLETE 2026-10-09 — c7445ad1, fac55c3f, 2d70d9b4
 
 ## Consent
 
@@ -119,7 +118,7 @@ none.
 | -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
 | U1 | 1    | [01-ux-gate.md](01-ux-gate.md)               | edit | `plugins/stackgen/stacks/language/typescript/skills/ux-gate/SKILL.md`                                                                                                                                                                                                 | —          | green  | c7445ad1 |
 | U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/vwf-plugin/**`, `readme.md`, `CLAUDE.md`, and any other human-facing passage `vwf:docs-sync` finds outside `plugins/`; widened: `plugins/vwf/agents/execute-ux-reviewer.md:108` (R1) | U1         | green  | fac55c3f |
-| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/stacks/language/typescript/pack.yaml`, the 13 bundle files named in Facts, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                 | U2         | green  |          |
+| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/stacks/language/typescript/pack.yaml`, the 13 bundle files named in Facts, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                 | U2         | green  | 2d70d9b4 |
 
 ## Shared-file rule
 
@@ -221,7 +220,7 @@ none — B94 holds what remains for the device stacks.
 | —    | acceptance        | —     | 1     | skipped     | why: no covers:, no acceptance criteria                                                                                                                                                                                                                                       | —        |
 | —    | ux                | —     | 1     | skipped     | why: no covers:, no Screens contract                                                                                                                                                                                                                                          | —        |
 | —    | reconcile         | —     | 1     | skipped     | why: no covers: (no stamps), no code unit (nothing to persist)                                                                                                                                                                                                                | —        |
-| 3    | U3 gates-and-bump | opus  | 1     | pass        | edit; typescript pack 0.3.1->0.4.0, 13 bundle pins, inventory regenerated, stackgen 3.0.0->3.1.0, marketplace regenerated; gate lines green                                                                                                                                   | —        |
+| 3    | U3 gates-and-bump | opus  | 1     | pass        | edit; typescript pack 0.3.1->0.4.0, 13 bundle pins, inventory regenerated, stackgen 3.0.0->3.1.0, marketplace regenerated; gate lines green                                                                                                                                   | 2d70d9b4 |
 | 3    | R3 wave review    | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean; generators --check up to date                                                                                                                                                                                                      | —        |
 | —    | reconcile         | —     | 1     | pass        | final wave gate 7/7 green over the finished tree                                                                                                                                                                                                                              | —        |
 | —    | reconcile         | —     | 1     | pass        | orchestrator gates: renders: keys {code, platform, state, file} match stack-adapter.md:442; no language/typescript@0.3.1 pin left                                                                                                                                             | —        |
