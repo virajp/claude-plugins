@@ -4,7 +4,7 @@ axis: project
 kind: language-bundle
 default: true
 components:
-- language/typescript@0.3.1
+- language/typescript@0.4.0
 - package-manager/pnpm@0.6.1
 - toolchain-gate/tsconfig@0.2.2
 - toolchain-gate/eslint@0.3.4

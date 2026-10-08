@@ -32,11 +32,16 @@ disagree.
    the screens need data, bring up the project's local stack first and wait on
    its readiness signal. Never hand-roll infrastructure, and never start
    anything interactively.
-2. **Capture each changed screen** in every state you can drive: default, and
-   where reachable empty / loading / error / success. Use the browser driver the
-   repo already depends on — check its manifest before reaching for one. Write
-   captures under the worktree's scratch/tmp area; they are working artifacts
-   and are never committed.
+2. **Capture each changed screen**: its default view, and every state pinned in
+   that screen's States cell of the Screens contract that the app can reach.
+   Take each screen's code from the Code column of the same table. Use the
+   browser driver the repo already depends on — check its manifest before
+   reaching for one. Write each capture, as a PNG, to
+   `docs/scratchpad/ux-gate/<platform>/<code>--<state>.png` in the worktree,
+   creating the directory first; `state` is `default` for the default view.
+   The path is gitignored; a capture is a working artifact and is never
+   committed. A pinned state the app cannot reach gets no capture and one
+   `findings` item that says so.
 3. **Scan each captured screen** for accessibility violations at WCAG A/AA,
    using the scanner the repo already depends on.
 4. **Return** the payload below. Report what happened, not what should have.
@@ -46,13 +51,21 @@ disagree.
 ```yaml
 rendered: ok | n/a
 reason: <one line> # required when n/a
-artifacts: [ <path>, … ] # what you captured, for the reviewer to read
+renders: # one item per capture, for the reviewer to read
+  - code: <the screen's code> # e.g. 004a
+    platform: <the screen platform> # site | webapp
+    state: <default | a pinned state>
+    file: <path relative to the worktree root> # the PNG above
 findings:
   - severity: <critical | high | medium | low>
     screen: <screen>/<state>
     what: <the violation, in one line>
     where: <rule id or selector>
 ```
+
+vwf copies the `renders:` files out of the worktree after the run, so a person
+can review the built app; each `code` is the screen's code in the flow's
+Screens table.
 
 **`n/a` is a legitimate answer and must be honest.** No `dev` task, no browser
 driver in the manifest, a server that would not boot — each is a `reason`, and

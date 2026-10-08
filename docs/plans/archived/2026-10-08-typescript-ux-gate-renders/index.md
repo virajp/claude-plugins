@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**COMPLETE**
 
-APPROVED 2026-10-08 by the user
+COMPLETE 2026-10-09 — c7445ad1, fac55c3f, 2d70d9b4
 
 ## Consent
 
@@ -114,11 +114,11 @@ none.
 
 ## Units
 
-| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                  | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-ux-gate.md](01-ux-gate.md)               | edit | `plugins/stackgen/stacks/language/typescript/skills/ux-gate/SKILL.md`                                                                                                                                                 | —          | pending |        |
-| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/vwf-plugin/**`, `readme.md`, `CLAUDE.md`, and any other human-facing passage `vwf:docs-sync` finds outside `plugins/`                | U1         | pending |        |
-| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/stacks/language/typescript/pack.yaml`, the 13 bundle files named in Facts, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | U2         | pending |        |
+| Id | Wave | Unit file                                    | Kind | Owns                                                                                                                                                                                                                                                                  | Depends on | Status | Commit   |
+| -- | ---- | -------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-ux-gate.md](01-ux-gate.md)               | edit | `plugins/stackgen/stacks/language/typescript/skills/ux-gate/SKILL.md`                                                                                                                                                                                                 | —          | green  | c7445ad1 |
+| U2 | 2    | [02-docs.md](02-docs.md)                     | edit | `site/src/content/docs/**`, `.claude/skills/stackgen-plugin/**`, `.claude/skills/vwf-plugin/**`, `readme.md`, `CLAUDE.md`, and any other human-facing passage `vwf:docs-sync` finds outside `plugins/`; widened: `plugins/vwf/agents/execute-ux-reviewer.md:108` (R1) | U1         | green  | fac55c3f |
+| U3 | 3    | [03-gates-and-bump.md](03-gates-and-bump.md) | edit | `plugins/stackgen/stacks/language/typescript/pack.yaml`, the 13 bundle files named in Facts, `plugins/stackgen/stacks/inventory.md`, `plugins/stackgen/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                 | U2         | green  | 2d70d9b4 |
 
 ## Shared-file rule
 
@@ -206,8 +206,24 @@ none — B94 holds what remains for the device stacks.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit              | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                        | Commit   |
+| ---- | ----------------- | ----- | ----- | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight         | —     | 1     | pass        | doctor: no blocking (no .config/vwf.yaml, stopped at §1); wave gate 7/7 green (code:precommit pass 2 clean after reflowing the Status edit)                                                                                                                                   | —        |
+| 0    | override          | —     | 1     | pass        | override: skip as deduped: mise run p:plugins:local                                                                                                                                                                                                                           | —        |
+| 0    | format-check      | —     | 1     | skipped     | why: no covers:, plan reads no blueprint artifact                                                                                                                                                                                                                             | —        |
+| 0    | conventions       | —     | 1     | skipped     | why: no code unit; LSP and conventions fetch not needed                                                                                                                                                                                                                       | —        |
+| 1    | U1 ux-gate        | opus  | 1     | pass        | edit; captures named docs/scratchpad/ux-gate/<platform>/<code>--<state>.png, renders: replaces artifacts:; DECIDED PNG + worktree-root-relative file; GAP example code 004a assumed                                                                                           | c7445ad1 |
+| 1    | R1 wave review    | opus  | 1     | findings(1) | rule 5 only: plugins/vwf/agents/execute-ux-reviewer.md:108 'scratch/tmp area' stale vs docs/scratchpad/ux-gate path; nobody-owned, handed to U2 as DOCS FALSIFIED; CONTRACT clean, RULINGS clean                                                                              | —        |
+| 1    | U2 docs           | —     | —     | —           | GAP: Owns widened to plugins/vwf/agents/execute-ux-reviewer.md:108 (that passage) per R1 rule-5 finding                                                                                                                                                                       | —        |
+| 2    | U2 docs           | opus  | 1     | pass        | edit; stackgen.md TS ux-gate paragraph + SwiftUI clause, vwf.md renders sentence, execute-ux-reviewer.md:108 -> gitignored docs/scratchpad/; DECIDED no backlog id in manual; GAP no TS gate passage existed, one added; DOCS FALSIFIED execute-ux-reviewer.md:51 'artifacts' | fac55c3f |
+| 2    | R2 wave review    | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean; execute-ux-reviewer.md:51 judged not falsified (plain noun, flutter gate still returns artifacts:)                                                                                                                                 | —        |
+| —    | acceptance        | —     | 1     | skipped     | why: no covers:, no acceptance criteria                                                                                                                                                                                                                                       | —        |
+| —    | ux                | —     | 1     | skipped     | why: no covers:, no Screens contract                                                                                                                                                                                                                                          | —        |
+| —    | reconcile         | —     | 1     | skipped     | why: no covers: (no stamps), no code unit (nothing to persist)                                                                                                                                                                                                                | —        |
+| 3    | U3 gates-and-bump | opus  | 1     | pass        | edit; typescript pack 0.3.1->0.4.0, 13 bundle pins, inventory regenerated, stackgen 3.0.0->3.1.0, marketplace regenerated; gate lines green                                                                                                                                   | 2d70d9b4 |
+| 3    | R3 wave review    | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean; generators --check up to date                                                                                                                                                                                                      | —        |
+| —    | reconcile         | —     | 1     | pass        | final wave gate 7/7 green over the finished tree                                                                                                                                                                                                                              | —        |
+| —    | reconcile         | —     | 1     | pass        | orchestrator gates: renders: keys {code, platform, state, file} match stack-adapter.md:442; no language/typescript@0.3.1 pin left                                                                                                                                             | —        |
 
 ## Launch
 

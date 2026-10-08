@@ -82,7 +82,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `language/bash` | Bash | `language-bundle` | project |  |  | 0.1.0 | Shell as a project's incidental second language — the hook scripts and small executables a markdown-authored project ships, held to portability and exit-code discipline rather than to a toolchain. |
 | `language/markdown` | Markdown | `language-bundle` | project |  |  | 0.1.0 | Markdown as a project's own language — the case where prose with frontmatter is the deliverable rather than documentation beside one, and the toolchain is the repo axis's rather than the language's. |
 | `language/swift` | Swift | `language-bundle` | project |  |  | 0.2.1 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
-| `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.3.1 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
+| `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.4.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.6.1 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.3.1 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.3.1 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
@@ -101,10 +101,10 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Bundle | Name | Kind | Axis | Components |
 | ------ | ---- | ---- | ---- | ---------- |
-| `astro-csr` | Astro (CSR) | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
-| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated`, `framework/effect@0.1.0` |
-| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
-| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated`, `framework/effect@0.1.0` |
+| `astro-csr` | Astro (CSR) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
+| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated`, `framework/effect@0.1.0` |
+| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
+| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated`, `framework/effect@0.1.0` |
 | `audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | `capability-provider/audit-store-d1@0.1.0` |
 | `audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | `capability-provider/audit-store-postgres@0.1.0` |
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |
@@ -141,7 +141,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-firebase` | Google Cloud · Firebase | `cloud-provider` | backing | `cloud-provider/gcp@0.1.0`, `cloud-service/firestore@0.1.0`, `cloud-service/firebase-auth@0.1.0`, `cloud-service/firebase-storage@0.1.0`, `cloud-service/firebase-messaging@0.1.0` |
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.1` |
-| `html` | HTML | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.1` |
+| `html` | HTML | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.1` |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |
@@ -157,11 +157,11 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@0.5.1`, `package-manager/swiftpm@0.3.1`, `toolchain-gate/swift-format@0.1.3`, `toolchain-gate/swiftlint@0.2.1` |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | `stylesheet/tailwindcss@0.2.1` |
 | `temporal` | Temporal | `capability-provider` | backing | `capability-provider/temporal@0.1.0` |
-| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |
-| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0` |
-| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/hono@generated` |
-| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/temporal@generated` |
-| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0` |
-| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/hono@generated`, `framework/effect@0.1.0`, `framework/react@generated`, `framework/refine@generated` |
-| `typescript-parseargs-cli` | TypeScript · parseArgs CLI | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4` |
-| `typescript-pulumi` | TypeScript · Pulumi | `language-bundle` | project | `language/typescript@0.3.1`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/pulumi@generated` |
+| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/cloudflare-agents@0.1.0` |
+| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0` |
+| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/hono@generated` |
+| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0`, `framework/temporal@generated` |
+| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/effect@0.1.0` |
+| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/hono@generated`, `framework/effect@0.1.0`, `framework/react@generated`, `framework/refine@generated` |
+| `typescript-parseargs-cli` | TypeScript · parseArgs CLI | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4` |
+| `typescript-pulumi` | TypeScript · Pulumi | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/pulumi@generated` |

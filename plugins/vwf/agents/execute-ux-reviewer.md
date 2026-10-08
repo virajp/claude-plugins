@@ -106,7 +106,7 @@ Two rules survive that delegation, and they are vwf's:
   vocabulary (`RENDERED: n/a — screenshots missing: no capability`).
 
 Rendered artifacts are working files: whatever the gate writes belongs under the
-worktree's scratch/tmp area and is never committed.
+worktree's gitignored `docs/scratchpad/` and is never committed.
 
 ## Memory (mempalace)
 
