@@ -714,9 +714,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/renders.mjs --worktree <worktr
 It copies each image into the main checkout's
 `docs/scratchpad/<project>/renders/<platform>/<route>/` — `index.png`, or
 `index--<state>.png` — overwriting only the screens and states it was given,
-and records them in that platform's `__renders/renders.json`. A line naming an
-unknown code or a missing file is one `SKIPPED:` stdout line; the rest are
-copied, and stdout ends with one `COPIED: <n>` line. Write one Run log row —
+and records them in that platform's `__renders/renders.json`. A line it cannot
+copy — an unknown code, a missing or non-PNG file, a failed copy — is one
+`SKIPPED:` stdout line; the rest are copied, and stdout ends with one
+`COPIED: <n>` line. Write one Run log row —
 `wave —`, unit `renders`, the `COPIED:` count and each `SKIPPED:` line as its
 detail — mirrored to the journal. With no `RENDER:` line, or `RENDERED: n/a`,
 run no copy: the `renders` row reads `skipped` with that reason. The copy
