@@ -80,7 +80,7 @@ branches load on demand, each named where it applies — never upfront.
 | [`edit` units and the wave review](references/edit-unit.md) | the Waves section, when a wave holds an `edit` unit, and every wave's review                           |
 | [One `review` row](references/review-unit.md)               | the Waves section, when a wave holds a `review` row — the engines, both reviewers, the findings loop   |
 | [Blocking and resume](references/blocking.md)               | On failure — what a failure skips, what it blocks, how a re-run picks up                               |
-| [The `code`-unit preflight](references/preflight.md)        | Setup steps 2 and 3, when the Units table holds a `code` unit — the LSP rule and the conventions fetch |
+| [The preflight reads](references/preflight.md)              | Resolve, for the release levels; Setup steps 2 and 3, when the Units table holds a `code` unit         |
 | [Acceptance & UX](references/acceptance-and-ux.md)          | when `covers:` is present and the acceptance or ux stage returns short of a pass                       |
 | [`all` and runner mode](references/all.md)                  | Resolve, when `$ARGUMENTS` is `all` — and when you are an `execute-runner` handed one folder           |
 
@@ -188,14 +188,16 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   row reading `APPROVED` was unclaimed, and the run claims it again below.
   A resume runs what its folder says and takes none of the fresh-run refusals
   below — a folder written before review rows existed was reviewed per unit,
-  and cannot be re-approved mid-run. Two things it does refuse, each with the
+  and cannot be re-approved mid-run. Three things it does refuse, each with the
   fix — edit the folder by hand in the worktree, then re-launch: a non-green
   `code` unit with no `review` row ahead that covers it (add a `NN-review.md`
   and its row), since it would land with no review; and an After landing
   table with no *Mode* column, or a step whose mode is not `run` — an `ask`
   step included, a mode no longer issued — naming the planner to re-run on
-  the step, `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`.
-- Status `APPROVED` with an `APPROVED` row → a fresh run. Seven refusals are
+  the step, `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`; and a
+  `## Release levels` Level cell that is not one of the four levels, per
+  [the preflight reads](references/preflight.md), naming the row.
+- Status `APPROVED` with an `APPROVED` row → a fresh run. Eight refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
   written and infers no row. **A `code` unit no `review` row covers** — a row
@@ -214,7 +216,11 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   step included, a mode no longer issued — naming the planner that wrote it,
   `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`, to re-run and
   record the step `run` or drop it; a section reading `none`, with no table,
-  is valid and exempt. The last three read the backlog lists against Parked,
+  is valid and exempt. **A `## Release levels` row whose Level is not one of
+  `NONE`, `PATCH`, `MINOR`, `MAJOR`** — naming the row; a folder with no such
+  section is an old-shape folder and is not refused, per *The release levels*
+  in [the preflight reads](references/preflight.md). The last three read the
+  backlog lists against Parked,
   since a landing turns `backlog:` into `Done` and `backlog_pieces:` into
   `Partially done` and checks nothing else; each names the id, and the fix is
   to move the id to the list its Parked lines say it belongs on. **An id on both `backlog:` and `backlog_pieces:`** — the plan
@@ -674,7 +680,7 @@ For each wave in index.md order, skipping units already `green` on a resume:
    reference states — then every line of the wave gate again and a closing
    folder commit as in step 6.
 
-The two fixed final units — the docs unit and the gates-and-bump unit — run as
+The two fixed final units — the docs unit and the gates unit — run as
 their own waves after every other wave, after the Acceptance & UX pass and
 after Reconcile; see *The fixed final waves* below.
 
@@ -768,14 +774,15 @@ The two fixed final units run as their own waves, in this order, and **only
 when no unit is skipped**: the docs unit invokes `vwf:docs-sync` over the run's
 branch delta — its standalone mode,
 `${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md` — and applies its findings
-plus every `DOCS FALSIFIED:` line the units returned; the gates-and-bump unit
-bumps each released project's version per the consent block **with the command
-that block names**, runs the generators the plan names, and passes the wave
-gate. Each runs the wave loop above in full — dispatch, wave review, wave gate,
-commit. Then run every line of the folder's **Wave gate** section once more
-over the finished tree, and every item under *Gates the orchestrator keeps* —
-those are the checks a diff cannot prove — before calling the run green; each
-is a Run log row (`wave —`, `reconcile`).
+plus every `DOCS FALSIFIED:` line the units returned; the gates unit runs the
+generators the plan names and passes the full wave gate. It bumps no version:
+a release level is recorded at the landing, in `.config/releases.yaml`, and
+the version is bumped by the release step a person runs. Each runs the wave
+loop above in full — dispatch, wave review, wave gate, commit. Then run every
+line of the folder's **Wave gate** section once more over the finished tree,
+and every item under *Gates the orchestrator keeps* — those are the checks a
+diff cannot prove — before calling the run green; each is a Run log row
+(`wave —`, `reconcile`).
 
 ## The final report
 
@@ -795,7 +802,11 @@ intact. Read the Run log table back and present:
 - the review findings that survived the cap, marked `contested`
 - **model downgrades**, named on the nodes that ran under them
 - the wave gate and orchestrator gate results
-- the versions bumped and the worktree path
+- the release levels recorded — the folder's `## Release levels` rows, and,
+  once the landing has written them, each key it raised in
+  `.config/releases.yaml`, from and to; or the one line *old-shape folder — no
+  release levels recorded* for a folder with no `## Release levels` section
+- the worktree path
 - each after-landing step and its outcome, once After landing has run
 
 With `covers:`, also:
@@ -872,15 +883,65 @@ Then act on that consent row:
   the folder and leaves it at the live path otherwise, and runs the sweep, per
   the contract's *Writing a row — the completion* and *The sweep* in
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
-  That is the commit `docs: plan queue — <folder> complete`, on the
-  integration branch, in the main checkout; a rejected push re-applies the
-  same row until it lands, and never re-picks.
+  Before that commit is made, make the **release-levels write** below in the
+  same checkout, right after `complete` edits the row. That is the commit
+  `docs: plan queue — <folder> complete`, on the integration branch, in the
+  main checkout, carrying the row and the raised levels together; a rejected
+  push re-applies the same row and the same raise until it lands, and never
+  re-picks.
 - **no** → stop with the worktree path and the branch name, and say the branch
   is ready to land by hand. Say too that the index row stays `RUNNING` until
   the hand merge is followed by asking the session to archive the folder —
   `plan-management archive <folder>`, run in the main checkout, which moves
   the folder and applies the same row edit and sweep — and that no typed
   command does this. Ask nothing further.
+
+**The release-levels write — on a merged landing only.** The run bumps no
+version; it records how far each project it changed must move, and a release
+step a person runs later bumps, tags and clears the key. `plan-management`'s
+verbs never commit, so this skill, the caller that owns the completion commit,
+writes the file itself: in the main checkout, on the integration branch, after
+the merge, right after `complete` edits the row and before the commit:
+
+1. Read the folder's `## Release levels` table — at
+   `docs/plans/archived/<basename>/index.md` when step 3 archived it, at its
+   live path otherwise. A folder with **no such section** is an old-shape
+   folder: write nothing, and the final report says *old-shape folder — no
+   release levels recorded*. Any `Release <project>` row an old-shape folder's
+   Consent block still carries is ignored — it never bumps or releases.
+2. Read `.config/releases.yaml` — one key per project, each `NONE`, `PATCH`,
+   `MINOR` or `MAJOR`. An absent key reads `NONE`; an absent file reads every
+   key `NONE`.
+3. **Raise, never lower.** For each row, the order is
+   `NONE < PATCH < MINOR < MAJOR`: when the row's Level is higher than the
+   key's current value, set the key, named by the row's Project cell, to the
+   row's Level; otherwise leave it. `PATCH` after `MAJOR` stays `MAJOR`, and a
+   `NONE` row changes nothing. Only the release step clears a key.
+4. When a key changed and the file is absent, create it with this two-line
+   header comment above the keys:
+
+   ```yaml
+   # Pending release levels, written by /vwf:execute at landing.
+   # Each key is cleared by the release step that releases the project.
+   ```
+5. When a key changed, stage `.config/releases.yaml` together with
+   `docs/plans/index.md` into the one `docs: plan queue — <folder> complete`
+   commit, by the procedure *Writing a row* in
+   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
+   **This commit is the one exception to that procedure's staging step,
+   "that file alone"**: the completion commit carries the levels file too,
+   and nothing else. When nothing changed, the commit carries the row alone.
+   There is no separate release-levels commit.
+6. On a rejected push whose rebase conflicts, the procedure drops the commit
+   and pulls; restore `.config/releases.yaml` from the new tip as it restores
+   the index, then re-apply both — the row, and the levels from step 2,
+   re-read at the new tip and raised again — and push again. Two runs landing
+   at once thus both keep the higher level.
+
+Writing on the integration branch after the merge, never on the run branch,
+is what keeps two concurrent runs from conflicting on the file at merge time.
+When the branch did **not** merge — `no`, or a merge conflict — nothing is
+written.
 
 When any landing condition fails — a red gate line, a unit that is not green,
 a blocking gap → **stop at the report** with what failed and the exact resume
@@ -918,22 +979,31 @@ Read index.md's **After landing** table. Every step carries the *Mode* `run`,
 decided at the planner's interview and written there. On a **green landing** —
 the branch merged and pushed per the Consent row — the steps run in table
 order from the main checkout, with no prompt: the `run` recorded in the folder
-is each step's authorisation, consented at the interview that wrote it. A
-release step recorded `run` runs on the same terms. An empty table, or `none`,
-skips this section and is said in one clause. A table with no *Mode* column or
-a mode other than `run` never reaches here: preflight refused it, on a fresh
-run and a resume alike.
+is each step's authorisation, consented at the interview that wrote it. No
+step releases: a release is always a step a person runs by hand, `/release`
+or the repo's own, and the landing has only recorded its level. An empty
+table, or `none`, runs no plan step and is said in one clause. A table with no
+*Mode* column or a mode other than `run` never reaches here: preflight refused
+it, on a fresh run and a resume alike.
 
-**Under an `all` override**, a step whose command the block names under
-`skip as deduped` or `hold release` does not run here: it is reported as
-deferred to the loop's exit — *skipped (deduped)* or *held (release)* —
-recorded in the Run log, and the remaining steps run in table order without
-it. It is neither a failure nor a step not run.
+**The repo's default steps.** After the plan's own steps, read
+`.config/vwf.yaml`'s optional `after_landing:` key — a list of commands the
+user keeps by hand — and run each, in list order, as a `run` step on the same
+terms: same authorisation, same report, same failure rule. A command the
+plan's own table already ran is skipped, so it runs once. An absent key, or
+an absent file, adds no step.
+
+**Under an `all` override**, a step — a plan step or a default step alike —
+whose command the block names under `skip as deduped` does not run here: it
+is reported as deferred to the loop's exit — *skipped (deduped)* — recorded
+in the Run log, and the remaining steps run in order without it. It is
+neither a failure nor a step not run.
 
 When the branch did **not** merge — the landing was not consented, or was
 consented and the merge hit a conflict (the hard halt of the `yes` branch
 above — the folder's Status reads `BLOCKED` with the files) — **no step
-runs**: a step's authorisation was for a green landing, and this is not one.
+runs**, plan step or default step: a step's authorisation was for a green
+landing, and this is not one.
 The report lists every step with its command, to run by hand after the hand
 merge. The orchestrator runs the steps, never a unit — a step may mutate the
 machine rather than the tree under review, and a unit never reaches outside
@@ -973,9 +1043,12 @@ and answered at the end.
 - Runs two `code` units' pipelines at once, a `review` row beside a `code`
   unit's pipeline, or an engine anywhere but at a `review` row — and never
   infers a `review` row the Units table does not write
-- Runs a generator or bumps a version outside the gates-and-bump unit — a
+- Bumps a version, ever — the landing records a release level and a release
+  step a person runs bumps it; runs a generator outside the gates unit — a
   consented after-landing step is the one exception, and it is the
   orchestrator's because it may write outside the worktree
+- Lowers or clears a key in `.config/releases.yaml`, or writes it anywhere
+  but the release-levels write on a merged landing
 - Asks the user anything at run time
 - Runs an after-landing step on a landing that was not green, or merges past
   the integration branch
