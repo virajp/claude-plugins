@@ -97,14 +97,12 @@ nothing and cuts no tag. `/vwf:execute` — the folder named, `next`, or each pl
 `all` runs — runs it as the plan folder's after-landing step, recorded `run` at
 the interview: it runs on a green landing without a prompt — except that under
 `all`, when the run's deduped-steps question is answered yes, an identical step
-runs once, from the main checkout, after the last plan that landed, and, when
-its one-release question is answered yes, a release step is held to the loop's
-exit (`references/all.md` in the execute skill) — and the author's next
-**restarted** session is on the plugin that just landed — which is why a plan
-editing a plugin the session running `/vwf:execute all` loads is asked, at its
-interview, for the Consent row End an `all` run after landing — `yes` ends the
-run there. Only the last line reaches users, and it is the one `CLAUDE.md`'s
-hard rule guards.
+runs once, from the main checkout, after the last plan that landed
+(`references/all.md` in the execute skill) — and the author's next **restarted**
+session is on the plugin that just landed — which is why a plan editing a plugin
+the session running `/vwf:execute all` loads is asked, at its interview, for the
+Consent row End an `all` run after landing — `yes` ends the run there. Only the
+last line reaches users, and it is the one `CLAUDE.md`'s hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
 carrying build metadata, and fails one whose version has a **13 or 17
@@ -302,9 +300,8 @@ a GitHub Release for the tag, as for the installer. When plugins, installer and
 site release together, cut them from the same `main` merge in that order —
 plugins, installer, site — each with its own note.
 
-**Ask the user before running any of them** — the one exception is a plan whose
-After landing table records the release as a `run` step, consented at its
-interview's release question.
+**Ask the user before running any of them** — always; no plan carries a release
+step.
 
 > The full ritual, the release-note format, and the CI facts that make a failed
 > publish legible are in `.claude/skills/release/` — run `/release`.

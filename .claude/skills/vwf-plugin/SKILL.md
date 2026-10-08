@@ -81,14 +81,16 @@ the code and security reviewers over the branch delta since the last row, the
 pass and the blueprint reconcile only when the plan has `covers:`), and sets the
 row `COMPLETE` after the merge lands — moving the folder to `archived/` and
 re-pointing the row when no gap is open, leaving it live when one is, for the
-`archive` verb once the user asks in prose — and runs each after-landing step
-without a prompt on a green landing — every one is recorded `run` at the
-interview, and it asks nothing at run time, save the run-level questions
-`execute all` asks once, before its first plan — one shared worktree, deduped
-after-landing steps, one release at the end, landing a plan recorded not to
-merge — each an override for that run only. `init` is not a command on that
-line: since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0,
-or alone via `/vwf:setup reshape`. `init` shapes the **base repo and every
+`archive` verb once the user asks in prose, raising the folder's
+`## Release levels` in `.config/releases.yaml` in that same commit and bumping
+no version — and runs each after-landing step without a prompt on a green
+landing — every one is recorded `run` at the interview, none releases, and the
+`.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at run
+time, save the run-level questions `execute all` asks once, before its first
+plan — one shared worktree, deduped after-landing steps, landing a plan recorded
+not to merge — each an override for that run only. `init` is not a command on
+that line: since 2026-09-06 it is **skill-invoked** and runs inside setup's Step
+0, or alone via `/vwf:setup reshape`. `init` shapes the **base repo and every
 member repo the product has** and `setup` sets up **vwf** in the base — two
 different things, and a repo can have either without the other. It resolves that
 set itself and takes no argument: the base per the membership asset (so a run
