@@ -32,9 +32,13 @@ with the route `/a/b` is `<root>/a/b/index.html` (the route `/` is
    2. For **each platform file** the pass touched:
       - Run `node routes.mjs --project <project> --platform <platform>`. It
         reads `## Screens` of every flow of that platform and writes
-        `<root>/__mockups/routes.json`. A non-zero exit is an error in the
-        Screens tables (two codes on one route, one code twice): report its
-        stderr and route the fix through this pass before rendering. Keep each
+        `<root>/__mockups/routes.json`. A non-zero exit writes nothing and is
+        an error in the Screens tables — two codes on one route (routes that
+        differ only in case count as one), one code twice, a route with a `.`
+        or `..` segment, a NUL or a first segment `__mockups` (any case), a
+        table without Code, Screen and Route columns — or no flows directory,
+        or no `<platform>.md` under it: report its stderr and route the fix
+        through this pass before rendering. Keep each
         `NO ROUTE: <code> <screen>` line for step 3.
       - Delete this flow's screen files: for the `path` of each of its screens
         in `routes.json`, delete only `index.html` and `index--*.html` there —
@@ -62,16 +66,19 @@ with the route `/a/b` is `<root>/a/b/index.html` (the route `/` is
       line `URL: http://127.0.0.1:<port>/`. Give every URL in one message, each
       as the root URL plus the route of this flow's first screen on that
       platform, with one sentence: follow the links, use `/__mockups/` (the
-      list of every flow, screen and state) and the state switcher, click a
-      screen to comment, press Done. The servers bind `127.0.0.1` only — the
-      review is for this machine. A link to a screen another flow has not
-      rendered yet opens a placeholder page.
+      list of every flow, screen and state) and the state switcher, click an
+      element to comment — a plain click on a link or submit control
+      navigates, so Alt/Option-click one to comment on it — press Done. The
+      servers bind `127.0.0.1` only — the review is for this machine. A
+      link to a screen another flow has not rendered yet opens a placeholder
+      page.
    2. Wait until every server has exited — each stops on its own Done.
    3. Record each rendered platform in `design.flows_rendered` as
       `<project>/<NNN>-<flow>/<platform>` (the render-currency stamp), only
       for a platform whose link check passed.
 3. **Review.** Read each platform's `<root>/__mockups/comments.yaml`. Each
-   `open` item (`code`, `route`, `state`, `selector`, `text`) is a **proposed
+   item carries `id`, `code`, `route`, `state`, `selector`, `text`, `status`,
+   `created_at` and `applied_at`. Each `open` item is a **proposed
    Screens-contract change**, taken one at a time: show it, the user confirms
    or declines, and a confirmed one is edited into the doc. Set its `status` to
    `applied` or `declined` and `applied_at` to the time (ISO 8601, UTC). A
