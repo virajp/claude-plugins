@@ -1,0 +1,286 @@
+// The one matcher of the mockup tree, shared by serve.mjs and links.mjs so the
+// server and the link check agree on what a URL path serves.
+//
+// The tree under a platform root:
+//
+//   <root>/index.html                     the screen whose route is /
+//   <root>/a/b/index.html                 the screen whose route is /a/b
+//   <root>/a/b/index--<state>.html        that screen in one pinned state
+//   <root>/orders/[id]/index.html         the route /orders/:id, {id} or [id]
+//   <root>/__mockups/routes.json          the route map routes.mjs writes
+//
+// Nothing here ever resolves outside the root: every candidate is realpath'd
+// and must sit under the root's own realpath.
+//
+// Zero dependencies — node: modules only.
+
+import {
+  readdirSync,
+  readFileSync,
+  realpathSync,
+  statSync,
+} from "node:fs";
+import {
+  dirname,
+  join,
+  sep,
+} from "node:path";
+
+export const RESERVED = "__mockups";
+
+const STATE_RE = /^[A-Za-z0-9_-]+$/;
+const PARAM_RE = /^\[[^\]/]+\]$/;
+
+/** Kebab-case of a screen name: "Order details" → "order-details". */
+export function slugify(name) {
+  return String(name)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
+/**
+ * A route to its directory under the root: "/" → "", "/orders/:id" →
+ * "orders/[id]". `:id`, `{id}` and `[id]` all become `[id]`.
+ */
+export function routeToPath(route) {
+  return String(route)
+    .replace(/[?#].*$/, "")
+    .split("/")
+    .filter(segment => segment !== "")
+    .map(segment => {
+      if (segment.startsWith(":") && segment.length > 1) {
+        return `[${segment.slice(1)}]`;
+      }
+      if (/^\{[^}]+\}$/.test(segment)) {
+        return `[${segment.slice(1, -1)}]`;
+      }
+      return segment;
+    })
+    .join("/");
+}
+
+/** The path of a screen with a sample value in each parameter segment. */
+export function sampleRoute(path) {
+  if (!path) {
+    return "/";
+  }
+  return "/" + path
+    .split("/")
+    .map(segment => (PARAM_RE.test(segment) ? "1" : segment))
+    .join("/");
+}
+
+/** Reads and validates `<root>/__mockups/routes.json`; throws on any defect. */
+export function readRoutes(root) {
+  const file = join(root, RESERVED, "routes.json");
+  let data;
+  try {
+    data = JSON.parse(readFileSync(file, "utf8"));
+  }
+  catch (error) {
+    throw new Error(`cannot read ${file}: ${error.message}`, { cause: error });
+  }
+  if (
+    data === null
+    || typeof data !== "object"
+    || typeof data.project !== "string"
+    || typeof data.platform !== "string"
+    || !Array.isArray(data.screens)
+  ) {
+    throw new Error(`${file}: needs project, platform and a screens list`);
+  }
+  for (const [index, screen] of data.screens.entries()) {
+    const ok = screen !== null
+      && typeof screen === "object"
+      && ["code", "screen", "slug", "flow", "route", "path"].every(key =>
+        typeof screen[key] === "string"
+      )
+      && typeof screen.routed === "boolean";
+    if (!ok) {
+      throw new Error(`${file}: screens[${index}] is malformed`);
+    }
+  }
+  return data;
+}
+
+/** The realpath of `path` when it sits under the (realpath'd) root, else null. */
+export function inRoot(root, path) {
+  let real;
+  try {
+    real = realpathSync(path);
+  }
+  catch {
+    return null;
+  }
+  return real === root || real.startsWith(root + sep) ? real : null;
+}
+
+function isFile(path) {
+  try {
+    return statSync(path).isFile();
+  }
+  catch {
+    return false;
+  }
+}
+
+function isDir(path) {
+  try {
+    return statSync(path).isDirectory();
+  }
+  catch {
+    return false;
+  }
+}
+
+/** The state names of a page directory, from its `index--<state>.html` files. */
+export function statesIn(dir) {
+  let names;
+  try {
+    names = readdirSync(dir);
+  }
+  catch {
+    return [];
+  }
+  return names
+    .map(name => /^index--(.+)\.html$/.exec(name)?.[1])
+    .filter(state => state !== undefined && STATE_RE.test(state))
+    .sort();
+}
+
+// Every directory the segments can reach, a static folder before a [param]
+// folder at each level.
+function* walk(root, dir, segments) {
+  if (segments.length === 0) {
+    yield dir;
+    return;
+  }
+  const [segment, ...rest] = segments;
+  const atRoot = dir === root;
+  if (!(atRoot && segment === RESERVED)) {
+    const literal = inRoot(root, join(dir, segment));
+    if (literal && isDir(literal)) {
+      yield* walk(root, literal, rest);
+    }
+  }
+  let names;
+  try {
+    names = readdirSync(dir).sort();
+  }
+  catch {
+    return;
+  }
+  for (const name of names) {
+    if (!PARAM_RE.test(name) || name === segment) {
+      continue;
+    }
+    const param = inRoot(root, join(dir, name));
+    if (param && isDir(param)) {
+      yield* walk(root, param, rest);
+    }
+  }
+}
+
+function splitPath(urlPath) {
+  let decoded;
+  try {
+    decoded = decodeURIComponent(urlPath);
+  }
+  catch {
+    return null;
+  }
+  if (decoded.includes("\0")) {
+    return null;
+  }
+  const segments = decoded.split("/").filter(segment => segment !== "");
+  if (segments.some(segment => segment === "." || segment === "..")) {
+    return null;
+  }
+  return segments;
+}
+
+/**
+ * The screen of routes.json a URL path belongs to, or null. A static segment
+ * outranks a [param] segment, so /orders/new beats /orders/[id].
+ */
+export function findScreen(routes, urlPath) {
+  const segments = Array.isArray(urlPath) ? urlPath : splitPath(urlPath);
+  if (!segments) {
+    return null;
+  }
+  let best = null;
+  let bestScore = -1;
+  for (const screen of routes.screens) {
+    const pattern = screen.path ? screen.path.split("/") : [];
+    if (pattern.length !== segments.length) {
+      continue;
+    }
+    let score = 0;
+    let ok = true;
+    for (const [index, part] of pattern.entries()) {
+      if (part === segments[index]) {
+        score += 1;
+      }
+      else if (!PARAM_RE.test(part)) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok && score > bestScore) {
+      best = screen;
+      bestScore = score;
+    }
+  }
+  return best;
+}
+
+/**
+ * What a GET of `urlPath` with `?state=<state>` (state null when absent)
+ * serves:
+ *   { kind: "file", file, dir }       a real file under the root
+ *   { kind: "placeholder", screen }   a code in routes.json with no file yet
+ *   { kind: "none", reason }          nothing — a 404, a broken link
+ * `/__mockups/` itself is the server's to answer; every path under it is none.
+ */
+export function matchPath(root, routes, urlPath, state) {
+  const segments = splitPath(urlPath);
+  if (!segments) {
+    return { kind: "none", reason: "malformed path" };
+  }
+  if (segments[0] === RESERVED) {
+    return { kind: "none", reason: `/${RESERVED}/ is reserved` };
+  }
+  if (state !== null && state !== undefined && !STATE_RE.test(state)) {
+    return { kind: "none", reason: `malformed state ${state}` };
+  }
+  const hasState = state !== null && state !== undefined;
+
+  if (!hasState && segments.length > 0) {
+    const literal = inRoot(root, join(root, ...segments));
+    if (literal && isFile(literal)) {
+      return { kind: "file", file: literal, dir: dirname(literal) };
+    }
+  }
+
+  const name = hasState ? `index--${state}.html` : "index.html";
+  let pageWithoutState = false;
+  for (const dir of walk(root, root, segments)) {
+    const file = inRoot(root, join(dir, name));
+    if (file && isFile(file)) {
+      return { kind: "file", file, dir };
+    }
+    if (hasState && isFile(join(dir, "index.html"))) {
+      pageWithoutState = true;
+    }
+  }
+
+  const screen = findScreen(routes, segments);
+  if (hasState && (pageWithoutState || screen)) {
+    return { kind: "none", reason: `no state file ${name}` };
+  }
+  if (screen) {
+    return { kind: "placeholder", screen };
+  }
+  return { kind: "none", reason: "no such route" };
+}
