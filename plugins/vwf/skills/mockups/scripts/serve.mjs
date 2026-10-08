@@ -31,7 +31,11 @@
 // where <render dir> is docs/scratchpad/<project>/renders/<platform> and holds
 // __renders/renders.json and __renders/routes.json, both read again at each
 // request. Each route is a page built in memory around index.png or
-// index--<state>.png of the route's folder. On mobile, watch and auto the page
+// index--<state>.png of the route's folder — shown only while renders.json
+// holds an entry for that screen's code and state whose route is the screen's
+// route now and whose file is that image; otherwise the route is the "no
+// render yet" page and the image is 404, and the state switcher and the
+// /__renders/ list read the same entries. On mobile, watch and auto the page
 // sets the mockup of the same route and state (served from --mockups under the
 // reserved /__mockups/ prefix, with the same guards; a --mockups tree with no
 // valid __mockups/routes.json shows none) in a frame on the left of the image;
@@ -207,13 +211,28 @@ if (RENDER_MODE) {
     fail(`--root holds no valid ${RENDERS}/renders.json: ${error.message}`);
   }
 }
+// The renders.json entries that hold under the route map now: an entry counts
+// only while its code's screen has the entry's route and the entry's file is
+// the one that screen's route folder gives its state. What is shown — a page,
+// a state, a list row, an image — is decided from these entries alone, never
+// from a file on disk, so an image a moved screen left at a route folder is
+// never shown as the render of the screen that now owns that route.
 function renders() {
+  let list;
   try {
-    return readRenders();
+    list = readRenders();
   }
   catch {
     return [];
   }
+  return list.filter(entry => {
+    const screen = routes.screens.find(s => s.code === entry.code);
+    if (!screen || entry.route !== screen.route) {
+      return false;
+    }
+    const name = renderName(entry.state === "default" ? null : entry.state);
+    return entry.file === (screen.path ? `${screen.path}/${name}` : name);
+  });
 }
 
 // A path the CLI names must resolve under the scratchpad; the file itself may
@@ -930,9 +949,11 @@ function getRender(res, url) {
   }
   const last = segments[segments.length - 1] ?? "";
   if (last.toLowerCase().endsWith(".png")) {
+    const rel = segments.join("/");
     const real = inRoot(root, join(root, ...segments));
     if (
-      !real
+      !renders().some(entry => entry.file === rel)
+      || !real
       || real === root
       || !real.toLowerCase().endsWith(".png")
       || real.slice(root.length + 1).split(sep)[0].toLowerCase() === RENDERS
@@ -949,8 +970,10 @@ function getRender(res, url) {
     res.writeHead(404).end();
     return;
   }
+  const list = renders();
+  const entry = renderEntry(list, screen.code, state);
   const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
-  const image = inRoot(root, join(dir, renderName(state)));
+  const image = entry && inRoot(root, join(dir, renderName(state)));
   if (!image || !statSync(image).isFile()) {
     if (state !== null) {
       res.writeHead(404).end();
@@ -959,8 +982,6 @@ function getRender(res, url) {
     send(res, 200, TYPES[".html"], renderPlaceholderPage(screen));
     return;
   }
-  const list = renders();
-  const entry = renderEntry(list, screen.code, state);
   send(
     res,
     200,

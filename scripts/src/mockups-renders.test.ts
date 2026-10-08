@@ -218,38 +218,39 @@ describe("renders.mjs", () => {
     expect(stderr.match(/not a RENDER: line/g)).toHaveLength(2);
   });
 
-  it("drops the entries and images of a code that moved or left the map", () => {
+  it("keeps every other entry and its image untouched on a second run", () => {
     run(SMOKE);
-    run("RENDER: 200a mobile default shots/b.png\n");
-    expect(rendersJson("mobile").renders).toHaveLength(3);
-    // 200b moves to /order/:id; 200a stays.
+    const first = rendersJson("mobile");
+    // 200b moves to /order/:id before the second run, which renders 200a only.
     put(
       w,
       "docs/blueprint/flows/demo/200-orders/mobile.md",
       DOC.replace("`/orders/:id`", "`/order/:id`"),
     );
-    const { stdout } = run("RENDER: 200a mobile empty shots/a.png\n");
+    const { stdout } = run("RENDER: 200a mobile default shots/b.png\n");
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     const json = rendersJson("mobile");
     expect(json.renders.map(e => [e.code, e.state])).toEqual([
       ["200a", "default"],
-      ["200a", "empty"],
+      ["200b", "default"],
+      ["200b", "error"],
     ]);
-    expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
-      false,
-    );
-    expect(existsSync(tree("mobile", "orders", "[id]", "index--error.png")))
-      .toBe(false);
+    for (const old of first.renders) {
+      expect(json.renders).toContainEqual(old);
+    }
+    expect(readFileSync(tree("mobile", "orders", "[id]", "index.png"), "utf8"))
+      .toBe("PNG-A");
+    expect(
+      readFileSync(
+        tree("mobile", "orders", "[id]", "index--error.png"),
+        "utf8",
+      ),
+    )
+      .toBe("PNG-B");
     expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
       "PNG-B",
     );
-    const routes = JSON.parse(
-      readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
-    );
-    expect(
-      routes.screens.find((s: { code: string; }) => s.code === "200b").route,
-    )
-      .toBe("/order/:id");
+    expect(rendersJson("web").renders).toHaveLength(1);
   });
 
   it("replaces a symlinked image, never writing through it", () => {

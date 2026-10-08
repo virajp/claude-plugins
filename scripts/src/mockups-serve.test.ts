@@ -503,7 +503,7 @@ describe("serve.mjs --renders", () => {
     const entry = (code: string, state: string, file: string) => ({
       code,
       state,
-      route: "",
+      route: code === "200a" ? "/orders" : "/orders/:id",
       file,
       plan: "demo-plan",
       date: "2026-10-09T00:00:00.000Z",
@@ -780,9 +780,58 @@ describe("serve.mjs --renders", () => {
       JSON.stringify({ project: "demo", platform: "web", screens }),
     );
     put(join(dir, "history", "index.png"), "PNG-HISTORY");
+    const moved = await (await fetch(new URL("/history", url))).text();
+    expect(moved).toContain("No render yet");
+    expect(moved).not.toContain("<img");
+    put(
+      join(dir, "__renders", "renders.json"),
+      JSON.stringify({
+        project: "demo",
+        platform: "web",
+        renders: [{
+          code: "200a",
+          state: "default",
+          route: "/history",
+          file: "history/index.png",
+          plan: "demo-plan",
+          date: "2026-10-09T00:00:00.000Z",
+        }],
+      }),
+    );
     const body = await (await fetch(new URL("/history", url))).text();
     expect(body).toContain("src=\"/history/index.png\"");
     expect((await fetch(new URL("/orders", url))).status).toBe(404);
+  });
+
+  it("never shows a moved screen's old image for the screen now at its route", async () => {
+    const { url } = await startRenders("web");
+    // 200a leaves /orders for /history; 200d takes /orders. renders.json still
+    // holds 200a's old entry, and orders/index.png is still on disk.
+    const screens = ROUTES.screens.map(s =>
+      s.code === "200a"
+        ? { ...s, route: "/history", path: "history" }
+        : s.code === "200d"
+        ? { ...s, route: "/orders", path: "orders" }
+        : s
+    );
+    put(
+      join(renderRoot("web"), "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform: "web", screens }),
+    );
+    const page = await (await fetch(new URL("/orders", url))).text();
+    expect(page).toContain("200d");
+    expect(page).toContain("No render yet");
+    expect(page).not.toContain("<img");
+    expect((await fetch(new URL("/orders/index.png", url))).status).toBe(404);
+    expect(existsSync(join(renderRoot("web"), "orders", "index.png"))).toBe(
+      true,
+    );
+    const history = await (await fetch(new URL("/history", url))).text();
+    expect(history).toContain("No render yet");
+    const list = await (await fetch(new URL("/__renders/", url))).text();
+    expect(list).not.toContain("200a");
+    expect(list).not.toContain("200d");
+    expect(list).toContain("200b");
   });
 
   it("removes its --url-file on Done and on exit", async () => {
