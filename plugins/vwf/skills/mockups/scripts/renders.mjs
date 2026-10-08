@@ -30,10 +30,12 @@
 //   { "project", "platform",
 //     "renders": [ { "code", "state", "route", "file", "plan", "date" } ] }
 //
-// merged — the entry of each { code, state } this run copied is replaced,
-// every other entry kept as it is, and no other image is touched. An old entry
-// may name a route or file the new route map no longer gives its code; the
-// render server shows an image only through an entry whose route and file
+// merged — the entry of each { code, state } this run copied is replaced, an
+// old entry naming a file this run overwrote is dropped (that file now holds
+// another render), every other entry is kept as it is, and no other image is
+// touched. So each kept entry still describes the image at its file. An old
+// entry may name a route or file the new route map no longer gives its code;
+// the render server shows an image only through an entry whose route and file
 // match the map, so such an image is never shown as another screen's render.
 // `file` is relative to the platform root, `date` ISO 8601 UTC, `plan` the
 // plan folder's name. `__renders/routes.json` keeps a copy of the route map,
@@ -74,6 +76,8 @@ import {
   inRoot,
   isDir,
   isFile,
+  renderFile,
+  renderName,
   RENDERS,
   STATE_RE,
 } from "./lib/routes.mjs";
@@ -278,9 +282,7 @@ for (const item of items) {
     continue;
   }
 
-  const name = item.state === "default"
-    ? "index.png"
-    : `index--${item.state}.png`;
+  const name = renderName(item.state);
   try {
     const realRoot = ensureDir(main, [
       "docs",
@@ -317,7 +319,7 @@ for (const item of items) {
     code: screen.code,
     state: item.state,
     route: screen.route,
-    file: screen.path ? `${screen.path}/${name}` : name,
+    file: renderFile(screen.path, item.state),
     plan,
     date,
   };
@@ -367,10 +369,13 @@ for (const [platform, entries] of copied) {
       throw new Error("the render tree escapes the main checkout");
     }
     const file = join(reserved, "renders.json");
-    // Only the { code, state } pairs this run copied are replaced; every other
-    // entry is kept as it is.
+    // The { code, state } pairs this run copied are replaced, and an old entry
+    // naming a file this run overwrote is dropped — it no longer describes
+    // that file. Every other entry is kept as it is.
     const kept = readRenders(file).filter(old =>
-      !entries.some(e => e.code === old.code && e.state === old.state)
+      !entries.some(e =>
+        (e.code === old.code && e.state === old.state) || e.file === old.file
+      )
     );
     const renders = [...kept, ...entries].sort((a, b) =>
       String(a.code).localeCompare(String(b.code))

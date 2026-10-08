@@ -251,6 +251,32 @@ describe("renders.mjs", () => {
       "PNG-B",
     );
     expect(rendersJson("web").renders).toHaveLength(1);
+    const routes = JSON.parse(
+      readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
+    );
+    expect(
+      routes.screens.find((s: { code: string; }) => s.code === "200b").route,
+    )
+      .toBe("/order/:id");
+  });
+
+  it("drops an old entry whose file this run overwrote with another screen", () => {
+    run("RENDER: 200a mobile default shots/a.png\n");
+    // 200a moves off /orders and 200b takes it; 200b's render lands in
+    // orders/index.png, the file 200a's old entry names.
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/mobile.md",
+      DOC.replace("`/orders`", "`/all`").replace("`/orders/:id`", "`/orders`"),
+    );
+    const { stdout } = run("RENDER: 200b mobile default shots/b.png\n");
+    expect(stdout.trimEnd()).toBe("COPIED: 1");
+    expect(rendersJson("mobile").renders.map(e => [e.code, e.file])).toEqual([
+      ["200b", "orders/index.png"],
+    ]);
+    expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
+      "PNG-B",
+    );
   });
 
   it("replaces a symlinked image, never writing through it", () => {

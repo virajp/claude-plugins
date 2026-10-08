@@ -33,6 +33,22 @@ export const RENDERS = "__renders";
 export const STATE_RE = /^[A-Za-z0-9_-]+$/;
 const PARAM_RE = /^\[[^\]/]+\]$/;
 
+/**
+ * The image name of a render state: `default` (or null) is index.png, any
+ * other state index--<state>.png — shared by renders.mjs and serve.mjs.
+ */
+export function renderName(state) {
+  return state === null || state === undefined || state === "default"
+    ? "index.png"
+    : `index--${state}.png`;
+}
+
+/** A render's file under the platform root: its route folder plus its name. */
+export function renderFile(path, state) {
+  const name = renderName(state);
+  return path ? `${path}/${name}` : name;
+}
+
 /** Kebab-case of a screen name: "Order details" → "order-details". */
 export function slugify(name) {
   return String(name)

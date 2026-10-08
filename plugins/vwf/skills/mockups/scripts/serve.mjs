@@ -99,6 +99,8 @@ import {
   isReserved,
   matchPath,
   readRoutes,
+  renderFile,
+  renderName,
   RENDERS,
   RESERVED,
   sampleRoute,
@@ -230,8 +232,7 @@ function renders() {
     if (!screen || entry.route !== screen.route) {
       return false;
     }
-    const name = renderName(entry.state === "default" ? null : entry.state);
-    return entry.file === (screen.path ? `${screen.path}/${name}` : name);
+    return entry.file === renderFile(screen.path, entry.state);
   });
 }
 
@@ -510,10 +511,6 @@ function placeholderPage(screen) {
 function fileUrl(path, name) {
   const segments = path ? path.split("/") : [];
   return "/" + [...segments, name].map(encodeURIComponent).join("/");
-}
-
-function renderName(state) {
-  return state === null ? "index.png" : `index--${state}.png`;
 }
 
 // The renders.json entry of one image, or undefined.
