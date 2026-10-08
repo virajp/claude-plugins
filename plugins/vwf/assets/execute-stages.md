@@ -160,7 +160,11 @@ Per-stage dispatch contract:
   itself never renders. Either way it judges against the design system and the Screens
   contract and adds a code-level token/state pass. Findings loop back to `code`
   like review findings; `RENDERED: n/a` on **any** UI slice is recorded as a gap
-  and reported at the final gate.
+  and reported at the final gate. The reviewer relays the gate's `renders:`
+  list as `RENDER: <code> <platform> <state> <file>` lines, and after the last
+  ux round, before the landing, the orchestrator copies that round's images
+  into the main checkout's `docs/scratchpad/<project>/renders/<platform>/` —
+  the execute skill's *Acceptance & UX* step says how.
 
 ## Shared stage rules
 

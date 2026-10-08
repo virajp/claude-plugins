@@ -439,7 +439,17 @@ returns findings in vwf's vocabulary:
 rendered: ok | n/a
 reason: <one line> # required when n/a
 findings: [ { severity, screen, what, where } ]
+renders: [ { code, platform, state, file } ] # optional; one per image
 ```
+
+**`renders:` is optional, and it is how a render outlives the run.** vwf keeps
+the images it names after the run, in the main checkout's
+`docs/scratchpad/<project>/renders/<platform>/`, for a person to review with
+`/vwf:mockups renders`. Each item is one image: `code` is the screen's code in
+the flow's Screens table, `platform` the screen platform it was rendered for,
+`state` is `default` or one of the screen's pinned states, and `file` is the
+image's path, which must be inside the worktree. A gate that returns no list is
+valid and works as before — its run simply keeps no images.
 
 vwf's rule is unchanged and stays vwf's: `rendered: n/a` on any UI slice is a
 gap that reaches the final human gate, never a silent downgrade to a code-only
