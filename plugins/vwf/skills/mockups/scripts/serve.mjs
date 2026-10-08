@@ -1010,7 +1010,10 @@ server.listen(port, "127.0.0.1", () => {
   // The URL file first, so whoever has read the URL: line finds it written.
   if (urlFile !== null) {
     ownUrl = `http://127.0.0.1:${bound}/`;
-    writeFileSync(urlFile, `${ownUrl}\n`);
+    // Removed first and written exclusively, so a symlink at the name is
+    // replaced, never followed.
+    rmSync(urlFile, { force: true });
+    writeFileSync(urlFile, `${ownUrl}\n`, { flag: "wx" });
   }
   process.stdout.write(`URL: http://127.0.0.1:${bound}/\n`);
   process.stderr.write(

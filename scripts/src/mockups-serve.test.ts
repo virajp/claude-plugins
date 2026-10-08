@@ -11,6 +11,7 @@ import {
 } from "node:child_process";
 import {
   existsSync,
+  lstatSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -607,6 +608,17 @@ describe("serve.mjs --renders", () => {
   it("writes its own URL to --url-file", async () => {
     const file = join(scratch(), "renders-web.url");
     const server = await startRenders("web", ["--url-file", file]);
+    expect(readFileSync(file, "utf8").trim()).toBe(server.url);
+  });
+
+  it("replaces a symlink at --url-file rather than writing through it", async () => {
+    const target = join(repo, "victim.txt");
+    writeFileSync(target, "untouched\n");
+    const file = join(scratch(), "renders-web.url");
+    symlinkSync(target, file);
+    const server = await startRenders("web", ["--url-file", file]);
+    expect(readFileSync(target, "utf8")).toBe("untouched\n");
+    expect(lstatSync(file).isSymbolicLink()).toBe(false);
     expect(readFileSync(file, "utf8").trim()).toBe(server.url);
   });
 
