@@ -381,6 +381,41 @@ describe("serve.mjs", () => {
     expect(yaml).toMatch(/^# done: /m);
   });
 
+  it("answers a malformed or //-led target and lives on", async () => {
+    const { url } = await start();
+    expect(await rawGet(url, "//[")).toBe(404);
+    expect(await rawGet(url, "//x/orders")).toBe(404);
+    expect(await rawGet(url, "/%E0%A4%A")).toBe(400);
+    expect(await rawGet(url, "*")).toBe(400);
+    expect((await fetch(url)).status).toBe(200);
+  });
+
+  it("answers 500 when a comment cannot be written, and lives on", async () => {
+    const { url } = await start();
+    mkdirSync(join(root, "__mockups", "comments.yaml"));
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: COMMENT,
+    });
+    expect(res.status).toBe(500);
+    expect((await fetch(url)).status).toBe(200);
+  });
+
+  it("names the screen a [param] path resolves to", async () => {
+    const { url } = await start();
+    const body = await (await fetch(new URL("/orders/7", url))).text();
+    expect(body).toContain("\"code\":\"200b\"");
+    expect(body).toContain("\"screen\":\"Order details\"");
+  });
+
+  it("lets Alt/Option-click comment on a link or a submit control", async () => {
+    const { url } = await start();
+    const body = await (await fetch(url)).text();
+    expect(body).toContain("e.altKey");
+    expect(body).toContain("Alt/Option-click a link or button");
+  });
+
   it("refuses a root outside docs/scratchpad/", () => {
     const outside = join(repo, "elsewhere");
     mkdirSync(join(outside, "__mockups"), { recursive: true });

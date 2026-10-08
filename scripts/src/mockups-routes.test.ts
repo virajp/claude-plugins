@@ -217,6 +217,21 @@ describe("routes.mjs", () => {
     expect(run().status).not.toBe(0);
   });
 
+  it("refuses two routes that differ only in case", () => {
+    writeFlow(
+      "200-orders",
+      "web",
+      flowDoc([
+        "| 200a | A | `/orders` | — | — | — | — |",
+        "| 200b | B | `/Orders` | — | — | — | — |",
+      ]),
+    );
+    const { status, stderr } = run();
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/route \/Orders is held by two codes/);
+    expect(existsSync(join(repo, ...OUT))).toBe(false);
+  });
+
   it("refuses a route with a . or .. segment or under __mockups", () => {
     for (const route of ["/a/../b", "/./a", "/__MOCKUPS/x", "/__mockups"]) {
       writeFlow(

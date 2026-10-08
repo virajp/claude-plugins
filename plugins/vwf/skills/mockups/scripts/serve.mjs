@@ -29,6 +29,10 @@
 //                             item in __mockups/comments.yaml, 204
 //   POST /done                appends a done marker, responds 204, exits 0
 //
+// Only a request target's path and query are read — never resolved against a
+// base, so a leading // is a path, not a host; a target that is not a path is
+// 400, and anything a handler throws is a 500 the server outlives.
+//
 // Loopback only: it binds 127.0.0.1, never any other interface, and carries no
 // auth and no TLS — it is a review server for one person on one machine. Any
 // request whose Host is not 127.0.0.1:<port> or localhost:<port> is 403 (no DNS
@@ -401,13 +405,58 @@ function refusal(req) {
   return type === "application/json" ? null : 415;
 }
 
+// The request target split into its path and query, or null when it is not a
+// path. Only the path is ever read: a target is never resolved against a base,
+// so a leading // stays a path and never becomes a host.
+function target(raw) {
+  const value = String(raw ?? "");
+  if (!value.startsWith("/")) {
+    return null;
+  }
+  const hash = value.indexOf("#");
+  const bare = hash === -1 ? value : value.slice(0, hash);
+  const query = bare.indexOf("?");
+  const pathname = query === -1 ? bare : bare.slice(0, query);
+  try {
+    decodeURIComponent(pathname);
+  }
+  catch {
+    return null;
+  }
+  return {
+    pathname,
+    searchParams: new URLSearchParams(
+      query === -1 ? "" : bare.slice(query + 1),
+    ),
+  };
+}
+
+// Whatever a handler throws, the request gets a 500 and the server lives on.
+function failed(res, error) {
+  process.stderr.write(`request failed: ${error?.stack ?? error}\n`);
+  if (!res.headersSent) {
+    res.writeHead(500).end();
+  }
+  else {
+    res.destroy();
+  }
+}
+
 const server = createServer((req, res) => {
+  handle(req, res).catch(error => failed(res, error));
+});
+
+async function handle(req, res) {
   const refused = refusal(req);
   if (refused !== null) {
     res.writeHead(refused).end();
     return;
   }
-  const url = new URL(req.url, "http://127.0.0.1");
+  const url = target(req.url);
+  if (url === null) {
+    res.writeHead(400).end();
+    return;
+  }
   if (req.method === "GET" || req.method === "HEAD") {
     if (url.pathname === `/${RESERVED}/` || url.pathname === `/${RESERVED}`) {
       send(res, 200, TYPES[".html"], listPage());
@@ -428,10 +477,9 @@ const server = createServer((req, res) => {
       res.writeHead(404).end();
       return;
     }
-    const screen = findScreen(routes, url.pathname);
     serveFile(res, match.file, {
-      code: screen?.code ?? "",
-      screen: screen?.screen ?? "",
+      code: match.screen?.code ?? "",
+      screen: match.screen?.screen ?? "",
       state: state ?? "",
       states: statesIn(match.dir),
       list: `/${RESERVED}/`,
@@ -439,7 +487,7 @@ const server = createServer((req, res) => {
     return;
   }
   if (req.method === "POST" && url.pathname === "/comment") {
-    postComment(req, res);
+    await postComment(req, res);
     return;
   }
   if (req.method === "POST" && url.pathname === "/done") {
@@ -447,7 +495,7 @@ const server = createServer((req, res) => {
     return;
   }
   res.writeHead(404).end();
-});
+}
 
 server.listen(port, "127.0.0.1", () => {
   const { port: bound } = server.address();
@@ -466,8 +514,10 @@ server.listen(port, "127.0.0.1", () => {
 // directory, a link to the list, a comment count and a Done button; hover
 // highlights the element under the cursor, click selects it and opens a
 // textarea; submit POSTs the comment; Done POSTs /done and replaces the body
-// with a one-line note. It never intercepts navigation — links between screens
-// and a form's submit control keep working.
+// with a one-line note. A plain click never intercepts navigation — links
+// between screens and a form's submit control keep working; an Alt/Option-click
+// opens the comment box on any element, a link or a submit control included,
+// without navigating.
 
 const OVERLAY = String.raw`function (CFG) {
   var count = 0;
@@ -496,7 +546,7 @@ const OVERLAY = String.raw`function (CFG) {
 
   var bar = document.createElement("div");
   bar.id = "drv-bar";
-  bar.innerHTML = "<b></b><span></span><span id=\"drv-states\"></span><a id=\"drv-list\">All mockups</a><span id=\"drv-count\">0 comments</span><button type=\"button\">Done</button>";
+  bar.innerHTML = "<b></b><span></span><span id=\"drv-states\"></span><a id=\"drv-list\">All mockups</a><span id=\"drv-count\">0 comments</span><span id=\"drv-hint\">Click to comment · Alt/Option-click a link or button</span><button type=\"button\">Done</button>";
   bar.querySelector("b").textContent = CFG.code || location.pathname;
   bar.querySelectorAll("span")[0].textContent = CFG.screen;
   bar.querySelector("#drv-list").href = CFG.list;
@@ -559,11 +609,13 @@ const OVERLAY = String.raw`function (CFG) {
 
   document.addEventListener("click", function (e) {
     if (inOverlay(e.target)) return;
-    if (e.target.closest && e.target.closest("a[href]")) return;
-    // A form's submit control keeps submitting: a form action may navigate.
-    var control = e.target.closest && e.target.closest("button,input[type=submit],input[type=image]");
-    if (control && control.form && (control.type === "submit" || control.type === "image")) return;
     if (e.target === document.body || e.target === document.documentElement) return;
+    if (!e.altKey) {
+      if (e.target.closest && e.target.closest("a[href]")) return;
+      // A form's submit control keeps submitting: a form action may navigate.
+      var control = e.target.closest && e.target.closest("button,input[type=submit],input[type=image]");
+      if (control && control.form && (control.type === "submit" || control.type === "image")) return;
+    }
     e.preventDefault();
     openForm(e.target, e.clientX, e.clientY);
   });

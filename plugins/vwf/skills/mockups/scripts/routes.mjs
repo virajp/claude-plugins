@@ -156,7 +156,8 @@ for (const flow of flows) {
     const routed = token !== null;
     const route = routed ? token : `/${row.code}-${slug}`;
     const path = routeToPath(route);
-    const key = path.replace(/\[[^\]]*\]/g, "[]");
+    // APFS folds case: /Orders and /orders are one folder.
+    const key = path.replace(/\[[^\]]*\]/g, "[]").toLowerCase();
     const bad = pathError(path);
     if (bad) {
       errors.push(`route ${route} of ${row.code} ${bad}`);

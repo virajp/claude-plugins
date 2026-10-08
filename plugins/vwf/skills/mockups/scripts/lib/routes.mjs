@@ -278,8 +278,10 @@ export function findScreen(routes, urlPath) {
 /**
  * What a GET of `urlPath` with `?state=<state>` (state null when absent)
  * serves:
- *   { kind: "file", file, dir }       a real file under the root
- *   { kind: "placeholder", screen }   a code in routes.json with no file yet
+ *   { kind: "file", file, dir, screen }  a real file under the root; screen
+ *                                        is the routes.json screen the path
+ *                                        belongs to, or null
+ *   { kind: "placeholder", screen }      a code in routes.json with no file yet
  *   { kind: "none", reason }          nothing — a 404, a broken link
  * `/__mockups/` itself is the server's to answer; every path under it is none.
  */
@@ -296,23 +298,23 @@ export function matchPath(root, routes, urlPath, state) {
   }
   const hasState = state !== null && state !== undefined;
   const name = hasState ? `index--${state}.html` : "index.html";
+  const screen = findScreen(routes, segments);
 
   if (!hasState && segments.length > 0) {
     const literal = servable(root, join(root, ...segments));
     if (literal && isFile(literal)) {
-      return { kind: "file", file: literal, dir: dirname(literal) };
+      return { kind: "file", file: literal, dir: dirname(literal), screen };
     }
   }
 
   // A path a screen of routes.json owns is that screen's folder or its
   // placeholder — never a [param] sibling, so a fixed route not rendered yet
   // still wins over /orders/[id].
-  const screen = findScreen(routes, segments);
   if (screen) {
     const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
     const file = servable(root, join(dir, name));
     if (file && isFile(file)) {
-      return { kind: "file", file, dir: dirname(file) };
+      return { kind: "file", file, dir: dirname(file), screen };
     }
     return hasState
       ? { kind: "none", reason: `no state file ${name}` }
@@ -323,7 +325,7 @@ export function matchPath(root, routes, urlPath, state) {
   for (const dir of walk(root, root, segments)) {
     const file = servable(root, join(dir, name));
     if (file && isFile(file)) {
-      return { kind: "file", file, dir };
+      return { kind: "file", file, dir, screen: null };
     }
     if (hasState && isFile(join(dir, "index.html"))) {
       pageWithoutState = true;
