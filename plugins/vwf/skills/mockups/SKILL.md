@@ -126,8 +126,12 @@ per screen, `{ code, screen, slug, flow, route, path, routed }`, where `path` is
 the screen's directory under the platform root and `routed` is false for a
 screen whose Route cell is empty. Such a screen gets the route
 `/<code>-<slug>`, and the script prints one `NO ROUTE: <code> <screen>` line
-for it — keep those lines for the report. A non-zero exit (two codes with one
-route, one code twice) stops the skill: show its stderr, render nothing.
+for it — keep those lines for the report. A non-zero exit stops the skill:
+show its stderr, render nothing. It exits non-zero on two codes with one route
+(routes that differ only in case count as one), one code twice, a route with a
+`.` or `..` segment, a NUL, or a first segment `__mockups` in any case, a
+Screens table without Code, Screen and Route columns, and no flows directory
+or no `<platform>.md` in it.
 
 ### 5. Recall (mempalace)
 
@@ -197,9 +201,11 @@ Each prints exactly one stdout line, `URL: http://127.0.0.1:<port>/` — the
 app's `/` screen (`--port <n>` pins one). Give every `URL:` line in one
 message, with one sentence: *open it, follow the links, use the state switcher
 and `/__mockups/` (the list of every flow, screen and state) to reach every
-screen, click an element to leave a comment, and press Done for each platform
-when the round is over.* Then **wait for every process to exit** — each stops
-on its own Done, with exit `0`. Do not poll the comments files while they run.
+screen, click an element to leave a comment — a link or submit control
+navigates on a plain click, so Alt/Option-click it to comment — and press Done
+for each platform when the round is over.* Then **wait for every process to
+exit** — each stops on its own Done, with exit `0`. Do not poll the comments
+files while they run.
 
 ### 10. Report, stamp, persist
 
