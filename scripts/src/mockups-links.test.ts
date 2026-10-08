@@ -224,6 +224,37 @@ describe("links.mjs", () => {
     expect(stdout).toBe("LINKS OK: 3 links in 2 pages\n");
   });
 
+  it("decodes a legacy name with no ; as a browser does in an attribute", () => {
+    write("signin/index--error.html", html("/"));
+    for (
+      const [href, reason] of [
+        ["/signin&amp", "no such route"],
+        ["/signin?state=error&lt", "malformed state error<"],
+      ] as const
+    ) {
+      write("index.html", html(href));
+      const { status, stdout } = run();
+      expect(status, href).toBe(1);
+      expect(stdout).toBe(`BROKEN: index.html -> ${href} — ${reason}\n`);
+    }
+    write(
+      "index.html",
+      html(
+        "/signin?state=error&lt=1",
+        "/signin?state=error&ltx",
+        "/signin&copy;",
+      ),
+    );
+    expect(run().stdout).toBe(
+      "BROKEN: index.html -> /signin&copy; — no such route\n",
+    );
+    write(
+      "index.html",
+      html("/signin?state=error&lt=1", "/signin?a=1&state=error"),
+    );
+    expect(run().stdout).toBe("LINKS OK: 3 links in 2 pages\n");
+  });
+
   it("reads unquoted hrefs too", () => {
     write("index.html", "<a href=/signin>a</a> <a href=nowhere>b</a>\n");
     const { status, stdout } = run();

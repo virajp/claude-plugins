@@ -80,7 +80,8 @@ function pages(dir, at = "") {
 // href="…", href='…' or an unquoted href=….
 const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
-// The named references a URL could hide in; any other is refused, never guessed.
+// The named references a URL could hide in. With a `;`, a name in neither this
+// table nor LEGACY is refused — the check fails closed rather than guess.
 const NAMED = {
   amp: "&",
   AMP: "&",
@@ -111,22 +112,55 @@ const NAMED = {
   rpar: ")",
   nbsp: "\u00a0",
 };
+// HTML's legacy names — the ones a browser also decodes with no `;` — and
+// their code points.
+const LEGACY = Object.fromEntries(
+  (
+    "AElig:c6 AMP:26 Aacute:c1 Acirc:c2 Agrave:c0 Aring:c5 Atilde:c3 Auml:c4 "
+    + "COPY:a9 Ccedil:c7 ETH:d0 Eacute:c9 Ecirc:ca Egrave:c8 Euml:cb GT:3e "
+    + "Iacute:cd Icirc:ce Igrave:cc Iuml:cf LT:3c Ntilde:d1 Oacute:d3 Ocirc:d4 "
+    + "Ograve:d2 Oslash:d8 Otilde:d5 Ouml:d6 QUOT:22 REG:ae THORN:de Uacute:da "
+    + "Ucirc:db Ugrave:d9 Uuml:dc Yacute:dd aacute:e1 acirc:e2 acute:b4 "
+    + "aelig:e6 agrave:e0 amp:26 aring:e5 atilde:e3 auml:e4 brvbar:a6 "
+    + "ccedil:e7 cedil:b8 cent:a2 copy:a9 curren:a4 deg:b0 divide:f7 eacute:e9 "
+    + "ecirc:ea egrave:e8 eth:f0 euml:eb frac12:bd frac14:bc frac34:be gt:3e "
+    + "iacute:ed icirc:ee iexcl:a1 igrave:ec iquest:bf iuml:ef laquo:ab lt:3c "
+    + "macr:af micro:b5 middot:b7 nbsp:a0 not:ac ntilde:f1 oacute:f3 ocirc:f4 "
+    + "ograve:f2 ordf:aa ordm:ba oslash:f8 otilde:f5 ouml:f6 para:b6 plusmn:b1 "
+    + "pound:a3 quot:22 raquo:bb reg:ae sect:a7 shy:ad sup1:b9 sup2:b2 sup3:b3 "
+    + "szlig:df thorn:fe times:d7 uacute:fa ucirc:fb ugrave:f9 uml:a8 uuml:fc "
+    + "yacute:fd yen:a5 yuml:ff"
+  )
+    .split(" ")
+    .map(pair => {
+      const [name, hex] = pair.split(":");
+      return [name, String.fromCodePoint(parseInt(hex, 16))];
+    }),
+);
 const REF_RE =
-  /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*);)/g;
+  /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*)(;?))/g;
 
 // The value a browser reads out of the attribute: every character reference
-// decoded, as the HTML parser does before the URL parser sees it. Any other
-// `&` is literal text, as in HTML. Null when a named reference ending in `;`
-// is one this file does not know — the check fails closed on it.
+// decoded, as the HTML parser does before the URL parser sees it. A legacy
+// name with no `;` is decoded too, unless `=` follows it — HTML's attribute
+// rule (the name run is already maximal, so no letter or digit can follow).
+// Any other `&` is literal text, as in HTML. Null when a named reference
+// ending in `;` is one this file does not know — the check fails closed on it.
 function decode(value) {
   let unknown = false;
-  const out = value.replace(REF_RE, (ref, hex, dec, name) => {
+  const out = value.replace(REF_RE, (ref, hex, dec, name, semi, at) => {
     if (name !== undefined) {
-      if (!Object.hasOwn(NAMED, name)) {
+      if (semi === "") {
+        return Object.hasOwn(LEGACY, name) && value[at + ref.length] !== "="
+          ? LEGACY[name]
+          : ref;
+      }
+      const known = Object.hasOwn(NAMED, name) ? NAMED : LEGACY;
+      if (!Object.hasOwn(known, name)) {
         unknown = true;
         return ref;
       }
-      return NAMED[name];
+      return known[name];
     }
     const code = hex !== undefined ? parseInt(hex, 16) : parseInt(dec, 10);
     return code === 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)
