@@ -224,6 +224,7 @@ none — B94 holds what remains for the device stacks.
 | 3    | R3 wave review    | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean; generators --check up to date                                                                                                                                                                                                      | —        |
 | —    | reconcile         | —     | 1     | pass        | final wave gate 7/7 green over the finished tree                                                                                                                                                                                                                              | —        |
 | —    | reconcile         | —     | 1     | pass        | orchestrator gates: renders: keys {code, platform, state, file} match stack-adapter.md:442; no language/typescript@0.3.1 pin left                                                                                                                                             | —        |
+| —    | after landing     | —     | 1     | skipped     | skipped (deduped): mise run p:plugins:local, deferred to the all loop's exit; merged dcb00dd1, row COMPLETE b39fa68a, B91 Done                                                                                                                                                | —        |
 
 ## Launch
 
