@@ -27,8 +27,10 @@ import {
 } from "node:path";
 
 export const RESERVED = "__mockups";
+// The reserved directory of a render tree (renders.mjs, serve.mjs --renders).
+export const RENDERS = "__renders";
 
-const STATE_RE = /^[A-Za-z0-9_-]+$/;
+export const STATE_RE = /^[A-Za-z0-9_-]+$/;
 const PARAM_RE = /^\[[^\]/]+\]$/;
 
 /** Kebab-case of a screen name: "Order details" → "order-details". */
@@ -67,7 +69,9 @@ export function isReserved(segment) {
 
 /**
  * Why a route's `path` cannot be served, or null when it can: a `.` or `..`
- * segment, a NUL, or a first segment that is the reserved `__mockups`.
+ * segment, a NUL, or a first segment that is the reserved `__mockups` or
+ * `__renders` — a route is served from the mockup tree and the render tree
+ * alike.
  */
 export function pathError(path) {
   const segments = String(path).split("/").filter(segment => segment !== "");
@@ -79,6 +83,9 @@ export function pathError(path) {
   }
   if (segments.length > 0 && isReserved(segments[0])) {
     return `starts with the reserved /${RESERVED}/`;
+  }
+  if (segments.length > 0 && segments[0].toLowerCase() === RENDERS) {
+    return `starts with the reserved /${RENDERS}/`;
   }
   return null;
 }
@@ -94,9 +101,12 @@ export function sampleRoute(path) {
     .join("/");
 }
 
-/** Reads and validates `<root>/__mockups/routes.json`; throws on any defect. */
-export function readRoutes(root) {
-  const file = join(root, RESERVED, "routes.json");
+/**
+ * Reads and validates `<root>/<reserved>/routes.json` — `__mockups` for a
+ * mockup tree, `__renders` for a render tree; throws on any defect.
+ */
+export function readRoutes(root, reserved = RESERVED) {
+  const file = join(root, reserved, "routes.json");
   let data;
   try {
     data = JSON.parse(readFileSync(file, "utf8"));
@@ -218,7 +228,8 @@ function* walk(root, dir, segments) {
   }
 }
 
-function splitPath(urlPath) {
+/** A URL path's decoded segments, or null for a malformed or `..` path. */
+export function splitPath(urlPath) {
   let decoded;
   try {
     decoded = decodeURIComponent(urlPath);

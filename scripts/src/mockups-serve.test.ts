@@ -470,3 +470,224 @@ describe("serve.mjs", () => {
     expect(result.stderr).toMatch(/routes\.json/);
   });
 });
+
+describe("serve.mjs --renders", () => {
+  const scratch = () => join(repo, "docs", "scratchpad", "demo");
+  const renderRoot = (platform: string) => join(scratch(), "renders", platform);
+  const mockRoot = (platform: string) => join(scratch(), "mockups", platform);
+
+  function put(file: string, text: string) {
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, text);
+  }
+
+  function renderTree(platform: string) {
+    const dir = renderRoot(platform);
+    const screens = ROUTES.screens.map(s => ({ ...s }));
+    put(
+      join(dir, "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform, screens }),
+    );
+    const entry = (code: string, state: string, file: string) => ({
+      code,
+      state,
+      route: "",
+      file,
+      plan: "demo-plan",
+      date: "2026-10-09T00:00:00.000Z",
+    });
+    put(
+      join(dir, "__renders", "renders.json"),
+      JSON.stringify({
+        project: "demo",
+        platform,
+        renders: [
+          entry("200a", "default", "orders/index.png"),
+          entry("200b", "default", "orders/[id]/index.png"),
+          entry("200b", "error", "orders/[id]/index--error.png"),
+        ],
+      }),
+    );
+    put(join(dir, "orders", "index.png"), "PNG-LIST");
+    put(join(dir, "orders", "[id]", "index.png"), "PNG-DETAIL");
+    put(join(dir, "orders", "[id]", "index--error.png"), "PNG-ERROR");
+  }
+
+  function startRenders(platform: string, extra: string[] = []) {
+    return start([
+      "--renders",
+      "--root",
+      renderRoot(platform),
+      "--mockups",
+      mockRoot(platform),
+      ...extra,
+    ]);
+  }
+
+  beforeEach(() => {
+    renderTree("mobile");
+    renderTree("web");
+    put(
+      join(mockRoot("mobile"), "orders", "[id]", "index.html"),
+      "<!doctype html><html><body><p>mobile mockup</p></body></html>\n",
+    );
+    put(
+      join(mockRoot("mobile"), "orders", "[id]", "index--error.html"),
+      "<!doctype html><html><body><p>mobile mockup error</p></body></html>\n",
+    );
+  });
+
+  it("sets the mockup frame beside the image on mobile", async () => {
+    const { url } = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders/7", url))).text();
+    expect(body).toContain("<iframe id=\"mockup\"");
+    expect(body).toContain("src=\"/__mockups/orders/7\"");
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    expect(body).toContain("<!-- mockup-review-overlay -->");
+    const error = await (await fetch(new URL("/orders/7?state=error", url)))
+      .text();
+    expect(error).toContain("src=\"/__mockups/orders/7?state=error\"");
+    expect(error).toContain("index--error.png");
+    expect(error).toContain("\"states\":[\"error\"]");
+    const frame = await fetch(new URL("/__mockups/orders/7?state=error", url));
+    expect(await frame.text()).toContain("mobile mockup error");
+    const image = await fetch(new URL("/orders/%5Bid%5D/index.png", url));
+    expect(image.status).toBe(200);
+    expect(image.headers.get("content-type")).toBe("image/png");
+    expect(await image.text()).toBe("PNG-DETAIL");
+  });
+
+  it("shows the render alone where no mockup exists", async () => {
+    const { url } = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders", url))).text();
+    expect(body).toContain("src=\"/orders/index.png\"");
+    expect(body).not.toContain("<iframe");
+  });
+
+  it("links the peer route in a new window once the peer file exists", async () => {
+    const peer = join(scratch(), "mockups-web.url");
+    const { url } = await startRenders("web", ["--peer-file", peer]);
+    const before = await (await fetch(new URL("/orders", url))).text();
+    expect(before).toContain("\"peer\":null");
+    writeFileSync(peer, "http://127.0.0.1:9/\n");
+    const after = await (await fetch(new URL("/orders?x=1", url))).text();
+    expect(after).toContain("\"peer\":\"http://127.0.0.1:9/orders\"");
+    expect(after).toContain("peer.target = \"_blank\"");
+    const state = await (await fetch(new URL("/orders/7?state=error", url)))
+      .text();
+    expect(state).toContain(
+      "\"peer\":\"http://127.0.0.1:9/orders/7?state=error\"",
+    );
+    expect(state).not.toContain("<iframe");
+  });
+
+  it("gives no link for a peer file with a non-loopback URL", async () => {
+    const peer = join(scratch(), "mockups-web.url");
+    writeFileSync(peer, "http://evil.example:9/\n");
+    const { url } = await startRenders("web", ["--peer-file", peer]);
+    const body = await (await fetch(new URL("/orders", url))).text();
+    expect(body).toContain("\"peer\":null");
+  });
+
+  it("writes its own URL to --url-file", async () => {
+    const file = join(scratch(), "renders-web.url");
+    const server = await startRenders("web", ["--url-file", file]);
+    expect(readFileSync(file, "utf8").trim()).toBe(server.url);
+  });
+
+  it("refuses a --url-file outside docs/scratchpad/", () => {
+    const result = spawnSync(
+      "node",
+      [
+        SCRIPT,
+        "--renders",
+        "--root",
+        renderRoot("web"),
+        "--url-file",
+        join(repo, "url.txt"),
+      ],
+      { cwd: repo, encoding: "utf8" },
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/--url-file must resolve under/);
+  });
+
+  it("404s a state with no image, renders.json, and a traversal", async () => {
+    const { url } = await startRenders("mobile");
+    expect((await fetch(new URL("/orders?state=error", url))).status).toBe(404);
+    expect((await fetch(new URL("/__renders/renders.json", url))).status).toBe(
+      404,
+    );
+    writeFileSync(join(repo, "secret.html"), "secret");
+    expect(await rawGet(url, "/__mockups/../../../../secret.html")).toBe(404);
+    expect(await rawGet(url, "/__mockups/%2e%2e/%2e%2e/secret.html")).toBe(404);
+    expect(await rawGet(url, "/../../../etc/passwd")).toBe(404);
+    expect((await fetch(new URL("/__mockups/__mockups/x", url))).status).toBe(
+      404,
+    );
+  });
+
+  it("lists every render at /__renders/", async () => {
+    const { url } = await startRenders("mobile");
+    const list = await (await fetch(new URL("/__renders/", url))).text();
+    expect(list).toContain("200a");
+    expect(list).toContain("200b");
+    expect(list).toContain("demo-plan");
+    expect(list).toContain("2026-10-09T00:00:00.000Z");
+    expect(list).not.toContain("100a");
+  });
+
+  it("records a comment with the plan of the image", async () => {
+    const { url } = await startRenders("web");
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: "/orders/7",
+        state: "error",
+        selector: "#render",
+        text: "Wrong colour",
+      }),
+    });
+    expect(res.status).toBe(204);
+    const file = join(renderRoot("web"), "__renders", "comments.yaml");
+    const parsed = parseYaml(readFileSync(file, "utf8")) as Array<
+      Record<string, unknown>
+    >;
+    expect(parsed).toHaveLength(1);
+    expect(parsed[0]).toMatchObject({
+      code: "200b",
+      plan: "demo-plan",
+      state: "error",
+      status: "open",
+    });
+    expect(existsSync(join(renderRoot("web"), "__mockups"))).toBe(false);
+  });
+
+  it("refuses a render root with no renders.json", () => {
+    rmSync(join(renderRoot("web"), "__renders", "renders.json"));
+    const result = spawnSync(
+      "node",
+      [SCRIPT, "--renders", "--root", renderRoot("web")],
+      { cwd: repo, encoding: "utf8" },
+    );
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/renders\.json/);
+  });
+
+  it("adds the peer link to a mockup page, and nothing without the flags", async () => {
+    const peer = join(repo, "docs", "scratchpad", "renders-web.url");
+    writeFileSync(peer, "http://localhost:9/\n");
+    const linked = await start(["--root", root, "--peer-file", peer]);
+    const body = await (await fetch(new URL("/signin?state=error", linked.url)))
+      .text();
+    expect(body).toContain(
+      "\"peer\":\"http://localhost:9/signin?state=error\"",
+    );
+    child?.kill();
+    const plain = await start();
+    const bare = await (await fetch(plain.url)).text();
+    expect(bare).toContain("\"peer\":null");
+    expect(bare).toContain("home page");
+  });
+});
