@@ -149,6 +149,8 @@ memory:
 
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
+
+after_landing: [] # OPTIONAL, hand-edited — shell commands /vwf:execute runs after every green landing, after the plan's own After landing steps, each once. Additive: absent or empty means none, so it carries no config_format bump
 ```
 
 ## The three axis states
@@ -233,6 +235,7 @@ at answering the question, never at installing something.
 | `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
 | `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`); the user (`viewports` — hand-edited) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
 | `docs_sync`          | the user (hand-edited)                                                                                                                    | the /vwf:docs-sync skill                                                                        |
+| `after_landing`      | the user (hand-edited)                                                                                                                    | `execute` (runs each command after a green landing); `change-plan` and `plan`, which never propose a listed command as a plan step |
 
 ## The hard floor (never configurable)
 
@@ -268,6 +271,15 @@ earlier than 65/90/80), never loosen.
   set, else the platform's default in the canvas conventions template's Layout
   block. The key is **additive** — absent means the default — so it needed no
   `config_format` bump.
+- **`after_landing`** is a list of shell commands the user edits by hand;
+  absent or empty means none. `/vwf:execute` runs them after each green
+  landing, after the plan's own After landing rows, as `run` steps — each
+  command once, so one the plan also lists does not run twice — and a failure
+  stops the rest. It never runs them on a landing that did not merge. Under
+  `/vwf:execute all` they are steps like the plan rows, so the "Deduped
+  after-landing steps" override covers them too. `change-plan` and `plan` never
+  propose a listed command as a plan step. The key is **additive**, so it
+  needed no `config_format` bump.
 - **A stamped config with no registry is a legal state**, not drift. `setup`
   writes this file at the end of its own run; `registry.yaml` arrives later,
   from `/vwf:architecture`. Between the two the product is
