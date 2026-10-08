@@ -1,0 +1,66 @@
+/code-review high — loop R1, round 4 — range 554a7d40..26bfccee (branch 2026-10-08-execute-renders-served-at-a-url)
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 405,
+    "summary": "The renders.json merge removes an old entry that has the same code and state as a new entry without adding it to `dropped`. If that screen's route moved, its old image stays on disk at the old path.",
+    "failure_scenario": "Run 1 renders code A at /a, writing a/index.png. The blueprint then moves A to /b and gives /a to code C. Run 2 renders A again, at b/index.png. The old A entry is filtered out at line 405 and never reaches removeImage, so a/index.png survives. serve.mjs --renders decides what to show by checking whether the file exists, so GET /a shows A's old screenshot as C's render. This is the medium round-1 finding that came back in round 2; it is still present at 26bfccee."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 587,
+    "summary": "renderPage calls matchPath on the mockup tree and accepts any `file` result. It never checks that the matched mockup belongs to the same screen code as the render, so matchPath's [param] walk can put another screen's mockup in the frame.",
+    "failure_scenario": "A plan adds /orders/new to the render route map, but the mockup tree only has orders/[id]/index.html, because mockups were not regenerated. On mobile, GET /orders/new finds no screen in mockRoutes, and walk() falls back to orders/[id]. The frame then shows the Order details mockup beside the New order render. That is the wrong pairing the code comment at line ~300 says it prevents. Fix: also require `match.screen?.code === screen.code`."
+  },
+  {
+    "file": "plugins/vwf/skills/execute/SKILL.md",
+    "line": 708,
+    "summary": "The orchestrator is told to pipe RENDER: lines into one renders.mjs run per project, but a RENDER: line has no project field. Nothing says which lines go to which project's run.",
+    "failure_scenario": "A UX stage reviews two projects whose Screens tables both use code S1 on platform webapp. Each per-project run gets every line, so project A's S1 image is also copied into project B's render tree at B's S1 route, and the other way round. When codes are disjoint, every run prints SKIPPED lines for the other project's codes, and those are logged as noise in the `renders` Run log row."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 126,
+    "summary": "On two-window platforms, renders mode starts a mockup server that has its own overlay and comment box, but step 6 only reads renders/<platform>/__renders/comments.yaml.",
+    "failure_scenario": "On webapp, the reviewer opens the mockup window from the 'Open the mockup' link and leaves comments there. They go to mockups/webapp/__mockups/comments.yaml. Step 6 never lists them or passes them to /vwf:feedback, so they sit `status: open` and are dropped from this review session."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 221,
+    "summary": "When the --peer-file directory does not exist, scratchFile keeps the unresolved dirname but compares it with the realpath'd scratchReal. A symlinked docs/scratchpad then makes the server refuse to start.",
+    "failure_scenario": "docs/scratchpad is a symlink, and the project has renders but no mockups. SKILL.md still passes --peer-file mockups/<platform>/__mockups/server.url. realpathSync(dirname) throws, the unresolved path does not start with scratchReal, and fail() exits 2. The render server never starts, even though the skill says it 'runs alone'. The --mockups branch compares the missing-dir case with the unresolved `scratchpad`, so the two checks disagree."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 333,
+    "summary": "readRenders treats an unreadable or corrupt renders.json as an empty list, then overwrites it. Every earlier entry is lost, but their images stay on disk and can no longer be pruned.",
+    "failure_scenario": "renders.json is truncated, for example by a crash between writeJson's rmSync and its write. The next run keeps none of the old entries and writes only its own. Earlier images remain at their routes and are still served, because the server checks whether the file exists. Once their codes move, nothing records them, so they are never removed and show up as other screens' renders."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 932,
+    "summary": "In renders mode, any request whose last segment ends in .png is served as a static file before route lookup. A route whose last segment ends in .png cannot be reached.",
+    "failure_scenario": "A Screens row has the route /share/[name].png, for example an OG-image page. GET /share/x.png goes down the PNG branch, finds no file at share/x.png, and returns 404. The render page and its placeholder are never served, while the mockup server serves the same route normally."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 1016,
+    "summary": "The --url-file write in the listen callback is unguarded. If it throws, the exception is uncaught: the server exits and never prints its URL: line.",
+    "failure_scenario": "A peer or a leftover process recreates server.url between the rmSync and the `wx` write, giving EEXIST, or the __renders directory is removed before the server listens. The exception escapes the listen callback and the process dies. The skill waits on a URL: line that never arrives, with only a stack trace on stderr."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 87,
+    "summary": "Altitude: `__renders` is added as a separate check beside the `__mockups`-only isReserved/servable, instead of making the reserved name a parameter. serve.mjs and renders.mjs each re-implement the guard.",
+    "failure_scenario": "The check 'inRoot, not the root, ends in .png, first segment is not __renders' is copied in renders.mjs removeImage and serve.mjs getRender, and pathError has a hard-coded second branch. A third tree, or a fix to one copy, will drift from the others. Passing the reserved name to isReserved/servable, as readRoutes already takes it, removes the duplicates."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 496,
+    "summary": "Reuse/efficiency: the state-to-filename mapping and the image path are written three times (serve.mjs renderName/fileUrl, renders.mjs main loop and currentFile at 358). Each render-mode request also re-reads and re-parses routes.json, even for image and iframe requests, and renders.json is parsed again per page.",
+    "failure_scenario": "If the naming rule changes in one place, renders.mjs writes files the server cannot find. Also, one page view triggers three or more synchronous routes.json reads (page, image, frame) plus renders.json reads. Checking the file's mtime, or sharing one renderFile(path, state) helper in lib/, avoids both."
+  }
+]
+```
