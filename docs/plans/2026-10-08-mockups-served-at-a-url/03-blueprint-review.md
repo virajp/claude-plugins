@@ -12,7 +12,7 @@
 ## Ruling
 
 > - Decision D3: One server for each platform, with all flows. The root is
->   `docs/scratchpad/<project>/<platform>/`.
+>   `docs/scratchpad/<project>/mockups/<platform>/`.
 >   `node serve.mjs --root <platform dir> [--port <n>]`. Binds `127.0.0.1` only,
 >   prints exactly one stdout line `URL: http://127.0.0.1:<port>/`. Serves
 >   nothing outside `--root`. No auth, no TLS.
@@ -21,9 +21,9 @@
 >   `GET /__mockups/` is a list of every flow, screen and state of the platform.
 > - Decision D8: `node routes.mjs --project <project> --platform <platform>`,
 >   from the repo root, writes
->   `docs/scratchpad/<project>/<platform>/__mockups/routes.json`. A non-zero
->   exit is an error. stdout carries one `NO ROUTE: <code> <screen>` line per
->   screen with no route.
+>   `docs/scratchpad/<project>/mockups/<platform>/__mockups/routes.json`. A
+>   non-zero exit is an error. stdout carries one `NO ROUTE: <code> <screen>`
+>   line per screen with no route.
 > - Decision D9: A link goes to the route of the target screen code, from
 >   `routes.json`. An action with no pinned target screen gets no href and a
 >   visible mark; the generator returns it as an `UNLINKED:` line, and the skill

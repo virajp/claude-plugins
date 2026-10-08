@@ -21,7 +21,7 @@
 > that the user confirms one at a time.
 
 > - Decision D3: One server for each platform, with all flows. The root is
->   `docs/scratchpad/<project>/<platform>/`.
+>   `docs/scratchpad/<project>/mockups/<platform>/`.
 > - Decision D4: A screen with the route `/a/b` is the file
 >   `<root>/a/b/index.html`. `GET /` serves the app's `/` screen.
 >   `GET /__mockups/` is a list of every flow, screen and state.

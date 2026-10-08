@@ -36,8 +36,9 @@
 
 1. **`plugins/vwf/agents/mockup-generator.md`** —
    - **Inputs.** Replace the render-directory input with: the platform root
-     (`docs/scratchpad/<project>/<platform>/`, absolute), the `routes.json`
-     path, and the flow it renders. Write only the files of this flow's screens.
+     (`docs/scratchpad/<project>/mockups/<platform>/`, absolute), the
+     `routes.json` path, and the flow it renders. Write only the files of this
+     flow's screens.
    - **File naming.** Replace the flat `<screen-slug>.html` rule (lines 44-50)
      with D4 and D5: `<root>/<path>/index.html` for the default view and
      `<root>/<path>/index--<state>.html` for each pinned state, `path` read from

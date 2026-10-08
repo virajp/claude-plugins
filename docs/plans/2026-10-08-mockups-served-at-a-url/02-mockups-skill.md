@@ -13,7 +13,7 @@
 ## Ruling
 
 > - Decision D3: One server for each platform, with all flows. The root is
->   `docs/scratchpad/<project>/<platform>/`.
+>   `docs/scratchpad/<project>/mockups/<platform>/`.
 >   `node serve.mjs --root <platform dir> [--port <n>]`. Binds `127.0.0.1` only,
 >   prints exactly one stdout line `URL: http://127.0.0.1:<port>/`. Serves
 >   nothing outside `--root`. No auth, no TLS.
@@ -26,7 +26,7 @@
 >   pin a route through `/vwf:blueprint`.
 > - Decision D8: `node routes.mjs --project <project> --platform <platform>`,
 >   from the repo root, writes
->   `docs/scratchpad/<project>/<platform>/__mockups/routes.json`:
+>   `docs/scratchpad/<project>/mockups/<platform>/__mockups/routes.json`:
 >   `{ "project", "platform", "screens": [ { "code", "screen", "slug", "flow", "route", "path", "routed" } ] }`.
 >   Two codes with one route, or one code twice, is an error: stderr, non-zero
 >   exit. stdout is one summary line, plus one `NO ROUTE: <code> <screen>` line
@@ -73,8 +73,8 @@
    - **Doc Paths.** The Flow screens row names the `## Screens` section of
      `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md` (the row says
      `index.md` today, which is wrong). The Render target row is
-     `docs/scratchpad/<project>/<platform>/` — production routes below it,
-     `__mockups/` reserved. Add a row for the three scripts (D24).
+     `docs/scratchpad/<project>/mockups/<platform>/` — production routes below
+     it, `__mockups/` reserved. Add a row for the three scripts (D24).
    - **A `node` step before any render (D17).** No `node` → say so with the
      remedy and stop; nothing is rendered.
    - **A route-map step, once for each project platform, before the dispatch

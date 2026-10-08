@@ -22,7 +22,7 @@
 > - Decision D2: Adapt stackgen's design-session `serve.mjs` into
 >   `plugins/vwf/skills/mockups/scripts/serve.mjs`.
 > - Decision D3: One server for each platform, with all flows. The root is
->   `docs/scratchpad/<project>/<platform>/`.
+>   `docs/scratchpad/<project>/mockups/<platform>/`.
 >   `node serve.mjs --root <platform dir> [--port <n>]`; `--root` must resolve
 >   under `<cwd>/docs/scratchpad/` and hold `__mockups/routes.json`. Binds
 >   `127.0.0.1` only, ephemeral port unless `--port`, prints exactly one stdout
@@ -49,7 +49,7 @@
 > - Decision D8: `node routes.mjs --project <project> --platform <platform>`,
 >   from the repo root, reads `## Screens` of every
 >   `docs/blueprint/flows/<project>/*/<platform>.md` and writes
->   `docs/scratchpad/<project>/<platform>/__mockups/routes.json`:
+>   `docs/scratchpad/<project>/mockups/<platform>/__mockups/routes.json`:
 >   `{ "project", "platform", "screens": [ { "code", "screen", "slug", "flow", "route", "path", "routed" } ] }`.
 >   `path` is the directory under the root (empty for `/`); `routed` is false
 >   for a D7 route. Two codes with one route, or one code twice, is an error:
