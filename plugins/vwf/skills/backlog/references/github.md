@@ -8,6 +8,14 @@ bootstrap, and the procedure for a project that does not exist yet. Every
 command runs in the **base** repo; nothing is cached between runs. The skill
 never runs `gh project create` — a project made that way carries no template.
 
+## Parsing
+
+`gh`'s own `--jq` flag, or `jq` over a file or a pipe, is the one parser. Never
+pipe `gh` output into another interpreter — `python3`, `node`, `ruby` — and
+never write a parser of your own: each step below gives the filter it needs.
+Prefer `--jq` on the `gh` call itself, so the command needs no shell variable
+and runs the same under bash, zsh or fish.
+
 ## Precondition
 
 Run before every verb, in this order; the first failure stops the verb with
@@ -85,6 +93,16 @@ also carries `options[]` with `id` and `name`. Read:
   field;
 - `Priority` — its `id`, and the option ids of `P0`, `P1`, `P2`;
 - `Group` — its `id`, once added.
+
+One call reads them all, one line per field and option — field name, field id,
+option name, option id, the last two empty for a text field:
+
+    gh project field-list <number> --owner <owner> --format json --limit 50 \
+      --jq '.fields[]
+            | select(.name == "Status" or .name == "Priority" or .name == "Group")
+            | if .options then .options[] as $o | [.name, .id, $o.name, $o.id]
+              else [.name, .id, "", ""] end
+            | @tsv'
 
 **Bootstrap** — idempotent; each step runs only when `field-list` shows the
 thing missing. The Team planning template ships `Status` with the options
@@ -250,7 +268,12 @@ The **next id** is one past the highest number over two sources, zero-padded
 to two digits:
 
 - every item title in the project, whatever its status — done and closed
-  included;
+  included:
+
+      gh project item-list <number> --owner <owner> --format json --limit 500 \
+        --jq '[.items[].title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber]
+              | max // 0'
+
 - every id in the `backlog:` and `backlog_pieces:` frontmatter lists of every
   plan folder directly under `docs/plans/` and `docs/plans/archived/` in the
   base repo — the `^backlog:` and `^backlog_pieces:` lines of each
@@ -268,7 +291,15 @@ A project starts at `B01` only when both sources are empty — so an id spent by
 a retired file store, or by a project since deleted, is never reissued.
 
 `Bnn` on the command line matches the title prefix; an id no item carries is a
-stop naming it.
+stop naming it. The match gives the item id, the draft issue id and the
+Status, one line per item:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '.items[] | select(.title | startswith("Bnn — "))
+            | [.id, .content.id, (.status // "")] | @tsv'
+
+More than one line is a stop too: print each title and ask the user which
+item the id means — the skill never picks one.
 
 ## Per verb
 
@@ -297,7 +328,12 @@ and, when a group was named:
 **`planned`, `partial`, `done`, `close`** — the `Status` edit above with
 `In progress`, `Partially done`, `Done` or `Closed`, then the body's closing
 lines. The body is replaced whole: read `content.body` from `item-list`,
-rewrite its closing lines, and write it back with the draft issue's own id:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '.items[] | select(.title | startswith("Bnn — ")) | .content.body'
+
+rewrite its closing lines, and write it back with the draft issue's own id —
+the second field of the id lookup under *Items*:
 
     gh project item-edit --id <draft-issue-id> --title "<title, unchanged>" \
       --body "<body with the closing lines rewritten>"
@@ -318,19 +354,55 @@ each `Landed:` line sits above it:
 - `close` — append the reason after a blank line. `close` runs the `Status`
   bootstrap first when `Closed` is absent.
 
-**`list`, `next`** — `item-list` alone; nothing is written. `list` reads each
-`Partially done` item's `content.body` and counts its lines beginning
-`Landed: ` for the Status cell, and ends with the project's `url` from the
-resolution. `next` filters to the candidates, then sorts by priority then id:
+**`list`, `next`** — `item-list` alone; nothing is written. Both sort by
+priority, then by the id's number; an item with no `Priority` sorts after
+`P2`, and an unnumbered item after every numbered one.
+
+`list` prints one tab-separated row per item that is not `Done` or `Closed` —
+id, title, group, priority, status — with each `Partially done` item's Status
+cell carrying the count of its body's lines beginning `Landed: `:
 
     gh project item-list <number> --owner <owner> --format json --limit 500 \
-      --jq '.items[] | select(.status == "Backlog"
+      --jq '[.items[] | select(.status != "Done" and .status != "Closed")
+             | {id: ((.title | capture("^(?<id>B[0-9]{2,}) — ").id)
+                     // "unnumbered"),
+                n: ((.title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber)
+                    // 1e9),
+                title, group: (.group // ""), priority: (.priority // "P9"),
+                status: (.status // ""),
+                landed: ([(.content.body // "") | scan("(?m)^Landed: ")]
+                         | length)}]
+            | sort_by(.priority, .n) | .[]
+            | [.id, .title,
+               .group, (if .priority == "P9" then "" else .priority end),
+               (if .status == "Partially done"
+                then "Partially done (\(.landed) landed)" else .status end)]
+            | @tsv'
+
+then the folded count, and ends with the project's `url` from the
+resolution:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Done" or .status == "Closed")]
+            | group_by(.status) | map("\(.[0].status): \(length)")
+            | join(", ")'
+
+`next` filters to the candidates and takes the first by the same order:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Backlog"
               or (.status == "Partially done"
                   and ((.content.body // "") | test("(?m)^Planned in: ")
-                       | not)))'
+                       | not)))]
+            | sort_by((.priority // "P9"),
+                      ((.title | capture("^B(?<n>[0-9]{2,}) — ").n
+                        | tonumber) // 1e9))
+            | first // empty
+            | [.title, .status, (.group // "")] | @tsv'
 
-and, when the top candidate is `Partially done`, prints its `Landed:` lines
-with the body.
+then reads its body with the `content.body` command under *Per verb*, and,
+when the item is `Partially done`, prints its `Landed:` lines with it. No
+output is the empty backlog.
 
 ## Errors
 
