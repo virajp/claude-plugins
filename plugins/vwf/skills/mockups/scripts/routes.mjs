@@ -22,8 +22,9 @@
 // points at the screen's home flow and is not a second definition.
 //
 // stdout: one summary line, plus one NO ROUTE line per unrouted screen. Two
-// codes with one route, or one code twice, is an error: stderr, exit 1, and
-// nothing is written.
+// codes with one route, one code twice, or a route with a `.` or `..` segment,
+// a NUL or a first segment `__mockups` (any case), is an error: stderr, exit 1,
+// and nothing is written.
 //
 // Zero dependencies — node: modules only.
 
@@ -37,6 +38,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import {
+  pathError,
   RESERVED,
   routeToPath,
   slugify,
@@ -155,6 +157,10 @@ for (const flow of flows) {
     const route = routed ? token : `/${row.code}-${slug}`;
     const path = routeToPath(route);
     const key = path.replace(/\[[^\]]*\]/g, "[]");
+    const bad = pathError(path);
+    if (bad) {
+      errors.push(`route ${route} of ${row.code} ${bad}`);
+    }
     if (byCode.has(row.code)) {
       errors.push(
         `code ${row.code} is defined twice: ${

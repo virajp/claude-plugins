@@ -60,6 +60,29 @@ export function routeToPath(route) {
     .join("/");
 }
 
+/** True when a segment is the reserved one, in any case (APFS folds case). */
+export function isReserved(segment) {
+  return String(segment).toLowerCase() === RESERVED;
+}
+
+/**
+ * Why a route's `path` cannot be served, or null when it can: a `.` or `..`
+ * segment, a NUL, or a first segment that is the reserved `__mockups`.
+ */
+export function pathError(path) {
+  const segments = String(path).split("/").filter(segment => segment !== "");
+  if (String(path).includes("\0")) {
+    return "holds a NUL";
+  }
+  if (segments.some(segment => segment === "." || segment === "..")) {
+    return "holds a . or .. segment";
+  }
+  if (segments.length > 0 && isReserved(segments[0])) {
+    return `starts with the reserved /${RESERVED}/`;
+  }
+  return null;
+}
+
 /** The path of a screen with a sample value in each parameter segment. */
 export function sampleRoute(path) {
   if (!path) {
@@ -100,6 +123,10 @@ export function readRoutes(root) {
     if (!ok) {
       throw new Error(`${file}: screens[${index}] is malformed`);
     }
+    const bad = pathError(screen.path);
+    if (bad) {
+      throw new Error(`${file}: screens[${index}] path ${bad}`);
+    }
   }
   return data;
 }
@@ -114,6 +141,15 @@ export function inRoot(root, path) {
     return null;
   }
   return real === root || real.startsWith(root + sep) ? real : null;
+}
+
+// inRoot, and never under the reserved directory, whatever its case.
+function servable(root, path) {
+  const real = inRoot(root, path);
+  if (!real || real === root) {
+    return real;
+  }
+  return isReserved(real.slice(root.length + 1).split(sep)[0]) ? null : real;
 }
 
 function isFile(path) {
@@ -158,8 +194,8 @@ function* walk(root, dir, segments) {
   }
   const [segment, ...rest] = segments;
   const atRoot = dir === root;
-  if (!(atRoot && segment === RESERVED)) {
-    const literal = inRoot(root, join(dir, segment));
+  if (!(atRoot && isReserved(segment))) {
+    const literal = servable(root, join(dir, segment));
     if (literal && isDir(literal)) {
       yield* walk(root, literal, rest);
     }
@@ -175,7 +211,7 @@ function* walk(root, dir, segments) {
     if (!PARAM_RE.test(name) || name === segment) {
       continue;
     }
-    const param = inRoot(root, join(dir, name));
+    const param = servable(root, join(dir, name));
     if (param && isDir(param)) {
       yield* walk(root, param, rest);
     }
@@ -202,7 +238,8 @@ function splitPath(urlPath) {
 
 /**
  * The screen of routes.json a URL path belongs to, or null. A static segment
- * outranks a [param] segment, so /orders/new beats /orders/[id].
+ * outranks a [param] segment at the first place they differ, so /orders/new
+ * beats /orders/[id].
  */
 export function findScreen(routes, urlPath) {
   const segments = Array.isArray(urlPath) ? urlPath : splitPath(urlPath);
@@ -210,24 +247,27 @@ export function findScreen(routes, urlPath) {
     return null;
   }
   let best = null;
-  let bestScore = -1;
+  let bestScore = "";
   for (const screen of routes.screens) {
     const pattern = screen.path ? screen.path.split("/") : [];
     if (pattern.length !== segments.length) {
       continue;
     }
-    let score = 0;
+    let score = "";
     let ok = true;
     for (const [index, part] of pattern.entries()) {
       if (part === segments[index]) {
-        score += 1;
+        score += "1";
       }
       else if (!PARAM_RE.test(part)) {
         ok = false;
         break;
       }
+      else {
+        score += "0";
+      }
     }
-    if (ok && score > bestScore) {
+    if (ok && (best === null || score > bestScore)) {
       best = screen;
       bestScore = score;
     }
@@ -248,25 +288,40 @@ export function matchPath(root, routes, urlPath, state) {
   if (!segments) {
     return { kind: "none", reason: "malformed path" };
   }
-  if (segments[0] === RESERVED) {
+  if (segments.length > 0 && isReserved(segments[0])) {
     return { kind: "none", reason: `/${RESERVED}/ is reserved` };
   }
   if (state !== null && state !== undefined && !STATE_RE.test(state)) {
     return { kind: "none", reason: `malformed state ${state}` };
   }
   const hasState = state !== null && state !== undefined;
+  const name = hasState ? `index--${state}.html` : "index.html";
 
   if (!hasState && segments.length > 0) {
-    const literal = inRoot(root, join(root, ...segments));
+    const literal = servable(root, join(root, ...segments));
     if (literal && isFile(literal)) {
       return { kind: "file", file: literal, dir: dirname(literal) };
     }
   }
 
-  const name = hasState ? `index--${state}.html` : "index.html";
+  // A path a screen of routes.json owns is that screen's folder or its
+  // placeholder — never a [param] sibling, so a fixed route not rendered yet
+  // still wins over /orders/[id].
+  const screen = findScreen(routes, segments);
+  if (screen) {
+    const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
+    const file = servable(root, join(dir, name));
+    if (file && isFile(file)) {
+      return { kind: "file", file, dir: dirname(file) };
+    }
+    return hasState
+      ? { kind: "none", reason: `no state file ${name}` }
+      : { kind: "placeholder", screen };
+  }
+
   let pageWithoutState = false;
   for (const dir of walk(root, root, segments)) {
-    const file = inRoot(root, join(dir, name));
+    const file = servable(root, join(dir, name));
     if (file && isFile(file)) {
       return { kind: "file", file, dir };
     }
@@ -274,13 +329,8 @@ export function matchPath(root, routes, urlPath, state) {
       pageWithoutState = true;
     }
   }
-
-  const screen = findScreen(routes, segments);
-  if (hasState && (pageWithoutState || screen)) {
+  if (pageWithoutState) {
     return { kind: "none", reason: `no state file ${name}` };
-  }
-  if (screen) {
-    return { kind: "placeholder", screen };
   }
   return { kind: "none", reason: "no such route" };
 }

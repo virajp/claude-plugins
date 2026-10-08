@@ -77,7 +77,8 @@ function pages(dir, at = "") {
     });
 }
 
-const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+// href="…", href='…' or an unquoted href=….
+const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
 function verdict(href) {
   if (href.startsWith("#")) {
@@ -102,8 +103,8 @@ let count = 0;
 const list = pages(root);
 for (const page of list) {
   const html = readFileSync(join(root, ...page.split("/")), "utf8");
-  for (const [, double, single] of html.matchAll(HREF_RE)) {
-    const href = (double ?? single ?? "").trim();
+  for (const [, double, single, bare] of html.matchAll(HREF_RE)) {
+    const href = (double ?? single ?? bare ?? "").trim();
     count += 1;
     const reason = verdict(href);
     if (reason !== null) {

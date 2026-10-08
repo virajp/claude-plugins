@@ -217,6 +217,20 @@ describe("routes.mjs", () => {
     expect(run().status).not.toBe(0);
   });
 
+  it("refuses a route with a . or .. segment or under __mockups", () => {
+    for (const route of ["/a/../b", "/./a", "/__MOCKUPS/x", "/__mockups"]) {
+      writeFlow(
+        "100-signin",
+        "web",
+        flowDoc([`| 100a | Home | \`${route}\` | — | — | — | — |`]),
+      );
+      const { status, stderr } = run();
+      expect(status).not.toBe(0);
+      expect(stderr).toMatch(/route .* of 100a/);
+      expect(existsSync(join(repo, ...OUT))).toBe(false);
+    }
+  });
+
   it("reads a table by column name, not by position", () => {
     twoFlows();
     run();

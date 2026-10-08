@@ -44,6 +44,7 @@ const ROUTES = {
     ["200a", "Orders", "200-orders", "/orders", "orders", true],
     ["200b", "Order details", "200-orders", "/orders/:id", "orders/[id]", true],
     ["200c", "Receipt", "200-orders", "/200c-receipt", "200c-receipt", false],
+    ["200d", "New order", "200-orders", "/orders/new", "orders/new", true],
   ]
     .map(([code, screen, flow, route, path, routed]) => ({
       code,
@@ -147,6 +148,46 @@ describe("links.mjs", () => {
     write("orders/[id]/index.html", html("/orders/1042", "/orders/abc"));
     write("orders/[id]/index--error.html", html("/orders/1042?state=error"));
     expect(run().status).toBe(0);
+  });
+
+  it("never matches a fixed route to its [param] sibling", () => {
+    write(
+      "orders/[id]/index.html",
+      html("/orders/new", "/orders/1?state=error"),
+    );
+    write("orders/[id]/index--error.html", html("/orders/new?state=error"));
+    const { status, stdout } = run();
+    expect(status).toBe(1);
+    expect(stdout).toBe(
+      "BROKEN: orders/[id]/index--error.html -> /orders/new?state=error — "
+        + "no state file index--error.html\n",
+    );
+  });
+
+  it("reads unquoted hrefs too", () => {
+    write("index.html", "<a href=/signin>a</a> <a href=nowhere>b</a>\n");
+    const { status, stdout } = run();
+    expect(status).toBe(1);
+    expect(stdout).toBe(
+      "BROKEN: index.html -> nowhere — not root-absolute\n",
+    );
+    write("index.html", "<a href=/orders/new>a</a><a href=/200c-receipt>b</a>");
+    expect(run().stdout).toBe("LINKS OK: 2 links in 1 pages\n");
+  });
+
+  it("refuses a routes.json whose path is reserved or climbs", () => {
+    for (const path of ["__MOCKUPS/x", "a/../b", "./a"]) {
+      write(
+        "__mockups/routes.json",
+        JSON.stringify({
+          ...ROUTES,
+          screens: [{ ...ROUTES.screens[0], path }],
+        }),
+      );
+      const { status, stderr } = run();
+      expect(status).toBe(2);
+      expect(stderr).toMatch(/path/);
+    }
   });
 
   it("refuses a root with no routes.json", () => {

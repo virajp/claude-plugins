@@ -30,7 +30,11 @@
 //   POST /done                appends a done marker, responds 204, exits 0
 //
 // Loopback only: it binds 127.0.0.1, never any other interface, and carries no
-// auth and no TLS — it is a review server for one person on one machine. The
+// auth and no TLS — it is a review server for one person on one machine. Any
+// request whose Host is not 127.0.0.1:<port> or localhost:<port> is 403 (no DNS
+// rebinding); a POST must be application/json (415 otherwise) and, when it
+// carries an Origin, come from one of those two origins (403 otherwise), so no
+// other site can write a comment or end the review. The
 // root must resolve under <cwd>/docs/scratchpad/ and hold
 // __mockups/routes.json; it refuses to start otherwise. Nothing outside --root
 // is ever served: every path is realpath'd and checked to sit under the root,
@@ -334,6 +338,7 @@ async function postComment(req, res) {
   appendComments(
     [
       `- id: ${id}`,
+      `  path: ${yamlString(body.path)}`,
       `  code: ${yamlOrNull(screen?.code)}`,
       `  route: ${yamlOrNull(screen?.route)}`,
       `  state: ${yamlOrNull(body.state)}`,
@@ -366,7 +371,42 @@ function postDone(res) {
 
 // --- Server ------------------------------------------------------------------
 
+let boundPort = null;
+
+function hosts() {
+  return [`127.0.0.1:${boundPort}`, `localhost:${boundPort}`];
+}
+
+// 403 for a foreign Host or Origin, 415 for a POST that is not JSON; null when
+// the request may proceed.
+function refusal(req) {
+  const host = String(req.headers.host ?? "").toLowerCase();
+  if (!hosts().includes(host)) {
+    return 403;
+  }
+  if (req.method !== "POST") {
+    return null;
+  }
+  const origin = req.headers.origin;
+  if (
+    origin !== undefined
+    && !hosts().map(h => `http://${h}`).includes(origin.toLowerCase())
+  ) {
+    return 403;
+  }
+  const type = String(req.headers["content-type"] ?? "")
+    .split(";")[0]
+    .trim()
+    .toLowerCase();
+  return type === "application/json" ? null : 415;
+}
+
 const server = createServer((req, res) => {
+  const refused = refusal(req);
+  if (refused !== null) {
+    res.writeHead(refused).end();
+    return;
+  }
   const url = new URL(req.url, "http://127.0.0.1");
   if (req.method === "GET" || req.method === "HEAD") {
     if (url.pathname === `/${RESERVED}/` || url.pathname === `/${RESERVED}`) {
@@ -411,6 +451,7 @@ const server = createServer((req, res) => {
 
 server.listen(port, "127.0.0.1", () => {
   const { port: bound } = server.address();
+  boundPort = bound;
   process.stdout.write(`URL: http://127.0.0.1:${bound}/\n`);
   process.stderr.write(
     `serving ${root} on 127.0.0.1:${bound}; comments → ${commentsPath}\n`,
@@ -426,7 +467,7 @@ server.listen(port, "127.0.0.1", () => {
 // highlights the element under the cursor, click selects it and opens a
 // textarea; submit POSTs the comment; Done POSTs /done and replaces the body
 // with a one-line note. It never intercepts navigation — links between screens
-// keep working.
+// and a form's submit control keep working.
 
 const OVERLAY = String.raw`function (CFG) {
   var count = 0;
@@ -519,6 +560,9 @@ const OVERLAY = String.raw`function (CFG) {
   document.addEventListener("click", function (e) {
     if (inOverlay(e.target)) return;
     if (e.target.closest && e.target.closest("a[href]")) return;
+    // A form's submit control keeps submitting: a form action may navigate.
+    var control = e.target.closest && e.target.closest("button,input[type=submit],input[type=image]");
+    if (control && control.form && (control.type === "submit" || control.type === "image")) return;
     if (e.target === document.body || e.target === document.documentElement) return;
     e.preventDefault();
     openForm(e.target, e.clientX, e.clientY);
@@ -565,7 +609,11 @@ const OVERLAY = String.raw`function (CFG) {
   }
 
   function done() {
-    fetch("/done", { method: "POST" }).then(function () {
+    fetch("/done", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    }).then(function () {
       document.body.innerHTML = "<p style=\"font:15px system-ui,sans-serif;padding:24px\">Review sent — you can close this tab.</p>";
     }).catch(function () {
       alert("The review server did not answer.");

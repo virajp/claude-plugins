@@ -19,6 +19,7 @@ import {
   symlinkSync,
   writeFileSync,
 } from "node:fs";
+import { request as httpRequest } from "node:http";
 import { connect } from "node:net";
 import { tmpdir } from "node:os";
 import {
@@ -55,6 +56,14 @@ const ROUTES = {
     ["200b", "Order details", "200-orders", "/orders/:id", "orders/[id]", true],
     ["200c", "Receipt", "200-orders", "/200c-receipt", "200c-receipt", false],
     ["200d", "New order", "200-orders", "/orders/new", "orders/new", true],
+    [
+      "200e",
+      "Archive",
+      "200-orders",
+      "/orders/archive",
+      "orders/archive",
+      true,
+    ],
   ]
     .map(([code, screen, flow, route, path, routed]) => ({
       code,
@@ -73,6 +82,7 @@ const PAGES: Record<string, string> = {
   "signin/index--error.html": "signin error page",
   "orders/index.html": "orders page",
   "orders/[id]/index.html": "order detail page",
+  "orders/[id]/index--error.html": "order detail error page",
   "orders/new/index.html": "new order page",
 };
 
@@ -126,11 +136,14 @@ function start(args = ["--root", root]): Promise<Server> {
 }
 
 /** fetch normalises `..` away, so send the raw request line; the status. */
-function rawGet(base: string, path: string): Promise<number> {
+function rawGet(base: string, path: string, host?: string): Promise<number> {
+  const port = Number(new URL(base).port);
   return new Promise((resolve, reject) => {
-    const socket = connect(Number(new URL(base).port), "127.0.0.1", () => {
+    const socket = connect(port, "127.0.0.1", () => {
       socket.write(
-        `GET ${path} HTTP/1.1\r\nHost: x\r\nConnection: close\r\n\r\n`,
+        `GET ${path} HTTP/1.1\r\nHost: ${
+          host ?? `127.0.0.1:${port}`
+        }\r\nConnection: close\r\n\r\n`,
       );
     });
     let data = "";
@@ -141,6 +154,40 @@ function rawGet(base: string, path: string): Promise<number> {
     socket.on("error", reject);
   });
 }
+
+/** A request with headers fetch would not let a test set; the status. */
+function send(
+  base: string,
+  method: string,
+  path: string,
+  headers: Record<string, string>,
+  body = "",
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(
+      {
+        host: "127.0.0.1",
+        port: Number(new URL(base).port),
+        method,
+        path,
+        headers: { connection: "close", ...headers },
+      },
+      res => {
+        res.resume();
+        res.on("end", () => resolve(res.statusCode ?? 0));
+      },
+    );
+    req.on("error", reject);
+    req.end(body);
+  });
+}
+
+const COMMENT = JSON.stringify({
+  path: "/orders/7",
+  state: "",
+  selector: "#total",
+  text: "Bigger",
+});
 
 describe("serve.mjs", () => {
   it("prints exactly one URL line on 127.0.0.1", async () => {
@@ -169,6 +216,85 @@ describe("serve.mjs", () => {
     expect(await (await fetch(new URL("/orders/new", url))).text()).toContain(
       "new order page",
     );
+  });
+
+  it("serves the placeholder of a fixed route with no file, never [id]", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/orders/archive", url));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("200e");
+    expect(body).toContain("Not rendered yet");
+    expect(body).not.toContain("order detail page");
+    expect((await fetch(new URL("/orders/archive?state=error", url))).status)
+      .toBe(404);
+    expect(await (await fetch(new URL("/orders/7?state=error", url))).text())
+      .toContain("order detail error page");
+  });
+
+  it("refuses a foreign Host, Origin or a non-JSON POST", async () => {
+    const server = await start();
+    const port = new URL(server.url).port;
+    expect(await rawGet(server.url, "/", `evil.example:${port}`)).toBe(403);
+    expect(await rawGet(server.url, "/", "127.0.0.1:1")).toBe(403);
+    expect(await rawGet(server.url, "/", `localhost:${port}`)).toBe(200);
+    const json = {
+      host: `127.0.0.1:${port}`,
+      "content-type": "application/json",
+    };
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        "content-type": "text/plain",
+      }, COMMENT),
+    )
+      .toBe(415);
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        origin: "http://evil.example",
+      }, COMMENT),
+    )
+      .toBe(403);
+    expect(
+      await send(server.url, "POST", "/done", {
+        ...json,
+        host: `evil.example:${port}`,
+      }, "{}"),
+    )
+      .toBe(403);
+    expect(
+      await send(server.url, "POST", "/done", {
+        ...json,
+        "content-type": "text/plain",
+      }, "{}"),
+    )
+      .toBe(415);
+    expect(existsSync(join(root, "__mockups", "comments.yaml"))).toBe(false);
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        origin: `http://localhost:${port}`,
+      }, COMMENT),
+    )
+      .toBe(204);
+    expect((await fetch(server.url)).status).toBe(200);
+  });
+
+  it("serves nothing under __mockups/ in any case", async () => {
+    const { url } = await start();
+    write("__mockups/comments.yaml", "- id: c001\n");
+    for (const path of ["/__MOCKUPS/comments.yaml", "/__Mockups/routes.json"]) {
+      expect((await fetch(new URL(path, url))).status).toBe(404);
+    }
+  });
+
+  it("injects an overlay that lets a form's submit control submit", async () => {
+    const { url } = await start();
+    const body = await (await fetch(url)).text();
+    expect(body).toContain("input[type=submit]");
+    expect(body).toContain("control.form");
+    expect(body).toMatch(/fetch\("\/done", \{[^}]*application\/json/);
   });
 
   it("serves a state file, and 404 for a state with no file", async () => {
@@ -235,6 +361,7 @@ describe("serve.mjs", () => {
       .toBe(400);
     const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
     expect(yaml.match(/^- id: /gm)).toHaveLength(1);
+    expect(yaml).toContain("  path: \"/orders/7\"");
     expect(yaml).toContain("  code: \"200b\"");
     expect(yaml).toContain("  route: \"/orders/:id\"");
     expect(yaml).toContain("  status: open");
@@ -243,7 +370,11 @@ describe("serve.mjs", () => {
 
   it("answers POST /done with 204 and exits 0", async () => {
     const server = await start();
-    const res = await fetch(new URL("/done", server.url), { method: "POST" });
+    const res = await fetch(new URL("/done", server.url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
     expect(res.status).toBe(204);
     expect(await server.exited).toBe(0);
     const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
