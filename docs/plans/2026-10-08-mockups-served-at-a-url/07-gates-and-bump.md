@@ -10,8 +10,8 @@
 
 ## Ruling
 
-> - Decision D11: vwf `21.0.0` → `21.1.0` (minor). No tag; the release waits for
->   plan 2. Site neither bumped nor released.
+> - Decision D23: vwf `21.0.0` → `21.1.0` (minor). No tag; the release waits for
+>   plan 2b. Site neither bumped nor released.
 
 ## Edits
 
@@ -23,7 +23,8 @@
 ## Verification
 
 - The full wave gate, green — this report is the run's final gate.
-- `test -x plugins/vwf/skills/mockups/scripts/serve.mjs` — true.
+- `test -x` on `plugins/vwf/skills/mockups/scripts/serve.mjs`, `routes.mjs` and
+  `links.mjs` — all true.
 
 ## Guardrails
 

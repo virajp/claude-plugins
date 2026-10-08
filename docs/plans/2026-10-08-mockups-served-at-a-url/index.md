@@ -24,28 +24,42 @@ APPROVED 2026-10-08 by the user
 | Release site publicly                             | none                                                                     |
 | End an `all` run after landing                    | no                                                                       |
 
-The vwf bump is made by U6: edit `plugins/vwf/.claude-plugin/plugin.json`, then
-`mise run p:plugins:marketplace`. The public tag waits for the chained plan 2
-(the ux-gate renders), so B91 ships as one release, cut by hand. The site change
-waits for a later site release.
+U6 does the vwf bump: it edits `plugins/vwf/.claude-plugin/plugin.json`, then
+runs `mise run p:plugins:marketplace`. The public tag waits for the chained
+plans 2a and 2b (the renders of the built app), so B91 ships as one release, cut
+by hand. The site change waits for a later site release.
 
 **The mode recorded here is the consent.** A `run` step runs on a green landing
 without a prompt. `p:plugins:local` stages vwf into the dev marketplace; only a
-**restarted** session picks it up.
+**restarted** session gets it.
 
 ## Goal
 
-`/vwf:mockups` and the `/vwf:blueprint` §6a screen review give the user a local
-`http://127.0.0.1:<port>/` URL for each flow, not a list of file paths. The page
-is an index of every platform and screen of the flow, with a comment overlay on
-each screen; the comments return to the session as proposals the user confirms
-one at a time. When `node` is absent, the skills fall back to the file paths of
-today.
+After `/vwf:mockups` or the `/vwf:blueprint` §6a screen review, the user opens
+one `http://127.0.0.1:<port>/` URL for each platform. The mockups use the
+production routes, the screens of all flows are connected, and every link works.
+A link check passes before the user is asked to validate. Each screen has a
+comment overlay; the comments return to the session as proposals that the user
+confirms one at a time.
 
-This is plan 1 of 2 for backlog item B91 ("Mockups and visual review are served
-from an HTTP endpoint"). Plan 2 — the execute ux-gate renders served at a URL —
-is parked below and will `require` this folder. No reversal of a standing
-decision.
+This is plan 1 of 3 for backlog item B91 ("Mockups and visual review are served
+from an HTTP endpoint"). Plans 2a and 2b serve the renders of the built app that
+the `/vwf:execute` UX stage makes; they are parked below.
+
+**Reversals.** This folder was approved on 2026-10-08 and revised on the same
+day, before any run. The revision reverses four rulings of that first version:
+
+- "One server per flow, all its platforms" becomes one server for each platform,
+  with all flows (D3).
+- The disk tree `<NNN>-<flow>/<platform>/<slug>.html` becomes
+  `<platform>/<route>/index.html` (D4).
+- "When `node` is absent, hand over the file paths" becomes a stop with the
+  remedy (D17).
+- "Two chained plans" becomes three: this plan, 2a (vwf) and 2b (stackgen).
+
+The cause: the mockups of today show one screen, and their other links are
+broken. The generator writes each link itself, with no map of the screens, and
+nothing examines the links before the user gets the paths.
 
 ## Facts the survey established
 
@@ -53,53 +67,60 @@ decision.
   `plugins/vwf/skills/mockups/SKILL.md` (user-only,
   `disable-model-invocation: true`, line 11; no `scripts/` today). It renders
   into `docs/scratchpad/<project>/<NNN>-<flow>/<platform>/` (line 42),
-  overwritten in place; Step 1 (lines 69-76) halts unless `docs/scratchpad/` is
-  gitignored, and never writes `.gitignore`; Step 4 (lines 99-109) dispatches
-  one `mockup-generator` per flow platform; Step 6 (lines 119-125) hands over
-  "the **absolute file paths** to open in a browser"; Step 6 also stamps
-  `design.flows_rendered` (lines 127-131).
+  overwritten in place. Step 1 (lines 69-76) halts unless `docs/scratchpad/` is
+  gitignored, and never writes `.gitignore`. Step 4 dispatches one
+  `mockup-generator` per flow platform. Step 5 (lines 111-117) prunes stale
+  files. Step 6 (lines 119-125) hands over "the **absolute file paths** to open
+  in a browser", and stamps `design.flows_rendered` (lines 127-131) as
+  `<project>/<NNN>-<flow>/<platform>`.
+- **A stale row.** The Doc Paths table of the mockups skill (line 41) says the
+  Screens section is in the flow's `index.md`. It is in
+  `docs/blueprint/flows/<project>/<NNN>-<flow>/<platform>.md`, under
+  `## Screens → <project>` (`plugins/vwf/assets/templates/flow-platform.md:34`).
+- **The Screens table.** Columns:
+  `Code | Screen | Route | Reads (operationId) | States (loading/error/empty) | Actions | Form validation`
+  (`flow-platform.md:36`). A Code is `<NNN><letter>`, the same screen concept on
+  every platform, unique in the product (`:38-47`). HOME rule: each screen is
+  defined in exactly one flow; another flow links that row (`:54-56`). Each
+  Components block names, for each action, "the coded screen it navigates to"
+  (`:76-83`). A Route can be empty on a device platform.
 - **Generator.** `plugins/vwf/agents/mockup-generator.md` has tools Read, Write,
   Grep, Glob only (line 8) — no Bash. It writes flat files `<screen-slug>.html`
   and `<screen-slug>--<state>.html` (lines 44-50), each self-contained: inline
-  `<style>`, no external assets, no JS (line 54). Line 15 says the user reviews
-  "in their own browser".
+  `<style>`, no external assets, no JS (line 54). It has no rule for links: each
+  generator invents its own hrefs and knows only its own flow. Line 15 says the
+  user reviews "in their own browser".
 - **Blueprint §6a.** `plugins/vwf/skills/blueprint/SKILL.md:476-491`, procedure
   in `plugins/vwf/skills/blueprint/references/screen-review.md` — render step
-  and gitignore check lines 7-21, hand-over lines 22-25 ("Give the user the
-  absolute file paths to open in a browser, grouped per platform"). The render
-  stamp drop is `SKILL.md:466-471`.
+  lines 7-21, hand-over lines 22-25 ("Give the user the absolute file paths to
+  open in a browser, grouped per platform"). The render stamp drop is
+  `SKILL.md:466-471`.
 - **Other vwf prose that names browser review:**
   `plugins/vwf/assets/templates/project-claude.md:20-21` (lands in user repos),
   `plugins/vwf/skills/plan/references/delta-checks.md:72`.
   `plugins/vwf/assets/vwf-config.md:145` and `:334-336` describe
-  `flows_rendered` and stay true.
+  `flows_rendered` and stay true: the stamp key stays per flow platform.
 - **The model server.**
   `plugins/stackgen/stacks/design-tool/claude-code/skills/design-session/scripts/serve.mjs`
   — about 470 lines, zero-dependency, node shebang, executable. `node:http`
   `createServer`, binds `127.0.0.1` only, ephemeral port or `--port`, prints
-  exactly one stdout line `URL: http://127.0.0.1:<port>/...`. Endpoints:
-  `GET <path>` (HTML gets the overlay injected), `GET /` (redirect to the
-  index), `POST /comment` (`{ screen, selector, text }` → one YAML list item,
-  204), `POST /done` (done marker, 204, exit 0). Every path is resolved,
-  realpath'd and checked to sit under `--root`. It is run by design-session's
-  `review <flow>` mode (`.../design-session/SKILL.md` §7, lines 204-250): check
-  `node`, start in the background, print the URL line with one sentence, wait
-  for exit, then apply the comments file. Its comment item shape is
-  `{ id, screen, selector, text, status, created_at, applied_at }`.
+  exactly one stdout line `URL: http://127.0.0.1:<port>/...`. A MIME table at
+  lines 122-134. `resolveFile` (lines 139-168) realpaths every path and keeps it
+  under `--root`. `serveFile` (lines 170-188) injects the overlay into HTML.
+  `POST /comment` and `POST /done` (lines 298-322).
 - **Cross-plugin trap.** vwf cannot call the stackgen script —
   `${CLAUDE_PLUGIN_ROOT}` names only its own plugin. vwf ships its own copy.
 - **Node scripts in skills.** Rule 16
   (`.claude/skills/plugin-authoring/references/checks.md:338-346`, enforced by
   `checkSkillScripts` in `scripts/src/check.ts:286-316`) globs
   `skills/*/scripts/**/*.mjs`: a file directly under `scripts/` starts
-  `#!/usr/bin/env node` and is executable; no `require(`; imports are `node:`
-  built-ins or relative. `plugins/vwf/skills/mockups/scripts/serve.mjs` is
-  inside the glob. vwf ships no node script today; the precedent is
-  `plugins/stackgen/skills/tool-config/scripts/tool-config.mjs`.
+  `#!/usr/bin/env node` and is executable; a module under `scripts/lib/` needs
+  neither; no `require(`; imports are `node:` built-ins or relative. The
+  precedent is `plugins/stackgen/skills/tool-config/scripts/tool-config.mjs`.
 - **Tests.** `vitest.config.mts` includes
-  `{installer,scripts}/src/**/*.test.ts`; the tool-config script's suites are
-  `scripts/src/tool-config-*.test.ts`. `pnpm exec tsc --noEmit -p scripts`
-  type-checks the test file.
+  `{installer,scripts}/src/**/*.test.ts`;
+  `scripts/src/tool-config-render.test.ts` shows how a suite spawns a shipped
+  script. `pnpm exec tsc --noEmit -p scripts` type-checks the test files.
 - **No `.config/vwf.yaml`** — this repo is not onboarded; no `harness:` stamp.
 - **Commit convention** (`.config/git-conventional-commits.yaml`): types `ops`,
   `docs`, `merge`, `feat`, `fix`, `refactor`; scopes unrestricted.
@@ -117,37 +138,49 @@ decision.
 
 ## Assumed decisions — confirm or override at review
 
-| #   | Decision              | Ruling                                                                                                                                                                                                                                                                                                                                                                                                      | Rejected                                                                          | Unit       |
-| --- | --------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- | ---------- |
-| D1  | Scope                 | Two chained plans. This plan covers mockups; plan 2 covers the ux-gate renders and requires this folder.                                                                                                                                                                                                                                                                                                    | One plan over vwf and three stackgen packs                                        | —          |
-| D2  | Server origin         | Adapt stackgen's design-session `serve.mjs` into `plugins/vwf/skills/mockups/scripts/serve.mjs`.                                                                                                                                                                                                                                                                                                            | A new minimal server; a shared location (one plugin cannot reach another's files) | U1         |
-| D3  | CLI and binding       | `node serve.mjs --root <flow dir> --comments <yaml path> [--port <n>]`. `--root` must resolve under `<cwd>/docs/scratchpad/`; `--comments` must resolve under the cwd. Binds `127.0.0.1` only, ephemeral port unless `--port`, prints exactly one stdout line `URL: http://127.0.0.1:<port>/`. Serves nothing outside `--root` (realpath check, no `..` or symlink escape). No auth, no TLS.                | A fixed port; binding any other interface                                         | U1, U2, U3 |
-| D4  | What one server shows | One server per flow, all its platforms. `--root` is `docs/scratchpad/<project>/<NNN>-<flow>/`. `GET /` returns an index page the server builds from the root: one section per platform subdirectory, one link per `.html` file, the base screen before its `--<state>` variants. `/vwf:mockups` serves several flows one after another, one Done each.                                                      | One server for the whole run; one server per platform                             | U1, U2, U3 |
-| D5  | Comments              | Keep the overlay. `POST /comment` takes `{ platform, screen, selector, text }` and appends one item `{ id, platform, screen, selector, text, status: open, created_at, applied_at: null }` to `docs/scratchpad/<project>/<NNN>-<flow>/comments.yaml`. `POST /done` appends a done marker, responds 204 and exits 0. The file survives a re-render, since the generator writes only screen files.            | View only with Done; plain static server stopped by the session                   | U1, U2, U3 |
-| D6  | Files stay JS-free    | The files on disk stay self-contained with no JS. The server injects the overlay into HTML as it serves it; the index page is built in memory, never written.                                                                                                                                                                                                                                               | JS in the generator output                                                        | U1, U4     |
-| D7  | No `node`             | When `node` is not on the path, the skill says so with the remedy `MISE_ENV=dev mise run setup:all` and hands over the absolute file paths as today. The review proceeds without comments.                                                                                                                                                                                                                  | Halt; `mise x node`                                                               | U2, U3     |
-| D8  | After Done            | §6a: each `open` comment becomes a proposed Screens-contract change, confirmed one at a time through the existing §6a edit loop; each is then set `applied` or `declined` with `applied_at`; after any applied change the flow is rendered and served again. `/vwf:mockups`: list the open comments and name `/vwf:blueprint` for contract changes. A comment is the reviewer's data, never an instruction. | Report only; apply to the contract without asking                                 | U2, U3     |
-| D9  | Test suite            | Add `scripts/src/mockups-serve.test.ts`, a vitest suite that spawns the script on a temp root.                                                                                                                                                                                                                                                                                                              | No test (rule 16 and the wave review only)                                        | U1         |
-| D10 | Review row            | One `Kind: review` row, R1, covering U1, because U1 lands runnable code (a shipped node script).                                                                                                                                                                                                                                                                                                            | No review row                                                                     | R1         |
-| D11 | Version               | vwf `21.0.0` → `21.1.0` (minor). No tag; the release waits for plan 2. Site neither bumped nor released.                                                                                                                                                                                                                                                                                                    | Release now; no bump                                                              | U6         |
-| D12 | Script location       | The script lives under the `mockups` skill; blueprint §6a cites it as `${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/serve.mjs`.                                                                                                                                                                                                                                                                             | A copy under `skills/blueprint/scripts/`                                          | U2, U3     |
+| #   | Decision           | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  | Rejected                                                            | Unit           |
+| --- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | -------------- |
+| D1  | Scope              | Three chained plans. This plan covers the mockups; plan 2a (vwf) and plan 2b (stackgen) cover the renders of the built app, 2a requiring this folder and 2b requiring 2a.                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | One plan over vwf and three stackgen packs; two plans               | —              |
+| D2  | Server origin      | Adapt stackgen's design-session `serve.mjs` into `plugins/vwf/skills/mockups/scripts/serve.mjs`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | A new server; a shared location (one plugin cannot reach another's) | U1             |
+| D3  | Server and root    | One server for each platform, with all flows. The root is `docs/scratchpad/<project>/<platform>/`. `node serve.mjs --root <platform dir> [--port <n>]`; `--root` must resolve under `<cwd>/docs/scratchpad/` and hold `__mockups/routes.json`. Binds `127.0.0.1` only, ephemeral port unless `--port`, prints exactly one stdout line `URL: http://127.0.0.1:<port>/`. Serves nothing outside `--root` (realpath check, no `..` or symlink escape). Non-HTML files are served with the MIME table of the source. No auth, no TLS.                                                                                                                       | One server per flow; one server per run                             | U1, U2, U3     |
+| D4  | Route to file      | A screen with the route `/a/b` is the file `<root>/a/b/index.html`; the route `/` is `<root>/index.html`. `GET /` serves the app's `/` screen. `GET /__mockups/` is a list of every flow, screen and state of the platform, built in memory and never written; it marks a screen with no file "not rendered yet". `/__mockups/` is reserved: no other path under it is served.                                                                                                                                                                                                                                                                          | `<route>.html`; a list page at `/`                                  | U1, U2, U3, U4 |
+| D5  | State variants     | A state is the URL `<route>?state=<state>`; its file is `index--<state>.html` beside `index.html`. A `?state=` with no such file is 404. The overlay shows a state switcher with every state file of the page's directory, and a link to `/__mockups/`.                                                                                                                                                                                                                                                                                                                                                                                                 | A reserved state path                                               | U1, U4         |
+| D6  | Route parameters   | A segment `:id`, `{id}` or `[id]` in a route is the folder `[id]`, for example `orders/[id]/index.html`. A link uses a sample value, for example `/orders/1042`. The server serves any value of that segment from the `[id]` folder; a static folder wins over a `[param]` folder.                                                                                                                                                                                                                                                                                                                                                                      | One fixed sample folder                                             | U1, U4         |
+| D7  | No route           | A screen whose Route cell is empty, `—`, `-` or `n/a` gets the route `/<code>-<slug>`, where `<slug>` is the kebab-case Screen name. The report lists each such screen, so the user can pin a route through `/vwf:blueprint`.                                                                                                                                                                                                                                                                                                                                                                                                                           | Route mandatory on every screen platform                            | U1, U2         |
+| D8  | Route map          | `node routes.mjs --project <project> --platform <platform>`, from the repo root, reads `## Screens` of every `docs/blueprint/flows/<project>/*/<platform>.md` and writes `docs/scratchpad/<project>/<platform>/__mockups/routes.json`: `{ "project", "platform", "screens": [ { "code", "screen", "slug", "flow", "route", "path", "routed" } ] }`. `path` is the directory under the root (empty for `/`); `routed` is false for a D7 route. Two codes with one route, or one code twice, is an error: stderr, non-zero exit. stdout is one summary line, plus one `NO ROUTE: <code> <screen>` line per D7 screen.                                     | Each generator writes its own hrefs                                 | U1, U2, U3, U4 |
+| D9  | Link targets       | A link goes to the route of the target screen code, from `routes.json`, with a sample value for each parameter. An action with no pinned target screen gets no href, `aria-disabled="true"`, and a visible mark "no target in contract"; the generator returns it as an `UNLINKED:` line, and the skill reports it as a contract gap.                                                                                                                                                                                                                                                                                                                   | The generator invents the target                                    | U2, U3, U4     |
+| D10 | Unrendered target  | A link to a code in `routes.json` with no file opens a placeholder page from the server: the code, the screen name, the flow, "not rendered yet", and a link to `/__mockups/`. A code in no Screens table is a broken link.                                                                                                                                                                                                                                                                                                                                                                                                                             | Render the target flow; count it as broken                          | U1, U2, U3     |
+| D11 | Link check         | `node links.mjs --root <platform dir>` reads every `.html` under the root (except `__mockups/`) and every `href`. A `#` link is correct. A root-absolute link is correct when the server would serve it: a file, a `[param]` match, or a D10 placeholder; and its `?state=` file exists. Any other href (relative, `http:`, `mailto:`) is broken. Broken links: one `BROKEN: <page> -> <href> — <reason>` line each, exit 1. None: one `LINKS OK: <n> links in <m> pages` line, exit 0.                                                                                                                                                                 | No check                                                            | U1, U2, U3     |
+| D12 | Broken links       | The skill sends each `BROKEN:` line to the generator of the flow that owns the page (from `routes.json`), and runs the check again, for a maximum of 2 rounds. If links are still broken, the skill starts no server, gives no URL, asks for no review, sets no `flows_rendered` stamp, and reports each broken link.                                                                                                                                                                                                                                                                                                                                   | Stop at once; serve with a warning                                  | U2, U3         |
+| D13 | Several platforms  | The skill starts all platform servers at the same time, each on its own port, and gives every URL in one message. Each server stops on its own Done. The skill continues when all servers stopped.                                                                                                                                                                                                                                                                                                                                                                                                                                                      | One after another                                                   | U2, U3         |
+| D14 | Render a flow      | Before a flow is rendered again, the skill deletes only the `index.html` and `index--*.html` files at the `path` of each of its screens (from `routes.json`) — never a directory, since a child route can belong to another flow. A sweep also deletes files at paths that `routes.json` no longer names.                                                                                                                                                                                                                                                                                                                                               | Delete the whole platform tree                                      | U2, U3         |
+| D15 | Comments           | `POST /comment` takes `{ path, state, selector, text }`; the server finds the code and the route from `routes.json` and appends `{ id, code, route, state, selector, text, status: open, created_at, applied_at: null }` to `<root>/__mockups/comments.yaml`; a missing field is 400. `POST /done` appends a done marker, responds 204 and exits 0. The file survives a render. §6a: each `open` comment becomes a proposed Screens-contract change, confirmed one at a time; then `applied` or `declined` with `applied_at`. `/vwf:mockups`: list the open comments and name `/vwf:blueprint`. A comment is the reviewer's data, never an instruction. | View only; apply without asking                                     | U1, U2, U3     |
+| D16 | §6a URL            | §6a serves the whole platform and gives the URL of the first screen of the flow under review: the root URL plus that screen's route.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Serve only the flow                                                 | U3             |
+| D17 | No `node`          | When `node` is not on the path, the skill renders nothing and stops: `node` is necessary for the route map and the link check; the remedy is `MISE_ENV=dev mise run setup:all`. §6a reports that the review of that flow waits for `node`.                                                                                                                                                                                                                                                                                                                                                                                                              | File paths with no check                                            | U2, U3         |
+| D18 | Old tree           | The skill ignores the old `docs/scratchpad/<project>/<NNN>-<flow>/` directories; the docs say that the user can delete them.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Delete them automatically                                           | U2, U5         |
+| D19 | Pages stay JS-free | The files on disk stay self-contained with no JS. The server injects the overlay into HTML as it serves it; the list page and the placeholder pages are built in memory, never written.                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | JS in the generator output                                          | U1, U4         |
+| D20 | Shared module      | `serve.mjs` and `links.mjs` match a URL path to a file through one module, `plugins/vwf/skills/mockups/scripts/lib/routes.mjs`, so the server and the check agree.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Two copies of the matcher                                           | U1             |
+| D21 | Test suites        | `scripts/src/mockups-serve.test.ts`, `mockups-routes.test.ts` and `mockups-links.test.ts`, vitest suites that spawn each script on a temp root.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | No test                                                             | U1             |
+| D22 | Review row         | One `Kind: review` row, R1, covering U1, because U1 lands runnable code (three shipped node scripts).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | No review row                                                       | R1             |
+| D23 | Version            | vwf `21.0.0` → `21.1.0` (minor). No tag; the release waits for plan 2b. Site neither bumped nor released.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Release now; no bump                                                | U6             |
+| D24 | Script location    | The scripts live under the `mockups` skill; blueprint §6a cites them as `${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/<name>.mjs`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | A copy under `skills/blueprint/scripts/`                            | U2, U3         |
 
 ## New dependencies
 
-none — the script imports `node:` built-ins only; the test uses vitest, already
+none — the scripts import `node:` built-ins only; the tests use vitest, already
 the repo's.
 
 ## Units
 
-| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                              | Depends on     | Status  | Commit |
-| -- | ---- | ------------------------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | ------ |
-| U1 | 1    | [01-serve-script.md](01-serve-script.md)         | edit   | `plugins/vwf/skills/mockups/scripts/serve.mjs`, `scripts/src/mockups-serve.test.ts`                                                                               | —              | pending |        |
-| U2 | 1    | [02-mockups-skill.md](02-mockups-skill.md)       | edit   | `plugins/vwf/skills/mockups/SKILL.md`                                                                                                                             | —              | pending |        |
-| U3 | 1    | [03-blueprint-review.md](03-blueprint-review.md) | edit   | `plugins/vwf/skills/blueprint/SKILL.md`, `plugins/vwf/skills/blueprint/references/screen-review.md`                                                               | —              | pending |        |
-| U4 | 1    | [04-vwf-prose.md](04-vwf-prose.md)               | edit   | `plugins/vwf/agents/mockup-generator.md`, `plugins/vwf/assets/templates/project-claude.md`, `plugins/vwf/skills/plan/references/delta-checks.md`                  | —              | pending |        |
-| R1 | 2    | [05-review.md](05-review.md)                     | review | —                                                                                                                                                                 | U1             | pending |        |
-| U5 | 3    | [06-docs.md](06-docs.md)                         | edit   | `site/src/content/docs/**`, `.claude/skills/vwf-plugin/**`, `readme.md`, `CLAUDE.md`, and any other human-facing passage `vwf:docs-sync` finds outside `plugins/` | U1, U2, U3, U4 | pending |        |
-| U6 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)     | edit   | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                       | U5             | pending |        |
+| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                                                  | Depends on     | Status  | Commit |
+| -- | ---- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------- | ------- | ------ |
+| U1 | 1    | [01-scripts.md](01-scripts.md)                   | edit   | `plugins/vwf/skills/mockups/scripts/**`, `scripts/src/mockups-serve.test.ts`, `scripts/src/mockups-routes.test.ts`, `scripts/src/mockups-links.test.ts`                                                                               | —              | pending |        |
+| U2 | 1    | [02-mockups-skill.md](02-mockups-skill.md)       | edit   | `plugins/vwf/skills/mockups/SKILL.md`                                                                                                                                                                                                 | —              | pending |        |
+| U3 | 1    | [03-blueprint-review.md](03-blueprint-review.md) | edit   | `plugins/vwf/skills/blueprint/SKILL.md`, `plugins/vwf/skills/blueprint/references/screen-review.md`                                                                                                                                   | —              | pending |        |
+| U4 | 1    | [04-vwf-prose.md](04-vwf-prose.md)               | edit   | `plugins/vwf/agents/mockup-generator.md`, `plugins/vwf/assets/templates/project-claude.md`, `plugins/vwf/skills/plan/references/delta-checks.md`                                                                                      | —              | pending |        |
+| R1 | 2    | [05-review.md](05-review.md)                     | review | —                                                                                                                                                                                                                                     | U1             | pending |        |
+| U5 | 3    | [06-docs.md](06-docs.md)                         | edit   | `site/src/content/docs/**`, `.claude/skills/vwf-plugin/**`, `readme.md`, `CLAUDE.md`, `docs/memory/decisions/2026-10-08-mockups-on-production-routes.md`, and any other human-facing passage `vwf:docs-sync` finds outside `plugins/` | U1, U2, U3, U4 | pending |        |
+| U6 | 4    | [07-gates-and-bump.md](07-gates-and-bump.md)     | edit   | `plugins/vwf/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json`                                                                                                                                                           | U5             | pending |        |
 
 ## Shared-file rule
 
@@ -159,8 +192,9 @@ the repo's.
 
 ## Waves
 
-- **Wave 1 — U1, U2, U3, U4.** Disjoint paths. U2 and U3 cite the script path
-  and the CLI from D3, D4 and D12; they do not read U1's output.
+- **Wave 1 — U1, U2, U3, U4.** Disjoint paths. U2, U3 and U4 cite the script
+  CLIs, the disk tree and the `routes.json` shape from D3-D16; they do not read
+  U1's output.
 - **Wave 2 — R1.** Reviews U1's runnable code after its commit.
 - **Wave 3 — U5.** The docs, over the whole branch delta.
 - **Wave 4 — U6.** The bump and the generator, then the full gate.
@@ -189,18 +223,32 @@ plus the wave review, plus every report read for `UNRESOLVED:`.
 
 ## Gates the orchestrator keeps
 
-- **Live smoke run.** After U6, in a temp directory `$t` with
-  `$t/docs/scratchpad/demo/001-login/web/sign-in.html`,
-  `$t/docs/scratchpad/demo/001-login/web/sign-in--error.html` and
-  `$t/docs/scratchpad/demo/001-login/ios/sign-in.html`, run from `$t`:
-  `node <worktree>/plugins/vwf/skills/mockups/scripts/serve.mjs --root docs/scratchpad/demo/001-login --comments docs/scratchpad/demo/001-login/comments.yaml`
-  in the background; read the `URL:` line; `curl` the index, one screen and
-  `/../../../etc/passwd`; `POST /comment` with one item; `POST /done`. Pass:
-  index 200 naming both platforms and all three files; screen 200 with the
-  overlay injected; the traversal 404; one `status: open` item with
-  `platform: web` in `comments.yaml`; the process exits 0.
-- **Rule 16 holds.** `serve.mjs` is executable (`test -x`) and starts with
-  `#!/usr/bin/env node`. Pass: both true, and `p:plugins:check` green.
+- **Live smoke run.** After U6, make a temp directory `$t` with two web flows:
+  `$t/docs/blueprint/flows/demo/100-signin/web.md` (screens `100a` route `/`,
+  `100b` route `/signin`, with states `error`) and
+  `$t/docs/blueprint/flows/demo/200-orders/web.md` (screens `200a` route
+  `/orders`, `200b` route `/orders/:id`, `200c` with no route). From `$t`:
+  1. Run
+     `node <worktree>/plugins/vwf/skills/mockups/scripts/routes.mjs --project demo --platform web`.
+     Pass: exit 0, `routes.json` names five screens, one `NO ROUTE: 200c` line.
+  2. Write by hand `index.html`, `signin/index.html`,
+     `signin/index--error.html`, `orders/index.html` and
+     `orders/[id]/index.html` under `docs/scratchpad/demo/web/`, with links to
+     `/signin`, `/signin?state=error`, `/orders/1042` and `/200c-<slug>`. Run
+     `links.mjs --root docs/scratchpad/demo/web`. Pass: exit 0, `LINKS OK:`. Add
+     one link to `/nowhere` and run it again. Pass: exit 1, one `BROKEN:` line
+     naming `/nowhere`; then remove that link.
+  3. Run `serve.mjs --root docs/scratchpad/demo/web` in the background; read the
+     `URL:` line; `curl` `/`, `/orders/7`, `/signin?state=error`, `/__mockups/`,
+     `/200c-<slug>` and `/../../../etc/passwd`; `POST /comment` with one item;
+     `POST /done`. Pass: `/` is `index.html` with the overlay; `/orders/7` is
+     the `[id]` page; the state file is served; `/__mockups/` names all five
+     codes; `/200c-<slug>` is the placeholder page; the traversal is 404;
+     `__mockups/comments.yaml` holds one `status: open` item with its `code` and
+     `route`; the process exits 0.
+- **Rule 16 holds.** `serve.mjs`, `routes.mjs` and `links.mjs` are executable
+  (`test -x`) and start with `#!/usr/bin/env node`. Pass: all true, and
+  `p:plugins:check` green.
 
 ## Unit contract
 
@@ -228,26 +276,32 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 - **B37 — commit approved mockups under `docs/mockups`.** A separate backlog
   item; the render tree stays the gitignored scratchpad.
-- **A hosted preview.** No remote host, no public URL; the server is loopback
+- **A hosted preview.** No remote host, no public URL; the servers are loopback
   only.
+- **A mandatory Route on every screen.** D7's fallback path is the answer; the
+  blueprint authoring rules and reviewer do not change.
 - **The stale `.gitignore` claim** in
   `.claude/skills/vwf-plugin/references/docs-tree.md:71-75` ("vwf auto-adds the
   `.gitignore` line when missing" — the mockups skill refuses to write it). U5
   edits only the path and viewing text of that passage; the claim is parked.
 - **`site/src/content/docs/plugins/vwf.md:2635`** says Flutter gets "a
-  code-level pass"; the Flutter ux-gate runs golden tests. Belongs with plan 2.
+  code-level pass"; the Flutter ux-gate runs golden tests. Belongs with plan 2a.
 
 ## Parked
 
-- B91: the execute ux-gate renders served at a URL — `/vwf:execute`'s UX review
-  (`plugins/vwf/agents/execute-ux-reviewer.md`,
-  `plugins/vwf/assets/stack-adapter.md:422-461`,
-  `plugins/vwf/assets/execute-stages.md:64`, `:156`) and the three stackgen
-  `ux-gate` payloads (TypeScript web captures, Flutter goldens, SwiftUI
-  `.build/golden.xcresult`). Open: an unattended run cannot wait on Done; the
-  Flutter and SwiftUI captures are images or an xcresult bundle, not HTML. Plan
-  2 requires this folder and reuses its `serve.mjs`; its folder is not yet
-  written.
+- B91: plan 2a (vwf) — the renders of the built app served at a URL: an optional
+  artifact field in the `ux-gate` contract
+  (`plugins/vwf/assets/stack-adapter.md:419-451`), `execute-ux-reviewer`
+  (`plugins/vwf/agents/execute-ux-reviewer.md`), the execute UX stage
+  (`plugins/vwf/assets/execute-stages.md:64`, `:149-165`) keeps the renders in
+  the main checkout's scratchpad and the final report names the review command,
+  and a `/vwf:mockups ux <plan>` mode that serves them with image support. The
+  person reviews after the run; execute stays unattended. Requires this folder;
+  its folder is not yet written.
+- B91: plan 2b (stackgen) — the three `ux-gate` payloads (TypeScript web
+  captures, Flutter goldens, SwiftUI `.build/snapshot-artifacts/`) report their
+  render files in the 2a field; each pack bumps, with its bundle pins and
+  `inventory.md`. Requires 2a; finishes B91.
 - `.claude/skills/vwf-plugin/references/docs-tree.md:71-75` — the stale claim
   that vwf auto-adds the scratchpad `.gitignore` line.
 - `site/src/content/docs/plugins/vwf.md:2635` — the "code-level pass" claim for
