@@ -200,8 +200,8 @@ describe("links.mjs", () => {
     }
   });
 
-  it("fails closed on an & that is not a known reference", () => {
-    for (const href of ["/&foo;/evil.com", "/signin&x", "/signin&amp"]) {
+  it("fails closed on a named reference it does not know", () => {
+    for (const href of ["/&foo;/evil.com", "/signin&x;", "/&Foo9;evil.com"]) {
       write("index.html", html(href));
       const { status, stdout } = run();
       expect(status, href).toBe(1);
@@ -214,6 +214,14 @@ describe("links.mjs", () => {
       html("&#47;signin", "/orders&sol;new", "/signin?a=1&amp;b=2"),
     );
     expect(run().stdout).toBe("LINKS OK: 3 links in 1 pages\n");
+  });
+
+  it("reads any other & as a literal &", () => {
+    write("signin/index--error.html", html("/"));
+    write("index.html", html("/signin?a=1&state=error", "/signin?a&b=2"));
+    const { status, stdout } = run();
+    expect(status).toBe(0);
+    expect(stdout).toBe("LINKS OK: 3 links in 2 pages\n");
   });
 
   it("reads unquoted hrefs too", () => {

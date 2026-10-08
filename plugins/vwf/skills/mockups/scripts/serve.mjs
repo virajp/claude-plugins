@@ -349,7 +349,6 @@ async function postComment(req, res) {
   appendComments(
     [
       `- id: ${id}`,
-      `  path: ${yamlString(body.path)}`,
       `  code: ${yamlOrNull(screen?.code)}`,
       `  route: ${yamlOrNull(screen?.route)}`,
       `  state: ${yamlOrNull(body.state)}`,

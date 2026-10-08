@@ -362,7 +362,7 @@ describe("serve.mjs", () => {
       .toBe(400);
     const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
     expect(yaml.match(/^- id: /gm)).toHaveLength(1);
-    expect(yaml).toContain("  path: \"/orders/7\"");
+    expect(yaml).not.toMatch(/^ {2}path: /m);
     expect(yaml).toContain("  code: \"200b\"");
     expect(yaml).toContain("  route: \"/orders/:id\"");
     expect(yaml).toContain("  status: open");

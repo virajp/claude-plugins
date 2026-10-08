@@ -115,8 +115,9 @@ const REF_RE =
   /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*);)/g;
 
 // The value a browser reads out of the attribute: every character reference
-// decoded, as the HTML parser does before the URL parser sees it. Null when an
-// `&` is not a reference this file knows — the check fails closed on it.
+// decoded, as the HTML parser does before the URL parser sees it. Any other
+// `&` is literal text, as in HTML. Null when a named reference ending in `;`
+// is one this file does not know — the check fails closed on it.
 function decode(value) {
   let unknown = false;
   const out = value.replace(REF_RE, (ref, hex, dec, name) => {
@@ -132,7 +133,7 @@ function decode(value) {
       ? "\ufffd"
       : String.fromCodePoint(code);
   });
-  return unknown || value.replace(REF_RE, "").includes("&") ? null : out;
+  return unknown ? null : out;
 }
 
 function verdict(raw) {
