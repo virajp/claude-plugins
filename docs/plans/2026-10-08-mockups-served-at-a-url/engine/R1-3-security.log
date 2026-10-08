@@ -1,0 +1,19 @@
+/security-review — loop R1, round 3 — range 7bb533f8..a695ad88 (branch 2026-10-08-mockups-served-at-a-url)
+
+No vulnerabilities at confidence >= 8.
+
+I checked the claims you listed against serve.mjs and lib/routes.mjs, and they hold:
+- **Path-only parse:** `target()` only splits off the hash and query and never resolves against a base. So `//etc/passwd` becomes the segments `etc`, `passwd` and is joined under the root (serve.mjs:411).
+- **Containment:** `splitPath` decodes the path before splitting it, then rejects NUL, `.` and `..` segments. Every candidate path is realpath'd and must sit under the realpath'd root (`inRoot`/`servable`, lib/routes.mjs:135-153). So an encoded `%2F` or a symlink doesn't get out.
+- **Reserved prefix:** it is checked case-insensitively on the URL's first segment and again on the first segment of the resolved real path. So a symlink or a case variant can't reach `__mockups`.
+- **YAML:** every user field goes through `JSON.stringify` and lands as a double-quoted scalar. `created_at` and `id` are made by the server.
+- **XSS:** the overlay config goes through `scriptJson` (`<` escaped), and the list and placeholder pages go through `escapeHtml`. The overlay sets values with `textContent`, and its `innerHTML` strings are fixed.
+- **CSRF and DNS rebinding:** the Host header must match the bound port exactly. A POST needs `application/json`, which a cross-origin page can't send without a preflight. An Origin that is present must match, and `null` is refused.
+- **Command injection:** there is no exec or spawn anywhere. routes.mjs writes only to paths built from its own command-line flags, which count as trusted.
+
+Dropped candidates:
+- **YAML injection via U+2028/U+2029, 2/10:** `JSON.stringify` leaves these characters unescaped, but they are not line breaks in YAML 1.2. The file is local, so impact would be low anyway.
+- **Same-origin mockup HTML can POST /comment and /done, 2/10:** the pages are trusted local content.
+- **Symlink inside the root pointing into `__mockups`, 1/10:** the real-path check blocks it.
+- **Unicode case folding of `__mockups`, 1/10:** APFS doesn't fold fullwidth characters.
+- **Comments written into a symlinked `__mockups` directory, 1/10:** the root is trusted because it comes from the command line.

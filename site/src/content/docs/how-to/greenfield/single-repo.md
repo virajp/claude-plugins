@@ -270,8 +270,10 @@ with their `schema.yaml` data models, the operations in
 `apis/relay.openapi.yaml`, the catalog rows, the ER diagram.
 
 Two gates run per doc — a completeness reviewer and, where screens changed, a
-render-and-review pass that puts static HTML mockups in the gitignored
-`docs/scratchpad/` tree for you to open in a browser. Relay's reviewer bounced
+render-and-review pass that writes static HTML mockups at their production
+routes in the gitignored `docs/scratchpad/` tree, checks every link, and serves
+each platform at one local URL where you click through the connected screens and
+leave comments that come back as proposed changes. Relay's reviewer bounced
 `120-team-board` once for a filter whose empty state nobody had pinned.
 
 When the worklist empties, the coherence reviewer walks every flow end to end

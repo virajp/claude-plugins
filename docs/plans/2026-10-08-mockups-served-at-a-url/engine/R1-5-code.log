@@ -1,0 +1,68 @@
+/code-review high — loop R1, round 5 — range 7bb533f8..3d31545d (branch 2026-10-08-mockups-served-at-a-url)
+
+Eight angles run over 31f47d73..3d31545d plus the uncommitted plan index edit. The three mockup test suites pass (39 tests). I confirmed findings 1–3 in a temp root: links to `/Orders/1` and `/old-route` passed the link check, and an external form `action` was never checked. The other findings come from reading the code.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/blueprint/references/screen-review.md",
+    "line": 39,
+    "summary": "Stale pages at old routes are never pruned in §6a, and a flow-scoped /vwf:mockups run does not prune them either (mockups/SKILL.md:162). Yet links.mjs scans every .html under the root, and lib/routes.mjs walk() serves any folder on disk, so an orphaned page both breaks the check and keeps dead links green.",
+    "failure_scenario": "A §6a pass changes screen 100b's route from /old-route to /new-route. routes.json is regenerated, but old-route/index.html stays. If the stale page links somewhere that no longer exists, links.mjs prints a BROKEN line for it. No flow in routes.json owns that page, so the fix cannot be sent to any generator. After two rounds the review stops with no URL. If the stale links are still valid, other flows' unre-rendered links to /old-route pass the check and serve the outdated page, even though D10 says a code in no Screens table is a broken link. Confirmed: a link to /old-route passed while old-route/ held a page and routes.json did not name it."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 81,
+    "summary": "The link check only reads href attributes, but the generator is told to navigate with a form action too (mockup-generator.md Links rule). So form action and formaction targets are never checked.",
+    "failure_scenario": "A generator writes <form action=\"https://evil.example/x\"> or action=\"orders/new\" (relative) or action=\"/no-such-route\". links.mjs prints LINKS OK and the review URL goes out. Submitting the form in the review (the overlay deliberately lets submit controls through) leaves the site or hits a 404. A POST action always 404s, because the server only serves GET and HEAD for pages. Confirmed: an external form action passed the check."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 304,
+    "summary": "The route matcher is inconsistent about letter case. findScreen compares segments case-sensitively, but the literal-file lookup and walk() go through the filesystem, which ignores case on macOS (APFS). A link with the wrong case passes the check and is served as a screen with no code.",
+    "failure_scenario": "A generator writes href=\"/Orders/1\" for the route /orders/:id. On macOS, join(root,'Orders') resolves to orders/, so links.mjs reports it OK (confirmed) and the server returns the page. findScreen returns null, so the overlay shows the raw path instead of 100a, and every comment on it is saved with code: null and route: null. The same tree fails the check on a Linux CI runner. The production router, which is case-sensitive, would 404 the link the check passed."
+  },
+  {
+    "file": "plugins/vwf/agents/mockup-generator.md",
+    "line": 60,
+    "summary": "The generator is told to write index--<state>.html for each pinned state, with no rule on which characters a state name may use. lib/routes.mjs STATE_RE (/^[A-Za-z0-9_-]+$/) silently drops any other name from statesIn, the list page and the state switcher, and turns down any ?state= that uses it.",
+    "failure_scenario": "A Screens row pins the state 'empty (no orders)' or 'no results'. The generator writes index--no results.html. The /__mockups/ list and the overlay switcher both leave it out. A link to ?state=no%20results is BROKEN as 'malformed state' (confirmed). Two repair rounds cannot fix it, because the generator has no naming rule to follow, so the review stops. Or, if nothing links to it, the mandatory sad-path render is never reachable for review."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 675,
+    "summary": "The overlay's done() treats any HTTP answer as success. It never checks r.ok, while both skills block until each server exits on Done (screen-review.md:69, mockups/SKILL.md:201).",
+    "failure_scenario": "The /done POST gets a 403 (Origin or Host mismatch, for example a page opened through another hostname or a proxy) or a 415 or 500. The page still says 'Review sent — you can close this tab', but the server never exits. The skill waits for that background process forever, records no stamp, and never reads comments.yaml. Nothing tells the user or the session how to stop the server."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/routes.mjs",
+    "line": 130,
+    "summary": "routeToken takes the whole first whitespace-separated token that starts with /, including trailing punctuation, so a Route cell listing aliases or ending in punctuation produces a mangled route and path.",
+    "failure_scenario": "A Route cell reads '/login, /signin' or '/orders/:id;'. The route becomes '/login,' and the path 'login,'. The generator writes login,/index.html and links to '/login,'. A link to the real /login is BROKEN as 'no such route', and the route map shows a route that does not match the contract."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 135,
+    "summary": "decode() rejects any href that still holds a bare & after replacing references. An HTML-valid query separator ('&b=' is literal text to a browser) is reported as 'an unknown character reference'.",
+    "failure_scenario": "A generator writes href=\"/orders/1?state=error&tab=items\". A browser opens /orders/1?state=error, but links.mjs prints BROKEN with a misleading reason. That costs a repair round and can stop the review even though the link works."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 136,
+    "summary": "Step 4 says routed is false only when the Route cell is empty, and that a non-zero exit means two codes on one route or one code twice. routes.mjs also treats any cell with no /-prefixed token (—, n/a, prose) as unrouted, and exits non-zero for ./.. segments, a __mockups first segment, missing Code/Screen/Route columns, and a missing flows directory.",
+    "failure_scenario": "The orchestrator gets a non-zero exit for a Screens table with no Route column, or a route starting /__mockups. It reports the error as a duplicate route and sends the user to fix the wrong thing. The same wrong exit-code list is in screen-review.md around line 35."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 291,
+    "summary": "yamlString's lone-surrogate alternatives can never match. Since ES2019, JSON.stringify already outputs lone surrogates as \\udXXX escape text, so only the DEL/C1/U+2028/U+2029/U+FEFF/U+FFFE/U+FFFF class does any work.",
+    "failure_scenario": "Maintenance cost: a hard-to-read regex with two lookaround branches that do nothing. The comment above it claims they matter. A simpler /[\\u007f-\\u009f\\u2028\\u2029\\ufeff\\ufffe\\uffff]/g does the same job."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 197,
+    "summary": "walk()'s atRoot && isReserved(segment) guard is redundant. matchPath already returns none for a reserved first segment, and servable() rejects any realpath whose first segment is reserved.",
+    "failure_scenario": "Three overlapping copies of the same /__mockups/ exclusion (matchPath:293, walk:197, servable:152). A future change to the rule must touch all three or they drift apart. Keeping only the realpath-based check in servable() is enough."
+  }
+]
+```

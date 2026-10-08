@@ -1,0 +1,472 @@
+/**
+ * vwf's mockups `serve.mjs`, spawned for real over a temp platform tree and
+ * driven over HTTP: the one URL line, routes to files, [param] folders, state
+ * files, the in-memory list and placeholder pages, the root confinement, the
+ * comment and done endpoints, and the refusals to start.
+ */
+import {
+  type ChildProcess,
+  spawn,
+  spawnSync,
+} from "node:child_process";
+import {
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  realpathSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from "node:fs";
+import { request as httpRequest } from "node:http";
+import { connect } from "node:net";
+import { tmpdir } from "node:os";
+import {
+  dirname,
+  join,
+} from "node:path";
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  it,
+} from "vitest";
+import { parse as parseYaml } from "yaml";
+
+const SCRIPT = join(
+  import.meta.dirname,
+  "..",
+  "..",
+  "plugins",
+  "vwf",
+  "skills",
+  "mockups",
+  "scripts",
+  "serve.mjs",
+);
+
+const ROUTES = {
+  project: "demo",
+  platform: "web",
+  screens: [
+    ["100a", "Home", "100-signin", "/", "", true],
+    ["100b", "Sign in", "100-signin", "/signin", "signin", true],
+    ["200a", "Orders", "200-orders", "/orders", "orders", true],
+    ["200b", "Order details", "200-orders", "/orders/:id", "orders/[id]", true],
+    ["200c", "Receipt", "200-orders", "/200c-receipt", "200c-receipt", false],
+    ["200d", "New order", "200-orders", "/orders/new", "orders/new", true],
+    [
+      "200e",
+      "Archive",
+      "200-orders",
+      "/orders/archive",
+      "orders/archive",
+      true,
+    ],
+  ]
+    .map(([code, screen, flow, route, path, routed]) => ({
+      code,
+      screen,
+      slug: String(screen).toLowerCase().replace(/ /g, "-"),
+      flow,
+      route,
+      path,
+      routed,
+    })),
+};
+
+const PAGES: Record<string, string> = {
+  "index.html": "home page",
+  "signin/index.html": "signin page",
+  "signin/index--error.html": "signin error page",
+  "orders/index.html": "orders page",
+  "orders/[id]/index.html": "order detail page",
+  "orders/[id]/index--error.html": "order detail error page",
+  "orders/new/index.html": "new order page",
+};
+
+let repo: string;
+let root: string;
+let child: ChildProcess | null = null;
+
+beforeEach(() => {
+  repo = realpathSync(mkdtempSync(join(tmpdir(), "mockups-serve-")));
+  root = join(repo, "docs", "scratchpad", "demo", "mockups", "web");
+  write("__mockups/routes.json", JSON.stringify(ROUTES, null, 2));
+  for (const [rel, text] of Object.entries(PAGES)) {
+    write(rel, `<!doctype html><html><body><p>${text}</p></body></html>\n`);
+  }
+});
+afterEach(() => {
+  child?.kill();
+  child = null;
+  rmSync(repo, { recursive: true, force: true });
+});
+
+function write(rel: string, text: string) {
+  const file = join(root, ...rel.split("/"));
+  mkdirSync(dirname(file), { recursive: true });
+  writeFileSync(file, text);
+}
+
+interface Server {
+  url: string;
+  stdout: () => string;
+  exited: Promise<number | null>;
+}
+
+function start(args = ["--root", root]): Promise<Server> {
+  const proc = spawn("node", [SCRIPT, ...args], { cwd: repo });
+  child = proc;
+  let out = "";
+  const exited = new Promise<number | null>(done => {
+    proc.on("exit", code => done(code));
+  });
+  return new Promise((resolve, reject) => {
+    proc.stdout.on("data", chunk => {
+      out += String(chunk);
+      const line = out.split("\n")[0];
+      if (out.includes("\n") && line !== undefined) {
+        resolve({ url: line.replace(/^URL: /, ""), stdout: () => out, exited });
+      }
+    });
+    proc.on("exit", code => reject(new Error(`exited ${code} before URL`)));
+  });
+}
+
+/** fetch normalises `..` away, so send the raw request line; the status. */
+function rawGet(base: string, path: string, host?: string): Promise<number> {
+  const port = Number(new URL(base).port);
+  return new Promise((resolve, reject) => {
+    const socket = connect(port, "127.0.0.1", () => {
+      socket.write(
+        `GET ${path} HTTP/1.1\r\nHost: ${
+          host ?? `127.0.0.1:${port}`
+        }\r\nConnection: close\r\n\r\n`,
+      );
+    });
+    let data = "";
+    socket.on("data", chunk => {
+      data += String(chunk);
+    });
+    socket.on("end", () => resolve(Number(data.split(" ")[1])));
+    socket.on("error", reject);
+  });
+}
+
+/** A request with headers fetch would not let a test set; the status. */
+function send(
+  base: string,
+  method: string,
+  path: string,
+  headers: Record<string, string>,
+  body = "",
+): Promise<number> {
+  return new Promise((resolve, reject) => {
+    const req = httpRequest(
+      {
+        host: "127.0.0.1",
+        port: Number(new URL(base).port),
+        method,
+        path,
+        headers: { connection: "close", ...headers },
+      },
+      res => {
+        res.resume();
+        res.on("end", () => resolve(res.statusCode ?? 0));
+      },
+    );
+    req.on("error", reject);
+    req.end(body);
+  });
+}
+
+const COMMENT = JSON.stringify({
+  path: "/orders/7",
+  state: "",
+  selector: "#total",
+  text: "Bigger",
+});
+
+describe("serve.mjs", () => {
+  it("prints exactly one URL line on 127.0.0.1", async () => {
+    const server = await start();
+    expect(server.stdout()).toMatch(/^URL: http:\/\/127\.0\.0\.1:\d+\/\n$/);
+    expect(new URL(server.url).hostname).toBe("127.0.0.1");
+  });
+
+  it("serves / as index.html with the overlay, the file unchanged", async () => {
+    const { url } = await start();
+    const res = await fetch(url);
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("home page");
+    expect(body).toContain("<!-- mockup-review-overlay -->");
+    expect(readFileSync(join(root, "index.html"), "utf8")).not.toContain(
+      "<script",
+    );
+  });
+
+  it("serves a [param] folder for any value, a static folder first", async () => {
+    const { url } = await start();
+    expect(await (await fetch(new URL("/orders/7", url))).text()).toContain(
+      "order detail page",
+    );
+    expect(await (await fetch(new URL("/orders/new", url))).text()).toContain(
+      "new order page",
+    );
+  });
+
+  it("serves the placeholder of a fixed route with no file, never [id]", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/orders/archive", url));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("200e");
+    expect(body).toContain("Not rendered yet");
+    expect(body).not.toContain("order detail page");
+    expect((await fetch(new URL("/orders/archive?state=error", url))).status)
+      .toBe(404);
+    expect(await (await fetch(new URL("/orders/7?state=error", url))).text())
+      .toContain("order detail error page");
+  });
+
+  it("refuses a foreign Host, Origin or a non-JSON POST", async () => {
+    const server = await start();
+    const port = new URL(server.url).port;
+    expect(await rawGet(server.url, "/", `evil.example:${port}`)).toBe(403);
+    expect(await rawGet(server.url, "/", "127.0.0.1:1")).toBe(403);
+    expect(await rawGet(server.url, "/", `localhost:${port}`)).toBe(200);
+    const json = {
+      host: `127.0.0.1:${port}`,
+      "content-type": "application/json",
+    };
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        "content-type": "text/plain",
+      }, COMMENT),
+    )
+      .toBe(415);
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        origin: "http://evil.example",
+      }, COMMENT),
+    )
+      .toBe(403);
+    expect(
+      await send(server.url, "POST", "/done", {
+        ...json,
+        host: `evil.example:${port}`,
+      }, "{}"),
+    )
+      .toBe(403);
+    expect(
+      await send(server.url, "POST", "/done", {
+        ...json,
+        "content-type": "text/plain",
+      }, "{}"),
+    )
+      .toBe(415);
+    expect(existsSync(join(root, "__mockups", "comments.yaml"))).toBe(false);
+    expect(
+      await send(server.url, "POST", "/comment", {
+        ...json,
+        origin: `http://localhost:${port}`,
+      }, COMMENT),
+    )
+      .toBe(204);
+    expect((await fetch(server.url)).status).toBe(200);
+  });
+
+  it("serves nothing under __mockups/ in any case", async () => {
+    const { url } = await start();
+    write("__mockups/comments.yaml", "- id: c001\n");
+    for (const path of ["/__MOCKUPS/comments.yaml", "/__Mockups/routes.json"]) {
+      expect((await fetch(new URL(path, url))).status).toBe(404);
+    }
+  });
+
+  it("injects an overlay that lets a form's submit control submit", async () => {
+    const { url } = await start();
+    const body = await (await fetch(url)).text();
+    expect(body).toContain("input[type=submit]");
+    expect(body).toContain("control.form");
+    expect(body).toMatch(/fetch\("\/done", \{[^}]*application\/json/);
+  });
+
+  it("serves a state file, and 404 for a state with no file", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/signin?state=error", url));
+    const body = await res.text();
+    expect(body).toContain("signin error page");
+    expect(body).toContain("\"states\":[\"error\"]");
+    expect((await fetch(new URL("/signin?state=empty", url))).status).toBe(404);
+  });
+
+  it("lists every code at /__mockups/ and serves nothing else under it", async () => {
+    const { url } = await start();
+    const list = await (await fetch(new URL("/__mockups/", url))).text();
+    for (const screen of ROUTES.screens) {
+      expect(list).toContain(screen.code);
+    }
+    expect(list).toContain("not rendered yet");
+    expect((await fetch(new URL("/__mockups/routes.json", url))).status).toBe(
+      404,
+    );
+  });
+
+  it("serves a placeholder for a code with no file", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/200c-receipt", url));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("200c");
+    expect(body).toContain("200-orders");
+    expect(body).toContain("Not rendered yet");
+    expect(body).toContain("href=\"/__mockups/\"");
+    expect(existsSync(join(root, "200c-receipt"))).toBe(false);
+  });
+
+  it("serves nothing outside the root", async () => {
+    const { url } = await start();
+    writeFileSync(join(repo, "secret.html"), "secret");
+    symlinkSync(join(repo, "secret.html"), join(root, "leak.html"));
+    expect(await rawGet(url, "/../../../../../secret.html")).toBe(404);
+    expect(await rawGet(url, "/%2e%2e/%2e%2e/secret.html")).toBe(404);
+    expect((await fetch(new URL("/leak.html", url))).status).toBe(404);
+    expect((await fetch(new URL("/nowhere", url))).status).toBe(404);
+  });
+
+  it("records a comment with its code and route, 400 on a missing field", async () => {
+    const { url } = await start();
+    const post = (body: unknown) =>
+      fetch(new URL("/comment", url), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(body),
+      });
+    const ok = await post({
+      path: "/orders/7",
+      state: "",
+      selector: "#total",
+      text: "Bigger",
+    });
+    expect(ok.status).toBe(204);
+    expect(
+      (await post({ path: "/orders/7", selector: "#total", text: "x" })).status,
+    )
+      .toBe(400);
+    const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(yaml.match(/^- id: /gm)).toHaveLength(1);
+    expect(yaml).not.toMatch(/^ {2}path: /m);
+    expect(yaml).toContain("  code: \"200b\"");
+    expect(yaml).toContain("  route: \"/orders/:id\"");
+    expect(yaml).toContain("  status: open");
+    expect(yaml).toContain("  applied_at: null");
+  });
+
+  it("writes every comment as a YAML string that parses back", async () => {
+    const { url } = await start();
+    const texts = [
+      "del \u007f",
+      "c1 \u0080 \u0085 \u009f",
+      "breaks \u2028 \u2029",
+      "bom \ufeff",
+      "nonchars \ufffe \uffff",
+      "lone \ud800 and \udfff",
+      "pair \ud83d\ude00 kept",
+    ];
+    for (const text of texts) {
+      const res = await fetch(new URL("/comment", url), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ path: "/", state: "", selector: "p", text }),
+      });
+      expect(res.status).toBe(204);
+    }
+    const file = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(file).not.toMatch(
+      /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/,
+    );
+    const parsed = parseYaml(file) as Array<{ text: string; }>;
+    expect(parsed.map(c => c.text)).toEqual(texts);
+  });
+
+  it("answers POST /done with 204 and exits 0", async () => {
+    const server = await start();
+    const res = await fetch(new URL("/done", server.url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: "{}",
+    });
+    expect(res.status).toBe(204);
+    expect(await server.exited).toBe(0);
+    const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(yaml).toMatch(/^# done: /m);
+  });
+
+  it("answers a malformed or //-led target and lives on", async () => {
+    const { url } = await start();
+    expect(await rawGet(url, "//[")).toBe(404);
+    expect(await rawGet(url, "//x/orders")).toBe(404);
+    expect(await rawGet(url, "/%E0%A4%A")).toBe(400);
+    expect(await rawGet(url, "*")).toBe(400);
+    expect((await fetch(url)).status).toBe(200);
+  });
+
+  it("answers 500 when a comment cannot be written, and lives on", async () => {
+    const { url } = await start();
+    mkdirSync(join(root, "__mockups", "comments.yaml"));
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: COMMENT,
+    });
+    expect(res.status).toBe(500);
+    expect((await fetch(url)).status).toBe(200);
+  });
+
+  it("names the screen a [param] path resolves to", async () => {
+    const { url } = await start();
+    const body = await (await fetch(new URL("/orders/7", url))).text();
+    expect(body).toContain("\"code\":\"200b\"");
+    expect(body).toContain("\"screen\":\"Order details\"");
+  });
+
+  it("lets Alt/Option-click comment on a link or a submit control", async () => {
+    const { url } = await start();
+    const body = await (await fetch(url)).text();
+    expect(body).toContain("e.altKey");
+    expect(body).toContain("Alt/Option-click a link or button");
+  });
+
+  it("refuses a root outside docs/scratchpad/", () => {
+    const outside = join(repo, "elsewhere");
+    mkdirSync(join(outside, "__mockups"), { recursive: true });
+    writeFileSync(
+      join(outside, "__mockups", "routes.json"),
+      JSON.stringify(ROUTES),
+    );
+    const result = spawnSync("node", [SCRIPT, "--root", outside], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(result.stdout).toBe("");
+    expect(result.stderr).toMatch(/docs\/scratchpad/);
+  });
+
+  it("refuses a root with no routes.json", () => {
+    rmSync(join(root, "__mockups"), { recursive: true });
+    const result = spawnSync("node", [SCRIPT, "--root", root], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    expect(result.status).not.toBe(0);
+    expect(result.stderr).toMatch(/routes\.json/);
+  });
+});
