@@ -43,7 +43,7 @@
    `UNRESOLVED: no mise backend for Android cmdline-tools`.
 3. **`config/.config/mise/tasks/`** — executable bash subtasks, leaf `android`:
    `setup/deps/install/android` (`sdkmanager --install` the platform
-   `platforms;android-@@COMPILE_SDK@@`, build-tools, `emulator` and the
+   `platforms;android-$COMPILE_SDK`, build-tools, `emulator` and the
    `EMULATOR_IMAGE` system image, accepting licenses non-interactively),
    `code/lint/android` (`./gradlew lint`), and an E2E task in the form
    pack-format uses for harness tasks (`./gradlew <device>DebugAndroidTest`
