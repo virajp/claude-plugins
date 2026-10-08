@@ -80,7 +80,76 @@ function pages(dir, at = "") {
 // href="…", href='…' or an unquoted href=….
 const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
 
-function verdict(href) {
+// The named references a URL could hide in; any other is refused, never guessed.
+const NAMED = {
+  amp: "&",
+  AMP: "&",
+  lt: "<",
+  LT: "<",
+  gt: ">",
+  GT: ">",
+  quot: "\"",
+  QUOT: "\"",
+  apos: "'",
+  sol: "/",
+  bsol: "\\",
+  colon: ":",
+  period: ".",
+  Tab: "\t",
+  NewLine: "\n",
+  num: "#",
+  quest: "?",
+  equals: "=",
+  percnt: "%",
+  semi: ";",
+  comma: ",",
+  plus: "+",
+  excl: "!",
+  commat: "@",
+  lowbar: "_",
+  lpar: "(",
+  rpar: ")",
+  nbsp: "\u00a0",
+};
+const REF_RE =
+  /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*);)/g;
+
+// The value a browser reads out of the attribute: every character reference
+// decoded, as the HTML parser does before the URL parser sees it. Null when an
+// `&` is not a reference this file knows — the check fails closed on it.
+function decode(value) {
+  let unknown = false;
+  const out = value.replace(REF_RE, (ref, hex, dec, name) => {
+    if (name !== undefined) {
+      if (!Object.hasOwn(NAMED, name)) {
+        unknown = true;
+        return ref;
+      }
+      return NAMED[name];
+    }
+    const code = hex !== undefined ? parseInt(hex, 16) : parseInt(dec, 10);
+    return code === 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)
+      ? "\ufffd"
+      : String.fromCodePoint(code);
+  });
+  return unknown || value.replace(REF_RE, "").includes("&") ? null : out;
+}
+
+function verdict(raw) {
+  const decoded = decode(raw);
+  if (decoded === null) {
+    return "an unknown character reference";
+  }
+  // The URL parser strips leading and trailing C0 controls and spaces.
+  let start = 0;
+  let end = decoded.length;
+  while (start < end && decoded.charCodeAt(start) <= 0x20) {
+    start++;
+  }
+  while (end > start && decoded.charCodeAt(end - 1) <= 0x20) {
+    end--;
+  }
+  const href = decoded.slice(start, end);
   if (href.startsWith("#")) {
     return null;
   }
@@ -89,15 +158,12 @@ function verdict(href) {
       ? "not a link inside the mockups"
       : "not root-absolute";
   }
-  // A browser reads a backslash as / and drops tab/CR/LF: /\evil.com is another host.
+  // A browser reads a backslash as / and drops tab/CR/LF: /\evil.com is another
+  // host. What is left — one /, then no / or \ — is a path on this origin.
   if (/[\\\t\r\n]/.test(href)) {
     return "not a link inside the mockups";
   }
-  const base = "http://127.0.0.1";
-  const url = new URL(href, base);
-  if (url.origin !== new URL(base).origin) {
-    return "not a link inside the mockups";
-  }
+  const url = new URL(href, "http://127.0.0.1");
   const states = url.searchParams.getAll("state");
   if (states.length > 1) {
     return "more than one state";
@@ -112,7 +178,7 @@ const list = pages(root);
 for (const page of list) {
   const html = readFileSync(join(root, ...page.split("/")), "utf8");
   for (const [, double, single, bare] of html.matchAll(HREF_RE)) {
-    const href = (double ?? single ?? bare ?? "").trim();
+    const href = double ?? single ?? bare ?? "";
     count += 1;
     const reason = verdict(href);
     if (reason !== null) {

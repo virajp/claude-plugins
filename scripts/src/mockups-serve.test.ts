@@ -33,6 +33,7 @@ import {
   expect,
   it,
 } from "vitest";
+import { parse as parseYaml } from "yaml";
 
 const SCRIPT = join(
   import.meta.dirname,
@@ -366,6 +367,33 @@ describe("serve.mjs", () => {
     expect(yaml).toContain("  route: \"/orders/:id\"");
     expect(yaml).toContain("  status: open");
     expect(yaml).toContain("  applied_at: null");
+  });
+
+  it("writes every comment as a YAML string that parses back", async () => {
+    const { url } = await start();
+    const texts = [
+      "del \u007f",
+      "c1 \u0080 \u0085 \u009f",
+      "breaks \u2028 \u2029",
+      "bom \ufeff",
+      "nonchars \ufffe \uffff",
+      "lone \ud800 and \udfff",
+      "pair \ud83d\ude00 kept",
+    ];
+    for (const text of texts) {
+      const res = await fetch(new URL("/comment", url), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ path: "/", state: "", selector: "p", text }),
+      });
+      expect(res.status).toBe(204);
+    }
+    const file = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(file).not.toMatch(
+      /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/,
+    );
+    const parsed = parseYaml(file) as Array<{ text: string; }>;
+    expect(parsed.map(c => c.text)).toEqual(texts);
   });
 
   it("answers POST /done with 204 and exits 0", async () => {

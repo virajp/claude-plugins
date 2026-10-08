@@ -175,6 +175,47 @@ describe("links.mjs", () => {
     }
   });
 
+  it("decodes character references before it judges an href", () => {
+    for (
+      const href of [
+        "/&#x2F;evil.com",
+        "/&#47;evil.com",
+        "/&#047evil.com",
+        "/&sol;evil.com",
+        "&sol;&sol;evil.com",
+        "/&#92;evil.com",
+        "/&bsol;evil.com",
+        "/&Tab;/evil.com",
+        "/&NewLine;/evil.com",
+        "&#x0D;//evil.com",
+        "http&colon;//evil.com",
+      ]
+    ) {
+      write("index.html", html(href));
+      const { status, stdout } = run();
+      expect(status, href).toBe(1);
+      expect(stdout).toBe(
+        `BROKEN: index.html -> ${href} — not a link inside the mockups\n`,
+      );
+    }
+  });
+
+  it("fails closed on an & that is not a known reference", () => {
+    for (const href of ["/&foo;/evil.com", "/signin&x", "/signin&amp"]) {
+      write("index.html", html(href));
+      const { status, stdout } = run();
+      expect(status, href).toBe(1);
+      expect(stdout).toBe(
+        `BROKEN: index.html -> ${href} — an unknown character reference\n`,
+      );
+    }
+    write(
+      "index.html",
+      html("&#47;signin", "/orders&sol;new", "/signin?a=1&amp;b=2"),
+    );
+    expect(run().stdout).toBe("LINKS OK: 3 links in 1 pages\n");
+  });
+
   it("reads unquoted hrefs too", () => {
     write("index.html", "<a href=/signin>a</a> <a href=nowhere>b</a>\n");
     const { status, stdout } = run();

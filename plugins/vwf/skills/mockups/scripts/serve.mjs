@@ -282,8 +282,15 @@ function appendComments(text) {
   appendFileSync(commentsPath, text);
 }
 
+// A YAML double-quoted scalar. JSON.stringify escapes C0 and lone surrogates;
+// the rest of what YAML forbids or reads as a line break — DEL, C1, U+2028,
+// U+2029, U+FEFF, U+FFFE, U+FFFF — is escaped here, so a comment can never make
+// comments.yaml unparseable.
 function yamlString(value) {
-  return JSON.stringify(String(value));
+  return JSON.stringify(String(value)).replace(
+    /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g,
+    ch => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
 }
 
 function readJson(req) {
