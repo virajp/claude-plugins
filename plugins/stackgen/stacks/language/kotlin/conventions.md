@@ -15,7 +15,10 @@ the build-script and lockfile doctrine.
 line — in `.config/mise/conf.d/kotlin/`. Gradle comes from the committed
 wrapper (`gradlew`, `gradle/wrapper/gradle-wrapper.properties`), and every
 task calls `./gradlew`, never a bare `gradle`. The Kotlin compiler comes from
-the Kotlin Gradle plugin, whose catalog version is the Kotlin version.
+the Kotlin Gradle plugin, whose catalog version is the Kotlin version. JDK 25
+needs the Gradle wrapper at 9.1 or later. The bytecode target is set with
+`jvmTarget` plus `-Xjdk-release` and `options.release` on that JDK — never a
+Gradle toolchain (`jvmToolchain`), which demands a JDK mise does not install.
 
 **The public API is the contract.** Everything is `internal` until a consumer
 needs it; what is `public` is documented with KDoc, versioned by semver — source
@@ -47,7 +50,7 @@ subtasks:
 | `setup:deps:install:kotlin` | resolves every resolvable configuration of every project, which fails when the resolved graph disagrees with a lockfile; with no lockfile anywhere, the same run under `--write-locks` writes them — `--frozen` refuses instead |
 | `setup:deps:outdated:kotlin` | `./gradlew dependencyUpdates` — the report of the ben-manes plugin `com.github.ben-manes.versions` |
 | `setup:deps:upgrade:kotlin` | the same every-project resolve under `--write-locks`, after the version catalog edit that moved a version |
-| `setup:deps:audit:kotlin` | `grype file:<lockfile>` over every `*gradle.lockfile` in the tree — advisory, never a gate |
+| `setup:deps:audit:kotlin` | one `grype dir:` scan over every `*gradle.lockfile` in the tree, each staged as `gradle.lockfile` so grype catalogues it — advisory, never a gate |
 | `setup:deps:cleanup:kotlin` | `./gradlew clean`; the lockfiles stay |
 
 **Why the tasks are built the way they are.** The task files carry one-line
@@ -71,18 +74,19 @@ comments only; the reasoning is here.
   lock that exists is checked, never rewritten. Moving a version is an
   `upgrade`.
 - `install --frozen` also fails when `gradle-wrapper.properties` sets no
-  `distributionSha256Sum`, so CI never runs an unverified Gradle
+  `distributionSha256Sum` of 64 hex digits, so CI never runs an unverified Gradle
   distribution; without `--frozen` it warns.
 - `upgrade` does not edit the catalog itself. A version moves by a reviewed
   edit to `gradle/libs.versions.toml`, guided by `outdated`'s report; the task
   then re-locks to match, and the lockfile diff shows what moved.
 - `outdated` needs the ben-manes plugin `com.github.ben-manes.versions`
   applied in the root `build.gradle.kts`, its version in the catalog's
-  `[plugins]` table. Without it, Gradle reports `dependencyUpdates` as an
-  unknown task.
+  `[plugins]` table. Without it the task warns and exits clean.
 - `audit` is advisory, like every ecosystem audit: the advisory database moves
   without any lockfile change, so a gate on it would fail a commit that changed
-  nothing. It scans every `*gradle.lockfile` outside `build/` and `.gradle/`.
+  nothing. It scans every `*gradle.lockfile` outside `build/`, `.gradle/`,
+  `node_modules/` and the worktree trees, in one grype run that reads
+  `.config/grype.yaml` when present.
   It skips itself when grype is absent — the universal toolchain pins grype
   for the dev environment only — or when no lockfile exists yet.
 - `cleanup` keeps the lockfiles: they are committed.

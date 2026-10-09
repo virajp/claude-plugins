@@ -17,12 +17,35 @@ gets exactly what CI gets.
 - mise pins Temurin on the current LTS line, so the build runs on a supported,
   long-lived JDK. A move to the next LTS is a deliberate edit of that file,
   reviewed as its own diff.
+- JDK 25 runs only on Gradle 9.1.0 or later, so the committed wrapper is 9.1
+  or newer; an older wrapper fails before the build configures.
 - The JDK the build **runs on** is not the bytecode it **emits**. Set the
-  target with `kotlin { jvmToolchain(N) }` in the build script (a convention
-  plugin, in a multi-module build), where `N` is the oldest Java release the
-  library supports. Raising it is a major release for consumers.
-- Never read `JAVA_HOME` in a build script. mise sets it; Gradle's toolchain
-  support finds the JDK from there.
+  target on the mise JDK, in the build script (a convention plugin, in a
+  multi-module build), where `N` is the oldest Java release the library
+  supports — 17 below:
+
+  ```kotlin
+  import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
+  kotlin {
+      compilerOptions {
+          jvmTarget = JvmTarget.JVM_17
+          freeCompilerArgs.add("-Xjdk-release=17")
+      }
+  }
+  tasks.withType<JavaCompile>().configureEach { options.release = 17 }
+  ```
+
+  `jvmTarget` sets the bytecode, `-Xjdk-release` and `options.release`
+  compile against release `N`'s API, so a newer JDK API fails the build, and
+  Kotlin's target validation sees the Kotlin and Java targets agree. Raising
+  `N` is a major release for consumers.
+- Never `jvmToolchain(N)` or `java { toolchain { … } }`: a toolchain must match
+  `N` exactly, mise installs only the LTS JDK, so Gradle reports
+  `No matching toolchains found` — or, with the foojay resolver applied,
+  downloads a JDK outside mise. No foojay resolver plugin either.
+- Never read `JAVA_HOME` in a build script. mise sets it, and Gradle
+  runs on that JDK.
 
 ## The Gradle wrapper
 

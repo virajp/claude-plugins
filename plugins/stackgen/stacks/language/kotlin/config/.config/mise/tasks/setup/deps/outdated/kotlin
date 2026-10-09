@@ -13,4 +13,10 @@ if [[ ! -x ./gradlew ]]; then
 fi
 
 # The task comes from the ben-manes plugin com.github.ben-manes.versions, applied in the root build.gradle.kts.
+if ! ./gradlew -q help --task dependencyUpdates >/dev/null 2>&1; then
+  print_warn "setup:deps:outdated:kotlin: no dependencyUpdates task (or the build does not configure), so there is nothing to report."
+  print_yellow "Apply the ben-manes plugin com.github.ben-manes.versions in the root build.gradle.kts, then re-run."
+  exit 0
+fi
+
 ./gradlew dependencyUpdates

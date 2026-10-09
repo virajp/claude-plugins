@@ -22,13 +22,14 @@ if [[ ! -x ./gradlew ]]; then
 fi
 
 # Only the distribution is checked here; CI validates gradle-wrapper.jar before any ./gradlew.
-if ! grep -q '^distributionSha256Sum=' gradle/wrapper/gradle-wrapper.properties 2>/dev/null; then
+# A present key is not enough: the value must be a SHA-256, 64 hex digits.
+if ! grep -Eq '^distributionSha256Sum=[0-9a-fA-F]{64}[[:space:]]*$' gradle/wrapper/gradle-wrapper.properties 2>/dev/null; then
   if [[ "${frozen}" == "true" ]]; then
-    print_error "setup:deps:install:kotlin: gradle-wrapper.properties sets no distributionSha256Sum."
-    print_yellow "Add the checksum Gradle publishes for the distribution, then re-run."
+    print_error "setup:deps:install:kotlin: gradle-wrapper.properties sets no valid distributionSha256Sum."
+    print_yellow "Set it to the 64-hex checksum Gradle publishes for the distribution, then re-run."
     exit 1
   fi
-  print_warn "setup:deps:install:kotlin: gradle-wrapper.properties sets no distributionSha256Sum."
+  print_warn "setup:deps:install:kotlin: gradle-wrapper.properties sets no valid distributionSha256Sum."
 fi
 
 # Every project's resolvable configurations, not the root's alone; resolving fails on a lock mismatch.
@@ -43,8 +44,8 @@ printf '%s\n' \
   '  }' \
   '}' >"${init_script}"
 
-locked="$(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \) -prune \
-  -o -type f -name '*gradle.lockfile' -print -quit)"
+locked="$(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \
+  -o -path ./.worktrees -o -path ./.claude/worktrees \) -prune -o -type f -name '*gradle.lockfile' -print -quit)"
 
 if [[ -n "${locked}" ]]; then
   print_subheader "Resolving every project against its lockfile ..."

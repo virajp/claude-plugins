@@ -18,7 +18,8 @@ fi
 lockfiles=()
 while IFS= read -r lockfile; do
   lockfiles+=("${lockfile}")
-done < <(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \) -prune \
+done < <(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \
+  -o -path ./.worktrees -o -path ./.claude/worktrees \) -prune \
   -o -type f -name '*gradle.lockfile' -print | sort)
 
 if [[ ${#lockfiles[@]} -eq 0 ]]; then
@@ -27,9 +28,21 @@ if [[ ${#lockfiles[@]} -eq 0 ]]; then
   exit 0
 fi
 
-status=0
+# grype catalogues a file named gradle.lockfile alone, so each lockfile is staged under that
+# name — settings-gradle.lockfile and buildscript-gradle.lockfile would otherwise scan empty.
+staging="$(mktemp -d "${TMPDIR:-/tmp}/stackgen-gradle-audit.XXXXXX")"
+trap 'rm -rf "${staging}"' EXIT
+n=0
 for lockfile in "${lockfiles[@]}"; do
+  n=$((n + 1))
   print_yellow "${lockfile#./}"
-  grype "file:${lockfile}" || status=$?
+  mkdir "${staging}/${n}"
+  cp "${lockfile}" "${staging}/${n}/gradle.lockfile"
 done
-exit "${status}"
+
+# The repo's grype config carries its accepted findings, as code:sec reads it.
+if [[ -f "${MISE_PROJECT_ROOT}/.config/grype.yaml" ]]; then
+  grype "dir:${staging}" --config "${MISE_PROJECT_ROOT}/.config/grype.yaml"
+else
+  grype "dir:${staging}"
+fi
