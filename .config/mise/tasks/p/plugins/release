@@ -150,9 +150,12 @@ elif ! git fetch --tags --quiet origin 2>/dev/null; then
   print_warn "Could not fetch tags — the last tags below are this checkout's."
 fi
 
-# Each plugin's last tag, level and target.
+# Each plugin's last tag, level and target — every plugin validated before any
+# file is written, so a refusal leaves the tree as it was.
 RELEASED=()
 FILES=()
+TARGETS=()
+NAMES=()
 for file in plugins/*/.claude-plugin/plugin.json; do
   name="$(node -p "require('./${file}').name")"
   case " ${KEYS[*]} " in
@@ -161,31 +164,31 @@ for file in plugins/*/.claude-plugin/plugin.json; do
   esac
   manifest="$(node -p "require('./${file}').version")"
   tag="$(git tag -l --sort=-v:refname "${name}-v*" | grep -E "^${name}-v[0-9]+\.[0-9]+\.[0-9]+\$" | head -n 1 || true)"
-  recorded="$(releases_level "${RELEASES_FILE}" "${name}")"
 
-  if [[ -z "${tag}" ]]; then
-    # No tag yet: the first release is the manifest as it stands.
-    base="none"
-    level="${recorded}"
-    target="${manifest}"
-  else
-    base="${tag##*-v}"
-    # A manifest below its tag, or an unreadable level, refuses like a target.
-    level="?"
-    if ! implied="$(level_implied "${base}" "${manifest}")" \
-      || ! level="$(level_max "${recorded}" "${implied}")" \
-      || ! target="$(release_target "${base}" "${level}")"; then
-      if [[ "${DRY_RUN}" == "true" ]]; then
-        printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag}" "${level:-?}"
-        continue
-      fi
-      print_error "Refusing to release ${name}: manifest ${manifest}, tag ${tag}, recorded level '${recorded}' give no valid target."
-      exit 1
+  # A malformed recorded level, a manifest below its tag, or an unreadable
+  # level refuses like a target. No tag yet: the first release is the
+  # manifest as it stands.
+  base="${tag##*-v}"
+  level="?"
+  recorded="?"
+  target="${manifest}"
+  if ! recorded="$(releases_level "${RELEASES_FILE}" "${name}")" \
+    || { [[ -n "${tag}" ]] && {
+      ! implied="$(level_implied "${base}" "${manifest}")" \
+        || ! level="$(level_max "${recorded}" "${implied}")" \
+        || ! target="$(release_target "${base}" "${level}")"
+    }; }; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag:-none}" "${level:-?}"
+      continue
     fi
-    if [[ -n "${target}" ]]; then
-      plain="$(version_bump "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${base}")"
-      [[ "${target}" == "${plain}" ]] || version_skip_note "${plain}" "${target}"
-    fi
+    print_error "Refusing to release ${name}: manifest ${manifest}, tag ${tag:-none}, recorded level '${recorded:-?}' give no valid target."
+    exit 1
+  fi
+  [[ -n "${tag}" ]] || level="${recorded}"
+  if [[ -n "${tag}" && -n "${target}" ]]; then
+    plain="$(version_bump "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${base}")"
+    [[ "${target}" == "${plain}" ]] || version_skip_note "${plain}" "${target}"
   fi
 
   if [[ "${DRY_RUN}" == "true" ]]; then
@@ -193,8 +196,22 @@ for file in plugins/*/.claude-plugin/plugin.json; do
     continue
   fi
   [[ -n "${target}" ]] || continue
+  NAMES+=("${name}")
+  FILES+=("${file}")
+  TARGETS+=("${target}")
+done
 
-  if [[ "${target}" != "${manifest}" ]]; then
+if [[ "${DRY_RUN}" == "true" ]]; then
+  print_warn "--dry-run — nothing written, nothing committed, merged or tagged."
+  exit 0
+fi
+
+# Every target is valid: write them.
+for i in "${!NAMES[@]}"; do
+  name="${NAMES[$i]}"
+  file="${FILES[$i]}"
+  target="${TARGETS[$i]}"
+  if [[ "${target}" != "$(node -p "require('./${file}').version")" ]]; then
     # Replace the version string in place, so the file keeps its formatting.
     node -e '
       const fs = require("fs");
@@ -210,13 +227,7 @@ for file in plugins/*/.claude-plugin/plugin.json; do
   fi
   releases_clear "${RELEASES_FILE}" "${name}"
   RELEASED+=("${name} ${target}")
-  FILES+=("${file}")
 done
-
-if [[ "${DRY_RUN}" == "true" ]]; then
-  print_warn "--dry-run — nothing written, nothing committed, merged or tagged."
-  exit 0
-fi
 
 if [[ "${#RELEASED[@]}" -eq 0 ]]; then
   print_success "No plugin has a recorded level or an untagged manifest — nothing to release."
