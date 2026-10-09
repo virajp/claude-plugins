@@ -342,7 +342,8 @@ stand.
   trigger & actors, ordered steps with actors/entities/`operationId`s, jobs,
   acceptance criteria) **and, per platform, that platform's screens** with their
   shared `<NNN><letter>` codes, Components blocks, Metadata blocks (`site` and
-  `webapp` only), and deviations, plus the
+  `webapp` only), OS-specific features (each `name`, `scope` and `fallback`),
+  and deviations, plus the
   relevant `conventions.md` anchors and registry block. It writes `index.md`,
   **one `<platform>.md` per platform**, and the `flows/index.md` catalog row. A
   **new** standard flow takes its **designated** number; a product flow takes

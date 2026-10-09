@@ -45,7 +45,8 @@ Do not read the other references; they cover surfaces that are not yours.
   trigger & actors, ordered steps with actors/entities/`operationId`s,
   background jobs, acceptance criteria — and **per platform**, that platform's
   screens with their shared codes, Components blocks, Metadata blocks (`site`
-  and `webapp` only), and deviations.
+  and `webapp` only), OS-specific features (each with `name`, `scope` and
+  `fallback`), and deviations.
 - **Context** — the relevant `conventions.md` anchors and the registry block.
   The registry carries **no stack**: never name a language, framework, database,
   cloud, or vendor in a flow doc — use the prose noun from
@@ -88,7 +89,12 @@ Do not read the other references; they cover surfaces that are not yours.
    description, a title or an image slot**, and never restate a product-wide
    value (site name, default description, social handle, locale) that belongs to
    `conventions.md#web-metadata`. A value you were not given comes back under
-   `UNRESOLVED:`. Then Platform deviations where the orchestrator passed any.
+   `UNRESOLVED:`. The frontmatter `features:` list — one entry per
+   OS-specific feature the orchestrator passed, each with `name`, `scope` and
+   `fallback`, or `features: []` when it passed none; record the fallback the
+   orchestrator elicited and **never invent one** — an entry without one comes
+   back under `UNRESOLVED:`. Then Platform deviations where the orchestrator
+   passed any.
    **Codes are shared across
    platform files** — use exactly the code the orchestrator assigned per screen
    concept; never re-letter per platform.
