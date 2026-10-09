@@ -46,8 +46,9 @@ anyway: `dir` mode reads the filesystem and does not honour `.gitignore`, and
 the default ruleset's `generic-api-key` fires on any long high-entropy string —
 a cache index full of hashes fails the gate for a hash, not a credential. The
 shipped block holds every stack's generated trees, whether or not the repo
-uses that stack: `.build`, `.gradle`, `.kotlin`, `.swiftpm`, `.turbo`, `.venv`,
-`Derived`, `DerivedData`, `build`, `dist`, `graphify-out`, `node_modules`.
+uses that stack: `.build`, `.cxx`, `.externalNativeBuild`, `.gradle`,
+`.kotlin`, `.swiftpm`, `.turbo`, `.venv`, `Derived`, `DerivedData`, `build`,
+`dist`, `graphify-out`, `node_modules`.
 
 Each entry is [the hook config's](pre-commit.md#3-the-global-exclude) regex
 for the path, as a TOML literal string — a directory `<d>` as

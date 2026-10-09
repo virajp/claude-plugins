@@ -252,13 +252,16 @@ ordering is the no-skill-lost rule: a pack is the destination that must exist
 project (`site` or `webapp`) in the browser, in its default view and each pinned
 state it can reach, as `<code>--<state>.png`, and returns the captures as vwf's
 `renders:` list. [`/vwf:execute`](./vwf.md#vwfexecute) keeps them after the run,
-and [`/vwf:mockups renders`](./vwf.md#vwfmockups) serves them. The Flutter and
-SwiftUI gates return no such list yet, so their renders are not kept.
+and [`/vwf:mockups renders`](./vwf.md#vwfmockups) serves them. The Compose
+pack's `ux-gate` returns the same list for `mobile` and `tablet`, copying each
+Roborazzi golden it verified. The Flutter and SwiftUI gates return no such list
+yet, so their renders are not kept.
 
-Four **framework** packs ship today, `effect`, `astro`, `cloudflare-agents` and
-`html`; every other framework a bundle names is a `@generated` ref, which is the
-generated path working as designed rather than a gap. `framework/astro` arrived
-on 2026-09-06 as the second, and it is the pack all four bundles in
+Five **framework** packs ship today, `effect`, `astro`, `cloudflare-agents`,
+`html` and `android`; every other framework a bundle names is a `@generated`
+ref, which is the generated path working as designed rather than a gap.
+`framework/astro` arrived on 2026-09-06 as the second, and it is the pack all
+four bundles in
 [the Astro example](#four-bundles-on-one-pack--the-astro-example) pin.
 `framework/cloudflare-agents` arrived on 2026-09-06 as the third — the
 Cloudflare Agents SDK, whose `Agent` class compiles to a Durable Object — and it
@@ -266,7 +269,10 @@ is the pack the `typescript-cloudflare-agents` bundle pins. `framework/html`
 arrived on 2026-09-15 as the fourth, under a category minted for it, `document`
 — a hand-authored page tree whose build, if any, is a bundler rather than a
 framework — and it is the pack the `html` bundle pins, the `site` platform's one
-entry beside the four Astro ones.
+entry beside the four Astro ones. `framework/android` arrived on 2026-10-09 as
+the fifth, under `meta-framework`, the nearest category to a build SDK — the
+Android Gradle plugin owns the module's build as a meta-framework owns an app's
+— and it is the pack the `kotlin-compose` and `android-library` bundles pin.
 
 **Swift** arrived on 2026-09-23 as the fourth language a language-bundle is
 rooted at, after TypeScript and the Markdown and Bash pair the
@@ -374,6 +380,42 @@ rendered exact, since CI loads it — ktlint from the mise registry, detekt's CL
 through the `github:` backend. The bundle carries no Android and no Kotlin
 Multiplatform.
 
+**Android** followed the same day on those four packs, as two bundles:
+`kotlin-compose`, the third `app-framework` bundle and the second under
+`native-ui`, serving `mobile` and `tablet` from one app module, and
+`android-library`, a language-bundle publishing an **AAR** on `packages`. Both
+pin `framework/android` — the Android Gradle plugin, the Android SDK, Android
+Lint and the emulator — and `kotlin-compose` adds `app-framework/compose`. The
+android pack's `templates/.config/mise/conf.d/android/mise.toml` pins the SDK's
+**cmdline-tools** through mise's `http:` backend at an exact build, with a
+sha256 per platform — a build number is no `X.Y.Z`, so the render cannot resolve
+`latest` and the pin is moved by hand — and sets `ANDROID_HOME` to
+`~/.local/share/android/sdk` beside four values: `COMPILE_SDK`, `MIN_SDK`,
+`TARGET_SDK` and `EMULATOR_IMAGE`, the sdkmanager id without its ABI.
+[`/vwf:setup`](./vwf.md#the-materialize-pass) detects each from the first module
+`build.gradle.kts` that states it as a literal and asks only for one it cannot
+read. `setup:deps:install:android` accepts the SDK licenses and installs
+`platform-tools`, the `COMPILE_SDK` platform, the emulator and the emulator
+image with this host's ABI appended; it installs no build-tools, which AGP
+fetches itself. `code:lint:android` runs Android Lint. `test:e2e` runs the
+instrumented Compose UI tests on a **Gradle Managed Device**, an emulator AGP
+creates, boots headless and tears down: by default
+`./gradlew e2eDebugAndroidTest` on the managed device `e2e`, with `--device` and
+`--variant` naming another, while `mise run test:e2e -- --connected` runs
+`connectedCheck` on an emulator or device already attached. The compose pack
+teaches Jetpack Compose with **Material 3** as the only UI toolkit — no
+Views/XML — and the app doctrine of a ViewModel exposing StateFlow, **Hilt**,
+**Navigation Compose** and **Room**, with Jetpack integration references for
+Hilt, Navigation Compose, Room, DataStore, Paging, WorkManager and CameraX,
+wiring only like Flutter's and SwiftUI's. Its goldens are
+[Roborazzi](https://github.com/takahirom/roborazzi) captures rendered on the JVM
+under Robolectric, committed under `src/test/screenshots/`: `test:golden`
+verifies them, `mise run test:golden -- --record` re-records them. Its `ux-gate`
+runs them on a Pixel 7 qualifier for `mobile` and a medium tablet for `tablet`,
+reads the Accessibility Test Framework's checks off the same run, and returns
+the `renders:` list. Wear OS, Android TV, Android Auto and Android XR are not
+covered yet.
+
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
 became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
@@ -477,13 +519,13 @@ in shape while only content varies:
 
 | Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetypes: the `language/typescript` bundle, and `swift-package` rooted at `language/swift`)                                                                                                                                                                                                                |
+| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetypes: the `language/typescript` bundle, `swift-package` rooted at `language/swift`, and `android-library` rooted at `language/kotlin` with `framework/android`)                                                                                                                                        |
 | `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                                              |
 | `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                                       |
 | `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                                                                                                         |
 | `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                                                                                          |
 | `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage                                                                            |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` rooted at `app-framework/swiftui`)                                                                                                                                                                                                                                           |
+| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` and `kotlin-compose` rooted at `app-framework/swiftui` and `app-framework/compose`)                                                                                                                                                                                          |
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                                             |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature. The tool's source may be a hosted canvas or a **committed directory** the imports read as files, and a pack may ship one extra, user-invocable authoring skill beyond the three the checker counts |
 | `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                                   |
@@ -763,28 +805,30 @@ line to any of them:
   config's global `exclude` — `.claude`, `.git`, `graphify-out`, `build`,
   `dist`, `*.lock`, `node_modules`, `.turbo`, the `*-lock.json` and
   `*-lock.yaml` globs, `.venv`, `.build`, `.swiftpm`, `Derived`, `DerivedData`,
-  `*.xcassets/`, `.gradle` and `.kotlin`. dprint resolves its patterns from the
-  config's directory, so each entry is written twice, `../X` and `**/X`, under
-  one `"includes": ["../**"]`. The toolkit's checker holds the three lists equal
-  after normalising the syntax away. The secret scanner's `[allowlist] paths` is
-  held to a **subset** of it, never the reverse — only generated trees, never a
-  lockfile or authored source. gitleaks extends upstream's default config, which
-  already skips `.git`, `node_modules` and the named lockfiles, and `.claude/`
-  is authored source a scanner must scan even though no formatter touches it in
-  a shaped repo, where it is machine-owned. Its entries are anchored `(^|/)`, so
-  `\.turbo/` never matches a `foo.turbo.ts`.
+  `*.xcassets/`, `.gradle`, `.kotlin`, `.cxx`, `.externalNativeBuild` and
+  `captures`. dprint resolves its patterns from the config's directory, so each
+  entry is written twice, `../X` and `**/X`, under one `"includes": ["../**"]`.
+  The toolkit's checker holds the three lists equal after normalising the syntax
+  away. The secret scanner's `[allowlist] paths` is held to a **subset** of it,
+  never the reverse — only generated trees, never a lockfile or authored source.
+  gitleaks extends upstream's default config, which already skips `.git`,
+  `node_modules` and the named lockfiles, and `.claude/` is authored source a
+  scanner must scan even though no formatter touches it in a shaped repo, where
+  it is machine-owned. Its entries are anchored `(^|/)`, so `\.turbo/` never
+  matches a `foo.turbo.ts`.
 - **Linter ignores.** The linter does not read `.gitignore`, so `linter.yaml`'s
-  `ignores:` carries the generated trees — `.build`, `.dart_tool`, `.gradle`,
-  `.kotlin`, `.swiftpm`, `.venv`, `Derived`, `DerivedData`, `build`,
-  `graphify-out` — each `**/`-prefixed.
+  `ignores:` carries the generated trees — `.build`, `.cxx`, `.dart_tool`,
+  `.externalNativeBuild`, `.gradle`, `.kotlin`, `.swiftpm`, `.venv`, `Derived`,
+  `DerivedData`, `build`, `graphify-out` — each `**/`-prefixed.
 - **Ignore lines and attributes.** `.gitignore` is a curated set in banner
   sections — macOS, editors, AI tooling, mise, secrets and env, build output,
-  Node, Python, Dart and Flutter, Swift and Xcode, Gradle and Kotlin, vwf's
-  working notes and scratch (`docs/memory/handoff/`, `docs/memory/doctor/`,
-  `docs/memory/runs/`, `docs/scratchpad/`), reports — never an upstream template
-  fetched over the network. `fnox.local.toml` is in the secrets section, so the
-  base names the one secrets manager that writes a local file. `.gitattributes`
-  marks `*.lock`, `pnpm-lock.yaml` and `Package.resolved` `linguist-generated`.
+  Node, Python, Dart and Flutter, Swift and Xcode, Gradle and Kotlin, Android,
+  vwf's working notes and scratch (`docs/memory/handoff/`,
+  `docs/memory/doctor/`, `docs/memory/runs/`, `docs/scratchpad/`), reports —
+  never an upstream template fetched over the network. `fnox.local.toml` is in
+  the secrets section, so the base names the one secrets manager that writes a
+  local file. `.gitattributes` marks `*.lock`, `pnpm-lock.yaml` and
+  `Package.resolved` `linguist-generated`.
 
 **Six files carry one marker pair**, `# >>> tool-config` / `# <<< tool-config`
 (`//` in dprint's JSONC): `.gitignore`, `.graphifyignore`, dprint's `excludes`,
@@ -1293,8 +1337,10 @@ and `code:lint:swift-format`, `toolchain-gate/swiftlint` `code:lint:swiftlint`,
 `code:format:pnpm` (sorting `package.json`), `package-manager/uv`
 `code:check:uv` (the lockfile freshness check), `design-tool/claude-code`
 `setup:ai:claude-code`; `app-framework/swiftui` adds `test/golden`, each task
-that builds checking `xcodebuild -version` against its `XCODE_VERSION`; and
-`capability-provider/fnox` fills the `setup/secrets` slot. A pack's subtask
+that builds checking `xcodebuild -version` against its `XCODE_VERSION`;
+`framework/android` supplies `setup:deps:install:android` alone of the verbs,
+`code:lint:android` and `test/e2e`, and `app-framework/compose` `test/golden`;
+and `capability-provider/fnox` fills the `setup/secrets` slot. A pack's subtask
 carries only its own tool's steps — no language pack owns another tool's. The
 pnpm pack also ships a root `.npmrc` setting `ignore-scripts=true` and
 `fund=false` — an install never runs a dependency's install-time code, and a
