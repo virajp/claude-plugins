@@ -328,7 +328,7 @@ flowchart TD
     B e9@-. "design-first screens" .-> SC["/vwf:screens<br/>(prompt → canvas → import)"]:::user
     SC e10@-. "accepted deltas → blueprint pass" .-> B
     B -->|"offers the top-priority slice"| C["/vwf:plan &lt;slice&gt; — per build cycle<br/>(diff + chained dependency plans)"]:::user
-    C -->|"approve — the folder is pushed; launch in a fresh context"| D["/vwf:execute &lt;folder&gt; | next | all<br/>(autonomous · lands per the plan's consent)"]:::chained
+    C -->|"approve — the folder is pushed; once nothing is left to plan, launch in a fresh context"| D["/vwf:execute &lt;folder&gt; | next | all<br/>(autonomous · lands per the plan's consent)"]:::chained
     D -->|"merged; the folder archived when no gap is open"| V["deploy (you) → /vwf:verify<br/>(a clean production pass freezes released API contracts)"]:::user
     V e3@-. "regressions & readings" .-> FB["/vwf:feedback"]:::user
     FB e4@-. "routes back into the product" .-> P
@@ -375,16 +375,17 @@ coverage (`plan` refuses to run without it), then offers to plan the top slice.
 Building is **one command per cycle**: `/vwf:plan <slice>` resolves the slice's
 unbuilt dependencies into a **chain of small plans** (each behind its own gate,
 executed in order — never one plan swallowing its dependencies), each approved
-folder is committed and pushed with a launch line, `execute` runs it unattended
-in a fresh context and a dedicated worktree — or `execute all` runs the whole
-queue, one runner per plan — and lands per the consent the folder recorded —
-stamping the covered blueprint docs' `implementation:` state as it lands — and
-archives the folder itself when no gap is open; one left live is archived when
-you ask. After you deploy, `verify` checks the environment (and, on a clean
-production pass, offers to freeze the released API contracts) and `feedback`
-routes what production says back into the product. When execution exposes a hole
-in the blueprint or plan, `vwf` captures it and loops back to fix the source —
-never silently working around it.
+folder is committed and pushed, the launch line follows once nothing at the
+backlog's priority is left to plan, `execute` runs it unattended in a fresh
+context and a dedicated worktree — or `execute all` runs the whole queue, one
+runner per plan — and lands per the consent the folder recorded — stamping the
+covered blueprint docs' `implementation:` state as it lands — and archives the
+folder itself when no gap is open; one left live is archived when you ask. After
+you deploy, `verify` checks the environment (and, on a clean production pass,
+offers to freeze the released API contracts) and `feedback` routes what
+production says back into the product. When execution exposes a hole in the
+blueprint or plan, `vwf` captures it and loops back to fix the source — never
+silently working around it.
 
 Work with **no blueprint slice behind it** — tooling, CI, a docs tree, a
 refactor, a repo the blueprint does not describe — never enters this chain at
@@ -2467,7 +2468,13 @@ tree; and the folder plus the index are **committed and pushed** through
 place and with no worktree, because the fresh session's worktree is cut from the
 integration branch and can see the folder only once it is committed there. Under
 `multi-repo` the folder lands in the member whose code it changes and the row in
-the base — two commits, both pushed. Only then the launch line:
+the base — two commits, both pushed. Only then does it **check that nothing is
+left to plan**, through [`/vwf:backlog unplanned`](#vwfbacklog): the **check
+priority** is the highest priority among the folder's backlog ids, or, with
+none, the highest priority any open item carries, and an item is unplanned when
+it is `Backlog`, or `Partially done` with no `Planned in:` line. The chain's own
+unplanned elements count too. When nothing is unplanned, it prints the launch
+line — once, after the last element of the chain:
 
 ```text
 /vwf:execute docs/plans/<date>-<HHMM>-<slice>
@@ -2475,14 +2482,23 @@ the base — two commits, both pushed. Only then the launch line:
 /vwf:execute all
 ```
 
+When something is unplanned there is no launch line: it lists the unplanned
+chain elements, then the unplanned items, and ends with the command for the next
+one — `/vwf:plan <slice>` for the next chain element, which comes first, else
+`/vwf:change-plan <item>` or `/vwf:plan <slice>` for the next item.
+`/vwf:execute` itself is unchanged, and still runs if you type it. A backlog it
+cannot read prints the launch line after one line saying the check did not run.
+
 Then it stops — there is no approve-into-execution in the same session. The run
 belongs to a fresh context — a fresh session, or a runner that `all` dispatches
 — and this one's context is the survey and the interview. Mid-chain, the next
-element is planned the same way, its own folder, row and commit; the chain's
-first unexecuted plan is the one to run first. One soft nudge at the gate: a
-flow slice whose screens have no current visual render (`design.flows_rendered`)
-gets a note offering `/vwf:mockups` — or a pending `/vwf:screens import` —
-first. Advisory only, never a halt.
+element is planned the same way, its own folder, row and commit, with no launch
+line; *Approve only* mid-chain stops with the remaining elements listed and the
+`/vwf:plan <slice>` command for the next. The chain's first unexecuted plan is
+the one to run first. One soft nudge at the gate: a flow slice whose screens
+have no current visual render (`design.flows_rendered`) gets a note offering
+`/vwf:mockups` — or a pending `/vwf:screens import` — first. Advisory only,
+never a halt.
 
 ### /vwf:execute
 
@@ -2495,7 +2511,8 @@ one executor for every plan folder. Execution is mechanical from the folder:
 needs, so it decides from a fixed rule set, stops only at a few defined pause
 points, and ends at a **final report** from which it lands per the consent the
 plan recorded. It cannot verify the fresh context, which is why the skill is
-user-only and why the planner's last line is the launch line.
+user-only and why the planner's last line, once nothing is left to plan, is the
+launch line.
 
 ```text
 /vwf:execute docs/plans/2026-06-26-1430-order                 # a cycle plan
@@ -3109,6 +3126,7 @@ working on yet. Nothing a feedback intake produces lands here.
 /vwf:backlog                          # list, priority then id
 /vwf:backlog add "stylesheet axis for web frontends"
 /vwf:backlog next                     # the top item to start, and the command for it
+/vwf:backlog unplanned P1             # what is left to plan at P1, read-only
 /vwf:backlog move B07 P0
 /vwf:backlog partial B07 docs/plans/2026-09-20-x   # a plan landed one piece of B07
 ```
@@ -3126,8 +3144,8 @@ reads its project.
 remote's host, with the `project` scope on its token — `gh auth login`, then
 `gh auth refresh -s project`. `/vwf:doctor` reports a `gh` that is absent,
 unauthenticated or short of the scope as a **degradation** with the remedy,
-every run. A token carrying `read:project` alone is enough for `list` and
-`next`, the two verbs that write nothing.
+every run. A token carrying `read:project` alone is enough for `list`, `next`
+and `unplanned`, the three verbs that write nothing.
 
 **There is no file fallback.** The project is the one store. When `gh` cannot
 reach it, every verb stops with the remedy, and a planner's recall reports the
@@ -3203,6 +3221,14 @@ cell counting its landed pieces, `Partially done (2 landed)` — and ends with t
 project's URL. Ids are never renumbered, and an item is never deleted or
 archived by this skill.
 
+`unplanned [priority]` lists, read-only, the items no plan covers yet at one
+priority — the same candidates `next` ranks, id and title one per line, then a
+line naming the priority. With no priority it uses the **top open priority**,
+the highest any `Backlog`, `In progress` or `Partially done` item carries. The
+planners, `handoff` and `recall` call it before they recommend `/vwf:execute`:
+while it lists anything, the next step is to plan, not to run. A backlog it
+cannot read says so, and the caller goes on as if nothing were unplanned.
+
 **This skill is the only thing that writes the project.** The commands that move
 items as plans are written and as they land call it rather than editing it, each
 passing the ids from its plan's two frontmatter lists on the folder's
@@ -3214,6 +3240,7 @@ absent when the plan covers no such item:
 | ---------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------------- |
 | [`/vwf:plan`](#vwfplan)                  | at hand-off, once the folder is approved  | `planned`, both lists                                                  |
 | [`/vwf:change-plan`](#vwfchange-plan)    | at hand-off, once the folder is approved  | `planned`, both lists                                                  |
+| the planners, `handoff` and `recall`     | before recommending `/vwf:execute`        | `unplanned`, at the check priority                                     |
 | [`/vwf:execute`](#vwfexecute)            | at landing, per the folder's consent      | `done` for `backlog:`, `partial` for `backlog_pieces:`                 |
 | [`plan-management`](#vwfplan-management) | archiving a plan whose ids are still open | `done` for `backlog:`, `partial` for `backlog_pieces:` and a forced id |
 
@@ -3345,17 +3372,27 @@ the ids both frontmatter lists name, adding the folder to their `Planned in:`
 list — an edit to the forge project, nothing in the tree; the folder plus
 `docs/plans/index.md` is **committed and pushed** through
 [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing on, in
-place and with no worktree; and only then the launch line is printed. The push
-is not an extra: the fresh session's worktree is cut from the integration
-branch, so it can see the folder only once the folder is committed there — an
-untracked folder ends up swept into some later wave's commit instead. The index
-row rides the same commit for the same reason. The approval you gave is the
-explicit request the push rule wants, so it is not asked again, and nothing is
-merged.
+place and with no worktree; and only then the check that nothing is left to
+plan, which decides how it ends. The push is not an extra: the fresh session's
+worktree is cut from the integration branch, so it can see the folder only once
+the folder is committed there — an untracked folder ends up swept into some
+later wave's commit instead. The index row rides the same commit for the same
+reason. The approval you gave is the explicit request the push rule wants, so it
+is not asked again, and nothing is merged.
 
-The launch line comes in three forms — the folder by name; `next`, which lets
-the queue pick by priority; or `all`, which runs every runnable plan in turn,
-each in its own runner:
+The check is [`/vwf:plan`](#vwfplan)'s: [`/vwf:backlog unplanned`](#vwfbacklog)
+at the highest priority among the plan's backlog ids — or, with none, the
+highest priority any open item carries — plus the pieces of this session's own
+request not yet planned. A request split into pieces is planned piece after
+piece in the one session: each piece but the last goes straight back to the
+interview for the next, with no launch line. While anything is unplanned the
+plan ends with the unplanned pieces and items and the command for the next one —
+`/vwf:change-plan <item>`, or `/vwf:plan <slice>` when the item names a slice —
+and `/vwf:execute` still runs if you type it. A backlog it cannot read prints
+the launch line after one line saying so. When nothing is unplanned, the launch
+line comes in three forms — the folder by name; `next`, which lets the queue
+pick by priority; or `all`, which runs every runnable plan in turn, each in its
+own runner:
 
 ```text
 /vwf:execute docs/plans/<date>-<name>
@@ -3441,6 +3478,14 @@ with a bare `/vwf:handoff`, then `/clear` and `/vwf:recall next`. That is the
 one prompt `recall` prints rather than runs: `execute` is user-only, so it shows
 the `/vwf:execute <folder>` launch line and you re-run it, and the run resumes
 from the folder's Run log.
+
+Neither recommends a run while planning is unfinished. Before `handoff` writes a
+`/vwf:execute …` next prompt, and before `recall` prints one, each calls
+[`/vwf:backlog unplanned`](#vwfbacklog); when it lists items, the next prompt is
+the planner command for the first one instead, and the rest are named as next
+steps. A prompt that resumes a folder already claimed — its row `RUNNING`, a
+paused or blocked run — is never replaced, and an unreadable backlog leaves the
+execute prompt as it is.
 
 ### /vwf:readme
 
@@ -3682,8 +3727,9 @@ start step 1; it runs none of them.)
 #    → resolves the dependency chain; an unbuilt `order` entity gets its own
 #      plan folder first (covers:/requires: linked), then the flow's — each
 #      TDD-ordered with the acceptance criteria this cycle must land, its
-#      consent recorded — approve each; the folder is committed and pushed
-#      with its index row, and the launch line is printed
+#      consent recorded — approve each; each folder is committed and pushed
+#      with its index row, and the launch line is printed once, after the
+#      last, when nothing at the priority is left to plan
 
 # 5. Execute — in a fresh session, unattended (per chained plan, in order;
 #    /vwf:execute all runs the whole chain, one runner per plan)

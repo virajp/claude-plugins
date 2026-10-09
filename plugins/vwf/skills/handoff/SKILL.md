@@ -127,6 +127,15 @@ If a clear single next action exists, fill the **Next prompt** section with a
 not rely on this session's context. If there is no obvious next step, delete
 that section entirely (don't pad it).
 
+**Plan before execute.** When the Next prompt would be `/vwf:execute …`, first
+invoke `/vwf:backlog unplanned` (the top open priority). If it lists items, the
+Next prompt is the planner command for the first one instead —
+`/vwf:change-plan <item>`, or `/vwf:plan <slice>` for a blueprint slice — and
+the **Open items / next steps** list names the others. If the backlog is
+unreadable, keep the execute prompt. A Next prompt that resumes a folder already
+claimed — its row `RUNNING`, a paused or blocked run — is never replaced: skip
+the check and keep its resume line.
+
 **For `next`, this section is the point of the handoff.** If the session has no
 continuable work — the thread finished, or the next move is the user's to choose
 — do **not** invent one. Write the handoff without the section and **tell the

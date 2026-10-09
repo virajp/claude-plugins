@@ -36,7 +36,7 @@ with a few words on each.>
 ## Open items / next steps
 
 <Ordered list of the immediate actions to resume — the shortest path back to
-productive work.>
+productive work. While `/vwf:backlog unplanned` lists items, name each.>
 
 ## Verification
 
@@ -48,6 +48,7 @@ result.>
 <!-- OPTIONAL. Include only when there is a clear single next action. A
 self-contained instruction the user can paste verbatim into a fresh session to
 continue — no reliance on this session's context. Delete this whole section if
-there is no obvious next step. -->
+there is no obvious next step. Never `/vwf:execute …` while
+`/vwf:backlog unplanned` lists items: plan the first one instead. -->
 
 <the ready-to-paste continuation prompt>

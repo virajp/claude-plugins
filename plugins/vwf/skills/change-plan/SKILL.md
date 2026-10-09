@@ -59,7 +59,9 @@ subagent reads. Nothing lives in conversation.
   The request is often one of its items; note every id it covers, and for each
   whether this plan finishes the item or lands one piece of it — interview item
   2a settles it — so the plan's frontmatter can carry them on the right list.
-  Reading the backlog is this skill's business; editing it never is —
+  The same read tells the interview which items share the plan's priority —
+  what §8's check counts before it recommends `/vwf:execute`. Reading the
+  backlog is this skill's business; editing it never is —
   `/vwf:backlog` is its sole writer
 - the base repo's `docs/plans/index.md` — the plan index, the one table where
   every active plan of either kind, cycle and change, its status and its
@@ -118,6 +120,9 @@ refining anything. Decompose it, agree the order, and plan **one folder per
 piece**, each through this whole procedure. A later piece that stands on an
 earlier one names it in its frontmatter `requires:` list; `/vwf:execute` halts
 until every required plan reads `COMPLETE`. One plan never swallows another.
+The pieces are planned one after another in this session: each runs §3 to §8,
+and §8's ending for a piece that is not the last goes straight back to §3 for
+the next piece — no launch block until the last one is planned.
 
 An answer mid-interview that raises something outside this plan's scope is
 **parked, durably**: acknowledge it, write it to the plan's *Parked* list with
@@ -363,7 +368,28 @@ In this order.
      when the branch has none. The approve in §5 is the explicit request
      git-workflow's push rule wants; do not ask again
 
-Then end with exactly this, and nothing after it:
+Then **check that nothing at this priority is left to plan**, before
+recommending a run. An **open** backlog item is `Backlog`, `In progress` or
+`Partially done`; an **unplanned** one is `Backlog`, or `Partially done` with no
+`Planned in:` line. The **check priority** is the highest priority among the
+frontmatter's `backlog:` and `backlog_pieces:` ids, or, when both are empty,
+the highest priority that has an open item. Invoke
+`/vwf:backlog unplanned <priority>` — with no argument when the plan names no
+id — and count, beside what it lists, the pieces of this session's request not
+yet planned (§2's split). Then end in exactly one of three ways:
+
+- **Nothing unplanned** — end with the launch block below, exactly as written.
+- **Something unplanned** — no launch block. Print the unplanned pieces of this
+  request first, then the unplanned items at the check priority, then the
+  command for the next one — `/vwf:change-plan <item>`, or `/vwf:plan <slice>`
+  when the item names a blueprint slice — and nothing after it. A piece of this
+  request that is next goes straight back to §3 instead. `/vwf:execute` is
+  unchanged; the user may still run it.
+- **The backlog unreadable** — the verb says so; end with the launch block,
+  preceded by one line saying the backlog could not be read, so the check did
+  not run.
+
+The launch block, with nothing after it:
 
 ```text
 Run in a fresh context — a fresh session, or a runner that `all` dispatches:

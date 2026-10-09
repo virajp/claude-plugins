@@ -48,22 +48,24 @@ the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
 the tree they govern; `release` is a slash command; a change to this repo is
 planned with `/vwf:plan` (a blueprint slice) or `/vwf:change-plan` (anything
 else), each of which **commits and pushes the approved folder** on the branch it
-was planned on together with its row in `docs/plans/index.md`'s **one table**,
-and run, in a fresh context, by the one executor, `/vwf:execute <folder>` — or
-`/vwf:execute next`, which reads that table alone, of either kind, and picks the
-runnable plan with the lowest `Priority` value, or `/vwf:execute all`, which
-runs every runnable plan in turn, each in its own `execute-runner` subagent,
-until one stops — which refuses a folder that is not on that branch, claims the
-row `RUNNING` with a pushed commit before it cuts a worktree, and marks it
-`COMPLETE` once the merge lands (archiving the folder there and re-pointing the
-row when no gap is open; leaving it live when one is, archived once you ask) —
-each plan folder carries this repo's gate lines, `mise run p:plugins:local` as
-an after-landing step, recorded `run` at the interview or dropped, and the
-release levels it derives per project, which `/vwf:execute` writes to
-`.config/releases.yaml` at landing: it runs the step on a green landing without
-a prompt, bumps no version, releases nothing, and asks nothing at run time, save
-the run-level questions `/vwf:execute all` asks once, before its first plan —
-every stop is a report with its resume command.
+was planned on together with its row in `docs/plans/index.md`'s **one table** —
+printing the launch line only once `/vwf:backlog unplanned` finds nothing left
+to plan at its priority, else the next item to plan — and run, in a fresh
+context, by the one executor, `/vwf:execute <folder>` — or `/vwf:execute next`,
+which reads that table alone, of either kind, and picks the runnable plan with
+the lowest `Priority` value, or `/vwf:execute all`, which runs every runnable
+plan in turn, each in its own `execute-runner` subagent, until one stops — which
+refuses a folder that is not on that branch, claims the row `RUNNING` with a
+pushed commit before it cuts a worktree, and marks it `COMPLETE` once the merge
+lands (archiving the folder there and re-pointing the row when no gap is open;
+leaving it live when one is, archived once you ask) — each plan folder carries
+this repo's gate lines, `mise run p:plugins:local` as an after-landing step,
+recorded `run` at the interview or dropped, and the release levels it derives
+per project, which `/vwf:execute` writes to `.config/releases.yaml` at landing:
+it runs the step on a green landing without a prompt, bumps no version, releases
+nothing, and asks nothing at run time, save the run-level questions
+`/vwf:execute all` asks once, before its first plan — every stop is a report
+with its resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

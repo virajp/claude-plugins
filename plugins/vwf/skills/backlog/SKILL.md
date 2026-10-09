@@ -10,7 +10,7 @@ description: The product's prioritised backlog — a project on the repo's forge
   approved, /vwf:execute as one lands, and plan-management as one is retired.
   Not the place for production feedback — that is worked now, and
   /vwf:feedback routes it into the docs and commands that fix it.
-argument-hint: "[add <item> | list | next | move <id> <P0|P1|P2> | planned <ids> <folder> | partial <ids> <folder> | done <ids> [folder] | close <id>]"
+argument-hint: "[add <item> | list | next | unplanned [P0|P1|P2] | move <id> <P0|P1|P2> | planned <ids> <folder> | partial <ids> <folder> | done <ids> [folder] | close <id>]"
 model: sonnet
 
 disable-model-invocation: false
@@ -62,7 +62,8 @@ Any of the three missing stops the verb with the remedy — `gh auth login` for
 a missing login, `gh auth refresh -s project` for a missing scope — and a
 caller's recall reports "backlog unreadable: <reason>" and continues with
 nothing. The one tolerance: a token carrying `read:project` alone passes
-`list` and `next`, the two verbs that write nothing, and fails every other.
+`list`, `next` and `unplanned`, the three verbs that write nothing, and
+fails every other.
 There is no fallback store.
 
 **Items are draft issues** in the project — never repo issues. Each is titled
@@ -167,6 +168,25 @@ Ask which of the two it is when the item does not say. Print the group when the
 item has one, since the group is usually the plan's real scope. An empty backlog
 is a one-line answer, not an error.
 
+### `unplanned [priority]`
+
+Read-only. List the items no plan covers yet at one priority, so a planner
+knows whether to recommend `/vwf:execute` or the next item to plan. An
+**open** item is `Backlog`, `In progress` or `Partially done`; an
+**unplanned** item is `Backlog`, or `Partially done` with no `Planned in:`
+line — the same candidates `next` ranks. With a priority (`P0`, `P1`, `P2`),
+list the unplanned items at it. With none, find the **top open priority** —
+the highest priority any open item carries — and list the unplanned items at
+that. Print each item's id and title, one per line, ordered by id, then one
+line naming the priority used. An empty result is one line: "no unplanned
+item at Pn". A backlog with no open item at all is the same line for the
+priority asked, or "no open item" when none was asked.
+
+A caller that cannot read the backlog — the precondition fails, or there is no
+project — gets the verb's stop line, "backlog unreadable: <reason>", and goes
+on as though nothing were unplanned: a planner prints its launch block as it
+would have before this verb existed.
+
 ### `move <id> <priority>`
 
 Set one item's Priority to `P0`, `P1` or `P2`. The id does not change.
@@ -218,13 +238,14 @@ order.
 The backlog moves as plans are written and as they land, and the commands that
 do that work call this skill rather than touching the project:
 
-| Caller                    | When                                     | Verb                                            |
-| ------------------------- | ---------------------------------------- | ----------------------------------------------- |
-| `/vwf:plan`               | at hand-off, once the folder is approved | `planned <ids> <folder>`                        |
-| `/vwf:change-plan`        | at hand-off, once the folder is approved | `planned <ids> <folder>`                        |
-| `/vwf:execute`            | at landing, after the final gate         | `done <ids> <folder>`, `partial <ids> <folder>` |
-| `plan-management archive` | archiving a plan whose ids are open      | `done <ids> <folder>`, `partial <ids> <folder>` |
-| `/vwf:init`               | the forge pass, base repo only, last     | missing-project procedure                       |
+| Caller                                                                | When                                                   | Verb                                            |
+| --------------------------------------------------------------------- | ------------------------------------------------------ | ----------------------------------------------- |
+| `/vwf:plan`                                                           | at hand-off, once the folder is approved               | `planned <ids> <folder>`                        |
+| `/vwf:change-plan`                                                    | at hand-off, once the folder is approved               | `planned <ids> <folder>`                        |
+| `/vwf:change-plan`, `/vwf:plan`, `handoff`, `recall`                  | before printing a launch block or an execute next step | `unplanned [priority]`                          |
+| `/vwf:execute`                                                        | at landing, after the final gate                       | `done <ids> <folder>`, `partial <ids> <folder>` |
+| `plan-management archive`                                             | archiving a plan whose ids are open                    | `done <ids> <folder>`, `partial <ids> <folder>` |
+| `/vwf:init`                                                           | the forge pass, base repo only, last                   | missing-project procedure                       |
 
 Callers pass the ids from the plan's two frontmatter lists on the folder's
 `index.md`, cycle plan and change plan alike. **`backlog:`** names the ids the
