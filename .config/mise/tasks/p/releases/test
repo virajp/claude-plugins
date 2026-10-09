@@ -1,0 +1,140 @@
+#!/usr/bin/env bash
+#MISE description="Unit-test the release-level functions in _scripts/local (table-driven)"
+#MISE dir="{{ config_root }}"
+
+# Every file case runs under mktemp -d; .config/releases.yaml is never touched.
+
+set -uo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
+
+cd "$MISE_PROJECT_ROOT"
+
+SANDBOX="$(mktemp -d)"
+trap 'rm -rf "$SANDBOX"' EXIT
+
+total=0
+
+fail() {
+  print_error "  FAIL $1"
+  [[ $# -ge 3 ]] && print_warn "       expected: $2" && print_warn "       actual:   $3"
+  exit 1
+}
+
+# eq <label> <expected> <command...> — the command must exit 0 and print expected.
+eq() {
+  local label="$1" expected="$2"
+  shift 2
+  local actual
+  total=$((total + 1))
+  actual="$("$@" 2>/dev/null)" || fail "$label (non-zero exit)"
+  [[ "$actual" == "$expected" ]] || fail "$label" "$expected" "$actual"
+  print_yellow "  ok   $label"
+}
+
+# refuses <label> <command...> — the command must exit non-zero.
+refuses() {
+  local label="$1"
+  shift
+  total=$((total + 1))
+  if "$@" >/dev/null 2>&1; then
+    fail "$label (expected a refusal)"
+  fi
+  print_yellow "  ok   $label"
+}
+
+# file_is <label> <file> <expected content>
+file_is() {
+  local label="$1" file="$2" expected="$3"
+  total=$((total + 1))
+  [[ "$(<"$file")" == "$expected" ]] || fail "$label" "$expected" "$(<"$file")"
+  print_yellow "  ok   $label"
+}
+
+C1="# Pending release levels, one key per project: NONE, PATCH, MINOR or MAJOR."
+C2="# Written by /vwf:execute at landing (highest level wins); cleared by the release tasks."
+
+# e3 <tag> <manifest> <recorded> — the E3 rule composed from the functions.
+e3() {
+  local implied level
+  implied="$(level_implied "$1" "$2")" || return 1
+  level="$(level_max "$3" "$implied")" || return 1
+  release_target "$1" "$level"
+}
+
+print_header "releases_level ..."
+F="$SANDBOX/level.yaml"
+eq "absent file → NONE" NONE releases_level "$SANDBOX/missing.yaml" vwf
+printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\nbad: HUGE\n' "$C1" "$C2" >"$F"
+eq "absent key → NONE" NONE releases_level "$F" stackgen
+eq "present key → value" MAJOR releases_level "$F" vwf
+eq "second key → value" PATCH releases_level "$F" site
+refuses "bad value → non-zero" releases_level "$F" bad
+
+print_header "releases_raise ..."
+F="$SANDBOX/raise.yaml"
+releases_raise "$F" vwf PATCH || fail "raise into an absent file"
+file_is "creates the file with the two comment lines" "$F" "$C1
+$C2
+vwf: PATCH"
+releases_raise "$F" vwf MAJOR || fail "raise PATCH → MAJOR"
+eq "PATCH then MAJOR → MAJOR" MAJOR releases_level "$F" vwf
+releases_raise "$F" vwf PATCH || fail "raise MAJOR → PATCH"
+eq "MAJOR then PATCH → MAJOR" MAJOR releases_level "$F" vwf
+releases_raise "$F" site PATCH || fail "raise a second key"
+releases_raise "$F" vwf MINOR || fail "raise MAJOR → MINOR"
+file_is "other keys and comments unchanged" "$F" "$C1
+$C2
+vwf: MAJOR
+site: PATCH"
+refuses "bad level → non-zero" releases_raise "$F" vwf HUGE
+releases_raise "$SANDBOX/none.yaml" vwf NONE || fail "raise NONE"
+total=$((total + 1))
+[[ ! -e "$SANDBOX/none.yaml" ]] || fail "NONE into an absent file writes nothing"
+print_yellow "  ok   NONE into an absent file writes nothing"
+
+print_header "releases_clear ..."
+F="$SANDBOX/clear.yaml"
+printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\n' "$C1" "$C2" >"$F"
+releases_clear "$F" vwf || fail "clear a present key"
+file_is "removes one key; others and comments stay" "$F" "$C1
+$C2
+site: PATCH"
+eq "absent key → zero exit" "" releases_clear "$F" stackgen
+eq "absent file → zero exit" "" releases_clear "$SANDBOX/missing.yaml" vwf
+total=$((total + 1))
+[[ -z "$(find "$SANDBOX" -name '.releases.*')" ]] || fail "no temp file left behind"
+print_yellow "  ok   no temp file left behind"
+
+print_header "level_max ..."
+eq "PATCH MAJOR → MAJOR" MAJOR level_max PATCH MAJOR
+eq "MINOR PATCH → MINOR" MINOR level_max MINOR PATCH
+eq "NONE NONE → NONE" NONE level_max NONE NONE
+refuses "bad level → non-zero" level_max NONE patch
+
+print_header "level_implied ..."
+eq "21.0.0 / 21.0.0 → NONE" NONE level_implied 21.0.0 21.0.0
+eq "21.0.0 / 21.2.0 → MINOR" MINOR level_implied 21.0.0 21.2.0
+eq "3.0.0 / 3.1.0 → MINOR" MINOR level_implied 3.0.0 3.1.0
+eq "1.1.50 / 1.1.51 → PATCH" PATCH level_implied 1.1.50 1.1.51
+eq "2.0.0 / 3.0.0 → MAJOR" MAJOR level_implied 2.0.0 3.0.0
+refuses "manifest lower → non-zero" level_implied 21.2.0 21.0.0
+refuses "manifest lower, later component higher → non-zero" level_implied 2.0.0 1.9.9
+
+print_header "release_target ..."
+eq "21.0.0 MAJOR → 22.0.0" 22.0.0 release_target 21.0.0 MAJOR
+eq "1.1.50 PATCH → 1.1.51" 1.1.51 release_target 1.1.50 PATCH
+eq "3.0.0 NONE → empty, exit 0" "" release_target 3.0.0 NONE
+eq "1.12.0 MINOR → 1.14.0 (13 skipped)" 1.14.0 release_target 1.12.0 MINOR
+eq "1.1.16 PATCH → 1.1.18 (17 skipped)" 1.1.18 release_target 1.1.16 PATCH
+eq "12.0.0 MAJOR → 14.0.0 (13 skipped)" 14.0.0 release_target 12.0.0 MAJOR
+refuses "13.0.0 PATCH → non-zero (cannot clear)" release_target 13.0.0 PATCH
+refuses "bad level → non-zero" release_target 1.0.0 major
+
+print_header "E3 end to end ..."
+eq "tag 21.0.0, manifest 21.2.0, recorded MAJOR → 22.0.0" 22.0.0 e3 21.0.0 21.2.0 MAJOR
+eq "tag 3.0.0, manifest 3.1.0, no record → 3.1.0" 3.1.0 e3 3.0.0 3.1.0 NONE
+eq "tag 1.1.50, manifest 1.1.50, recorded PATCH → 1.1.51" 1.1.51 e3 1.1.50 1.1.50 PATCH
+eq "tag 1.1.2, manifest 1.1.2, no record → skipped" "" e3 1.1.2 1.1.2 NONE
+
+print_header "All release-level tests passed ($total cases)!"

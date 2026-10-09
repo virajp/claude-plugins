@@ -10,9 +10,9 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-08 by the user
+RUNNING since 2026-10-09T09:26 in .worktrees/2026-10-08-release-tasks-bump
 
 ## Consent
 
@@ -169,7 +169,7 @@ none
 
 | Id | Wave | Unit file                                      | Kind   | Owns                                                                                                                                                                                                                                                                                                                                                                | Depends on | Status  | Commit |
 | -- | ---- | ---------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-functions.md](01-functions.md)             | edit   | `.config/mise/tasks/_scripts/local`, `.config/mise/tasks/p/releases/test`                                                                                                                                                                                                                                                                                           | —          | pending |        |
+| U1 | 1    | [01-functions.md](01-functions.md)             | edit   | `.config/mise/tasks/_scripts/local`, `.config/mise/tasks/p/releases/test`                                                                                                                                                                                                                                                                                           | —          | green   |        |
 | U2 | 2    | [02-plugins-release.md](02-plugins-release.md) | edit   | `.config/mise/tasks/p/plugins/release`                                                                                                                                                                                                                                                                                                                              | U1         | pending |        |
 | U3 | 2    | [03-i-release.md](03-i-release.md)             | edit   | `.config/mise/tasks/p/i/release`                                                                                                                                                                                                                                                                                                                                    | U1         | pending |        |
 | U4 | 2    | [04-site-release.md](04-site-release.md)       | edit   | `.config/mise/tasks/p/site/release`                                                                                                                                                                                                                                                                                                                                 | U1         | pending |        |
@@ -267,8 +267,11 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                             | Commit |
+| ---- | --------- | ----- | ----- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green   | format check skipped (no covers:); doctor: no blocking finding (repo not onboarded, no .config/vwf.yaml); edit units only — LSP and conventions skipped; wave gate 7/7 green                                                       | —      |
+| 1    | U1        | opus  | 1     | green   | six contract functions + private level_rank helper; p:releases:test 38/38; raise to NONE on absent file writes nothing; empty value refused; DOCS FALSIFIED CLAUDE.md guard is four functions; GAP: shellcheck not pinned, not run | —      |
+| 1    | R1-wave   | opus  | 1     | pass    | CONTRACT clean; RULINGS clean; rule-5 repo-shape.md:309,315 (four functions; five tasks source the sidecar) handed to U7 as DOCS FALSIFIED (U7 owns it); level_rank helper informational                                           | —      |
 
 ## Launch
 
