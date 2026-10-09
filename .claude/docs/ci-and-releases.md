@@ -54,8 +54,8 @@ uninstalled here; the exception is a merge that stops on a **conflict**, whose
 resolution ends in a real commit. Remotely, the `protected-branches` ruleset
 blocks force-push and deletion on both branches, and `release-tags` does the
 same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
-`p:plugins:release`, `p:i:release`, `p:site:release` and `deps-update.yml` all
-still push directly.
+`p:release`, `p:plugins:release`, `p:i:release`, `p:site:release` and
+`deps-update.yml` all still push directly.
 
 **The landing model is per branch in the skill, and legacy here.** The mise base
 `stackgen:tool-config` lands sets how a branch lands per destination —
@@ -69,40 +69,52 @@ and doctor's predicate (f) as one drift row — until the next
 `/vwf:setup reshape`, whose `/stackgen:tool-config all` rewrites it into the
 pair and lands the new merge scripts.
 
-That is why **no release task commits**: `p:i:release`, `p:plugins:release` and
-`p:site:release` all tag what has already landed on `main`, and the version bump
-is an ordinary `develop` commit (`p:i:version` for the installer,
-`p:site:version` for the website, the plugin manifest by hand). The two version
-tasks **skip past 13 and 17** rather than land on one, computing the target
-before they write it — the bumped component stepped past the number — and
-printing what they skipped, so `1.1.12` patched is `1.1.14`; all three release
-tasks **refuse** to tag a version carrying such a component, before the tag name
-is built. A release task that commits has to be trusted to commit the right
-thing; one that only tags can be checked against what is already reviewed.
+**A release task bumps, commits and merges, then tags — and `main` stays
+merge-only.** No person and no plan bumps a version by hand: a landing plan
+records a level per project (`NONE`, `PATCH`, `MINOR`, `MAJOR`), and
+`/vwf:execute` raises it in `.config/releases.yaml`, the highest level winning.
+`p:plugins:release` (keys `vwf`, `stackgen`), `p:i:release` (`installer`) and
+`p:site:release` (`site`) each read only their own keys, run from `develop`,
+bump each project from its **last tag** at the higher of the recorded level and
+the level an untagged manifest implies against that tag, clear their keys,
+commit on `develop`, push, merge `develop` into `main` with `code:merge:main`,
+tag on `main`, push, and go back to `develop`. `p:release` composes them — each
+`--no-commit`, one bump commit, one merge, then each `--tag-only` — and
+`/release` calls it. The bump is an ordinary `develop` commit that reaches
+`main` by merge, so the `no-commit-to-branch` hook is never skipped; under a
+`pr` merge model `code:merge:main` only opens a PR, so every full run, `--ci`
+and `p:release` refuse unless `MERGE_MODEL` and `MERGE_MODEL_MAIN` are both
+`direct` — the fallback is `--no-commit`, the PR landed by hand, then
+`--tag-only`. The targets **skip past 13 and 17** rather than land on one — the
+bumped component stepped past the number, through the same guard `p:i:version`
+and `p:site:version` use, so `1.1.12` patched is `1.1.14` — and all three
+release tasks **refuse** to tag a version carrying such a component, before the
+tag name is built. This reverses the earlier rule that a release task only tags
+(2026-10-08): tagging only what had landed left every bump to a hand edit, which
+is what the recorded levels retire. The full ritual is the `release` skill.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
 its own tag** in the marketplace manifest, so shipping is a deliberate act:
 
 ```text
-bump plugins/<name>/.claude-plugin/plugin.json version   (on develop)
-mise run p:plugins:marketplace                             → the ref renames itself
-mise run p:plugins:local                                   → stages X.Y.Z+N, this machine only
-merge develop → main
-mise run p:plugins:release                                 → creates + pushes the tags
+a plan lands on develop                → /vwf:execute raises the level in .config/releases.yaml
+mise run p:plugins:local               → stages X.Y.Z+N, this machine only
+mise run p:release                     → bumps, commits, merges to main, creates + pushes the tags
 ```
 
-The third line is the **local half** of a release: it publishes nothing, commits
-nothing and cuts no tag. `/vwf:execute` — the folder named, `next`, or each plan
-`all` runs — runs it as the plan folder's after-landing step, recorded `run` at
-the interview: it runs on a green landing without a prompt — except that under
-`all`, when the run's deduped-steps question is answered yes, an identical step
-runs once, from the main checkout, after the last plan that landed
-(`references/all.md` in the execute skill) — and the author's next **restarted**
-session is on the plugin that just landed — which is why a plan editing a plugin
-the session running `/vwf:execute all` loads is asked, at its interview, for the
-Consent row End an `all` run after landing — `yes` ends the run there. Only the
-last line reaches users, and it is the one `CLAUDE.md`'s hard rule guards.
+The second line is the **local half** of a release: it publishes nothing,
+commits nothing and cuts no tag. `/vwf:execute` — the folder named, `next`, or
+each plan `all` runs — runs it as the plan folder's after-landing step, recorded
+`run` at the interview: it runs on a green landing without a prompt — except
+that under `all`, when the run's deduped-steps question is answered yes, an
+identical step runs once, from the main checkout, after the last plan that
+landed (`references/all.md` in the execute skill) — and the author's next
+**restarted** session is on the plugin that just landed — which is why a plan
+editing a plugin the session running `/vwf:execute all` loads is asked, at its
+interview, for the Consent row End an `all` run after landing — `yes` ends the
+run there. Only the last line reaches users, and it is the one `CLAUDE.md`'s
+hard rule guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
 carrying build metadata, and fails one whose version has a **13 or 17
@@ -115,10 +127,10 @@ runs between releases lives only in the gitignored staged copies
 and the `+N` is not a component.
 
 `p:plugins:release` tags **only** the plugins whose ref has no tag yet, which is
-what makes releases per-plugin: a plugin whose version did not move already has
-its tag and is skipped, so its entry stays byte-identical and
-`claude plugin update` sees nothing for it. It refuses to run off `main`, on a
-dirty tree, or against a stale manifest — a tag cut anywhere else would publish
+what makes releases per-plugin: a plugin with no recorded level and a manifest
+equal to its tag is skipped, so its entry stays byte-identical and
+`claude plugin update` sees nothing for it. It bumps only on `develop` and on a
+clean tree, and tags only on `main` — a tag cut anywhere else would publish
 content `main` never carried.
 
 **The cost of that discipline, and what pays it.** Between the bump and the tag,
@@ -164,19 +176,23 @@ loads the working tree for that session, no install and no cache.
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `p:plugins:marketplace --check`, then
   `p:plugins:inventory --check`, then `p:plugins:check`, then the vitest suites,
-  then `p:plugins:npm-normalize-test`, then `tsc --noEmit` per project. The
-  order matters — proving the two committed generated files are what their
-  sources generate *before* validating anything means a stale one fails as
-  staleness rather than as some confusing downstream assertion. On `main` only
-  it adds one more gate: **every `source.ref` names a tag that exists**. That
-  one is deliberately *not* part of `p:plugins:marketplace --check`, which must
-  stay offline and fresh-clone-safe; this asks the remote a question. It goes
-  red in exactly one state — merged to `main` without running
-  `p:plugins:release` — which is a marketplace whose installs fail for every
-  user, so red is correct. Deliberately a **separate file** from `release.yml`:
-  npm allows one Trusted Publisher and validates the entry-point workflow's
-  filename, so that file's trigger surface stays untouched. This workflow
-  publishes nothing and holds no `id-token` permission.
+  then `p:plugins:npm-normalize-test`, then `p:releases:test` (the release-level
+  functions' table test), then `tsc --noEmit` per project. The order matters —
+  proving the two committed generated files are what their sources generate
+  *before* validating anything means a stale one fails as staleness rather than
+  as some confusing downstream assertion. On `main` only it adds one more gate:
+  **every `source.ref` names a tag that exists**. That one is deliberately *not*
+  part of `p:plugins:marketplace --check`, which must stay offline and
+  fresh-clone-safe; this asks the remote a question. It goes red whenever `main`
+  names a ref with no tag — the window between `p:plugins:release`'s merge to
+  `main` and its tag push, which it closes itself, or a bump that reached `main`
+  some other way — and that is a marketplace whose installs fail for every user,
+  so red is correct. The run the merge's push to `main` starts can fall inside
+  that window and go red; a re-run after the tag push clears it. Deliberately a
+  **separate file** from `release.yml`: npm allows one Trusted Publisher and
+  validates the entry-point workflow's filename, so that file's trigger surface
+  stays untouched. This workflow publishes nothing and holds no `id-token`
+  permission.
 - **`release.yml`** — publishes `@virajp.dev/claude-plugins` to npm via **OIDC
   trusted publishing** (no stored token, provenance automatic). Triggered two
   ways: a pushed `installer-v*` tag, or `workflow_dispatch` — which is also how
@@ -192,12 +208,15 @@ loads the working tree for that session, no install and no cache.
   pnpm.** The local `p:i:publish` task mirrors the gates + `npm publish`.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
-  any known-vulnerable package, then it cuts a **patch release** — committing
-  the refresh and the `p:i:version` bump to **`develop`**, merging to `main`,
-  then tagging with `mise run p:i:release --ci` (tests + tag, no push/watch) and
-  pushing. It takes the same merge-only route a human does, because
-  `p:i:release` no longer bumps or commits. It then **delegates the npm publish
-  by dispatching `release.yml` on the new tag**
+  any known-vulnerable package, then it cuts a **patch release** — raising
+  `installer` to `PATCH` in `.config/releases.yaml` the way a landing plan does,
+  committing the refresh and that level on **`develop`**, failing on a dirty
+  tree before anything is pushed, pushing `develop` with `-u` (`code:merge:main`
+  reads `develop@{u}`), pointing a local `main` at `origin/main` with
+  `git branch -f`, then running `mise run p:i:release --ci` — which bumps,
+  commits, merges with `code:merge:main` and tags, with no tag push and no watch
+  — and pushing the tag. It takes the same merge-only route a human does. It
+  then **delegates the npm publish by dispatching `release.yml` on the new tag**
   (`gh workflow run release.yml
   --ref <tag>`, using the built-in
   `GITHUB_TOKEN` and the job's `actions: write` grant) rather than publishing
@@ -276,29 +295,30 @@ with it.
 
 ## Cutting a release
 
-Three rituals now, for the three things this repo ships.
+One ritual, on `develop` with a clean tree:
 
-**The plugins**: bump the version in each changed plugin's manifest on
-`develop`, `mise run p:plugins:marketplace`, merge to `main`, then
-`mise run p:plugins:release` (`--dry-run` first). No npm, no GitHub Release —
-the tag *is* the release, and users move on
-`claude plugin marketplace update virajp-plugins`.
+```sh
+mise run p:release -- --dry-run   # one line per project: tag, level, → version | skip | refused
+mise run p:release
+```
 
-**The installer**: `mise run p:i:version` on `develop` (`--minor`/`--major` to
-choose the bump; it skips past 13 and 17, so commit the version it prints),
-commit, merge to `main`, then `mise run p:i:release` there — it tags, pushes
-`main` before the tag (`release.yml` checks reachability), and watches the
-publish. Then a GitHub Release for the tag: every `installer-vX.Y.Z` tag carries
-one, so a missing Release means a missed step. Prefer releasing via CI over the
+`--dry-run` writes nothing and checks no branch. `p:release` stops on any
+`refused` line; checks `gh` and runs `p:i:test` and `p:site:check` for the
+projects that need them before the first bump; then makes one bump commit, one
+merge, and tags plugins, installer and site in that order, its own tag steps
+carrying `RELEASE_GATES_DONE=1` so those gates are not run twice. A failure
+stops the run and prints the commands that resume it, skipping any tag already
+on origin, with a resolve-or-abort hint when the merge stopped. One task alone —
+`p:plugins:release`, `p:i:release`, `p:site:release` — runs the same sequence
+for its own project.
+
+The plugins get no npm and no GitHub Release — the tag *is* the release, and
+users move on `claude plugin marketplace update virajp-plugins`. The installer
+and the site each get a GitHub Release for the tag: every `installer-vX.Y.Z` and
+`site-vX.Y.Z` tag carries one, so a missing Release means a missed step. Their
+tasks push `main` before the tag (`release.yml` and `site.yml` check
+reachability) and watch the run. Prefer releasing the installer via CI over the
 local `p:i:publish`, so every version keeps the strongest npm trust level.
-
-**The website**: `mise run p:site:version` on `develop` (it skips past 13 and 17
-too), commit, merge to `main`, then `mise run p:site:release` there — it runs
-the site gate, tags, pushes `main` before the tag (`site.yml` checks
-reachability the same way `release.yml` does), and watches the deploy run. Then
-a GitHub Release for the tag, as for the installer. When plugins, installer and
-site release together, cut them from the same `main` merge in that order —
-plugins, installer, site — each with its own note.
 
 **Ask the user before running any of them** — always; no plan carries a release
 step.

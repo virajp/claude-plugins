@@ -1,0 +1,240 @@
+#!/usr/bin/env bash
+#MISE description="Release every project with a recorded level or an untagged manifest — one bump commit, one merge to main, then each tag"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="print each project, its last tag, its level and the version it would release; change nothing"
+
+# The three release tasks, composed:
+#
+#   1. on develop: p:plugins:release, p:i:release, p:site:release, each --no-commit
+#   2. one commit of every staged bump, push develop, code:merge:main
+#   3. on main: --tag-only for each task that released a project, then back to develop
+#
+# Which project releases is read from the tasks' own --dry-run lines first, so a
+# task with nothing to release is not run at all; the commit names the versions
+# actually staged. Refused up front unless the merge model into main is direct;
+# gh, p:i:test and p:site:check are checked before the first bump, for the
+# projects that need them. The first failure stops the run and prints the
+# commands that resume it, skipping any tag already on origin.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+DRY_RUN="${usage_dry_run:-false}"
+BUMP_BRANCH="develop"
+RELEASE_BRANCH="main"
+TASKS=(p:plugins:release p:i:release p:site:release)
+
+if [[ "${DRY_RUN}" == "true" ]]; then
+  for task in "${TASKS[@]}"; do
+    mise run "${task}" --dry-run
+  done
+  exit 0
+fi
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "${BRANCH}" != "${BUMP_BRANCH}" ]]; then
+  print_error "On '${BRANCH}', not '${BUMP_BRANCH}'. A release bumps on ${BUMP_BRANCH} and reaches ${RELEASE_BRANCH} by merge."
+  exit 1
+fi
+if [[ -n "$(git status --porcelain)" ]]; then
+  print_error "Working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
+# Under pr, code:merge:main only opens a PR, and every tag would name a stale main.
+# code:merge:main reads MERGE_MODEL alone today; MERGE_MODEL_MAIN is checked too
+# so either one set to anything but direct refuses.
+MERGE_MODE="${MERGE_MODEL:-direct}"
+[[ "${MERGE_MODE}" == "direct" ]] && MERGE_MODE="${MERGE_MODEL_MAIN:-direct}"
+if [[ "${MERGE_MODE}" != "direct" ]]; then
+  print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run each task with --no-commit, land the PR, then each with --tag-only on ${RELEASE_BRANCH}."
+  exit 1
+fi
+
+# The plan: one "<name> <target>" per project to release, and the tasks that own them.
+RELEASED=()
+RELEASING_TASKS=()
+for task in "${TASKS[@]}"; do
+  lines="$(mise run "${task}" --dry-run | awk '$2 == "tag" && $4 == "level" && $6 == "→" { print $1, $7 }')"
+  printf '%s\n' "${lines}"
+  owns=false
+  while read -r name target; do
+    [[ -n "${name}" ]] || continue
+    case "${target}" in
+      skip) ;;
+      refused)
+        print_error "${task} refuses to release ${name} — fix that before releasing anything."
+        exit 1
+        ;;
+      *)
+        RELEASED+=("${name} ${target}")
+        owns=true
+        ;;
+    esac
+  done <<<"${lines}"
+  [[ "${owns}" == "true" ]] && RELEASING_TASKS+=("${task}")
+done
+
+if [[ "${#RELEASED[@]}" -eq 0 ]]; then
+  print_success "No project has a recorded level or an untagged manifest — nothing to release."
+  exit 0
+fi
+
+releases() {
+  local entry
+  for entry in "${RELEASED[@]}"; do
+    [[ "${entry%% *}" == "$1" ]] && return 0
+  done
+  return 1
+}
+
+# 0. Everything that can fail without changing anything, before the first bump:
+#    gh, which the installer and site tag steps push and watch with, and the
+#    gates those tag steps would otherwise run again on main.
+if releases installer || releases site; then
+  if ! command -v gh >/dev/null 2>&1; then
+    print_error "gh (GitHub CLI) is required to push and watch the installer and site releases. Install: brew install gh"
+    exit 1
+  fi
+  if ! gh auth status >/dev/null 2>&1; then
+    print_error "gh is not authenticated. Run: gh auth login"
+    exit 1
+  fi
+fi
+if releases installer && ! mise run p:i:test; then
+  print_error "p:i:test failed — nothing bumped, merged or tagged. Fix it, then 'mise run p:release'."
+  exit 1
+fi
+if releases site && ! mise run p:site:check; then
+  print_error "p:site:check failed — nothing bumped, merged or tagged. Fix it, then 'mise run p:release'."
+  exit 1
+fi
+
+# 1. The bumps, staged on develop. A failure here leaves only this run's edits,
+#    since the tree was clean when it started.
+for task in "${RELEASING_TASKS[@]}"; do
+  if ! mise run "${task}" --no-commit; then
+    print_error "Stopped at '${task} --no-commit'; ${BUMP_BRANCH} holds a partial bump."
+    print_yellow "Resume: drop this run's edits with 'git reset --hard HEAD' on ${BUMP_BRANCH}, then 'mise run p:release'."
+    exit 1
+  fi
+done
+
+# The version each project's manifest carries in the index — what the tasks
+# actually wrote, which a tag landing since the plan above can make differ from it.
+staged_version() {
+  local file
+  case "$1" in
+    installer) file="package.json" ;;
+    site) file="site/package.json" ;;
+    *) file="plugins/$1/.claude-plugin/plugin.json" ;;
+  esac
+  git show ":${file}" | node -e 'let s = ""; process.stdin.on("data", d => (s += d)).on("end", () => console.log(JSON.parse(s).version))'
+}
+
+STAGED=()
+for entry in "${RELEASED[@]}"; do
+  name="${entry%% *}"
+  planned="${entry#* }"
+  staged="$(staged_version "${name}")"
+  if [[ "${staged}" != "${planned}" ]]; then
+    print_warn "${name}: planned ${planned}, staged ${staged} — the commit names what was staged."
+  fi
+  STAGED+=("${name} ${staged}")
+done
+
+SUMMARY="$(printf '%s, ' "${STAGED[@]}")"
+SUMMARY="${SUMMARY%, }"
+MESSAGE="ops: release ${SUMMARY}"
+
+# 2 and 3 as one list, so a failure can print what is left.
+STEPS=()
+if ! git diff --cached --quiet; then
+  STEPS+=("mise x -- git commit -m $(printf '%q' "${MESSAGE}")")
+fi
+STEPS+=("git push origin ${BUMP_BRANCH}")
+STEPS+=("mise run code:merge:main")
+STEPS+=("git switch ${RELEASE_BRANCH}")
+# The installer and site gates passed in step 0 of this run, so their tag steps
+# skip running them again on main. The resume lines drop that prefix: a resume
+# may follow a fix on main that no gate of this run checked.
+for task in "${RELEASING_TASKS[@]}"; do
+  case "${task}" in
+    p:i:release | p:site:release) STEPS+=("RELEASE_GATES_DONE=1 mise run ${task} --tag-only") ;;
+    *) STEPS+=("mise run ${task} --tag-only") ;;
+  esac
+done
+STEPS+=("git switch ${BUMP_BRANCH}")
+
+remote_has_tag() { [[ -n "$(git ls-remote --tags origin "refs/tags/$1" 2>/dev/null)" ]]; }
+local_has_tag() { git rev-parse -q --verify "refs/tags/$1" >/dev/null; }
+
+# One step's resume lines, judged when the run stops: a tag already on origin is
+# not cut again, and a tag cut here but never pushed is pushed rather than re-made,
+# so the printed list re-runs cleanly.
+resume_step() {
+  local step="${1#RELEASE_GATES_DONE=1 }" tag="" workflow="" ref missing=false unpushed=()
+  case "${step}" in
+    "mise run p:plugins:release --tag-only")
+      while read -r ref; do
+        [[ -n "${ref}" ]] || continue
+        remote_has_tag "${ref}" && continue
+        if local_has_tag "${ref}"; then unpushed+=("${ref}"); else missing=true; fi
+      done < <(node -p "require('./.claude-plugin/marketplace.json').plugins.map(p => p.source.ref).join('\n')")
+      [[ "${#unpushed[@]}" -eq 0 ]] || printf '  %s\n' "git push origin ${unpushed[*]}"
+      [[ "${missing}" == "false" ]] || printf '  %s\n' "${step}"
+      [[ "${#unpushed[@]}" -gt 0 || "${missing}" == "true" ]] || printf '  %s\n' "# every plugin tag is on origin"
+      return 0
+      ;;
+    "mise run p:i:release --tag-only")
+      tag="installer-v$(node -p "require('./package.json').version")"
+      workflow="release.yml"
+      ;;
+    "mise run p:site:release --tag-only")
+      tag="site-v$(node -p "require('./site/package.json').version")"
+      workflow="site.yml"
+      ;;
+    *)
+      printf '  %s\n' "${step}"
+      return 0
+      ;;
+  esac
+  if remote_has_tag "${tag}"; then
+    printf '  %s\n' "# ${tag} is on origin — follow its run: gh run list --workflow=${workflow}"
+  elif local_has_tag "${tag}"; then
+    printf '  %s\n' "git push origin ${RELEASE_BRANCH}" "git push origin ${tag}" "# then follow its run: gh run list --workflow=${workflow}"
+  else
+    printf '  %s\n' "${step}"
+  fi
+}
+
+ON_MAIN=false
+for i in "${!STEPS[@]}"; do
+  step="${STEPS[$i]}"
+  if [[ "${step}" == "git switch ${RELEASE_BRANCH}" ]]; then
+    # Back to develop whatever happens from here.
+    trap 'git switch -q "${BUMP_BRANCH}" || print_warn "Still on ${RELEASE_BRANCH} — switch back to ${BUMP_BRANCH} by hand."' EXIT
+  fi
+  if ! eval "${step}"; then
+    print_error "Stopped at '${step}'."
+    if [[ "${step}" == "mise run code:merge:main" ]]; then
+      # A conflict leaves the tree mid-merge on main, where no resume line runs.
+      print_yellow "If the merge stopped on a conflict, either finish it and 'git push origin ${RELEASE_BRANCH}', then resume from the step after it; or 'git merge --abort' and 'git switch ${BUMP_BRANCH}' first."
+    fi
+    print_yellow "Resume from ${BUMP_BRANCH} with:"
+    # The EXIT trap puts the run back on develop, so a tag step resumes on main.
+    if [[ "${ON_MAIN}" == "true" ]]; then
+      printf '  %s\n' "git switch ${RELEASE_BRANCH}"
+    fi
+    for rest in "${STEPS[@]:$i}"; do
+      resume_step "${rest}"
+    done
+    exit 1
+  fi
+  [[ "${step}" != "git switch ${RELEASE_BRANCH}" ]] || ON_MAIN=true
+done
+trap - EXIT
+
+print_success "Released: ${SUMMARY}"

@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
-#MISE description="Tag every plugin whose marketplace ref has no tag yet, and push"
+#MISE description="Bump vwf and stackgen from their last tags and recorded levels, land the bump on main, and tag it"
 #MISE dir="{{ config_root }}"
 
-#USAGE flag "--dry-run" help="report what would be tagged and pushed; change nothing"
+#USAGE flag "--dry-run" help="print each plugin, its last tag, its level and the version it would release; change nothing"
+#USAGE flag "--no-commit" help="bump and stage only, on develop (p:release commits)"
+#USAGE flag "--tag-only" help="tag the refs the current manifest names, on main (p:release, after its merge)"
 
-# Tags the refs .claude-plugin/marketplace.json already names; only from main, after the merge.
+# Each plugin releases from its last <name>-v* tag, at the higher of the level
+# recorded in .config/releases.yaml and the level an untagged manifest implies.
+#
+#   (no flag)    from develop: bump plugin.json, clear the plugin's key, regenerate
+#                the marketplace manifest, commit, push develop, merge develop into
+#                main with code:merge:main, tag on main, push the tags, back to develop;
+#                refused unless the merge model into main is direct
+#   --no-commit  the bump step alone, staged on develop
+#   --tag-only   the tag step alone, on main — tags every marketplace ref with no tag
+#   --dry-run    one line per plugin; no branch or tree check, nothing written
 
 set -euo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -13,78 +24,240 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 cd "$MISE_PROJECT_ROOT"
 
 DRY_RUN="${usage_dry_run:-false}"
+NO_COMMIT="${usage_no_commit:-false}"
+TAG_ONLY="${usage_tag_only:-false}"
+BUMP_BRANCH="develop"
 RELEASE_BRANCH="main"
+RELEASES_FILE=".config/releases.yaml"
+KEYS=(vwf stackgen)
 
-# 1. A clean tree, so the tag names what was tested.
-if [[ -n "$(git status --porcelain)" ]]; then
-  print_error "Working tree is not clean. Commit or stash your changes first."
+if [[ "${NO_COMMIT}" == "true" && "${TAG_ONLY}" == "true" ]]; then
+  print_error "--no-commit and --tag-only are two halves of one release; pass one of them."
   exit 1
 fi
 
-# 2. Only from main — users read the manifest from it.
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
-  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Merge to ${RELEASE_BRANCH} first — a plugin tag off it publishes content users' marketplace never lists."
-  exit 1
-fi
-
-# 3. A stale manifest would tag the previous release's refs.
-mise run p:plugins:marketplace --check
-
-# 4. Every ref the manifest names, in entry order.
-mapfile -t REFS < <(node -p "
-  require('./.claude-plugin/marketplace.json')
-    .plugins.map(p => p.source.ref).join('\n')
-")
-
-# 5. "Exists" means on the remote, not in this checkout.
-git fetch --tags --quiet origin
-
-TO_TAG=()
-FORBIDDEN=()
-for ref in "${REFS[@]}"; do
-  if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
-    # Only newly cut refs are checked; tags from before the 13/17 rule stand.
-    if version_forbidden "${ref##*-v}"; then
-      FORBIDDEN+=("${ref}")
+# The tag step: tag every marketplace ref with no tag, then one push.
+tag_step() {
+  if [[ "${DRY_RUN}" != "true" ]]; then
+    # A clean tree, so the tag names what was tested.
+    if [[ -n "$(git status --porcelain)" ]]; then
+      print_error "Working tree is not clean. Commit or stash your changes first."
+      exit 1
     fi
-    TO_TAG+=("${ref}")
+
+    # Only from main — users read the manifest from it.
+    local branch
+    branch="$(git rev-parse --abbrev-ref HEAD)"
+    if [[ "${branch}" != "${RELEASE_BRANCH}" ]]; then
+      print_error "On '${branch}', not '${RELEASE_BRANCH}'. Merge to ${RELEASE_BRANCH} first — a plugin tag off it publishes content users' marketplace never lists."
+      exit 1
+    fi
+  fi
+
+  # A stale manifest would tag the previous release's refs.
+  mise run p:plugins:marketplace --check
+
+  # Every ref the manifest names, in entry order.
+  local refs=()
+  mapfile -t refs < <(node -p "
+    require('./.claude-plugin/marketplace.json')
+      .plugins.map(p => p.source.ref).join('\n')
+  ")
+
+  # "Exists" means on the remote, not in this checkout.
+  git fetch --tags --quiet origin
+
+  local to_tag=() forbidden=() ref tagged
+  for ref in "${refs[@]}"; do
+    if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
+      # Only newly cut refs are checked; tags from before the 13/17 rule stand.
+      if version_forbidden "${ref##*-v}"; then
+        forbidden+=("${ref}")
+      fi
+      to_tag+=("${ref}")
+      continue
+    fi
+
+    # An existing tag must point at HEAD; re-pointing it is not this task's call.
+    tagged="$(git rev-list -n 1 "refs/tags/${ref}")"
+    if [[ "${tagged}" != "$(git rev-parse HEAD)" ]]; then
+      print_warn "${ref} already exists at ${tagged:0:8}, not HEAD — bump that plugin's version instead of reusing the tag."
+    fi
+  done
+
+  # Refuse the whole run — tags are pushed together, never partially.
+  if [[ "${#forbidden[@]}" -gt 0 ]]; then
+    print_error "Refusing to release ${forbidden[*]}: 13 and 17 are never issued as a version component. Bump that plugin's manifest past it, regenerate the marketplace manifest, and land it on ${RELEASE_BRANCH} first."
+    exit 1
+  fi
+
+  if [[ "${#to_tag[@]}" -eq 0 ]]; then
+    print_success "Every plugin ref already has its tag — nothing to tag."
+    return 0
+  fi
+
+  print_header "Tagging ${#to_tag[@]} plugin(s):"
+  printf '  %s\n' "${to_tag[@]}"
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    print_warn "--dry-run — no tags created, nothing pushed."
+    return 0
+  fi
+
+  # Annotated tags, then one push.
+  for ref in "${to_tag[@]}"; do
+    git tag -a "${ref}" -m "${ref}"
+  done
+
+  print_header "Pushing ${#to_tag[@]} tag(s) ..."
+  git push origin "${to_tag[@]}"
+
+  print_success "Released: ${to_tag[*]}"
+  print_yellow "Users pick these up with 'claude plugin marketplace update virajp-plugins' then 'claude plugin update <name>'."
+}
+
+if [[ "${TAG_ONLY}" == "true" ]]; then
+  tag_step
+  exit 0
+fi
+
+# The bump step's checks: on develop, and a clean tree. Under --no-commit the
+# index may already hold a sibling release task's staged bump, so only unstaged
+# and untracked changes are refused.
+if [[ "${DRY_RUN}" != "true" ]]; then
+  BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${BRANCH}" != "${BUMP_BRANCH}" ]]; then
+    print_error "On '${BRANCH}', not '${BUMP_BRANCH}'. A release bumps on ${BUMP_BRANCH} and reaches ${RELEASE_BRANCH} by merge."
+    exit 1
+  fi
+  if [[ "${NO_COMMIT}" == "true" ]]; then
+    if ! git diff --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+      print_error "Working tree has unstaged or untracked changes. Commit or stash them first."
+      exit 1
+    fi
+  elif [[ -n "$(git status --porcelain)" ]]; then
+    print_error "Working tree is not clean. Commit or stash your changes first."
+    exit 1
+  fi
+  # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
+  # Either variable may be the one code:merge:main reads, so both must be direct.
+  for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
+    if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
+      print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+      exit 1
+    fi
+  done
+  git fetch --tags --quiet origin
+elif ! git fetch --tags --quiet origin 2>/dev/null; then
+  print_warn "Could not fetch tags — the last tags below are this checkout's."
+fi
+
+# Each plugin's last tag, level and target — every plugin validated before any
+# file is written, so a refusal leaves the tree as it was.
+RELEASED=()
+FILES=()
+TARGETS=()
+NAMES=()
+for file in plugins/*/.claude-plugin/plugin.json; do
+  name="$(node -p "require('./${file}').name")"
+  case " ${KEYS[*]} " in
+    *" ${name} "*) ;;
+    *) continue ;;
+  esac
+  manifest="$(node -p "require('./${file}').version")"
+  tag="$(git tag -l --sort=-v:refname "${name}-v*" | grep -E "^${name}-v[0-9]+\.[0-9]+\.[0-9]+\$" | head -n 1 || true)"
+
+  # A malformed recorded level, a manifest below its tag, or an unreadable
+  # level refuses like a target. No tag yet: the first release is the
+  # manifest as it stands.
+  base="${tag##*-v}"
+  level="?"
+  recorded="?"
+  target="${manifest}"
+  if ! recorded="$(releases_level "${RELEASES_FILE}" "${name}")" \
+    || { [[ -n "${tag}" ]] && {
+      ! implied="$(level_implied "${base}" "${manifest}")" \
+        || ! level="$(level_max "${recorded}" "${implied}")" \
+        || ! target="$(release_target "${base}" "${level}")"
+    }; }; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag:-none}" "${level:-?}"
+      continue
+    fi
+    print_error "Refusing to release ${name}: manifest ${manifest}, tag ${tag:-none}, recorded level '${recorded:-?}' give no valid target."
+    exit 1
+  fi
+  [[ -n "${tag}" ]] || level="${recorded}"
+  if [[ -n "${tag}" && -n "${target}" ]]; then
+    plain="$(version_bump "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${base}")"
+    [[ "${target}" == "${plain}" ]] || version_skip_note "${plain}" "${target}"
+  fi
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '%-10s tag %-22s level %-6s → %s\n' "${name}" "${tag:-none}" "${level}" "${target:-skip}"
     continue
   fi
-
-  # An existing tag must point at HEAD; re-pointing it is not this task's call.
-  tagged="$(git rev-list -n 1 "refs/tags/${ref}")"
-  if [[ "${tagged}" != "$(git rev-parse HEAD)" ]]; then
-    print_warn "${ref} already exists at ${tagged:0:8}, not HEAD — bump that plugin's version instead of reusing the tag."
-  fi
+  [[ -n "${target}" ]] || continue
+  NAMES+=("${name}")
+  FILES+=("${file}")
+  TARGETS+=("${target}")
 done
-
-# Refuse the whole run — tags are pushed together, never partially.
-if [[ "${#FORBIDDEN[@]}" -gt 0 ]]; then
-  print_error "Refusing to release ${FORBIDDEN[*]}: 13 and 17 are never issued as a version component. Bump that plugin's manifest past it, regenerate the marketplace manifest, and land it on ${RELEASE_BRANCH} first."
-  exit 1
-fi
-
-if [[ "${#TO_TAG[@]}" -eq 0 ]]; then
-  print_success "Every plugin ref already has its tag — nothing to release."
-  exit 0
-fi
-
-print_header "Releasing ${#TO_TAG[@]} plugin(s):"
-printf '  %s\n' "${TO_TAG[@]}"
 
 if [[ "${DRY_RUN}" == "true" ]]; then
-  print_warn "--dry-run — no tags created, nothing pushed."
+  print_warn "--dry-run — nothing written, nothing committed, merged or tagged."
   exit 0
 fi
 
-# 6. Annotated tags, then one push.
-for ref in "${TO_TAG[@]}"; do
-  git tag -a "${ref}" -m "${ref}"
+# Every target is valid: write them.
+for i in "${!NAMES[@]}"; do
+  name="${NAMES[$i]}"
+  file="${FILES[$i]}"
+  target="${TARGETS[$i]}"
+  if [[ "${target}" != "$(node -p "require('./${file}').version")" ]]; then
+    # Replace the version string in place, so the file keeps its formatting.
+    node -e '
+      const fs = require("fs");
+      const [file, version] = process.argv.slice(1);
+      const text = fs.readFileSync(file, "utf8");
+      const next = text.replace(/("version"\s*:\s*")[^"]*(")/, "$1" + version + "$2");
+      if (JSON.parse(next).version !== version) {
+        console.error("Could not set the version in " + file);
+        process.exit(1);
+      }
+      fs.writeFileSync(file, next);
+    ' "${file}" "${target}"
+  fi
+  releases_clear "${RELEASES_FILE}" "${name}"
+  RELEASED+=("${name} ${target}")
 done
 
-print_header "Pushing ${#TO_TAG[@]} tag(s) ..."
-git push origin "${TO_TAG[@]}"
+if [[ "${#RELEASED[@]}" -eq 0 ]]; then
+  print_success "No plugin has a recorded level or an untagged manifest — nothing to release."
+  exit 0
+fi
 
-print_success "Released: ${TO_TAG[*]}"
-print_yellow "Users pick these up with 'claude plugin marketplace update virajp-plugins' then 'claude plugin update <name>'."
+mise run p:plugins:marketplace
+git add -- "${FILES[@]}" .claude-plugin/marketplace.json
+if [[ -f "${RELEASES_FILE}" ]]; then
+  git add -- "${RELEASES_FILE}"
+fi
+
+SUMMARY="$(printf '%s, ' "${RELEASED[@]}")"
+SUMMARY="${SUMMARY%, }"
+
+if [[ "${NO_COMMIT}" == "true" ]]; then
+  print_success "Staged on ${BUMP_BRANCH}: ${SUMMARY}"
+  exit 0
+fi
+
+# A manifest already at its target with no recorded key stages nothing.
+if ! git diff --cached --quiet; then
+  mise x -- git commit -m "ops: release ${SUMMARY}"
+fi
+git push origin "${BUMP_BRANCH}"
+mise run code:merge:main
+
+# Tag on main, and come back to develop whatever happens.
+git switch -q "${RELEASE_BRANCH}"
+trap 'git switch -q "${BUMP_BRANCH}" || print_warn "Still on ${RELEASE_BRANCH} — switch back to ${BUMP_BRANCH} by hand."' EXIT
+tag_step

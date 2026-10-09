@@ -4,6 +4,9 @@
 #MISE hide=true
 
 # This repo's own sidecar to `helpers`; nothing landed in a target repo may source it.
+# The version guard: version_forbidden, version_bump, version_next, version_skip_note.
+# The release levels of .config/releases.yaml: releases_level, releases_raise, releases_clear,
+# level_rank, level_max, level_implied, release_target.
 if [ -n "${MISE_LOCAL_SOURCED:-}" ]; then
   return 0
 fi
@@ -128,4 +131,182 @@ version_next() {
 # Report one skipped version.
 version_skip_note() {
   print_warn "Skipped ${1} — 13 and 17 are never issued as a version component. The version is now ${2}."
+}
+
+# Print a level's rank, NONE < PATCH < MINOR < MAJOR; refuses anything else.
+level_rank() {
+  case "${1:-}" in
+    NONE) echo 0 ;;
+    PATCH) echo 1 ;;
+    MINOR) echo 2 ;;
+    MAJOR) echo 3 ;;
+    *)
+      print_error "Unknown release level '${1:-}': expected NONE, PATCH, MINOR or MAJOR."
+      return 1
+      ;;
+  esac
+}
+
+# Print a key's level in a releases file; NONE when the file or the key is absent.
+releases_level() {
+  local file="${1:-}"
+  local key="${2:-}"
+
+  if [ ! -f "${file}" ]; then
+    echo NONE
+    return 0
+  fi
+
+  local found value
+  found="$(awk -v k="${key}" '
+    index($0, k ":") == 1 {
+      n++
+      if (n > 1) { print "!dup"; exit }
+      v = substr($0, length(k) + 2)
+      sub(/#.*/, "", v)
+      gsub(/[ \t\r]/, "", v)
+    }
+    END { if (n == 1) print "=" v }
+  ' "${file}")"
+
+  if [ -z "${found}" ]; then
+    echo NONE
+    return 0
+  fi
+
+  if [ "${found}" = "!dup" ]; then
+    print_error "Key '${key}' appears more than once in ${file}."
+    return 1
+  fi
+
+  value="${found#=}"
+  level_rank "${value}" >/dev/null || {
+    print_error "Bad level for '${key}' in ${file}."
+    return 1
+  }
+  echo "${value}"
+}
+
+# Set a key to LEVEL only when it is higher than the recorded one; never lowers.
+releases_raise() {
+  local file="${1:-}"
+  local key="${2:-}"
+  local level="${3:-}"
+
+  local want have current
+  want="$(level_rank "${level}")" || return 1
+  current="$(releases_level "${file}" "${key}")" || return 1
+  have="$(level_rank "${current}")" || return 1
+  if [ "${want}" -le "${have}" ]; then
+    return 0
+  fi
+
+  local dir tmp
+  dir="$(dirname "${file}")"
+  tmp="$(mktemp "${dir}/.releases.XXXXXX")" || return 1
+  chmod 644 "${tmp}"
+
+  if [ -f "${file}" ]; then
+    awk -v k="${key}" -v l="${level}" '
+      index($0, k ":") == 1 { print k ": " l; done = 1; next }
+      { print }
+      END { if (!done) print k ": " l }
+    ' "${file}" >"${tmp}" || {
+      rm -f "${tmp}"
+      return 1
+    }
+  else
+    {
+      echo "# Pending release levels, one key per project: NONE, PATCH, MINOR or MAJOR."
+      echo "# Written by /vwf:execute at landing (highest level wins); cleared by the release tasks."
+      echo "${key}: ${level}"
+    } >"${tmp}"
+  fi
+
+  mv "${tmp}" "${file}"
+}
+
+# Remove a key's line from a releases file; comments and other keys stay; absent is no error.
+releases_clear() {
+  local file="${1:-}"
+  local key="${2:-}"
+
+  [ -f "${file}" ] || return 0
+  awk -v k="${key}" 'index($0, k ":") == 1 { found = 1 } END { exit !found }' "${file}" || return 0
+
+  local dir tmp
+  dir="$(dirname "${file}")"
+  tmp="$(mktemp "${dir}/.releases.XXXXXX")" || return 1
+  chmod 644 "${tmp}"
+  awk -v k="${key}" 'index($0, k ":") != 1' "${file}" >"${tmp}" || {
+    rm -f "${tmp}"
+    return 1
+  }
+  mv "${tmp}" "${file}"
+}
+
+# Print the higher of two levels.
+level_max() {
+  local a b
+  a="$(level_rank "${1:-}")" || return 1
+  b="$(level_rank "${2:-}")" || return 1
+  if [ "${a}" -ge "${b}" ]; then
+    echo "${1}"
+  else
+    echo "${2}"
+  fi
+}
+
+# Print the level a manifest implies against its last tag; refuses a manifest below the tag.
+level_implied() {
+  local tag="${1:-}"
+  local manifest="${2:-}"
+
+  # version_bump validates each as a plain X.Y.Z.
+  version_bump patch "${tag}" >/dev/null || return 1
+  version_bump patch "${manifest}" >/dev/null || return 1
+
+  local t1 t2 t3 m1 m2 m3
+  local IFS='.'
+  # shellcheck disable=SC2086
+  set -- ${tag#v}
+  t1="$((10#${1}))"
+  t2="$((10#${2}))"
+  t3="$((10#${3%%[-+]*}))"
+  # shellcheck disable=SC2086
+  set -- ${manifest#v}
+  m1="$((10#${1}))"
+  m2="$((10#${2}))"
+  m3="$((10#${3%%[-+]*}))"
+  IFS=' '
+
+  local name i tc mc
+  for i in 1 2 3; do
+    case "${i}" in
+      1) tc="${t1}" mc="${m1}" name=MAJOR ;;
+      2) tc="${t2}" mc="${m2}" name=MINOR ;;
+      3) tc="${t3}" mc="${m3}" name=PATCH ;;
+    esac
+    if [ "${mc}" -gt "${tc}" ]; then
+      echo "${name}"
+      return 0
+    fi
+    if [ "${mc}" -lt "${tc}" ]; then
+      print_error "Manifest ${manifest} is lower than the last tag ${tag}."
+      return 1
+    fi
+  done
+  echo NONE
+}
+
+# Print the version a level releases from the last tag, 13 and 17 skipped; nothing for NONE.
+release_target() {
+  local tag="${1:-}"
+  local level="${2:-}"
+
+  level_rank "${level}" >/dev/null || return 1
+  if [ "${level}" = "NONE" ]; then
+    return 0
+  fi
+  version_next "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${tag}"
 }

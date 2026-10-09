@@ -1,0 +1,11 @@
+/security-review (run over 0a90f308..HEAD in the worktree, round 4)
+
+No high-confidence vulnerabilities found.
+
+Candidates looked at and rejected:
+- .config/mise/tasks/p/release evals its step strings. Every string is a hard-coded literal, a task name from the fixed TASKS array, or the commit message. The message is quoted with printf '%q' and built from versions in committed manifests, so no untrusted input reaches eval.
+- The .config/releases.yaml reads in _scripts/local (releases_level, releases_raise) use awk -v against a committed file. Anyone who can change that file can already push code to develop, so no new trust boundary is crossed.
+- .github/workflows/deps-update.yml runs only on schedule and workflow_dispatch, with no PR, issue or comment input. The contents: write and actions: write permissions are unchanged. Running p:i:release -- --ci and pushing a tag built from package.json uses repo-controlled data only.
+- .github/workflows/plugins.yml only adds the p:releases:test step, a fixed command with no new permissions.
+- .config/vwf.yaml only adds an after-landing task list from the committed config, with no untrusted input.
+- Tags, refs and the develop -> main merge are built from fixed branch names and committed manifest versions. No external input can choose the tagged commit, and main stays merge-only.

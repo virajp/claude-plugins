@@ -301,10 +301,23 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   component past the number, writes it in one call and prints what it skipped,
   so `1.1.12` patched is `1.1.14`; it refuses before writing anything when the
   level it was given cannot reach the forbidden component, as a patch bump never
-  clears a forbidden *minor*) and `p:site:release` (tags `site-v<version>` from
-  `main` and watches `site.yml`, **refusing** a version that carries such a
-  component before the tag name is built). None of them runs in `plugins.yml` or
-  in pre-commit — `site.yml` owns them.
+  clears a forbidden *minor*; kept for hand use, and called by `p:site:release`)
+  and `p:site:release` (bumps `site/package.json` from the last `site-v*` tag
+  and the recorded level, commits on `develop`, merges to `main`, tags
+  `site-v<version>` and watches `site.yml`, **refusing** a version that carries
+  such a component before the tag name is built). None of them runs in
+  `plugins.yml` or in pre-commit — `site.yml` owns them.
+- **`p:release`** and its three parts, `p:plugins:release`, `p:i:release` and
+  `p:site:release` — each reads its own keys in `.config/releases.yaml`, bumps
+  from the project's last tag at the higher of the recorded level and the one an
+  untagged manifest implies, commits on `develop`, merges to `main` with
+  `code:merge:main` and tags there; `p:release` runs the three as one bump
+  commit and one merge. Each of the three takes `--dry-run`, `--no-commit` and
+  `--tag-only`; `p:release` takes `--dry-run` alone. None runs in a gate; the
+  ritual is `/release`.
+- **`p:releases:test`** — a bash table test of the sidecar's release-level
+  functions below, the 13/17 skip and "highest wins" among its cases. It runs in
+  `plugins.yml`, not in pre-commit.
 
 The 13/17 guard itself is four functions — `version_forbidden`,
 `version_skip_note`, `version_bump` and `version_next` — in
@@ -312,13 +325,21 @@ The 13/17 guard itself is four functions — `version_forbidden`,
 pack-owned `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
 result of the level; `version_next LEVEL CURRENT` prints that same result
 stepped past a forbidden component, and exits 1 without printing when the level
-it was given can never reach one. Five tasks source the sidecar on the line
-after they source `helpers`: `p:i:version` and `p:site:version` to skip,
-`p:i:release`, `p:site:release` and `p:plugins:release` to refuse. The split is
-the same one `/vwf:init` writes into a shaped repo — `helpers` is the pack's and
-is replaced on every reshape, the sidecar is the repo's and never is — and
-nothing a pack lands may source it. It carries a shebang and the exec bit, or
-the repo's own shell gate does not see it.
+it was given can never reach one. Beside the guard sit the release-level
+functions: `releases_level`, `releases_raise` and `releases_clear` read, raise
+and clear one flat `key: LEVEL` line of `.config/releases.yaml` with awk
+(`releases_level` refuses an unknown value or a duplicated key), `level_max` and
+`level_implied` compare levels and versions, and `release_target` turns a tag
+and a level into the next version through `version_next` — with a private
+`level_rank` helper under them. Six tasks source the sidecar on the line after
+they source `helpers`: `p:i:version` and `p:site:version` to skip,
+`p:i:release`, `p:site:release` and `p:plugins:release` to compute and refuse,
+and `p:releases:test` to test it — `p:release` reaches it only through the
+three; `deps-update.yml` sources it too, to raise the installer's level. The
+split is the same one `/vwf:init` writes into a shaped repo — `helpers` is the
+pack's and is replaced on every reshape, the sidecar is the repo's and never is
+— and nothing a pack lands may source it. It carries a shebang and the exec bit,
+or the repo's own shell gate does not see it.
 
 `p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion
