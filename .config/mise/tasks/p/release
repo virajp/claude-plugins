@@ -89,7 +89,7 @@ releases() {
 
 # 0. Everything that can fail without changing anything, before the first bump:
 #    gh, which the installer and site tag steps push and watch with, and the
-#    gates those tag steps run again on main.
+#    gates those tag steps would otherwise run again on main.
 if releases installer || releases site; then
   if ! command -v gh >/dev/null 2>&1; then
     print_error "gh (GitHub CLI) is required to push and watch the installer and site releases. Install: brew install gh"
@@ -154,8 +154,13 @@ fi
 STEPS+=("git push origin ${BUMP_BRANCH}")
 STEPS+=("mise run code:merge:main")
 STEPS+=("git switch ${RELEASE_BRANCH}")
+# The installer and site gates passed in step 0 of this run, so their tag steps
+# — and the resume lines that name them — skip running them again on main.
 for task in "${RELEASING_TASKS[@]}"; do
-  STEPS+=("mise run ${task} --tag-only")
+  case "${task}" in
+    p:i:release | p:site:release) STEPS+=("RELEASE_GATES_DONE=1 mise run ${task} --tag-only") ;;
+    *) STEPS+=("mise run ${task} --tag-only") ;;
+  esac
 done
 STEPS+=("git switch ${BUMP_BRANCH}")
 
@@ -179,11 +184,11 @@ resume_step() {
       [[ "${#unpushed[@]}" -gt 0 || "${missing}" == "true" ]] || printf '  %s\n' "# every plugin tag is on origin"
       return 0
       ;;
-    "mise run p:i:release --tag-only")
+    "RELEASE_GATES_DONE=1 mise run p:i:release --tag-only")
       tag="installer-v$(node -p "require('./package.json').version")"
       workflow="release.yml"
       ;;
-    "mise run p:site:release --tag-only")
+    "RELEASE_GATES_DONE=1 mise run p:site:release --tag-only")
       tag="site-v$(node -p "require('./site/package.json').version")"
       workflow="site.yml"
       ;;
