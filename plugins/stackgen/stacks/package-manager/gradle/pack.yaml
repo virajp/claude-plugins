@@ -1,0 +1,21 @@
+name: Gradle
+summary: Dependency declaration, resolution and locking for a Kotlin/JVM build
+  —
+  the committed wrapper, the Kotlin DSL, the version catalog as the one place a
+  version is written, and gradle.lockfile as the pin.
+version: 0.1.0
+type: package-manager
+package_manager: gradle
+# Dependency locking writes one gradle.lockfile per project — the root's, and
+# one beside each module's build file — and settings-gradle.lockfile for the
+# settings script's own classpath.
+lockfile:
+  - gradle.lockfile
+  - "**/gradle.lockfile"
+  - settings-gradle.lockfile
+kind: language-bundle
+axis: repo
+# Gradle runs from the wrapper the repo commits, so this pack lands no config
+# and no task: the dependency tasks call `./gradlew`, and they are the language
+# pack's, which owns the JDK they run on.
+harness: n/a

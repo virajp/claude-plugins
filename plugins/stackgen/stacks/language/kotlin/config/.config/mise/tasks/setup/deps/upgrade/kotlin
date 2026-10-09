@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Rewrite the lockfile from the version catalog"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_warn "setup:deps:upgrade:kotlin: no executable ./gradlew, so there is nothing to upgrade."
+  exit 0
+fi
+
+# A version moves by editing gradle/libs.versions.toml; this re-locks what the catalog now asks for.
+./gradlew dependencies --write-locks

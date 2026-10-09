@@ -353,12 +353,19 @@ table and by nothing looser:
 | `Cargo.toml`                            | rust     |
 | `Package.swift`                         | swift    |
 | a root `*.xcodeproj` directory          | swift    |
+| a `settings.gradle(.kts)`               | kotlin   |
+| a lone `build.gradle(.kts)`             | kotlin   |
 
 A file not in this table is not a manifest, whatever it looks like — the one
 directory it admits is an Xcode project at the top of the directory being
-read, never deeper, whose dependency list lives inside it. A `blank` repo
-reads nothing, and a `shaped` repo proposes from its registry or from
-question 2. Say in one line, per repo, what the read found.
+read, never deeper, whose dependency list lives inside it. A Gradle build is
+one project at the directory holding `settings.gradle.kts` or
+`settings.gradle`; the `build.gradle.kts` or `build.gradle` files of its
+modules below it are never read as further projects. A `build.gradle(.kts)` is
+a manifest alone only where no settings file sits beside it or above it in the
+same build. A `blank` repo reads nothing, and a `shaped` repo proposes from
+its registry or from question 2. Say in one line, per repo, what the read
+found.
 
 Nothing else keys on a language. The ignore set `/stackgen:tool-config`
 lands is a universal superset, every stack's section in every repo, so no

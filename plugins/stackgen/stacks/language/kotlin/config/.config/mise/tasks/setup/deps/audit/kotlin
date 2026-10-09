@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Advisory, not a gate: the advisory database moves without any lockfile change.
+
+if ! command -v grype >/dev/null 2>&1; then
+  print_warn "setup:deps:audit:kotlin: grype is not on PATH, so the audit is skipped."
+  exit 0
+fi
+
+if [[ ! -f gradle.lockfile ]]; then
+  print_warn "setup:deps:audit:kotlin: no gradle.lockfile, so there is nothing to audit."
+  print_yellow "Run setup:deps:install to write it, then re-run."
+  exit 0
+fi
+
+grype file:gradle.lockfile

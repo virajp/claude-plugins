@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+#MISE description="Report dependencies that have moved on"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_warn "setup:deps:outdated:kotlin: no executable ./gradlew, so there is nothing to report."
+  exit 0
+fi
+
+# The task comes from the ben-manes gradle-versions-plugin, applied in settings.gradle.kts.
+./gradlew dependencyUpdates

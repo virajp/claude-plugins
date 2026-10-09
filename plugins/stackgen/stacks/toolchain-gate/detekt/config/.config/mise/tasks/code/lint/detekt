@@ -1,0 +1,60 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the Kotlin sources with detekt"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `--fix` is ignored: layout is ktlint's, and detekt's own rules do not rewrite.
+# Whole tree even with a file list: detekt's findings span files.
+
+if ! command -v detekt-cli >/dev/null 2>&1; then
+  print_warn "detekt is not installed; skipping. Run: mise install"
+  exit 0
+fi
+if [ ! -f .config/detekt.yml ]; then
+  print_warn ".config/detekt.yml is missing; skipping."
+  exit 0
+fi
+
+has_kotlin=false
+if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+  # To a file, not a process substitution, so a failed listing stops the task.
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.kt' '*.kts' \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  if [ -s "${git_list}" ]; then
+    has_kotlin=true
+  fi
+elif [ -n "$(find . \( -name build -o -name .gradle -o -name .kotlin \) -prune \
+  -o \( -name '*.kt' -o -name '*.kts' \) -print -quit)" ]; then
+  has_kotlin=true
+fi
+
+detekt_args=(
+  --input .
+  --config .config/detekt.yml
+  --build-upon-default-config
+  --excludes '**/build/**,**/.gradle/**,**/.kotlin/**,**/generated/**'
+)
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  detekt_args+=(--debug)
+fi
+
+if [ "${has_kotlin}" = "true" ]; then
+  print_subheader "Linting Kotlin sources with detekt ..."
+  detekt-cli "${detekt_args[@]}"
+fi

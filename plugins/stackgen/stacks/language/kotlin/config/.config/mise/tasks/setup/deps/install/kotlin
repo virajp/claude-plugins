@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+#MISE description="Resolve the build's dependencies against the lockfile"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than write the lockfile"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_warn "setup:deps:install:kotlin: no executable ./gradlew, so there is nothing to resolve."
+  print_yellow "Commit the Gradle wrapper (gradlew and gradle/wrapper/), then re-run."
+  exit 0
+fi
+
+if [[ -f gradle.lockfile ]]; then
+  print_subheader "Resolving dependencies against gradle.lockfile ..."
+  ./gradlew dependencies
+elif [[ "${usage_frozen:-false}" == "true" ]]; then
+  print_error "setup:deps:install:kotlin: no gradle.lockfile, and --frozen refuses to write one."
+  exit 1
+else
+  print_subheader "Writing gradle.lockfile ..."
+  ./gradlew dependencies --write-locks
+fi

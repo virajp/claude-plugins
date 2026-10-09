@@ -1,0 +1,6 @@
+# detekt, the correctness gate for Kotlin — the CLI release zip, whose
+# bin/detekt-cli runs on the JDK the repo pins. CI loads this file, so the
+# render pins it exact: a new release can add rules and fail the build
+[tools."github:detekt/detekt"]
+version = "latest"
+asset_pattern = "detekt-cli-*.zip"

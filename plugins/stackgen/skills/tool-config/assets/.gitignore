@@ -88,6 +88,12 @@ xcuserdata/
 *.xcuserstate
 *.xcscmblueprint
 
+# ==== Gradle and Kotlin ====
+.gradle/
+.kotlin/
+local.properties
+*.iml
+
 # ==== vwf — working notes and scratch ====
 # Local-only working notes, never reviewed and never shipped: one developer's
 # handoffs, doctor reports and run logs, and rendered mockups.

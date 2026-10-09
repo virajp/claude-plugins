@@ -9,6 +9,8 @@ exclude = [
   "**/.build/**",
   "**/.claude/**",
   "**/.git/**",
+  "**/.gradle/**",
+  "**/.kotlin/**",
   "**/.swiftpm/**",
   "**/.turbo/**",
   "**/.venv/**",

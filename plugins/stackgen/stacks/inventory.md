@@ -7,13 +7,13 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**68 packs, 64 bundles, 10 kinds.**
+**72 packs, 65 bundles, 10 kinds.**
 
 ## Kinds
 
 | Kind | Packs | Bundles |
 | ---- | ----: | ------: |
-| `language-bundle` | 16 | 15 |
+| `language-bundle` | 20 | 16 |
 | `database` | 1 | 1 |
 | `cloud-provider` | 31 | 26 |
 | `workspace` | 0 | 3 |
@@ -80,9 +80,11 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `framework/effect` | Effect-TS | `language-bundle` | project | meta-framework |  | 0.1.0 | Effect as the composition and error model for a TypeScript codebase — writing effects, running them, and testing them. |
 | `framework/html` | HTML | `language-bundle` | project | document |  | 0.2.1 | A hand-authored HTML5 page tree with plain CSS and ES-module JavaScript as the whole of a static site — no framework, no components, no content model; Vite serves it in development and builds it into `./dist`, with a copy-only build as the documented opt-out. It also carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data, repeated per page since no layout owns them — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `language/bash` | Bash | `language-bundle` | project |  |  | 0.1.0 | Shell as a project's incidental second language — the hook scripts and small executables a markdown-authored project ships, held to portability and exit-code discipline rather than to a toolchain. |
+| `language/kotlin` | Kotlin | `language-bundle` | project |  |  | 0.1.0 | The Kotlin/JVM library baseline — standards and public-API design, null safety and the error model, coroutines and flows, kotlin.test on JUnit 5, the JDK toolchain, build and run, config and observability wiring. |
 | `language/markdown` | Markdown | `language-bundle` | project |  |  | 0.1.0 | Markdown as a project's own language — the case where prose with frontmatter is the deliverable rather than documentation beside one, and the toolchain is the repo axis's rather than the language's. |
 | `language/swift` | Swift | `language-bundle` | project |  |  | 0.2.1 | The Swift package baseline — standards and public-API design, the error model, strict concurrency, Swift Testing, build and run, config and observability wiring. |
 | `language/typescript` | TypeScript | `language-bundle` | project |  |  | 0.4.0 | The Node/TypeScript language baseline — standards, error semantics, the async model, testing, build and run, config and observability wiring. |
+| `package-manager/gradle` | Gradle | `language-bundle` | repo |  |  | 0.1.0 | Dependency declaration, resolution and locking for a Kotlin/JVM build — the committed wrapper, the Kotlin DSL, the version catalog as the one place a version is written, and gradle.lockfile as the pin. |
 | `package-manager/pnpm` | pnpm | `language-bundle` | repo |  |  | 0.6.1 | Dependency installation, locking and workspace layout for the Node ecosystem — the manifest contract and the monorepo shape. |
 | `package-manager/pub` | pub | `app-framework` | repo |  |  | 0.3.1 | Dependency declaration and locking for a Flutter app — pubspec.yaml, which also carries the SDK constraints and native package-manager config. |
 | `package-manager/swiftpm` | SwiftPM | `language-bundle` | repo |  |  | 0.3.1 | Dependency declaration, resolution and locking for a Swift package — Package.swift as the manifest, Package.resolved as the lockfile, .build/ as the one build tree. |
@@ -91,7 +93,9 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `stylesheet/stylex` | StyleX | `stylesheet` | stylesheet | compile-time |  | 0.2.1 | Styles authored as typed objects in the component's own language and compiled to atomic CSS at build — the token mapping type-checked, the cascade replaced by explicit merge order, and nothing evaluated at runtime. |
 | `stylesheet/tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | utility |  | 0.2.1 | Utility classes generated from a token block — the design system's semantic roles declared once in CSS, and every style written at the call site as a class rather than in a stylesheet of its own. |
 | `toolchain-gate/analysis-options` | analysis_options | `app-framework` | project |  |  | 0.2.2 | The Dart analyzer and lint configuration for a Flutter app. |
+| `toolchain-gate/detekt` | detekt | `language-bundle` | repo |  |  | 0.1.0 | The correctness gate for Kotlin — detekt's CLI through mise, building on its default rules, with every layout rule left to ktlint. |
 | `toolchain-gate/eslint` | ESLint | `language-bundle` | repo |  |  | 0.3.4 | The correctness gate for TypeScript and JavaScript — flat config, zero formatting rules, overrides scoped by glob. |
+| `toolchain-gate/ktlint` | ktlint | `language-bundle` | repo |  |  | 0.1.0 | The Kotlin layout gate — ktlint through mise, formatting and checking every .kt and .kts file against one set of defaults kept under .config/. |
 | `toolchain-gate/ruff` | Ruff | `language-bundle` | repo |  |  | 0.3.3 | The lint and format gate for Python — one tool for both halves, run through the project's uv environment rather than a global install. |
 | `toolchain-gate/swift-format` | swift-format | `language-bundle` | repo |  |  | 0.1.3 | The Swift formatter — swift-format, built into the toolchain as `swift format`, configured once under .config/. |
 | `toolchain-gate/swiftlint` | SwiftLint | `language-bundle` | repo |  |  | 0.2.1 | The correctness gate for Swift — SwiftLint through mise, strict, with every layout rule left to swift-format. |
@@ -142,6 +146,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.1` |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.1` |
+| `kotlin-library` | Kotlin · library | `language-bundle` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0` |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |
