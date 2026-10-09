@@ -1,0 +1,123 @@
+#!/usr/bin/env bash
+#MISE description="Release every project with a recorded level or an untagged manifest — one bump commit, one merge to main, then each tag"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--dry-run" help="print each project, its last tag, its level and the version it would release; change nothing"
+
+# The three release tasks, composed:
+#
+#   1. on develop: p:plugins:release, p:i:release, p:site:release, each --no-commit
+#   2. one commit of every staged bump, push develop, code:merge:main
+#   3. on main: --tag-only for each task that released a project, then back to develop
+#
+# Which project releases is read from the tasks' own --dry-run lines first, so the
+# commit names every version and a task with nothing to release is not run at all.
+# The first failure stops the run and prints the commands that resume it.
+
+set -euo pipefail
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+cd "$MISE_PROJECT_ROOT"
+
+DRY_RUN="${usage_dry_run:-false}"
+BUMP_BRANCH="develop"
+RELEASE_BRANCH="main"
+TASKS=(p:plugins:release p:i:release p:site:release)
+
+if [[ "${DRY_RUN}" == "true" ]]; then
+  for task in "${TASKS[@]}"; do
+    mise run "${task}" --dry-run
+  done
+  exit 0
+fi
+
+BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+if [[ "${BRANCH}" != "${BUMP_BRANCH}" ]]; then
+  print_error "On '${BRANCH}', not '${BUMP_BRANCH}'. A release bumps on ${BUMP_BRANCH} and reaches ${RELEASE_BRANCH} by merge."
+  exit 1
+fi
+if [[ -n "$(git status --porcelain)" ]]; then
+  print_error "Working tree is not clean. Commit or stash your changes first."
+  exit 1
+fi
+
+# The plan: one "<name> <target>" per project to release, and the tasks that own them.
+RELEASED=()
+RELEASING_TASKS=()
+for task in "${TASKS[@]}"; do
+  lines="$(mise run "${task}" --dry-run | awk '$2 == "tag" && $4 == "level" && $6 == "→" { print $1, $7 }')"
+  printf '%s\n' "${lines}"
+  owns=false
+  while read -r name target; do
+    [[ -n "${name}" ]] || continue
+    case "${target}" in
+      skip) ;;
+      refused)
+        print_error "${task} refuses to release ${name} — fix that before releasing anything."
+        exit 1
+        ;;
+      *)
+        RELEASED+=("${name} ${target}")
+        owns=true
+        ;;
+    esac
+  done <<<"${lines}"
+  [[ "${owns}" == "true" ]] && RELEASING_TASKS+=("${task}")
+done
+
+if [[ "${#RELEASED[@]}" -eq 0 ]]; then
+  print_success "No project has a recorded level or an untagged manifest — nothing to release."
+  exit 0
+fi
+
+SUMMARY="$(printf '%s, ' "${RELEASED[@]}")"
+SUMMARY="${SUMMARY%, }"
+MESSAGE="ops: release ${SUMMARY}"
+
+# 1. The bumps, staged on develop. A failure here leaves only this run's edits,
+#    since the tree was clean when it started.
+for task in "${RELEASING_TASKS[@]}"; do
+  if ! mise run "${task}" --no-commit; then
+    print_error "Stopped at '${task} --no-commit'; ${BUMP_BRANCH} holds a partial bump."
+    print_yellow "Resume: drop this run's edits with 'git reset --hard HEAD' on ${BUMP_BRANCH}, then 'mise run p:release'."
+    exit 1
+  fi
+done
+
+# 2 and 3 as one list, so a failure can print what is left.
+STEPS=()
+if ! git diff --cached --quiet; then
+  STEPS+=("mise x -- git commit -m $(printf '%q' "${MESSAGE}")")
+fi
+STEPS+=("git push origin ${BUMP_BRANCH}")
+STEPS+=("mise run code:merge:main")
+STEPS+=("git switch ${RELEASE_BRANCH}")
+for task in "${RELEASING_TASKS[@]}"; do
+  STEPS+=("mise run ${task} --tag-only")
+done
+STEPS+=("git switch ${BUMP_BRANCH}")
+
+ON_MAIN=false
+for i in "${!STEPS[@]}"; do
+  step="${STEPS[$i]}"
+  if [[ "${step}" == "git switch ${RELEASE_BRANCH}" ]]; then
+    # Back to develop whatever happens from here.
+    trap 'git switch -q "${BUMP_BRANCH}" || print_warn "Still on ${RELEASE_BRANCH} — switch back to ${BUMP_BRANCH} by hand."' EXIT
+  fi
+  if ! eval "${step}"; then
+    print_error "Stopped at '${step}'."
+    print_yellow "Resume from ${BUMP_BRANCH} with:"
+    # The EXIT trap puts the run back on develop, so a tag step resumes on main.
+    if [[ "${ON_MAIN}" == "true" ]]; then
+      printf '  %s\n' "git switch ${RELEASE_BRANCH}"
+    fi
+    for rest in "${STEPS[@]:$i}"; do
+      printf '  %s\n' "${rest}"
+    done
+    exit 1
+  fi
+  [[ "${step}" != "git switch ${RELEASE_BRANCH}" ]] || ON_MAIN=true
+done
+trap - EXIT
+
+print_success "Released: ${SUMMARY}"
