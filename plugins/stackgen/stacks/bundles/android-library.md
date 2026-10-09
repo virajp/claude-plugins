@@ -40,16 +40,17 @@ use, Android apps included: it needs no SDK, no emulator and no Android Lint.
   through its own subtasks, which the repo's `code:format:all` and
   `code:lint:all` run.
 - **Android**, from the `android` pack: the **Android Gradle Plugin**'s
-  library plugin; the **Android SDK**, whose cmdline-tools mise pins and whose
-  platform, build-tools and emulator image `setup:deps:install:android`
-  installs with `sdkmanager` into `ANDROID_HOME`
-  (`~/.local/share/android/sdk`), from the `COMPILE_SDK`, `MIN_SDK`,
-  `TARGET_SDK` and `EMULATOR_IMAGE` values `/vwf:setup` asks for as it lands
-  the pack; **Android Lint** under `code:lint:android`; and **Gradle Managed
-  Devices** for instrumented tests on a headless emulator: `mise run test:e2e`
-  runs `./gradlew e2eDebugAndroidTest` on the module's one managed device,
-  `e2e`, while `mise run test:e2e --connected` runs `connectedCheck` on an
-  emulator or device already running.
+  library plugin, which fetches its own build-tools on first build; the
+  **Android SDK**, whose cmdline-tools mise pins and whose platform-tools,
+  compile platform, emulator and emulator system image
+  `setup:deps:install:android` installs with `sdkmanager` into `ANDROID_HOME`
+  (`~/.local/share/android/sdk`), from the `COMPILE_SDK` and `EMULATOR_IMAGE`
+  values `/vwf:setup` asks for as it lands the pack, beside `MIN_SDK` and
+  `TARGET_SDK`; **Android Lint** under `code:lint:android`; and **Gradle
+  Managed Devices** for instrumented tests on a headless emulator:
+  `mise run test:e2e` runs `./gradlew e2eDebugAndroidTest` on the module's one
+  managed device, `e2e`, while `mise run test:e2e -- --connected` runs
+  `connectedCheck` on an emulator or device already running.
 
 ## What it does not carry
 
