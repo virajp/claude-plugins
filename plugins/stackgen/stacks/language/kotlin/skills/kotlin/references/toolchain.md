@@ -30,7 +30,11 @@ gets exactly what CI gets.
   hook and CI step calls `./gradlew`, never a bare `gradle`.
 - The wrapper is upgraded with `./gradlew wrapper --gradle-version <v>` —
   run twice, so the second run regenerates the scripts with the new version —
-  and the `distributionSha256Sum` it writes stays in the properties file.
+  and the `distributionSha256Sum` it writes stays in the properties file;
+  `setup:deps:install:kotlin --frozen` fails without it.
+- `gradle-wrapper.jar` runs on every `./gradlew`, so CI validates it first —
+  `gradle/actions/wrapper-validation`, or `gradle/actions/setup-gradle`,
+  which validates it built in — before any Gradle step.
 
 ## The Kotlin compiler
 

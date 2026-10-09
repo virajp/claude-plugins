@@ -25,13 +25,14 @@ ship the format and lint ones, and the repo's `code:format:all`,
 
 | Task | Runs |
 | --- | --- |
-| `setup:deps:install:kotlin` | `./gradlew dependencies` against `gradle.lockfile`; with no lockfile, `--write-locks` writes it — `--frozen` refuses instead |
-| `setup:deps:outdated:kotlin` | `./gradlew dependencyUpdates`, the gradle-versions-plugin's report |
-| `setup:deps:upgrade:kotlin` | `./gradlew dependencies --write-locks`, after the catalog edit |
-| `setup:deps:audit:kotlin` | grype over `gradle.lockfile` — advisory |
+| `setup:deps:install:kotlin` | resolves every project against its lockfile; with no lockfile, `--write-locks` writes them — `--frozen` refuses instead |
+| `setup:deps:outdated:kotlin` | `./gradlew dependencyUpdates`, the `com.github.ben-manes.versions` plugin's report |
+| `setup:deps:upgrade:kotlin` | every project re-locked under `--write-locks`, after the catalog edit |
+| `setup:deps:audit:kotlin` | grype over every `*gradle.lockfile` — advisory |
 | `setup:deps:cleanup:kotlin` | `./gradlew clean` |
 
-Each skips itself with a warning when there is no executable `./gradlew`.
+Each skips itself with a warning when there is no executable `./gradlew`,
+except `install --frozen`, which fails.
 
 ## Warnings
 

@@ -1,27 +1,58 @@
 #!/usr/bin/env bash
 
-#MISE description="Resolve the build's dependencies against the lockfile"
+#MISE description="Resolve the build's dependencies against the lockfiles"
 #MISE hide=true
 
-#USAGE flag "--frozen" help="fail rather than write the lockfile"
+#USAGE flag "--frozen" help="fail rather than write a lockfile"
 
 set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
+frozen="${usage_frozen:-false}"
+
 if [[ ! -x ./gradlew ]]; then
+  if [[ "${frozen}" == "true" ]]; then
+    print_error "setup:deps:install:kotlin: no executable ./gradlew, and --frozen needs one."
+    exit 1
+  fi
   print_warn "setup:deps:install:kotlin: no executable ./gradlew, so there is nothing to resolve."
   print_yellow "Commit the Gradle wrapper (gradlew and gradle/wrapper/), then re-run."
   exit 0
 fi
 
-if [[ -f gradle.lockfile ]]; then
-  print_subheader "Resolving dependencies against gradle.lockfile ..."
-  ./gradlew dependencies
-elif [[ "${usage_frozen:-false}" == "true" ]]; then
+# Only the distribution is checked here; CI validates gradle-wrapper.jar before any ./gradlew.
+if ! grep -q '^distributionSha256Sum=' gradle/wrapper/gradle-wrapper.properties 2>/dev/null; then
+  if [[ "${frozen}" == "true" ]]; then
+    print_error "setup:deps:install:kotlin: gradle-wrapper.properties sets no distributionSha256Sum."
+    print_yellow "Add the checksum Gradle publishes for the distribution, then re-run."
+    exit 1
+  fi
+  print_warn "setup:deps:install:kotlin: gradle-wrapper.properties sets no distributionSha256Sum."
+fi
+
+# Every project's resolvable configurations, not the root's alone; resolving fails on a lock mismatch.
+init_script="$(mktemp "${TMPDIR:-/tmp}/stackgen-resolve-all.XXXXXX")"
+trap 'rm -f "${init_script}"' EXIT
+printf '%s\n' \
+  'allprojects { p ->' \
+  '  p.tasks.register("stackgenResolveAll") {' \
+  '    notCompatibleWithConfigurationCache("resolves every configuration at execution time")' \
+  '    def confs = p.configurations' \
+  '    doLast { confs.matching { it.canBeResolved }.each { it.resolve() } }' \
+  '  }' \
+  '}' >"${init_script}"
+
+locked="$(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \) -prune \
+  -o -type f -name '*gradle.lockfile' -print -quit)"
+
+if [[ -n "${locked}" ]]; then
+  print_subheader "Resolving every project against its lockfile ..."
+  ./gradlew --init-script "${init_script}" stackgenResolveAll
+elif [[ "${frozen}" == "true" ]]; then
   print_error "setup:deps:install:kotlin: no gradle.lockfile, and --frozen refuses to write one."
   exit 1
 else
-  print_subheader "Writing gradle.lockfile ..."
-  ./gradlew dependencies --write-locks
+  print_subheader "Writing every project's lockfile ..."
+  ./gradlew --init-script "${init_script}" stackgenResolveAll --write-locks
 fi

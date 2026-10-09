@@ -12,5 +12,5 @@ if [[ ! -x ./gradlew ]]; then
   exit 0
 fi
 
-# The task comes from the ben-manes gradle-versions-plugin, applied in settings.gradle.kts.
+# The task comes from the ben-manes plugin com.github.ben-manes.versions, applied in the root build.gradle.kts.
 ./gradlew dependencyUpdates

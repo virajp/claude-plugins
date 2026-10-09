@@ -14,10 +14,22 @@ if ! command -v grype >/dev/null 2>&1; then
   exit 0
 fi
 
-if [[ ! -f gradle.lockfile ]]; then
+# Every lockfile: the root's, each module's, and the settings and buildscript classpaths'.
+lockfiles=()
+while IFS= read -r lockfile; do
+  lockfiles+=("${lockfile}")
+done < <(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \) -prune \
+  -o -type f -name '*gradle.lockfile' -print | sort)
+
+if [[ ${#lockfiles[@]} -eq 0 ]]; then
   print_warn "setup:deps:audit:kotlin: no gradle.lockfile, so there is nothing to audit."
   print_yellow "Run setup:deps:install to write it, then re-run."
   exit 0
 fi
 
-grype file:gradle.lockfile
+status=0
+for lockfile in "${lockfiles[@]}"; do
+  print_yellow "${lockfile#./}"
+  grype "file:${lockfile}" || status=$?
+done
+exit "${status}"

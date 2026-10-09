@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-#MISE description="Rewrite the lockfile from the version catalog"
+#MISE description="Rewrite the lockfiles from the version catalog"
 #MISE hide=true
 
 set -euo pipefail
@@ -12,5 +12,17 @@ if [[ ! -x ./gradlew ]]; then
   exit 0
 fi
 
+# Every project's resolvable configurations, not the root's alone.
+init_script="$(mktemp "${TMPDIR:-/tmp}/stackgen-resolve-all.XXXXXX")"
+trap 'rm -f "${init_script}"' EXIT
+printf '%s\n' \
+  'allprojects { p ->' \
+  '  p.tasks.register("stackgenResolveAll") {' \
+  '    notCompatibleWithConfigurationCache("resolves every configuration at execution time")' \
+  '    def confs = p.configurations' \
+  '    doLast { confs.matching { it.canBeResolved }.each { it.resolve() } }' \
+  '  }' \
+  '}' >"${init_script}"
+
 # A version moves by editing gradle/libs.versions.toml; this re-locks what the catalog now asks for.
-./gradlew dependencies --write-locks
+./gradlew --init-script "${init_script}" stackgenResolveAll --write-locks
