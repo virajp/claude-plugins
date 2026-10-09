@@ -93,6 +93,7 @@ universal — every stack's trees, whether or not the repo uses that stack:
 | `.build`, `.swiftpm`, `Derived`, `DerivedData` | SwiftPM and Xcode output                           |
 | `*.xcassets/`                               | Xcode rewrites every `Contents.json` inside one       |
 | `.gradle`, `.kotlin`                        | Gradle's and the Kotlin compiler's caches             |
+| `.cxx`, `.externalNativeBuild`, `captures`  | Android's native build output and Studio's captures   |
 
 A tree a repo does not produce matches nothing and costs nothing.
 

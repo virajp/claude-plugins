@@ -1,0 +1,60 @@
+name: Android
+summary: The Android build framework — the Android Gradle plugin owning the
+  app or AAR module, the SDK levels the repo pins, Android Lint as a gate, R8,
+  and the emulator driven headless by Gradle Managed Devices for the E2E run.
+version: 0.1.0
+type: framework
+# No framework category names a build SDK; meta-framework is the nearest — like
+# one, AGP owns the build and the module layout inside the language's project.
+category: meta-framework
+kind: language-bundle
+axis: project
+# No platforms: list — the surfaces are the bundles' (kotlin-compose,
+# android-library).
+# The four values this pack's mise template carries as @@NAME@@, each filled by
+# /vwf:setup when it lands the pack. The three SDK levels are read from the
+# first module build script that states them as a literal; the emulator image is
+# the sdkmanager id without its ABI, which setup:deps:install:android appends
+# per host, so one committed value serves a Mac and a Linux runner.
+values:
+  - name: COMPILE_SDK
+    detect: >-
+      grep -rhoE --include=build.gradle.kts --exclude-dir=build
+      --exclude-dir=.gradle --exclude-dir=node_modules
+      'compileSdk *= *[0-9]+' . | head -n 1 | grep -oE '[0-9]+$'
+    question: >-
+      Which Android API level does this repo compile against (compileSdk)? The
+      newest stable level, `36` say; the SDK platform installed is this one.
+  - name: MIN_SDK
+    detect: >-
+      grep -rhoE --include=build.gradle.kts --exclude-dir=build
+      --exclude-dir=.gradle --exclude-dir=node_modules
+      'minSdk *= *[0-9]+' . | head -n 1 | grep -oE '[0-9]+$'
+    question: >-
+      Which is the oldest Android API level the app or library supports
+      (minSdk)? `26` say.
+  - name: TARGET_SDK
+    detect: >-
+      grep -rhoE --include=build.gradle.kts --exclude-dir=build
+      --exclude-dir=.gradle --exclude-dir=node_modules
+      'targetSdk *= *[0-9]+' . | head -n 1 | grep -oE '[0-9]+$'
+    question: >-
+      Which Android API level does the app target (targetSdk)? Usually the
+      compile level; a library states none, so answer the compile level.
+  - name: EMULATOR_IMAGE
+    detect: >-
+      api=$(grep -rhoE --include=build.gradle.kts --exclude-dir=build
+      --exclude-dir=.gradle --exclude-dir=node_modules
+      'targetSdk *= *[0-9]+' . | head -n 1 | grep -oE '[0-9]+$')
+      && printf 'system-images;android-%s;google_apis\n' "${api}"
+    question: >-
+      Which emulator system image do the E2E tests run on, as its sdkmanager id
+      without the ABI? `system-images;android-36;google_apis` say — the ABI is
+      added per machine.
+harness:
+  e2e_local:
+    task: test:e2e
+    mechanism: >-
+      instrumented UI tests on a Gradle Managed Device — an emulator AGP
+      creates, boots headless, tests on and tears down — run through
+      ./gradlew <device><Variant>AndroidTest

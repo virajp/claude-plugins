@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the instrumented UI tests on a headless emulator, through Gradle Managed Devices"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--device <device>" default="e2e" help="the managed device to run on, as named in testOptions.managedDevices"
+#USAGE flag "--variant <variant>" default="debug" help="the build variant whose androidTest source set runs"
+#USAGE flag "--connected" help="run connectedCheck on an already-running emulator or attached device instead"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_error "test:e2e: no executable ./gradlew at the repo root."
+  print_yellow "Commit the Gradle wrapper (gradlew and gradle/wrapper/), then re-run."
+  exit 1
+fi
+if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "${ANDROID_HOME}/platforms" ]; then
+  print_error "test:e2e: no Android SDK at ANDROID_HOME (${ANDROID_HOME:-unset})."
+  print_yellow "Run: mise run setup:deps:install:android"
+  exit 1
+fi
+
+if [[ "${usage_connected:-false}" == "true" ]]; then
+  print_header "Running the instrumented tests on the connected device ..."
+  ./gradlew connectedCheck
+  exit 0
+fi
+
+device="${usage_device:-e2e}"
+variant="${usage_variant:-debug}"
+first=$(printf '%s' "${variant:0:1}" | tr '[:lower:]' '[:upper:]')
+task="${device}${first}${variant:1}AndroidTest"
+
+gradle_args=()
+# A runner has no GPU; the software renderer keeps the emulator deterministic there.
+if [ -n "${CI:-}" ]; then
+  gradle_args+=(-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect)
+fi
+
+print_header "Running ${task} on the managed device ${device} ..."
+./gradlew ${gradle_args[@]+"${gradle_args[@]}"} "${task}"

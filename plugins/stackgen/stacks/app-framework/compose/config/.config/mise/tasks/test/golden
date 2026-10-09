@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+#MISE description="Verify the app's Compose screens against their recorded golden images"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--record" help="re-record every golden instead of verifying against them"
+#USAGE flag "--variant <variant>" default="Debug" help="the build variant whose unit tests hold the goldens"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [ ! -x ./gradlew ]; then
+  print_error "test:golden: no executable ./gradlew at the repo root."
+  print_yellow "Commit the Gradle wrapper (gradlew and gradle/wrapper/), then re-run."
+  exit 1
+fi
+
+variant="${usage_variant:-Debug}"
+
+if [[ "${usage_record:-false}" == "true" ]]; then
+  print_header "Recording goldens (${variant}) ..."
+  ./gradlew "recordRoborazzi${variant}"
+else
+  # Verify fails on a changed render and on a screen with no golden.
+  print_header "Verifying goldens (${variant}) ..."
+  ./gradlew "verifyRoborazzi${variant}"
+fi

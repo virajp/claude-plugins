@@ -1,0 +1,28 @@
+name: Jetpack Compose
+summary: The native Android app stack — Jetpack Compose with Material 3 on
+  Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and
+  Room — one codebase across phone and tablet, its goldens rendered by
+  Roborazzi.
+version: 0.1.0
+type: app-framework
+category: native-ui
+kind: app-framework
+axis: project
+# No platforms: list — the surfaces are the bundle's (kotlin-compose).
+languages:
+  - token: kotlin
+    role: primary
+    facts:
+      lsp: >-
+        kotlin-lsp, JetBrains' Kotlin language server; declared by the
+        language/kotlin pack as `kotlin-lsp` and provisioned via the generated
+        local plugin
+      mise_tool: java
+      manifest: settings.gradle.kts
+harness:
+  goldens:
+    task: test:golden
+    mechanism: >-
+      Roborazzi image goldens of Compose screens, rendered on the JVM under
+      Robolectric — recorded under --record, verified otherwise — with the
+      Accessibility Test Framework's checks run over the same captures

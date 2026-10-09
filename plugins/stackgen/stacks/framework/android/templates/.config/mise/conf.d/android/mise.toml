@@ -1,0 +1,20 @@
+[env]
+# The SDK every task and AGP read; sdkmanager installs into it, never into a tool dir
+ANDROID_HOME = "{{ env.HOME }}/.local/share/android/sdk"
+COMPILE_SDK = "@@COMPILE_SDK@@"
+EMULATOR_IMAGE = "@@EMULATOR_IMAGE@@"
+MIN_SDK = "@@MIN_SDK@@"
+TARGET_SDK = "@@TARGET_SDK@@"
+_.path = [ "{{ env.HOME }}/.local/share/android/sdk/platform-tools", "{{ env.HOME }}/.local/share/android/sdk/emulator" ]
+
+# An exact build, not `latest`: the build number is no X.Y.Z, so the render
+# cannot resolve `latest` to a pin; move it by hand to `mise latest`'s answer
+[tools."http:android-cmdline-tools"]
+version = "16111833"
+version_list_url = "https://dl.google.com/android/repository/repository2-3.xml"
+version_expr = 'split(body, "\n") | map(trim(#)) | filter(# matches "^<url>commandlinetools-linux-[0-9]+_latest[.]zip</url>$") | map(trimSuffix(trimPrefix(#, "<url>commandlinetools-linux-"), "_latest.zip</url>")) | uniq() | sortVersions()'
+
+[tools."http:android-cmdline-tools".platforms]
+linux-x64 = { format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-linux-{{version}}_latest.zip" }
+macos-arm64 = { format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-mac_arm64-{{version}}_latest.zip" }
+macos-x64 = { format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-mac_x86_64-{{version}}_latest.zip" }
