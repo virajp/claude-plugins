@@ -53,6 +53,12 @@ decision to embed one is a recorded exception, not a pattern.
 sizes; layout adapts to the window size class, never to a device model — see
 [phone & tablet](platforms/phone-and-tablet.md).
 
+**A module per further form factor.** A watch, a TV and a car surface are each
+their own entry point over the shared domain and data modules, built on their
+own library: [Wear OS](platforms/wear-os.md),
+[Android TV](platforms/android-tv.md) and
+[Android Auto](platforms/android-auto.md).
+
 ## The trade nobody states up front
 
 **The SDK and the Android Gradle Plugin move every year.** Each Android release

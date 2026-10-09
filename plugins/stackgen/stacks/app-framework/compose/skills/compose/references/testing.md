@@ -41,11 +41,14 @@ this reference is what the app adds.
   ```
 
   The file name is the screen's code and state, under the platform the
-  qualifiers render (`mobile` for a phone, `tablet` for `MediumTablet`), so the
-  `ux-gate` finds it. Paths and properties are the conventions'.
+  qualifiers render (`mobile` for a phone, `tablet` for `MediumTablet`, `watch`
+  for `WearOSLargeRound`, `tv` for `Television1080p`), so the `ux-gate` finds
+  it. Paths and properties are the conventions'.
 - **Every pinned state of a screen in the flow's Screens table has a golden**,
   on every platform the screen ships to. A state with no golden is a gap the
-  `ux-gate` reports.
+  `ux-gate` reports. An `auto` screen is the exception: it is a Car App
+  Library template, tested with `androidx.car.app:app-testing` rather than
+  rendered — see [Android Auto](platforms/android-auto.md).
 - **The accessibility check runs on every golden** through a `RoborazziRule`
   with `RoborazziATFAccessibilityCheckOptions` (preset `LATEST`, failure level
   error) and the after-test strategy, so a missing label or a small touch

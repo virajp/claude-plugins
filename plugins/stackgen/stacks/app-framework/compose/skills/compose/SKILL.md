@@ -37,6 +37,7 @@ skill's. Read the reference matching your task — one, not all of them.
 | `@Preview` functions and what they are for | [Previews](references/previews.md) |
 | Writing or running tests, goldens, emulator tests | [Testing & coverage](references/testing.md) |
 | Jank, recomposition counts, startup, app size | [Performance & size](references/performance.md) |
+| A home-screen app widget with Jetpack Glance | [Glance widgets](references/glance-widgets.md) |
 
 ## Platforms
 
@@ -46,6 +47,9 @@ realises: a flow's `<token>.md` take is built on that file.
 | Token | Read |
 | --- | --- |
 | `mobile`, `tablet` — one app for phones, foldables and tablets, window size classes | [Phone & tablet](references/platforms/phone-and-tablet.md) |
+| `watch` — Wear OS: Compose for Wear OS, rotary input, tiles and complications | [Wear OS](references/platforms/wear-os.md) |
+| `tv` — Android TV and Google TV: Compose for TV, D-pad focus, the ten-foot layout | [Android TV](references/platforms/android-tv.md) |
+| `auto` — Android Auto and Automotive OS: Car App Library templates, not Compose | [Android Auto](references/platforms/android-auto.md) |
 
 ## Integrations (topic 12)
 

@@ -1,9 +1,9 @@
 name: Jetpack Compose
 summary: The native Android app stack — Jetpack Compose with Material 3 on
   Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and
-  Room — one codebase across phone and tablet, its goldens rendered by
-  Roborazzi.
-version: 0.1.0
+  Room — one codebase across phone, tablet, Wear OS and Android TV, with
+  Android Auto through the Car App Library, its goldens rendered by Roborazzi.
+version: 0.2.0
 type: app-framework
 category: native-ui
 kind: app-framework

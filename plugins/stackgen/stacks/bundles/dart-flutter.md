@@ -34,6 +34,14 @@ Android Auto is Kotlin driven over a MethodChannel. Nothing new is provisioned
 for it. So `auto` is only ever declared **alongside** `mobile`, never alone,
 and never as its own project.
 
+## When to pick it over the native stacks
+
+Pick **Dart · Flutter** when the same app must ship on Android and iOS from one
+codebase. Pick **Kotlin · Compose** instead when the app is Android-only or
+Android-first — or reaches Wear OS or Android TV, which Flutter's template
+does not cover — and **Swift · SwiftUI** when it ships on Apple platforms
+alone.
+
 ## Stack
 
 - **Client SDKs for the backing services** the product selected — identity,

@@ -28,7 +28,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 0.1.0 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone and tablet, its goldens rendered by Roborazzi. |
+| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 0.2.0 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.7.1 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
 | `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.5.1 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
@@ -76,7 +76,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `design-tool/claude-design` | Claude Design | `design-tool` | design |  |  | 0.2.0 | The canvas Anthropic hosts at claude.ai/design — designed pages live on a canvas project, reached over its own MCP server. |
 | `design-tool/lovable` | Lovable | `design-tool` | design |  |  | 0.1.0 | Prompt-to-app at lovable.dev — a real project surface, but what it returns is generated app code rather than a canvas, which makes the screens import lossier. |
 | `design-tool/stitch` | Google Stitch | `design-tool` | design |  |  | 0.1.0 | Prompt-to-UI at stitch.withgoogle.com — fast for screens, and honest that it stores no design system at all. |
-| `framework/android` | Android | `language-bundle` | project | meta-framework |  | 0.1.0 | The Android build framework — the Android Gradle plugin owning the app or AAR module, the SDK levels the repo pins, Android Lint as a gate, R8, and the emulator driven headless by Gradle Managed Devices for the E2E run. |
+| `framework/android` | Android | `language-bundle` | project | meta-framework |  | 0.2.0 | The Android build framework — the Android Gradle plugin owning the app or AAR module, the SDK levels the repo pins, Android Lint as a gate, R8, and the emulator driven headless by Gradle Managed Devices for the E2E run. |
 | `framework/astro` | Astro | `language-bundle` | project | meta-framework |  | 0.5.1 | Astro as the content-first web framework that owns the build — file routes, content collections, islands only where interactivity demands it, and two config decisions (`output`, and whether an adapter is present) that between them give four ways to render. It covers MDX, the image pipeline, and layouts and slots, and carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `framework/cloudflare-agents` | Cloudflare Agents SDK | `language-bundle` | project | agent-sdk |  | 0.1.0 | The `agents` package as the shape of a stateful, addressable agent on Workers — an `Agent` class that compiles to a Durable Object, with state that survives hibernation, its own SQLite, scheduled work and live client connections, plus the client that talks to it. |
 | `framework/effect` | Effect-TS | `language-bundle` | project | meta-framework |  | 0.1.0 | Effect as the composition and error model for a TypeScript codebase — writing effects, running them, and testing them. |
@@ -107,7 +107,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Bundle | Name | Kind | Axis | Components |
 | ------ | ---- | ---- | ---- | ---------- |
-| `android-library` | Android · library | `language-bundle` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.1.0` |
+| `android-library` | Android · library | `language-bundle` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.2.0` |
 | `astro-csr` | Astro (CSR) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
 | `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated`, `framework/effect@0.1.0` |
 | `astro-ssg` | Astro (SSG) | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/astro@0.5.1`, `framework/react@generated` |
@@ -149,7 +149,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.1` |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.1` |
-| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.1.0`, `app-framework/compose@0.1.0` |
+| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.2.0`, `app-framework/compose@0.2.0` |
 | `kotlin-library` | Kotlin · library | `language-bundle` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0` |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |
