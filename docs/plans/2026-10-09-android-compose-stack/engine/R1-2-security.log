@@ -1,0 +1,13 @@
+/security-review over b65209c2..9bbf1e0d (run as a sub-task over the row's range in the worktree)
+
+No high-confidence vulnerabilities found.
+
+Candidates considered and dismissed:
+- code/lint/android eval "files+=(${usage_files:-})": same pattern as ~10 existing tasks; usage passes a shell-quoted list from the repo's own pre-commit staged list.
+- setup/deps/install/android pipes yes into sdkmanager --licenses: licence consent, not security; hidden opt-in task. Package ids from COMPILE_SDK (regex-checked) and EMULATOR_IMAGE (quoted array element); no injection; sdkmanager uses HTTPS.
+- http:android-cmdline-tools: https for download and version_list_url; each platform pins an exact build with sha256; both Linux arches share the Java-only zip and checksum; version_expr only parses the list.
+- pack.yaml values.detect: fixed grep pipelines, output cut to digits before printf.
+- test/e2e and test/golden build Gradle task names from --device/--variant, passed as one quoted argument; no trust boundary crossed.
+- ANDROID_HOME and _.path under $HOME/.local/share/android/sdk: user-owned only.
+- New exclusions (.cxx/, .externalNativeBuild/, captures/) in formatter, linter, taplo, pre-commit; gitleaks gets only .cxx/ and .externalNativeBuild/ (gitignored native build output); captures/ still scanned.
+- Skills and reference docs contain no instructions to fetch or run remote code; Keystore, explicit android:exported and backup-exclusion guidance is sound.
