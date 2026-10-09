@@ -342,6 +342,38 @@ Like Flutter's, those integration references are wiring only — setup order,
 platform configuration, anti-patterns — with the API surface left to Context7 at
 use time. Third-party integrations are not covered yet.
 
+**Kotlin** arrived on 2026-10-09 as the fifth language a language-bundle is
+rooted at: `kotlin-library`, a Kotlin/JVM library published as a JAR on the
+`packages` platform, pins four new packs. `language/kotlin` is the root — the
+12-topic doctrine, with tests on `kotlin.test` and JUnit 5,
+`kotlinx-coroutines-test` and Kover — and its
+`templates/.config/mise/conf.d/kotlin/` pins the JDK the Gradle wrapper and the
+Kotlin Gradle plugin run on: `mise.toml` holds `java` at `temurin-25`, a Temurin
+LTS line rather than `latest`, which would answer a non-LTS feature release.
+Beside it, `mise.dev.toml` installs **kotlin-lsp**, JetBrains' language server,
+through mise's `http:` backend from the JetBrains archive, since it publishes no
+GitHub release asset — on macOS and Linux; on Windows it is installed by hand.
+The compiler is the Kotlin Gradle plugin's and Gradle is the committed
+wrapper's, so mise pins neither. `package-manager/gradle` carries the wrapper,
+Kotlin DSL and version-catalog doctrine (`gradle/libs.versions.toml`), lands no
+file and no task, and declares its lockfiles — `gradle.lockfile` at the root and
+beside each module, and `settings-gradle.lockfile` — as a `lockfile` fact. The
+`setup:deps:<verb>:kotlin` subtasks are the language pack's and run `./gradlew`:
+`install` resolves every configuration of every project, so a graph that
+disagrees with any lockfile fails; it writes lockfiles only when none exists
+anywhere, and under `--frozen` refuses instead, as it does without a wrapper or
+a 64-hex `distributionSha256Sum`. `upgrade` re-locks every project under
+`--write-locks`, `outdated` runs the ben-manes `dependencyUpdates` task and
+warns when the build lacks it, `audit` runs one advisory grype scan over every
+`*gradle.lockfile`, and `cleanup` runs `./gradlew clean` and keeps the
+lockfiles. `toolchain-gate/ktlint` lands `.config/ktlint.editorconfig` with the
+`code:format:ktlint` and `code:lint:ktlint` subtasks, and
+`toolchain-gate/detekt` lands `.config/detekt.yml` with `code:lint:detekt`,
+leaving every layout rule to ktlint; each pins its tool in a mise template
+rendered exact, since CI loads it — ktlint from the mise registry, detekt's CLI
+through the `github:` backend. The bundle carries no Android and no Kotlin
+Multiplatform.
+
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
 became the `toolchain-manager/mise` pack, its four repo gates the `repo-gates`
@@ -730,10 +762,10 @@ line to any of them:
   three syntaxes: the formatter's `dprint.json` and `taplo.toml` and the hook
   config's global `exclude` — `.claude`, `.git`, `graphify-out`, `build`,
   `dist`, `*.lock`, `node_modules`, `.turbo`, the `*-lock.json` and
-  `*-lock.yaml` globs, `.venv`, `.build`, `.swiftpm`, `Derived`, `DerivedData`
-  and `*.xcassets/`. dprint resolves its patterns from the config's directory,
-  so each entry is written twice, `../X` and `**/X`, under one
-  `"includes": ["../**"]`. The toolkit's checker holds the three lists equal
+  `*-lock.yaml` globs, `.venv`, `.build`, `.swiftpm`, `Derived`, `DerivedData`,
+  `*.xcassets/`, `.gradle` and `.kotlin`. dprint resolves its patterns from the
+  config's directory, so each entry is written twice, `../X` and `**/X`, under
+  one `"includes": ["../**"]`. The toolkit's checker holds the three lists equal
   after normalising the syntax away. The secret scanner's `[allowlist] paths` is
   held to a **subset** of it, never the reverse — only generated trees, never a
   lockfile or authored source. gitleaks extends upstream's default config, which
@@ -742,17 +774,17 @@ line to any of them:
   a shaped repo, where it is machine-owned. Its entries are anchored `(^|/)`, so
   `\.turbo/` never matches a `foo.turbo.ts`.
 - **Linter ignores.** The linter does not read `.gitignore`, so `linter.yaml`'s
-  `ignores:` carries the generated trees — `.build`, `.dart_tool`, `.swiftpm`,
-  `.venv`, `Derived`, `DerivedData`, `build`, `graphify-out` — each
-  `**/`-prefixed.
+  `ignores:` carries the generated trees — `.build`, `.dart_tool`, `.gradle`,
+  `.kotlin`, `.swiftpm`, `.venv`, `Derived`, `DerivedData`, `build`,
+  `graphify-out` — each `**/`-prefixed.
 - **Ignore lines and attributes.** `.gitignore` is a curated set in banner
   sections — macOS, editors, AI tooling, mise, secrets and env, build output,
-  Node, Python, Dart and Flutter, Swift and Xcode, vwf's working notes and
-  scratch (`docs/memory/handoff/`, `docs/memory/doctor/`, `docs/memory/runs/`,
-  `docs/scratchpad/`), reports — never an upstream template fetched over the
-  network. `fnox.local.toml` is in the secrets section, so the base names the
-  one secrets manager that writes a local file. `.gitattributes` marks `*.lock`,
-  `pnpm-lock.yaml` and `Package.resolved` `linguist-generated`.
+  Node, Python, Dart and Flutter, Swift and Xcode, Gradle and Kotlin, vwf's
+  working notes and scratch (`docs/memory/handoff/`, `docs/memory/doctor/`,
+  `docs/memory/runs/`, `docs/scratchpad/`), reports — never an upstream template
+  fetched over the network. `fnox.local.toml` is in the secrets section, so the
+  base names the one secrets manager that writes a local file. `.gitattributes`
+  marks `*.lock`, `pnpm-lock.yaml` and `Package.resolved` `linguist-generated`.
 
 **Six files carry one marker pair**, `# >>> tool-config` / `# <<< tool-config`
 (`//` in dprint's JSONC): `.gitignore`, `.graphifyignore`, dprint's `excludes`,
@@ -1251,29 +1283,31 @@ your own the same way, as a subtask file of your own, never by editing an
 **Who adds the subtasks.** `/stackgen:tool-config` lands the common contract and
 the universal subtasks, and every pack with a `config/` tree adds its own beside
 them: `package-manager/pnpm`, `package-manager/uv`, `language/swift`,
-`app-framework/flutter` and `app-framework/swiftui` supply
+`language/kotlin`, `app-framework/flutter` and `app-framework/swiftui` supply
 `setup:deps:<verb>:<slug>`; `toolchain-gate/ruff` supplies `code:format:ruff`
 and `code:lint:ruff`, `app-framework/flutter` `code:format:flutter` and
 `code:lint:flutter`, `toolchain-gate/swift-format` `code:format:swift-format`
 and `code:lint:swift-format`, `toolchain-gate/swiftlint` `code:lint:swiftlint`,
-`package-manager/pnpm` `code:format:pnpm` (sorting `package.json`),
-`package-manager/uv` `code:check:uv` (the lockfile freshness check),
-`design-tool/claude-code` `setup:ai:claude-code`; `app-framework/swiftui` adds
-`test/golden`, each task that builds checking `xcodebuild -version` against its
-`XCODE_VERSION`; and `capability-provider/fnox` fills the `setup/secrets` slot.
-A pack's subtask carries only its own tool's steps — no language pack owns
-another tool's. The pnpm pack also ships a root `.npmrc` setting
-`ignore-scripts=true` and `fund=false` — an install never runs a dependency's
-install-time code, and a package that genuinely has to build is allowed by name
-in the workspace file — plus, in its `templates/`, an `npx = "pnpm dlx"` alias,
-which keeps one store, one lockfile-aware resolver and one set of registry
-settings. The mise base lands first, from `/stackgen:tool-config`; composition
-then runs `toolchain-gate`, then `package-manager`/`language`, then
-`app-framework`, then `capability-provider`, then `cloud-provider`, then
-`cloud-service`, and the lockfile records per file which component supplied it.
-The **deploy target goes last** because it is the most specific thing a repo
-pins — a `cloud-service` pack's root config and the `p:<id>:deploy` overlay
-beside it are the answer to how this repo actually ships.
+`toolchain-gate/ktlint` `code:format:ktlint` and `code:lint:ktlint`,
+`toolchain-gate/detekt` `code:lint:detekt`, `package-manager/pnpm`
+`code:format:pnpm` (sorting `package.json`), `package-manager/uv`
+`code:check:uv` (the lockfile freshness check), `design-tool/claude-code`
+`setup:ai:claude-code`; `app-framework/swiftui` adds `test/golden`, each task
+that builds checking `xcodebuild -version` against its `XCODE_VERSION`; and
+`capability-provider/fnox` fills the `setup/secrets` slot. A pack's subtask
+carries only its own tool's steps — no language pack owns another tool's. The
+pnpm pack also ships a root `.npmrc` setting `ignore-scripts=true` and
+`fund=false` — an install never runs a dependency's install-time code, and a
+package that genuinely has to build is allowed by name in the workspace file —
+plus, in its `templates/`, an `npx = "pnpm dlx"` alias, which keeps one store,
+one lockfile-aware resolver and one set of registry settings. The mise base
+lands first, from `/stackgen:tool-config`; composition then runs
+`toolchain-gate`, then `package-manager`/`language`, then `app-framework`, then
+`capability-provider`, then `cloud-provider`, then `cloud-service`, and the
+lockfile records per file which component supplied it. The **deploy target goes
+last** because it is the most specific thing a repo pins — a `cloud-service`
+pack's root config and the `p:<id>:deploy` overlay beside it are the answer to
+how this repo actually ships.
 
 **What no pack can know comes from your values** — in the base repo and in every
 member repo `/vwf:init` resolved, each from that repo's own:

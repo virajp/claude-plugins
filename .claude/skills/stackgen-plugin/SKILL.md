@@ -243,12 +243,12 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   removed. A pack's ignore and attribute lines are not its own at all:
   tool-config's `.gitignore`, `.gitattributes`, exclude set, linter ignores and
   formatter plugins are **universal supersets** carrying every stack's entries —
-  node's, Python's, Dart's, Flutter's and Swift's, fnox's `fnox.local.toml`,
-  pnpm's and SwiftPM's lockfile markers — whether or not the repo uses that
-  stack; **(d)** is retired too — a mise `conf.d/` file in `config/` is refused
-  by rule 11: a pack's tool pin, environment values and aliases (fnox's pin,
-  pnpm's `npx`, swiftlint's pin, swiftui's four Xcode and simulator values as
-  `@@` names) live in its **`templates/`** tree, in
+  node's, Python's, Dart's, Flutter's, Swift's, Gradle's and Kotlin's, fnox's
+  `fnox.local.toml`, pnpm's and SwiftPM's lockfile markers — whether or not the
+  repo uses that stack; **(d)** is retired too — a mise `conf.d/` file in
+  `config/` is refused by rule 11: a pack's tool pin, environment values and
+  aliases (fnox's pin, pnpm's `npx`, swiftlint's pin, swiftui's four Xcode and
+  simulator values as `@@` names) live in its **`templates/`** tree, in
   `templates/.config/mise/conf.d/<slug>/` and nowhere else in `conf.d/`, which
   `/stackgen:tool-config pack --slug <slug> --dir <pack dir>` renders, its
   values declared in the pack's `values:` list, given with `--set` and stored

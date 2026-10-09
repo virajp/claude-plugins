@@ -1077,13 +1077,16 @@ nothing looser — `package.json` → node, `pyproject.toml` or `requirements.tx
 python, `pubspec.yaml` → dart, `go.mod` → go, `Cargo.toml` → rust,
 `Package.swift` or a root `*.xcodeproj` directory → swift — the one directory
 the table admits, and only at the top of the directory being read, since an
-Xcode app keeps its dependency list inside it. A `blank` repo reads nothing, and
-a `shaped` repo proposes from its registry or from question 2. Nothing else keys
-on a language: the ignore set `/stackgen:tool-config` lands is a universal
-superset, every stack's section in every repo, so no ignore template is asked
-for; and the skill's `NODE` value starts as `init`'s `--node true` on a repo
-whose `stackgen.yaml` holds none yet, which
-[`/vwf:setup`](#the-materialize-pass) then re-derives from the packs it pins.
+Xcode app keeps its dependency list inside it — and `settings.gradle(.kts)`, or
+a `build.gradle(.kts)` with no settings file beside or above it, → kotlin: a
+Gradle build is one project, its modules' build files never read as more. A
+`blank` repo reads nothing, and a `shaped` repo proposes from its registry or
+from question 2. Nothing else keys on a language: the ignore set
+`/stackgen:tool-config` lands is a universal superset, every stack's section in
+every repo, so no ignore template is asked for; and the skill's `NODE` value
+starts as `init`'s `--node true` on a repo whose `stackgen.yaml` holds none yet,
+which [`/vwf:setup`](#the-materialize-pass) then re-derives from the packs it
+pins.
 
 **Five questions in six rounds**, asked *before* the plan so one yes covers all
 of it. **A round is one round for the whole product**, however many repos

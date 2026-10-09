@@ -31,13 +31,13 @@ drift — is [the skill's](../SKILL.md); what follows is git's own.
 **The ignore set is curated, never fetched.** One block, between
 `# >>> tool-config` and `# <<< tool-config`, in banner sections: macOS,
 editors, AI tooling, mise, secrets and env, build output, Node, Python, Dart
-and Flutter, Swift and Xcode, scratch, reports. Every stack's section ships
-whether or not the repo uses that stack — a pattern for a tree the repo never
-produces matches nothing — so a pack never adds an ignore line, and no
-upstream template is fetched: a fetched template is a network call on every
-render and a block that silently never lands when it fails. A repo's own
-lines go below the closing marker and survive every render
-([the marked files](../SKILL.md#the-marked-files)).
+and Flutter, Swift and Xcode, Gradle and Kotlin, scratch, reports. Every
+stack's section ships whether or not the repo uses that stack — a pattern
+for a tree the repo never produces matches nothing — so a pack never adds an
+ignore line, and no upstream template is fetched: a fetched template is a
+network call on every render and a block that silently never lands when it
+fails. A repo's own lines go below the closing marker and survive every
+render ([the marked files](../SKILL.md#the-marked-files)).
 
 **The mise lines are load-bearing**: they cover every path mise loads a local
 override from, and the local lock it writes beside one, and dropping one is

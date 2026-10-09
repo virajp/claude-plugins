@@ -62,8 +62,11 @@ machine as it lands the pack — the pack's `values:` list gives each value a
 app ships on Apple platforms alone or reaches one Flutter does not; pick Flutter
 when it must also ship on Android. A Swift library on the `packages` platform
 pins `swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swift
-toolchain, which must be on `PATH`; it carries no app target. Anything else
-takes the **generate** entry — see below.
+toolchain, which must be on `PATH`; it carries no app target. A Kotlin/JVM
+library on the same platform pins `kotlin-library` — Gradle through the
+committed wrapper, ktlint and detekt, on the Temurin JDK mise pins; it carries
+no Android target and no Kotlin Multiplatform. Anything else takes the
+**generate** entry — see below.
 
 **A `site` project picks between five entries** — four Astro bundles and `html`.
 The Astro four sit on the one `framework/astro` pack, all carrying React for
