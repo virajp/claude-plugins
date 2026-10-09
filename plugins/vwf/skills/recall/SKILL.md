@@ -138,6 +138,12 @@ the user whether to run it now**:
   run resumes from the folder's Run log, which records every unit that
   returned.
   Resuming a cap-paused run that way is the primary use of this command.
+  That resume line is printed as it is — a folder already claimed (its row
+  `RUNNING`, a paused or blocked run) is never replaced. For a folder not yet
+  claimed, invoke `/vwf:backlog unplanned` before printing it: if it lists
+  items, print them and the planner command for the first one —
+  `/vwf:change-plan <item>`, or `/vwf:plan <slice>` — instead of the launch
+  line. A backlog that is unreadable leaves the launch line as it is.
 - **No** → stop after the summary; the user drives from here.
 
 **For `next`, do not ask** — show the summary, then execute the Next prompt
