@@ -40,8 +40,8 @@ gets exactly what CI gets.
   compile against release `N`'s API, so a newer JDK API fails the build, and
   Kotlin's target validation sees the Kotlin and Java targets agree. Raising
   `N` is a major release for consumers.
-- Never `jvmToolchain(N)` or `java { toolchain { … } }`: a toolchain must match
-  `N` exactly, mise installs only the LTS JDK, so Gradle reports
+- Never `jvmToolchain(N)` or `java { toolchain { … } }`: a toolchain must
+  match `N` exactly, mise installs only the LTS JDK, so Gradle reports
   `No matching toolchains found` — or, with the foojay resolver applied,
   downloads a JDK outside mise. No foojay resolver plugin either.
 - Never read `JAVA_HOME` in a build script. mise sets it, and Gradle

@@ -74,8 +74,8 @@ comments only; the reasoning is here.
   lock that exists is checked, never rewritten. Moving a version is an
   `upgrade`.
 - `install --frozen` also fails when `gradle-wrapper.properties` sets no
-  `distributionSha256Sum` of 64 hex digits, so CI never runs an unverified Gradle
-  distribution; without `--frozen` it warns.
+  `distributionSha256Sum` of 64 hex digits, so CI never runs an unverified
+  Gradle distribution; without `--frozen` it warns.
 - `upgrade` does not edit the catalog itself. A version moves by a reviewed
   edit to `gradle/libs.versions.toml`, guided by `outdated`'s report; the task
   then re-locks to match, and the lockfile diff shows what moved.
@@ -86,9 +86,9 @@ comments only; the reasoning is here.
   without any lockfile change, so a gate on it would fail a commit that changed
   nothing. It scans every `*gradle.lockfile` outside `build/`, `.gradle/`,
   `node_modules/` and the worktree trees, in one grype run that reads
-  `.config/grype.yaml` when present.
-  It skips itself when grype is absent — the universal toolchain pins grype
-  for the dev environment only — or when no lockfile exists yet.
+  `.config/grype.yaml` when present. It skips itself when grype is absent —
+  the universal toolchain pins grype for the dev environment only — or when
+  no lockfile exists yet.
 - `cleanup` keeps the lockfiles: they are committed.
 
 **CI validates the wrapper jar before any `./gradlew`.** `gradlew` runs the
