@@ -11,7 +11,8 @@
 #
 #   (no flag)    from develop: bump plugin.json, clear the plugin's key, regenerate
 #                the marketplace manifest, commit, push develop, merge develop into
-#                main with code:merge:main, tag on main, push the tags, back to develop
+#                main with code:merge:main, tag on main, push the tags, back to develop;
+#                refused unless the merge model into main is direct
 #   --no-commit  the bump step alone, staged on develop
 #   --tag-only   the tag step alone, on main — tags every marketplace ref with no tag
 #   --dry-run    one line per plugin; no branch or tree check, nothing written
@@ -138,6 +139,12 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     print_error "Working tree is not clean. Commit or stash your changes first."
     exit 1
   fi
+  # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
+  MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
+  fi
   git fetch --tags --quiet origin
 elif ! git fetch --tags --quiet origin 2>/dev/null; then
   print_warn "Could not fetch tags — the last tags below are this checkout's."
@@ -163,12 +170,16 @@ for file in plugins/*/.claude-plugin/plugin.json; do
     target="${manifest}"
   else
     base="${tag##*-v}"
-    level="$(level_max "${recorded}" "$(level_implied "${base}" "${manifest}")")"
-    if ! target="$(release_target "${base}" "${level}")"; then
+    # A manifest below its tag, or an unreadable level, refuses like a target.
+    level="?"
+    if ! implied="$(level_implied "${base}" "${manifest}")" \
+      || ! level="$(level_max "${recorded}" "${implied}")" \
+      || ! target="$(release_target "${base}" "${level}")"; then
       if [[ "${DRY_RUN}" == "true" ]]; then
-        printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag}" "${level}"
+        printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag}" "${level:-?}"
         continue
       fi
+      print_error "Refusing to release ${name}: manifest ${manifest}, tag ${tag}, recorded level '${recorded}' give no valid target."
       exit 1
     fi
     if [[ -n "${target}" ]]; then
