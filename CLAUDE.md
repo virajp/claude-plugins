@@ -2,8 +2,8 @@
 
 ## Rules
 
-- ALWAYS ask user before running a `p:i:release`, `p:plugins:release` or
-  `p:site:release` task
+- ALWAYS ask user before running a `p:release`, `p:i:release`,
+  `p:plugins:release` or `p:site:release` task — `--dry-run` alone excepted
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
   `readme.md`, this file, and the manual under `site/src/content/docs/` in the
   same commit — stale docs are more harmful than no docs
@@ -178,6 +178,9 @@ inventory and check in that order — freshness before validity:
   `references/checks.md`.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
+- **`p:releases:test`** — table-tests the release-level functions in
+  `.config/mise/tasks/_scripts/local`, the 13/17 skip and "highest wins" among
+  them. In `plugins.yml`, not in pre-commit.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
 - **`p:site:check`** — the website's gate: `astro check`, `p:site:build` (Astro
@@ -187,7 +190,8 @@ inventory and check in that order — freshness before validity:
   `site.yml`, not `plugins.yml`, and not in pre-commit. Beside it:
   **`p:site:dev`**, **`p:site:build`**, **`p:site:icons`** (rasterizes the
   committed favicon set, by hand when the mark changes), **`p:site:version`**
-  and **`p:site:release`**.
+  (kept for hand use) and **`p:site:release`**, which bumps, merges and tags —
+  see CI & Releases.
 
 Beside them the local gate runs **three tool-neutral hooks** — `format`, `lint`
 and `sec` — each of which calls a mise task (`code:format --fix`,
@@ -302,8 +306,10 @@ marketplace against the default branch, so `main` stays default and PRs target
 remotely. The landing model `stackgen:tool-config` lands is **per branch** —
 `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`, `direct` or `pr` — but this repo's
 own `.config/mise/conf.d/_base/mise.toml` still carries the legacy single
-`MERGE_MODEL`, read as both, until its next `/vwf:setup reshape`. No release
-task commits: all three tag what has already landed.
+`MERGE_MODEL`, read as both, until its next `/vwf:setup reshape`. A release task
+bumps, commits on `develop`, merges to `main` with `code:merge:main`, and only
+then tags — so `main` stays merge-only; that full sequence refuses unless both
+merge models into `main` are `direct`.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:
@@ -321,27 +327,34 @@ writes, so `claude plugin update` sees each edit without a commit.
 
 **13 and 17 are never issued as a version component** — the two plugin
 manifests, the installer, the site, `config_format`, `blueprint_format` alike.
-`p:plugins:check` refuses such a manifest; `p:i:version` and `p:site:version`
-**skip past** the number — each computes its target first, stepping the bumped
-component past a 13 or 17, then writes it in a single `pnpm version` call and
-prints what it skipped, refusing before it writes anything when the level it was
-given cannot reach the forbidden component; all three release tasks **refuse**
-to tag one. The guard is four functions in `.config/mise/tasks/_scripts/local`,
-this repo's own sidecar beside the pack-owned `helpers`, which no pack file may
-source. Versions issued before the rule stand, and the `+N` staging counter is
-not a component.
+`p:plugins:check` refuses such a manifest; the release tasks — and `p:i:version`
+and `p:site:version`, which they call — **skip past** the number, computing the
+target first, stepping the bumped component past a 13 or 17 and printing what
+they skipped, refusing before they write anything when the level cannot reach
+the forbidden component; all three release tasks **refuse** to tag one. The
+guard is four functions in `.config/mise/tasks/_scripts/local`, this repo's own
+sidecar beside the pack-owned `helpers`, which no pack file may source; the
+release-level functions sit beside it — `releases_level`, `releases_raise`,
+`releases_clear`, `level_max`, `level_implied` and `release_target`, over a
+private `level_rank`. Versions issued before the rule stand, and the `+N`
+staging counter is not a component.
 
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
 marketplace and updates this machine's install, publishing nothing and cutting
 no tag, so `/vwf:execute` takes it as the plan's after-landing step — run
-without a prompt on a green landing, as the plan records it `run` — and a staged
-plugin loads in the next **restarted** session. Public second — the tags.
+without a prompt on a green landing, as the plan records it `run`, and named in
+`.config/vwf.yaml`'s `after_landing:` so every landing here runs it — and a
+staged plugin loads in the next **restarted** session. Public second — the tags.
 
-**Ask the user before running `p:plugins:release`, `p:i:release` or
-`p:site:release`** — always; no plan carries a release step. A plan records each
-project's release level, and `/vwf:execute` raises it in `.config/releases.yaml`
-at landing; the release tasks do not read that file yet.
+**No person and no plan bumps a version by hand**, and a tracked version moves
+only at release. A plan records each project's release level, and `/vwf:execute`
+raises it in `.config/releases.yaml` at landing. The release tasks read it: each
+bumps its project from the last tag at the higher of the recorded level and the
+one an untagged manifest implies, and clears its own keys; `p:release` runs all
+three with one bump commit and one merge, then tags each. **Ask the user before
+running `p:release`, `p:plugins:release`, `p:i:release` or `p:site:release`** —
+always; no plan carries a release step.
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the
