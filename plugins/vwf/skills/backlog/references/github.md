@@ -28,8 +28,8 @@ its remedy.
    `gh auth login --hostname <host>`".
 3. The same command's output lists the token's scopes on a line beginning
    `- Token scopes:`. `project` must appear — with the one tolerance the skill
-   states, `read:project` alone for `list` and `next`. Missing → stop: "the
-   `gh` token has no `project` scope; run
+   states, `read:project` alone for `list`, `next` and `unplanned`. Missing →
+   stop: "the `gh` token has no `project` scope; run
    `gh auth refresh --hostname <host> -s project`".
 
 A caller's recall that hits any of the three reports
@@ -354,9 +354,9 @@ each `Landed:` line sits above it:
 - `close` — append the reason after a blank line. `close` runs the `Status`
   bootstrap first when `Closed` is absent.
 
-**`list`, `next`** — `item-list` alone; nothing is written. Both sort by
-priority, then by the id's number; an item with no `Priority` sorts after
-`P2`, and an unnumbered item after every numbered one.
+**`list`, `next`, `unplanned`** — `item-list` alone; nothing is written.
+`list` and `next` sort by priority, then by the id's number; an item with no
+`Priority` sorts after `P2`, and an unnumbered item after every numbered one.
 
 `list` prints one tab-separated row per item that is not `Done` or `Closed` —
 id, title, group, priority, status — with each `Partially done` item's Status
@@ -403,6 +403,35 @@ resolution:
 then reads its body with the `content.body` command under *Per verb*, and,
 when the item is `Partially done`, prints its `Landed:` lines with it. No
 output is the empty backlog.
+
+`unplanned` takes two calls when no priority is given, one when it is. The top
+open priority is the lowest `priority` value over the open items — `Backlog`,
+`In progress` and `Partially done` — skipping an item with no `Priority`:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Backlog" or .status == "In progress"
+              or .status == "Partially done") | .priority // empty]
+            | min // empty'
+
+No output is "no open item". Then the unplanned items at that priority, or at
+the one the caller gave — `Backlog`, or `Partially done` with no `Planned in:`
+line, the `next` candidates — one tab-separated id and title per line, ordered
+by the id's number, an unnumbered item last:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.priority == "<P>"
+              and (.status == "Backlog"
+                   or (.status == "Partially done"
+                       and ((.content.body // "") | test("(?m)^Planned in:")
+                            | not))))
+             | {n: ((.title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber)
+                    // 1e9),
+                id: ((.title | capture("^(?<id>B[0-9]{2,}) — ").id)
+                     // "unnumbered"),
+                title}]
+            | sort_by(.n) | .[] | [.id, .title] | @tsv'
+
+then the line naming `<P>`. No output is "no unplanned item at `<P>`".
 
 ## Errors
 
