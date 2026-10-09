@@ -36,9 +36,11 @@ pins the tool; CI loads that file, so the render writes an exact version, never
 `latest`, because under strict settings a release that adds a rule is a failing
 build nobody touched — only tool-config's `upgrade` moves it.
 `.config/mise/tasks/code/lint/detekt` is the subtask the repo's
-`code:lint:all` runs, over the whole tree, skipping `build/`, `.gradle/`,
-`.kotlin/` and any `generated/` tree, and skipping itself with a warning when
-detekt or its configuration is absent. `.config/detekt.yml` is the
+`code:lint:all` runs, over every `.kt` and `.kts` file git lists — tracked or
+untracked, never ignored — skipping `build/`, `.gradle/`, `.kotlin/` and any
+`generated/` tree, and skipping itself with a warning when detekt or its
+configuration is absent. detekt does not read `.gitignore`, so the task hands
+it git's list rather than `--input .`. `.config/detekt.yml` is the
 configuration; detekt's own discovery never looks under `.config/`, so every
 invocation names it with `--config`.
 

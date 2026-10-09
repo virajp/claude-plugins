@@ -23,13 +23,19 @@ script reads `libs.<alias>` and never spells a coordinate with a version in it.
 
 **`gradle.lockfile` is the pin, and it is committed.** Dependency locking is on
 for every configuration, so a dynamic or ranged version still resolves to the
-exact versions the lockfile records. Only `./gradlew dependencies --write-locks`
-(or `--update-locks <group>:<name>`) writes it; a lockfile is never edited by
-hand, and CI never writes one — a stale lockfile fails the build.
+exact versions the lockfile records. Only a resolve of every project under
+`--write-locks` (or `--update-locks <group>:<name>`) writes it — the language
+pack's `setup:deps:install:kotlin` and `setup:deps:upgrade:kotlin`, never the
+root-only `./gradlew dependencies`; a lockfile is never edited by hand, and CI
+never writes one — a stale lockfile fails the build. The lockfile pins
+versions, not artifact bytes: Gradle's dependency verification is the
+integrity layer a repo adds when it needs one.
 
-**Updates are reported, not applied.** The `gradle-versions-plugin`, declared in
-the catalog, reports what has moved; moving a version is a catalog edit and a
-`--write-locks` run, committed together.
+**Updates are reported, not applied.** The ben-manes `gradle-versions-plugin`
+(`com.github.ben-manes.versions`), its version in the catalog's `[plugins]`
+and applied in the root `build.gradle.kts`, reports what has moved
+(`./gradlew dependencyUpdates`); moving a version is a catalog edit and a
+re-lock, committed together.
 
 **The build cache and the configuration cache are on.** `gradle.properties`
 sets `org.gradle.caching=true` and `org.gradle.configuration-cache=true`, so a

@@ -34,6 +34,6 @@ task.
 
 **The rules that do not wait for a reference:** Gradle runs only as
 `./gradlew`; a version is written only in `gradle/libs.versions.toml`;
-`gradle.lockfile` is committed and written only by
-`./gradlew dependencies --write-locks`, never by hand; and never add a
+`gradle.lockfile` is committed and written only by an every-project
+`--write-locks` run (`mise run setup:deps:upgrade:kotlin`), never by hand; and never add a
 dependency or a plugin without the user's explicit consent.

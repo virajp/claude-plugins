@@ -27,9 +27,16 @@ gradle/wrapper/gradle-wrapper.properties # tracked — the Gradle version pin
   tampered or truncated distribution fails the download rather than running.
   Take the checksum from Gradle's published release checksums, never from the
   downloaded file itself.
-- **`gradle-wrapper.jar` is a binary in the tree.** A change to it arrives only
-  from the wrapper task; a diff to it in any other change is a finding in
-  review.
+- **`gradle-wrapper.jar` is a binary in the tree, and `./gradlew` runs it.**
+  A change to it arrives only from the wrapper task; a diff to it in any other
+  change is a finding in review.
+- **CI validates the wrapper jar before any `./gradlew`.** No local task can
+  prove the jar genuine, so the workflow runs `gradle/actions/wrapper-validation`
+  — or `gradle/actions/setup-gradle`, which validates it built in — before its
+  first Gradle step. `distributionSha256Sum` covers the distribution the jar
+  downloads; validation covers the jar itself. The language pack's
+  `setup:deps:install:kotlin --frozen` fails when `distributionSha256Sum` is
+  unset, and warns without `--frozen`.
 
 ## The Kotlin DSL
 

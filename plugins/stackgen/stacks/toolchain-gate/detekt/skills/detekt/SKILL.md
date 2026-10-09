@@ -36,11 +36,15 @@ mise run code:lint:all      # every lint subtask, as the hook runs it
 Directly:
 
 ```bash
-detekt-cli --input . \
+detekt-cli --input src/main/kotlin,src/test/kotlin \
   --config .config/detekt.yml \
-  --build-upon-default-config \
-  --excludes '**/build/**,**/.gradle/**,**/.kotlin/**,**/generated/**'
+  --build-upon-default-config
 ```
+
+`--input` takes one list, comma-separated on detekt 1.x and separated by the
+platform path separator (`:`) on 2.x. Never `--input .`: detekt does not read
+`.gitignore`, so it walks `node_modules/`, worktree checkouts and every other
+ignored tree. The task feeds it the `.kt` and `.kts` files git lists instead.
 
 The binary is `detekt-cli`, and it needs a JDK on `PATH` — the one mise pins
 for the repo. `--config` is not optional: detekt never looks under `.config/`,

@@ -59,9 +59,20 @@ dependencies {
 
 ## Reporting updates
 
-The `gradle-versions-plugin` (`com.github.ben-manes.versions`), declared in
-`[plugins]` and applied at the root, reports every catalog entry with a newer
-release:
+The ben-manes `gradle-versions-plugin` (`com.github.ben-manes.versions`),
+its version in the catalog's `[plugins]` table, is applied in the root
+`build.gradle.kts`:
+
+```kotlin
+// build.gradle.kts (root)
+plugins {
+    alias(libs.plugins.versions)
+}
+```
+
+It reports every dependency with a newer release; the language pack's
+`setup:deps:outdated:kotlin` runs it. Without the plugin applied, Gradle
+reports `dependencyUpdates` as an unknown task.
 
 ```bash
 ./gradlew dependencyUpdates
