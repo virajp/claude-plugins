@@ -87,8 +87,13 @@ tag_step() {
     exit 1
   fi
 
-  # 5. The site gate must pass before anything is tagged.
-  mise run p:site:check
+  # 5. The site gate must pass before anything is tagged — unless p:release
+  # already ran it as its preflight and says so for --tag-only.
+  if [[ "${TAG_ONLY}" == "true" && "${RELEASE_GATES_DONE:-}" == "1" ]]; then
+    print_header "Skipping p:site:check — RELEASE_GATES_DONE=1 (run by p:release's preflight)."
+  else
+    mise run p:site:check
+  fi
 
   # 6. The annotated tag.
   git tag -a "${TAG}" -m "${TAG}"
@@ -174,27 +179,28 @@ fi
 # The last tag, the level and the target.
 MANIFEST="$(node -p "require('./site/package.json').version")"
 LAST_TAG="$(git tag -l --sort=-v:refname "site-v*" | grep -E '^site-v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
-RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")"
+BASE="${LAST_TAG#site-v}"
 
-if [[ -z "${LAST_TAG}" ]]; then
-  # No tag yet: the first release is the manifest as it stands.
-  BASE=""
-  LEVEL="${RECORDED}"
-  TARGET="${MANIFEST}"
-else
-  BASE="${LAST_TAG#site-v}"
-  # A manifest below its tag, or an unreadable level, refuses like a target.
-  LEVEL="?"
-  if ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" \
-    || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
-    || ! TARGET="$(release_target "${BASE}" "${LEVEL}")"; then
-    if [[ "${DRY_RUN}" == "true" ]]; then
-      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL:-?}"
-      exit 0
-    fi
-    print_error "Refusing to release site: manifest ${MANIFEST}, tag ${LAST_TAG}, recorded level '${RECORDED}' give no valid target."
-    exit 1
+# A malformed recorded level, a manifest below its tag, or an unreadable level
+# refuses like a target. No tag yet: the first release is the manifest as it stands.
+LEVEL="?"
+RECORDED="?"
+TARGET="${MANIFEST}"
+if ! RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")" \
+  || { [[ -n "${LAST_TAG}" ]] && {
+    ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" \
+      || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
+      || ! TARGET="$(release_target "${BASE}" "${LEVEL}")"
+  }; }; then
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL:-?}"
+    exit 0
   fi
+  print_error "Refusing to release site: manifest ${MANIFEST}, tag ${LAST_TAG:-none}, recorded level '${RECORDED:-?}' give no valid target."
+  exit 1
+fi
+if [[ -z "${LAST_TAG}" ]]; then
+  LEVEL="${RECORDED}"
 fi
 
 if [[ "${DRY_RUN}" == "true" ]]; then
