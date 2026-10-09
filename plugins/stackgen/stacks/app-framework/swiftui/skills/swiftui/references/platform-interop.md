@@ -57,7 +57,9 @@ project's deployment targets, and every API newer than that minimum is guarded.
 - **Guard at the smallest scope.** An `#available` check around the one call
   or modifier that needs it, with the fallback beside it, so the fallback gets
   read and tested. An `@available` attribute on a whole type is for a type that
-  genuinely cannot exist on the older OS.
+  genuinely cannot exist on the older OS. A flow's declared OS-specific
+  feature follows the same guard, with the flow's own fallback, per
+  [iOS & iPadOS](platforms/ios-ipados.md#device-features-inside-mobile).
 - **A fallback is a real behaviour**, not an empty branch. If a feature cannot
   exist on the older OS, the screen that offers it says so or does not offer
   it.
