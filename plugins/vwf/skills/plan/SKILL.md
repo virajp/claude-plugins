@@ -369,8 +369,10 @@ advisory, when any; the parked list. Then wait for explicit approval. Offer:
 
 - **Approve & plan next** (mid-chain) — write the folder (§7), hand it off
   (§8), then proceed to the next chain element (§3).
-- **Approve only** — write the folder (§7), hand it off (§8), and stop
-  (mid-chain: the rest of the chain stays unplanned; say so).
+- **Approve only** — write the folder (§7), hand it off (§8), and stop.
+  Mid-chain, the rest of the chain stays unplanned: say so, list the remaining
+  chain elements, and end with the command for the next one,
+  `/vwf:plan <slice>` — no launch block.
 - **Reject** — then either **Revise** (apply feedback to the section named,
   re-present, looping until approved or abandoned) or **Abandon** (nothing is
   on disk; leave a one-line note of what was decided so the next attempt can
@@ -502,7 +504,26 @@ In this order.
    — so a member session addresses the same project and commits nothing for
    it.
 
-Then end with exactly this, and nothing after it:
+4. **Check that nothing is left to plan.** A launch block is a
+   recommendation to execute, and planning finishes first: every item at the
+   priority is planned before anything runs. Compute the **check priority** —
+   the highest priority among this folder's `backlog:` and `backlog_pieces:`
+   ids, or, with no id, the highest priority that has an open item (`Backlog`,
+   `In progress` or `Partially done`). Invoke
+   `/vwf:backlog unplanned <priority>`, which lists the **unplanned** items at
+   it — `Backlog`, or `Partially done` with no `Planned in:` line. Count too
+   the elements of this session's own chain not yet planned. Then:
+   - **nothing unplanned** — end with the launch block below, once;
+   - **something unplanned** — omit the launch block. List the unplanned
+     chain elements, then the unplanned items, and end with the command for
+     the next one: `/vwf:plan <slice>` for the next chain element, which comes
+     first, else `/vwf:change-plan <item>` or `/vwf:plan <slice>` for the
+     next item. `/vwf:execute` still runs if the user types it;
+   - **the backlog unreadable** — the verb says so: end with the launch block
+     below, after one line saying the backlog could not be checked and why.
+
+When nothing is unplanned, or the backlog is unreadable (after its one line),
+end with exactly this, and nothing after it:
 
 ```text
 Run in a fresh context — a fresh session, or a runner that `all` dispatches:
@@ -522,8 +543,10 @@ Do not start executing. The fresh context is the point — this session's contex
 is the survey and the interview, and the run should carry none of it.
 
 **Mid-chain**, after the push, continue to the next element (§3) — each element
-is its own folder, its own row, its own commit; the launch line is printed once
-per folder and the chain's first unexecuted plan is the one to run first.
+is its own folder, its own row, its own commit. Mid-chain, no launch line is
+printed: the next element is planned, and the launch block prints once, after
+the last element, when the check passes. The chain's first unexecuted plan is
+the one to run first.
 
 ## What this skill never does
 
