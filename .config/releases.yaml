@@ -2,3 +2,4 @@
 # Written by /vwf:execute at landing (highest level wins); cleared by the release tasks.
 vwf: MAJOR
 site: PATCH
+stackgen: MINOR
