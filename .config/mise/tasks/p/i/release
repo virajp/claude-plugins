@@ -85,8 +85,13 @@ tag_step() {
     exit 1
   fi
 
-  # 5. Tests must pass before anything is tagged.
-  mise run p:i:test
+  # 5. Tests must pass before anything is tagged — unless p:release already ran
+  # them as its preflight and says so for --tag-only.
+  if [[ "${TAG_ONLY}" == "true" && "${RELEASE_GATES_DONE:-}" == "1" ]]; then
+    print_header "Skipping p:i:test — RELEASE_GATES_DONE=1 (run by p:release's preflight)."
+  else
+    mise run p:i:test
+  fi
 
   # 6. The annotated tag.
   git tag -a "${TAG}" -m "${TAG}"
@@ -104,27 +109,25 @@ if [[ "${TAG_ONLY}" != "true" || "${DRY_RUN}" == "true" ]]; then
     git fetch --tags --quiet origin
   fi
   LAST_TAG="$(git tag -l 'installer-v*' --sort=-v:refname | grep -E '^installer-v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
-  RECORDED="$(releases_level "${RELEASES}" "${KEY}")"
   MANIFEST="$(node -p "require('./package.json').version")"
-  if [[ -z "${LAST_TAG}" ]]; then
-    # No tag yet: the first release is the manifest as it stands.
-    LAST=""
-    LEVEL="${RECORDED}"
-    TARGET="${MANIFEST}"
-  else
-    LAST="${LAST_TAG#installer-v}"
-    # A manifest below its tag, or an unreadable level, refuses like a target.
-    LEVEL="?"
-    if ! IMPLIED="$(level_implied "${LAST}" "${MANIFEST}")" \
-      || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
-      || ! TARGET="$(release_target "${LAST}" "${LEVEL}")"; then
-      if [[ "${DRY_RUN}" == "true" ]]; then
-        printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL:-?}"
-        exit 0
-      fi
-      print_error "Refusing to release installer: package.json ${MANIFEST}, tag ${LAST_TAG}, recorded level '${RECORDED}' give no valid target."
-      exit 1
+  LAST="${LAST_TAG#installer-v}"
+  # A malformed recorded level, a manifest below its tag, or no valid target
+  # refuses. No tag yet: the first release is the manifest as it stands.
+  LEVEL="?"
+  TARGET="${MANIFEST}"
+  if ! RECORDED="$(releases_level "${RELEASES}" "${KEY}")" \
+    || { [[ -n "${LAST_TAG}" ]] && ! { IMPLIED="$(level_implied "${LAST}" "${MANIFEST}")" \
+      && LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
+      && TARGET="$(release_target "${LAST}" "${LEVEL}")"; }; }; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL:-?}"
+      exit 0
     fi
+    print_error "Refusing to release installer: package.json ${MANIFEST}, tag ${LAST_TAG:-none}, recorded level '${RECORDED:-?}' give no valid target."
+    exit 1
+  fi
+  if [[ -z "${LAST_TAG}" ]]; then
+    LEVEL="${RECORDED}"
   fi
 
   if [[ "${DRY_RUN}" == "true" ]]; then
@@ -205,7 +208,10 @@ if [[ "${TAG_ONLY}" != "true" || "${DRY_RUN}" == "true" ]]; then
     exit 0
   fi
 
-  mise x -- git commit -m "ops: release installer ${TARGET}"
+  # A manifest already at its target with no recorded key stages nothing.
+  if ! git diff --cached --quiet; then
+    mise x -- git commit -m "ops: release installer ${TARGET}"
+  fi
   git push origin "${DEVELOP_BRANCH}"
   mise run code:merge:main
 
