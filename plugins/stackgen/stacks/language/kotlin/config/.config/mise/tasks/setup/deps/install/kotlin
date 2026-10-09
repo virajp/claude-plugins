@@ -23,7 +23,7 @@ fi
 
 # Only the distribution is checked here; CI validates gradle-wrapper.jar before any ./gradlew.
 # A present key is not enough: the value must be a SHA-256, 64 hex digits.
-if ! grep -Eq '^distributionSha256Sum=[0-9a-fA-F]{64}[[:space:]]*$' gradle/wrapper/gradle-wrapper.properties 2>/dev/null; then
+if ! grep -Eq '^[[:space:]]*distributionSha256Sum[[:space:]]*[=:][[:space:]]*[0-9a-fA-F]{64}[[:space:]]*$' gradle/wrapper/gradle-wrapper.properties 2>/dev/null; then
   if [[ "${frozen}" == "true" ]]; then
     print_error "setup:deps:install:kotlin: gradle-wrapper.properties sets no valid distributionSha256Sum."
     print_yellow "Set it to the 64-hex checksum Gradle publishes for the distribution, then re-run."

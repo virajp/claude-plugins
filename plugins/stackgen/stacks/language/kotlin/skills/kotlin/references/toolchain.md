@@ -81,5 +81,6 @@ downloads the JetBrains archive, checksum-verified, for macOS and Linux
 (arm64 and x64), renaming its launcher to `kotlin-lsp`. CI never loads that
 file, so the pin stays `latest` and `mise install` moves it forward. On
 Windows mise has no url for it, and it is installed by hand. `mise x --` runs
-it inside the repo's environment, so it sees the pinned JDK. It imports the Gradle build itself; a build that does not configure from
-the command line does not configure for the server either.
+it inside the repo's environment, so it sees the pinned JDK. It imports the
+Gradle build itself; a build that does not configure from the command line
+does not configure for the server either.

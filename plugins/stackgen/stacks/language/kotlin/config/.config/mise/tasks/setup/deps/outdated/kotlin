@@ -13,10 +13,16 @@ if [[ ! -x ./gradlew ]]; then
 fi
 
 # The task comes from the ben-manes plugin com.github.ben-manes.versions, applied in the root build.gradle.kts.
-if ! ./gradlew -q help --task dependencyUpdates >/dev/null 2>&1; then
-  print_warn "setup:deps:outdated:kotlin: no dependencyUpdates task (or the build does not configure), so there is nothing to report."
+# One run: only Gradle's task-not-found error is a skip; any other failure is the build's, and fails.
+log="$(mktemp "${TMPDIR:-/tmp}/stackgen-outdated.XXXXXX")"
+trap 'rm -f "${log}"' EXIT
+if ./gradlew dependencyUpdates 2>&1 | tee "${log}"; then
+  exit 0
+fi
+if grep -Eq "Task '(:)?dependencyUpdates' not found" "${log}"; then
+  print_warn "setup:deps:outdated:kotlin: no dependencyUpdates task, so there is nothing to report."
   print_yellow "Apply the ben-manes plugin com.github.ben-manes.versions in the root build.gradle.kts, then re-run."
   exit 0
 fi
-
-./gradlew dependencyUpdates
+print_error "setup:deps:outdated:kotlin: ./gradlew dependencyUpdates failed; its output is above."
+exit 1
