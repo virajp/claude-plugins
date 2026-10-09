@@ -1,0 +1,13 @@
+/security-review over f6b2edab..2c44b6ed -- plugins/ (the Skill invocation scoped itself to the main checkout's develop..main delta; the engine prompt was re-run as a sub-task over the row's range)
+
+No high-confidence vulnerabilities found.
+
+These looked like candidates but are not exploitable:
+
+- eval "files+=(${usage_files:-})" in the ktlint format and lint tasks: this is not new. The same line already exists in the pnpm, flutter, ruff, swift-format and tool-config code/{format,lint,check}/all tasks. mise's usage shell-quotes variadic args, so eval is the intended way to rebuild the array, and the all dispatcher has already evaluated the same value before it reaches these tasks.
+- http:kotlin-lsp download (mise.dev.toml): the archives and their .sha256 files both come over HTTPS from download.jetbrains.com. Same trust root, so the checksum only guards against corruption, but nothing is fetched over plain HTTP and no third party can pick the host. version_list_url is fixed to api.github.com/repos/Kotlin/kotlin-lsp, and version_regex captures only \d+\.\d+\.\d+, which is substituted into a fixed JetBrains URL. A release tag cannot redirect the download.
+- detekt (github:detekt/detekt) and ktlint (registry): both are fetched over HTTPS from the projects' own release assets. The version = "latest" pin is a supply-chain hardening point only, outside the exclusion scope.
+- ./gradlew calls in the setup:deps:* tasks: they run the repo's own committed wrapper, which is the normal Gradle trust model. The repo controls no other input to these tasks.
+- grype file:gradle.lockfile: fixed path, no interpolation.
+- gitleaks allowlist ((^|/)\.gradle/, (^|/)\.kotlin/): these are build and cache directories that are also gitignored. Secrets committed in normal sources, gradle.properties or local.properties are still scanned.
+- detekt task: the git file list is written to a mktemp file and only checked for being non-empty. Filenames are never put into a command.

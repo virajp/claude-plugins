@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+#MISE description="Delete build output"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `gradle.lockfile` stays: it is the committed lockfile.
+
+if [[ ! -x ./gradlew ]]; then
+  print_warn "setup:deps:cleanup:kotlin: no executable ./gradlew, so there is nothing to clean."
+  exit 0
+fi
+
+./gradlew clean

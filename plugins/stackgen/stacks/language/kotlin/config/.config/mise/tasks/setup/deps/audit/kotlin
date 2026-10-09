@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+#MISE description="Report known vulnerabilities in the dependency tree"
+#MISE hide=true
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# Advisory, not a gate: the advisory database moves without any lockfile change.
+
+if ! command -v grype >/dev/null 2>&1; then
+  print_warn "setup:deps:audit:kotlin: grype is not on PATH, so the audit is skipped."
+  exit 0
+fi
+
+# Every lockfile: the root's, each module's, and the settings and buildscript classpaths'.
+lockfiles=()
+while IFS= read -r lockfile; do
+  lockfiles+=("${lockfile}")
+done < <(find . \( -name build -o -name .gradle -o -name .git -o -name node_modules \
+  -o -path ./.worktrees -o -path ./.claude/worktrees \) -prune \
+  -o -type f -name '*gradle.lockfile' -print | sort)
+
+if [[ ${#lockfiles[@]} -eq 0 ]]; then
+  print_warn "setup:deps:audit:kotlin: no gradle.lockfile, so there is nothing to audit."
+  print_yellow "Run setup:deps:install to write it, then re-run."
+  exit 0
+fi
+
+# grype catalogues a file named gradle.lockfile alone, so each lockfile is staged under that
+# name — settings-gradle.lockfile and buildscript-gradle.lockfile would otherwise scan empty.
+staging="$(mktemp -d "${TMPDIR:-/tmp}/stackgen-gradle-audit.XXXXXX")"
+trap 'rm -rf "${staging}"' EXIT
+n=0
+for lockfile in "${lockfiles[@]}"; do
+  n=$((n + 1))
+  print_yellow "${lockfile#./}"
+  mkdir "${staging}/${n}"
+  cp "${lockfile}" "${staging}/${n}/gradle.lockfile"
+done
+
+# The repo's grype config carries its accepted findings, as code:sec reads it.
+if [[ -f "${MISE_PROJECT_ROOT}/.config/grype.yaml" ]]; then
+  grype "dir:${staging}" --config "${MISE_PROJECT_ROOT}/.config/grype.yaml"
+else
+  grype "dir:${staging}"
+fi

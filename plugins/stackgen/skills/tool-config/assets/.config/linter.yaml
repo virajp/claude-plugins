@@ -8,6 +8,8 @@ ignores:
   # >>> tool-config
   - "**/.build/"
   - "**/.dart_tool/"
+  - "**/.gradle/"
+  - "**/.kotlin/"
   - "**/.swiftpm/"
   - "**/.venv/"
   - "**/Derived/"

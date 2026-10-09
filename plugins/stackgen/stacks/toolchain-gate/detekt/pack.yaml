@@ -1,0 +1,11 @@
+name: detekt
+summary: The correctness gate for Kotlin — detekt's CLI through mise, building
+  on its default rules, with every layout rule left to ktlint.
+version: 0.1.0
+type: toolchain-gate
+kind: language-bundle
+axis: repo
+# Topic 10 of the language-bundle bar, the lint half. NOT a repo gate:
+# this linter is meaningful only for one toolchain, so it belongs to its
+# language's bundle.
+harness: n/a

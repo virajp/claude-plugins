@@ -1,0 +1,9 @@
+/security-review over f6b2edab..e58e08cf -- plugins/ (run as a sub-task scoped to the row's range)
+
+No high-confidence vulnerabilities found.
+
+Dismissed candidates:
+- Lockfile copies following symlinks (setup/deps/audit/kotlin:21-40): find runs without -L and with -type f, so a symlinked *gradle.lockfile is never listed. mktemp -d makes the staging directory with mode 0700, and cp writes only into fresh numbered subdirectories inside it. Nothing escapes the repo.
+- eval "files+=(${usage_files:-})" (ktlint format and lint tasks): mise shell-quotes the usage_* value. This pattern was already in 7 other shipped tasks, so it is not new.
+- Git-listed paths starting with - passed to ktlint (code/format/ktlint:96, code/lint/ktlint): a path must end in .kt/.kts and exist as a regular file. Turning that into a ktlint option with real impact is speculative. detekt adds a ./ prefix to every path.
+- kotlin-lsp http: download (mise.dev.toml): HTTPS; checksum from the same JetBrains host adds little, but that is hardening, not an exploit. Dev-only tool. The new exclusions cover only the gitignored .gradle/ and .kotlin/ caches.

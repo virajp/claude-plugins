@@ -28,9 +28,26 @@
 > - Decision K7: `setup:deps:outdated:kotlin` uses the ben-manes
 >   `gradle-versions-plugin` (`./gradlew dependencyUpdates`).
 >   `setup:deps:audit:kotlin` runs grype over `gradle.lockfile`.
-> - Decision K8: The `conf.d/kotlin/` template pins `kotlin-lsp` (`github:`
->   backend), and `lsp_servers` runs `mise x -- kotlin-lsp`. If no release asset
->   exists, the unit returns `UNRESOLVED`.
+> - Decision K8 (ruled at run time, 2026-10-09): kotlin-lsp has no GitHub
+>   release asset, so the `conf.d/kotlin/` template pins `kotlin-lsp` through
+>   the mise `http:` backend from the JetBrains CDN, in the shape of the user's
+>   working source
+>   `~/Projects/github.com/95octane/95octane/.config/mise.dev.toml:42-49`,
+>   verbatim below. `lsp_servers` runs `mise x -- kotlin-lsp`. The source covers
+>   macOS only; a platform it does not cover is a `GAP:` naming the assumption
+>   taken, never an unverified url.
+
+```toml
+[tools."http:kotlin-lsp"]
+version          = "latest"
+version_list_url = "https://api.github.com/repos/Kotlin/kotlin-lsp/releases/latest"
+version_regex    = 'kotlin-lsp/v(\d+\.\d+\.\d+)'
+
+[tools."http:kotlin-lsp".platforms]
+macos-arm64 = { checksum_url = "https://download-cdn.jetbrains.com/language-server/kotlin-server/{{version}}/kotlin-server-{{version}}-aarch64.sit.sha256", format = "zip", rename_exe = "kotlin-lsp", url = "https://download-cdn.jetbrains.com/language-server/kotlin-server/{{version}}/kotlin-server-{{version}}-aarch64.sit" }
+macos-x64   = { checksum_url = "https://download-cdn.jetbrains.com/language-server/kotlin-server/{{version}}/kotlin-server-{{version}}.sit.sha256", format = "zip", rename_exe = "kotlin-lsp", url = "https://download-cdn.jetbrains.com/language-server/kotlin-server/{{version}}/kotlin-server-{{version}}.sit" }
+```
+
 > - Decision K9: The SwiftPM pattern applies. `language/kotlin` holds the facts
 >   (`mise_tool: java`, `manifest: settings.gradle.kts`, `lsp: kotlin-lsp`, no
 >   `binaries`), the `setup/deps/*/kotlin` subtasks and the doctrine.
@@ -50,11 +67,11 @@
    template needs them.
 2. **`templates/.config/mise/conf.d/kotlin/mise.toml`** — pin `java` (Temurin
    LTS; read the current LTS via Context7 or the mise registry) and `kotlin-lsp`
-   through the `github:` backend of JetBrains' kotlin-lsp repository. Confirm a
-   downloadable release asset exists for macOS and Linux; if none, return
-   `UNRESOLVED: kotlin-lsp has no release asset for mise` and pin nothing for
-   it. Exact pins only where CI loads them, as the Swift and SwiftLint templates
-   do.
+   through the mise `http:` backend, adapting the K8 block above to a pack
+   template (`@@NAME@@` values only if the pack needs them). The block covers
+   macOS only; for any other platform, add a url only if you can verify it, else
+   record a `GAP:` with the assumption taken. Exact pins only where CI loads
+   them, as the Swift and SwiftLint templates do.
 3. **`config/.config/mise/tasks/setup/deps/{install,outdated,upgrade,audit,cleanup}/kotlin`**
    — executable bash subtasks in the shape of the Swift pack's
    `setup/deps/*/swift`, each calling `./gradlew` (never a bare `gradle`):

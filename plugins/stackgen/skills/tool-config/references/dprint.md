@@ -92,6 +92,7 @@ universal — every stack's trees, whether or not the repo uses that stack:
 | `.venv`                                     | Python's environment                                  |
 | `.build`, `.swiftpm`, `Derived`, `DerivedData` | SwiftPM and Xcode output                           |
 | `*.xcassets/`                               | Xcode rewrites every `Contents.json` inside one       |
+| `.gradle`, `.kotlin`                        | Gradle's and the Kotlin compiler's caches             |
 
 A tree a repo does not produce matches nothing and costs nothing.
 

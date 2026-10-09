@@ -1,0 +1,5 @@
+# The JDK the Gradle wrapper and the Kotlin Gradle plugin run on: Temurin, held
+# to the LTS line. A line, not `latest` — `mise latest java` answers the newest
+# Temurin feature release (27.0.0+35 today), which is not LTS
+[tools.java]
+version = "temurin-25"

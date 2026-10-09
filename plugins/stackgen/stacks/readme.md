@@ -71,6 +71,22 @@ is neither a `.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no
 Swift source is in scope. No pack lands `Package.swift`: `swift package init`
 creates it.
 
+**The Kotlin library stack made Kotlin the fifth language root on
+2026-10-09.** `kotlin-library`, `platforms: [packages]`, a Kotlin/JVM library
+published as a JAR, pins four packs: `language/kotlin` (the root, its
+template pinning the JDK as mise `java` at `temurin-25`, an LTS line, and
+`kotlin-lsp` in `mise.dev.toml` through the `http:` backend from the
+JetBrains archive, macOS and Linux only — Windows installs it by hand),
+`package-manager/gradle` (doctrine only, no `config/` tier — Gradle is the
+committed wrapper's, the compiler the Kotlin Gradle plugin's — and a
+`lockfile` fact naming every `gradle.lockfile` and `settings-gradle.lockfile`),
+`toolchain-gate/ktlint` and `toolchain-gate/detekt` — two more gates
+meaningful for one toolchain, each pinned through mise by its pack's template.
+`language/kotlin` owns the `setup:deps:<verb>:kotlin` subtasks, which run
+`./gradlew` and lock every project of the build; ktlint owns
+`code:format:ktlint` and `code:lint:ktlint`, detekt `code:lint:detekt`. No
+Android and no Kotlin Multiplatform.
+
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The first
 bundle whose root is not a language: Flutter owns the manifest and the build,
@@ -261,8 +277,9 @@ curated option survives the merge — the eight TypeScript ones, the Flutter
 app, the provider-neutral container deploy and the Claude Code plugin
 template, the four Wave D added on what were then the two tool axes, the three
 the stylesheet axis added to them, the `secrets-manager` pair above, the
-five Wave E added for the two clouds, and the two Swift ones of 2026-09-23,
-`swift-package` and the `swift-swiftui` app. Each names its components as refs,
+five Wave E added for the two clouds, the two Swift ones of 2026-09-23,
+`swift-package` and the `swift-swiftui` app, and the Kotlin one of 2026-10-09,
+`kotlin-library`. Each names its components as refs,
 mixing shipped packs (copied verbatim) with `@generated` ones (researched on
 first fetch) — which is the dispatch rule working at bundle scale rather than
 a gap.

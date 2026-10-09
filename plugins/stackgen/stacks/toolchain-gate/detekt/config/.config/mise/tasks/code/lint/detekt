@@ -1,0 +1,120 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the Kotlin sources with detekt"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="files to lint (default: the whole repo)"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+# `--fix` is ignored: layout is ktlint's, and detekt's own rules do not rewrite.
+# Whole tree from git's list, even with a file list: detekt's findings span files,
+# and detekt does not read `.gitignore`.
+
+if ! command -v detekt-cli >/dev/null 2>&1; then
+  print_warn "detekt is not installed; skipping. Run: mise install"
+  exit 0
+fi
+if [ ! -f .config/detekt.yml ]; then
+  print_warn ".config/detekt.yml is missing; skipping."
+  exit 0
+fi
+
+kotlin_scope=()
+in_git=false
+if command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
+  fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
+fi
+
+if [ "${in_git}" = "true" ]; then
+  # To a file, not a process substitution, so a failed listing stops the task.
+  git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
+  trap 'rm -f "${git_list}"' EXIT
+  git_status=0
+  git -c core.quotePath=off ls-files -z --cached --others --exclude-standard -- '*.kt' '*.kts' \
+    >"${git_list}" || git_status=$?
+  if [ "${git_status}" -ne 0 ]; then
+    print_error "git ls-files failed (exit ${git_status})"
+    exit "${git_status}"
+  fi
+  # Mid-merge git lists a conflicted path once per stage; skip the repeats.
+  previous=""
+  while IFS= read -r -d '' path; do
+    if [ "${path}" = "${previous}" ]; then
+      continue
+    fi
+    previous="${path}"
+    case "/${path}" in
+      */build/* | */.gradle/* | */.kotlin/* | */generated/*) ;;
+      *)
+        if [ -f "${path}" ]; then
+          kotlin_scope+=("./${path}")
+        fi
+        ;;
+    esac
+  done <"${git_list}"
+else
+  while IFS= read -r -d '' kotlin_file; do
+    kotlin_scope+=("${kotlin_file}")
+  done < <(find . \( -name build -o -name .gradle -o -name .kotlin -o -name generated \
+    -o -name node_modules -o -name .worktrees -o -path '*/.claude/worktrees' \) -prune \
+    -o \( -name '*.kt' -o -name '*.kts' \) -type f -print0)
+fi
+
+if [ "${#kotlin_scope[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+# `--input` takes one list: comma-separated on detekt 1.x, the path separator on 2.x.
+separator=","
+detekt_version="$(detekt-cli --version 2>/dev/null || true)"
+if [[ "${detekt_version}" =~ ^[2-9] ]]; then
+  separator=":"
+fi
+input=""
+for path in "${kotlin_scope[@]}"; do
+  if [[ "${path}" == *"${separator}"* ]]; then
+    print_warn "detekt cannot take a path containing '${separator}'; skipping ${path}"
+    continue
+  fi
+  # The argument file below splits on whitespace, quoted or not.
+  if [[ "${path}" =~ [[:space:]] ]]; then
+    print_warn "detekt cannot take a path containing whitespace; skipping ${path}"
+    continue
+  fi
+  input="${input:+${input}${separator}}${path}"
+done
+if [ -z "${input}" ]; then
+  exit 0
+fi
+
+# Through an @argument file, not argv: Linux caps one argument at 128 KiB, which
+# a large tree's --input list passes.
+argfile="$(mktemp "${TMPDIR:-/tmp}/code-lint-detekt.XXXXXX")"
+trap 'rm -f "${git_list:-}" "${argfile}"' EXIT
+{
+  printf '%s\n' --input "${input}" --config .config/detekt.yml --build-upon-default-config
+  if [[ "${usage_debug:-false}" == "true" ]]; then
+    printf '%s\n' --debug
+  fi
+} >"${argfile}"
+
+print_subheader "Linting Kotlin sources with detekt ..."
+detekt-cli "@${argfile}"

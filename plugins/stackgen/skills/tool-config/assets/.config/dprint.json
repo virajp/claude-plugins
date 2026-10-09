@@ -39,6 +39,10 @@
     "../**/DerivedData/",
     "**/*.xcassets/",
     "../**/*.xcassets/",
+    "**/.gradle/",
+    "../**/.gradle/",
+    "**/.kotlin/",
+    "../**/.kotlin/",
     // <<< tool-config
   ],
   "exec": {

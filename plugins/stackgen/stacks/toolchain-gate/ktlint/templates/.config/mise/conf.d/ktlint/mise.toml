@@ -1,0 +1,4 @@
+# ktlint, the layout gate for Kotlin; CI loads this file, so the render pins
+# it exact — a new release can add rules and fail the build
+[tools.ktlint]
+version = "latest"

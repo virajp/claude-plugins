@@ -1,0 +1,29 @@
+name: Kotlin
+summary: The Kotlin/JVM library baseline — standards and public-API design,
+  null
+  safety and the error model, coroutines and flows, kotlin.test on JUnit 5, the
+  JDK toolchain, build and run, config and observability wiring.
+version: 0.1.0
+type: language
+kind: language-bundle
+axis: project
+platforms: [ packages ]
+languages:
+  - token: kotlin
+    facts:
+      lsp: >-
+        kotlin-lsp, JetBrains' Kotlin language server; declared by this pack as
+        `kotlin-lsp` and provisioned via the generated local plugin; mise
+        installs it for development through the `http:` backend, from the
+        JetBrains archive (macOS and Linux)
+      mise_tool: java
+      manifest: settings.gradle.kts
+lsp_servers:
+  kotlin-lsp:
+    command: mise
+    args: [ x, --, kotlin-lsp, --stdio ]
+    extensionToLanguage:
+      ".kt": kotlin
+      ".kts": kotlin
+    startupTimeout: 60000
+harness: n/a

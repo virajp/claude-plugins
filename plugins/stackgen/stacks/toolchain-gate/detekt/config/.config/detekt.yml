@@ -1,0 +1,22 @@
+# Overrides only: every run passes --build-upon-default-config, so detekt's
+# default rules apply and this file changes what differs from them.
+
+config:
+  validation: true
+  warningsAsErrors: true
+
+build:
+  maxIssues: 0
+
+# Layout rules off: ktlint decides layout.
+style:
+  MaxLineLength:
+    active: false # wrapping is ktlint's, at the width its config sets
+  NewLineAtEndOfFile:
+    active: false # ktlint's final-newline rule
+  WildcardImport:
+    active: false # ktlint's no-wildcard-imports rule
+  TrailingWhitespace:
+    active: false # ktlint's no-trailing-spaces rule
+  NoTabs:
+    active: false # ktlint's indentation rule
