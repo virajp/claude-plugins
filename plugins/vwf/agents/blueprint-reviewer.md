@@ -64,6 +64,12 @@ orchestrator passes both. Verify the contract and every platform file:
       key matching its filename, and a resolving
       `Flow contract: [<name>](./index.md)` link. A missing link or a
       filename/key mismatch is a gap.
+- [ ] **OS-specific features** — every entry in a platform file's `features:`
+      frontmatter list has a `name`, a `scope` naming an OS of that platform's
+      doctrine (`ios` in this release), and a non-empty `fallback`. A missing
+      or empty `fallback` is a gap, and so is a `scope` the platform does not
+      name. `features: []` is complete, and the `scope` value is never a
+      vendor-name gap.
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
       goal-anchor list the orchestrator passed (a link to a nonexistent goal is
@@ -166,8 +172,9 @@ orchestrator passes both. Verify the contract and every platform file:
       so a named database, cloud platform, SDK, store, or third-party service is
       a gap: replace it with the prose noun in
       `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md` ("the datastore",
-      "the payment provider"). The only carve-outs are `environment.md` issuers
-      and `conventions.md#integrations` — neither of which is a flow doc.
+      "the payment provider"). The only carve-outs are `environment.md` issuers,
+      `conventions.md#integrations`, and the `scope` value of a platform file's
+      `features:` entry, which names an OS rather than a vendor.
 - [ ] Section-to-project mappings match the registry (by project **name** and
       `role`/`platforms` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in

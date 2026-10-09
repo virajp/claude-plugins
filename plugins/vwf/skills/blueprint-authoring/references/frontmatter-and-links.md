@@ -73,16 +73,25 @@ concept.
 
 ## The `platform:` key (which platform a flow file renders)
 
-A flow's **platform file** carries one more key beside `status:` and
+A flow's **platform file** carries two more keys beside `status:` and
 `implementation:`:
 
 ```yaml
 platform: mobile # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp
+features: [] # OS-specific features on this platform; [] when none. Each entry:
+#   - name: <the feature, in words>
+#     scope: ios # one OS name from the platform doctrine — `ios` in this release
+#     fallback: <what the other OS, or a device without the feature, shows> # required
 ```
 
+`features:` lists each OS-specific feature on this platform — `name`, `scope`
+and a **required** `fallback`; the reviewer returns a gap for a missing or
+empty `fallback` and for a `scope` the platform does not name. The rule is
+[flow-contract.md](flow-contract.md#os-specific-features).
+
 Since **format 15** the platform lives in the **filename** (`mobile.md`,
-`auto.md`, …); this key restates it so the file is self-describing, and the
-reviewer checks the two agree. The old `device:` key on `index.md` is
+`auto.md`, …); the `platform:` key restates it so the file is self-describing,
+and the reviewer checks the two agree. The old `device:` key on `index.md` is
 **retired** — a flow contract is platform-agnostic, and in-car journeys are no
 longer separate flows.
 
@@ -101,7 +110,9 @@ Rules the reviewer enforces:
 - `watch` covers **watchOS and Wear OS**, `tv` **tvOS and Android TV**, and
   `spatial` **visionOS, Android XR and Quest** — the same form-factor rule:
   a vendor difference is a deviation inside the one platform file, never a
-  separate file.
+  separate file. The one exception is an **OS-specific feature** — one OS
+  offers it, the other does not — which is a `features:` entry (above), not a
+  deviation.
 - Screen **codes** are shared across a flow's platform files — `100a` is one
   screen concept; a platform lacking it omits the row, and a platform-only
   screen takes the next letter free across the whole flow.

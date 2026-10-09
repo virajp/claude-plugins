@@ -43,8 +43,10 @@ Its Screens elicitation pins the in-car specifics per screen: the OS
 **template** it maps to (list / grid / map / now-playing / …), the glanceable
 content subset vs the phone screen, and the driver-distraction constraints —
 recorded under the platform file's **Platform deviations**, noting any
-CarPlay-vs-Android-Auto difference there. In-car UIs are template-constrained by
-the OS; custom layout does not apply.
+CarPlay-vs-Android-Auto difference there. An OS-specific feature — one system
+offers it, the other does not — is not a deviation: its record is the platform
+file's `features:` list, whose entry shape `flow-platform.md` owns. In-car UIs
+are template-constrained by the OS; custom layout does not apply.
 
 ## Watch (`watch`)
 
@@ -56,7 +58,8 @@ Digital Crown (or rotary input) as the input for scrolling and value entry;
 which content surfaces as a **complication or widget**, a first-class surface
 beside the app's own screens; and the short-session shape — every task done in
 seconds, nothing that needs a keyboard. Recorded under the platform file's
-**Platform deviations**, noting any watchOS-vs-Wear-OS difference there.
+**Platform deviations**, noting any watchOS-vs-Wear-OS difference there; an
+OS-specific feature goes in the `features:` list instead (`flow-platform.md`).
 
 ## TV (`tv`)
 
@@ -66,7 +69,8 @@ never its own flow. Its Screens elicitation pins the TV specifics per screen:
 a visible focus state, a predictable focus order across the screen; the
 **10-foot distance** — large type and the safe-area margins the screen edge
 needs; and no touch and no hover as inputs. Recorded under the platform file's
-**Platform deviations**, noting any tvOS-vs-Android-TV difference there.
+**Platform deviations**, noting any tvOS-vs-Android-TV difference there; an
+OS-specific feature goes in the `features:` list instead (`flow-platform.md`).
 
 ## Spatial (`spatial`)
 
@@ -77,7 +81,8 @@ three surfaces the screen uses — a **window**, a **volume**, or an **immersive
 space**; comfortable depth and ergonomic placement in the user's field of view;
 and **ornaments** for controls attached to a window's edge. Recorded under the
 platform file's **Platform deviations**, noting any difference between the
-three systems there.
+three systems there; an OS-specific feature goes in the `features:` list instead
+(`flow-platform.md`).
 
 ## Doc unit
 

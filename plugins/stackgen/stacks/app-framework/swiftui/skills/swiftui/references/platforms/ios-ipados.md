@@ -66,8 +66,44 @@ a sidebar on a regular-width iPad), touch targets of the platform's minimum
 size, and the design system's tokens throughout. The difference between the two
 tokens is layout, never behaviour — a task the phone can do, the tablet can do.
 
-**Out of scope:** device- and OS-specific features inside a form factor — a
-particular island, notch or camera cut-out treatment, a single model's frame
-size. A product that needs one records it as a platform deviation in its flow
-and realises it behind a narrow availability check, per
-[platform interop](../platform-interop.md).
+**OS-specific features are declared, then guarded.** A flow's platform file
+may list an OS-specific feature as a `features:` entry. An entry with
+`scope: ios` is built behind an availability check (`#available`) at the
+smallest scope that needs it, per [platform interop](../platform-interop.md),
+and the code shows the entry's declared `fallback` wherever the check fails.
+The stack builds the fallback the flow names; it never invents one, and a
+feature with no entry is not built.
+
+## Device features inside mobile
+
+The worked case is the **Dynamic Island**. It is present on iPhone models with
+a Dynamic Island and absent on earlier iPhones, and both run the same `mobile`
+target. Two separate things decide what a user sees, and the code handles
+each:
+
+- **The OS** — Live Activities, which feed the island, need iOS 16.1. Guard
+  the call that starts one with `#available(iOS 16.1, *)`, and check that the
+  user has not turned Live Activities off before starting one. The `else`
+  branch shows the declared fallback.
+- **The hardware** — no availability check sees the island itself. A Live
+  Activity carries two presentations: the island's, and the Lock Screen's,
+  which the system shows as a banner on a device without the island. Build
+  the Lock Screen presentation as the declared fallback, so a device without
+  the island still shows what the flow asked for.
+
+The pattern, with the fallback left as the declaring flow sets it:
+
+```swift
+func startTracking(_ order: Order) {
+    if #available(iOS 16.1, *),
+       ActivityAuthorizationInfo().areActivitiesEnabled {
+        startOrderActivity(order) // the island, or the Lock Screen banner
+    } else {
+        showDeclaredFallback(for: order) // the flow's `fallback`, as written
+    }
+}
+```
+
+The example shows the shape, not a product's answer: what the fallback is —
+an in-app banner, a status row, nothing at all — is the flow's `fallback`
+field, read from the entry, never chosen here.
