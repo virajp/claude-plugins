@@ -1748,34 +1748,37 @@ drift detectors; nothing selects a migration by them, so there is no support
 window.
 
 Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
-linkage; project roles and platforms; stacks) and confirms it with you via MCQ,
-then produces a **dry-run plan** of every doc to scaffold or reconcile. On a
-new/empty repo it applies the workspace structure as the default and elicits
-each project's stack from the [template menu](#stack-templates) — a platform no
-installed plugin has a template for leaves that axis for `/vwf:architecture` to
-settle rather than halting the run. An axis setup finds **absent** on a repo
-architecture has not run on is written `unresolved` and the run carries on: the
-one case in which setup writes that value, and it fills an absence only — a
-pinned slug is never rewritten. It also writes the product's **one**
-`mempalace.yaml`, at the repo root — one wing, the seven rooms vwf's memory
-protocol uses, and a secret denylist behind `.gitignore` — mining the whole tree
-including submodules, and consolidating away any config it finds in `.config/`
-or a submodule root (mining reads the config only from the directory it is
-pointed at, so a stray one is silently inert rather than merely wrong). Nothing
-is written until you approve; it works in a worktree, never deletes, and **never
-moves a source file** — a layout that differs from its topology's grouping, and
-an `iac` project sitting in another project's repo, both end the run as written
-recommendations rather than as moves. It merges a vwf section into your
-`CLAUDE.md`, confirms the `.graphifyignore` `/stackgen:tool-config all` landed
-is present (see [Code intelligence](#code-intelligence)) — writing no ignore
-file itself — bootstraps `environment.md` from the repo's existing env-var and
-secret usage (names only), detects the repo's verification-harness capabilities
-(dev server, E2E, staging mode), and stamps the **vwf config** at
-`.config/vwf.yaml` — the blueprint and config format versions, harness
-inventory, enforcement opt-outs, and per-project nuances (a coverage-target
-override, a non-conventional health path) — so a later run detects drift, and
-every command knows how vwf operates in this repo (pipeline knobs, verify
-environments, the mempalace wing).
+linkage; project roles and platforms — `watch`, `tv` and `spatial` from an Xcode
+target's SDK or an `AndroidManifest.xml` feature, Wear OS from
+`android.hardware.type.watch`, Android TV from `android.software.leanback`, and
+`auto` from the Car App Library metadata or `android.hardware.type.automotive`;
+stacks) and confirms it with you via MCQ, then produces a **dry-run plan** of
+every doc to scaffold or reconcile. On a new/empty repo it applies the workspace
+structure as the default and elicits each project's stack from the
+[template menu](#stack-templates) — a platform no installed plugin has a
+template for leaves that axis for `/vwf:architecture` to settle rather than
+halting the run. An axis setup finds **absent** on a repo architecture has not
+run on is written `unresolved` and the run carries on: the one case in which
+setup writes that value, and it fills an absence only — a pinned slug is never
+rewritten. It also writes the product's **one** `mempalace.yaml`, at the repo
+root — one wing, the seven rooms vwf's memory protocol uses, and a secret
+denylist behind `.gitignore` — mining the whole tree including submodules, and
+consolidating away any config it finds in `.config/` or a submodule root (mining
+reads the config only from the directory it is pointed at, so a stray one is
+silently inert rather than merely wrong). Nothing is written until you approve;
+it works in a worktree, never deletes, and **never moves a source file** — a
+layout that differs from its topology's grouping, and an `iac` project sitting
+in another project's repo, both end the run as written recommendations rather
+than as moves. It merges a vwf section into your `CLAUDE.md`, confirms the
+`.graphifyignore` `/stackgen:tool-config all` landed is present (see
+[Code intelligence](#code-intelligence)) — writing no ignore file itself —
+bootstraps `environment.md` from the repo's existing env-var and secret usage
+(names only), detects the repo's verification-harness capabilities (dev server,
+E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
+blueprint and config format versions, harness inventory, enforcement opt-outs,
+and per-project nuances (a coverage-target override, a non-conventional health
+path) — so a later run detects drift, and every command knows how vwf operates
+in this repo (pipeline knobs, verify environments, the mempalace wing).
 
 #### The materialize pass
 
@@ -2298,8 +2301,9 @@ rendered screen) and the comment overlay. Comments land in
 `__renders/comments.yaml`; after Done, each `open` one goes to
 [`/vwf:feedback`](#vwffeedback) as a UX issue, one at a time, for you to confirm
 or decline. Today the TypeScript pack's `ux-gate` returns the image list, and
-the Compose pack's does for `mobile` and `tablet`, so web and Android projects
-have renders; the Flutter and SwiftUI gates keep none yet.
+the Compose pack's does for `mobile`, `tablet`, `watch` and `tv` (never `auto`,
+whose Car App Library templates Roborazzi cannot render), so web and Android
+projects have renders; the Flutter and SwiftUI gates keep none yet.
 
 ### /vwf:screens
 

@@ -253,9 +253,10 @@ project (`site` or `webapp`) in the browser, in its default view and each pinned
 state it can reach, as `<code>--<state>.png`, and returns the captures as vwf's
 `renders:` list. [`/vwf:execute`](./vwf.md#vwfexecute) keeps them after the run,
 and [`/vwf:mockups renders`](./vwf.md#vwfmockups) serves them. The Compose
-pack's `ux-gate` returns the same list for `mobile` and `tablet`, copying each
-Roborazzi golden it verified. The Flutter and SwiftUI gates return no such list
-yet, so their renders are not kept.
+pack's `ux-gate` returns the same list for `mobile`, `tablet`, `watch` and `tv`
+— never `auto`, which it does not render — copying each Roborazzi golden it
+verified. The Flutter and SwiftUI gates return no such list yet, so their
+renders are not kept.
 
 Five **framework** packs ship today, `effect`, `astro`, `cloudflare-agents`,
 `html` and `android`; every other framework a bundle names is a `@generated`
@@ -382,11 +383,12 @@ Multiplatform.
 
 **Android** followed the same day on those four packs, as two bundles:
 `kotlin-compose`, the third `app-framework` bundle and the second under
-`native-ui`, serving `mobile` and `tablet` from one app module, and
-`android-library`, a language-bundle publishing an **AAR** on `packages`. Both
-pin `framework/android` — the Android Gradle plugin, the Android SDK, Android
-Lint and the emulator — and `kotlin-compose` adds `app-framework/compose`. The
-android pack's `templates/.config/mise/conf.d/android/mise.toml` pins the SDK's
+`native-ui`, serving `mobile`, `tablet`, `watch`, `tv` and `auto` from one
+Gradle project, and `android-library`, a language-bundle publishing an **AAR**
+on `packages`. Both pin `framework/android` — the Android Gradle plugin, the
+Android SDK, Android Lint and the emulator — and `kotlin-compose` adds
+`app-framework/compose`. The android pack's
+`templates/.config/mise/conf.d/android/mise.toml` pins the SDK's
 **cmdline-tools** through mise's `http:` backend at an exact build, with a
 sha256 per platform — a build number is no `X.Y.Z`, so the render cannot resolve
 `latest` and the pin is moved by hand — and sets `ANDROID_HOME` to
@@ -411,10 +413,26 @@ wiring only like Flutter's and SwiftUI's. Its goldens are
 [Roborazzi](https://github.com/takahirom/roborazzi) captures rendered on the JVM
 under Robolectric, committed under `src/test/screenshots/`: `test:golden`
 verifies them, `mise run test:golden -- --record` re-records them. Its `ux-gate`
-runs them on a Pixel 7 qualifier for `mobile` and a medium tablet for `tablet`,
-reads the Accessibility Test Framework's checks off the same run, and returns
-the `renders:` list. Wear OS, Android TV, Android Auto and Android XR are not
-covered yet.
+runs them on a Pixel 7 qualifier for `mobile`, a medium tablet for `tablet`, a
+large round Wear OS watch for `watch` and a 1080p television for `tv`, reads the
+Accessibility Test Framework's checks off the same run, and returns the
+`renders:` list.
+
+The two packs then went to **0.2.0** and the bundle took every Android form
+factor but XR: `watch` is Wear OS, `tv` is Android TV and Google TV, and `auto`
+is Android Auto and Android Automotive OS, declared only alongside `mobile`. The
+compose pack gained one platform reference each — Compose for Wear OS with tiles
+and complications, Compose for TV with D-pad focus, and the Car App Library
+templates `auto` draws instead of Compose — plus a Jetpack Glance widgets
+reference. Roborazzi cannot render a Car App Library template, so the `ux-gate`
+reports each changed `auto` screen as a finding and returns `rendered: n/a` when
+every changed screen is `auto`. The android pack gained references for each form
+factor's manifest features and devices, Baseline Profiles with Macrobenchmark,
+Play Feature Delivery modules, and a note that instant apps are retired.
+[`/vwf:setup`](./vwf.md#vwfsetup) detects `watch` from
+`android.hardware.type.watch`, `tv` from `android.software.leanback`, and `auto`
+from the Car App Library metadata or `android.hardware.type.automotive`. Android
+XR (`spatial`) is not covered.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library

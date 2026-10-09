@@ -98,7 +98,8 @@ mise's `http:` backend at an exact build with a sha256 per platform, sets
 `test:e2e`, which runs the instrumented tests on the Gradle Managed Device
 `e2e`, or `connectedCheck` under `-- --connected`. Two bundles pin it:
 `android-library`, an AAR on `packages`, and `kotlin-compose`, the app on
-`mobile` and `tablet`, which adds `app-framework/compose`.
+`mobile`, `tablet`, `watch`, `tv` and `auto`, which adds
+`app-framework/compose`.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The first
@@ -134,7 +135,8 @@ Apple. Like Flutter's, they are wiring only; third-party integrations are not
 covered yet.
 
 **`app-framework/compose` made the third on 2026-10-09**, the second in
-`native-ui`, rooting the `kotlin-compose` bundle on `mobile` and `tablet`.
+`native-ui`, rooting the `kotlin-compose` bundle — first on `mobile` and
+`tablet`.
 Jetpack Compose with Material 3 is the only toolkit; the app doctrine is a
 ViewModel with StateFlow, Hilt, Navigation Compose and Room, with Jetpack
 integration references, wiring only. Its goldens are Roborazzi captures on
@@ -142,6 +144,15 @@ Robolectric under `test:golden`, and its `ux-gate` returns them as `renders:`.
 The four-part ownership test does not hold — Gradle and AGP own the manifest
 and the build — so the type is kept for the doctrine, with the reason in the
 pack's `conventions.md`.
+
+**The Android form factors followed the same day**, taking `compose` and
+`android` to `0.2.0` and the bundle to `watch` (Wear OS), `tv` (Android TV and
+Google TV) and `auto` (Android Auto and Automotive OS, declared alongside
+`mobile`). The compose pack gained a platform reference each and a Jetpack
+Glance one; its `ux-gate` renders `watch` and `tv` and reports `auto` — Car
+App Library templates Roborazzi cannot render — as `n/a`. The android pack
+gained form-factor manifests, Baseline Profiles, Play Feature Delivery and a
+note that instant apps are retired. Android XR (`spatial`) is not covered.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
