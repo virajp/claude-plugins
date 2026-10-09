@@ -70,6 +70,9 @@ eq "absent key → NONE" NONE releases_level "$F" stackgen
 eq "present key → value" MAJOR releases_level "$F" vwf
 eq "second key → value" PATCH releases_level "$F" site
 refuses "bad value → non-zero" releases_level "$F" bad
+printf 'vwf: PATCH\nsite: MINOR\nvwf: MAJOR\n' >"$SANDBOX/dup.yaml"
+refuses "duplicated key → non-zero" releases_level "$SANDBOX/dup.yaml" vwf
+eq "duplicated other key → value" MINOR releases_level "$SANDBOX/dup.yaml" site
 
 print_header "releases_raise ..."
 F="$SANDBOX/raise.yaml"

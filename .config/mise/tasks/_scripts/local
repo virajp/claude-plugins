@@ -160,17 +160,23 @@ releases_level() {
   local found value
   found="$(awk -v k="${key}" '
     index($0, k ":") == 1 {
+      n++
+      if (n > 1) { print "!dup"; exit }
       v = substr($0, length(k) + 2)
       sub(/#.*/, "", v)
       gsub(/[ \t\r]/, "", v)
-      print "=" v
-      exit
     }
+    END { if (n == 1) print "=" v }
   ' "${file}")"
 
   if [ -z "${found}" ]; then
     echo NONE
     return 0
+  fi
+
+  if [ "${found}" = "!dup" ]; then
+    print_error "Key '${key}' appears more than once in ${file}."
+    return 1
   fi
 
   value="${found#=}"
