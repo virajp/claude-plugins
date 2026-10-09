@@ -140,11 +140,13 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     exit 1
   fi
   # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
-  MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
-  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
-    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
-    exit 1
-  fi
+  # Either variable may be the one code:merge:main reads, so both must be direct.
+  for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
+    if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
+      print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+      exit 1
+    fi
+  done
   git fetch --tags --quiet origin
 elif ! git fetch --tags --quiet origin 2>/dev/null; then
   print_warn "Could not fetch tags — the last tags below are this checkout's."
