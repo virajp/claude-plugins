@@ -72,11 +72,8 @@ jobs:
             printf '%s\n' "$dirty"
             exit 1
           fi
+          # -u: code:merge:main's unpushed check reads develop@{u}.
           git push -u origin develop
-          if [ -n "$(git log --oneline origin/develop..develop)" ]; then
-            echo "::error::develop has commits origin/develop does not."
-            exit 1
-          fi
 
           # code:merge:main needs a local main to check out.
           git fetch origin main
