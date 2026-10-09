@@ -1,10 +1,24 @@
 #!/usr/bin/env bash
-#MISE description="Tag the website release on main and watch the deploy pipeline"
+#MISE description="Bump the website from its last tag and recorded level, land the bump on main, tag it and watch the deploy pipeline"
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--ci" help="CI mode: stop after creating the tag (the caller pushes + dispatches); skips the interactive push and pipeline watch"
+#USAGE flag "--dry-run" help="print the last tag, the level and the version it would release; check no branch, write nothing"
+#USAGE flag "--no-commit" help="bump site/package.json and clear the site key, stage both, and stop — on develop (p:release commits)"
+#USAGE flag "--tag-only" help="tag the version main already carries, push and watch — on main (p:release, after its merge)"
 
-# Tags what main already carries; never bumps or commits.
+# The site releases from its last site-v* tag, at the higher of the level
+# recorded under `site` in .config/releases.yaml and the level an untagged
+# site/package.json implies against that tag (13 and 17 skipped).
+#
+#   (no flag)    from develop: bump site/package.json, clear the site key, commit,
+#                push develop, merge develop into main with code:merge:main, tag on
+#                main, push main then the tag, watch site.yml, back to develop
+#   --no-commit  the bump step alone, staged on develop
+#   --tag-only   the tag step alone, on main — tags the version site/package.json carries
+#   --dry-run    one line; no branch or tree check, nothing written
+#
+# Nothing to release (level NONE, manifest equal to the tag) is a skip, not an error.
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -12,89 +26,215 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
+CI_MODE="${usage_ci:-false}"
+DRY_RUN="${usage_dry_run:-false}"
+NO_COMMIT="${usage_no_commit:-false}"
+TAG_ONLY="${usage_tag_only:-false}"
+BUMP_BRANCH="develop"
 RELEASE_BRANCH="main"
+RELEASES_FILE=".config/releases.yaml"
+KEY="site"
 
-# 1. A clean tree, so the tag names what was tested.
-if [[ -n "$(git status --porcelain)" ]]; then
-  print_error "Working tree is not clean. Commit or stash your changes first."
+if [[ "${NO_COMMIT}" == "true" && "${TAG_ONLY}" == "true" ]]; then
+  print_error "--no-commit and --tag-only are two halves of one release; pass one of them."
   exit 1
 fi
 
-# 2. Only from main — the workflow refuses a tag not reachable from it.
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
-  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Bump with 'mise run p:site:version' on develop, commit, merge to ${RELEASE_BRANCH}, then run this."
-  exit 1
-fi
+# Never push a tag we cannot then watch.
+require_gh() {
+  if ! command -v gh >/dev/null 2>&1; then
+    print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
+    exit 1
+  fi
+  if ! gh auth status >/dev/null 2>&1; then
+    print_error "gh is not authenticated. Run: gh auth login"
+    exit 1
+  fi
+}
 
-VERSION="$(node -p "require('./site/package.json').version")"
+# The tag step: the version site/package.json carries on main, tagged once, pushed and watched.
+tag_step() {
+  # 1. A clean tree, so the tag names what was tested.
+  if [[ -n "$(git status --porcelain)" ]]; then
+    print_error "Working tree is not clean. Commit or stash your changes first."
+    exit 1
+  fi
 
-# 3. Refuse a hand-edited 13 or 17 component before tagging.
-if version_forbidden "${VERSION}"; then
-  print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component. Bump past it with 'mise run p:site:version' on develop."
-  exit 1
-fi
+  # 2. Only from main — the workflow refuses a tag not reachable from it.
+  local branch
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${branch}" != "${RELEASE_BRANCH}" ]]; then
+    print_error "On '${branch}', not '${RELEASE_BRANCH}'. Run 'mise run p:site:release' on ${BUMP_BRANCH} — it bumps, merges and tags — or merge to ${RELEASE_BRANCH} first."
+    exit 1
+  fi
 
-# Namespaced — a bare `v*` glob would match every other tag family.
-TAG="site-v${VERSION}"
+  VERSION="$(node -p "require('./site/package.json').version")"
 
-# 4. The tag must not exist on the remote yet.
-git fetch --tags --quiet origin
-if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-  print_error "${TAG} already exists. Bump with 'mise run p:site:version' on develop, commit, and merge to ${RELEASE_BRANCH} first."
-  exit 1
-fi
+  # 3. Refuse a hand-edited 13 or 17 component before tagging.
+  if version_forbidden "${VERSION}"; then
+    print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component."
+    exit 1
+  fi
 
-# 5. The site gate must pass before anything is tagged.
-mise run p:site:check
+  # Namespaced — a bare `v*` glob would match every other tag family.
+  TAG="site-v${VERSION}"
 
-# 6. The annotated tag.
-git tag -a "${TAG}" -m "${TAG}"
+  # 4. The tag must not exist on the remote yet.
+  git fetch --tags --quiet origin
+  if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+    print_error "${TAG} already exists. Record a level for 'site' in ${RELEASES_FILE} and run 'mise run p:site:release' on ${BUMP_BRANCH}."
+    exit 1
+  fi
 
-print_header "Created ${TAG}."
+  # 5. The site gate must pass before anything is tagged.
+  mise run p:site:check
 
-# 7. --ci: tag only; the calling workflow pushes and deploys.
-if [[ "${usage_ci:-false}" == "true" ]]; then
-  print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + deploy."
+  # 6. The annotated tag.
+  git tag -a "${TAG}" -m "${TAG}"
+
+  print_header "Created ${TAG}."
+
+  # 7. --ci: tag only; the calling workflow pushes and deploys.
+  if [[ "${CI_MODE}" == "true" ]]; then
+    print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + deploy."
+    return 0
+  fi
+
+  require_gh
+
+  # main BEFORE the tag — the workflow checks the tag is reachable from origin/main.
+  print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
+  git push origin "${RELEASE_BRANCH}"
+  git push origin "${TAG}"
+
+  # 8. Match the tag's run by ref AND commit — the main push's run shares the SHA but never deploys.
+  local release_sha run_id=""
+  release_sha="$(git rev-parse HEAD)"
+  print_header "Waiting for the site workflow to start on ${TAG} ..."
+  for _ in $(seq 1 30); do
+    run_id="$(gh run list --workflow=site.yml --limit 20 \
+      --json databaseId,headSha,headBranch \
+      --jq "[.[] | select(.headBranch==\"${TAG}\" and .headSha==\"${release_sha}\")][0].databaseId" 2>/dev/null || true)"
+    if [[ -n "${run_id}" && "${run_id}" != "null" ]]; then
+      break
+    fi
+    sleep 4
+  done
+
+  if [[ -z "${run_id}" || "${run_id}" == "null" ]]; then
+    print_error "Site workflow run did not appear. Check manually: gh run list --workflow=site.yml"
+    exit 1
+  fi
+
+  # --exit-status: this task fails when the pipeline does.
+  print_header "Watching site run ${run_id} ..."
+  gh run watch "${run_id}" --exit-status
+
+  print_header "Deploy pipeline succeeded — https://claude-plugins.virajp.dev is on site-v${VERSION}."
+}
+
+if [[ "${TAG_ONLY}" == "true" && "${DRY_RUN}" != "true" ]]; then
+  tag_step
   exit 0
 fi
 
-# 8. Never push a tag we cannot then watch.
-if ! command -v gh >/dev/null 2>&1; then
-  print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
-  exit 1
-fi
-if ! gh auth status >/dev/null 2>&1; then
-  print_error "gh is not authenticated. Run: gh auth login"
-  exit 1
-fi
-
-# main BEFORE the tag — the workflow checks the tag is reachable from origin/main.
-print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
-git push origin "${RELEASE_BRANCH}"
-git push origin "${TAG}"
-
-# 9. Match the tag's run by ref AND commit — the main push's run shares the SHA but never deploys.
-RELEASE_SHA="$(git rev-parse HEAD)"
-print_header "Waiting for the site workflow to start on ${TAG} ..."
-RUN_ID=""
-for _ in $(seq 1 30); do
-  RUN_ID="$(gh run list --workflow=site.yml --limit 20 \
-    --json databaseId,headSha,headBranch \
-    --jq "[.[] | select(.headBranch==\"${TAG}\" and .headSha==\"${RELEASE_SHA}\")][0].databaseId" 2>/dev/null || true)"
-  if [[ -n "${RUN_ID}" && "${RUN_ID}" != "null" ]]; then
-    break
+# The bump step's checks: on develop, and a clean tree. Under --no-commit the
+# index may already hold a sibling release task's staged bump, so only unstaged
+# and untracked changes are refused.
+if [[ "${DRY_RUN}" != "true" ]]; then
+  BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${BRANCH}" != "${BUMP_BRANCH}" ]]; then
+    print_error "On '${BRANCH}', not '${BUMP_BRANCH}'. A release bumps on ${BUMP_BRANCH} and reaches ${RELEASE_BRANCH} by merge."
+    exit 1
   fi
-  sleep 4
-done
-
-if [[ -z "${RUN_ID}" || "${RUN_ID}" == "null" ]]; then
-  print_error "Site workflow run did not appear. Check manually: gh run list --workflow=site.yml"
-  exit 1
+  if [[ "${NO_COMMIT}" == "true" ]]; then
+    if ! git diff --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+      print_error "Working tree has unstaged or untracked changes. Commit or stash them first."
+      exit 1
+    fi
+  else
+    if [[ -n "$(git status --porcelain)" ]]; then
+      print_error "Working tree is not clean. Commit or stash your changes first."
+      exit 1
+    fi
+    [[ "${CI_MODE}" == "true" ]] || require_gh
+  fi
+  git fetch --tags --quiet origin
+elif ! git fetch --tags --quiet origin 2>/dev/null; then
+  print_warn "Could not fetch tags — the last tag below is this checkout's."
 fi
 
-# --exit-status: this task fails when the pipeline does.
-print_header "Watching site run ${RUN_ID} ..."
-gh run watch "${RUN_ID}" --exit-status
+# The last tag, the level and the target.
+MANIFEST="$(node -p "require('./site/package.json').version")"
+LAST_TAG="$(git tag -l --sort=-v:refname "site-v*" | grep -E '^site-v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
+RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")"
 
-print_header "Deploy pipeline succeeded — https://claude-plugins.virajp.dev is on site-v${VERSION}."
+if [[ -z "${LAST_TAG}" ]]; then
+  # No tag yet: the first release is the manifest as it stands.
+  BASE=""
+  LEVEL="${RECORDED}"
+  TARGET="${MANIFEST}"
+else
+  BASE="${LAST_TAG#site-v}"
+  LEVEL="$(level_max "${RECORDED}" "$(level_implied "${BASE}" "${MANIFEST}")")"
+  if ! TARGET="$(release_target "${BASE}" "${LEVEL}")"; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL}"
+      exit 0
+    fi
+    exit 1
+  fi
+fi
+
+if [[ "${DRY_RUN}" == "true" ]]; then
+  printf '%-10s tag %-22s level %-6s → %s\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL}" "${TARGET:-skip}"
+  exit 0
+fi
+
+if [[ -z "${TARGET}" ]]; then
+  print_success "No recorded level for 'site' and site/package.json is at ${LAST_TAG} — nothing to release."
+  exit 0
+fi
+
+# Bump. From a clean tree with the manifest at its tag, p:site:version writes it
+# (and prints any 13/17 skip); otherwise — the manifest already ahead, or a
+# sibling's bump staged under --no-commit — set the target directly.
+if [[ "${TARGET}" != "${MANIFEST}" ]]; then
+  if [[ "${MANIFEST}" == "${BASE}" && -z "$(git status --porcelain)" ]]; then
+    case "${LEVEL}" in
+      MAJOR) mise run p:site:version -- --major ;;
+      MINOR) mise run p:site:version -- --minor ;;
+      *) mise run p:site:version ;;
+    esac
+  else
+    (cd site && pnpm version "${TARGET}" --no-git-tag-version --no-git-checks)
+  fi
+  WRITTEN="$(node -p "require('./site/package.json').version")"
+  if [[ "${WRITTEN}" != "${TARGET}" ]]; then
+    print_error "site/package.json is at ${WRITTEN}, expected ${TARGET}."
+    exit 1
+  fi
+fi
+
+releases_clear "${RELEASES_FILE}" "${KEY}"
+git add -- site/package.json
+if [[ -f "${RELEASES_FILE}" ]]; then
+  git add -- "${RELEASES_FILE}"
+fi
+
+if [[ "${NO_COMMIT}" == "true" ]]; then
+  print_success "Staged on ${BUMP_BRANCH}: site ${TARGET}"
+  exit 0
+fi
+
+# A manifest already at its target with no recorded key stages nothing.
+if ! git diff --cached --quiet; then
+  mise x -- git commit -m "ops: release site ${TARGET}"
+fi
+git push origin "${BUMP_BRANCH}"
+mise run code:merge:main
+
+# Tag on main, and come back to develop whatever happens.
+git switch -q "${RELEASE_BRANCH}"
+trap 'git switch -q "${BUMP_BRANCH}" || print_warn "Still on ${RELEASE_BRANCH} — switch back to ${BUMP_BRANCH} by hand."' EXIT
+tag_step
