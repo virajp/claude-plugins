@@ -95,6 +95,9 @@ tag_step() {
     mise run p:site:check
   fi
 
+  # gh before the tag, so a missing gh leaves no local tag behind.
+  [[ "${CI_MODE}" == "true" ]] || require_gh
+
   # 6. The annotated tag.
   git tag -a "${TAG}" -m "${TAG}"
 
@@ -105,8 +108,6 @@ tag_step() {
     print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + deploy."
     return 0
   fi
-
-  require_gh
 
   # main BEFORE the tag — the workflow checks the tag is reachable from origin/main.
   print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
@@ -166,10 +167,14 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     [[ "${CI_MODE}" == "true" ]] || require_gh
   fi
   # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
-  MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
-  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
-    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
-    exit 1
+  # Either setting off direct refuses — empty or unset reads as direct.
+  if [[ "${NO_COMMIT}" != "true" ]]; then
+    for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
+      if [[ "${MERGE_MODE}" != "direct" ]]; then
+        print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+        exit 1
+      fi
+    done
   fi
   git fetch --tags --quiet origin
 elif ! git fetch --tags --quiet origin 2>/dev/null; then
