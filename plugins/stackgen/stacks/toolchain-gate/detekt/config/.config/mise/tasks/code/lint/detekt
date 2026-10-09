@@ -26,7 +26,24 @@ if [ ! -f .config/detekt.yml ]; then
 fi
 
 kotlin_scope=()
-if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+in_git=false
+if command -v git >/dev/null 2>&1; then
+  if [ -n "${GIT_DIR:-}" ]; then
+    in_git=true
+  fi
+  dir="${PWD}"
+  while [ "${in_git}" = "false" ]; do
+    if [ -e "${dir}/.git" ]; then
+      in_git=true
+    elif [ -z "${dir}" ]; then
+      break
+    else
+      dir="${dir%/*}"
+    fi
+  done
+fi
+
+if [ "${in_git}" = "true" ]; then
   # To a file, not a process substitution, so a failed listing stops the task.
   git_list="$(mktemp "${TMPDIR:-/tmp}/code-lint.XXXXXX")"
   trap 'rm -f "${git_list}"' EXIT
@@ -56,7 +73,8 @@ if command -v git >/dev/null 2>&1 && git rev-parse --is-inside-work-tree >/dev/n
 else
   while IFS= read -r -d '' kotlin_file; do
     kotlin_scope+=("${kotlin_file}")
-  done < <(find . \( -name build -o -name .gradle -o -name .kotlin -o -name generated \) -prune \
+  done < <(find . \( -name build -o -name .gradle -o -name .kotlin -o -name generated \
+    -o -name node_modules -o -name .worktrees -o -path '*/.claude/worktrees' \) -prune \
     -o \( -name '*.kt' -o -name '*.kts' \) -type f -print0)
 fi
 
