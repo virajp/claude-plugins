@@ -306,8 +306,9 @@ and the folder names every third-party package the run is allowed to install and
 carries a consent block — whether the run may merge on green, and what ships —
 so approving the plan is where you consent to each of those. Relay approves the
 entity plan, then the flow plan; each is committed and pushed with its row in
-`docs/plans/index.md`, and each ends on a launch line for a fresh session. See
-[`/vwf:plan`](../../plugins/vwf.md#vwfplan).
+`docs/plans/index.md`, and the flow plan, the last of the chain, ends on a
+launch line for a fresh session — once nothing at its priority is left to plan.
+See [`/vwf:plan`](../../plugins/vwf.md#vwfplan).
 
 ### /vwf:execute
 

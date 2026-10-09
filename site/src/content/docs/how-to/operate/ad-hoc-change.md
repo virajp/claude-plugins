@@ -93,8 +93,10 @@ shown the plan. A hit with no owner is what becomes a stray doc edit halfway
 through the run.
 
 If your request is really several things, it says so **before** refining any of
-them, and proposes one folder per piece with an order. Relay's is: the CI change
-first, the contributing-guide cleanup inside it, and "switch the whole repo to a
+them, and proposes one folder per piece with an order — planned one after
+another in the same session, each piece going straight back to the interview for
+the next, with no launch line until the last. Relay's is: the CI change first,
+the contributing-guide cleanup inside it, and "switch the whole repo to a
 different task runner" — which you mentioned in passing — parked, not absorbed.
 
 ### 2. Answer one question at a time
@@ -172,13 +174,21 @@ the project on the forge, nothing in the tree — and the folder and the index a
 nothing merged. That is not housekeeping: the next step runs in a worktree cut
 from the integration branch, and it can only see a folder that is already
 committed there. A folder left untracked ends up swept into some later commit of
-the run instead. Only then does it print the launch line.
+the run instead. Only then does it **check that nothing is left to plan**:
+[`/vwf:backlog unplanned`](../../plugins/vwf.md#vwfbacklog) at the highest
+priority among the plan's backlog ids — or, with none, the highest priority any
+open item carries — plus any piece of your request not yet planned. When it
+lists something, there is no launch line: it prints the unplanned items and the
+planner command for the next one, and that is your next step — plan first, run
+after. When it lists nothing, or the backlog cannot be read (one line says so),
+it prints the launch line.
 
 It does not start executing, and that is deliberate.
 
 ### 4. Run it in a fresh session
 
-Open a new session, `/clear` or a new window, and paste the launch line:
+Once the launch line is printed, open a new session, `/clear` or a new window,
+and paste it:
 
 ```text
 /vwf:execute docs/plans/2026-09-08-ci-release-notes
