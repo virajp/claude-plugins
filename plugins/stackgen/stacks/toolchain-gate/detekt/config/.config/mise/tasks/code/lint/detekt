@@ -94,20 +94,27 @@ for path in "${kotlin_scope[@]}"; do
     print_warn "detekt cannot take a path containing '${separator}'; skipping ${path}"
     continue
   fi
+  # The argument file below splits on whitespace, quoted or not.
+  if [[ "${path}" =~ [[:space:]] ]]; then
+    print_warn "detekt cannot take a path containing whitespace; skipping ${path}"
+    continue
+  fi
   input="${input:+${input}${separator}}${path}"
 done
 if [ -z "${input}" ]; then
   exit 0
 fi
 
-detekt_args=(
-  --input "${input}"
-  --config .config/detekt.yml
-  --build-upon-default-config
-)
-if [[ "${usage_debug:-false}" == "true" ]]; then
-  detekt_args+=(--debug)
-fi
+# Through an @argument file, not argv: Linux caps one argument at 128 KiB, which
+# a large tree's --input list passes.
+argfile="$(mktemp "${TMPDIR:-/tmp}/code-lint-detekt.XXXXXX")"
+trap 'rm -f "${git_list:-}" "${argfile}"' EXIT
+{
+  printf '%s\n' --input "${input}" --config .config/detekt.yml --build-upon-default-config
+  if [[ "${usage_debug:-false}" == "true" ]]; then
+    printf '%s\n' --debug
+  fi
+} >"${argfile}"
 
 print_subheader "Linting Kotlin sources with detekt ..."
-detekt-cli "${detekt_args[@]}"
+detekt-cli "@${argfile}"
