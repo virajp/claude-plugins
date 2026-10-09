@@ -94,6 +94,11 @@ xcuserdata/
 local.properties
 *.iml
 
+# ==== Android ====
+.cxx/
+.externalNativeBuild/
+captures/
+
 # ==== vwf — working notes and scratch ====
 # Local-only working notes, never reviewed and never shipped: one developer's
 # handoffs, doctor reports and run logs, and rendered mockups.

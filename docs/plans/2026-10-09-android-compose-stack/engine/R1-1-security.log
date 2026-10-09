@@ -1,0 +1,16 @@
+/security-review over b65209c2..d30f576c (run as a sub-task over the row's range in the worktree)
+
+No high-confidence vulnerabilities found.
+
+Candidates considered and why each was dismissed:
+
+- eval "files+=(${usage_files:-})" (framework/android/config/.config/mise/tasks/code/lint/android:25). The same pattern is already used in about 10 shipped subtasks (ktlint, ruff, swift-format, pnpm, flutter, tool-config code/lint/all). usage hands variadic args already shell-quoted; names come from the local pre-commit file list. Nothing new.
+- [tools."http:android-cmdline-tools"] has no checksum (framework/android/templates/.config/mise/conf.d/android/mise.toml:11-20). HTTPS from dl.google.com at an exact build number; mise's lockfile can record a checksum. Defence in depth, not exploitable.
+- { yes || true; } | sdkmanager --licenses (setup/deps/install/android:56). Unattended licence acceptance is a legal/consent question, not security. Hidden task, runs only on setup.
+- values: detect commands in pack.yaml read build.gradle.kts from a possibly untrusted repo; output is cut to [0-9]+$ before filling the template, so no TOML/shell injection. EMULATOR_IMAGE only gets digits through printf.
+- COMPILE_SDK and EMULATOR_IMAGE in the sdkmanager package list are quoted array arguments, no eval.
+- --device / --variant flags in test/e2e and --variant in test/golden go into a quoted Gradle task name; no shell injection.
+- ANDROID_HOME fixed to $HOME/.local/share/android/sdk and added to _.path; user-owned, no PATH hijack.
+- swiftshader_indirect Gradle property set when CI is set; fixed literal.
+- Formatter, taplo, pre-commit and .gitignore exclusions (.cxx/, .externalNativeBuild/, captures/) drop build output only; gitleaks allowlist unchanged.
+- Docs, SKILL.md files and the two bundles hold no executable content.

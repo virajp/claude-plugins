@@ -7,7 +7,9 @@ version: 1
 ignores:
   # >>> tool-config
   - "**/.build/"
+  - "**/.cxx/"
   - "**/.dart_tool/"
+  - "**/.externalNativeBuild/"
   - "**/.gradle/"
   - "**/.kotlin/"
   - "**/.swiftpm/"

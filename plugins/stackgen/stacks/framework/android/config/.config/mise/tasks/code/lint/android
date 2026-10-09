@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+
+#MISE description="Lint the Android modules with Android Lint"
+#MISE dir="{{ config_root }}"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply the safe fixes Android Lint offers (whole-repo runs only; with files it lints)"
+#USAGE arg "[files]" var=#true help="files that changed (default: the whole repo); Android Lint always runs per module"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_warn "code:lint:android: no executable ./gradlew; skipping."
+  exit 0
+fi
+if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "${ANDROID_HOME}/platforms" ]; then
+  print_warn "code:lint:android: no Android SDK at ANDROID_HOME; skipping. Run: mise run setup:deps:install:android"
+  exit 0
+fi
+
+files=()
+eval "files+=(${usage_files:-})"
+
+# A file list only decides whether to run: Android Lint has no per-file mode.
+if [ ${#files[@]} -gt 0 ]; then
+  relevant=false
+  for f in "${files[@]}"; do
+    case "${f}" in
+      *src/*.kt | *src/*.java | *src/*.xml | *.gradle.kts | *.pro | *libs.versions.toml) relevant=true ;;
+    esac
+  done
+  if [ "${relevant}" = "false" ]; then
+    exit 0
+  fi
+fi
+
+gradle_args=()
+if [[ "${usage_debug:-false}" == "true" ]]; then
+  gradle_args+=(--info)
+fi
+
+# lintFix rewrites across every module, so only a whole-repo run applies it.
+if [[ "${usage_fix:-false}" == "true" ]] && [ ${#files[@]} -eq 0 ]; then
+  print_subheader "Applying Android Lint's safe fixes ..."
+  ./gradlew ${gradle_args[@]+"${gradle_args[@]}"} lintFix
+else
+  print_subheader "Linting the Android modules with Android Lint ..."
+  ./gradlew ${gradle_args[@]+"${gradle_args[@]}"} lint
+fi

@@ -65,7 +65,12 @@ pins `swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swi
 toolchain, which must be on `PATH`; it carries no app target. A Kotlin/JVM
 library on the same platform pins `kotlin-library` — Gradle through the
 committed wrapper, ktlint and detekt, on the Temurin JDK mise pins; it carries
-no Android target and no Kotlin Multiplatform. Anything else takes the
+no Android target and no Kotlin Multiplatform. A native Android app on `mobile`
+and `tablet` pins `kotlin-compose` — Jetpack Compose with Material 3 over the
+same Kotlin, Gradle, ktlint and detekt packs plus `framework/android`, whose SDK
+levels and emulator image `/vwf:setup` reads off the module build scripts as it
+lands the pack — and an Android library published as an AAR on `packages` pins
+`android-library`, the same stack without Compose. Anything else takes the
 **generate** entry — see below.
 
 **A `site` project picks between five entries** — four Astro bundles and `html`.

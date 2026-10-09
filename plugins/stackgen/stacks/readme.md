@@ -87,6 +87,19 @@ meaningful for one toolchain, each pinned through mise by its pack's template.
 `code:format:ktlint` and `code:lint:ktlint`, detekt `code:lint:detekt`. No
 Android and no Kotlin Multiplatform.
 
+**The Android stack followed the same day on those four packs.**
+`framework/android` (AGP, the Android SDK, Android Lint and the emulator;
+`meta-framework`, the nearest category) pins the SDK's cmdline-tools through
+mise's `http:` backend at an exact build with a sha256 per platform, sets
+`ANDROID_HOME`, and carries four values — `COMPILE_SDK`, `MIN_SDK`,
+`TARGET_SDK`, `EMULATOR_IMAGE` — in its template. It owns
+`setup:deps:install:android` (platform, emulator and system image through
+`sdkmanager`; no build-tools, which AGP fetches), `code:lint:android` and
+`test:e2e`, which runs the instrumented tests on the Gradle Managed Device
+`e2e`, or `connectedCheck` under `-- --connected`. Two bundles pin it:
+`android-library`, an AAR on `packages`, and `kotlin-compose`, the app on
+`mobile` and `tablet`, which adds `app-framework/compose`.
+
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The first
 bundle whose root is not a language: Flutter owns the manifest and the build,
@@ -119,6 +132,16 @@ token it realises — and topic 12's wiring for Apple's core integrations: widge
 and complications, App Intents, push notifications, StoreKit and Sign in with
 Apple. Like Flutter's, they are wiring only; third-party integrations are not
 covered yet.
+
+**`app-framework/compose` made the third on 2026-10-09**, the second in
+`native-ui`, rooting the `kotlin-compose` bundle on `mobile` and `tablet`.
+Jetpack Compose with Material 3 is the only toolkit; the app doctrine is a
+ViewModel with StateFlow, Hilt, Navigation Compose and Room, with Jetpack
+integration references, wiring only. Its goldens are Roborazzi captures on
+Robolectric under `test:golden`, and its `ux-gate` returns them as `renders:`.
+The four-part ownership test does not hold — Gradle and AGP own the manifest
+and the build — so the type is kept for the doctrine, with the reason in the
+pack's `conventions.md`.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
@@ -278,11 +301,11 @@ app, the provider-neutral container deploy and the Claude Code plugin
 template, the four Wave D added on what were then the two tool axes, the three
 the stylesheet axis added to them, the `secrets-manager` pair above, the
 five Wave E added for the two clouds, the two Swift ones of 2026-09-23,
-`swift-package` and the `swift-swiftui` app, and the Kotlin one of 2026-10-09,
-`kotlin-library`. Each names its components as refs,
-mixing shipped packs (copied verbatim) with `@generated` ones (researched on
-first fetch) — which is the dispatch rule working at bundle scale rather than
-a gap.
+`swift-package` and the `swift-swiftui` app, and the three Kotlin ones of
+2026-10-09, `kotlin-library`, `android-library` and the `kotlin-compose` app.
+Each names its components as refs, mixing shipped packs (copied verbatim) with
+`@generated` ones (researched on first fetch) — which is the dispatch rule
+working at bundle scale rather than a gap.
 
 A component answers *what is TypeScript*; a bundle answers *what is a
 TypeScript service*. The menu lists bundles only — offering bare components

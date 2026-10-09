@@ -2297,8 +2297,9 @@ switcher, the plan and date of the image, a link to **`/__renders/`** (every
 rendered screen) and the comment overlay. Comments land in
 `__renders/comments.yaml`; after Done, each `open` one goes to
 [`/vwf:feedback`](#vwffeedback) as a UX issue, one at a time, for you to confirm
-or decline. Today only the TypeScript pack's `ux-gate` returns the image list,
-so only web projects have renders; the Flutter and SwiftUI gates keep none yet.
+or decline. Today the TypeScript pack's `ux-gate` returns the image list, and
+the Compose pack's does for `mobile` and `tablet`, so web and Android projects
+have renders; the Flutter and SwiftUI gates keep none yet.
 
 ### /vwf:screens
 

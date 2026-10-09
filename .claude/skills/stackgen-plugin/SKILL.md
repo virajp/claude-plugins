@@ -169,22 +169,23 @@ they share. Two are flagged today. On the project axis it is `astro-ssg`,
 `platforms: [site]` — what a `site` project's round highlights, and nothing on
 any other platform's round; the other four entries on that round, the three
 remaining Astro bundles and `html` (the `framework/html` pack, a hand-authored
-page tree under the `document` category, since 2026-09-15), carry no flag.
-Neither app-framework bundle carries one either — `dart-flutter`
-(`cross-platform-ui`) and `swift-swiftui` (the `app-framework/swiftui` pack, the
-first under `native-ui`, since 2026-09-23) — so an app platform's round
-preselects nothing. On the design axis it is `design-tool`'s `claude-code` — the
-terminal itself as a design tool, the fourth of that kind beside
-`claude-design`, `lovable` and `stitch`, and the first with a **file canvas**: a
-committed `docs/design/<project>/` its three import skills read as files, plus a
-fourth, user-invocable `design-session` skill that writes it — the design system
-and the logo, and since pack `0.2.0` a flow's screens (`screens <flow>`, from
-the brief `/vwf:screens prompt` wrote, into `screens/<flow>--<platform>/`) and a
-review round (`review <flow>`, which serves the canvas from the repo, waits for
-**Done**, then applies every open comment). The server is the skill's own
-`scripts/serve.mjs`, a single-file Node program with no dependencies: it binds
-`127.0.0.1` on an ephemeral port, serves only the canvas, carries no auth and no
-TLS, and appends each comment to a **committed**
+page tree under the `document` category, since 2026-09-15), carry no flag. None
+of the three app-framework bundles carries one either — `dart-flutter`
+(`cross-platform-ui`), `swift-swiftui` (the `app-framework/swiftui` pack, the
+first under `native-ui`, since 2026-09-23) and `kotlin-compose` (the
+`app-framework/compose` pack, the second under `native-ui`, since 2026-10-09) —
+so an app platform's round preselects nothing. On the design axis it is
+`design-tool`'s `claude-code` — the terminal itself as a design tool, the fourth
+of that kind beside `claude-design`, `lovable` and `stitch`, and the first with
+a **file canvas**: a committed `docs/design/<project>/` its three import skills
+read as files, plus a fourth, user-invocable `design-session` skill that writes
+it — the design system and the logo, and since pack `0.2.0` a flow's screens
+(`screens <flow>`, from the brief `/vwf:screens prompt` wrote, into
+`screens/<flow>--<platform>/`) and a review round (`review <flow>`, which serves
+the canvas from the repo, waits for **Done**, then applies every open comment).
+The server is the skill's own `scripts/serve.mjs`, a single-file Node program
+with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
+canvas, carries no auth and no TLS, and appends each comment to a **committed**
 `comments/<flow>--<platform>.yaml`. It requests `taste-skill@taste-skill`
 through its own `setup/ai/claude-code` subtask, which `setup:ai:all` calls, so
 the repo installs it at user scope when no scope serving the repo has it.
@@ -243,13 +244,15 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   removed. A pack's ignore and attribute lines are not its own at all:
   tool-config's `.gitignore`, `.gitattributes`, exclude set, linter ignores and
   formatter plugins are **universal supersets** carrying every stack's entries —
-  node's, Python's, Dart's, Flutter's, Swift's, Gradle's and Kotlin's, fnox's
-  `fnox.local.toml`, pnpm's and SwiftPM's lockfile markers — whether or not the
-  repo uses that stack; **(d)** is retired too — a mise `conf.d/` file in
-  `config/` is refused by rule 11: a pack's tool pin, environment values and
-  aliases (fnox's pin, pnpm's `npx`, swiftlint's pin, swiftui's four Xcode and
-  simulator values as `@@` names) live in its **`templates/`** tree, in
-  `templates/.config/mise/conf.d/<slug>/` and nowhere else in `conf.d/`, which
+  node's, Python's, Dart's, Flutter's, Swift's, Gradle's, Kotlin's and
+  Android's, fnox's `fnox.local.toml`, pnpm's and SwiftPM's lockfile markers —
+  whether or not the repo uses that stack; **(d)** is retired too — a mise
+  `conf.d/` file in `config/` is refused by rule 11: a pack's tool pin,
+  environment values and aliases (fnox's pin, pnpm's `npx`, swiftlint's pin,
+  swiftui's four Xcode and simulator values as `@@` names, android's
+  cmdline-tools pin and its four SDK and emulator values) live in its
+  **`templates/`** tree, in `templates/.config/mise/conf.d/<slug>/` and nowhere
+  else in `conf.d/`, which
   `/stackgen:tool-config pack --slug <slug> --dir <pack dir>` renders, its
   values declared in the pack's `values:` list, given with `--set` and stored
   under `packs.<slug>` in `.config/stackgen.yaml`, and a pack dropped from a

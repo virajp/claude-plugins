@@ -1,0 +1,23 @@
+[env]
+# The SDK every task and AGP read; sdkmanager installs into it, never into a tool dir
+ANDROID_HOME = "{{ env.HOME }}/.local/share/android/sdk"
+COMPILE_SDK = "@@COMPILE_SDK@@"
+EMULATOR_IMAGE = "@@EMULATOR_IMAGE@@"
+MIN_SDK = "@@MIN_SDK@@"
+TARGET_SDK = "@@TARGET_SDK@@"
+_.path = [ "{{ env.HOME }}/.local/share/android/sdk/platform-tools", "{{ env.HOME }}/.local/share/android/sdk/emulator" ]
+
+# An exact build, not `latest`: the build number is no X.Y.Z, so the render
+# cannot resolve `latest` to a pin; move it by hand to `mise latest`'s answer,
+# with each platform's sha256 beside it. The linux zip is Java-only, so both
+# Linux arches share it
+[tools."http:android-cmdline-tools"]
+version = "16111833"
+version_list_url = "https://dl.google.com/android/repository/repository2-3.xml"
+version_expr = 'split(body, "\n") | map(trim(#)) | filter(# matches "^<url>commandlinetools-linux-[0-9]+_latest[.]zip</url>$") | map(trimSuffix(trimPrefix(#, "<url>commandlinetools-linux-"), "_latest.zip</url>")) | uniq() | sortVersions()'
+
+[tools."http:android-cmdline-tools".platforms]
+linux-arm64 = { checksum = "sha256:0877a1d048fe4a24efe2eff536ca4223f7adeb58648bb81909d33c446918cfa8", format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-linux-{{version}}_latest.zip" }
+linux-x64 = { checksum = "sha256:0877a1d048fe4a24efe2eff536ca4223f7adeb58648bb81909d33c446918cfa8", format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-linux-{{version}}_latest.zip" }
+macos-arm64 = { checksum = "sha256:58da8f215781cc0208743e88b65ae259780c55e7eb40e50373d377cf369232d6", format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-mac_arm64-{{version}}_latest.zip" }
+macos-x64 = { checksum = "sha256:7e601c04e7173754b3d051a87bb4c3a8243c65a9d7bfa9356ed6499fb8953fa3", format = "zip", url = "https://dl.google.com/android/repository/commandlinetools-mac_x86_64-{{version}}_latest.zip" }

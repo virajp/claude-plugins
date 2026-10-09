@@ -19,6 +19,8 @@ exclude: |-
   # >>> tool-config
   (^|/)\.build/
   |(^|/)\.claude/
+  |(^|/)\.cxx/
+  |(^|/)\.externalNativeBuild/
   |(^|/)\.git/
   |(^|/)\.gradle/
   |(^|/)\.kotlin/
@@ -28,6 +30,7 @@ exclude: |-
   |(^|/)Derived/
   |(^|/)DerivedData/
   |(^|/)build/
+  |(^|/)captures/
   |(^|/)dist/
   |(^|/)graphify-out/
   |(^|/)node_modules/

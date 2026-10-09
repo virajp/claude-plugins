@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+
+#MISE description="Install the Android SDK packages the build and the emulator need"
+#MISE hide=true
+
+#USAGE flag "--frozen" help="fail rather than skip when the SDK cannot be installed"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+frozen="${usage_frozen:-false}"
+
+if ! command -v sdkmanager >/dev/null 2>&1; then
+  if [[ "${frozen}" == "true" ]]; then
+    print_error "setup:deps:install:android: sdkmanager is not installed, and --frozen needs it."
+    print_yellow "Run: mise install"
+    exit 1
+  fi
+  print_warn "setup:deps:install:android: sdkmanager is not installed; skipping. Run: mise install"
+  exit 0
+fi
+
+missing=()
+for name in ANDROID_HOME COMPILE_SDK EMULATOR_IMAGE; do
+  if [ -z "${!name:-}" ]; then
+    missing+=("${name}")
+  fi
+done
+if [ ${#missing[@]} -gt 0 ]; then
+  print_error "setup:deps:install:android: ${missing[*]} unset or empty."
+  print_yellow "Run /vwf:setup to fill the android pack's values, then re-run."
+  exit 1
+fi
+
+case "$(uname -m)" in
+  arm64 | aarch64) abi="arm64-v8a" ;;
+  x86_64 | amd64) abi="x86_64" ;;
+  *)
+    print_error "setup:deps:install:android: no emulator ABI for $(uname -m)."
+    exit 1
+    ;;
+esac
+
+# An SDK id level: API 37 and later are published only as <level>.<minor>.
+sdk_level() {
+  if [[ "$1" =~ ^[0-9]+$ ]] && ((10#$1 >= 37)); then
+    printf '%s.0' "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
+if [[ ! "${COMPILE_SDK}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+  print_error "setup:deps:install:android: COMPILE_SDK '${COMPILE_SDK}' is not a level (36, 36.1, 37.0)."
+  exit 1
+fi
+
+image_re='^system-images;android-([0-9]+);(.+)$'
+image="${EMULATOR_IMAGE}"
+if [[ "${image}" =~ ${image_re} ]]; then
+  image="system-images;android-$(sdk_level "${BASH_REMATCH[1]}");${BASH_REMATCH[2]}"
+fi
+
+packages=(
+  "platform-tools"
+  "platforms;android-$(sdk_level "${COMPILE_SDK}")"
+  "emulator"
+  "${image};${abi}"
+)
+
+mkdir -p "${ANDROID_HOME}"
+
+print_subheader "Accepting the SDK licenses ..."
+{ yes || true; } | sdkmanager --sdk_root="${ANDROID_HOME}" --licenses >/dev/null
+
+print_subheader "Installing ${packages[*]} ..."
+sdkmanager --sdk_root="${ANDROID_HOME}" "${packages[@]}"
