@@ -9,7 +9,9 @@
 
 # Runs from develop. The version is the last installer-v* tag bumped by the
 # higher of the level recorded under `installer` in .config/releases.yaml and the
-# level an untagged package.json implies against that tag (13 and 17 skipped).
+# level an untagged package.json implies against that tag (13 and 17 skipped);
+# with no installer-v* tag yet, package.json is released as it stands.
+# Full mode and --ci are refused unless the merge model into main is direct.
 # Full mode: bump, clear the key, commit on develop, push it, merge develop into
 # main with code:merge:main, tag on main, push main then the tag, watch
 # release.yml, and switch back to develop. --ci does the same up to the tag,
@@ -35,6 +37,18 @@ RELEASE_BRANCH="main"
 if [[ "${TAG_ONLY}" == "true" && "${NO_COMMIT}" == "true" ]]; then
   print_error "--tag-only and --no-commit are two halves of one release; pass one."
   exit 1
+fi
+
+# Never push a tag we cannot then watch — checked before any commit, merge or tag.
+if [[ "${DRY_RUN}" != "true" && "${NO_COMMIT}" != "true" && "${CI_MODE}" != "true" ]]; then
+  if ! command -v gh >/dev/null 2>&1; then
+    print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
+    exit 1
+  fi
+  if ! gh auth status >/dev/null 2>&1; then
+    print_error "gh is not authenticated. Run: gh auth login"
+    exit 1
+  fi
 fi
 
 # Tag step: a clean tree on main, the version package.json carries, tagged once.
@@ -89,31 +103,32 @@ if [[ "${TAG_ONLY}" != "true" || "${DRY_RUN}" == "true" ]]; then
   else
     git fetch --tags --quiet origin
   fi
-  LAST_TAG="$(git tag -l 'installer-v*' --sort=-v:refname | head -n 1)"
+  LAST_TAG="$(git tag -l 'installer-v*' --sort=-v:refname | grep -E '^installer-v[0-9]+\.[0-9]+\.[0-9]+$' | head -n 1 || true)"
   RECORDED="$(releases_level "${RELEASES}" "${KEY}")"
-  if [[ -z "${LAST_TAG}" ]]; then
-    if [[ "${DRY_RUN}" == "true" ]]; then
-      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "none" "${RECORDED}"
-      exit 0
-    fi
-    print_error "No installer-v* tag found — nothing to bump from."
-    exit 1
-  fi
-  LAST="${LAST_TAG#installer-v}"
   MANIFEST="$(node -p "require('./package.json').version")"
-
-  IMPLIED="$(level_implied "${LAST}" "${MANIFEST}")"
-  LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")"
-  if ! TARGET="$(release_target "${LAST}" "${LEVEL}")"; then
-    if [[ "${DRY_RUN}" == "true" ]]; then
-      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL}"
-      exit 0
+  if [[ -z "${LAST_TAG}" ]]; then
+    # No tag yet: the first release is the manifest as it stands.
+    LAST=""
+    LEVEL="${RECORDED}"
+    TARGET="${MANIFEST}"
+  else
+    LAST="${LAST_TAG#installer-v}"
+    # A manifest below its tag, or an unreadable level, refuses like a target.
+    LEVEL="?"
+    if ! IMPLIED="$(level_implied "${LAST}" "${MANIFEST}")" \
+      || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
+      || ! TARGET="$(release_target "${LAST}" "${LEVEL}")"; then
+      if [[ "${DRY_RUN}" == "true" ]]; then
+        printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL:-?}"
+        exit 0
+      fi
+      print_error "Refusing to release installer: package.json ${MANIFEST}, tag ${LAST_TAG}, recorded level '${RECORDED}' give no valid target."
+      exit 1
     fi
-    exit 1
   fi
 
   if [[ "${DRY_RUN}" == "true" ]]; then
-    printf '%-10s tag %-22s level %-6s → %s\n' "${KEY}" "${LAST_TAG}" "${LEVEL}" "${TARGET:-skip}"
+    printf '%-10s tag %-22s level %-6s → %s\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL}" "${TARGET:-skip}"
     exit 0
   fi
 
@@ -139,12 +154,18 @@ if [[ "${TAG_ONLY}" != "true" || "${DRY_RUN}" == "true" ]]; then
     print_error "Working tree is not clean. Commit or stash your changes first."
     exit 1
   fi
+  # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
+  MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
+  fi
   if git rev-parse -q --verify "refs/tags/installer-v${TARGET}" >/dev/null; then
     print_error "installer-v${TARGET} already exists — refusing to bump to it."
     exit 1
   fi
 
-  print_header "installer: ${LAST_TAG} + ${LEVEL} → ${TARGET}"
+  print_header "installer: ${LAST_TAG:-none} + ${LEVEL} → ${TARGET}"
   LOCK_WAS_CLEAN=false
   git diff --quiet -- pnpm-lock.yaml && LOCK_WAS_CLEAN=true
 
@@ -199,16 +220,6 @@ tag_step
 if [[ "${CI_MODE}" == "true" ]]; then
   print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + publish."
   exit 0
-fi
-
-# Never push a tag we cannot then watch.
-if ! command -v gh >/dev/null 2>&1; then
-  print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
-  exit 1
-fi
-if ! gh auth status >/dev/null 2>&1; then
-  print_error "gh is not authenticated. Run: gh auth login"
-  exit 1
 fi
 
 # main BEFORE the tag — the workflow checks the tag is reachable from origin/main.
