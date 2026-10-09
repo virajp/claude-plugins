@@ -62,7 +62,21 @@ jobs:
 
           git add pnpm-lock.yaml package.json .config/releases.yaml
           mise x -- git commit -m "ops(deps): monthly dependency refresh"
-          git push origin develop
+
+          # code:merge:main refuses untracked files, uncommitted changes and
+          # unpushed commits on develop. Fail here, before anything is pushed,
+          # naming what is dirty, rather than inside the release after it.
+          dirty="$(git status --porcelain)"
+          if [ -n "$dirty" ]; then
+            echo "::error::The tree is not clean after the refresh commit; nothing was pushed."
+            printf '%s\n' "$dirty"
+            exit 1
+          fi
+          git push -u origin develop
+          if [ -n "$(git log --oneline origin/develop..develop)" ]; then
+            echo "::error::develop has commits origin/develop does not."
+            exit 1
+          fi
 
           # code:merge:main needs a local main to check out.
           git fetch origin main
