@@ -59,19 +59,28 @@ Xcode version pinned as `XCODE_VERSION` in the pack's own
 `.config/mise/conf.d/swiftui/mise.toml`, which `/vwf:setup` reads off your
 machine as it lands the pack — the pack's `values:` list gives each value a
 `detect` command — and asks for only when it cannot detect it. Pick it when the
-app ships on Apple platforms alone or reaches one Flutter does not; pick Flutter
-when it must also ship on Android. A Swift library on the `packages` platform
-pins `swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swift
-toolchain, which must be on `PATH`; it carries no app target. A Kotlin/JVM
-library on the same platform pins `kotlin-library` — Gradle through the
-committed wrapper, ktlint and detekt, on the Temurin JDK mise pins; it carries
-no Android target and no Kotlin Multiplatform. A native Android app on `mobile`
-and `tablet` pins `kotlin-compose` — Jetpack Compose with Material 3 over the
-same Kotlin, Gradle, ktlint and detekt packs plus `framework/android`, whose SDK
-levels and emulator image `/vwf:setup` reads off the module build scripts as it
-lands the pack — and an Android library published as an AAR on `packages` pins
-`android-library`, the same stack without Compose. Anything else takes the
-**generate** entry — see below.
+app ships on Apple platforms alone or reaches one Flutter does not. A Swift
+library on the `packages` platform pins `swift-package` — SwiftPM, swift-format
+and SwiftLint over the host's Swift toolchain, which must be on `PATH`; it
+carries no app target. A Kotlin/JVM library on the same platform pins
+`kotlin-library` — Gradle through the committed wrapper, ktlint and detekt, on
+the Temurin JDK mise pins; it carries no Android target and no Kotlin
+Multiplatform. A native Android app pins `kotlin-compose` — Jetpack Compose with
+Material 3 over the same Kotlin, Gradle, ktlint and detekt packs plus
+`framework/android`, whose SDK levels and emulator image `/vwf:setup` reads off
+the module build scripts as it lands the pack — serving `mobile`, `tablet`,
+`watch` (Wear OS), `tv` (Android TV and Google TV) and `auto` (Android Auto and
+Automotive OS, Car App Library templates declared alongside `mobile`) from one
+Gradle project; it does not serve `spatial` (Android XR). An Android library
+published as an AAR on `packages` pins `android-library`, the same stack without
+Compose. Anything else takes the **generate** entry — see below.
+
+**A mobile app picks between three.** Pick `kotlin-compose` when the app is
+Android-only or Android-first, or reaches Wear OS or Android TV, which Flutter's
+template does not cover; pick `swift-swiftui` when it ships on Apple platforms
+alone; pick Flutter when the same app must ship on Android and iOS from one
+codebase. A product that ships a native app on each side pins `kotlin-compose`
+and `swift-swiftui` as two projects.
 
 **A `site` project picks between five entries** — four Astro bundles and `html`.
 The Astro four sit on the one `framework/astro` pack, all carrying React for

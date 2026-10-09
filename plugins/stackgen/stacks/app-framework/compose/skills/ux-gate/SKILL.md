@@ -35,16 +35,24 @@ driven interactively.
 1. **Resolve the device for each changed screen's platform.** The goldens
    render on a Robolectric device qualifier, fixed per platform:
 
-   | Platform | Qualifier                                   | Viewport            |
-   | -------- | ------------------------------------------- | ------------------- |
-   | `mobile` | `RobolectricDeviceQualifiers.Pixel7`        | Pixel 7, portrait   |
-   | `tablet` | `RobolectricDeviceQualifiers.MediumTablet`  | medium tablet, landscape |
+   | Platform | Qualifier                                      | Viewport                    |
+   | -------- | ---------------------------------------------- | --------------------------- |
+   | `mobile` | `RobolectricDeviceQualifiers.Pixel7`           | Pixel 7, portrait           |
+   | `tablet` | `RobolectricDeviceQualifiers.MediumTablet`     | medium tablet, landscape    |
+   | `watch`  | `RobolectricDeviceQualifiers.WearOSLargeRound` | large round Wear OS watch   |
+   | `tv`     | `RobolectricDeviceQualifiers.Television1080p`  | 1080p television, landscape |
 
    When `design.viewports.<project>.<platform>` in `.config/vwf.yaml` names a
    size the golden tests' qualifiers do not render, say so in a finding — a
-   golden rendered at another size is not evidence for that one. Any other
-   changed platform has no device this pack renders: report it as a finding,
-   its `where` naming `<project>.<platform>`, never as `ok`.
+   golden rendered at another size is not evidence for that one.
+   **An `auto` screen is not rendered.** It is a Car App Library template the
+   car host draws, and Roborazzi cannot render one. Report each changed `auto`
+   screen as a finding — severity `low`, `what` saying it was not rendered
+   because Roborazzi cannot render Car App Library templates, `where` naming
+   `<project>.auto` — and when every changed screen is `auto`, return
+   `rendered: n/a` with that reason. Never count an `auto` screen toward `ok`.
+   Any other changed platform has no device this pack renders: report it as a
+   finding, its `where` naming `<project>.<platform>`, never as `ok`.
 2. **Check the prerequisites.** The repo has an executable `./gradlew`, the
    `test:golden` task (read the task list rather than assuming), and goldens
    under a module's `src/test/screenshots/`. Any one missing is
@@ -90,7 +98,7 @@ rendered: ok | n/a
 reason: <one line> # required when n/a; names the device or the missing prerequisite
 renders: # one item per copied image, for the reviewer to read
   - code: <the screen's code> # e.g. 004a
-    platform: <the screen platform> # mobile | tablet
+    platform: <the screen platform> # mobile | tablet | watch | tv
     state: <default | a pinned state>
     file: <path relative to the worktree root> # the PNG under docs/scratchpad/ux-gate/
 findings:

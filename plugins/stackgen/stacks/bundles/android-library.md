@@ -7,7 +7,7 @@ components:
 - package-manager/gradle@0.1.0
 - toolchain-gate/ktlint@0.1.0
 - toolchain-gate/detekt@0.1.0
-- framework/android@0.1.0
+- framework/android@0.2.0
 platforms:
 - packages
 ---

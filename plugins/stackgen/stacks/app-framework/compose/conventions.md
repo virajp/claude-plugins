@@ -55,10 +55,14 @@ source set that sets one screen in one state and captures it.
   `src/test/screenshots/<platform>/<code>--<state>.png`, where `<code>` is the
   screen's code in the flow's Screens table, `<state>` is `default` or a pinned
   state, and `<platform>` is the vwf platform token the test's device qualifiers
-  render — `mobile` or `tablet`. The `ux-gate` reads exactly these paths.
+  render — `mobile`, `tablet`, `watch` or `tv`. The `ux-gate` reads exactly
+  these paths. An `auto` screen has no golden: the car host draws its
+  template, not the app.
 - **The device is a Robolectric qualifier, never the machine's.** A `mobile`
   golden runs under `@Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)`,
-  a `tablet` golden under `RobolectricDeviceQualifiers.MediumTablet`, both with
+  a `tablet` golden under `RobolectricDeviceQualifiers.MediumTablet`, a `watch`
+  golden under `RobolectricDeviceQualifiers.WearOSLargeRound` and a `tv` golden
+  under `RobolectricDeviceQualifiers.Television1080p`, each with
   `@GraphicsMode(GraphicsMode.Mode.NATIVE)`.
 - **Accessibility is checked over the same captures.** The golden tests use
   Roborazzi's accessibility-check module with the Accessibility Test

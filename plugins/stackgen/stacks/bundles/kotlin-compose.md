@@ -7,32 +7,46 @@ components:
 - package-manager/gradle@0.1.0
 - toolchain-gate/ktlint@0.1.0
 - toolchain-gate/detekt@0.1.0
-- framework/android@0.1.0
-- app-framework/compose@0.1.0
+- framework/android@0.2.0
+- app-framework/compose@0.2.0
 platforms:
 - mobile
 - tablet
+- watch
+- tv
+- auto
 ---
 
-# mobile · tablet — Kotlin · Compose
+# mobile · tablet · watch · tv · auto — Kotlin · Compose
 
 The native Android app: **Kotlin ·
 [Jetpack Compose](https://developer.android.com/compose)** with Material 3, a
 single-package repo living as its own repo — a multi-repo member — built by
 Gradle and the Android Gradle Plugin and shipping through Google Play.
 
-**One project, phones and tablets.** A project on this template declares the
-platforms it actually ships, as **one** project with one app module, never one
-project per form factor. The tokens map like this:
+**One template, every Android form factor.** Compose is one UI toolkit across
+Android's form factors, so a project on this template declares whichever
+platforms it actually ships — as **one** project with several platforms, never
+one project per form factor. The tokens map to form factors like this:
 
-| Token    | Form factor     |
-| -------- | --------------- |
-| `mobile` | Android phones  |
-| `tablet` | Android tablets |
+| Token    | Form factor                            |
+| -------- | -------------------------------------- |
+| `mobile` | Android phones                         |
+| `tablet` | Android tablets                        |
+| `watch`  | Wear OS                                |
+| `tv`     | Android TV and Google TV               |
+| `auto`   | Android Auto and Android Automotive OS |
 
-Those two are what it covers today. `watch` (Wear OS), `tv` (Android TV),
-`auto` (Android Auto) and `spatial` (Android XR) are **not yet covered** — a
-project declaring one of them is not covered by this bundle.
+**`auto` is not a Compose surface.** The in-car screens are Car App Library
+templates the car host draws, not Compose views — projected from the phone
+app on Android Auto, and run from an automotive module of the same Gradle
+project on Android Automotive OS. So `auto` is only ever declared
+**alongside** `mobile`, never alone, and never as its own project. `watch` and
+`tv` are form factors of their own, declared in the one Gradle project beside
+the phone app.
+
+`spatial` (Android XR) is **not covered** — a project declaring it is not
+covered by this bundle.
 
 ## When to pick it
 

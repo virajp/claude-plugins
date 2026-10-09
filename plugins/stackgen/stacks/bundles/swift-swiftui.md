@@ -53,7 +53,8 @@ cover — or when it needs each new Apple API on the day it ships and the
 system's own look and behaviour without a bridge. Pick **Dart · Flutter** when
 the same app must also ship on Android: one codebase for both stores is worth
 more than native reach there, and Flutter reaches CarPlay through its own
-native edge.
+native edge. A product that ships a native app on each side pairs this bundle
+with **Kotlin · Compose** for the Android app.
 
 ## Stack
 
@@ -91,7 +92,8 @@ native edge.
 
 ## What it does not carry
 
-- **No Android** — an app that must also ship there is the Flutter bundle's.
+- **No Android** — a native Android app is the Kotlin · Compose bundle's, and
+  one codebase for both stores is the Flutter bundle's.
 - **No UIKit- or AppKit-first doctrine** — both are reached from SwiftUI as
   interop, never as the app's primary framework.
 

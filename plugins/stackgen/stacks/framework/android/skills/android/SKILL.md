@@ -40,6 +40,10 @@ reference is not here — look a DSL property up when you need it.
 | The SDK install, the emulator, Gradle Managed Devices | [Emulator & managed devices](references/emulator-and-managed-devices.md) |
 | An AAR library module and publishing it | [Library modules](references/library-modules.md) |
 | Instrumented UI tests on the emulator — the E2E run | [UI tests](references/ui-tests.md) |
+| Wear OS, Android TV, Android Auto, Automotive OS — the manifest and devices | [Form factors](references/form-factors.md) |
+| A Baseline Profile and Macrobenchmark | [Baseline profiles](references/baseline-profiles.md) |
+| A Play Feature Delivery module | [Dynamic features](references/dynamic-features.md) |
+| An instant app — retired | [Instant apps](references/instant-apps.md) |
 
 For the Kotlin baseline, see the **kotlin** skill; for the build scripts, the
 version catalog and the lockfile, **gradle**; for Compose, the UX gate and the
