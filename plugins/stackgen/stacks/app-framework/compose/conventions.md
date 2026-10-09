@@ -72,7 +72,7 @@ config consent line. It calls only the committed Gradle wrapper.
 
 | Task          | Does                                                                                                                                                                                                                         |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `test:golden` | `./gradlew verifyRoborazziDebug` — fails on any render that differs from its golden and on a screen with no golden; `--record` runs `./gradlew recordRoborazziDebug` instead; `--variant` names another variant than `Debug` |
+| `test:golden` | `./gradlew verifyRoborazziDebug` — fails on any render that differs from its golden and on a screen with no golden; `--record` runs `./gradlew recordRoborazziDebug` instead; `--variant` names another variant than `debug` |
 
 **Why the task is built the way it is.** A verifying run never records, so a
 screen with no golden fails rather than passing on a golden it just wrote.

@@ -4,7 +4,7 @@
 #MISE dir="{{ config_root }}"
 
 #USAGE flag "--record" help="re-record every golden instead of verifying against them"
-#USAGE flag "--variant <variant>" default="Debug" help="the build variant whose unit tests hold the goldens"
+#USAGE flag "--variant <variant>" default="debug" help="the build variant whose unit tests hold the goldens"
 
 set -euo pipefail
 # shellcheck source=/dev/null
@@ -16,13 +16,15 @@ if [ ! -x ./gradlew ]; then
   exit 1
 fi
 
-variant="${usage_variant:-Debug}"
+variant="${usage_variant:-debug}"
+first=$(printf '%s' "${variant:0:1}" | tr '[:lower:]' '[:upper:]')
+Variant="${first}${variant:1}"
 
 if [[ "${usage_record:-false}" == "true" ]]; then
-  print_header "Recording goldens (${variant}) ..."
-  ./gradlew "recordRoborazzi${variant}"
+  print_header "Recording goldens (${Variant}) ..."
+  ./gradlew "recordRoborazzi${Variant}"
 else
   # Verify fails on a changed render and on a screen with no golden.
-  print_header "Verifying goldens (${variant}) ..."
-  ./gradlew "verifyRoborazzi${variant}"
+  print_header "Verifying goldens (${Variant}) ..."
+  ./gradlew "verifyRoborazzi${Variant}"
 fi

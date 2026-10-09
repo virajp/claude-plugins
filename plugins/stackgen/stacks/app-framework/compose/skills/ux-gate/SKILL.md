@@ -73,7 +73,9 @@ driven interactively.
    accessibility check with the Accessibility Test Framework over each
    capture, so the step-3 run is the audit. Read each failing test's message
    from the JUnit results under the module's
-   `build/test-results/testDebugUnitTest/`. Each issue — a missing label, a
+   `build/test-results/test<Variant>UnitTest/`, the variant `test:golden`
+   ran with its first letter capitalised — `testDebugUnitTest/` for the
+   default `debug`. Each issue — a missing label, a
    touch target under 48 dp, low contrast, a duplicate description — is a
    finding, the equivalent of a WCAG A/AA violation; report it at that
    severity so vwf can apply one rule across every stack, its `where` naming
