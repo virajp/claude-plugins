@@ -1,10 +1,21 @@
 #!/usr/bin/env bash
-#MISE description="Tag the installer release on main and watch the publish pipeline"
+#MISE description="Bump the installer from its recorded level, merge to main, tag it and watch the publish pipeline"
 #MISE dir="{{ config_root }}"
 
-#USAGE flag "--ci" help="CI mode: stop after creating the tag (the caller pushes + dispatches); skips the interactive push and pipeline watch"
+#USAGE flag "--ci" help="CI mode: bump, commit, merge and tag, then stop (the caller pushes the tag + dispatches); skips the interactive push and pipeline watch"
+#USAGE flag "--no-commit" help="bump package.json and clear the installer key, stage both, and stop — on develop (p:release commits)"
+#USAGE flag "--tag-only" help="tag the version main already carries, push and watch — on main (no bump)"
+#USAGE flag "--dry-run" help="print the last tag, the level and the version it would release; check no branch, write nothing"
 
-# Tags what main already carries; never bumps or commits.
+# Runs from develop. The version is the last installer-v* tag bumped by the
+# higher of the level recorded under `installer` in .config/releases.yaml and the
+# level an untagged package.json implies against that tag (13 and 17 skipped).
+# Full mode: bump, clear the key, commit on develop, push it, merge develop into
+# main with code:merge:main, tag on main, push main then the tag, watch
+# release.yml, and switch back to develop. --ci does the same up to the tag,
+# then switches back to develop. --no-commit stops after staging; --tag-only is
+# the tag step alone. --dry-run, with any mode, prints one line and writes nothing.
+# Nothing to release (level NONE, manifest equal to the tag) is a skip, not an error.
 
 set -e
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
@@ -12,54 +23,185 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
 cd "$MISE_PROJECT_ROOT"
 
+CI_MODE="${usage_ci:-false}"
+NO_COMMIT="${usage_no_commit:-false}"
+TAG_ONLY="${usage_tag_only:-false}"
+DRY_RUN="${usage_dry_run:-false}"
+RELEASES=".config/releases.yaml"
+KEY="installer"
+DEVELOP_BRANCH="develop"
 RELEASE_BRANCH="main"
 
-# 1. A clean tree, so the tag names what was tested.
-if [[ -n "$(git status --porcelain)" ]]; then
-  print_error "Working tree is not clean. Commit or stash your changes first."
+if [[ "${TAG_ONLY}" == "true" && "${NO_COMMIT}" == "true" ]]; then
+  print_error "--tag-only and --no-commit are two halves of one release; pass one."
   exit 1
 fi
 
-# 2. Only from main — the workflow refuses a tag not reachable from it.
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-if [[ "${BRANCH}" != "${RELEASE_BRANCH}" ]]; then
-  print_error "On '${BRANCH}', not '${RELEASE_BRANCH}'. Bump with 'mise run p:i:version' on develop, commit, merge to ${RELEASE_BRANCH}, then run this."
-  exit 1
+# Tag step: a clean tree on main, the version package.json carries, tagged once.
+tag_step() {
+  # 1. A clean tree, so the tag names what was tested.
+  if [[ -n "$(git status --porcelain)" ]]; then
+    print_error "Working tree is not clean. Commit or stash your changes first."
+    exit 1
+  fi
+
+  # 2. Only from main — the workflow refuses a tag not reachable from it.
+  local branch
+  branch="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${branch}" != "${RELEASE_BRANCH}" ]]; then
+    print_error "On '${branch}', not '${RELEASE_BRANCH}'. Run 'mise run p:i:release' on ${DEVELOP_BRANCH} — it bumps, merges and tags — or merge to ${RELEASE_BRANCH} first."
+    exit 1
+  fi
+
+  VERSION="$(node -p "require('./package.json').version")"
+
+  # 3. Refuse a hand-edited 13 or 17 component before tagging.
+  if version_forbidden "${VERSION}"; then
+    print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component."
+    exit 1
+  fi
+
+  # Namespaced — a bare `v*` glob would match every plugin tag.
+  TAG="installer-v${VERSION}"
+
+  # 4. The tag must not exist on the remote yet.
+  git fetch --tags --quiet origin
+  if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+    print_error "${TAG} already exists. Record a level for 'installer' in ${RELEASES} and run 'mise run p:i:release' on ${DEVELOP_BRANCH}."
+    exit 1
+  fi
+
+  # 5. Tests must pass before anything is tagged.
+  mise run p:i:test
+
+  # 6. The annotated tag.
+  git tag -a "${TAG}" -m "${TAG}"
+
+  print_header "Created ${TAG}."
+}
+
+# --tag-only: today's behaviour — no bump, no level read. Under --dry-run it
+# prints the line below like every other mode and writes nothing.
+if [[ "${TAG_ONLY}" != "true" || "${DRY_RUN}" == "true" ]]; then
+  # The last tag is the base, always — never the manifest.
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    git fetch --tags --quiet origin 2>/dev/null || print_warn "Could not fetch tags — using the local tag list."
+  else
+    git fetch --tags --quiet origin
+  fi
+  LAST_TAG="$(git tag -l 'installer-v*' --sort=-v:refname | head -n 1)"
+  RECORDED="$(releases_level "${RELEASES}" "${KEY}")"
+  if [[ -z "${LAST_TAG}" ]]; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "none" "${RECORDED}"
+      exit 0
+    fi
+    print_error "No installer-v* tag found — nothing to bump from."
+    exit 1
+  fi
+  LAST="${LAST_TAG#installer-v}"
+  MANIFEST="$(node -p "require('./package.json').version")"
+
+  IMPLIED="$(level_implied "${LAST}" "${MANIFEST}")"
+  LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")"
+  if ! TARGET="$(release_target "${LAST}" "${LEVEL}")"; then
+    if [[ "${DRY_RUN}" == "true" ]]; then
+      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL}"
+      exit 0
+    fi
+    exit 1
+  fi
+
+  if [[ "${DRY_RUN}" == "true" ]]; then
+    printf '%-10s tag %-22s level %-6s → %s\n' "${KEY}" "${LAST_TAG}" "${LEVEL}" "${TARGET:-skip}"
+    exit 0
+  fi
+
+  if [[ -z "${TARGET}" ]]; then
+    print_header "installer: nothing to release — level NONE and package.json ${MANIFEST} equals ${LAST_TAG}."
+    exit 0
+  fi
+
+  # Bump step: develop, and a clean tree. Under --no-commit the index may already
+  # hold a sibling release task's staged bump, so only unstaged and untracked
+  # changes are refused.
+  BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+  if [[ "${BRANCH}" != "${DEVELOP_BRANCH}" ]]; then
+    print_error "On '${BRANCH}', not '${DEVELOP_BRANCH}'. The bump is committed on ${DEVELOP_BRANCH}; use --tag-only to tag what ${RELEASE_BRANCH} carries."
+    exit 1
+  fi
+  if [[ "${NO_COMMIT}" == "true" ]]; then
+    if ! git diff --quiet || [[ -n "$(git ls-files --others --exclude-standard)" ]]; then
+      print_error "Working tree has unstaged or untracked changes. Commit or stash them first."
+      exit 1
+    fi
+  elif [[ -n "$(git status --porcelain)" ]]; then
+    print_error "Working tree is not clean. Commit or stash your changes first."
+    exit 1
+  fi
+  if git rev-parse -q --verify "refs/tags/installer-v${TARGET}" >/dev/null; then
+    print_error "installer-v${TARGET} already exists — refusing to bump to it."
+    exit 1
+  fi
+
+  print_header "installer: ${LAST_TAG} + ${LEVEL} → ${TARGET}"
+  LOCK_WAS_CLEAN=false
+  git diff --quiet -- pnpm-lock.yaml && LOCK_WAS_CLEAN=true
+
+  # p:i:version when it reaches the target from the manifest on a clean tree;
+  # otherwise the target is written directly — the target is authoritative.
+  if [[ "${MANIFEST}" != "${TARGET}" ]]; then
+    if [[ "${MANIFEST}" == "${LAST}" && -z "$(git status --porcelain)" ]]; then
+      case "${LEVEL}" in
+        MAJOR) mise run p:i:version -- --major ;;
+        MINOR) mise run p:i:version -- --minor ;;
+        *) mise run p:i:version ;;
+      esac
+    else
+      # --no-git-checks: pnpm refuses any dirty tree, the levels file included.
+      pnpm version "${TARGET}" --no-git-tag-version --no-git-checks
+      PLAIN="$(version_bump "$(printf '%s' "${LEVEL}" | tr '[:upper:]' '[:lower:]')" "${LAST}")"
+      if [[ "${TARGET}" != "${PLAIN}" ]]; then
+        version_skip_note "${PLAIN}" "${TARGET}"
+      fi
+    fi
+  fi
+  WRITTEN="$(node -p "require('./package.json').version")"
+  if [[ "${WRITTEN}" != "${TARGET}" ]]; then
+    print_error "package.json reads ${WRITTEN}, not the target ${TARGET}."
+    exit 1
+  fi
+
+  releases_clear "${RELEASES}" "${KEY}"
+  git add package.json
+  [[ -f "${RELEASES}" ]] && git add "${RELEASES}"
+  if [[ "${LOCK_WAS_CLEAN}" == "true" ]] && ! git diff --quiet -- pnpm-lock.yaml; then
+    git add pnpm-lock.yaml
+  fi
+
+  if [[ "${NO_COMMIT}" == "true" ]]; then
+    print_header "installer ${TARGET} staged on ${DEVELOP_BRANCH} — not committed (--no-commit)."
+    exit 0
+  fi
+
+  mise x -- git commit -m "ops: release installer ${TARGET}"
+  git push origin "${DEVELOP_BRANCH}"
+  mise run code:merge:main
+
+  # Tag on main, and come back to develop whatever happens — --ci included.
+  git switch "${RELEASE_BRANCH}"
+  trap 'git switch -q "${DEVELOP_BRANCH}" || print_warn "Still on ${RELEASE_BRANCH} — switch back to ${DEVELOP_BRANCH} by hand."' EXIT
 fi
 
-VERSION="$(node -p "require('./package.json').version")"
+tag_step
 
-# 3. Refuse a hand-edited 13 or 17 component before tagging.
-if version_forbidden "${VERSION}"; then
-  print_error "Refusing to tag ${VERSION}: 13 and 17 are never issued as a version component. Bump past it with 'mise run p:i:version' on develop."
-  exit 1
-fi
-
-# Namespaced — a bare `v*` glob would match every plugin tag.
-TAG="installer-v${VERSION}"
-
-# 4. The tag must not exist on the remote yet.
-git fetch --tags --quiet origin
-if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
-  print_error "${TAG} already exists. Bump with 'mise run p:i:version' on develop, commit, and merge to ${RELEASE_BRANCH} first."
-  exit 1
-fi
-
-# 5. Tests must pass before anything is tagged.
-mise run p:i:test
-
-# 6. The annotated tag.
-git tag -a "${TAG}" -m "${TAG}"
-
-print_header "Created ${TAG}."
-
-# 7. --ci: tag only; the calling workflow pushes and publishes.
-if [[ "${usage_ci:-false}" == "true" ]]; then
+# --ci: tag only; the calling workflow pushes and publishes.
+if [[ "${CI_MODE}" == "true" ]]; then
   print_header "CI mode (--ci) — stopping after the tag; the workflow handles push + publish."
   exit 0
 fi
 
-# 8. Never push a tag we cannot then watch.
+# Never push a tag we cannot then watch.
 if ! command -v gh >/dev/null 2>&1; then
   print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
   exit 1
@@ -74,7 +216,7 @@ print_header "Pushing ${RELEASE_BRANCH} and ${TAG} ..."
 git push origin "${RELEASE_BRANCH}"
 git push origin "${TAG}"
 
-# 9. Find the tag's release.yml run by head commit, then follow it.
+# Find the tag's release.yml run by head commit, then follow it.
 RELEASE_SHA="$(git rev-parse HEAD)"
 print_header "Waiting for the release workflow to start ..."
 RUN_ID=""
@@ -98,3 +240,4 @@ print_header "Watching release run ${RUN_ID} ..."
 gh run watch "${RUN_ID}" --exit-status
 
 print_header "Release pipeline succeeded — @virajp.dev/claude-plugins@${VERSION} published to npm."
+# Full mode and --ci end on develop through the EXIT trap; --tag-only leaves the branch as it found it.
