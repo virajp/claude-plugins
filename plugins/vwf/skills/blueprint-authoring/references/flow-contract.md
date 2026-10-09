@@ -141,6 +141,20 @@ and record only deviations, never re-decide it per screen (see the
 `flowchart` is allowed only when a flow has **3+ screens with branching
 navigation** — a judgement, not a bar.
 
+## OS-specific features
+
+A feature one OS offers inside a form-factor platform and the other does not is
+declared in that platform file's `features:` frontmatter list, never as a
+Platform deviation. Any form-factor platform may carry entries. Each entry has
+three keys: `name` — the feature, in words; `scope` — one OS name from the
+platform doctrine (`ios` in this release); and `fallback` — what the other OS,
+or a device without the feature, shows. **`fallback` is required** on every
+entry; the blueprint-reviewer returns a gap for a missing or empty one, and for
+a `scope` the platform does not name. A feature every OS of the platform offers
+is not a feature entry — it is ordinary Screens content. The entry shape is
+owned by `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow-platform.md`, and a file
+with none carries `features: []`.
+
 ## Background Jobs live on the flow
 
 Jobs moved from the entity to the flow for the same reason: a background job
