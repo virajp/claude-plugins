@@ -43,9 +43,11 @@ without fixing everything first. It is **debt with a ledger**:
 
 ## Fixes
 
-`code:lint:android --fix` runs `lintFix`, which applies the fixes lint marks as
-safe and then reports what remains. Review the diff — a safe fix is mechanical,
-not necessarily right for the code around it.
+`mise run code:lint:android -- --fix` runs `lintFix`, which applies the fixes
+lint marks as safe and then reports what remains. Review the diff — a safe fix
+is mechanical, not necessarily right for the code around it. The commit hook
+passes a file list, and with one the task runs `lint` alone: `lintFix` rewrites
+across every module, so it runs only when asked for over the whole repo.
 
 ## Custom checks
 

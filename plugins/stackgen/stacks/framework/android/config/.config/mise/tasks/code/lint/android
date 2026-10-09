@@ -5,7 +5,7 @@
 #MISE hide=true
 
 #USAGE flag "--debug" help="emit debug logs"
-#USAGE flag "--fix" help="apply the safe fixes Android Lint offers"
+#USAGE flag "--fix" help="apply the safe fixes Android Lint offers (whole-repo runs only; with files it lints)"
 #USAGE arg "[files]" var=#true help="files that changed (default: the whole repo); Android Lint always runs per module"
 
 set -euo pipefail
@@ -29,7 +29,7 @@ if [ ${#files[@]} -gt 0 ]; then
   relevant=false
   for f in "${files[@]}"; do
     case "${f}" in
-      *.kt | *.kts | *.java | *.xml | *.pro | *libs.versions.toml) relevant=true ;;
+      *src/*.kt | *src/*.java | *src/*.xml | *.gradle.kts | *.pro | *libs.versions.toml) relevant=true ;;
     esac
   done
   if [ "${relevant}" = "false" ]; then
@@ -42,7 +42,8 @@ if [[ "${usage_debug:-false}" == "true" ]]; then
   gradle_args+=(--info)
 fi
 
-if [[ "${usage_fix:-false}" == "true" ]]; then
+# lintFix rewrites across every module, so only a whole-repo run applies it.
+if [[ "${usage_fix:-false}" == "true" ]] && [ ${#files[@]} -eq 0 ]; then
   print_subheader "Applying Android Lint's safe fixes ..."
   ./gradlew ${gradle_args[@]+"${gradle_args[@]}"} lintFix
 else

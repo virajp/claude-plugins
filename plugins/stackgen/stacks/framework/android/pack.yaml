@@ -24,7 +24,8 @@ values:
       'compileSdk *= *[0-9]+' . | head -n 1 | grep -oE '[0-9]+$'
     question: >-
       Which Android API level does this repo compile against (compileSdk)? The
-      newest stable level, `36` say; the SDK platform installed is this one.
+      newest stable level, `36`, `36.1` or `37.0` say; the SDK platform
+      installed is this one, and a bare `37` or later installs `<level>.0`.
   - name: MIN_SDK
     detect: >-
       grep -rhoE --include=build.gradle.kts --exclude-dir=build

@@ -26,17 +26,18 @@ the build script, the install task reads the environment, and they must agree.
 and sets `ANDROID_HOME` to `~/.local/share/android/sdk` — outside any tool
 directory, so a cmdline-tools upgrade never discards the SDK.
 `setup:deps:install:android` installs the rest into it: `platform-tools`, the
-`platforms;android-<COMPILE_SDK>` platform, `build-tools;<COMPILE_SDK>.0.0`,
-the `emulator`, and the `EMULATOR_IMAGE` system image with the host's ABI
-appended (`arm64-v8a` on Apple silicon, `x86_64` on a Linux runner) — after
-accepting the SDK licenses non-interactively. `ANDROID_SDK_ROOT` is not set:
-AGP reads `ANDROID_HOME`. The JDK is the **kotlin** pack's.
+`platforms;android-<COMPILE_SDK>` platform, the `emulator`, and the
+`EMULATOR_IMAGE` system image with the host's ABI appended (`arm64-v8a` on
+Apple silicon, `x86_64` on a Linux runner) — after accepting the SDK licenses
+non-interactively. It installs no build-tools: AGP downloads the build-tools
+it wants on first build. `ANDROID_SDK_ROOT` is not set: AGP reads
+`ANDROID_HOME`. The JDK is the **kotlin** pack's.
 
 **Android Lint is a gate, and its baseline is debt, not a mute.**
 `code:lint:android` runs `./gradlew lint` across every Android module, or
-`lintFix` under `--fix`. Each module sets `warningsAsErrors` and
-`abortOnError`; a `lint-baseline.xml` is committed only when adopting the gate
-on an existing codebase, and it only ever shrinks.
+`lintFix` under `--fix` on a whole-repo run. Each module sets
+`warningsAsErrors` and `abortOnError`; a `lint-baseline.xml` is committed only
+when adopting the gate on an existing codebase, and it only ever shrinks.
 
 **Release builds shrink.** `isMinifyEnabled` and `isShrinkResources` are on for
 the release build type, the keep rules beside the module in
@@ -50,8 +51,9 @@ declares a Gradle Managed Device named `e2e` under
 image source matching `EMULATOR_IMAGE` — and `test:e2e` runs
 `./gradlew e2eDebugAndroidTest`: AGP creates the emulator, boots it headless,
 runs the module's `androidTest` source set, and tears it down. On CI it adds the
-software GPU renderer. `test:e2e --connected` runs `connectedCheck` against a
-running emulator or device instead, for a local debugging loop.
+software GPU renderer. `mise run test:e2e -- --connected` runs
+`connectedCheck` against a running emulator or device instead, for a local
+debugging loop.
 
 **Why the tasks are built the way they are.** The task files carry one-line
 comments only; the reasoning is here.
@@ -62,12 +64,20 @@ comments only; the reasoning is here.
   SDK install with no level is a guess.
 - The emulator image value carries no ABI, so one committed value serves a Mac
   and a Linux runner; the task appends the host's.
-- The build-tools package is the compile level's `.0.0` release. AGP downloads
-  its own default build-tools on first build when it wants a different one,
-  which the accepted licenses allow.
+- No build-tools package is installed: its ids do not follow the compile
+  level, and AGP downloads the version it pins on first build, which the
+  accepted licenses allow.
+- `COMPILE_SDK` is a level, `36` or `36.1` or `37.0`; the task refuses any
+  other form. From API 37 Google publishes platforms and system images only as
+  `<level>.<minor>`, so the task maps a bare `37` or later to `<level>.0`, in
+  the platform id and in the image's `android-<level>` alike. A minor release
+  is stated in full.
 - `code:lint:android` runs per module, since Android Lint has no per-file mode:
   a file list from the hook decides only whether to run at all, and a commit
-  touching no Kotlin, Java, XML, keep rule or version catalog skips it. It skips
+  touching no Kotlin, Java or XML under a `src/` tree, no build script, keep
+  rule or version catalog skips it — IDE XML never starts it. With a file list
+  it runs `lint` even under `--fix`: `lintFix` rewrites across every module, so
+  only a whole-repo `mise run code:lint:android -- --fix` applies it. It skips
   itself when there is no `./gradlew` or no installed SDK.
 - `test:e2e` fails rather than skips: the E2E harness is a verification gate,
   and a gate that quietly passes on a missing SDK proves nothing.

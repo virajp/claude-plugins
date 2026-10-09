@@ -10,9 +10,13 @@ The SDK lives at `ANDROID_HOME` — `~/.local/share/android/sdk`, set by
 | --- | --- |
 | `platform-tools` | always — `adb` |
 | `platforms;android-<COMPILE_SDK>` | the compile level |
-| `build-tools;<COMPILE_SDK>.0.0` | the compile level |
 | `emulator` | always |
 | `<EMULATOR_IMAGE>;<abi>` | the image value plus the host's ABI |
+
+No build-tools are installed: AGP downloads the version it pins on first
+build. From API 37 Google publishes a platform and its system images only as
+`<level>.<minor>` (`android-37.0`, `android-37.1`), so the task maps a bare
+`37` or later to `<level>.0`; state a minor release (`36.1`, `37.1`) in full.
 
 `sdkmanager` itself comes from mise (Android's command-line tools), so a fresh
 machine is `mise install` then that task. Never install SDK packages by hand

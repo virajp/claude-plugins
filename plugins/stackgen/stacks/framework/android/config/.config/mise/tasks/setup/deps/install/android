@@ -42,12 +42,31 @@ case "$(uname -m)" in
     ;;
 esac
 
+# An SDK id level: API 37 and later are published only as <level>.<minor>.
+sdk_level() {
+  if [[ "$1" =~ ^[0-9]+$ ]] && ((10#$1 >= 37)); then
+    printf '%s.0' "$1"
+  else
+    printf '%s' "$1"
+  fi
+}
+
+if [[ ! "${COMPILE_SDK}" =~ ^[0-9]+(\.[0-9]+)?$ ]]; then
+  print_error "setup:deps:install:android: COMPILE_SDK '${COMPILE_SDK}' is not a level (36, 36.1, 37.0)."
+  exit 1
+fi
+
+image_re='^system-images;android-([0-9]+);(.+)$'
+image="${EMULATOR_IMAGE}"
+if [[ "${image}" =~ ${image_re} ]]; then
+  image="system-images;android-$(sdk_level "${BASH_REMATCH[1]}");${BASH_REMATCH[2]}"
+fi
+
 packages=(
   "platform-tools"
-  "platforms;android-${COMPILE_SDK}"
-  "build-tools;${COMPILE_SDK}.0.0"
+  "platforms;android-$(sdk_level "${COMPILE_SDK}")"
   "emulator"
-  "${EMULATOR_IMAGE};${abi}"
+  "${image};${abi}"
 )
 
 mkdir -p "${ANDROID_HOME}"
