@@ -13,7 +13,8 @@
 #
 #   (no flag)    from develop: bump site/package.json, clear the site key, commit,
 #                push develop, merge develop into main with code:merge:main, tag on
-#                main, push main then the tag, watch site.yml, back to develop
+#                main, push main then the tag, watch site.yml, back to develop;
+#                refused unless the merge model into main is direct
 #   --no-commit  the bump step alone, staged on develop
 #   --tag-only   the tag step alone, on main — tags the version site/package.json carries
 #   --dry-run    one line; no branch or tree check, nothing written
@@ -159,6 +160,12 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     fi
     [[ "${CI_MODE}" == "true" ]] || require_gh
   fi
+  # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
+  MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
+  fi
   git fetch --tags --quiet origin
 elif ! git fetch --tags --quiet origin 2>/dev/null; then
   print_warn "Could not fetch tags — the last tag below is this checkout's."
@@ -176,12 +183,16 @@ if [[ -z "${LAST_TAG}" ]]; then
   TARGET="${MANIFEST}"
 else
   BASE="${LAST_TAG#site-v}"
-  LEVEL="$(level_max "${RECORDED}" "$(level_implied "${BASE}" "${MANIFEST}")")"
-  if ! TARGET="$(release_target "${BASE}" "${LEVEL}")"; then
+  # A manifest below its tag, or an unreadable level, refuses like a target.
+  LEVEL="?"
+  if ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" \
+    || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
+    || ! TARGET="$(release_target "${BASE}" "${LEVEL}")"; then
     if [[ "${DRY_RUN}" == "true" ]]; then
-      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL}"
+      printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG}" "${LEVEL:-?}"
       exit 0
     fi
+    print_error "Refusing to release site: manifest ${MANIFEST}, tag ${LAST_TAG}, recorded level '${RECORDED}' give no valid target."
     exit 1
   fi
 fi
