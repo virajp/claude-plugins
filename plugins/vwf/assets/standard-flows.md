@@ -192,9 +192,13 @@ iOS/Android and `desktop` hides Windows/macOS/Linux, so `auto` hides CarPlay and
 Android Auto the same way. Their template differences (list / grid / map /
 now-playing and the driver-distraction rules) are recorded as deviations inside
 `auto.md`. Likewise `watch` hides watchOS and Wear OS, `tv` hides tvOS and
-Android TV, and `spatial` hides visionOS, Android XR and Quest; each vendor's
-differences are deviations inside that platform's file. Unlike `auto`, which
-rides the `mobile` binary, each of the three may be declared alone.
+Android TV, and `spatial` hides visionOS, Android XR and Quest. Unlike
+`auto`, which rides the `mobile` binary, each of the three may be declared
+alone. An
+**OS-specific feature** inside one form-factor platform — one OS offers it, the
+other does not — is declared in that platform file's `features:` list, with a
+`scope` naming the OS and a `fallback` naming what the other OS shows; every
+other vendor difference stays a deviation inside that platform's file.
 
 A project's implemented platforms are declared in the registry
 (`projects[].platforms`) and **only** there — since format 19 the key is gone

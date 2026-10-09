@@ -10,9 +10,10 @@ backlog_pieces: [ B58 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-09 by the user
+RUNNING since 2026-10-09 21:22 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-09-os-feature-declarations
 
 ## Consent
 
@@ -110,13 +111,13 @@ None. No unit adds a package.
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                             | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1 | 1    | [01-flow-platform.md](01-flow-platform.md)     | edit | `plugins/vwf/assets/templates/flow-platform.md`, `plugins/vwf/assets/standard-flows.md`                                                                                                          | —          | pending |        |
-| U2 | 1    | [02-ios-features.md](02-ios-features.md)       | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platforms/ios-ipados.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platform-interop.md` | —          | pending |        |
-| U3 | 2    | [03-blueprint-rules.md](03-blueprint-rules.md) | edit | `plugins/vwf/skills/blueprint/references/platforms.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/agents/blueprint-reviewer.md`                         | U1         | pending |        |
-| U4 | 3    | [04-docs.md](04-docs.md)                       | edit | `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/plugins/stackgen.md`, `docs/memory/decisions/2026-10-09-structured-platform-features.md`                                          | U1, U2, U3 | pending |        |
-| U5 | 4    | [05-gates.md](05-gates.md)                     | edit | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`         | U2, U4     | pending |        |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                                        | Depends on | Status  | Commit |
+| -- | ---- | ---------------------------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1 | 1    | [01-flow-platform.md](01-flow-platform.md)     | edit | `plugins/vwf/assets/templates/flow-platform.md`, `plugins/vwf/assets/standard-flows.md`                                                                                                                                                                                     | —          | green   |        |
+| U2 | 1    | [02-ios-features.md](02-ios-features.md)       | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platforms/ios-ipados.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platform-interop.md`                                                                            | —          | green   |        |
+| U3 | 2    | [03-blueprint-rules.md](03-blueprint-rules.md) | edit | `plugins/vwf/skills/blueprint/references/platforms.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/agents/blueprint-reviewer.md`                                                                                                    | U1         | pending |        |
+| U4 | 3    | [04-docs.md](04-docs.md)                       | edit | `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/plugins/stackgen.md`, `docs/memory/decisions/2026-10-09-structured-platform-features.md`, `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md` (widened at run time, R1-wave rule 5) | U1, U2, U3 | pending |        |
+| U5 | 4    | [05-gates.md](05-gates.md)                     | edit | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                    | U2, U4     | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Kind is `edit` on every unit. No row is `review` (decision 9).
@@ -187,8 +188,15 @@ unit deletes with plain `rm`, never `git rm`.
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                                                                                                                   | Commit |
+| ---- | --------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green       | doctor blocking checks: mise and graphify CLI present, graph reachable from the main checkout; no blocking finding; all 3 Wave gate lines green on the branch base 4b597fc2; format check skipped (no covers:); stack conventions skipped (edit units only); order: W1 U1,U2 → W2 U3 → W3 U4 (docs) → W4 U5 (gates)                                                                                                                      |        |
+| 0    | override  | —     | 1     | green       | override: skip as deduped: mise run p:plugins:local                                                                                                                                                                                                                                                                                                                                                                                      |        |
+| 1    | U1        | opus  | 1     | green       | flow-platform.md: frontmatter features: [] with commented entry shape (name, scope ios, required fallback); deviations comment names features: as the structured record. standard-flows.md ~190-200: vendor-differences clause replaced by the features: rule; form-factors-not-vendors and auto sentences intact; refolded 80 cols                                                                                                      |        |
+| 1    | U2        | opus  | 1     | green       | ios-ipados.md: Out of scope paragraph replaced by the rule (scope: ios built behind #available at smallest scope, declared fallback, stack never invents one); new section Device features inside mobile — Dynamic Island worked case (#available(iOS 16.1, *) + areActivitiesEnabled; Lock Screen presentation as fallback), ActivityKit checked via Context7. platform-interop.md: one cross-reference sentence                        |        |
+| 1    | R1-wave   | opus  | 1     | findings(3) | U1 standard-flows.md:199 features sentence breaks the referent of "the three" (rule 4) → loop-back; U1 flow-platform.md:143 deviations comment still "each noting any vendor difference" (rule 2 minor) → loop-back; rule 5 in nobody-owned plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md:101 (and :78-92 lacks features:) → DOCS FALSIFIED handed to U4, Owns widened (GAP); CONTRACT clean; RULINGS clean |        |
+| 1    | U1        | opus  | 2     | green       | R1-wave fix: standard-flows.md "Unlike auto ... the three" sentence moved above the features: rule, refolded ≤80 cols; flow-platform.md:143 now "every other vendor difference (an OS-specific feature goes in features:, above)"; p:plugins:check green                                                                                                                                                                                 |        |
+| 1    | R1-wave   | opus  | 2     | findings(1) | round-1 items 2 and 3 resolved; contested (cap of two rounds, 3→1 converging): U1 standard-flows.md:197 ragged fold ("alone. An" short line) after the round-1 move — cosmetic, left; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                      |        |
 
 ## Launch
 

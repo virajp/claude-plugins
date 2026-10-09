@@ -5,6 +5,10 @@ description: <one-line — this platform's take on the journey>
 status: draft # draft | reviewed | stable
 platform: mobile # mobile | tablet | desktop | site | webapp | auto | watch | tv | spatial — MUST match the filename
 implementation: none # none | partial | complete — written by the pipeline only
+features: [] # OS-specific features on this platform; [] when none. Each entry:
+#   - name: <the feature, in words>
+#     scope: ios # one OS name from the platform doctrine — `ios` in this release
+#     fallback: <what the other OS, or a device without the feature, shows> # required
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
 
@@ -122,6 +126,11 @@ Flow contract: [<Flow name>](./index.md)
 
 ## Platform deviations
 
+<!-- An OS-specific feature — one OS offers it, the other does not — is not a
+     deviation: it is the frontmatter `features:` list, the structured record,
+     each entry naming the feature, its `scope` and its required `fallback`.
+     Prose deviations below stay for every other difference. -->
+
 <!-- Only what genuinely differs on this platform: navigation/input idiom,
      density, omitted screens or actions and why, and (for `auto`) the OS
      template each screen maps to (list / grid / map / now-playing) plus the
@@ -131,7 +140,8 @@ Flow contract: [<Flow name>](./index.md)
      (for `tv`) the focus order and focus state under a remote, the 10-foot
      type and safe-area margins, no touch and no hover; (for `spatial`) gaze
      and pinch, the window / volume / immersive-space surface each screen
-     uses, depth and placement, ornaments — each noting any vendor difference.
+     uses, depth and placement, ornaments — each noting every other vendor
+     difference (an OS-specific feature goes in `features:`, above).
      Omit the section when nothing deviates. -->
 
 - <deviation> — <why>
