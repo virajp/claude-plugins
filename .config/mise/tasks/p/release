@@ -44,7 +44,10 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 # Under pr, code:merge:main only opens a PR, and every tag would name a stale main.
-MERGE_MODE="${MERGE_MODEL_MAIN:-${MERGE_MODEL:-direct}}"
+# code:merge:main reads MERGE_MODEL alone today; MERGE_MODEL_MAIN is checked too
+# so either one set to anything but direct refuses.
+MERGE_MODE="${MERGE_MODEL:-direct}"
+[[ "${MERGE_MODE}" == "direct" ]] && MERGE_MODE="${MERGE_MODEL_MAIN:-direct}"
 if [[ "${MERGE_MODE}" != "direct" ]]; then
   print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run each task with --no-commit, land the PR, then each with --tag-only on ${RELEASE_BRANCH}."
   exit 1
@@ -155,7 +158,8 @@ STEPS+=("git push origin ${BUMP_BRANCH}")
 STEPS+=("mise run code:merge:main")
 STEPS+=("git switch ${RELEASE_BRANCH}")
 # The installer and site gates passed in step 0 of this run, so their tag steps
-# — and the resume lines that name them — skip running them again on main.
+# skip running them again on main. The resume lines drop that prefix: a resume
+# may follow a fix on main that no gate of this run checked.
 for task in "${RELEASING_TASKS[@]}"; do
   case "${task}" in
     p:i:release | p:site:release) STEPS+=("RELEASE_GATES_DONE=1 mise run ${task} --tag-only") ;;
@@ -171,7 +175,7 @@ local_has_tag() { git rev-parse -q --verify "refs/tags/$1" >/dev/null; }
 # not cut again, and a tag cut here but never pushed is pushed rather than re-made,
 # so the printed list re-runs cleanly.
 resume_step() {
-  local step="$1" tag="" workflow="" ref missing=false unpushed=()
+  local step="${1#RELEASE_GATES_DONE=1 }" tag="" workflow="" ref missing=false unpushed=()
   case "${step}" in
     "mise run p:plugins:release --tag-only")
       while read -r ref; do
@@ -184,11 +188,11 @@ resume_step() {
       [[ "${#unpushed[@]}" -gt 0 || "${missing}" == "true" ]] || printf '  %s\n' "# every plugin tag is on origin"
       return 0
       ;;
-    "RELEASE_GATES_DONE=1 mise run p:i:release --tag-only")
+    "mise run p:i:release --tag-only")
       tag="installer-v$(node -p "require('./package.json').version")"
       workflow="release.yml"
       ;;
-    "RELEASE_GATES_DONE=1 mise run p:site:release --tag-only")
+    "mise run p:site:release --tag-only")
       tag="site-v$(node -p "require('./site/package.json').version")"
       workflow="site.yml"
       ;;
@@ -215,6 +219,10 @@ for i in "${!STEPS[@]}"; do
   fi
   if ! eval "${step}"; then
     print_error "Stopped at '${step}'."
+    if [[ "${step}" == "mise run code:merge:main" ]]; then
+      # A conflict leaves the tree mid-merge on main, where no resume line runs.
+      print_yellow "If the merge stopped on a conflict, either finish it and 'git push origin ${RELEASE_BRANCH}', then resume from the step after it; or 'git merge --abort' and 'git switch ${BUMP_BRANCH}' first."
+    fi
     print_yellow "Resume from ${BUMP_BRANCH} with:"
     # The EXIT trap puts the run back on develop, so a tag step resumes on main.
     if [[ "${ON_MAIN}" == "true" ]]; then
