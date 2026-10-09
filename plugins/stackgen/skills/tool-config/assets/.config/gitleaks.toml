@@ -17,6 +17,8 @@ useDefault = true
 paths = [
   # >>> tool-config
   '''(^|/)\.build/''',
+  '''(^|/)\.cxx/''',
+  '''(^|/)\.externalNativeBuild/''',
   '''(^|/)\.gradle/''',
   '''(^|/)\.kotlin/''',
   '''(^|/)\.swiftpm/''',

@@ -66,9 +66,9 @@ file; fold one in by hand.
 universal subtask that runs `@askviraj/linter` over the whole tree — eslint
 included, through the config the linter's installer generates. It ships empty
 of overrides. Its `ignores:` list is **generated trees only**, since the linter
-does not read `.gitignore`, and holds every stack's: `.build`, `.dart_tool`,
-`.gradle`, `.kotlin`, `.swiftpm`, `.venv`, `Derived`, `DerivedData`, `build`,
-`graphify-out`. It is not one of the lists the toolkit's checker holds equal
+does not read `.gitignore`, and holds every stack's: `.build`, `.cxx`,
+`.dart_tool`, `.externalNativeBuild`, `.gradle`, `.kotlin`, `.swiftpm`,
+`.venv`, `Derived`, `DerivedData`, `build`, `graphify-out`. It is not one of the lists the toolkit's checker holds equal
 to the exclusion set.
 
 Patterns resolve from the repo root, so every entry is `**/`-prefixed: a
