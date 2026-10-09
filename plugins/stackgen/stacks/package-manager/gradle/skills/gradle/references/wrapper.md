@@ -31,12 +31,12 @@ gradle/wrapper/gradle-wrapper.properties # tracked — the Gradle version pin
   A change to it arrives only from the wrapper task; a diff to it in any other
   change is a finding in review.
 - **CI validates the wrapper jar before any `./gradlew`.** No local task can
-  prove the jar genuine, so the workflow runs `gradle/actions/wrapper-validation`
-  — or `gradle/actions/setup-gradle`, which validates it built in — before its
-  first Gradle step. `distributionSha256Sum` covers the distribution the jar
-  downloads; validation covers the jar itself. The language pack's
-  `setup:deps:install:kotlin --frozen` fails when `distributionSha256Sum` is
-  unset, and warns without `--frozen`.
+  prove the jar genuine, so the workflow runs
+  `gradle/actions/wrapper-validation` — or `gradle/actions/setup-gradle`, which
+  validates it built in — before its first Gradle step. `distributionSha256Sum`
+  covers the distribution the jar downloads; validation covers the jar itself.
+  The language pack's `setup:deps:install:kotlin --frozen` fails when
+  `distributionSha256Sum` is unset, and warns without `--frozen`.
 
 ## The Kotlin DSL
 
