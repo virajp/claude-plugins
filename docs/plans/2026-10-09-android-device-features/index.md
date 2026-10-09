@@ -13,9 +13,10 @@ backlog_pieces: [ B58 ]
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-09 by the user
+RUNNING since 2026-10-10T05:21 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-09-android-device-features
 
 ## Consent
 
@@ -94,12 +95,12 @@ None. No unit adds a package.
 
 ## Units
 
-| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                      | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-blueprint-scope.md](01-blueprint-scope.md) | edit | `plugins/vwf/assets/templates/flow-platform.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/agents/blueprint-reviewer.md`                         | —          | pending |        |
-| U2 | 1    | [02-compose-rule.md](02-compose-rule.md)       | edit | `plugins/stackgen/stacks/app-framework/compose/**`                                                                                                                                        | —          | pending |        |
-| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/plugins/stackgen.md`, `docs/memory/decisions/2026-10-09-android-device-features.md`                                        | U1, U2     | pending |        |
-| U4 | 3    | [04-gates.md](04-gates.md)                     | edit | `plugins/stackgen/stacks/app-framework/compose/pack.yaml`, `plugins/stackgen/stacks/bundles/kotlin-compose.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json` | U2, U3     | pending |        |
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                                          | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-blueprint-scope.md](01-blueprint-scope.md) | edit | `plugins/vwf/assets/templates/flow-platform.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/agents/blueprint-reviewer.md`                                                                                                             | —          | green   | 0f35293e |
+| U2 | 1    | [02-compose-rule.md](02-compose-rule.md)       | edit | `plugins/stackgen/stacks/app-framework/compose/**`                                                                                                                                                                                                                            | —          | green   |          |
+| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/plugins/stackgen.md`, `docs/memory/decisions/2026-10-09-android-device-features.md`, `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md` (the feature `scope` passage, widened at R1) | U1, U2     | pending |          |
+| U4 | 3    | [04-gates.md](04-gates.md)                     | edit | `plugins/stackgen/stacks/app-framework/compose/pack.yaml`, `plugins/stackgen/stacks/bundles/kotlin-compose.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                     | U2, U3     | pending |          |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`. Kind is `edit` on every unit.
@@ -165,10 +166,26 @@ commits. A unit deletes with plain `rm`, never `git rm`.
   plan time; a case is added when documentation can be verified.
 - B58: canvas frame sizes per platform — no folder yet.
 
+## Gaps surfaced during execution
+
+- GAP (R1, rule 5, non-blocking):
+  `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md:83`
+  still reads "`ios` in this release" for the feature `scope`, falsified by U1.
+  No unit owned it; handed to the docs unit U3 as a `DOCS FALSIFIED:` line and
+  U3's Owns widened to that passage, as the plan's Goal authorises.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                   | Commit   |
+| ---- | --------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight | —     | 1     | green       | doctor: no blocking finding (5 non-blocking: no format stamp, graphify post-merge hook missing, graph stale, .graphifyignore excludes, no registry so no LSP check); format check skipped (no covers:); stack conventions skipped (edit units only); wave gate p:plugins:check, p:plugins:marketplace -- --check, p:site:check all green | —        |
+| 0    | order     | —     | —     | recorded    | wave 1: U1, U2 (edit) → R1; wave 2: U3 (edit) → R2; wave 3: U4 (edit) → R3; no review row (decision 6)                                                                                                                                                                                                                                   | —        |
+| 1    | U2        | opus  | 1     | green       | compose phone-and-tablet.md gains "Device features inside mobile": capability check (PackageManager.hasSystemFeature where a vendor documents a flag), vendor a label only, declared fallback, no worked case; p:plugins:check green                                                                                                     |          |
+| 1    | U1        | opus  | 1     | green       | flow-platform.md scope comment, flow-contract.md and blueprint-reviewer.md name `ios`, `android:samsung`, `android:oneplus` on mobile, other android: values a gap; DECIDED: reviewer carve-out reworded to "an OS or a device-family label the platform doctrine lists"; p:plugins:check green                                          |          |
+| 1    | R1        | opus  | 1     | findings(3) | U1 flow-contract.md:156 fold width 85 cols → loop U1; U1 blueprint-reviewer.md:178 carve-out reword not named by an edit → accepted as consequence of decisions 1 and 5, loop U1 to confirm fold; frontmatter-and-links.md:83 falsified, no owner → GAP, DOCS FALSIFIED to U3, U3 Owns widened; CONTRACT clean; RULINGS clean            |          |
+| 1    | U1        | opus  | 2     | green       | flow-contract.md:156 refolded to ≤80 cols, no words changed; reviewer reword kept, fold confirmed; p:plugins:check green                                                                                                                                                                                                                 | 0f35293e |
+| 1    | R1        | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
+| 1    | gate      | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
 
 ## Launch
 
