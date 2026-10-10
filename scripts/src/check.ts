@@ -245,8 +245,8 @@ function checkHookScripts(plugin: Plugin): Finding[] {
 
   for (const [event, command] of hookCommands(doc.hooks ?? {})) {
     // Matched rather than assumed: a hook may be an inline shell command with no
-    // script at all (vwf's guarded `rtk` hook is one), and only the ones naming
-    // a bundled file have anything to exist.
+    // script at all, and only the ones naming a bundled file have anything to
+    // exist.
     for (const path of captures(command, ROOT_REF_RE)) {
       const file = byPath.get(path);
       if (file === undefined) {

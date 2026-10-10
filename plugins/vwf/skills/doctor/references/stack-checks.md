@@ -329,16 +329,6 @@ Where **no** pinned payload carries a `lockfile:` list, `repo.stack` keeps
 today's reading — the package manager's conventional lockfile at the repo
 root, judged from the token — and that is the only case read that way.
 
-**`rtk` is recommended, never required.** vwf ships a `PreToolUse` Bash hook
-that pipes each command through `rtk hook claude` to cut token cost, and the
-hook entry is guarded (`command -v rtk … || true`), so a machine without it
-runs correctly and simply pays full price. Missing from `PATH` → a
-**degradation**, never blocking: name what it buys and give the remedy
-(`brew install --formulae rtk`, or the releases at
-<https://github.com/rtk-ai/rtk>). This is the one place vwf tells a user the
-tool exists at all — without it the hook is silent in both directions, which is
-why the finding is worth reporting on every run rather than once.
-
 **The forge CLI is recommended, never required.** `/vwf:backlog` keeps the
 product's backlog on the base repo's forge and needs that forge's CLI to read
 it. Resolve the forge the way the `backlog` skill does — the rule is in
@@ -355,9 +345,9 @@ write verbs alone — and give the remedy (`brew install gh`, or the releases at
 <https://github.com/cli/cli>; `gh auth login`; `gh auth refresh -s project`).
 On a GitLab remote run the same three for `glab` and note that the backlog is
 not yet supported there, so the row reports the CLI state as information
-rather than a cost. An unsupported host reports `n/a — no forge CLI`. Like
-`rtk`, this is reported on every run: a machine without the CLI runs correctly
-and simply has no backlog to read, and nothing else says so until a verb fails.
+rather than a cost. An unsupported host reports `n/a — no forge CLI`. This is
+reported on every run: a machine without the CLI runs correctly and simply has
+no backlog to read, and nothing else says so until a verb fails.
 The same three answers decide whether predicate **(g)** below runs at all —
 it reuses them rather than probing a second time, and a miss here is what it
 reports as its skip reason.

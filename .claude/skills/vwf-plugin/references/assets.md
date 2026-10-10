@@ -36,12 +36,11 @@ is a map of which file owns which subject, not a summary of their contents.
   writes the index, the Status block and the archive move — a skill's reference,
   not shared doctrine, because no other skill reads it directly.
 
-- `hooks/hooks.json` — the guarded `rtk` Bash hook plus the two mempalace
-  auto-save hooks (`Stop` + `PreCompact`), whose scripts sit beside it. The
-  npm→pnpm/bun normalizer is not here: it ships inside stackgen's
-  `package-manager/pnpm` pack, copied into the target repo rather than
-  discovered as a plugin hook — a JS/TS rewrite has no business in a
-  language-agnostic workflow plugin.
+- `hooks/hooks.json` — the two mempalace auto-save hooks (`Stop` +
+  `PreCompact`), whose scripts sit beside it. The npm→pnpm/bun normalizer is not
+  here: it ships inside stackgen's `package-manager/pnpm` pack, copied into the
+  target repo rather than discovered as a plugin hook — a JS/TS rewrite has no
+  business in a language-agnostic workflow plugin.
 - `vendor/` — provenance, licence position and resync policy for the vendored
   third-party skills: `mempalace/` (the two memory skills, MIT with upstream's
   own LICENSE) and `andrej-karpathy-skills/` (`karpathy-guidelines`, MIT
