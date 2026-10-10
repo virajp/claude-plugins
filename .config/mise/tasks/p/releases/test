@@ -59,7 +59,7 @@ e3() {
   local implied level
   implied="$(level_implied "$1" "$2")" || return 1
   level="$(level_max "$3" "$implied")" || return 1
-  release_target "$1" "$level"
+  release_target "$1" "$level" "$2"
 }
 
 print_header "releases_level ..."
@@ -133,11 +133,19 @@ eq "1.1.16 PATCH → 1.1.18 (17 skipped)" 1.1.18 release_target 1.1.16 PATCH
 eq "12.0.0 MAJOR → 14.0.0 (13 skipped)" 14.0.0 release_target 12.0.0 MAJOR
 refuses "13.0.0 PATCH → non-zero (cannot clear)" release_target 13.0.0 PATCH
 refuses "bad level → non-zero" release_target 1.0.0 major
+eq "21.0.0 MINOR, manifest 21.2.0 → 21.2.0 (manifest is the floor)" 21.2.0 release_target 21.0.0 MINOR 21.2.0
+eq "21.0.0 MAJOR, manifest 21.2.0 → 22.0.0 (target above manifest)" 22.0.0 release_target 21.0.0 MAJOR 21.2.0
+eq "21.0.0 PATCH, manifest 21.0.1 → 21.0.1 (equal)" 21.0.1 release_target 21.0.0 PATCH 21.0.1
+eq "21.0.0 NONE, manifest 21.2.0 → empty, exit 0" "" release_target 21.0.0 NONE 21.2.0
+refuses "manifest above target with a 13 → non-zero" release_target 1.0.0 PATCH 1.13.0
+refuses "bad manifest → non-zero" release_target 1.0.0 PATCH 1.x
 
 print_header "E3 end to end ..."
 eq "tag 21.0.0, manifest 21.2.0, recorded MAJOR → 22.0.0" 22.0.0 e3 21.0.0 21.2.0 MAJOR
 eq "tag 3.0.0, manifest 3.1.0, no record → 3.1.0" 3.1.0 e3 3.0.0 3.1.0 NONE
 eq "tag 1.1.50, manifest 1.1.50, recorded PATCH → 1.1.51" 1.1.51 e3 1.1.50 1.1.50 PATCH
 eq "tag 1.1.2, manifest 1.1.2, no record → skipped" "" e3 1.1.2 1.1.2 NONE
+eq "tag 21.0.0, manifest 21.2.0, no record → 21.2.0 (never lowers the manifest)" 21.2.0 e3 21.0.0 21.2.0 NONE
+eq "tag 21.0.0, manifest 21.2.0, recorded PATCH → 21.2.0" 21.2.0 e3 21.0.0 21.2.0 PATCH
 
 print_header "All release-level tests passed ($total cases)!"

@@ -6,7 +6,7 @@
 # This repo's own sidecar to `helpers`; nothing landed in a target repo may source it.
 # The version guard: version_forbidden, version_bump, version_next, version_skip_note.
 # The release levels of .config/releases.yaml: releases_level, releases_raise, releases_clear,
-# level_rank, level_max, level_implied, release_target.
+# level_rank, level_max, level_implied, release_target (the manifest is its floor).
 if [ -n "${MISE_LOCAL_SOURCED:-}" ]; then
   return 0
 fi
@@ -300,13 +300,47 @@ level_implied() {
 }
 
 # Print the version a level releases from the last tag, 13 and 17 skipped; nothing for NONE.
+# With a manifest, the manifest is the floor: a target below it releases the manifest as is.
 release_target() {
   local tag="${1:-}"
   local level="${2:-}"
+  local manifest="${3:-}"
 
   level_rank "${level}" >/dev/null || return 1
   if [ "${level}" = "NONE" ]; then
     return 0
   fi
-  version_next "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${tag}"
+  local target
+  target="$(version_next "$(printf '%s' "${level}" | tr '[:upper:]' '[:lower:]')" "${tag}")" || return 1
+  if [ -z "${manifest}" ]; then
+    echo "${target}"
+    return 0
+  fi
+  version_bump patch "${manifest}" >/dev/null || return 1
+
+  local t1 t2 t3 m1 m2 m3
+  local IFS='.'
+  # shellcheck disable=SC2086
+  set -- ${target#v}
+  t1="$((10#${1}))"
+  t2="$((10#${2}))"
+  t3="$((10#${3%%[-+]*}))"
+  # shellcheck disable=SC2086
+  set -- ${manifest#v}
+  m1="$((10#${1}))"
+  m2="$((10#${2}))"
+  m3="$((10#${3%%[-+]*}))"
+  IFS=' '
+
+  if [ "${m1}" -gt "${t1}" ] \
+    || { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -gt "${t2}" ]; } \
+    || { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -eq "${t2}" ] && [ "${m3}" -gt "${t3}" ]; }; then
+    if version_forbidden "${manifest}"; then
+      print_error "Manifest ${manifest} is above the target ${target} and carries a 13 or 17."
+      return 1
+    fi
+    echo "${manifest#v}"
+  else
+    echo "${target}"
+  fi
 }

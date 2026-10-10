@@ -88,6 +88,9 @@ tasks read that file:
 - **The level is the higher** of the recorded one and the one an untagged
   manifest implies against that tag (the first component that differs). Tag
   `vwf-v21.0.0`, manifest `21.2.0`, recorded `MAJOR` → `22.0.0`.
+- **The manifest is the floor**: a target below the manifest releases the
+  manifest as it stands, so a release never lowers it. Tag `vwf-v21.0.0`,
+  manifest `21.2.0`, no record → implied `MINOR` → `21.1.0`, raised to `21.2.0`.
 - **The version skips 13 and 17**: the target comes from the same guard the
   version tasks use, so `1.1.12` patched is `1.1.14`, and the task says what it
   skipped. A level that can never clear the number refuses.
