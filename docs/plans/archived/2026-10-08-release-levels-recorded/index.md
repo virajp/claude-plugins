@@ -277,17 +277,20 @@ A unit returns exactly this block and nothing else — no file contents, no diff
 - G1 (plan hole, U5; cap-free, from the unit's own GAP) — D11 does not say what
   a failed `after_landing:` command stops. Assumed: it stops only the
   `after_landing:` commands after it, the same failure rule as the plan's own
-  steps (U4 and U5 agree). Close by confirming or amending D11.
+  steps (U4 and U5 agree). Close by confirming or amending D11. **Resolved
+  2026-10-10:** the user confirmed the assumption.
 - G2 (plan hole, run-time Owns widening) — D5 puts the levels file in the commit
   that marks the plan COMPLETE, but the plan-index contract's step 5 staged
   `docs/plans/index.md` alone, and no unit owned it. U6's Owns was widened to
   `plugins/vwf/skills/plan-management/references/plan-index.md`, which now names
-  the one exception. Close by confirming the widening.
+  the one exception. Close by confirming the widening. **Resolved 2026-10-10:**
+  the user confirmed the widening.
 - G3 (plan fact, informational) — the Facts cite `installer/CLAUDE.md:219-221`
   as carrying the release exception; it never did, so U6 left it unchanged. The
   header comment U7 wrote in `.config/releases.yaml` (verbatim from 07-gates.md)
   differs from the header the new execute landing write uses when it creates the
-  file; the keys agree. Close by acknowledging.
+  file; the keys agree. Close by acknowledging. **Resolved 2026-10-10:** the
+  user acknowledged both facts; nothing changes.
 
 ## Run log
 
