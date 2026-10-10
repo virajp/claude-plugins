@@ -1,18 +1,18 @@
 ---
 type: vwf-change-plan
-title: SwiftUI third-party integrations
+title: SwiftUI and Compose third-party integrations
 requires: []
-backlog: [ B61 ]
+backlog: [ B61, B99 ]
 backlog_pieces: []
 ---
 
-# Plan — SwiftUI third-party integrations (2026-10-10)
+# Plan — SwiftUI and Compose third-party integrations (2026-10-10)
 
 ## Status
 
 **APPROVED**
 
-APPROVED 2026-10-10 by the user
+APPROVED 2026-10-10 by the user — revised the same day to absorb B99
 
 ## Consent
 
@@ -24,109 +24,195 @@ APPROVED 2026-10-10 by the user
 There is no After landing row: `.config/vwf.yaml`'s `after_landing:` already
 lists `mise run p:plugins:local`, and `/vwf:execute` runs it after every green
 landing; a restarted session loads the staged stackgen. The End an `all` run row
-is `no`: the next plan in the queue edits stackgen files only and does not load
-the SwiftUI pack, so the stale copy has no effect on it.
+is `no`: the plans in the queue edit files only and do not load the SwiftUI or
+Compose pack during a run, so the stale copy has no effect on them.
 
 ## Release levels
 
-| Project  | Level | Reason                                                               |
-| -------- | ----- | -------------------------------------------------------------------- |
-| stackgen | MINOR | new behaviour: the SwiftUI pack ships 11 more integration references |
-| site     | PATCH | the manual lists the new integrations; the site gets no new feature  |
+| Project  | Level | Reason                                                                           |
+| -------- | ----- | -------------------------------------------------------------------------------- |
+| stackgen | MINOR | new behaviour: the SwiftUI and Compose packs ship 24 more integration references |
+| site     | PATCH | the manual lists the new integrations; the site gets no new feature              |
 
 ## Goal
 
-The SwiftUI app-framework pack carries wiring doctrine for eleven more
-integrations — nine third-party SDKs and two Apple frameworks — so a SwiftUI
-product has the integration coverage a Flutter product has today. This finishes
-backlog item B61.
+The SwiftUI and Compose app-framework packs cover every dependency the 95octane
+Flutter frontend uses: each has an integration reference, a native answer in a
+topic file, or a recorded "not applicable" with its reason. SwiftUI gains eleven
+integration references and Compose thirteen, so a native product has the
+coverage a Flutter product has today. This finishes backlog items B61 and B99.
 
-No reversal. Ruling E4 of the Swift chain
-(`docs/memory/decisions/2026-09-23-swift-native-stack.md:54-58`) shipped the
-Apple core integrations and **parked** the third-party set; this plan is that
-parked item coming due. The docs unit records it as an addendum to that doc.
+The folder was first approved for B61 alone (SwiftUI); the user merged B99 into
+it on 2026-10-10 because both items close the same gap. No reversal: ruling E4
+of the Swift chain
+(`docs/memory/decisions/2026-09-23-swift-native-stack.md:54-58`) parked the
+third-party SwiftUI set, and this plan is that item coming due. The docs unit
+records it as an addendum to that doc.
 
 ## Facts the survey established
 
-- The pack: `plugins/stackgen/stacks/app-framework/swiftui/`, `pack.yaml:5`
-  `version: 0.6.0`. No pack key declares integrations; an integration is a file
-  under `skills/swiftui/references/integrations/` plus a router row. No checker
-  rule counts them.
-- The router: `skills/swiftui/SKILL.md:53-65`, section the "Integrations (topic
-  12)" section — a lead-in at `:55-57` ("One per **Apple** integration", files
-  are wiring only, the API surface is Context7's), then a two-column
-  `Wiring | Read` table at `:59-65`, one row per file.
-- The five existing files (`app-intents.md`, `push-notifications.md`,
-  `sign-in-with-apple.md`, `storekit.md`, `widgets-and-complications.md`) run 63
-  to 79 lines. Shared shape: an H1 that reads "SwiftUI — <topic> (<Framework>)";
-  a bold lead, "Wiring, platform configuration and anti-patterns only", which
-  names the API surface left to Context7; a framing paragraph; the "Setup order"
-  section; one or two topic sections (several have the "Per platform" section);
-  the "Anti-patterns" section last. Prose, no URLs, no inline Context7 ids.
-  Anti-pattern tables use padded separators.
-- The Flutter set for the same topics:
+- **SwiftUI pack:** `plugins/stackgen/stacks/app-framework/swiftui/`,
+  `pack.yaml:5` `version: 0.6.0`. Router `skills/swiftui/SKILL.md:53-65`, the
+  "Integrations (topic 12)" section: a lead-in at `:55-57` ("One per **Apple**
+  integration"), then a two-column Wiring and Read table at `:59-65`. Five
+  integration files today: `app-intents.md`, `push-notifications.md`,
+  `sign-in-with-apple.md`, `storekit.md`, `widgets-and-complications.md`. Topic
+  files beside them include `data-and-networking.md`, `ui-composition.md`,
+  `platform-interop.md`, `state-management.md`.
+- **Compose pack:** `plugins/stackgen/stacks/app-framework/compose/`,
+  `pack.yaml:6` `version: 0.3.0`. Router `skills/compose/SKILL.md:54-67`, the
+  "Integrations (topic 12)" section: a lead-in ("One per Jetpack library the app
+  wires") and a Wiring and Read table, one row per file. Seven integration files
+  today, all Jetpack: `hilt.md`, `room.md`, `navigation-compose.md`,
+  `datastore.md`, `workmanager.md`, `paging.md`, `camerax.md`. Topic files
+  include `ui-composition.md`, `platform-interop.md`, `data-and-networking.md`,
+  `state-management.md`.
+- **One file shape on both packs.** H1 "SwiftUI — <topic> (<Framework>)" or
+  "Jetpack Compose — <topic>"; a bold lead, "Wiring, configuration and
+  anti-patterns only", naming the API surface left to Context7; a framing
+  paragraph; a "Setup order" section; one or two topic sections (Structure,
+  Testing, Per platform); an "Anti-patterns" section last, a two-column table
+  with padded separators. 47 to 79 lines, prose, no URLs, no inline Context7
+  ids. No pack key declares integrations and no checker rule counts them.
+- **Flutter files for coverage, not shape:**
   `plugins/stackgen/stacks/app-framework/flutter/skills/flutter/references/integrations/`
   — `firebase-{analytics,app-check,auth,crashlytics,messaging,storage}.md`,
   `revenuecat.md`, `image-handling.md`, `webrtc.md`, `maps-and-location.md`,
-  `webview.md`, plus three Dart-only files. Read them for coverage, not shape.
-- Topic 12: `plugins/stackgen/assets/kinds.md:566` (conditional, repeats per
+  `webview.md`.
+- **Topic 12:** `plugins/stackgen/assets/kinds.md:566` (conditional, repeats per
   integration), `:595-600` (setup order, platform configuration, anti-patterns;
   manifest entries, entitlements, permissions, emulator wiring; never API
-  surface), `:891` (an API-surface listing under topic 12 is a gap).
-- Rule 13 (`plugins/stackgen/assets/pack-format.md`, about `:445-456`): a file
-  that lands in a target repo cites no plugin path.
-- Bundle: `plugins/stackgen/stacks/bundles/swift-swiftui.md:6` pins
-  `app-framework/swiftui@0.6.0`; it lists no integrations.
-- Inventory: `plugins/stackgen/stacks/inventory.md:33` (pack row) and `:166`
-  (bundle row) carry `0.6.0`; regenerated by `mise run p:plugins:inventory`.
-- Version rule: `pack-format.md:433-443` — a bundle pins the pack's current
-  version, and the inventory generator fails on a pin the pack no longer
-  carries, so the pack bump, the pin and the inventory land together.
-- Docs this falsifies: `site/src/content/docs/plugins/stackgen.md:347-348` (the
-  five Apple integrations) and `:353-356` ("Third-party integrations are not
-  covered yet."); `plugins/stackgen/stacks/readme.md:132-135` (the same).
-  History, not rewritten:
-  `docs/memory/decisions/2026-09-23-swift-native-stack.md` (`:54-58` E4,
-  `:120-123` parked list) — it gets an addendum.
-- Precedent: archived
-  `docs/plans/archived/2026-09-23-swiftui-platform-doctrine/` put the five files
-  in one unit and the router in a later wave (S4: a router row is added after
-  its file). Its U2 cut claims Context7 could not confirm.
+  surface), `:891` (an API-surface listing under topic 12 is a gap). Rule 13
+  (`plugins/stackgen/assets/pack-format.md`, about `:445-456`): a file that
+  lands in a target repo cites no plugin path.
+- **Bundles and inventory:** `bundles/swift-swiftui.md:6` pins
+  `app-framework/swiftui@0.6.0`; `bundles/kotlin-compose.md:11` pins
+  `app-framework/compose@0.3.0`. `inventory.md:33` (swiftui), `:31` (compose)
+  and the bundle rows `:166`, `:152` carry those versions; regenerated by
+  `mise run p:plugins:inventory`. `pack-format.md:433-443`: a bundle pins the
+  pack's current version and the generator fails on a stale pin, so bump, pin
+  and inventory land together.
+- **The 95octane frontend:**
+  `~/Projects/github.com/95octane/95octane/frontend/pubspec.yaml`, one pubspec,
+  no local packages. The dependency map (capability, SwiftUI answer, Android
+  answer, gap class) is the table under "Dependency map" below; the docs unit
+  copies it into the decisions doc (T16).
+- **Docs this falsifies:** `site/src/content/docs/plugins/stackgen.md:347-356`
+  (five Apple integrations, "Third-party integrations are not covered yet."),
+  `:413-418` (Compose's Jetpack list);
+  `plugins/stackgen/stacks/readme.md:132-135` (SwiftUI, the same sentence) and
+  `:140-143` (Compose). History, not rewritten:
+  `docs/memory/decisions/2026-09-23-swift-native-stack.md` — it gets an
+  addendum.
+- **Precedent:** archived
+  `docs/plans/archived/2026-09-23-swiftui-platform-doctrine/` put the
+  integration files in wave 1 and the router in a later wave (S4: a router row
+  is added after its file); its U2 cut claims Context7 could not confirm.
 - Commit types allowed (`.config/git-conventional-commits.yaml`): `ops`, `docs`,
   `merge`, `feat`, `fix`, `refactor`; no scopes.
 
+### Dependency map
+
+Gap class: (i) a new integration reference, (ii) a native answer in a topic
+file, (iii) not applicable. "U" names the unit that closes it.
+
+| Dependency                    | Capability              | SwiftUI answer                                         | Android answer                                         | Class |
+| ----------------------------- | ----------------------- | ------------------------------------------------------ | ------------------------------------------------------ | ----- |
+| intl                          | i18n, formatting        | `ui-composition.md` localization section (U4)          | `ui-composition.md` localization section (U8)          | ii    |
+| flutter_cache_manager         | file and HTTP cache     | `data-and-networking.md` (exists)                      | `data-and-networking.md` (exists)                      | ii    |
+| http, cupertino_http          | networking              | `data-and-networking.md`, URLSession (exists)          | `data-and-networking.md` (exists)                      | ii    |
+| cronet_http                   | networking              | not applicable                                         | `data-and-networking.md`, client choice (exists)       | ii    |
+| shared_preferences            | key-value storage       | `state-management.md`, `@AppStorage` (U4)              | `integrations/datastore.md` (exists)                   | ii    |
+| flutter_secure_storage        | secure storage          | `data-and-networking.md`, Keychain (exists)            | `integrations/datastore.md`, Keystore (exists)         | ii    |
+| package_info_plus             | app version info        | Bundle info, native                                    | `build-and-variants.md`, BuildConfig (exists)          | ii    |
+| device_info_plus              | device info             | `UIDevice`, native                                     | `android.os.Build`, native                             | ii    |
+| flutter_native_splash         | splash screen           | `platform-interop.md`, launch screen (U4)              | `platform-interop.md`, SplashScreen API (U8)           | ii    |
+| upgrader                      | app update prompt       | `data-and-networking.md`, app version gate (U4)        | `integrations/in-app-updates.md` (U6)                  | i     |
+| share_plus                    | share sheet             | `platform-interop.md`, `ShareLink` (U4)                | `platform-interop.md`, Sharesheet (U8)                 | ii    |
+| webview_flutter               | web view                | `integrations/webview.md` (U3)                         | `integrations/webview.md` (U7)                         | i     |
+| flutter_animate               | animation               | `ui-composition.md` (exists)                           | `ui-composition.md` (exists)                           | ii    |
+| permission_handler            | runtime permissions     | `platform-interop.md`, usage strings (U4)              | `platform-interop.md` (exists)                         | ii    |
+| get (GetX)                    | state, routing, DI      | state, navigation topics (exist)                       | state topic, Hilt, Navigation Compose (exist)          | ii    |
+| crypto                        | hashing                 | CryptoKit, native                                      | `MessageDigest`, native                                | ii    |
+| path_provider                 | file paths              | `FileManager`, native                                  | `filesDir`, native                                     | ii    |
+| material_symbols_icons        | icons                   | SF Symbols, native                                     | Material icons (exists)                                | ii    |
+| image_picker                  | photo picking           | `platform-interop.md`, PhotosPicker (U4)               | `platform-interop.md` (exists), CameraX (exists)       | ii    |
+| image_cropper                 | image crop              | `integrations/image-handling.md`, cropping (U2)        | `integrations/image-handling.md`, cropping (U6)        | i     |
+| firebase_core                 | Firebase bootstrap      | every `integrations/firebase-*.md` (U1)                | every `integrations/firebase-*.md` (U5)                | i     |
+| firebase_auth                 | auth                    | `integrations/firebase-auth.md` (U1)                   | `integrations/firebase-auth.md` (U5)                   | i     |
+| google_sign_in                | Google sign-in          | `integrations/firebase-auth.md`, Google section (U1)   | `integrations/credential-manager.md` (U6)              | i     |
+| sign_in_with_apple            | Apple sign-in           | `integrations/sign-in-with-apple.md` (exists)          | `integrations/firebase-auth.md`, Apple provider (U5)   | i     |
+| firebase_crashlytics          | crash reporting         | `integrations/firebase-crashlytics.md` (U1)            | `integrations/firebase-crashlytics.md` (U5)            | i     |
+| firebase_analytics            | analytics               | `integrations/firebase-analytics.md` (U1)              | `integrations/firebase-analytics.md` (U5)              | i     |
+| firebase_messaging            | push                    | `integrations/firebase-messaging.md` (U1)              | `integrations/firebase-messaging.md` (U5)              | i     |
+| firebase_app_check            | attestation             | `integrations/firebase-app-check.md` (U1)              | `integrations/firebase-app-check.md` (U5)              | i     |
+| firebase_storage              | cloud storage           | `integrations/firebase-storage.md` (U1)                | `integrations/firebase-storage.md` (U5)                | i     |
+| geolocator                    | location                | `integrations/maps-and-location.md` (U3)               | `integrations/maps-and-location.md` (U7)               | i     |
+| google_maps_flutter           | maps                    | `integrations/maps-and-location.md`, MapKit (U3)       | `integrations/maps-and-location.md`, Maps Compose (U7) | i     |
+| wakelock_plus                 | keep screen on          | `platform-interop.md` (U4)                             | `platform-interop.md` (U8)                             | ii    |
+| purchases_flutter (commented) | in-app purchase         | `integrations/revenuecat.md` (U2)                      | `integrations/revenuecat.md` (U6)                      | i     |
+| flutter_webrtc (commented)    | real-time media         | `integrations/webrtc.md` (U2)                          | `integrations/webrtc.md` (U6)                          | i     |
+| flutter_lints                 | lint                    | swift-format, SwiftLint packs                          | ktlint, detekt packs                                   | ii    |
+| mockito                       | test mocks              | `testing.md` (exists)                                  | `testing.md` (exists)                                  | ii    |
+| equatable, collection         | Dart language helpers   | not applicable: `Equatable`, the standard library      | not applicable: `data class`, the standard library     | iii   |
+| smooth_page_indicator         | pager dots              | not applicable: a `TabView` page style                 | not applicable: `HorizontalPager`                      | iii   |
+| country_state_city            | static geo data         | not applicable: a data package, no platform capability | not applicable: the same                               | iii   |
+| build_runner, flutter_gen     | Dart code generation    | not applicable: Xcode generates asset symbols          | not applicable: the R class                            | iii   |
+| flutter_launcher_icons        | icon generation         | not applicable: the asset catalog                      | not applicable: mipmap resources                       | iii   |
+| intl_translation              | ARB code generation     | not applicable: String Catalogs (U4)                   | not applicable: string resources (U8)                  | iii   |
+| import_sorter                 | Dart formatting         | not applicable: swift-format                           | not applicable: ktlint                                 | iii   |
+| dependency_validator          | Dart dependency hygiene | not applicable: SwiftPM resolution                     | not applicable: Gradle locking                         | iii   |
+| network_image_mock            | Dart test shim          | not applicable                                         | not applicable                                         | iii   |
+| flutter, flutter_test, …      | the Flutter SDK         | not applicable                                         | not applicable                                         | iii   |
+
 ## Assumed decisions — confirm or override at review
 
-| #   | Decision      | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                   | Rejected                                                     | Unit       |
-| --- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ | ---------- |
-| T1  | The set       | Eleven files: `firebase-analytics.md`, `firebase-app-check.md`, `firebase-auth.md`, `firebase-crashlytics.md`, `firebase-messaging.md`, `firebase-storage.md`, `revenuecat.md`, `image-handling.md`, `webrtc.md`, `maps-and-location.md` (MapKit and Core Location), `webview.md` (`WKWebView`). flutter_animate, GetX and json_serializable do not apply: Swift answers them natively in topics 1 to 11                 | third-party only (9 files); Firebase and RevenueCat only (7) | U1, U2, U3 |
-| T2  | Images        | `image-handling.md` wires Nuke (its SwiftUI `LazyImage` and its pipeline: disk and memory cache, prefetch, downsampling)                                                                                                                                                                                                                                                                                                 | Kingfisher; `AsyncImage` with a sized `URLCache`             | U2         |
-| T3  | WebRTC        | `webrtc.md` has two sections, each with its own setup order: the plain Google WebRTC xcframework through SwiftPM first (bring your own signalling), then the LiveKit Swift SDK (an SFU client tied to a LiveKit server)                                                                                                                                                                                                  | the plain WebRTC framework only; LiveKit only                | U2         |
-| T4  | Shape         | Every new file takes the shape of the five SwiftUI integration files: an H1 that reads "SwiftUI — <topic> (<SDK or framework>)", the bold "Wiring, platform configuration and anti-patterns only" lead naming the API surface left to Context7, a framing paragraph, the "Setup order" section, the topic sections, the "Per platform" section, the "Anti-patterns" section last. Prose, no URLs, no API-surface listing | the Flutter files' section order                             | U1, U2, U3 |
-| T5  | Platforms     | the "Per platform" section covers iOS and iPadOS, macOS, watchOS, tvOS, visionOS and CarPlay. It states only the support Context7 confirms; any other platform reads "not confirmed" rather than a guess                                                                                                                                                                                                                 | assume every SDK works on every Apple platform               | U1, U2, U3 |
-| T6  | Sources       | Decision E18 holds: every SDK and Apple behaviour is resolved through Context7 (`resolve-library-id` then `query-docs`) before it is written, never from training knowledge. A claim Context7 cannot confirm is cut                                                                                                                                                                                                      | —                                                            | U1, U2, U3 |
-| T7  | Router        | The router gains eleven rows in its two-column Wiring and Read table, after the files exist (S4), and its lead-in drops "Apple" so it reads "One per integration"                                                                                                                                                                                                                                                        | rows written in wave 1                                       | U4         |
-| T8  | Version       | The gates unit bumps `app-framework/swiftui` from `0.6.0` to `0.7.0`, re-pins `bundles/swift-swiftui.md` to `app-framework/swiftui@0.7.0`, and regenerates `inventory.md`, in one commit. The router's own frontmatter `version:` is not touched                                                                                                                                                                         | a bump inside each content unit                              | U6         |
-| T9  | Review        | No review row: the plan lands prose only, no runnable code                                                                                                                                                                                                                                                                                                                                                               | a review row                                                 | —          |
-| T10 | Decisions doc | The docs unit appends a dated addendum to `docs/memory/decisions/2026-09-23-swift-native-stack.md`: E4's parked third-party set shipped in this plan, with T1 to T3                                                                                                                                                                                                                                                      | a new decisions doc                                          | U5         |
+| #   | Decision        | Ruling                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Rejected                                                         | Unit                   |
+| --- | --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------- | ---------------------- |
+| T1  | SwiftUI set     | Eleven SwiftUI files: `firebase-analytics.md`, `firebase-app-check.md`, `firebase-auth.md`, `firebase-crashlytics.md`, `firebase-messaging.md`, `firebase-storage.md`, `revenuecat.md`, `image-handling.md`, `webrtc.md`, `maps-and-location.md` (MapKit and Core Location), `webview.md` (`WKWebView`). flutter_animate, GetX and json_serializable do not apply: Swift answers them natively in topics 1 to 11                                                                                           | third-party only (9 files); Firebase and RevenueCat only (7)     | U1, U2, U3             |
+| T2  | Images, iOS     | SwiftUI `image-handling.md` wires Nuke (its SwiftUI `LazyImage` and its pipeline: disk and memory cache, prefetch, downsampling)                                                                                                                                                                                                                                                                                                                                                                           | Kingfisher; `AsyncImage` with a sized `URLCache`                 | U2                     |
+| T3  | WebRTC, iOS     | SwiftUI `webrtc.md` has two sections, each with its own setup order: the plain Google WebRTC xcframework through SwiftPM first (bring your own signalling), then the LiveKit Swift SDK (an SFU client tied to a LiveKit server)                                                                                                                                                                                                                                                                            | the plain WebRTC framework only; LiveKit only                    | U2                     |
+| T4  | Shape           | Every new integration file takes the shape of its pack's existing integration files: the pack's H1 form, the bold "Wiring, configuration and anti-patterns only" lead naming the API surface left to Context7, a framing paragraph, a "Setup order" section, the topic sections, a "Per platform" section, an "Anti-patterns" section last. Prose, no URLs, no API-surface listing                                                                                                                         | the Flutter files' section order                                 | U1, U2, U3, U5, U6, U7 |
+| T5  | Platforms       | The "Per platform" section covers the pack's platforms — SwiftUI: iOS and iPadOS, macOS, watchOS, tvOS, visionOS, CarPlay; Compose: phone and tablet, Wear OS, Android TV, Android Auto. It states only the support Context7 confirms; any other platform reads "not confirmed" rather than a guess                                                                                                                                                                                                        | assume every SDK works on every platform                         | U1, U2, U3, U5, U6, U7 |
+| T6  | Sources         | Decision E18 holds on both packs: every SDK and platform behaviour is resolved through Context7 (`resolve-library-id` then `query-docs`) before it is written, never from training knowledge. A claim Context7 cannot confirm is cut                                                                                                                                                                                                                                                                       | —                                                                | U1 to U8               |
+| T7  | Routers         | Each router gains one row per new file in its two-column Wiring and Read table, after the files exist (S4). SwiftUI's lead-in drops "Apple" so it reads "One per integration"; Compose's drops "Jetpack library" so it reads "One per library the app wires"                                                                                                                                                                                                                                               | rows written in wave 1                                           | U9, U10                |
+| T8  | Versions        | The gates unit bumps `app-framework/swiftui` from `0.6.0` to `0.7.0` and `app-framework/compose` from `0.3.0` to `0.4.0`, re-pins `bundles/swift-swiftui.md` and `bundles/kotlin-compose.md`, and regenerates `inventory.md`, in one commit. No router frontmatter `version:` is touched                                                                                                                                                                                                                   | a bump inside each content unit                                  | U12                    |
+| T9  | Review          | No review row: the plan lands prose only, no runnable code                                                                                                                                                                                                                                                                                                                                                                                                                                                 | a review row                                                     | —                      |
+| T10 | Swift addendum  | The docs unit appends a dated addendum to `docs/memory/decisions/2026-09-23-swift-native-stack.md`: E4's parked third-party set shipped in this plan, with T1 to T3 and T12                                                                                                                                                                                                                                                                                                                                | a new decisions doc for it                                       | U11                    |
+| T11 | Compose set     | Thirteen Compose files: `firebase-analytics.md`, `firebase-app-check.md` (Play Integrity), `firebase-auth.md` (with the Apple provider), `firebase-crashlytics.md`, `firebase-messaging.md` (FCM and notification channels), `firebase-storage.md`, `revenuecat.md` (with Google Play Billing), `image-handling.md`, `webrtc.md`, `maps-and-location.md` (Maps Compose and the fused location provider), `webview.md`, `credential-manager.md` (Google sign-in), `in-app-updates.md` (Play In-App Updates) | the eleven only; only what 95octane uses                         | U5, U6, U7             |
+| T12 | SwiftUI gaps    | Three gaps close inside SwiftUI files: `firebase-auth.md` gains a Google Sign-In section (GoogleSignIn-iOS with Firebase); `image-handling.md` gains a cropping section (one library, chosen on Context7 evidence); `data-and-networking.md` gains an app version gate section (a server-side minimum version plus an App Store link, since iOS has no in-app update API)                                                                                                                                  | separate `google-sign-in.md` and `app-updates.md`; leave as gaps | U1, U2, U4             |
+| T13 | Native gaps     | Short additions to existing topic files, no new integration file. Localization: a section in each pack's `ui-composition.md` (String Catalogs on SwiftUI; string resources and per-app language on Android). Share sheet, splash or launch screen, keep-screen-on: each pack's `platform-interop.md`. PhotosPicker and general permission usage strings: SwiftUI `platform-interop.md`. `@AppStorage`: SwiftUI `state-management.md`                                                                       | localization only; record only                                   | U4, U8                 |
+| T14 | Images, Android | Compose `image-handling.md` wires Coil (Compose-first, coroutines) with one shared `ImageLoader`; each pack's cropping library is chosen on Context7 evidence and named in the file                                                                                                                                                                                                                                                                                                                        | Glide                                                            | U2, U6                 |
+| T15 | WebRTC, Android | Compose `webrtc.md` has two sections like SwiftUI's: a maintained prebuilt libwebrtc artifact chosen on Context7 evidence first, then the LiveKit Android SDK                                                                                                                                                                                                                                                                                                                                              | one section only                                                 | U6                     |
+| T16 | Parity record   | The docs unit writes `docs/memory/decisions/2026-10-10-flutter-dependency-parity.md` holding the "Dependency map" table above, with each answer re-pointed at the file that landed                                                                                                                                                                                                                                                                                                                         | a shipped `from-flutter.md` in each pack; both                   | U11                    |
 
 ## New dependencies
 
-None in this repo. The doctrine teaches target repos to use firebase-ios-sdk,
-purchases-ios (RevenueCat), Nuke, the WebRTC xcframework and the LiveKit Swift
-SDK, each through SwiftPM. The user consented to each at the approval gate on
-2026-10-10.
+None in this repo. The doctrine teaches target repos to use, each through its
+platform's package manager: firebase-ios-sdk, GoogleSignIn-iOS, purchases-ios
+(RevenueCat), Nuke, an iOS cropping library, the WebRTC xcframework and the
+LiveKit Swift SDK; the Firebase Android BoM, Play Integrity, Google Play
+Billing, RevenueCat Android, Coil, an Android cropping library, Credential
+Manager, Play In-App Updates, Maps Compose, Play Services Location, a prebuilt
+libwebrtc artifact and the LiveKit Android SDK. The user consented to each at
+the approval gate on 2026-10-10.
 
 ## Units
 
-| Id | Wave | Unit file                              | Kind | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Depends on | Status  | Commit |
-| -- | ---- | -------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-firebase.md](01-firebase.md)       | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-analytics.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-app-check.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-auth.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-crashlytics.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-messaging.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-storage.md` | —          | pending |        |
-| U2 | 1    | [02-third-party.md](02-third-party.md) | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/revenuecat.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/image-handling.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/webrtc.md`                                                                                                                                                                                                                                                                                                                                                              | —          | pending |        |
-| U3 | 1    | [03-apple.md](03-apple.md)             | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/maps-and-location.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/webview.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                | —          | pending |        |
-| U4 | 2    | [04-router.md](04-router.md)           | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | U1, U2, U3 | pending |        |
-| U5 | 3    | [05-docs.md](05-docs.md)               | edit | `site/src/content/docs/**`, `plugins/stackgen/stacks/readme.md`, `docs/memory/decisions/2026-09-23-swift-native-stack.md`, `.claude/skills/stackgen-plugin/**`, `readme.md`, and any other human-facing passage `vwf:docs-sync` finds                                                                                                                                                                                                                                                                                                                                                                                                                                         | U4         | pending |        |
-| U6 | 4    | [06-gates.md](06-gates.md)             | edit | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | U5         | pending |        |
+| Id  | Wave | Unit file                                              | Kind | Owns                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Depends on      | Status  | Commit |
+| --- | ---- | ------------------------------------------------------ | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------- | ------- | ------ |
+| U1  | 1    | [01-swiftui-firebase.md](01-swiftui-firebase.md)       | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-analytics.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-app-check.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-auth.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-crashlytics.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-messaging.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/firebase-storage.md` | —               | pending |        |
+| U2  | 1    | [02-swiftui-third-party.md](02-swiftui-third-party.md) | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/revenuecat.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/image-handling.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/webrtc.md`                                                                                                                                                                                                                                                                                                                                                              | —               | pending |        |
+| U3  | 1    | [03-swiftui-apple.md](03-swiftui-apple.md)             | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/maps-and-location.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/integrations/webview.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                | —               | pending |        |
+| U4  | 1    | [04-swiftui-topics.md](04-swiftui-topics.md)           | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/data-and-networking.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/ui-composition.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/platform-interop.md`, `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/state-management.md`                                                                                                                                                                                                                                                                                   | —               | pending |        |
+| U5  | 1    | [05-compose-firebase.md](05-compose-firebase.md)       | edit | `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-analytics.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-app-check.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-auth.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-crashlytics.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-messaging.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/firebase-storage.md` | —               | pending |        |
+| U6  | 1    | [06-compose-third-party.md](06-compose-third-party.md) | edit | `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/revenuecat.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/image-handling.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/webrtc.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/credential-manager.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/in-app-updates.md`                                                                                                                                      | —               | pending |        |
+| U7  | 1    | [07-compose-google.md](07-compose-google.md)           | edit | `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/maps-and-location.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/integrations/webview.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                | —               | pending |        |
+| U8  | 1    | [08-compose-topics.md](08-compose-topics.md)           | edit | `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/ui-composition.md`, `plugins/stackgen/stacks/app-framework/compose/skills/compose/references/platform-interop.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | —               | pending |        |
+| U9  | 2    | [09-swiftui-router.md](09-swiftui-router.md)           | edit | `plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | U1, U2, U3      | pending |        |
+| U10 | 2    | [10-compose-router.md](10-compose-router.md)           | edit | `plugins/stackgen/stacks/app-framework/compose/skills/compose/SKILL.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | U5, U6, U7      | pending |        |
+| U11 | 3    | [11-docs.md](11-docs.md)                               | edit | `site/src/content/docs/**`, `plugins/stackgen/stacks/readme.md`, `docs/memory/decisions/2026-09-23-swift-native-stack.md`, `docs/memory/decisions/2026-10-10-flutter-dependency-parity.md`, `.claude/skills/stackgen-plugin/**`, `readme.md`, and any other human-facing passage `vwf:docs-sync` finds                                                                                                                                                                                                                                                                                                                                                                        | U4, U8, U9, U10 | pending |        |
+| U12 | 4    | [12-gates.md](12-gates.md)                             | edit | `plugins/stackgen/stacks/app-framework/swiftui/pack.yaml`, `plugins/stackgen/stacks/app-framework/compose/pack.yaml`, `plugins/stackgen/stacks/bundles/swift-swiftui.md`, `plugins/stackgen/stacks/bundles/kotlin-compose.md`, `plugins/stackgen/stacks/inventory.md`                                                                                                                                                                                                                                                                                                                                                                                                         | U11             | pending |        |
 
 Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 `skipped`.
@@ -135,20 +221,22 @@ Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
 
 | File                                                                      | Why it collides                             | Owner            |
 | ------------------------------------------------------------------------- | ------------------------------------------- | ---------------- |
-| `plugins/stackgen/stacks/inventory.md`                                    | generated from every pack and bundle        | U6 only          |
-| `swiftui/pack.yaml`, `bundles/swift-swiftui.md`                           | the version and its pin move together       | U6 only          |
-| `swiftui/skills/swiftui/SKILL.md`                                         | the router links every file                 | U4 only          |
+| `plugins/stackgen/stacks/inventory.md`                                    | generated from every pack and bundle        | U12 only         |
+| the two `pack.yaml` files and their two bundle pins                       | a version and its pin move together         | U12 only         |
+| the two routers, `swiftui/.../SKILL.md` and `compose/.../SKILL.md`        | each links every integration file           | U9 and U10       |
 | `plugins/*/.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | version files and a generated file; no bump | nobody — never   |
 | `.config/releases.yaml`                                                   | written by `/vwf:execute` at landing        | nobody in a unit |
-| the human-facing docs                                                     | n units editing one doc                     | U5 only          |
+| the human-facing docs                                                     | n units editing one doc                     | U11 only         |
 
 ## Waves
 
-- **Wave 1 — U1, U2, U3.** Eleven new files, disjoint by name. No unit reads
-  another's output.
-- **Wave 2 — U4.** The router rows, after their files exist (S4).
-- **Wave 3 — U5.** Docs.
-- **Wave 4 — U6.** The version bump, the pin, the inventory and the full gate.
+- **Wave 1 — U1 to U8.** Twenty-four new files and six edited topic files,
+  disjoint by path. No unit reads another's output; a cross-reference names a
+  file by its file name only.
+- **Wave 2 — U9, U10.** The two routers, after their files exist (S4); disjoint.
+- **Wave 3 — U11.** Docs and the two decisions-doc edits.
+- **Wave 4 — U12.** The two bumps, the two pins, the inventory and the full
+  gate.
 
 ## Wave gate
 
@@ -172,11 +260,12 @@ none — `.config/vwf.yaml`'s `after_landing:` runs `mise run p:plugins:local`.
 
 ## Gates the orchestrator keeps
 
-- After wave 2: every link in the router table in the "Integrations (topic 12)"
-  section resolves to a file in `references/integrations/`, and every file there
-  has a row. Pass: sixteen files, sixteen rows, no broken link.
-- After wave 1: a grep of the eleven new files for `plugins/`,
-  `CLAUDE_PLUGIN_ROOT` and `stackgen/` finds nothing (rule 13).
+- After wave 1: a grep of the 24 new files and the six edited topic files for
+  `plugins/`, `CLAUDE_PLUGIN_ROOT` and `stackgen/` finds nothing (rule 13).
+- After wave 2: every link in each router's integration table resolves to a file
+  in that pack's `references/integrations/`, and every file there has a row.
+  Pass: SwiftUI sixteen files and sixteen rows; Compose twenty files and twenty
+  rows; no broken link.
 
 ## Unit contract
 
@@ -185,8 +274,8 @@ paths plus "touch nothing outside this list", the facts section, the shared-file
 rule, and the return block below. A unit never bumps a version, never runs a
 generator, never edits a doc, never adds a dependency this file does not list,
 never commits. A unit deletes with plain `rm`, never `git rm` — it stages
-nothing. U6 is the one exception to "never bumps a version" and "never runs a
-generator": T8 names that bump and that generator.
+nothing. U12 is the one exception to "never bumps a version" and "never runs a
+generator": T8 names those bumps and that generator.
 
 A unit returns exactly this block and nothing else — no file contents, no diff:
 
@@ -202,11 +291,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Out of scope
 
-- **flutter_animate, GetX and json_serializable equivalents** — Dart-only; Swift
-  answers them natively in topics 1 to 11 (T1).
+- **The not-applicable dependencies** in the map — Dart tooling, Dart language
+  helpers, a data package, plain UI widgets — with the reason in the map.
 - **API-surface listings** — Context7's at use time (topic 12).
-- **Any change to topics 1 to 11, the platform references or the five Apple
-  integration files.**
+- **The `framework/android`, `language/kotlin` and `package-manager/gradle`
+  packs** — build doctrine, untouched.
+- **Any change to the existing integration files and platform references**
+  beyond what T12 and T13 name.
 
 ## Parked
 
