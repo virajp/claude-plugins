@@ -241,8 +241,8 @@ describe("hook scripts", () => {
     });
 
   it("accepts an executable script and an inline command", () => {
-    // vwf's guarded `rtk` hook is inline and names no bundled file, so a rule
-    // that demanded a script would flag it on every run.
+    // An inline command names no bundled file, so a rule that demanded a
+    // script would flag it on every run.
     const root = tree({
       alpha: {
         files: {
@@ -253,7 +253,7 @@ describe("hook scripts", () => {
       },
       beta: {
         files: {
-          "hooks/hooks.json": hooks("command -v rtk && rtk hook || true"),
+          "hooks/hooks.json": hooks("command -v jq && jq --version || true"),
         },
       },
     });

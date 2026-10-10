@@ -65,25 +65,23 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Six binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`,
-  `pnpm` and `rtk`. `pnpm` is only the **default** Context7 runner;
-  `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs no pnpm — see
+- **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`
+  and `pnpm`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
+  overrides it, so a bun or npm user needs no pnpm — see
   [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover all six: it
+  checks this at install time**, and `/vwf:doctor` does not cover all five: it
   blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
   pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
-  language server as an ordinary finding, reports a missing `rtk` as a
-  **degradation** — its hook is guarded, so the run is correct and merely costs
-  more — and says nothing at all about the Context7 runner, while `uv` and
-  `python` matter as graphify's runtime rather than on their own. Run
-  `/vwf:doctor` first regardless, but install all six rather than relying on it
-  to tell you. A seventh, `gh`, logged in, is needed by `/vwf:backlog`, which
-  keeps the backlog in a GitHub Project and wants the `project` scope, by
-  `init`'s **forge pass** (the default branch and protection on `develop` and
-  `main` on the `repo` scope, the backlog project on `project` — on a GitLab
-  remote, `glab`), and by the doctor predicate that reads that forge state back;
-  doctor reports its absence as a **degradation** with the remedy, and init
-  prints the by-hand list and carries on.
+  language server as an ordinary finding, and says nothing at all about the
+  Context7 runner, while `uv` and `python` matter as graphify's runtime rather
+  than on their own. Run `/vwf:doctor` first regardless, but install all five
+  rather than relying on it to tell you. A sixth, `gh`, logged in, is needed by
+  `/vwf:backlog`, which keeps the backlog in a GitHub Project and wants the
+  `project` scope, by `init`'s **forge pass** (the default branch and protection
+  on `develop` and `main` on the `repo` scope, the backlog project on `project`
+  — on a GitLab remote, `glab`), and by the doctor predicate that reads that
+  forge state back; doctor reports its absence as a **degradation** with the
+  remedy, and init prints the by-hand list and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -213,11 +211,8 @@ Paste one of these, adjusting the plugin name:
   produces from that prompt. It is your agent's best effort, and the honest
   expectation is that skills port well, hooks and MCP wiring port unevenly, and
   subagents port worst.
-- **Hook and MCP wiring vary most.** vwf's hooks include a command *rewrite*
-  (`rtk`) — a tool that can only allow or deny a command cannot express it, and
-  the usual adaptation is a refuse-with-correction. MCP transport support
-  differs per tool; vwf's memory server is HTTP, which is the more portable of
-  the two it declares.
+- **MCP wiring varies most.** MCP transport support differs per tool; vwf's
+  memory server is HTTP, which is the more portable of the two it declares.
 - **Model-invocation restrictions may be approximated.** Some skills are marked
   so the model cannot invoke them itself and you own the timing
   (`disable-model-invocation: true`). If your tool has no equivalent, that
@@ -484,9 +479,6 @@ maintainers. 🙏
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and
   **[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp)** — the engines
   behind the language servers `stackgen`'s packs declare.
-- **[rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer)** — the
-  token-saving proxy `vwf`'s Bash hook shells out to (installed via
-  `brew install --formulae rtk`).
 - **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
   tool `vwf` integrates with.
 - **[tsup](https://tsup.egoist.dev/)** — bundles the installer CLI for

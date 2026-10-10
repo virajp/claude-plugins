@@ -64,7 +64,6 @@ them at install time, and the table below gives the command for each.
 | Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`                   |
 | uv              | **required** | installs graphify, through mise's pipx backend        | `uv` in your global mise config, then `mise install`                            |
 | python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `python` in your global mise config, then `mise install`                        |
-| rtk             | recommended  | the token-saving `rtk hook claude` Bash hook          | `brew install --formulae rtk`                                                   |
 | gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project`        |
 
 Your global mise config is `~/.config/mise/config.toml`: add each tool to its
@@ -82,17 +81,14 @@ claimed there is nothing for it to resolve, so its absence degrades rather than
 blocks until one is. An earlier installer refused the install outright and
 printed the command to fix each; that gate did not come back when the
 installer's plugin flags did, so the failure now arrives at first use rather
-than at install. `rtk` is the exception — the hook entry is guarded, so a `vwf`
-without `rtk` still runs correctly and merely costs more, and `/vwf:doctor`
-reports it as a **degradation** every run rather than blocking. `gh` is the same
-kind of exception: [`/vwf:backlog`](#vwfbacklog) and the planners' recall of it
-need the GitHub CLI, and so do [`/vwf:init`](#vwfinit)'s **forge pass** — the
-default branch, the protection on `develop` and `main`, the backlog project;
-`glab` on a GitLab remote — and the `/vwf:doctor` predicate that reads that
-forge state back. Doctor reports a CLI that is absent, not logged in, or without
-the `project` scope as a **degradation** with the remedy, every run, and skips
-the forge-state predicate with a note; init prints the by-hand list and carries
-on.
+than at install. `gh` is the exception: [`/vwf:backlog`](#vwfbacklog) and the
+planners' recall of it need the GitHub CLI, and so do [`/vwf:init`](#vwfinit)'s
+**forge pass** — the default branch, the protection on `develop` and `main`, the
+backlog project; `glab` on a GitLab remote — and the `/vwf:doctor` predicate
+that reads that forge state back. Doctor reports a CLI that is absent, not
+logged in, or without the `project` scope as a **degradation** with the remedy,
+every run, and skips the forge-state predicate with a note; init prints the
+by-hand list and carries on.
 
 **The memory server is started by Claude Code.** `vwf` declares mempalace over
 **stdio** as `mise x -- mempalace-mcp`, so Claude Code starts it once per
@@ -208,11 +204,10 @@ adopting it.
 **Dependencies**
 
 - **External prerequisites, checked at run time rather than install time.**
-  `mise`, `graphify`, `uv`, `python`, `pnpm` and `rtk` must be on your `PATH`.
-  Nothing refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on
-  a missing `graphify` — and on `mise` once a stack is pinned — `/vwf:doctor`
-  reports a missing `rtk` as a **degradation**, and `uv`, `python` and `pnpm`
-  fail later in their own ways. `gh`, logged in, is needed by
+  `mise`, `graphify`, `uv`, `python` and `pnpm` must be on your `PATH`. Nothing
+  refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
+  missing `graphify` — and on `mise` once a stack is pinned, and `uv`, `python`
+  and `pnpm` fail later in their own ways. `gh`, logged in, is needed by
   [`/vwf:backlog`](#vwfbacklog) (the `project` scope), by
   [`/vwf:init`](#vwfinit)'s forge pass (the `repo` scope — `project` only for
   its backlog step; `glab` on GitLab) and by the doctor predicate that reads the

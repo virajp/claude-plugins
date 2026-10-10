@@ -15,11 +15,11 @@ paths:
 
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
 workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
-subagents they delegate to, the shared doctrine in `assets/`, the guarded `rtk`
-hook, the two mempalace auto-save hooks, and two MCP servers. It names **no**
-technology — no stack templates, no language list; what each axis offers comes
-from a stack plugin behind the stack-adapter contract, and `p:plugins:check`'s
-technology-free guard enforces it.
+subagents they delegate to, the shared doctrine in `assets/`, the two mempalace
+auto-save hooks, and two MCP servers. It names **no** technology — no stack
+templates, no language list; what each axis offers comes from a stack plugin
+behind the stack-adapter contract, and `p:plugins:check`'s technology-free guard
+enforces it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
 The references below are an index of which file owns what, not a second copy of
@@ -385,9 +385,9 @@ not correctness, and `prefixSkillNames` is gone.
 ## Hooks
 
 `hooks/hooks.json` is authored directly in Claude's own format, with the scripts
-beside it: the guarded `rtk` Bash hook, and the two mempalace auto-save hooks
-(`Stop` and `PreCompact`). Plugin hooks are auto-discovered from that file and
-**never written to `settings.json`**, so verify them with `/hooks`.
+beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`). Plugin
+hooks are auto-discovered from that file and **never written to
+`settings.json`**, so verify them with `/hooks`.
 
 The verdict trap that shipped here: **a script's verdict shape is decided by its
 event**. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop`
