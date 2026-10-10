@@ -172,7 +172,8 @@ commits. A unit deletes with plain `rm`, never `git rm`.
   `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md:83`
   still reads "`ios` in this release" for the feature `scope`, falsified by U1.
   No unit owned it; handed to the docs unit U3 as a `DOCS FALSIFIED:` line and
-  U3's Owns widened to that passage, as the plan's Goal authorises.
+  U3's Owns widened to that passage, as the plan's Goal authorises. Resolved in
+  wave 2 by U3, passed by R2.
 
 ## Run log
 
@@ -186,6 +187,11 @@ commits. A unit deletes with plain `rm`, never `git rm`.
 | 1    | U1        | opus  | 2     | green       | flow-contract.md:156 refolded to ≤80 cols, no words changed; reviewer reword kept, fold confirmed; p:plugins:check green                                                                                                                                                                                                                 | 0f35293e |
 | 1    | R1        | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
 | 1    | gate      | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
+| 2    | U3        | opus  | 1     | green       | decision record written (D1–D5, vendor research, rule-only outcome); vwf.md features scope lists ios, android:samsung, android:oneplus; stackgen.md Compose passage adds the device-feature rule; frontmatter-and-links.md:83 corrected (R1 gap); docs-sync grep: none stale; p:site:check green                                         |          |
+| 2    | R2        | opus  | 1     | findings(2) | U3 vwf.md:2097 paragraph not dprint-wrapped; U3 decision record lines 3-4, 17-19 not dprint-wrapped → loop U3; CONTRACT clean; RULINGS clean                                                                                                                                                                                             |          |
+| 2    | U3        | opus  | 2     | green       | vwf.md 2094-2110 and decision record rewrapped by dprint on those two files, whitespace only; dprint check and p:site:check green                                                                                                                                                                                                        |          |
+| 2    | R2        | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
+| 2    | gate      | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
 
 ## Launch
 

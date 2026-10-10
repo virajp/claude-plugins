@@ -80,7 +80,8 @@ A flow's **platform file** carries two more keys beside `status:` and
 platform: mobile # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp
 features: [] # OS-specific features on this platform; [] when none. Each entry:
 #   - name: <the feature, in words>
-#     scope: ios # one OS name from the platform doctrine — `ios` in this release
+#     scope: ios # a value the platform doctrine names — on `mobile`: `ios`,
+#                # `android:samsung`, `android:oneplus` (vendor = label only)
 #     fallback: <what the other OS, or a device without the feature, shows> # required
 ```
 
