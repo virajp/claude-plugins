@@ -53,9 +53,14 @@ package and a `400` for an unknown system.
 - **Every call is a plain GET** with no header and no body, which is all
   `WebFetch` sends; that is why the advisory list is read here rather than
   from OSV's query endpoint.
-- **Which version is default:** the entry whose `is_default` is `true`. The
-  earliest and latest `published_at` across `versions[]` are the two age
-  signals.
+- **Which version is default:** the entry whose `is_default` is `true` —
+  unless it is a prerelease, when it is the newest stable entry by
+  `published_at`. A prerelease is a semver pre-release (`-` after the
+  patch) or, for Maven, a qualifier `alpha`, `beta`, `rc`, `cr`, `m<n>`,
+  `milestone`, `preview`, `eap`, `dev` or `snapshot` in any case, `-` or `.`
+  before it. With no stable entry at all, the default stands and the row
+  says so. The earliest and latest `published_at` across `versions[]` are
+  the two age signals.
 - **The package name, per system.** A Maven name is the group and artifact
   joined by `:` — `org.apache.logging.log4j:log4j-core`, the form deps.dev's
   own Maven examples use — percent-encoded in the path, the `:` as `%3A`.

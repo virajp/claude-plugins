@@ -1532,12 +1532,14 @@ before it lands:
    them: absent from its registry, first published under 30 days ago, an
    unpatched critical or high advisory on the version to be pinned, a near-name
    of a far more downloaded package, deprecated or archived → `block`; one
-   maintainer, bottom-tier downloads, no provenance, a low Scorecard → `warn`. A
-   `block` halts the component with the table; you name the replacement, and it
-   is checked in turn — never a silent swap. A source the skill cannot reach is
-   `UNRESOLVED`, never an inferred verdict, and halts like an unreachable
-   Context7. Shipped packs are outside the check: their names were curated by
-   hand.
+   maintainer, bottom-tier downloads, no provenance, a low Scorecard, a Maven
+   artifact with no linked source project → `warn`. A name with no version is
+   vetted at its newest stable version, never a prerelease the registry marks
+   default. A `block` halts the component with the table; you name the
+   replacement, and it is checked in turn — never a silent swap. A source the
+   skill cannot reach is `UNRESOLVED`, never an inferred verdict, and halts like
+   an unreachable Context7. Shipped packs are outside the check: their names
+   were curated by hand.
 5. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
    or a numbered list — checking the kind's **topic-bar coverage**, artifact
    validity, the content, and that every emitted name has a row in the verdict

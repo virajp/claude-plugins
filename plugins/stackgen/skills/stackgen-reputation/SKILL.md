@@ -62,7 +62,9 @@ prefix.
   runs against: `npm:left-pad@1.3.0`, `pypi:jinja2@3.1.4`,
   `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`. With
   none given the check runs against the registry's default version — for a
-  package the one the registry marks default or latest; for an action the
+  package the one the registry marks default or latest, unless that version
+  is a prerelease, when the newest stable version is used instead (a
+  prerelease is vetted only when it is pinned); for an action the
   latest release's tag; for an image the tag is required, and a name without
   one is read as `latest` and warned as such.
 - An **image name carries its registry host and full repository path**, and
