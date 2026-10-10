@@ -121,7 +121,7 @@ the composition's single consent gate and landing. Generation is
    | a Dart or Flutter package                    | `pub:<package>`                             |
    | a GitHub Action                              | `action:<owner>/<repo>@<ref>`               |
    | a container image                            | `image:<registry>/<repo>:<tag>`             |
-   | a `mise_tool` entry, whatever its backend    | `mise:<backend>:<path>`, as its toml key    |
+   | a `mise_tool` entry, whatever its backend    | `mise:<backend>:<path>@<version>`           |
    | a `Package.swift` dependency                 | `spm:<host>/<owner>/<repo>@<version>`       |
    | a Maven dependency                           | `maven:<group>:<artifact>@<version>`        |
    | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
@@ -132,7 +132,9 @@ the composition's single consent gate and landing. Generation is
    Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
    Ruby and .NET tools have no prefix of their own: they are mise tools,
    reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or
-   `mise:dotnet:…`.
+   `mise:dotnet:…`. A mise tool's name is its toml key with the version
+   its toml value pins after `@`; an entry that pins `latest`, or no
+   version, is written with no `@`, and the skill warns on it as unpinned.
 
    **Expand a short mise name first.** A mise tool named without a
    backend (no `:`, e.g. `swiftlint`) is expanded before it is vetted:

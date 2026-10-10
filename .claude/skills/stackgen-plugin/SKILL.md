@@ -105,8 +105,8 @@ pins, stackgen resolves its composition and dispatches **per component**:
    vwf's principles catalog with citations → at assemble, every concrete
    third-party name the component emits (packages, runner-invoked tools,
    actions, images, SwiftPM packages, Maven artifacts and Gradle plugins, mise
-   tools as `mise:<backend>:<path>`) through `stackgen-reputation` — eight
-   prefixes, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
+   tools as `mise:<backend>:<path>@<version>`) through `stackgen-reputation` —
+   eight prefixes, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
    halting the component with the verdict table until the user names a
    replacement, never a silent swap → the `stackgen-skill-reviewer` gate, capped
    at **four rounds**, after which residuals are reported rather than looped;

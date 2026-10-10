@@ -216,8 +216,9 @@ dry-run gate shows it, from the `stackgen-reputation` skill — a skill anyone
 can call, the user by hand on a name they are about to type and the generator
 over the list it assembled. A name is passed with its ecosystem prefix —
 `npm:`, `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:` or `mise:`. A
-mise tool is always passed as `mise:<backend>:<path>`, the same as its toml
-key, a short name expanded with `mise registry <name>` first; a SwiftPM
+mise tool is always passed as `mise:<backend>:<path>@<version>` — its toml
+key, a short name expanded with `mise registry <name>` first, and the version
+its toml value pins, with no `@` when that is `latest` or absent; a SwiftPM
 dependency as `spm:<host>/<owner>/<repo>@<version>`; a Maven dependency as
 `maven:<group>:<artifact>@<version>`, and a Gradle plugin as its marker
 coordinate, `maven:<id>:<id>.gradle.plugin@<version>`. Go, Cargo, Ruby and

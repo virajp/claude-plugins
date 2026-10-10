@@ -1522,24 +1522,24 @@ before it lands:
    every **shipped** pack skill and pack agent under a strict parser too, so a
    curated pack is held to what a generated one is.
 4. **The names.** Every concrete third-party name the component emits — a
-   `mise_tool` entry, written `mise:<backend>:<path>` as its toml key once a
-   short name is expanded with `mise registry`, a package a runner-invoked task
-   names, a command an MCP server entry spawns, a GitHub Action, a container
-   image, a `Package.swift` dependency, a Maven dependency or Gradle plugin in a
-   build file — gets a verdict from `stackgen-reputation` before the dry-run
-   gate shows it: `pass`, `warn` or `block`, decided by thresholds written in
-   the skill's `references/signals.md` rather than judged on the spot — among
-   them: absent from its registry, first published under 30 days ago, an
-   unpatched critical or high advisory on the version to be pinned, a near-name
-   of a far more downloaded package, deprecated or archived → `block`; one
-   maintainer, bottom-tier downloads, no provenance, a low Scorecard, a Maven
-   artifact with no linked source project → `warn`. A name with no version is
-   vetted at its newest stable version, never a prerelease the registry marks
-   default. A `block` halts the component with the table; you name the
-   replacement, and it is checked in turn — never a silent swap. A source the
-   skill cannot reach is `UNRESOLVED`, never an inferred verdict, and halts like
-   an unreachable Context7. Shipped packs are outside the check: their names
-   were curated by hand.
+   `mise_tool` entry, written `mise:<backend>:<path>@<version>` — its toml key
+   and the version it pins — once a short name is expanded with `mise registry`,
+   a package a runner-invoked task names, a command an MCP server entry spawns,
+   a GitHub Action, a container image, a `Package.swift` dependency, a Maven
+   dependency or Gradle plugin in a build file — gets a verdict from
+   `stackgen-reputation` before the dry-run gate shows it: `pass`, `warn` or
+   `block`, decided by thresholds written in the skill's `references/signals.md`
+   rather than judged on the spot — among them: absent from its registry, first
+   published under 30 days ago, an unpatched critical or high advisory on the
+   version to be pinned, a near-name of a far more downloaded package,
+   deprecated or archived → `block`; one maintainer, bottom-tier downloads, no
+   provenance, a low Scorecard, a Maven artifact with no linked source project →
+   `warn`. A name with no version is vetted at its newest stable version, never
+   a prerelease the registry marks default. A `block` halts the component with
+   the table; you name the replacement, and it is checked in turn — never a
+   silent swap. A source the skill cannot reach is `UNRESOLVED`, never an
+   inferred verdict, and halts like an unreachable Context7. Shipped packs are
+   outside the check: their names were curated by hand.
 5. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
    or a numbered list — checking the kind's **topic-bar coverage**, artifact
    validity, the content, and that every emitted name has a row in the verdict

@@ -277,6 +277,12 @@ the unit could not proceed without; it blocks the unit and its dependents.
   Closes with a ruling in `references/signals.md`. **Resolved 2026-10-10:** the
   user ruled `warn`, not silent: a new `signals.md` row warns when the resolved
   Maven version names no source project.
+- G3 (R1 round 2, contested at the cap; added 2026-10-10): `generator.md:123`
+  wrote a mise tool as `mise:<backend>:<path>` with no `@version`, so the skill
+  warned on every generated mise name and vetted the backend's default version.
+  **Resolved 2026-10-10:** the user ruled that the generator writes
+  `mise:<backend>:<path>@<version>`, the version the toml value pins, and no `@`
+  for `latest` or no pin (`generator.md`, `artifact-doctrine.md`).
 
 ## Launch
 
