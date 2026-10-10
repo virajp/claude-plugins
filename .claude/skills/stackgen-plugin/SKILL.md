@@ -104,15 +104,17 @@ pins, stackgen resolves its composition and dispatches **per component**:
    detect the real stack → one Context7 research pass per topic → instantiate
    vwf's principles catalog with citations → at assemble, every concrete
    third-party name the component emits (packages, runner-invoked tools,
-   actions, images) through `stackgen-reputation`, a `block` halting the
-   component with the verdict table until the user names a replacement, never a
-   silent swap → the `stackgen-skill-reviewer` gate, capped at **four rounds**,
-   after which residuals are reported rather than looped; its tenth check reads
-   the verdict table it is handed — every name has a row, none reads `block` —
-   and it stays offline. Context7 or a reputation source unreachable → **halt,
-   never guess**. The verdict table is shown whole beside the reviewer's verdict
-   at the dry-run consent gate; a template read-back (`/vwf:plan`,
-   `/vwf:execute`) never re-checks.
+   actions, images, SwiftPM packages, Maven artifacts and Gradle plugins, mise
+   tools as `mise:<backend>:<path>`) through `stackgen-reputation` — eight
+   prefixes, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
+   halting the component with the verdict table until the user names a
+   replacement, never a silent swap → the `stackgen-skill-reviewer` gate, capped
+   at **four rounds**, after which residuals are reported rather than looped;
+   its tenth check reads the verdict table it is handed — every name has a row,
+   none reads `block` — and it stays offline. Context7 or a reputation source
+   unreachable → **halt, never guess**. The verdict table is shown whole beside
+   the reviewer's verdict at the dry-run consent gate; a template read-back
+   (`/vwf:plan`, `/vwf:execute`) never re-checks.
 
 Mixed compositions are the ordinary case, with one consent and one landing per
 bundle, so a later re-sync can act on one component alone. Packs are **assets,
