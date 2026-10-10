@@ -267,11 +267,16 @@ the unit could not proceed without; it blocks the unit and its dependents.
   kotlin.jvm plugin marker is the prerelease 2.5.0-Beta1; the skill takes the
   registry default, so an unpinned "latest" vets a beta. Assumption: the skill
   is followed as written. Closes with a ruling on whether the default-version
-  read skips prereleases.
+  read skips prereleases. **Resolved 2026-10-10:** the user ruled that an
+  unpinned name skips prereleases: the default is the newest stable version, and
+  a prerelease is vetted only when pinned (`SKILL.md`, `sources.md`,
+  `signals.md`).
 - G2 (U4, smoke run): the skill does not say what the Scorecard signal is when a
   Maven version has no related project (androidx.core:core-ktx, the plugin
   marker). Assumption: the signal stays silent, adding nothing to the verdict.
-  Closes with a ruling in `references/signals.md`.
+  Closes with a ruling in `references/signals.md`. **Resolved 2026-10-10:** the
+  user ruled `warn`, not silent: a new `signals.md` row warns when the resolved
+  Maven version names no source project.
 
 ## Launch
 
