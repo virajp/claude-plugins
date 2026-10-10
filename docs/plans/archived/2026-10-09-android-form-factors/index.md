@@ -252,4 +252,5 @@ or run every runnable plan, highest priority first:
   is the phone module's, plus the Car App Library testing artifact and the
   Desktop Head Unit by hand, and wrote that into
   `framework/android/skills/android/references/form-factors.md`. A later plan
-  can add an automated path if one appears.
+  can add an automated path if one appears. **Resolved 2026-10-10:** the user
+  accepted U2's assumption as the ruling; the test path stays as written.
