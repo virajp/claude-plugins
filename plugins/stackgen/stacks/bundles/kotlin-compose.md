@@ -8,7 +8,7 @@ components:
 - toolchain-gate/ktlint@0.1.0
 - toolchain-gate/detekt@0.1.0
 - framework/android@0.2.0
-- app-framework/compose@0.2.0
+- app-framework/compose@0.3.0
 platforms:
 - mobile
 - tablet

@@ -28,7 +28,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 0.2.0 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
+| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 0.3.0 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 0.7.1 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
 | `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 0.6.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 0.1.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
@@ -149,7 +149,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/gke@0.1.0` |
 | `github-actions` | GitHub Actions | `ci-system` | cicd | `ci-system/github-actions@0.2.1` |
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.4.0`, `package-manager/pnpm@0.6.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.4`, `framework/html@0.2.1` |
-| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.2.0`, `app-framework/compose@0.2.0` |
+| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0`, `framework/android@0.2.0`, `app-framework/compose@0.3.0` |
 | `kotlin-library` | Kotlin · library | `language-bundle` | project | `language/kotlin@0.1.0`, `package-manager/gradle@0.1.0`, `toolchain-gate/ktlint@0.1.0`, `toolchain-gate/detekt@0.1.0` |
 | `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
 | `notion` | Notion | `capability-provider` | backing | `capability-provider/notion@0.1.0` |
