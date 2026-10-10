@@ -13,7 +13,6 @@ backlog_pieces: []
 **COMPLETE**
 
 COMPLETE 2026-10-10 — 8d474d00 fa33cafb
-/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/all-2026-10-10-0934
 
 ## Consent
 
