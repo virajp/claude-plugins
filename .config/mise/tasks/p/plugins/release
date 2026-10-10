@@ -178,7 +178,7 @@ for file in plugins/*/.claude-plugin/plugin.json; do
     || { [[ -n "${tag}" ]] && {
       ! implied="$(level_implied "${base}" "${manifest}")" \
         || ! level="$(level_max "${recorded}" "${implied}")" \
-        || ! target="$(release_target "${base}" "${level}")"
+        || ! target="$(release_target "${base}" "${level}" "${manifest}")"
     }; }; then
     if [[ "${DRY_RUN}" == "true" ]]; then
       printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag:-none}" "${level:-?}"

@@ -353,10 +353,10 @@ staged plugin loads in the next **restarted** session. Public second — the tag
 only at release. A plan records each project's release level, and `/vwf:execute`
 raises it in `.config/releases.yaml` at landing. The release tasks read it: each
 bumps its project from the last tag at the higher of the recorded level and the
-one an untagged manifest implies, and clears its own keys; `p:release` runs all
-three with one bump commit and one merge, then tags each. **Ask the user before
-running `p:release`, `p:plugins:release`, `p:i:release` or `p:site:release`** —
-always; no plan carries a release step.
+one an untagged manifest implies, never below the manifest, and clears its own
+keys; `p:release` runs all three with one bump commit and one merge, then tags
+each. **Ask the user before running `p:release`, `p:plugins:release`,
+`p:i:release` or `p:site:release`** — always; no plan carries a release step.
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the

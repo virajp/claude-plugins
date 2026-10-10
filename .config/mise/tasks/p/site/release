@@ -195,7 +195,7 @@ if ! RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")" \
   || { [[ -n "${LAST_TAG}" ]] && {
     ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" \
       || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
-      || ! TARGET="$(release_target "${BASE}" "${LEVEL}")"
+      || ! TARGET="$(release_target "${BASE}" "${LEVEL}" "${MANIFEST}")"
   }; }; then
   if [[ "${DRY_RUN}" == "true" ]]; then
     printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL:-?}"

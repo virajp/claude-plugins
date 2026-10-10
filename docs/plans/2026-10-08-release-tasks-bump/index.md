@@ -272,7 +272,10 @@ none
   below the manifest — tag 21.0.0, manifest 21.2.0, no record → implied MINOR →
   21.1.0, and the task lowers the manifest. No task refuses it (U2, U3, U4
   followed E3 as written). Close with a ruling: refuse a target below the
-  manifest, or take the manifest as the floor.
+  manifest, or take the manifest as the floor. **Resolved 2026-10-10:** the user
+  ruled the manifest is the floor. `release_target` takes the manifest as a
+  third argument and releases it as is when the target falls below it; the three
+  release tasks pass it, and `p:releases:test` covers it.
 
 ## Run log
 
