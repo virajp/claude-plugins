@@ -46,7 +46,8 @@ their own conventions.
 ## Layout
 
 <!-- Keep only this platform's block; drop the others. Each size below is the
-     platform's DEFAULT viewport. When .config/vwf.yaml sets
+     platform's DEFAULT viewport. For a device token only (never site or
+     webapp, whose sizes are fixed), when .config/vwf.yaml sets
      design.viewports.<project>.<platform>: <W>x<H>, write that size into the
      kept block in place of the default. -->
 
@@ -56,9 +57,23 @@ their own conventions.
 - **tablet** — every screen renders at **834×1194** (portrait) in a tablet frame
   **with the camera cutout**, toggleable via the `frame` tweak (default on);
   theme via `darkMode` (default on).
-- **desktop** — every screen renders at a **1440×900** viewport in a
-  browser-chrome frame, toggleable via the `frame` tweak (default on); theme via
-  `darkMode` (default on).
+- **desktop** (a natively installed app) — every screen renders at
+  **1440×900** in a neutral native app window frame: a title bar with window
+  controls, no address bar and no tabs, toggleable via the `frame` tweak
+  (default on); theme via `darkMode` (default on).
+- **site** — every screen renders at **1440×900** in a desktop browser-chrome
+  frame by default. A `width` tweak (`1440` | `390`, default `1440`) switches
+  the same coded frame to **390×844** in a mobile browser frame with a status
+  bar and an address bar — the narrow layout is this tweak, never a second
+  frame. The `frame` tweak toggles the chrome (default on); theme via `darkMode`
+  (default on). The size is fixed: `design.viewports` does not apply to `site`.
+- **webapp** — every screen renders at **1440×900** in a desktop browser-chrome
+  frame by default. A `width` tweak (`1440` | `390`, default `1440`) switches
+  the same coded frame to **390×844** in a mobile browser frame with a status
+  bar and an address bar — the narrow layout is this tweak, never a second
+  frame. The `frame` tweak toggles the chrome (default on); theme via `darkMode`
+  (default on). The size is fixed: `design.viewports` does not apply to
+  `webapp`.
 - **auto** (in-car — CarPlay and Android Auto together) — every screen renders
   at **800×480** landscape (the CarPlay base resolution; Android Auto head units
   are commonly 1280×720 — same layout, more pixels) in the in-car display frame
@@ -95,7 +110,9 @@ their own conventions.
   the index; never a static wireframe.
 - Standing tweak set on every coded frame: `darkMode` (default on), `frame`
   (default on), one tweak per pinned **sad state**, one tweak per pinned
-  **conditional product state** (empty data, entity-state variants).
+  **conditional product state** (empty data, entity-state variants). On `site`
+  and `webapp` every coded frame also carries the `width` tweak (`1440` |
+  `390`, default `1440`) — still one frame per code.
 - Info/warning/error popup messages appear **close to the point of interaction**
   — a message for a control in the bottom part of the screen never lands at the
   top, where the user would miss it.

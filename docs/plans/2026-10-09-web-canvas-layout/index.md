@@ -10,9 +10,10 @@ backlog_pieces: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-09 by the user
+RUNNING since 2026-10-10T09:36 in
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/all-2026-10-10-0934
 
 ## Consent
 
@@ -102,11 +103,11 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                    | Kind | Owns                                                                                                                                                            | Depends on | Status  | Commit |
-| -- | ---- | ---------------------------- | ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
-| U1 | 1    | [01-layout.md](01-layout.md) | edit | `plugins/vwf/assets/templates/canvas-claude.md`, `plugins/vwf/skills/screens/references/prompt-mode.md`, `plugins/vwf/skills/screens/references/import-mode.md` | —          | pending |        |
-| U2 | 2    | [02-docs.md](02-docs.md)     | edit | `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-10-09-web-canvas-layout.md`                                                                 | U1         | pending |        |
-| U3 | 3    | [03-gates.md](03-gates.md)   | edit | `.claude-plugin/marketplace.json` (generated; regenerated only)                                                                                                 | U2         | pending |        |
+| Id | Wave | Unit file                    | Kind | Owns                                                                                                                                                                                                           | Depends on | Status  | Commit |
+| -- | ---- | ---------------------------- | ---- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | ------ |
+| U1 | 1    | [01-layout.md](01-layout.md) | edit | `plugins/vwf/assets/templates/canvas-claude.md`, `plugins/vwf/skills/screens/references/prompt-mode.md`, `plugins/vwf/skills/screens/references/import-mode.md`                                                | —          | green   |        |
+| U2 | 2    | [02-docs.md](02-docs.md)     | edit | `site/src/content/docs/plugins/vwf.md`, `docs/memory/decisions/2026-10-09-web-canvas-layout.md`, `plugins/vwf/assets/templates/screen-prompt.md` (widened at run time: the standing-tweak-set comment, :16-17) | U1         | pending |        |
+| U3 | 3    | [03-gates.md](03-gates.md)   | edit | `.claude-plugin/marketplace.json` (generated; regenerated only)                                                                                                                                                | U2         | pending |        |
 
 ## Shared-file rule
 
@@ -175,8 +176,28 @@ none
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit         | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                     | Commit |
+| ---- | ------------ | ----- | ----- | ----------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | format-check | —     | —     | skipped     | no covers: — the plan reads no blueprint artifact                                                                                                                                                                                                                                                                          | —      |
+| 0    | preflight    | —     | —     | green       | doctor: 0 blocking (no registry yet, config stamp drift, graph ~4h stale, graphify-refresh post-commit only — noted); wave gate 3/3 green; edit units only — no LSP rule, no conventions fetch; order W1 U1, W2 U2, W3 U3                                                                                                  | —      |
+| 0    | override     | —     | —     | applied     | override: shared worktree: all-2026-10-10-0934; skip as deduped: mise run p:plugins:local                                                                                                                                                                                                                                  | —      |
+| 1    | U1           | opus  | 1     | green       | canvas-claude.md desktop native window, site/webapp blocks + width tweak; prompt-mode, import-mode agree. DECIDED: missing width tweak on site/webapp is a standing-tweak delta (decision 2). DOCS FALSIFIED: vwf.md conventions passage (U2)                                                                              | —      |
+| 1    | R1           | opus  | 1     | findings(4) | import-mode.md:42 and prompt-mode.md:25 fold width (loop to U1); screen-prompt.md:16-17 standing tweak set omits width — rule 5, nobody-owned, handed to U2 (Owns widened); canvas-push.md:50 maps web to desktop — rule 5 in stackgen design-import-screens, Out of scope, recorded as gap. CONTRACT clean, RULINGS clean | —      |
+| 1    | U1           | opus  | 2     | green       | re-wrapped import-mode.md standing-tweaks paragraph and prompt-mode.md sad-state lines to the fold; no wording changed                                                                                                                                                                                                     | —      |
+| 1    | R1           | opus  | 2     | pass        | both fold findings fixed; CONTRACT clean, RULINGS clean                                                                                                                                                                                                                                                                    | —      |
+
+## Gaps surfaced during execution
+
+- R1 (wave review, rule 5) ·
+  `plugins/stackgen/stacks/design-tool/claude-design/skills/design-import-screens/references/canvas-push.md:50`
+  maps `web` to `desktop`, which decision 4 makes a native app window; the plan
+  put stackgen's `design-import-screens` skill Out of scope and gave no unit
+  Owns over it · left unedited (Out of scope; a stackgen pack edit also needs a
+  pack version bump) — a follow-up plan should map `web` to `site`/`webapp`.
+- R1 (wave review, rule 5) ·
+  `plugins/vwf/assets/templates/screen-prompt.md:16-17` lists the standing tweak
+  set without the new `width` tweak; no unit owned it · U2's Owns widened to
+  that passage, per the Goal.
 
 ## Launch
 
