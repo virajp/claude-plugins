@@ -13,8 +13,9 @@
      drop sections marked (if any) when empty. The standing conventions — the
      naming contract (pages, frame codes, the index--<platform> stitch),
      revise-in-place, the interactive-journey mandate, the standing tweak set
-     (darkMode on, device frame on with the mobile/tablet camera cutout, a
-     tweak per pinned sad and conditional state), the device frame at the
+     (darkMode on, device frame on with the mobile/tablet camera cutout,
+     a tweak per pinned sad and conditional state, and on site/webapp
+     the width tweak, 1440 | 390), the device frame at the
      platform's RESOLVED viewport (design.viewports.<project>.<platform> in
      .config/vwf.yaml when set, else the platform's default), stub
      treatment — live in

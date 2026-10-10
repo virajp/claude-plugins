@@ -38,13 +38,16 @@ it.
      mobile/tablet; the watch-face, TV and floating-window frames on `watch`,
      `tv` and `spatial`), sized to the platform's resolved viewport, the
      `design.viewports.<project>.<platform>` override when set, else the default
-     — is a delta: canvas rework, the contract does not change), **components vs
-     the pinned Components blocks** (a pinned component with no element on the
-     frame, an element the contract doesn't pin, or behavior/content against a
-     component's rules — clickability/visibility conditions, pinned copy — is a
-     delta), form fields and validation UX — and stray
-     per-screen/per-state/per-mode **pages** where a tweak or on-page section
-     belongs (canvas rework).
+     — `site` and `webapp` resolve to the fixed 1440×900 — is a delta: canvas
+     rework, the contract does not change), **components vs the pinned
+     Components blocks** (a pinned component with no element on the frame, an
+     element the contract doesn't pin, or behavior/content against a component's
+     rules — clickability/visibility conditions, pinned copy — is a delta), form
+     fields and validation UX — and stray per-screen/per-state/per-mode **pages**
+     where a tweak or on-page section belongs (canvas rework). On a `site` or
+     `webapp` page, read each coded frame at its default `1440` width and diff
+     that layout alone — the `390` `width` tweak is not diffed; a frame missing
+     the `width` tweak is a standing-tweak delta like `frame`.
    - **Journey level**, against the flow's Trigger & Actors, Steps, and sequence
      diagram: entry points present vs triggers, the navigable happy path vs step
      order, a transition the steps don't back (or a step no screen serves), the

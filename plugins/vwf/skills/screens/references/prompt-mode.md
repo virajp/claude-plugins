@@ -15,12 +15,16 @@ navigation, the happy path clickable end to end and stitched into its index —
 never a static page), the **standing tweak set** on every coded frame:
 `darkMode` (default **on**), `frame` (default **on**, the device frame matched
 to the platform and drawn at its **resolved viewport** — the mobile and tablet
-frames include the camera notch/cutout for a true visual, desktop a
-browser-chrome frame, the in-car platforms the OS display frame with its
-template constraints, `watch` a watch-face frame, `tv` a TV frame with its
-title-safe inset, `spatial` a floating window), one tweak per pinned **sad
-state**, and one tweak per pinned **conditional product state** (empty data,
-entity-state variants — product states, not sad paths) — plus stub treatment for
+frames include the camera notch/cutout for a true visual, desktop a neutral
+native app window frame (a title bar with window controls, no address bar and
+no tabs), `site` and `webapp` a desktop browser-chrome frame at a fixed
+1440×900 whose `width` tweak (`1440` | `390`, default `1440`) switches the same
+coded frame to 390×844 in a mobile browser frame with a status bar and an
+address bar, the in-car platforms the OS display frame with its template
+constraints, `watch` a watch-face frame, `tv` a TV frame with its title-safe
+inset, `spatial` a floating window), one tweak per pinned **sad state**, and
+one tweak per pinned **conditional product state** (empty data, entity-state
+variants — product states, not sad paths) — plus stub treatment for
 out-of-flow screens, the product one-liner, and the goal vocabulary from
 `product.md`. Generated sections are **regenerated in place**; the **Project
 conventions (canvas-owned)** section — conventions discovered while designing —

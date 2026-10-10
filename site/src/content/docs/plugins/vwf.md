@@ -2338,18 +2338,24 @@ contract, one **interactive** page per flow per platform revised in place, the
 happy path clickable end to end and stitched into an `index--<platform>` page
 that chains every flow in execution order, the platform's device frame, and the
 standing tweak set (dark mode, device frame, one tweak per pinned sad and
-conditional state). Its generated sections regenerate; a **canvas-owned
-section** holds what you discover while designing, preserved across
-regenerations and folded back by `import`.
+conditional state, and a `width` tweak on `site` and `webapp`). Its generated
+sections regenerate; a **canvas-owned section** holds what you discover while
+designing, preserved across regenerations and folded back by `import`.
 
 Each device platform's frame has a default viewport — `mobile` 390×844, `tablet`
 834×1194, `desktop` 1440×900, `auto` 800×480, `watch` 208×248, `tv` 1920×1080,
-`spatial` 1280×720. A product overrides one per project in `.config/vwf.yaml`,
-beside the canvas pin, as `design.viewports.<project>.<platform>: <W>x<H>`
-(`390x844`); the briefs, the generated conventions file and both design adapters
-read the resolved size. Nothing writes the key — you edit it by hand — and an
-entry that is malformed or names a platform the project does not declare is
-reported by `/vwf:doctor` and ignored, falling back to the default.
+`spatial` 1280×720 — and `desktop` renders in a neutral native app window (a
+title bar with window controls, no address bar and no tabs). `site` and `webapp`
+render at a fixed 1440×900 in a desktop browser-chrome frame, and their `width`
+tweak (`1440` or `390`) switches the same coded frame to 390×844 in a mobile
+browser frame — one frame per code, and `import` diffs the 1440 layout. A
+product overrides a device platform's viewport per project in
+`.config/vwf.yaml`, beside the canvas pin, as
+`design.viewports.<project>.<platform>: <W>x<H>` (`390x844`); the briefs, the
+generated conventions file and both design adapters read the resolved size.
+Nothing writes the key — you edit it by hand — and an entry that is malformed or
+names a platform the project does not declare is reported by `/vwf:doctor` and
+ignored, falling back to the default.
 
 So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
 (`100-home--mobile` — the sync key `import` matches back by), a one-line goal,
@@ -2368,23 +2374,23 @@ chat is where you make the design yours. What a screen **shows** and how it
 contract (an unmatched page gets a per-page question — assign, propose a new
 flow, or discard), diffs each flow's platform pages against its Screens contract
 (frames present vs the contracted codes, state tweaks vs pinned sad and
-conditional states, the standing `darkMode`/`frame` tweaks, **components vs the
-pinned Components blocks** — a missing element, an unpinned one, or behavior or
-content against a component's rules is a delta — wired navigation vs step order)
-— at journey level against the flow's trigger, step order, and sequence diagram,
-flagging a declared platform with no page (an in-car page with no subset flow
-proposes one) — and at index level against the `index--<platform>` stitch (a
-missing index or an unreachable flow page is canvas rework) — and asks **one
-question per delta**: accept (the design wins; the contract follows), reject
-(the contract stands; the canvas gets rework), or adapt. It also diffs each
-canvas project's CLAUDE.md against the repo-side `CLAUDE--<platform>.md` and
-offers to fold canvas-discovered conventions into the file's canvas-owned
-section — the one edit `import` makes itself. Accepted contract deltas are
-handed to `/vwf:blueprint <flow>` — the blueprint skill remains the only
-flow-doc editor, so every design-driven change still passes the reviewer gate
-and demotes `implementation:` stamps where the contract moved. A confirmed new
-flow is scaffolded as a draft that a full blueprint pass must complete — pixels
-don't carry steps or acceptance criteria.
+conditional states, the standing `darkMode`/`frame` tweaks and, on `site` and
+`webapp`, `width`, **components vs the pinned Components blocks** — a missing
+element, an unpinned one, or behavior or content against a component's rules is
+a delta — wired navigation vs step order) — at journey level against the flow's
+trigger, step order, and sequence diagram, flagging a declared platform with no
+page (an in-car page with no subset flow proposes one) — and at index level
+against the `index--<platform>` stitch (a missing index or an unreachable flow
+page is canvas rework) — and asks **one question per delta**: accept (the design
+wins; the contract follows), reject (the contract stands; the canvas gets
+rework), or adapt. It also diffs each canvas project's CLAUDE.md against the
+repo-side `CLAUDE--<platform>.md` and offers to fold canvas-discovered
+conventions into the file's canvas-owned section — the one edit `import` makes
+itself. Accepted contract deltas are handed to `/vwf:blueprint <flow>` — the
+blueprint skill remains the only flow-doc editor, so every design-driven change
+still passes the reviewer gate and demotes `implementation:` stamps where the
+contract moved. A confirmed new flow is scaffolded as a draft that a full
+blueprint pass must complete — pixels don't carry steps or acceptance criteria.
 
 ### /vwf:plan
 
