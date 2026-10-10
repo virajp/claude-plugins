@@ -53,19 +53,36 @@
 //   GET  <route>[?state=<s>]  the screen at that route, through lib/routes.mjs:
 //                             <route>/index.html, a [param] folder for any
 //                             value of that segment, index--<s>.html for a
-//                             state (default is index.html), or a placeholder page for a code in
-//                             routes.json with no file yet; HTML gets the
-//                             overlay; any other file under --root is served
-//                             with its MIME type
-//   GET  /__mockups/          every flow, screen and state of the platform,
-//                             built in memory; nothing else under it is served
-//   POST /comment             { path, state, selector, text } → one YAML list
-//                             item in __mockups/comments.yaml, 204
+//                             state (default is index.html) — or, when that
+//                             state has no page but the screen's default page
+//                             exists, the default page with a "state not
+//                             rendered" banner — or a placeholder page for a
+//                             code in routes.json with no file yet; a state of
+//                             a screen with no page at all is 404. HTML gets
+//                             the overlay; any other file under --root is
+//                             served with its MIME type, and an HTML file only
+//                             as a screen's page, never by its own name
+//   GET  <route>?overlay=<c>  the modal, dialog or sheet <c> routes.json puts
+//        [&state=<s>]         on that route's screen: its
+//                             index--overlay-<c>[--<s>].html beside the
+//                             parent's page, with the same state fallback and
+//                             placeholder
+//   GET  /                    the screen that owns /; when no screen does, a
+//                             302 to /__mockups/
+//   GET  /__mockups/          every flow, screen, overlay and state of the
+//                             platform, built in memory; nothing else under it
+//                             is served
+//   POST /comment             { path, state, overlay?, selector, text } → one
+//                             YAML list item in __mockups/comments.yaml, filed
+//                             under the screen the same GET would serve, 204
 //   POST /done                appends a done marker, responds 204, exits 0
 //
-// Only a request target's path and query are read — never resolved against a
-// base, so a leading // is a path, not a host; a target that is not a path is
-// 400, and anything a handler throws is a 500 the server outlives.
+// A request target is read by lib/link.mjs, the parser links.mjs uses, so the
+// server and the link check agree on every target: only its path and query
+// are read — never resolved against a base, so a leading // is a path, not a
+// host; a target that is not a path is 400, and anything a handler throws is
+// a 500 the server outlives. A port it cannot listen on is one stderr line
+// and exit 2.
 //
 // Loopback only: it binds 127.0.0.1, never any other interface, and carries no
 // auth and no TLS — it is a review server for one person on one machine. Any
@@ -100,10 +117,15 @@ import {
   sep,
 } from "node:path";
 import {
+  parseTarget,
+  resolveTarget,
+} from "./lib/link.mjs";
+import {
   findScreen,
   inRoot,
   isReserved,
   matchPath,
+  pageName,
   pathShape,
   readRoutes,
   renderFile,
@@ -517,20 +539,23 @@ function listPage() {
   const sections = [...flows.entries()].map(([flow, screens]) => {
     const items = screens.map(screen => {
       const dir = routeDir(root, screen.path);
-      const href = sampleRoute(screen.path);
-      const rendered = existsSync(join(dir, "index.html"));
-      const states = statesIn(dir)
+      const overlay = screen.overlay === undefined ? null : screen.code;
+      const href = sampleRoute(screen.path)
+        + (overlay ? `?overlay=${encodeURIComponent(overlay)}` : "");
+      const glue = overlay ? "&" : "?";
+      const rendered = existsSync(join(dir, pageName(null, overlay)));
+      const states = statesIn(dir, overlay)
         .map(state =>
-          `<a href="${escapeHtml(href)}?state=${encodeURIComponent(state)}">${
-            escapeHtml(state)
-          }</a>`
+          `<a href="${escapeHtml(href)}${glue}state=${
+            encodeURIComponent(state)
+          }">${escapeHtml(state)}</a>`
         )
         .join(" · ");
       return `<li><code>${escapeHtml(screen.code)}</code> ${
         escapeHtml(screen.screen)
-      } — <a href="${escapeHtml(href)}">${escapeHtml(screen.route)}</a>${
-        states ? ` — states: ${states}` : ""
-      }${
+      } — <a href="${escapeHtml(href)}">${escapeHtml(screen.route)}${
+        overlay ? ` (${escapeHtml(screen.overlay)}'s overlay)` : ""
+      }</a>${states ? ` — states: ${states}` : ""}${
         rendered ? "" : " <span class=\"muted\">not rendered yet</span>"
       }</li>`;
     });
@@ -552,7 +577,11 @@ function placeholderPage(screen) {
       escapeHtml(screen.screen)
     }</h1>\n<p>Flow <code>${escapeHtml(screen.flow)}</code> — route <code>${
       escapeHtml(screen.route)
-    }</code>.</p>\n<p><b>Not rendered yet.</b></p>\n`
+    }</code>${
+      screen.overlay === undefined
+        ? ""
+        : `, an overlay of <code>${escapeHtml(screen.overlay)}</code>`
+    }.</p>\n<p><b>Not rendered yet.</b></p>\n`
       + `<p><a href="/${RESERVED}/">All mockups</a></p>`,
   );
 }
@@ -653,7 +682,11 @@ function renderPage(screen, pathname, state, entry) {
   let mockup = null;
   if (sideBySide && mockRoutes !== null) {
     const match = matchPath(mockRoot, mockRoutes, pathname, state);
-    if (match.kind === "file" && match.file.endsWith(".html")) {
+    if (
+      match.kind === "file"
+      && !match.fallback
+      && match.file.endsWith(".html")
+    ) {
       mockup = `/${RESERVED}${pathname}${query}`;
     }
   }
@@ -684,6 +717,9 @@ function renderPage(screen, pathname, state, entry) {
 // --- Comments ----------------------------------------------------------------
 
 let counter = countComments();
+// The comments this server took since it started — each page's count starts
+// here, so a reviewer who moves on still sees what they sent.
+let posted = 0;
 
 function countComments() {
   if (!existsSync(commentsPath)) {
@@ -713,7 +749,7 @@ function appendComments(text) {
 // comments.yaml unparseable.
 function yamlString(value) {
   return JSON.stringify(String(value)).replace(
-    /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g,
+    /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]/g,
     ch => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
 }
@@ -744,14 +780,31 @@ function readJson(req) {
 }
 
 // path, selector and text are non-empty strings; state is a string, empty for
-// the page's default state.
+// the page's default state; overlay, when sent, a string, empty for none.
 function isComment(body) {
   return body !== null
     && typeof body === "object"
     && ["path", "selector", "text"].every(key =>
       typeof body[key] === "string" && body[key].length > 0
     )
-    && typeof body.state === "string";
+    && typeof body.state === "string"
+    && (body.overlay === undefined || typeof body.overlay === "string");
+}
+
+// The screen a comment is about: the one the same GET serves — an overlay's
+// own screen for an overlay — or, in renders mode, the screen of the path.
+function commentScreen(body) {
+  if (RENDER_MODE) {
+    return findScreen(routes, body.path);
+  }
+  const match = matchPath(
+    root,
+    routes,
+    body.path,
+    body.state || null,
+    body.overlay || null,
+  );
+  return match.kind === "none" ? null : match.screen;
 }
 
 async function postComment(req, res) {
@@ -767,7 +820,7 @@ async function postComment(req, res) {
     res.writeHead(400).end();
     return;
   }
-  const screen = findScreen(routes, body.path);
+  const screen = commentScreen(body);
   const yamlOrNull = value => (value ? yamlString(value) : "null");
   // Renders mode: the plan that made the image, from renders.json.
   const plan = RENDER_MODE && screen
@@ -780,6 +833,7 @@ async function postComment(req, res) {
     ]
     : [];
   counter += 1;
+  posted += 1;
   const id = `c${String(counter).padStart(3, "0")}`;
   appendComments(
     [
@@ -848,32 +902,6 @@ function refusal(req) {
   return type === "application/json" ? null : 415;
 }
 
-// The request target split into its path and query, or null when it is not a
-// path. Only the path is ever read: a target is never resolved against a base,
-// so a leading // stays a path and never becomes a host.
-function target(raw) {
-  const value = String(raw ?? "");
-  if (!value.startsWith("/")) {
-    return null;
-  }
-  const hash = value.indexOf("#");
-  const bare = hash === -1 ? value : value.slice(0, hash);
-  const query = bare.indexOf("?");
-  const pathname = query === -1 ? bare : bare.slice(0, query);
-  try {
-    decodeURIComponent(pathname);
-  }
-  catch {
-    return null;
-  }
-  return {
-    pathname,
-    searchParams: new URLSearchParams(
-      query === -1 ? "" : bare.slice(query + 1),
-    ),
-  };
-}
-
 // Whatever a handler throws, the request gets a 500 and the server lives on.
 function failed(res, error) {
   process.stderr.write(`request failed: ${error?.stack ?? error}\n`);
@@ -895,7 +923,7 @@ async function handle(req, res) {
     res.writeHead(refused).end();
     return;
   }
-  const url = target(req.url);
+  const url = parseTarget(req.url);
   if (url === null) {
     res.writeHead(400).end();
     return;
@@ -910,13 +938,17 @@ async function handle(req, res) {
       send(res, 200, TYPES[".html"], listPage());
       return;
     }
-    const states = url.searchParams.getAll("state");
-    if (states.length > 1) {
-      res.writeHead(404).end();
+    if (url.pathname === "/" && findScreen(routes, []) === null) {
+      res
+        .writeHead(302, {
+          location: `/${RESERVED}/`,
+          "cache-control": "no-store",
+        })
+        .end();
       return;
     }
-    const state = states[0] ?? null;
-    const match = matchPath(root, routes, url.pathname, state);
+    const match = resolveTarget(root, routes, url);
+    const { state, overlay } = match;
     if (match.kind === "placeholder") {
       send(res, 200, TYPES[".html"], placeholderPage(match.screen));
       return;
@@ -929,10 +961,15 @@ async function handle(req, res) {
       code: match.screen?.code ?? "",
       screen: match.screen?.screen ?? "",
       state: state ?? "",
-      states: statesIn(match.dir),
+      overlay: overlay ?? "",
+      states: statesIn(match.dir, overlay),
+      notice: match.fallback
+        ? `State ${state} not rendered — showing the default view`
+        : "",
+      count: posted,
       list: `/${RESERVED}/`,
       listLabel: "All mockups",
-      peer: peerLink(url.pathname, state),
+      peer: overlay ? null : peerLink(url.pathname, state),
       peerLabel: "Open the render",
       meta: "",
     });
@@ -987,7 +1024,7 @@ function getRender(res, url) {
       "/" + segments.slice(1).map(encodeURIComponent).join("/"),
       state,
     );
-    if (match.kind !== "file") {
+    if (match.kind !== "file" || match.fallback) {
       res.writeHead(404).end();
       return;
     }
@@ -1041,6 +1078,7 @@ function getRender(res, url) {
       screen: screen.screen,
       state: state ?? "",
       states: renderStates(list, screen.code),
+      count: posted,
       list: `/${RENDERS}/`,
       listLabel: "All renders",
       peer: sideBySide ? null : peerLink(url.pathname, state),
@@ -1075,6 +1113,11 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
   process.on(signal, () => process.exit(128 + osConstants.signals[signal]));
 }
 
+// A port in use, or one it may not bind: one line, exit 2, no stack trace.
+server.on("error", error => {
+  fail(`cannot listen on 127.0.0.1:${port}: ${error.code ?? error.message}`);
+});
+
 server.listen(port, "127.0.0.1", () => {
   const { port: bound } = server.address();
   boundPort = bound;
@@ -1095,18 +1138,20 @@ server.listen(port, "127.0.0.1", () => {
 // --- The overlay -------------------------------------------------------------
 //
 // Injected before </body> of every HTML page, called with { code, screen,
-// state, states, list }. Plain JS: a fixed toolbar with the screen's code and
-// name, a state switcher over the index--<state>.html files of the page's
-// directory, a link to the list, a comment count and a Done button; hover
+// state, overlay, states, notice, count, list }. Plain JS: a fixed toolbar
+// with the screen's code and name, a state switcher over the page's state
+// files (an overlay's own, keeping its ?overlay=), the "state not rendered"
+// banner when the server fell back to the default page, a link to the list, a
+// count of the comments this server took and a Done button; hover
 // highlights the element under the cursor, click selects it and opens a
-// textarea; submit POSTs the comment; Done POSTs /done and replaces the body
-// with a one-line note. A plain click never intercepts navigation — links
+// textarea; submit POSTs the comment; Done POSTs /done and, once it answers
+// 2xx, replaces the body with a one-line note. A plain click never intercepts navigation — links
 // between screens and a form's submit control keep working; an Alt/Option-click
 // opens the comment box on any element, a link or a submit control included,
 // without navigating.
 
 const OVERLAY = String.raw`function (CFG) {
-  var count = 0;
+  var count = CFG.count || 0;
   var selected = null;
   var hovered = null;
 
@@ -1117,6 +1162,7 @@ const OVERLAY = String.raw`function (CFG) {
     "#drv-bar span{opacity:.75}",
     "#drv-bar a{color:#93c5fd;text-decoration:none}",
     "#drv-bar a.drv-current{color:#fff;font-weight:600;text-decoration:underline}",
+    "#drv-bar #drv-notice{opacity:1;padding:1px 6px;border-radius:3px;background:#f59e0b;color:#111}",
     "#drv-bar button{margin-left:auto;padding:4px 12px;border:0;border-radius:4px;background:#3b82f6;color:#fff;font:inherit;cursor:pointer}",
     "body{margin-top:36px!important}",
     ".drv-hover{outline:2px dashed #3b82f6!important;outline-offset:-2px}",
@@ -1137,6 +1183,12 @@ const OVERLAY = String.raw`function (CFG) {
   bar.querySelectorAll("span")[0].textContent = CFG.screen;
   bar.querySelector("#drv-list").href = CFG.list;
   bar.querySelector("#drv-list").textContent = CFG.listLabel || "All mockups";
+  if (CFG.notice) {
+    var notice = document.createElement("span");
+    notice.id = "drv-notice";
+    notice.textContent = CFG.notice;
+    bar.insertBefore(notice, bar.querySelector("#drv-list"));
+  }
   if (CFG.meta) {
     var meta = document.createElement("span");
     meta.id = "drv-meta";
@@ -1157,7 +1209,9 @@ const OVERLAY = String.raw`function (CFG) {
     ["default"].concat(CFG.states).forEach(function (state) {
       var a = document.createElement("a");
       var isDefault = state === "default";
-      a.href = location.pathname + (isDefault ? "" : "?state=" + encodeURIComponent(state));
+      var query = (CFG.overlay ? ["overlay=" + encodeURIComponent(CFG.overlay)] : [])
+        .concat(isDefault ? [] : ["state=" + encodeURIComponent(state)]);
+      a.href = location.pathname + (query.length ? "?" + query.join("&") : "");
       a.textContent = state;
       if ((isDefault && !CFG.state) || state === CFG.state) a.className = "drv-current";
       statesEl.appendChild(a);
@@ -1166,6 +1220,7 @@ const OVERLAY = String.raw`function (CFG) {
   }
   document.body.appendChild(bar);
   var countEl = bar.querySelector("#drv-count");
+  countEl.textContent = count + " comment" + (count === 1 ? "" : "s");
   bar.querySelector("button").addEventListener("click", done);
 
   function inOverlay(el) {
@@ -1250,7 +1305,7 @@ const OVERLAY = String.raw`function (CFG) {
       fetch("/comment", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ path: location.pathname, state: CFG.state, selector: selector, text: text }),
+        body: JSON.stringify({ path: location.pathname, state: CFG.state, overlay: CFG.overlay || "", selector: selector, text: text }),
       }).then(function (r) {
         if (!r.ok) throw new Error(r.status);
         count += 1;
@@ -1267,7 +1322,8 @@ const OVERLAY = String.raw`function (CFG) {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: "{}",
-    }).then(function () {
+    }).then(function (r) {
+      if (!r.ok) throw new Error(r.status);
       document.body.innerHTML = "<p style=\"font:15px system-ui,sans-serif;padding:24px\">Review sent — you can close this tab.</p>";
     }).catch(function () {
       alert("The review server did not answer.");

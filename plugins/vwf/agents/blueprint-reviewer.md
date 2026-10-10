@@ -120,7 +120,9 @@ orchestrator passes both. Verify the contract and every platform file:
       (empty data, entity-state variants), and form validation where it has a
       form, and defers visual language to `design-system.md` — no tokens, type,
       or component behavior re-decided here. A screen another flow already
-      defines is **linked**, not redefined (the home rule); a screen defined
+      defines is **linked**, not redefined (the home rule) — a row whose Code
+      cell is a markdown link to the home flow's row, e.g.
+      `[004a](../004-checkout/mobile.md#004a)`; a screen defined
       here that duplicates a row in the passed flow list's docs is a gap.
 - [ ] Every Screens row has a matching **Components block** (format 12) headed
       by its code, listing the elements the screen displays (text, info, error

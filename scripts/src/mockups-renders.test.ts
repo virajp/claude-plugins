@@ -345,6 +345,21 @@ describe("renders.mjs", () => {
     expect(existsSync(tree("mobile"))).toBe(false);
   });
 
+  it("skips an overlay screen, which has no route folder of its own", () => {
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/web.md",
+      DOC + "| 200c | Cancel order | sheet of 200b | — | — | — | — |\n",
+    );
+    const { status, stdout } = run(
+      "RENDER: demo 200c web default shots/a.png\n",
+    );
+    expect(status).toBe(0);
+    expect(stdout).toMatch(/^SKIPPED: 200c web default — .*overlay of 200b/m);
+    expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 0");
+    expect(existsSync(tree("web", "orders", "[id]", "index.png"))).toBe(false);
+  });
+
   it("names the PNG rule when it skips another image type", () => {
     put(w, "shots/c.jpg", "JPG");
     const { stdout } = run("RENDER: demo 200a web default shots/c.jpg\n");

@@ -8,11 +8,22 @@
 //
 // `screens` is [ { code, screen, slug, flow, route, path, routed } ]. A table
 // is read by its header row, by column name (Code, Screen, Route), never by
-// position. A Route cell with no `/` token has no route: the screen gets
+// position. The route is the first word of the Route cell that starts with
+// `/` once the punctuation around it — `(`, `,`, `;`, `.` and the like — is
+// dropped. A Route cell with no such word has no route: the screen gets
 // `/<code>-<slug>` and `routed: false`. A row whose Code cell is a markdown
-// link points at the screen's home flow and is not a second definition.
-// `errors` lists two codes with one route, one code twice, and a route
-// `pathError` refuses; a caller writes nothing when it is not empty. A missing
+// link (`[004a](../004-checkout/mobile.md#004a)`) points at the screen's home
+// flow and is not a second definition.
+//
+// An overlay — a Route cell holding `modal of <code>`, `dialog of <code>` or
+// `sheet of <code>` — sits on its parent's route: it takes the parent's route,
+// path and routed, plus `overlay: <parent code>`, and holds no route of its
+// own. Its parent is a screen of the platform, in any flow, that is not an
+// overlay; a route word in the cell must have the parent's route shape.
+//
+// `errors` lists two non-overlay codes with one route, one code twice, a route
+// `pathError` refuses, and an overlay whose parent is missing, an overlay, or
+// on another route; a caller writes nothing when it is not empty. A missing
 // flows directory, no `<platform>.md`, or a table with no Code, Screen and
 // Route columns throws.
 //
@@ -27,6 +38,7 @@ import {
 import { join } from "node:path";
 import {
   pathError,
+  routeShape,
   routeToPath,
   slugify,
 } from "./routes.mjs";
@@ -85,8 +97,21 @@ function screensOf(text, file) {
 }
 
 function routeToken(cell) {
-  const token = cell.split(/\s+/).find(part => part.startsWith("/"));
-  return token === undefined ? null : token.replace(/[?#].*$/, "") || "/";
+  for (const part of cell.split(/\s+/)) {
+    const token = part
+      .replace(/^[("'<]+/, "")
+      .replace(/[,;:.!?)"'>]+$/, "");
+    if (token.startsWith("/")) {
+      return token.replace(/[?#].*$/, "") || "/";
+    }
+  }
+  return null;
+}
+
+// The parent code a Route cell marks this screen an overlay of, or null.
+function overlayOf(cell) {
+  return /\b(?:modal|dialog|sheet)\s+of\s+([A-Za-z0-9_]+)\b/i.exec(cell)?.[1]
+    ?? null;
 }
 
 /** The route map of one platform's flows; see the header. */
@@ -105,20 +130,11 @@ export function buildRouteMap(flowsDir, platform) {
   const errors = [];
   const byCode = new Map();
   const byPath = new Map();
+  const overlays = [];
   for (const flow of flows) {
     const file = join(flowsDir, flow, `${platform}.md`);
     for (const row of screensOf(readFileSync(file, "utf8"), file)) {
       const slug = slugify(row.screen) || slugify(row.code);
-      const token = routeToken(row.route);
-      const routed = token !== null;
-      const route = routed ? token : `/${row.code}-${slug}`;
-      const path = routeToPath(route);
-      // APFS folds case: /Orders and /orders are one folder.
-      const key = path.replace(/\[[^\]]*\]/g, "[]").toLowerCase();
-      const bad = pathError(path);
-      if (bad) {
-        errors.push(`route ${route} of ${row.code} ${bad}`);
-      }
       if (byCode.has(row.code)) {
         errors.push(
           `code ${row.code} is defined twice: ${
@@ -128,6 +144,23 @@ export function buildRouteMap(flowsDir, platform) {
       }
       else {
         byCode.set(row.code, flow);
+      }
+      const token = routeToken(row.route);
+      const parent = overlayOf(row.route);
+      const screen = { code: row.code, screen: row.screen, slug, flow };
+      screens.push(screen);
+      if (parent !== null) {
+        overlays.push({ screen, parent, token });
+        continue;
+      }
+      const routed = token !== null;
+      const route = routed ? token : `/${row.code}-${slug}`;
+      const path = routeToPath(route);
+      // APFS folds case: /Orders and /orders are one folder.
+      const key = path.replace(/\[[^\]]*\]/g, "[]").toLowerCase();
+      const bad = pathError(path);
+      if (bad) {
+        errors.push(`route ${route} of ${row.code} ${bad}`);
       }
       if (byPath.has(key)) {
         errors.push(
@@ -139,16 +172,34 @@ export function buildRouteMap(flowsDir, platform) {
       else {
         byPath.set(key, row.code);
       }
-      screens.push({
-        code: row.code,
-        screen: row.screen,
-        slug,
-        flow,
-        route,
-        path,
-        routed,
-      });
+      Object.assign(screen, { route, path, routed });
     }
+  }
+  const parents = new Map(
+    screens.filter(s => s.route !== undefined).map(s => [s.code, s]),
+  );
+  for (const { screen, parent, token } of overlays) {
+    const home = parents.get(parent);
+    if (!home) {
+      errors.push(
+        overlays.some(o => o.screen.code === parent)
+          ? `overlay ${screen.code} names the overlay ${parent} as its parent`
+          : `overlay ${screen.code} names no screen ${parent} of the platform`,
+      );
+      continue;
+    }
+    if (token !== null && routeShape(token) !== routeShape(home.route)) {
+      errors.push(
+        `overlay ${screen.code} route ${token} is not its parent ${parent}'s ${home.route}`,
+      );
+      continue;
+    }
+    Object.assign(screen, {
+      route: home.route,
+      path: home.path,
+      routed: home.routed,
+      overlay: parent,
+    });
   }
   return { flows, screens, errors };
 }

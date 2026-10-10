@@ -131,8 +131,22 @@ file paths.
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**
-rather than redefining it, so a screen has one authoritative contract. The
-coherence reviewer flags a screen defined twice.
+rather than redefining it, so a screen has one authoritative contract. That
+reference row's **Code cell is a markdown link to the home flow's row** — the
+code as the link text, the home flow's platform file plus the code as the
+anchor, e.g. `[004a](../004-checkout/mobile.md#004a)`; any other form of the
+cell reads as a second definition. The coherence reviewer flags a screen
+defined twice.
+
+**Overlays.** A modal, dialog or sheet that opens over another screen has no
+route of its own: its Route cell names its parent's code instead — `modal of
+<code>`, `dialog of <code>` or `sheet of <code>` (e.g. `sheet of 004b`), where
+the parent is a screen of the same platform, in any flow, that is not itself
+an overlay. It may share the parent's route (a route in the cell beside the
+marker must be the parent's); it keeps its own code, row, states and
+Components block. Two screens on one route are a contract error unless all
+but one of them carry this marker. The mockup review serves an overlay at
+`<parent route>?overlay=<code>`.
 
 Visual and interaction *language* — tokens, typography, spacing, motion,
 component behavior — comes from `docs/blueprint/design-system.md`; reference it

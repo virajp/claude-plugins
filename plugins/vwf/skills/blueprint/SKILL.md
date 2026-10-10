@@ -159,8 +159,8 @@ Whole-product coverage holds when, all at once:
 - every registry project's surfaces are represented per its `doc_unit`
   (`N/A — <reason>` counts as represented);
 - every flow with a Screens section has passed its **visual review** (§6a) — a
-  recorded skip (`screens/<project>/<NNN>-<flow>/<platform>` in `remaining:`) is
-  an open hole;
+  recorded skip, deferral or link-check stop
+  (`screens/<project>/<NNN>-<flow>/<platform>` in `remaining:`) is an open hole;
 - every project declaring a screen platform carries its **mandatory standard flows** per
   `${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md` (conditional slugs resolved
   from the registry's auth capabilities; waivers in `enforcement.rules`
@@ -486,13 +486,15 @@ The review is a **connected mockup site for each platform**, served at a local
 `http://127.0.0.1:<port>/` URL: every flow's screens at their production routes,
 linked to each other. A link check passes before the user is asked to look —
 broken links that survive two repair rounds stop the review with no URL and no
-stamp — and each screen takes comments, which come back as proposed
+stamp, reported as `screen review stopped: <N> broken links` — and each screen
+takes comments, which come back as proposed
 Screens-contract changes the user confirms one at a time. The procedure — the
 route map, the `mockup-generator` dispatch per platform file, the link check,
 the servers and the `design.flows_rendered` stamp, the comments and how review
 remarks route, the design-first alternative, and the explicit skip — is in
 [screen render & review](references/screen-review.md). Read it now. Whichever
-path the user takes, a deferred or declined review records
+path the user takes, a deferred or declined review — or one the link check
+stopped — records
 `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining`, and
 coverage stays `partial` while any `screens/` entry remains — exactly like any
 other hole. Mockups are **never pushed to the design tool**.

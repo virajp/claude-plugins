@@ -51,7 +51,9 @@
 // symlink is removed, never followed.
 //
 // stdout: one `SKIPPED: <code> <platform> <state> — <reason>` line per line it
-// could not copy (another project, an unknown code, a missing file, a file
+// could not copy (another project, an unknown code, an overlay screen — a
+// modal, dialog or sheet on its parent's route, whose render would land on
+// the parent's image — a missing file, a file
 // that is not a PNG, a file outside the worktree, a platform with no route
 // map, a folder or copy that failed), then one `COPIED: <n>` line; the json of
 // every platform that copied is written whatever failed. Exit 0 once the
@@ -309,6 +311,13 @@ for (const item of items) {
   const screen = map.screens.find(s => s.code === item.code);
   if (!screen) {
     skip(item, `code ${item.code} is in no ${item.platform} Screens table`);
+    continue;
+  }
+  if (screen.overlay !== undefined) {
+    skip(
+      item,
+      `${item.code} is an overlay of ${screen.overlay} and has no route folder of its own`,
+    );
     continue;
   }
 

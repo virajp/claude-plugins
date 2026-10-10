@@ -61,7 +61,16 @@ Flow contract: [<Flow name>](./index.md)
 
      HOME RULE: every screen is defined in exactly one flow (its home journey);
      another flow that touches it links the home flow's row instead of
-     redefining it.
+     redefining it — a reference row whose Code cell is a markdown link to
+     that row, e.g. [004a](../004-checkout/mobile.md#004a). Any other form of
+     the cell reads as a second definition.
+
+     OVERLAYS: a modal, dialog or sheet that opens over another screen puts
+     its parent's code in the Route cell instead of a route — `modal of 004b`,
+     `dialog of 004b` or `sheet of 004b` — and shares the parent's route (a
+     route beside the marker must be the parent's). The parent is a screen of
+     this platform, in any flow, and not itself an overlay. Two screens on one
+     route are an error unless all but one carry the marker.
 
      Error and empty are MANDATORY pins per screen (or an explicit
      "n/a — <why>") — sad paths are contract; so are the CONDITIONAL product

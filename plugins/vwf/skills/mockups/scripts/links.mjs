@@ -6,13 +6,25 @@
 //
 //   node links.mjs --root docs/scratchpad/<project>/mockups/<platform>
 //
-// Reads every .html under the root (never __mockups/) and every href in it. A
-// `#` link is correct. A root-absolute link is correct when the review server
-// would serve it — a file, a [param] folder, or the placeholder of a code in
-// __mockups/routes.json with no file yet — and its `?state=` file exists. It
-// matches through lib/routes.mjs, the module the server uses, so the two agree.
-// Every other href — relative, `http:`, `mailto:`, protocol-relative — is
-// broken.
+// Reads every .html under the root (never __mockups/, in any case) and every
+// link in it: the href of an <a> or <area>, the action of a <form>, and the
+// formaction of a <button> or <input> — read from the tags, so a comment, a
+// <script>, <style>, <textarea> or <title>, another attribute (data-href) and
+// another element (<link>, an SVG <image>) are never read. An unquoted value
+// runs to the next space or `>`, as in a browser. Character references are
+// decoded as a browser does first, numeric 0x80-0x9F through Windows-1252.
+//
+// A `#` link is correct. A root-absolute link is correct when the review
+// server would serve it — a file, a [param] folder, or the placeholder of a
+// code in __mockups/routes.json with no file yet; a `?state=` page, or that
+// screen's default page when the state page is missing (the server shows it
+// with a "state not rendered" banner) — but never a `?state=` link to a screen
+// with no page at all; and a `?overlay=<code>` link names an overlay of the
+// screen at that route. The target is read by lib/link.mjs and matched by
+// lib/routes.mjs, the parser and matcher the server uses, so the two agree.
+// Every other link — relative, `http:`, `mailto:`, protocol-relative — is
+// broken, and so is a form that submits by POST (its own method="post", or
+// its button's formmethod): the review server answers GET only.
 //
 // Broken links: one `BROKEN: <page> -> <href> — <reason>` line each on stdout,
 // exit 1. None: one `LINKS OK: <n> links in <m> pages` line, exit 0. A root
@@ -32,9 +44,12 @@ import {
   resolve,
 } from "node:path";
 import {
-  matchPath,
+  parseTarget,
+  resolveTarget,
+} from "./lib/link.mjs";
+import {
+  isReserved,
   readRoutes,
-  RESERVED,
 } from "./lib/routes.mjs";
 
 function fail(message) {
@@ -69,7 +84,7 @@ function pages(dir, at = "") {
     .flatMap(entry => {
       const rel = at ? `${at}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
-        return at === "" && entry.name === RESERVED
+        return at === "" && isReserved(entry.name)
           ? []
           : pages(join(dir, entry.name), rel);
       }
@@ -77,20 +92,74 @@ function pages(dir, at = "") {
     });
 }
 
-// href="…", href='…' or an unquoted href=….
-const HREF_RE = /\bhref\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+))/gi;
+// Text a browser never reads as a tag: a comment (to its end when it is never
+// closed), and the raw text of script, style, textarea and title.
+const SKIP_RE =
+  /<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi;
+// One tag: an optional `/`, its name, and its attributes, quoted values kept
+// whole so a `>` inside one does not end the tag.
+const TAG_RE = /<(\/?)([A-Za-z][^\s/>]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
+// One attribute: a name and a value, double-, single- or unquoted.
+const ATTR_RE = /([^\s"'>/=]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
 
-// The named references a URL could hide in. With a `;`, a name in neither this
-// table nor LEGACY is refused — the check fails closed rather than guess.
+// A tag's attributes by lower-case name, the first of a name winning, as in a
+// browser; an attribute with no value is null.
+function attributes(text) {
+  const out = new Map();
+  for (const [, name, double, single, bare] of text.matchAll(ATTR_RE)) {
+    const key = name.toLowerCase();
+    if (!out.has(key)) {
+      out.set(key, double ?? single ?? bare ?? null);
+    }
+  }
+  return out;
+}
+
+// The links of one page, in order: { href, post }, post true for a target a
+// form submits by POST.
+function linksOf(html) {
+  const links = [];
+  let formPost = false;
+  for (
+    const [, close, rawName, rest] of html.replace(SKIP_RE, " ").matchAll(
+      TAG_RE,
+    )
+  ) {
+    const name = rawName.toLowerCase();
+    if (close) {
+      if (name === "form") {
+        formPost = false;
+      }
+      continue;
+    }
+    const attrs = attributes(rest);
+    const isPost = value => String(value ?? "").trim().toLowerCase() === "post";
+    let href = null;
+    let post = false;
+    if (name === "a" || name === "area") {
+      href = attrs.get("href") ?? null;
+    }
+    else if (name === "form") {
+      formPost = isPost(attrs.get("method"));
+      href = attrs.get("action") ?? null;
+      post = formPost;
+    }
+    else if (name === "button" || name === "input") {
+      href = attrs.get("formaction") ?? null;
+      post = attrs.has("formmethod")
+        ? isPost(attrs.get("formmethod"))
+        : formPost;
+    }
+    if (href !== null) {
+      links.push({ href, post });
+    }
+  }
+  return links;
+}
+
+// The named references a URL could hide in, beyond LEGACY's. With a `;`, a
+// name in neither table is refused — the check fails closed rather than guess.
 const NAMED = {
-  amp: "&",
-  AMP: "&",
-  lt: "<",
-  LT: "<",
-  gt: ">",
-  GT: ">",
-  quot: "\"",
-  QUOT: "\"",
   apos: "'",
   sol: "/",
   bsol: "\\",
@@ -110,7 +179,6 @@ const NAMED = {
   lowbar: "_",
   lpar: "(",
   rpar: ")",
-  nbsp: "\u00a0",
 };
 // HTML's legacy names — the ones a browser also decodes with no `;` — and
 // their code points.
@@ -137,6 +205,19 @@ const LEGACY = Object.fromEntries(
       return [name, String.fromCodePoint(parseInt(hex, 16))];
     }),
 );
+// Every name a reference ending in `;` may use: LEGACY plus NAMED.
+const KNOWN = { ...LEGACY, ...NAMED };
+// The numeric references 0x80-0x9F a browser reads as Windows-1252; the five
+// it leaves alone (0x81, 0x8D, 0x8F, 0x90, 0x9D) are not listed.
+const WINDOWS_1252 = Object.fromEntries(
+  (
+    "80:20ac 82:201a 83:192 84:201e 85:2026 86:2020 87:2021 88:2c6 89:2030 "
+    + "8a:160 8b:2039 8c:152 8e:17d 91:2018 92:2019 93:201c 94:201d 95:2022 "
+    + "96:2013 97:2014 98:2dc 99:2122 9a:161 9b:203a 9c:153 9e:17e 9f:178"
+  )
+    .split(" ")
+    .map(pair => pair.split(":").map(hex => parseInt(hex, 16))),
+);
 const REF_RE =
   /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*)(;?))/g;
 
@@ -155,22 +236,22 @@ function decode(value) {
           ? LEGACY[name]
           : ref;
       }
-      const known = Object.hasOwn(NAMED, name) ? NAMED : LEGACY;
-      if (!Object.hasOwn(known, name)) {
+      if (!Object.hasOwn(KNOWN, name)) {
         unknown = true;
         return ref;
       }
-      return known[name];
+      return KNOWN[name];
     }
     const code = hex !== undefined ? parseInt(hex, 16) : parseInt(dec, 10);
-    return code === 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)
-      ? "\ufffd"
-      : String.fromCodePoint(code);
+    if (code === 0 || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) {
+      return "\ufffd";
+    }
+    return String.fromCodePoint(WINDOWS_1252[code] ?? code);
   });
   return unknown ? null : out;
 }
 
-function verdict(raw) {
+function verdict(raw, post) {
   const decoded = decode(raw);
   if (decoded === null) {
     return "an unknown character reference";
@@ -198,13 +279,15 @@ function verdict(raw) {
   if (/[\\\t\r\n]/.test(href)) {
     return "not a link inside the mockups";
   }
-  const url = new URL(href, "http://127.0.0.1");
-  const states = url.searchParams.getAll("state");
-  if (states.length > 1) {
-    return "more than one state";
+  const target = parseTarget(href);
+  if (target === null) {
+    return "malformed path";
   }
-  const match = matchPath(root, routes, url.pathname, states[0] ?? null);
-  return match.kind === "none" ? match.reason : null;
+  const match = resolveTarget(root, routes, target);
+  if (match.kind === "none") {
+    return match.reason;
+  }
+  return post ? "a POST form; the review server answers GET only" : null;
 }
 
 const broken = [];
@@ -212,10 +295,9 @@ let count = 0;
 const list = pages(root);
 for (const page of list) {
   const html = readFileSync(join(root, ...page.split("/")), "utf8");
-  for (const [, double, single, bare] of html.matchAll(HREF_RE)) {
-    const href = double ?? single ?? bare ?? "";
+  for (const { href, post } of linksOf(html)) {
     count += 1;
-    const reason = verdict(href);
+    const reason = verdict(href, post);
     if (reason !== null) {
       broken.push(`BROKEN: ${page} -> ${href} — ${reason}`);
     }

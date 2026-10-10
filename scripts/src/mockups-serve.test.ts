@@ -1,8 +1,10 @@
 /**
  * vwf's mockups `serve.mjs`, spawned for real over a temp platform tree and
  * driven over HTTP: the one URL line, routes to files, [param] folders, state
- * files, the in-memory list and placeholder pages, the root confinement, the
- * comment and done endpoints, and the refusals to start.
+ * files and the default page for a state not rendered, overlays at their
+ * parent's route, the in-memory list and placeholder pages, the / redirect,
+ * the root confinement, the comment and done endpoints, and the refusals to
+ * start.
  */
 import {
   type ChildProcess,
@@ -311,13 +313,14 @@ describe("serve.mjs", () => {
     expect(body).toMatch(/fetch\("\/done", \{[^}]*application\/json/);
   });
 
-  it("serves a state file, and 404 for a state with no file", async () => {
+  it("serves a state file, and 404 for a state of a screen with no page", async () => {
     const { url } = await start();
     const res = await fetch(new URL("/signin?state=error", url));
     const body = await res.text();
     expect(body).toContain("signin error page");
     expect(body).toContain("\"states\":[\"error\"]");
-    expect((await fetch(new URL("/signin?state=empty", url))).status).toBe(404);
+    expect((await fetch(new URL("/200c-receipt?state=empty", url))).status)
+      .toBe(404);
   });
 
   it("lists every code at /__mockups/ and serves nothing else under it", async () => {
@@ -455,6 +458,149 @@ describe("serve.mjs", () => {
     const body = await (await fetch(url)).text();
     expect(body).toContain("e.altKey");
     expect(body).toContain("Alt/Option-click a link or button");
+  });
+
+  it("redirects / to /__mockups/ only when no screen owns /", async () => {
+    write(
+      "__mockups/routes.json",
+      JSON.stringify({
+        ...ROUTES,
+        screens: ROUTES.screens.filter(s => s.code !== "100a"),
+      }),
+    );
+    const { url } = await start();
+    const res = await fetch(url, { redirect: "manual" });
+    expect(res.status).toBe(302);
+    expect(res.headers.get("location")).toBe("/__mockups/");
+    expect((await fetch(new URL("/signin", url))).status).toBe(200);
+  });
+
+  it("serves the default page with a banner for a state not rendered", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/signin?state=empty", url));
+    expect(res.status).toBe(200);
+    const body = await res.text();
+    expect(body).toContain("signin page");
+    expect(body).toContain("State empty not rendered");
+    expect((await fetch(new URL("/200c-receipt?state=x", url))).status).toBe(
+      404,
+    );
+    expect(await (await fetch(new URL("/signin?state=error", url))).text())
+      .not
+      .toContain("not rendered");
+  });
+
+  it("serves an overlay at its parent's route with ?overlay=", async () => {
+    write(
+      "__mockups/routes.json",
+      JSON.stringify({
+        ...ROUTES,
+        screens: [
+          ...ROUTES.screens,
+          {
+            ...ROUTES.screens[3],
+            code: "200f",
+            screen: "Cancel order",
+            slug: "cancel-order",
+            flow: "300-cancel",
+            overlay: "200b",
+          },
+        ],
+      }),
+    );
+    write("orders/[id]/index--overlay-200f.html", "<p>cancel sheet</p>");
+    write("orders/[id]/index--overlay-200f--error.html", "<p>cancel error</p>");
+    const { url } = await start();
+    const sheet = await (await fetch(new URL("/orders/7?overlay=200f", url)))
+      .text();
+    expect(sheet).toContain("cancel sheet");
+    expect(sheet).toContain("\"code\":\"200f\"");
+    expect(sheet).toContain("\"overlay\":\"200f\"");
+    expect(sheet).toContain("\"states\":[\"error\"]");
+    expect(
+      await (await fetch(new URL("/orders/7?overlay=200f&state=error", url)))
+        .text(),
+    )
+      .toContain("cancel error");
+    const parent = await (await fetch(new URL("/orders/7", url))).text();
+    expect(parent).toContain("order detail page");
+    expect(parent).toContain("\"states\":[\"error\"]");
+    for (
+      const path of [
+        "/orders?overlay=200f",
+        "/orders/7?overlay=200g",
+        "/orders/7?state=overlay-200f",
+      ]
+    ) {
+      expect((await fetch(new URL(path, url))).status, path).toBe(404);
+    }
+    const list = await (await fetch(new URL("/__mockups/", url))).text();
+    expect(list).toContain("href=\"/orders/1?overlay=200f\"");
+    rmSync(join(root, "orders", "[id]", "index--overlay-200f.html"));
+    const placeholder = await fetch(new URL("/orders/7?overlay=200f", url));
+    expect(placeholder.status).toBe(200);
+    expect(await placeholder.text()).toContain("Not rendered yet");
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        path: "/orders/7",
+        state: "",
+        overlay: "200f",
+        selector: "p",
+        text: "Softer",
+      }),
+    });
+    expect(res.status).toBe(204);
+    const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(yaml).toContain("  code: \"200f\"");
+  });
+
+  it("serves an HTML file only as a screen's page, never by its name", async () => {
+    const { url } = await start();
+    expect((await fetch(new URL("/signin/index.html", url))).status).toBe(404);
+    const body = await (await fetch(new URL("/orders/index--error.html", url)))
+      .text();
+    expect(body).toContain("order detail page");
+    expect(body).toContain("\"code\":\"200b\"");
+  });
+
+  it("matches a folder only in its exact case", async () => {
+    const { url } = await start();
+    for (const path of ["/Signin", "/ORDERS/new"]) {
+      expect((await fetch(new URL(path, url))).status, path).toBe(404);
+    }
+  });
+
+  it("starts each page's count at the comments this server took", async () => {
+    const { url } = await start();
+    expect(await (await fetch(url)).text()).toContain("\"count\":0");
+    await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: COMMENT,
+    });
+    expect(await (await fetch(url)).text()).toContain("\"count\":1");
+  });
+
+  it("shows Review sent only once /done answered 2xx", async () => {
+    const { url } = await start();
+    const body = await (await fetch(url)).text();
+    expect(body).toMatch(/fetch\("\/done"[\s\S]*?if \(!r\.ok\) throw/);
+  });
+
+  it("exits 2 with one stderr line when its port is taken", async () => {
+    const first = await start();
+    const port = new URL(first.url).port;
+    const result = spawnSync("node", [SCRIPT, "--root", root, "--port", port], {
+      cwd: repo,
+      encoding: "utf8",
+    });
+    expect(result.status).toBe(2);
+    expect(result.stderr).toMatch(
+      /^serve\.mjs: cannot listen on 127\.0\.0\.1:/,
+    );
+    expect(result.stderr.trimEnd().split("\n")).toHaveLength(1);
   });
 
   it("refuses a root outside docs/scratchpad/", () => {
