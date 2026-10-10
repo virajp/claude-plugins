@@ -22,14 +22,20 @@ field that matches case-insensitively.
 
 ## `depsdev` — deps.dev
 
-Base `https://api.deps.dev`. One surface across npm and PyPI (also Go, Cargo,
-Maven, NuGet, RubyGems, which this skill does not yet address) for versions,
+Base `https://api.deps.dev`. One surface across every system its `System`
+enum names — `npm`, `pypi`, `maven`, `cargo`, `go`, `rubygems` and `nuget`,
+all of which this skill now addresses: `npm` and `pypi` through their own
+prefixes, `maven` through `maven:`, and the other four through `mise:` alone
+(`mise:cargo:`, `mise:go:`, `mise:gem:`, `mise:dotnet:`) — for versions,
 publish dates, deprecation, advisories, provenance and the source project's
-Scorecard. Verified against `/google/deps.dev`.
+Scorecard. Verified against `/google/deps.dev` (read 2026-10-10): the
+`System` enum (`GO`, `RUBYGEMS`, `NPM`, `CARGO`, `MAVEN`, `PYPI`, `NUGET`),
+the package path with `@` and `/` percent-encoded, a `404` for an unknown
+package and a `400` for an unknown system.
 
 | Endpoint                                                    | Request                                                                   | Fields read                                                                                                                                                      | Context7 id       |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------- |
-| `/v3/systems/{system}/packages/{name}`                      | GET; `system` is `npm` or `pypi`; `name` percent-encoded (`%40scope%2Fpkg`) | `versions[]` — `version_key.version`, `published_at`, `is_default`, `is_deprecated`, `deprecated_reason`                                                            | `/google/deps.dev` |
+| `/v3/systems/{system}/packages/{name}`                      | GET; `system` is `npm`, `pypi`, `maven`, `cargo`, `go`, `rubygems` or `nuget`, written lowercase as the verified `npm` example is; `name` percent-encoded (`%40scope%2Fpkg`) | `versions[]` — `version_key.version`, `published_at`, `is_default`, `is_deprecated`, `deprecated_reason`                                                            | `/google/deps.dev` |
 | `/v3/systems/{system}/packages/{name}/versions/{version}`   | GET                                                                       | `published_at`, `is_deprecated`, `advisory_keys[].id`, `slsa_provenances[]` (`source_repository`, `verified`), `attestations[]` (`type`, `verified`), `related_projects[].project_key.id` | `/google/deps.dev` |
 | `/v3/projects/{project_key.id}`                             | GET; id is `github.com/owner/repo` (or gitlab, bitbucket), percent-encoded | `stars_count`, `scorecard.overall_score`, `scorecard.date`                                                                                                        | `/google/deps.dev` |
 | `/v3/advisories/{advisory_key.id}`                          | GET; an OSV id from `advisory_keys`                                       | `cvss3_score`, `aliases[]`, `title`                                                                                                                              | `/google/deps.dev` |
@@ -38,7 +44,8 @@ Scorecard. Verified against `/google/deps.dev`.
   does not cache anyway.
 - **Rate limit:** enforced, unspecified; over the limit is a `429`. The skill
   does not retry — a `429` is *unreachable*.
-- **Unreachable** unresolves: exists (npm, pypi), first-publish age,
+- **Unreachable** unresolves: exists (npm, pypi, maven, and the four
+  deps.dev systems behind `mise:`), first-publish age,
   latest-publish age, deprecated, advisories on version, provenance,
   Scorecard. The package endpoint is the one that says whether the name
   exists at all, so with it down every package signal is unresolved, not
@@ -49,6 +56,19 @@ Scorecard. Verified against `/google/deps.dev`.
 - **Which version is default:** the entry whose `is_default` is `true`. The
   earliest and latest `published_at` across `versions[]` are the two age
   signals.
+- **The package name, per system.** A Maven name is the group and artifact
+  joined by `:` — `org.apache.logging.log4j:log4j-core`, the form deps.dev's
+  own Maven examples use — percent-encoded in the path, the `:` as `%3A`.
+  A Go name is the module path, its `/` as `%2F`. A Cargo, RubyGems or
+  NuGet name is the package name as the registry spells it. A `maven:`
+  Gradle plugin marker is looked up by the same rule: its group is the
+  plugin id, its artifact `<id>.gradle.plugin`.
+- **Which Maven repositories it indexes:** deps.dev's own data list names
+  Maven Central, Google's Maven Repository (`maven.google.com`), Jenkins'
+  Maven Repository and the Gradle Plugins Maven Repository
+  (`plugins.gradle.org/m2`). So an `androidx.`, `com.android.` or
+  `com.google.android.` group, and a Gradle plugin marker, are all in its
+  index, and a `404` on any `maven:` name is the *exists* signal blocking.
 
 ## `osv` — OSV.dev
 
@@ -153,8 +173,13 @@ the discontinued flag) was not, which is why those pub signals are
 
 ## `github` — GitHub's REST API
 
-For an action's repository. Verified against `/websites/github_en_rest` for
-the paths and the rate-limit rules, and against the OpenAPI description
+For an action's repository — and, by the same three rows, a `spm:` name on
+`github.com` (its version checked as a tag through the git-ref row) and a
+`mise:` name whose backend routes to the repository checks (`aqua`,
+`github`, `ubi`, and `asdf` or `vfox` on an `owner/repo` path). No row was
+added for them: they read nothing an action does not. Verified against
+`/websites/github_en_rest` for the paths and the rate-limit rules, and
+against the OpenAPI description
 `/openapi/raw_githubusercontent_github_rest-api-description_main_descriptions_api_github_com_api_github_com_json`
 for the response fields (the repository object's `archived`, `disabled`,
 `created_at`, `pushed_at`, `stargazers_count`, and the release object's
@@ -172,12 +197,25 @@ for the response fields (the repository object's `archived`, `disabled`,
   Exceeding it returns `403` or `429` with `x-ratelimit-remaining: 0` and an
   `x-ratelimit-reset` epoch; retrying before that is what gets an IP banned.
   The skill does not wait and does not retry: a rate-limited response is
-  *unreachable*, and every action name still to be checked in that run
-  unresolves on the same line. Three calls per action means a run over
-  twenty actions cannot finish inside the window, and says so rather than
-  trickling.
+  *unreachable*, and every action, `spm:` or repository-routed `mise:` name
+  still to be checked in that run unresolves on the same line. Three calls
+  per name means a run over twenty such names cannot finish inside the
+  window, and says so rather than trickling.
 - **Unreachable** unresolves: every action signal except *ref is a tag, not
-  a SHA*, which is syntactic.
+  a SHA*, which is syntactic; the same for `spm:` and repository-routed
+  `mise:` names, whose syntactic signals stand.
+
+## `mise-core` — mise's core tools
+
+Not an endpoint: Context7's mise docs (`/jdx/mise`, read 2026-10-10)
+confirm no keyless GET that lists the core tools — the documented way is the
+local command `mise registry -b core`, which this skill does not run. So the
+list is a **fixed table, taken from the core-tools page's language guides on
+that date**: `bun`, `deno`, `dotnet`, `elixir`, `erlang`, `go`, `java`,
+`node`, `python`, `ruby`, `rust`, `swift`, `zig`. A `mise:core:` path is
+checked against this table and nothing else; a core tool mise adds later is
+missing here until a plan adds it, and warns meanwhile. Nothing to be
+unreachable.
 
 ## `dockerhub` — the Docker Hub API
 
@@ -227,3 +265,14 @@ For an image's existence, on the `docker.io` host only. Verified against
   source list does not name it, so it was not verified).
 - **OSV's `Pub` ecosystem token** and its `GIT` matching for an action's
   tag.
+- **A keyless list of mise's core tools.** Context7 documents only the local
+  `mise registry -b core`; the `mise-core` section above holds the fixed
+  table instead.
+- **Any SwiftPM source off `github.com`**, and any registry read for the
+  `gitlab`, `forgejo`, `conda`, `http`, `s3`, `packslip` and `spinel` mise
+  backends. None was verified, so those names carry the syntactic signals
+  alone and *exists* is `unavailable`.
+- **The Swift Package Index API.** Not verified on Context7; a `spm:` name
+  reads GitHub, not it.
+- **Google Maven and the Gradle Plugin Portal as sources of their own.**
+  Not needed while deps.dev indexes both; not verified.

@@ -210,11 +210,19 @@ emits instead. A **concrete name** is any third-party thing a generated
 component would have a repo fetch or run: a package a `mise_tool` entry or a
 runner-invoked harness task names (`dlx`, `npx`, `uv run --with`, `uvx`), a
 command an `mcp_servers:` / `user_mcp_servers:` entry spawns, a GitHub Action,
-a container image. Every one of them gets a verdict before the dry-run gate
-shows it, from the `stackgen-reputation` skill — a skill anyone can call, the
-user by hand on a name they are about to type and the generator over the list
-it assembled. A name is passed with its ecosystem prefix — `npm:`, `pypi:`,
-`pub:`, `action:`, `image:` — and comes back as one of three verdicts:
+a container image, a dependency in a `Package.swift`, a Maven dependency or a
+Gradle plugin in a build file. Every one of them gets a verdict before the
+dry-run gate shows it, from the `stackgen-reputation` skill — a skill anyone
+can call, the user by hand on a name they are about to type and the generator
+over the list it assembled. A name is passed with its ecosystem prefix —
+`npm:`, `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:` or `mise:`. A
+mise tool is always passed as `mise:<backend>:<path>`, the same as its toml
+key, a short name expanded with `mise registry <name>` first; a SwiftPM
+dependency as `spm:<host>/<owner>/<repo>@<version>`; a Maven dependency as
+`maven:<group>:<artifact>@<version>`, and a Gradle plugin as its marker
+coordinate, `maven:<id>:<id>.gradle.plugin@<version>`. Go, Cargo, Ruby and
+.NET tools are reached through `mise:` alone. Each name comes back as one of
+three verdicts:
 
 - **`pass`** — nothing found against it.
 - **`warn`** — a signal worth reading before consenting; the row travels to

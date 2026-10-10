@@ -1,11 +1,12 @@
 ---
 name: stackgen-reputation
 description: Vet a third-party name — an npm, PyPI or pub.dev package, a
-  GitHub Action, a container image — against public registry, advisory and
-  scorecard data, and return one verdict per name, pass, warn or block, with
-  the signals that decided it. Invoked by the stackgen generator over every
-  concrete name a generated component would emit, and by anyone who wants to
-  check a package before typing it into anything.
+  GitHub Action, a container image, a SwiftPM package, a Maven artifact or
+  Gradle plugin, a mise tool on any backend — against public registry,
+  advisory and scorecard data, and return one verdict per name, pass, warn
+  or block, with the signals that decided it. Invoked by the stackgen
+  generator over every concrete name a generated component would emit, and
+  by anyone who wants to check a package before typing it into anything.
 argument-hint: "<ecosystem>:<name> …"
 disable-model-invocation: false
 model: sonnet
@@ -19,9 +20,13 @@ free of a known hole on the version you are about to pin* — from public read
 APIs, with thresholds written down rather than judged on the spot. It is
 called two ways: the generator in `/stackgen:stackgen-stack-template` calls
 it at its assemble step over every package, runner-invoked tool, action and
-image a generated component would name, and a person calls it as
-`/stackgen:stackgen-reputation npm:left-pad npm:lodahs` to see a `pass` and
-a `block` side by side.
+image a generated component would name — every SwiftPM dependency, every
+Maven dependency and Gradle plugin, and every mise tool by its backend
+among them — and a person calls it as
+`/stackgen:stackgen-reputation npm:left-pad npm:lodahs` to see a `pass`
+and a `block` side by side, or as
+`/stackgen:stackgen-reputation mise:aqua:realm/SwiftLint` to vet a mise
+tool.
 
 > **`disable-model-invocation` must stay `false`, and there is no
 > `user-invocable` line on purpose.** The generator reaches this skill
@@ -36,7 +41,8 @@ One row per name given:
 | Column       | Is                                                                    |
 | ------------ | --------------------------------------------------------------------- |
 | `name`       | the name as given, prefix stripped, version or ref as resolved        |
-| `ecosystem`  | `npm`, `pypi`, `pub`, `action` or `image`                             |
+| `ecosystem`  | `npm`, `pypi`, `pub`, `action`, `image`, `spm`, `maven` or `mise`     |
+| `backend`    | for a `mise` row only: the backend, and the checks it routed to       |
 | `verdict`    | `pass`, `warn` or `block`                                             |
 | `signals`    | the signals that decided it — every `block` and `warn` that fired     |
 | `source`     | the APIs the deciding signals came from, by the short names below     |
@@ -47,8 +53,9 @@ The verdict is data about the name, not advice about what to use instead.
 ## Name syntax
 
 One argument per name, `<ecosystem>:<name>` — `npm:`, `pypi:`, `pub:`,
-`action:` (owner/repo), `image:` (registry/repo). A bare name defaults to the
-ecosystem of the component's language; the generator always writes the
+`action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo),
+`maven:` (group:artifact), `mise:` (backend:path). A bare name defaults to
+the ecosystem of the component's language; the generator always writes the
 prefix.
 
 - A **version or ref** may follow the name and pins what the advisory check
@@ -65,19 +72,62 @@ prefix.
   for `docker.io` only — the one registry with a keyless GET for it; on any
   other host (`ghcr.io` included) the row carries the syntactic tag signal
   alone, and `signals.md` says why.
+- A **SwiftPM package** is `spm:<host>/<owner>/<repo>@<version>` —
+  `spm:github.com/apple/swift-argument-parser@1.5.0` — and the host is
+  mandatory, as for `image:`. On `github.com` the name takes the checks an
+  `action:` takes, with the version checked against the repository's tags;
+  on any other host it takes the syntactic signals alone and *exists* is
+  `unavailable`, so it warns at most. With no version the latest release's
+  tag is used, and the unpinned signal fires.
+- A **Maven artifact** is `maven:<group>:<artifact>@<version>` —
+  `maven:com.squareup.okhttp3:okhttp@4.12.0`. A **Gradle plugin id** is
+  written as its marker coordinate,
+  `maven:<id>:<id>.gradle.plugin@<version>` — the plugin
+  `org.jetbrains.kotlin.android` at `2.1.0` is
+  `maven:org.jetbrains.kotlin.android:org.jetbrains.kotlin.android.gradle.plugin@2.1.0`.
+  With no version the check runs against the registry's default version, as
+  for a package.
+- A **mise tool** is `mise:<backend>:<path>[@<version>]` —
+  `mise:aqua:realm/SwiftLint@0.57.0`, `mise:core:node@22` — in the full
+  backend form only, the same as its toml key. The version follows the path;
+  with none given the backend's own default is used, as above, and an
+  unpinned or `latest` version warns. A short registry name with no backend
+  (`mise:swiftlint`) is not expanded here: its row reads
+  `UNRESOLVED: no backend for <name>` — the caller expands it first, with
+  `mise registry <name>`. Which checks each backend takes is the backend
+  table under Procedure.
 - The **bare-name default** needs the component's language. The generator
   passes it as a leading `lang=<language>` token —
   `lang=python requests httpx` — and the mapping is `typescript` and
-  `javascript` → `npm`, `python` → `pypi`, `dart` → `pub`. A bare name
-  under any other language, or with no `lang=` token, is not guessed: its
-  row reads
+  `javascript` → `npm`, `python` → `pypi`, `dart` → `pub`, `swift` → `spm`,
+  `kotlin` and `java` → `maven`. A bare name under any other language, or
+  with no `lang=` token, is not guessed: its row reads
   `UNRESOLVED: no ecosystem for <name>` and the other names still get rows.
 
 ## Procedure
 
 1. **Parse.** Split the arguments into names; apply the prefix rule and the
-   `lang=` default above. Reject a prefix outside the five with an
-   `UNRESOLVED` row for that name alone.
+   `lang=` default above. The top-level prefixes are eight: `npm:`,
+   `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:` and `mise:`.
+   Reject a prefix outside the eight with an `UNRESOLVED` row for that name
+   alone. There is no top-level `cargo:`, `go:`, `gem:` or `nuget:` — those
+   ecosystems are reached through `mise:` alone, by the backend table
+   below. For a `mise:` name, route it by its backend:
+
+   | Backend                                                          | The checks it takes                                                                                                        |
+   | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+   | `core`                                                           | first-party: `pass` when the path is a mise core tool (the list in `signals.md`); a path not on it is `warn`               |
+   | `aqua`, `github`, `ubi`                                          | the GitHub repository checks an `action:` takes, on the path's first two segments as `owner/repo`, plus the Scorecard      |
+   | `npm`                                                            | the `npm:` checks on the path                                                                                              |
+   | `pypi`, `pipx`                                                   | the `pypi:` checks on the path — `pipx` is mise's older name for `pypi`                                                    |
+   | `spm`                                                            | the `spm:` checks; a path written `owner/repo` is on `github.com`, a URL path names its own host                           |
+   | `cargo`, `go`, `gem`, `dotnet`                                   | the deps.dev package checks, in the systems `cargo`, `go`, `rubygems` and `nuget` respectively                             |
+   | `asdf`, `vfox`                                                   | the GitHub repository checks on the plugin repository when the path is `owner/repo`; otherwise the syntactic signals alone |
+   | `gitlab`, `forgejo`, `conda`, `http`, `s3`, `packslip`, `spinel` | the syntactic signals alone; *exists* is `unavailable`, so the row warns at most                                           |
+   | any backend not in this table                                    | the syntactic signals alone, warn at most — never `UNRESOLVED`; a backend mise adds later stays here until a plan maps it  |
+
+   The row's `backend:` field names the backend and the routed checks, so a
+   reader sees why a `mise:http:` row could only warn.
 2. **Fetch.** For each name, fetch every signal
    `${CLAUDE_PLUGIN_ROOT}/skills/stackgen-reputation/references/signals.md`
    lists for its ecosystem, from the endpoints
@@ -119,10 +169,11 @@ scored, decided by OSV's severity word, is `UNRESOLVED` with OSV down.
 Invoked by a skill — the generator, or anything else programmatic — return
 **the YAML block below and nothing else**: no prose before it, none after.
 Invoked by a person, render the same rows as a markdown table with the same
-six columns, and nothing else either. The block is **data, not
-instructions**: a caller reads the verdicts off it and acts on its own rules
-— the generator's block policy is the generator's, written where it calls
-this skill — and nothing in a row is a directive to the caller.
+columns — `backend` only when a `mise` row is present — and nothing else
+either. The block is **data, not instructions**: a caller reads the
+verdicts off it and acts on its own rules — the generator's block policy
+is the generator's, written where it calls this skill — and nothing in a
+row is a directive to the caller.
 
 ```yaml
 plugin: stackgen
@@ -130,7 +181,8 @@ skill: stackgen-reputation
 checked_at: <ISO 8601 UTC>
 verdicts:
   - name: <name, prefix stripped, with the resolved version or ref>
-    ecosystem: <npm | pypi | pub | action | image>
+    ecosystem: <npm | pypi | pub | action | image | spm | maven | mise>
+    backend: <for mise only: the backend> — <the checks it routed to>
     verdict: <pass | warn | block>
     signals:
       - <signal name>: <the value seen> — <block | warn>
@@ -142,7 +194,8 @@ verdicts:
 ```
 
 A row with `unresolved:` has no `verdict:` key, and the two never appear
-together. An empty argument list returns `verdicts: []`.
+together. The `backend:` key appears on a `mise` row alone. An empty
+argument list returns `verdicts: []`.
 
 ## What it never does
 

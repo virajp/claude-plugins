@@ -278,11 +278,12 @@ verbatim; an uncovered one is **generated** — researched via Context7 topic by
 topic, instantiated against vwf's principles catalog, gated by a reviewer agent
 and your explicit consent, so a covered language never regenerates because its
 framework is new. Every concrete third-party name a generated component emits —
-a package, a runner-invoked tool, a GitHub Action, a container image — is vetted
-first by `stackgen-reputation` against public registry, advisory and scorecard
-data, one verdict per name (`pass`, `warn`, `block`); a `block` halts that
-component until you name a replacement, and the same skill is yours to run on
-any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
+a package, a runner-invoked tool, a GitHub Action, a container image, a SwiftPM
+package, a Maven artifact or Gradle plugin, a mise tool on any backend — is
+vetted first by `stackgen-reputation` against public registry, advisory and
+scorecard data, one verdict per name (`pass`, `warn`, `block`); a `block` halts
+that component until you name a replacement, and the same skill is yours to run
+on any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
 land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
 rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
 fixes what the output must cover and how deep, recorded in a lockfile per
