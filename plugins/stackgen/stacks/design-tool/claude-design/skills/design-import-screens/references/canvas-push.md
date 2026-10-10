@@ -46,8 +46,12 @@ and platform** (`mobile` / `tablet` / `desktop` / `auto` / `watch` / `tv` /
 project per platform, since each platform canvas carries its own conventions
 CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two platforms
 never share a canvas project**. A flow's `device:` frontmatter key names the
-platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device → its in-car
-platform). On a **device** platform (`mobile`, `tablet`, `desktop`, `auto`,
+platform (`mobile` → `mobile`, `web` → `site` or `webapp`, whichever the flow's
+registry project lists — when it lists both, stop and name the two, since the
+flow must say which — an in-car device → its in-car platform). On `site` and
+`webapp` every card is pushed at a fixed 1440×900 in a desktop browser-chrome
+frame, one frame per code, the narrow 390 layout a `width` tweak, never a second
+frame; `design.viewports` does not apply to them. On a **device** platform (`mobile`, `tablet`, `desktop`, `auto`,
 `watch`, `tv`, `spatial`) every card is generated and pushed at the platform's
 **resolved viewport**: `design.viewports.<registry-project>.<platform>` from
 `.config/vwf.yaml` when set (`<W>x<H>`, in points), else the default size the

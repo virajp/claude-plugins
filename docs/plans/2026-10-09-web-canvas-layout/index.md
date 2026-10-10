@@ -206,17 +206,24 @@ none
   put stackgen's `design-import-screens` skill Out of scope and gave no unit
   Owns over it · left unedited (Out of scope; a stackgen pack edit also needs a
   pack version bump) — a follow-up plan should map `web` to `site`/`webapp`.
+  **Resolved 2026-10-10:** the user ruled that `web` maps to `site` or `webapp`,
+  whichever the flow's registry project lists, and the push stops when it lists
+  both; `site` and `webapp` cards push at 1440×900 in a browser frame with the
+  `width` tweak. `claude-design` pack 0.2.0 → 0.3.0.
 - R1 (wave review, rule 5) ·
   `plugins/vwf/assets/templates/screen-prompt.md:16-17` lists the standing tweak
   set without the new `width` tweak; no unit owned it · U2's Owns widened to
-  that passage, per the Goal.
+  that passage, per the Goal. **Resolved in the run** by that widening.
 
 - R2 (wave review, rule 5) ·
   `plugins/stackgen/stacks/design-tool/claude-code/skills/design-session/SKILL.md:170-174`
   default-viewport list names only device platforms, with no site/webapp
   default, browser frame or `width` tweak; a stackgen pack file outside every
   Owns · left unedited, beside the canvas-push.md gap — the same follow-up plan
-  should align it.
+  should align it. **Resolved 2026-10-10:** the user applied decisions 1, 2 and
+  6: `site` and `webapp` pages lay out at a fixed 1440×900 in a browser frame,
+  one page per code, the 390 layout a `width` tweak, `design.viewports` not
+  applying. `claude-code` pack 0.4.0 → 0.5.0.
 
 ## Launch
 

@@ -171,7 +171,10 @@ per platform, and that file is what this mode reads.
    (`<W>x<H>`, in points), else the platform's default — mobile 390×844,
    tablet 834×1194, desktop 1440×900, auto 800×480, watch 208×248, tv
    1920×1080, spatial 1280×720 — never a desktop viewport on a smaller
-   device. Write
+   device; on `site` or `webapp` the page is laid out at a fixed 1440×900
+   in a desktop browser-chrome frame, one page per code, the narrow 390
+   layout a `width` tweak, never a second page, and `design.viewports`
+   does not apply. Write
    `docs/design/<project>/screens/<flow>--<platform>/<CODE>.html` for every
    screen code the brief names, and only those. Each page is
    **self-contained**: inline `<style>` built from the design system's tokens,
