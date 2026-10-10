@@ -3,7 +3,7 @@ name: Claude Design
 axis: design
 kind: design-tool
 components:
-- design-tool/claude-design@0.2.0
+- design-tool/claude-design@0.3.0
 ---
 
 # Design — Claude Design
