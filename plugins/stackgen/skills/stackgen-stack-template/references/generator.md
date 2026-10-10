@@ -106,19 +106,53 @@ the composition's single consent gate and landing. Generation is
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
    `uv run --with`, `uvx`), every `mcp_servers:` / `user_mcp_servers:`
-   command, every action reference, every image reference — each written
-   with its ecosystem prefix, `npm:`, `pypi:`, `pub:`, `action:`
-   (owner/repo) or `image:` (registry/repo); the generator always writes
-   the prefix, never a bare name. Invoke `stackgen-reputation` with that
-   list, one argument per name. It returns a verdict table, one row per
-   name reading `pass`, `warn` or `block`. **A `block` row halts this
-   component here**: report the table, ask the user to name the
-   replacement, and check the replacement before the step resumes. The
-   generator never swaps a name silently — a swap is a new recommendation,
-   and it is the user's. `warn` rows travel with the table to the dry-run
-   consent gate. An `UNRESOLVED:` row halts the same way a Context7 outage
-   does (the preconditions above): a name whose sources could not be
-   reached is never landed on an inferred verdict.
+   command, every action reference, every image reference, every
+   dependency in a `Package.swift`, and every Maven dependency and Gradle
+   plugin in a build file (`build.gradle.kts`, `settings.gradle.kts`,
+   `gradle/libs.versions.toml`) — each written with one of the eight
+   ecosystem prefixes, `npm:`, `pypi:`, `pub:`, `action:`, `image:`,
+   `spm:`, `maven:` or `mise:`; the generator always writes the prefix,
+   never a bare name. Which name takes which prefix:
+
+   | The name                                     | Is written as                               |
+   | -------------------------------------------- | ------------------------------------------- |
+   | a runner-invoked npm tool                    | `npm:<package>`                             |
+   | a runner-invoked Python tool                 | `pypi:<package>`                            |
+   | a Dart or Flutter package                    | `pub:<package>`                             |
+   | a GitHub Action                              | `action:<owner>/<repo>@<ref>`               |
+   | a container image                            | `image:<registry>/<repo>:<tag>`             |
+   | a `mise_tool` entry, whatever its backend    | `mise:<backend>:<path>`, as its toml key    |
+   | a `Package.swift` dependency                 | `spm:<host>/<owner>/<repo>@<version>`       |
+   | a Maven dependency                           | `maven:<group>:<artifact>@<version>`        |
+   | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
+
+   An MCP command takes the prefix of the registry its runner fetches
+   from — `npm:` for `npx`, `pypi:` for `uvx`. A SwiftPM name is read from
+   the dependency's package URL, the host kept (`github.com` included). A
+   Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
+   Ruby and .NET tools have no prefix of their own: they are mise tools,
+   reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or
+   `mise:dotnet:…`.
+
+   **Expand a short mise name first.** A mise tool named without a
+   backend (no `:`, e.g. `swiftlint`) is expanded before it is vetted:
+   run `mise registry <name>` directly — mise is on PATH — and take the
+   first backend it prints (`aqua:realm/SwiftLint`). That full form is
+   both the name vetted (`mise:aqua:realm/SwiftLint`) and the key written
+   into the toml. A name `mise registry` does not know stops generation
+   as `UNRESOLVED:`; the skill never receives a short mise name, since it
+   returns `UNRESOLVED` for one.
+
+   Invoke `stackgen-reputation` with that list, one argument per name. It
+   returns a verdict table, one row per name reading `pass`, `warn` or
+   `block`. **A `block` row halts this component here**: report the
+   table, ask the user to name the replacement, and check the replacement
+   before the step resumes. The generator never swaps a name silently — a
+   swap is a new recommendation, and it is the user's. `warn` rows travel
+   with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
+   the same way a Context7 outage does (the preconditions above): a name
+   whose sources could not be reached is never landed on an inferred
+   verdict.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent per
    generated component — stateless: it gets the catalog paths, the
    declared kind and the component's classification, the detected stack,
