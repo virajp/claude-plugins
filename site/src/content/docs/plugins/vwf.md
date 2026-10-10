@@ -2091,21 +2091,22 @@ declared alone, since each can ship as a standalone app. One difference is not a
 deviation: an **OS-specific feature** — one OS offers it inside the form factor,
 the other does not, such as the Dynamic Island inside `mobile` — is declared in
 the platform file's `features:` frontmatter list, each entry naming the feature
-(`name`), the OS it applies to (`scope`, `ios` in this release) and the
-**required** `fallback` the other OS, or a device without the feature, shows;
-the blueprint reviewer returns a gap for a missing fallback or an unknown scope,
-and no vendor token is added. All four are device platforms, and each carries
-its own interaction rules in the blueprint contract: in-car screens for a
-driver, glanceable wrist screens driven by the crown and complications,
-focus-based navigation with a remote at ten feet, and gaze and pinch across
-windows, volumes and immersive spaces. `cli` is the one platform with **no
-screens**: it takes no platform file and never reaches the design canvas,
-mockups, or the scratchpad — what it requires instead is the design system's
-**Terminal UX** section. An in-car journey is therefore a *platform file of the
-same flow* — `100-home/auto.md`, same number, same steps, its own screens — not
-a separate subset flow. Which platforms a flow implements is elicited per flow
-(signing in while driving makes no sense) and listed in the contract's Platforms
-table.
+(`name`), where it applies (`scope` — on `mobile`, `ios`, or the Android device
+family `android:samsung` or `android:oneplus`, a label only, since the stack
+detects the feature by a capability check) and the **required** `fallback` the
+other OS, or a device without the feature, shows; the blueprint reviewer returns
+a gap for a missing fallback or an unknown scope, and no vendor token is added.
+All four are device platforms, and each carries its own interaction rules in the
+blueprint contract: in-car screens for a driver, glanceable wrist screens driven
+by the crown and complications, focus-based navigation with a remote at ten
+feet, and gaze and pinch across windows, volumes and immersive spaces. `cli` is
+the one platform with **no screens**: it takes no platform file and never
+reaches the design canvas, mockups, or the scratchpad — what it requires instead
+is the design system's **Terminal UX** section. An in-car journey is therefore a
+*platform file of the same flow* — `100-home/auto.md`, same number, same steps,
+its own screens — not a separate subset flow. Which platforms a flow implements
+is elicited per flow (signing in while driving makes no sense) and listed in the
+contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
 **`blueprint-authoring`** doctrine — trigger and actors, the ordered steps,

@@ -44,6 +44,28 @@ and all three are read at run time, never inferred from the device model.
 - **Text fields declare their keyboard** (`KeyboardOptions`) and IME action, and
   the layout moves above the IME with `imePadding()`.
 
+## Device features inside mobile
+
+A flow's platform file may list a device-family feature as a `features:`
+entry with `scope: android:samsung` or `scope: android:oneplus`. Both run the
+same `mobile` target as every other Android phone, so the entry is built behind
+a capability check and never behind the vendor:
+
+- **The check is the platform's own feature test** — for example
+  `PackageManager.hasSystemFeature`, where the vendor documents a feature flag
+  for it. The check asks whether this device has the feature, at run time.
+- **The vendor name is a label, never the test.** It names the family the
+  flow was designed for; the code does not read the device's maker or model to
+  decide, because a feature moves between models and vendors drop it.
+- **When the check fails, the code shows the entry's declared `fallback`.**
+  The stack builds the fallback the flow names and never invents one, and a
+  feature with no entry is not built.
+
+The rule has no code example on purpose: the shape is the check, the feature
+behind it, and the declared fallback in the other branch. No vendor worked case
+ships in this release, because no stable public API was verified for Samsung or
+OnePlus at plan time.
+
 ## Goldens
 
 A screen shipped to both platforms has goldens under `mobile/` (Pixel 7

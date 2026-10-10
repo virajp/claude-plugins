@@ -7,7 +7,10 @@ platform: mobile # mobile | tablet | desktop | site | webapp | auto | watch | tv
 implementation: none # none | partial | complete — written by the pipeline only
 features: [] # OS-specific features on this platform; [] when none. Each entry:
 #   - name: <the feature, in words>
-#     scope: ios # one OS name from the platform doctrine — `ios` in this release
+#     scope: ios # one value the platform doctrine names: on `mobile`, `ios` for
+#                # the iOS side, or `android:samsung` / `android:oneplus` for an
+#                # Android device family. A vendor value is a label only — the
+#                # stack detects the feature itself by a capability check.
 #     fallback: <what the other OS, or a device without the feature, shows> # required
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---

@@ -65,10 +65,11 @@ orchestrator passes both. Verify the contract and every platform file:
       `Flow contract: [<name>](./index.md)` link. A missing link or a
       filename/key mismatch is a gap.
 - [ ] **OS-specific features** — every entry in a platform file's `features:`
-      frontmatter list has a `name`, a `scope` naming an OS of that platform's
-      doctrine (`ios` in this release), and a non-empty `fallback`. A missing
-      or empty `fallback` is a gap, and so is a `scope` the platform does not
-      name. `features: []` is complete, and the `scope` value is never a
+      frontmatter list has a `name`, a `scope` the platform's doctrine names,
+      and a non-empty `fallback`. A `scope` on `mobile` must be one of `ios`,
+      `android:samsung` or `android:oneplus`; any other value — another
+      `android:` string included — is a gap. A missing or empty `fallback` is
+      a gap. `features: []` is complete, and the `scope` value is never a
       vendor-name gap.
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
@@ -174,7 +175,8 @@ orchestrator passes both. Verify the contract and every platform file:
       `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md` ("the datastore",
       "the payment provider"). The only carve-outs are `environment.md` issuers,
       `conventions.md#integrations`, and the `scope` value of a platform file's
-      `features:` entry, which names an OS rather than a vendor.
+      `features:` entry, which names an OS or a device-family label the
+      platform doctrine lists.
 - [ ] Section-to-project mappings match the registry (by project **name** and
       `role`/`platforms` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in

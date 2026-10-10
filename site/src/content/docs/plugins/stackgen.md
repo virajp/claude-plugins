@@ -437,7 +437,14 @@ Play Feature Delivery modules, and a note that instant apps are retired.
 [`/vwf:setup`](./vwf.md#vwfsetup) detects `watch` from
 `android.hardware.type.watch`, `tv` from `android.software.leanback`, and `auto`
 from the Car App Library metadata or `android.hardware.type.automotive`. Android
-XR (`spatial`) is not covered.
+XR (`spatial`) is not covered. The compose pack's phone-and-tablet reference
+then gained the rule for a flow's declared Android device feature (a `features:`
+entry with `scope: android:samsung` or `scope: android:oneplus`): the feature is
+built behind the platform's own capability check, such as
+`PackageManager.hasSystemFeature` where a vendor documents a flag, never behind
+the device's maker, and the entry's declared `fallback` shows wherever the check
+fails. The vendor name is a label only. The rule ships without a vendor worked
+case, because no stable public API was verified for either vendor.
 
 The `devtools` plugin then dissolved into stackgen and was deleted, closing the
 marketplace at two plugins. Its mise doctrine and its file-based task library
