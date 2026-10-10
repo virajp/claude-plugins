@@ -264,23 +264,35 @@ All non-blocking; the run proceeded on the assumption stated.
   (`plugins/vwf/skills/execute/SKILL.md:706`), so the orchestrator cannot split
   the lines: a code two projects share is filed under both. Assumed: E3-E5 as
   written. Closes in a follow-up plan that adds a project to the line.
+  **Resolved 2026-10-10:** the user ruled that the ux reviewer writes the
+  project first on each `RENDER:` line; `renders.mjs` skips a line for another
+  project.
 - **G2 (R1 review, plan gap).** E2's "latest set only" does not say how to prune
   an entry whose route moved or whose code was removed. Assumed: U1's fix for
-  the R1 finding on `renders.mjs:304`.
+  the R1 finding on `renders.mjs:304`. **Resolved 2026-10-10:** the user ruled
+  prune: each run drops the entries, and deletes the images, of codes that left
+  the route map or whose route changed shape.
 - **G3 (R1 review, dropped finding).** E3 names no image format, while
   `renders.mjs` copies PNG only (`plugins/vwf/assets/stack-adapter.md:445`). A
   `.jpg` or `.webp` gate keeps nothing. Assumed: PNG, as E2's file names say.
+  **Resolved 2026-10-10:** the user ruled PNG only, stated in the
+  `stack-adapter.md` contract.
 - **G4 (R1 review, convergence guard — oscillation).** Round 2 returned as many
   U1 review findings as round 1 (7 and 7), and round 1's medium on
   `renders.mjs:304` resurfaced as partly fixed at `renders.mjs:400-403`: a
   replaced entry whose route moved leaves its old image, served as the screen
   that now owns the route. The loop ended at the guard after 2 rounds; the 7
   round-2 findings are `contested` (Run log). The loop failed to settle — look
-  there first, not at the contract.
+  there first, not at the contract. **Resolved 2026-10-10:** the user ruled all
+  open contested findings fixed: the moved-route image (by the G2 prune), the
+  write and stdin failures exit non-zero, the peer-file folder resolves through
+  symlinks, the mockups routes file is read per request, and the naming and
+  guard code is shared.
 - **G5 (R1 review, plan gap).** E3 does not say what a relative `file` is
   relative to; `renders.mjs` resolves it against the worktree root, so in a
   monorepo a path relative to the project directory is SKIPPED. Assumed: the
-  worktree root.
+  worktree root. **Resolved 2026-10-10:** the user ruled the worktree root,
+  stated in the `stack-adapter.md` contract.
 - **G6 (R1 security — PAUSE, ruling needed).** The review row's security
   findings did not converge: round 1 raised 1 (frame click followed `//host`,
   fixed in 2bfde1db), round 2 raised 1 (`writeJson` followed a symlink, fixed in
@@ -308,11 +320,15 @@ All non-blocking; the run proceeded on the assumption stated.
   (drop-on-overwrite compares paths case-sensitively, APFS folds case),
   `serve.mjs:232` (a syntax-only route edit hides renders as "No render yet").
   Entries of codes that left the map stay in `renders.json` (G2, E2 as written).
-  The loop failed to settle — look there first.
+  The loop failed to settle — look there first. **Resolved 2026-10-10:** the
+  user ruled all three fixed: `?state=default` is the plain index on both sides,
+  the path compare ignores case on a case-insensitive file system, and routes
+  match by shape.
 - **G8 (wave 2 contract review, contested).** `mockups/SKILL.md:114-116`
   promises a stderr warning and no window link when `__mockups/routes.json` is
   missing; the server warns only when the `--mockups` directory exists, and the
-  window link depends on `--peer-file` alone.
+  window link depends on `--peer-file` alone. **Resolved 2026-10-10:** the user
+  ruled the doc follows the code; `mockups/SKILL.md` is rewritten.
 
 ## Run log
 

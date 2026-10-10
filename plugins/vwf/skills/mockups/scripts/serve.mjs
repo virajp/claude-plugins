@@ -21,7 +21,8 @@
 // every request, and when it holds a loopback URL the overlay links the same
 // route and state there in a new window — so a mockup server and a render
 // server, started in any order, link each other. Both paths must resolve under
-// <cwd>/docs/scratchpad/.
+// <cwd>/docs/scratchpad/, through its realpath, so a symlinked scratchpad
+// works; --peer-file's folder may not exist yet.
 //
 // Renders mode — the built app's images that /vwf:execute copied (renders.mjs):
 //
@@ -30,24 +31,29 @@
 //
 // where <render dir> is docs/scratchpad/<project>/renders/<platform> and holds
 // __renders/renders.json and __renders/routes.json, both read again at each
-// request. Each route is a page built in memory around index.png or
-// index--<state>.png of the route's folder — shown only while renders.json
-// holds an entry for that screen's code and state whose route is the screen's
-// route now and whose file is that image; otherwise the route is the "no
-// render yet" page and the image is 404, and the state switcher and the
-// /__renders/ list read the same entries. On mobile, watch and auto the page
-// sets the mockup of the same route and state (served from --mockups under the
-// reserved /__mockups/ prefix, with the same guards; a --mockups tree with no
-// valid __mockups/routes.json shows none) in a frame on the left of the image;
-// elsewhere it shows the image alone and the --peer-file link. /__renders/ lists every render; nothing else
-// under it is served. Comments go to __renders/comments.yaml with the plan of
-// the image. The images themselves are served as image/png.
+// request. Each route is a page built in memory around the image of the
+// renders.json entry for that screen's code and state — shown only while the
+// entry's route and file match the screen's route now and the file its route
+// folder gives the state, each compared by shape (parameter names dropped, so
+// a route edit that only renames a parameter keeps its renders); otherwise
+// the route is the "no render yet" page and the image is 404, and the state
+// switcher and the /__renders/ list read the same entries. ?state=default is
+// the plain index file, index.png here and index.html in the mockup tree. On
+// mobile, watch and auto the page sets the mockup of the same route and state
+// (served from --mockups under the reserved /__mockups/ prefix, with the same
+// guards) in a frame on the left of the image; the --mockups tree's
+// __mockups/routes.json is read again at each request, and while it is
+// missing or invalid no mockup is shown, with one stderr warning. Elsewhere
+// it shows the image alone and the --peer-file link. /__renders/ lists every
+// render; nothing else under it is served. Comments go to
+// __renders/comments.yaml with the plan of the image. The images themselves
+// are served as image/png.
 //
 // Endpoints — there are no others:
 //   GET  <route>[?state=<s>]  the screen at that route, through lib/routes.mjs:
 //                             <route>/index.html, a [param] folder for any
 //                             value of that segment, index--<s>.html for a
-//                             state, or a placeholder page for a code in
+//                             state (default is index.html), or a placeholder page for a code in
 //                             routes.json with no file yet; HTML gets the
 //                             overlay; any other file under --root is served
 //                             with its MIME type
@@ -98,15 +104,18 @@ import {
   inRoot,
   isReserved,
   matchPath,
+  pathShape,
   readRoutes,
   renderFile,
-  renderName,
   RENDERS,
   RESERVED,
+  routeDir,
+  routeShape,
   sampleRoute,
   splitPath,
   STATE_RE,
   statesIn,
+  underReserved,
 } from "./lib/routes.mjs";
 
 // --- CLI ---------------------------------------------------------------------
@@ -174,7 +183,8 @@ catch (error) {
 
 // Renders mode: routes.json is read again at each request, so a copy made while
 // the server runs — a new screen, a moved route — is seen; a file that cannot
-// be read then keeps the last good map, with one stderr line.
+// be read then keeps the last good map, with one stderr line. The mockups
+// routes.json of --mockups is read again too (refreshMockups).
 function refreshRoutes() {
   if (!RENDER_MODE) {
     return;
@@ -187,6 +197,7 @@ function refreshRoutes() {
       `serve.mjs: keeping the last route map: ${error.message}\n`,
     );
   }
+  refreshMockups();
 }
 
 // Renders mode: renders.json, read at start to refuse a tree with none, and
@@ -215,10 +226,12 @@ if (RENDER_MODE) {
 }
 // The renders.json entries that hold under the route map now: an entry counts
 // only while its code's screen has the entry's route and the entry's file is
-// the one that screen's route folder gives its state. What is shown — a page,
-// a state, a list row, an image — is decided from these entries alone, never
-// from a file on disk, so an image a moved screen left at a route folder is
-// never shown as the render of the screen that now owns that route.
+// the one that screen's route folder gives its state — each compared by shape,
+// parameter names dropped, so a route edit that only renames a parameter keeps
+// its renders. What is shown — a page, a state, a list row, an image — is
+// decided from these entries alone, and an image is read from its entry's
+// file, never from a file on disk, so an image a moved screen left at a route
+// folder is never shown as the render of the screen that now owns that route.
 function renders() {
   let list;
   try {
@@ -229,15 +242,42 @@ function renders() {
   }
   return list.filter(entry => {
     const screen = routes.screens.find(s => s.code === entry.code);
-    if (!screen || entry.route !== screen.route) {
+    if (
+      !screen
+      || typeof entry.route !== "string"
+      || typeof entry.file !== "string"
+      || routeShape(entry.route) !== routeShape(screen.route)
+    ) {
       return false;
     }
-    return entry.file === renderFile(screen.path, entry.state);
+    return pathShape(entry.file)
+      === pathShape(renderFile(screen.path, entry.state));
   });
 }
 
+// The realpath of a path whose tail may not exist yet: its nearest existing
+// ancestor realpath'd, the rest joined on — so a symlinked scratchpad resolves.
+function realPrefix(full) {
+  const rest = [];
+  let dir = full;
+  for (;;) {
+    try {
+      return join(realpathSync(dir), ...rest);
+    }
+    catch {
+      const parent = dirname(dir);
+      if (parent === dir) {
+        return full;
+      }
+      rest.unshift(basename(dir));
+      dir = parent;
+    }
+  }
+}
+
 // A path the CLI names must resolve under the scratchpad; the file itself may
-// not exist yet, its directory must.
+// not exist yet. --url-file needs its directory; --peer-file's directory may
+// be made later, and is resolved through its nearest existing ancestor.
 function scratchFile(flag, value, mustExist) {
   const full = resolve(value);
   let dir;
@@ -248,7 +288,7 @@ function scratchFile(flag, value, mustExist) {
     if (mustExist) {
       fail(`${flag} has no directory: ${value}`);
     }
-    dir = dirname(full);
+    dir = realPrefix(dirname(full));
   }
   const file = join(dir, basename(full));
   if (!file.startsWith(scratchReal + sep)) {
@@ -304,9 +344,32 @@ function peerLink(pathname, state) {
 }
 
 // Renders mode: the mockup tree served in the frame, or null when there is
-// none. It must resolve under the scratchpad, as --root does.
+// none. It must resolve under the scratchpad, as --root does. Its
+// __mockups/routes.json is read again at each request; while it is missing or
+// invalid, mockRoutes is null and no mockup is shown.
 let mockRoot = null;
 let mockRoutes = null;
+let mockWarning = null;
+function refreshMockups() {
+  if (mockRoot === null) {
+    return;
+  }
+  try {
+    mockRoutes = readRoutes(mockRoot);
+    mockWarning = null;
+  }
+  catch (error) {
+    // Never fall back to the render route map: a mockup matched through the
+    // wrong map could be shown beside another screen's render.
+    mockRoutes = null;
+    if (mockWarning !== error.message) {
+      mockWarning = error.message;
+      process.stderr.write(
+        `serve.mjs: --mockups has no valid ${RESERVED}/routes.json, so no mockup is shown: ${error.message}\n`,
+      );
+    }
+  }
+}
 if (RENDER_MODE && args.mockups !== undefined) {
   const wanted = resolve(args.mockups);
   if (existsSync(wanted)) {
@@ -317,17 +380,7 @@ if (RENDER_MODE && args.mockups !== undefined) {
     if (!mockRoot.startsWith(scratchReal + sep)) {
       fail(`--mockups must resolve under ${scratchpad}${sep}: ${args.mockups}`);
     }
-    try {
-      mockRoutes = readRoutes(mockRoot);
-    }
-    catch (error) {
-      // Never fall back to the render route map: a mockup matched through the
-      // wrong map could be shown beside another screen's render.
-      process.stderr.write(
-        `serve.mjs: --mockups has no valid ${RESERVED}/routes.json, so no mockup is shown: ${error.message}\n`,
-      );
-      mockRoot = null;
-    }
+    refreshMockups();
   }
   else if (!wanted.startsWith(scratchpad + sep)) {
     fail(`--mockups must resolve under ${scratchpad}${sep}: ${args.mockups}`);
@@ -463,7 +516,7 @@ function listPage() {
   }
   const sections = [...flows.entries()].map(([flow, screens]) => {
     const items = screens.map(screen => {
-      const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
+      const dir = routeDir(root, screen.path);
       const href = sampleRoute(screen.path);
       const rendered = existsSync(join(dir, "index.html"));
       const states = statesIn(dir)
@@ -506,11 +559,10 @@ function placeholderPage(screen) {
 
 // --- Renders mode pages ------------------------------------------------------
 
-// A folder path to a URL path: "orders/[id]" + "index.png" →
+// A file path to a URL path: "orders/[id]/index.png" →
 // "/orders/%5Bid%5D/index.png".
-function fileUrl(path, name) {
-  const segments = path ? path.split("/") : [];
-  return "/" + [...segments, name].map(encodeURIComponent).join("/");
+function fileUrl(file) {
+  return "/" + file.split("/").map(encodeURIComponent).join("/");
 }
 
 // The renders.json entry of one image, or undefined.
@@ -593,13 +645,13 @@ function renderPlaceholderPage(screen) {
   );
 }
 
-// The page of one render: the image, and on a side-by-side platform the
-// mockup of the same route and state in a frame on its left.
+// The page of one render: the image of its entry, and on a side-by-side
+// platform the mockup of the same route and state in a frame on its left.
 function renderPage(screen, pathname, state, entry) {
-  const image = fileUrl(screen.path, renderName(state));
+  const image = fileUrl(entry.file);
   const query = state === null ? "" : `?state=${encodeURIComponent(state)}`;
   let mockup = null;
-  if (sideBySide && mockRoot !== null) {
+  if (sideBySide && mockRoutes !== null) {
     const match = matchPath(mockRoot, mockRoutes, pathname, state);
     if (match.kind === "file" && match.file.endsWith(".html")) {
       mockup = `/${RESERVED}${pathname}${query}`;
@@ -608,10 +660,8 @@ function renderPage(screen, pathname, state, entry) {
   const caption = `${screen.code} ${screen.screen}${
     state === null ? "" : ` — ${state}`
   }`;
-  const img = `<figure><figcaption>Render${
-    entry
-      ? ` — ${escapeHtml(entry.plan ?? "")} · ${escapeHtml(entry.date ?? "")}`
-      : ""
+  const img = `<figure><figcaption>Render — ${escapeHtml(entry.plan ?? "")} · ${
+    escapeHtml(entry.date ?? "")
   }</figcaption><img id="render" src="${escapeHtml(image)}" alt="${
     escapeHtml(caption)
   }"></figure>`;
@@ -927,7 +977,7 @@ function getRender(res, url) {
     return;
   }
   if (isReserved(first ?? "")) {
-    if (mockRoot === null) {
+    if (mockRoutes === null) {
       res.writeHead(404).end();
       return;
     }
@@ -953,7 +1003,7 @@ function getRender(res, url) {
       || !real
       || real === root
       || !real.toLowerCase().endsWith(".png")
-      || real.slice(root.length + 1).split(sep)[0].toLowerCase() === RENDERS
+      || underReserved(root, real, RENDERS)
       || !statSync(real).isFile()
     ) {
       res.writeHead(404).end();
@@ -969,9 +1019,12 @@ function getRender(res, url) {
   }
   const list = renders();
   const entry = renderEntry(list, screen.code, state);
-  const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
-  const image = entry && inRoot(root, join(dir, renderName(state)));
-  if (!image || !statSync(image).isFile()) {
+  const image = entry && inRoot(root, routeDir(root, entry.file));
+  if (
+    !image
+    || underReserved(root, image, RENDERS)
+    || !statSync(image).isFile()
+  ) {
     if (state !== null) {
       res.writeHead(404).end();
       return;
@@ -992,7 +1045,7 @@ function getRender(res, url) {
       listLabel: "All renders",
       peer: sideBySide ? null : peerLink(url.pathname, state),
       peerLabel: "Open the mockup",
-      meta: entry ? `${entry.plan ?? ""} · ${entry.date ?? ""}` : "",
+      meta: `${entry.plan ?? ""} · ${entry.date ?? ""}`,
     }),
   );
 }

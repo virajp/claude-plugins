@@ -49,6 +49,42 @@ export function renderFile(path, state) {
   return path ? `${path}/${name}` : name;
 }
 
+/** True when a file name is one renderName gives. */
+export function isRenderName(name) {
+  return /^index(--[A-Za-z0-9_-]+)?\.png$/.test(String(name));
+}
+
+/** A route folder (or a file) under the root: "orders/[id]" → <root>/orders/[id]. */
+export function routeDir(root, path) {
+  return join(root, ...(path ? path.split("/") : []));
+}
+
+/**
+ * The shape of a folder path, its parameter names dropped: "orders/[id]" and
+ * "orders/[orderId]" are both "orders/[]".
+ */
+export function pathShape(path) {
+  return String(path)
+    .split("/")
+    .filter(segment => segment !== "")
+    .map(segment => (PARAM_RE.test(segment) ? "[]" : segment))
+    .join("/");
+}
+
+/** The shape of a route: "/orders/:id" and "/orders/{orderId}" match. */
+export function routeShape(route) {
+  return pathShape(routeToPath(route));
+}
+
+/**
+ * True when a realpath under the root has `name` as its first segment, in any
+ * case (APFS folds case).
+ */
+export function underReserved(root, real, name) {
+  return real !== root
+    && real.slice(root.length + 1).split(sep)[0].toLowerCase() === name;
+}
+
 /** Kebab-case of a screen name: "Order details" → "order-details". */
 export function slugify(name) {
   return String(name)
@@ -175,7 +211,7 @@ function servable(root, path) {
   if (!real || real === root) {
     return real;
   }
-  return isReserved(real.slice(root.length + 1).split(sep)[0]) ? null : real;
+  return underReserved(root, real, RESERVED) ? null : real;
 }
 
 export function isFile(path) {
@@ -303,8 +339,8 @@ export function findScreen(routes, urlPath) {
 }
 
 /**
- * What a GET of `urlPath` with `?state=<state>` (state null when absent)
- * serves:
+ * What a GET of `urlPath` with `?state=<state>` (state null when absent;
+ * `default` is the same as absent) serves:
  *   { kind: "file", file, dir, screen }  a real file under the root; screen
  *                                        is the routes.json screen the path
  *                                        belongs to, or null
@@ -323,7 +359,8 @@ export function matchPath(root, routes, urlPath, state) {
   if (state !== null && state !== undefined && !STATE_RE.test(state)) {
     return { kind: "none", reason: `malformed state ${state}` };
   }
-  const hasState = state !== null && state !== undefined;
+  // `default` is the plain index.html, as it is the plain index.png of a render.
+  const hasState = state !== null && state !== undefined && state !== "default";
   const name = hasState ? `index--${state}.html` : "index.html";
   const screen = findScreen(routes, segments);
 
@@ -338,7 +375,7 @@ export function matchPath(root, routes, urlPath, state) {
   // placeholder — never a [param] sibling, so a fixed route not rendered yet
   // still wins over /orders/[id].
   if (screen) {
-    const dir = join(root, ...(screen.path ? screen.path.split("/") : []));
+    const dir = routeDir(root, screen.path);
     const file = servable(root, join(dir, name));
     if (file && isFile(file)) {
       return { kind: "file", file, dir: dirname(file), screen };
