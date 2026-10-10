@@ -5,9 +5,11 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  closeSync,
   existsSync,
   mkdirSync,
   mkdtempSync,
+  openSync,
   readFileSync,
   realpathSync,
   rmSync,
@@ -119,10 +121,10 @@ function rendersJson(platform: string): {
 }
 
 const SMOKE = [
-  "RENDER: 200b mobile default shots/a.png",
-  "RENDER: 200b mobile error shots/b.png",
-  "RENDER: 200a web default shots/a.png",
-  "RENDER: 999z mobile default shots/a.png",
+  "RENDER: demo 200b mobile default shots/a.png",
+  "RENDER: demo 200b mobile error shots/b.png",
+  "RENDER: demo 200a web default shots/a.png",
+  "RENDER: demo 999z mobile default shots/a.png",
   "",
 ]
   .join("\n");
@@ -173,9 +175,9 @@ describe("renders.mjs", () => {
     put(base, "outside.png", "OUT");
     const { status, stdout } = run(
       [
-        `RENDER: 200a mobile default ${join(base, "outside.png")}`,
-        "RENDER: 200a mobile error ../outside.png",
-        "RENDER: 200a mobile empty shots/missing.png",
+        `RENDER: demo 200a mobile default ${join(base, "outside.png")}`,
+        "RENDER: demo 200a mobile error ../outside.png",
+        "RENDER: demo 200a mobile empty shots/missing.png",
       ]
         .join("\n"),
     );
@@ -189,7 +191,7 @@ describe("renders.mjs", () => {
     run(SMOKE);
     const first = rendersJson("mobile");
     const { stdout } = run(
-      "RENDER: 200b mobile error shots/a.png\n",
+      "RENDER: demo 200b mobile error shots/a.png\n",
       "docs/plans/2026-10-09-second/",
     );
     expect(stdout.trimEnd()).toBe("COPIED: 1");
@@ -218,38 +220,32 @@ describe("renders.mjs", () => {
     expect(stderr.match(/not a RENDER: line/g)).toHaveLength(2);
   });
 
-  it("keeps every other entry and its image untouched on a second run", () => {
+  it("prunes the entries and images of a screen whose route moved", () => {
     run(SMOKE);
-    const first = rendersJson("mobile");
     // 200b moves to /order/:id before the second run, which renders 200a only.
     put(
       w,
       "docs/blueprint/flows/demo/200-orders/mobile.md",
       DOC.replace("`/orders/:id`", "`/order/:id`"),
     );
-    const { stdout } = run("RENDER: 200a mobile default shots/b.png\n");
+    const { status, stdout } = run(
+      "RENDER: demo 200a mobile default shots/b.png\n",
+    );
+    expect(status).toBe(0);
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     const json = rendersJson("mobile");
     expect(json.renders.map(e => [e.code, e.state])).toEqual([
       ["200a", "default"],
-      ["200b", "default"],
-      ["200b", "error"],
     ]);
-    for (const old of first.renders) {
-      expect(json.renders).toContainEqual(old);
-    }
-    expect(readFileSync(tree("mobile", "orders", "[id]", "index.png"), "utf8"))
-      .toBe("PNG-A");
-    expect(
-      readFileSync(
-        tree("mobile", "orders", "[id]", "index--error.png"),
-        "utf8",
-      ),
-    )
-      .toBe("PNG-B");
+    expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
+      false,
+    );
+    expect(existsSync(tree("mobile", "orders", "[id]", "index--error.png")))
+      .toBe(false);
     expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
       "PNG-B",
     );
+    // web was not touched by this run.
     expect(rendersJson("web").renders).toHaveLength(1);
     const routes = JSON.parse(
       readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
@@ -260,8 +256,160 @@ describe("renders.mjs", () => {
       .toBe("/order/:id");
   });
 
+  it("prunes the entry and image of a code that left the route map", () => {
+    run(SMOKE);
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/mobile.md",
+      DOC.split("\n").filter(line => !line.startsWith("| 200b")).join("\n"),
+    );
+    run("RENDER: demo 200a mobile default shots/b.png\n");
+    expect(rendersJson("mobile").renders.map(e => e.code)).toEqual(["200a"]);
+    expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
+      false,
+    );
+  });
+
+  it("removes the old image of a replaced entry whose route moved", () => {
+    run(SMOKE);
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/mobile.md",
+      DOC.replace("`/orders/:id`", "`/order/:id`"),
+    );
+    run("RENDER: demo 200b mobile default shots/b.png\n");
+    expect(rendersJson("mobile").renders.map(e => [e.code, e.file])).toEqual([
+      ["200b", "order/[id]/index.png"],
+    ]);
+    expect(readFileSync(tree("mobile", "order", "[id]", "index.png"), "utf8"))
+      .toBe("PNG-B");
+    expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
+      false,
+    );
+    expect(existsSync(tree("mobile", "orders", "[id]", "index--error.png")))
+      .toBe(false);
+  });
+
+  it("keeps the renders of a screen whose route only renamed a parameter", () => {
+    run(SMOKE);
+    put(
+      w,
+      "docs/blueprint/flows/demo/200-orders/mobile.md",
+      DOC.replace("`/orders/:id`", "`/orders/{orderId}`"),
+    );
+    run("RENDER: demo 200a mobile default shots/b.png\n");
+    expect(rendersJson("mobile").renders.map(e => [e.code, e.state])).toEqual([
+      ["200a", "default"],
+      ["200b", "default"],
+      ["200b", "error"],
+    ]);
+    expect(readFileSync(tree("mobile", "orders", "[id]", "index.png"), "utf8"))
+      .toBe("PNG-A");
+  });
+
+  it("never deletes a file a pruned entry names outside its route folders", () => {
+    run(SMOKE);
+    put(base, "victim.png", "VICTIM");
+    const file = tree("mobile", "__renders", "renders.json");
+    const json = rendersJson("mobile");
+    json.renders.push(
+      {
+        ...(json.renders[0] as Entry),
+        code: "999y",
+        file: "../../../../../victim.png",
+      },
+      {
+        ...(json.renders[0] as Entry),
+        code: "999x",
+        file: "__renders/index.png",
+      },
+    );
+    writeFileSync(file, JSON.stringify(json));
+    put(tree("mobile"), "__renders/index.png", "RESERVED");
+    run("RENDER: demo 200a mobile default shots/b.png\n");
+    expect(readFileSync(join(base, "victim.png"), "utf8")).toBe("VICTIM");
+    expect(existsSync(tree("mobile", "__renders", "index.png"))).toBe(true);
+    expect(rendersJson("mobile").renders.map(e => e.code)).not.toContain(
+      "999y",
+    );
+  });
+
+  it("skips a line for another project", () => {
+    const { status, stdout } = run(
+      "RENDER: other 200a mobile default shots/a.png\n"
+        + "RENDER: demo 200a web default shots/a.png\n",
+    );
+    expect(status).toBe(0);
+    expect(stdout).toMatch(/^SKIPPED: 200a mobile default — .*project other/m);
+    expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 1");
+    expect(existsSync(tree("mobile"))).toBe(false);
+  });
+
+  it("names the PNG rule when it skips another image type", () => {
+    put(w, "shots/c.jpg", "JPG");
+    const { stdout } = run("RENDER: demo 200a web default shots/c.jpg\n");
+    expect(stdout).toMatch(/^SKIPPED: 200a web default — .*must be a PNG/m);
+  });
+
+  it("exits non-zero when renders.json cannot be written", () => {
+    mkdirSync(tree("web", "__renders", "renders.json"), { recursive: true });
+    const { status, stdout, stderr } = run(
+      "RENDER: demo 200a web default shots/a.png\n",
+    );
+    expect(status).not.toBe(0);
+    expect(stdout.trimEnd()).toBe("COPIED: 1");
+    expect(stderr).toMatch(/cannot write __renders/);
+  });
+
+  it("exits non-zero when stdin cannot be read", () => {
+    const fd = openSync(base, "r");
+    try {
+      const result = spawnSync(
+        "node",
+        [
+          SCRIPT,
+          "--worktree",
+          w,
+          "--main",
+          m,
+          "--project",
+          "demo",
+          "--plan",
+          "p",
+        ],
+        { stdio: [fd, "pipe", "pipe"], encoding: "utf8" },
+      );
+      expect(result.status).not.toBe(0);
+      expect(result.stdout).toBe("");
+      expect(result.stderr).toMatch(/stdin/);
+    }
+    finally {
+      closeSync(fd);
+    }
+  });
+
+  it("drops an overwritten entry by path in the file system's own case rule", () => {
+    run("RENDER: demo 200a mobile default shots/a.png\n");
+    const file = tree("mobile", "__renders", "renders.json");
+    const json = rendersJson("mobile");
+    json.renders.push({
+      ...(json.renders[0] as Entry),
+      state: "empty",
+      file: "ORDERS/index.png",
+    });
+    writeFileSync(file, JSON.stringify(json));
+    // The same folder in another case: one folder on a case-insensitive disk.
+    const folded = existsSync(tree("mobile", "ORDERS", "index.png"));
+    run("RENDER: demo 200a mobile default shots/b.png\n");
+    const states = rendersJson("mobile").renders.map(e => e.state);
+    expect(states).toEqual(folded ? ["default"] : ["default", "empty"]);
+    expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
+      "PNG-B",
+    );
+  });
+
   it("drops an old entry whose file this run overwrote with another screen", () => {
-    run("RENDER: 200a mobile default shots/a.png\n");
+    run("RENDER: demo 200a mobile default shots/a.png\n");
     // 200a moves off /orders and 200b takes it; 200b's render lands in
     // orders/index.png, the file 200a's old entry names.
     put(
@@ -269,7 +417,7 @@ describe("renders.mjs", () => {
       "docs/blueprint/flows/demo/200-orders/mobile.md",
       DOC.replace("`/orders`", "`/all`").replace("`/orders/:id`", "`/orders`"),
     );
-    const { stdout } = run("RENDER: 200b mobile default shots/b.png\n");
+    const { stdout } = run("RENDER: demo 200b mobile default shots/b.png\n");
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     expect(rendersJson("mobile").renders.map(e => [e.code, e.file])).toEqual([
       ["200b", "orders/index.png"],
@@ -286,7 +434,7 @@ describe("renders.mjs", () => {
       join(base, "outside.png"),
       tree("mobile", "orders", "index.png"),
     );
-    const { stdout } = run("RENDER: 200a mobile default shots/a.png\n");
+    const { stdout } = run("RENDER: demo 200a mobile default shots/a.png\n");
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     expect(readFileSync(join(base, "outside.png"), "utf8")).toBe("OUTSIDE");
     expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
@@ -306,7 +454,7 @@ describe("renders.mjs", () => {
       join(base, "outside-routes.json"),
       tree("mobile", "__renders", "routes.json"),
     );
-    const { stdout } = run("RENDER: 200a mobile default shots/a.png\n");
+    const { stdout } = run("RENDER: demo 200a mobile default shots/a.png\n");
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     expect(readFileSync(join(base, "outside-renders.json"), "utf8")).toBe(
       "OUTSIDE-R",
@@ -330,7 +478,7 @@ describe("renders.mjs", () => {
     mkdirSync(outside);
     mkdirSync(tree("mobile"), { recursive: true });
     symlinkSync(outside, tree("mobile", "orders"));
-    const { stdout } = run("RENDER: 200b mobile default shots/a.png\n");
+    const { stdout } = run("RENDER: demo 200b mobile default shots/a.png\n");
     expect(stdout).toMatch(/^SKIPPED: 200b mobile default — .*escapes/m);
     expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 0");
     expect(existsSync(join(outside, "[id]"))).toBe(false);

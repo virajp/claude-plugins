@@ -710,8 +710,9 @@ delta before the stages re-verify — *Late loop-backs re-run the last row* in
 [review-unit.md](references/review-unit.md).
 
 **Keep the renders.** After the ux stage's last round, before the landing, take
-the `RENDER: <code> <platform> <state> <file>` lines that round's reviewer
-returned and pipe them, on stdin, into one run per project the stage reviewed:
+the `RENDER: <project> <code> <platform> <state> <file>` lines that round's
+reviewer returned and run the script once per project the stage reviewed,
+piping each run, on stdin, only the lines whose first field is that project:
 
 ```sh
 node ${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/renders.mjs --worktree <worktree> --main <main checkout> --project <project> --plan <folder>
@@ -720,9 +721,11 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/renders.mjs --worktree <worktr
 It copies each image into the main checkout's
 `docs/scratchpad/<project>/renders/<platform>/<route>/` — `index.png`, or
 `index--<state>.png` — overwriting only the screens and states it was given,
-and records them in that platform's `__renders/renders.json`. A line it cannot
-copy — an unknown code, a missing or non-PNG file, a failed copy — is one
-`SKIPPED:` stdout line; the rest are copied, and stdout ends with one
+and records them in that platform's `__renders/renders.json`, pruning there
+each entry, and its image, whose code left the platform's route map or whose
+route changed. A line it cannot
+copy — another project, an unknown code, a missing or non-PNG file, a failed
+copy — is one `SKIPPED:` stdout line; the rest are copied, and stdout ends with one
 `COPIED: <n>` line. Write one Run log row —
 `wave —`, unit `renders`, the `COPIED:` count and each `SKIPPED:` line as its
 detail — mirrored to the journal. With no `RENDER:` line, or `RENDERED: n/a`,

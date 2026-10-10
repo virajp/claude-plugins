@@ -16,6 +16,7 @@ import {
   mkdtempSync,
   readFileSync,
   realpathSync,
+  renameSync,
   rmSync,
   symlinkSync,
   writeFileSync,
@@ -832,6 +833,75 @@ describe("serve.mjs --renders", () => {
     expect(list).not.toContain("200a");
     expect(list).not.toContain("200d");
     expect(list).toContain("200b");
+  });
+
+  it("reads ?state=default as the plain index file on both sides", async () => {
+    const { url } = await startRenders("mobile");
+    const body = await (await fetch(new URL("/orders/7?state=default", url)))
+      .text();
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    expect(body).toContain("<iframe id=\"mockup\"");
+    const frame = await fetch(
+      new URL("/__mockups/orders/7?state=default", url),
+    );
+    expect(frame.status).toBe(200);
+    expect(await frame.text()).toContain("mobile mockup");
+    child?.kill();
+    const mockups = await start();
+    const page = await fetch(new URL("/signin?state=default", mockups.url));
+    expect(page.status).toBe(200);
+    expect(await page.text()).toContain("signin page");
+  });
+
+  it("keeps a screen's renders when its route only renames a parameter", async () => {
+    const screens = ROUTES.screens.map(s =>
+      s.code === "200b"
+        ? { ...s, route: "/orders/{orderId}", path: "orders/[orderId]" }
+        : s
+    );
+    put(
+      join(renderRoot("web"), "__renders", "routes.json"),
+      JSON.stringify({ project: "demo", platform: "web", screens }),
+    );
+    const { url } = await startRenders("web");
+    const body = await (await fetch(new URL("/orders/7", url))).text();
+    expect(body).toContain("src=\"/orders/%5Bid%5D/index.png\"");
+    const image = await fetch(new URL("/orders/%5Bid%5D/index.png", url));
+    expect(image.status).toBe(200);
+    expect(await image.text()).toBe("PNG-DETAIL");
+    const error = await fetch(new URL("/orders/7?state=error", url));
+    expect(error.status).toBe(200);
+    expect(await error.text()).toContain("index--error.png");
+  });
+
+  it("takes a --peer-file in a folder not made yet under a symlinked scratchpad", async () => {
+    const real = join(repo, "real-scratchpad");
+    renameSync(join(repo, "docs", "scratchpad"), real);
+    symlinkSync(real, join(repo, "docs", "scratchpad"));
+    const peer = join(scratch(), "later", "mockups-web.url");
+    const { url } = await startRenders("web", ["--peer-file", peer]);
+    expect(await (await fetch(new URL("/orders", url))).text()).toContain(
+      "\"peer\":null",
+    );
+    put(peer, "http://127.0.0.1:9/\n");
+    expect(await (await fetch(new URL("/orders", url))).text()).toContain(
+      "\"peer\":\"http://127.0.0.1:9/orders\"",
+    );
+  });
+
+  it("reads the mockups routes.json again at each request", async () => {
+    const file = join(mockRoot("mobile"), "__mockups", "routes.json");
+    const saved = readFileSync(file, "utf8");
+    rmSync(file);
+    const { url } = await startRenders("mobile");
+    const before = await (await fetch(new URL("/orders/7", url))).text();
+    expect(before).not.toContain("<iframe");
+    writeFileSync(file, saved);
+    const after = await (await fetch(new URL("/orders/7", url))).text();
+    expect(after).toContain("<iframe id=\"mockup\"");
+    expect((await fetch(new URL("/__mockups/orders/7", url))).status).toBe(200);
+    rmSync(file);
+    expect((await fetch(new URL("/__mockups/orders/7", url))).status).toBe(404);
   });
 
   it("removes its --url-file on Done and on exit", async () => {

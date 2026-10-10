@@ -2294,9 +2294,13 @@ images that gate names in the main checkout's
 `docs/scratchpad/<project>/renders/<platform>/<route>/` — `index.png`, or
 `index--<state>.png` — at the same routes as the mockups, replacing only the
 screens and states a run rendered and recording each image's code, state, route,
-plan and date in `__renders/renders.json`. The command that serves them is
-`/vwf:mockups renders [project]`; with nothing on disk it says so and names
-`/vwf:execute`. How the two views meet depends on the platform:
+plan and date in `__renders/renders.json`. Each run also prunes, on every
+platform it copied to, the entries and images of codes that left the route map
+or whose route changed shape. Only PNG files are kept, and the ux reviewer tags
+each image with its project, so a code two projects share is filed under its own
+project alone. The command that serves them is `/vwf:mockups renders [project]`;
+with nothing on disk it says so and names `/vwf:execute`. How the two views meet
+depends on the platform:
 
 | Platform                                               | View                                                                                                                                               |
 | ------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |

@@ -448,8 +448,11 @@ the images it names after the run, in the main checkout's
 `/vwf:mockups renders`. Each item is one image: `code` is the screen's code in
 the flow's Screens table, `platform` the screen platform it was rendered for,
 `state` is `default` or one of the screen's pinned states, and `file` is the
-image's path, which must be inside the worktree. A gate that returns no list is
-valid and works as before — its run simply keeps no images.
+image's path, which must be inside the worktree; a relative `file` is relative
+to the worktree root, not to the project's directory. The image must be a PNG
+— an item naming any other format is skipped, and its image is not kept. A
+gate that returns no list is valid and works as before — its run simply keeps
+no images.
 
 vwf's rule is unchanged and stays vwf's: `rendered: n/a` on any UI slice is a
 gap that reaches the final human gate, never a silent downgrade to a code-only

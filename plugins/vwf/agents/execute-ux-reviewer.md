@@ -50,9 +50,10 @@ path** and its **`covers:` doc names** for your gap drawers.
 
    **Read whatever artifacts it reports** and judge them yourself — the gate
    renders, you decide. Keep the `renders:` list of your **last** gate call:
-   you relay it, item for item, as `RENDER:` lines in your return block, and
-   the orchestrator copies those images out of the worktree before it lands. You
-   copy nothing yourself. If the repo has no `ux-gate` skill, or it returns
+   you relay it, item for item, as `RENDER:` lines in your return block, each
+   led by the project the item's screen belongs to, and the orchestrator
+   copies those images out of the worktree before it lands. You copy nothing
+   yourself. If the repo has no `ux-gate` skill, or it returns
    `rendered: n/a`, fall back to the code-level pass below and carry the reason
    forward verbatim. Never substitute a tool of your own choosing.
 2. **Judge against the contracts.** For each screen and state:
@@ -138,7 +139,7 @@ block below:
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] <screen>/<state> — <what deviates and from which contract>   # (or "none")
 RENDERED: ok   # or "n/a — <why>"; the gate reported which
-RENDER: <code> <platform> <state> <file>   # one per renders: item; omit when none
+RENDER: <project> <code> <platform> <state> <file>   # one per renders: item; omit when none
 A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"

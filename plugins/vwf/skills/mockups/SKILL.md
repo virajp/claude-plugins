@@ -110,10 +110,12 @@ stamps nothing.
 
      Each server reads its peer's file at every request, so the two start in
      any order; the overlay of each page links the same route and state on the
-     other port, in a new window. With no mockups, the render server runs
-     alone and shows no window link. On every platform, a missing or invalid
-     `__mockups/routes.json` means no mockup is shown — no frame, no window
-     link — and the server warns on stderr.
+     other port, in a new window — the link appears only while the peer
+     server runs and its file names its URL. A mockup server refuses to start
+     without a valid `__mockups/routes.json`, so with no mockups the render
+     server runs alone and shows no window link. On a side-by-side platform,
+     a `--mockups` folder with no valid `__mockups/routes.json` shows no
+     frame, and the render server warns on stderr.
 
    Each server prints exactly one stdout line, `URL: http://127.0.0.1:<port>/`.
 4. **Give every URL** in one message, one sentence each: which serves the
