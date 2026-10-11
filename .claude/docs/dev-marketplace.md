@@ -99,6 +99,13 @@ directory and is unaffected by which mode you are in.
 
 - **`add .dev-marketplace` is rejected** — *"Invalid marketplace source
   format"*. Use `./.dev-marketplace` or an absolute path.
+- **`marketplace add` writes this machine's absolute path.** It lands in
+  `~/.claude/settings.json` as
+  `extraKnownMarketplaces.virajp-plugins.source.path` —
+  `/Users/<you>/…/.dev-marketplace`. Claude expands `${HOME}` in that path and
+  keeps it through `marketplace update`, `install` and `update`, so
+  `p:plugins:local` rewrites the absolute form to `${HOME}/…` on every run. Run
+  it after any fresh `add`; a path outside `$HOME` is left as it is.
 - **`.dev-marketplace/plugins/` is a staging directory, not a symlink.** Every
   dev `source` is `./plugins/<name>`, resolved against the marketplace root.
   Claude rejects every other way of naming a local tree — an absolute path, a
