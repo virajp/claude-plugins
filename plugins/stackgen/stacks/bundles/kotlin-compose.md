@@ -8,13 +8,24 @@ components:
 - toolchain-gate/ktlint@0.1.0
 - toolchain-gate/detekt@0.1.0
 - framework/android@0.2.0
-- app-framework/compose@0.4.0
+- app-framework/compose@0.5.0
 platforms:
 - mobile
 - tablet
 - watch
 - tv
 - auto
+os:
+  mobile:
+  - android
+  tablet:
+  - android
+  watch:
+  - wearos
+  tv:
+  - androidtv
+  auto:
+  - androidauto
 ---
 
 # mobile · tablet · watch · tv · auto — Kotlin · Compose

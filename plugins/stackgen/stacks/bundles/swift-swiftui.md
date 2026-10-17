@@ -3,7 +3,7 @@ name: Swift · SwiftUI
 axis: project
 kind: app-framework
 components:
-- app-framework/swiftui@0.7.0
+- app-framework/swiftui@0.8.0
 - package-manager/swiftpm@0.3.1
 - toolchain-gate/swift-format@0.1.3
 - toolchain-gate/swiftlint@0.2.1
@@ -15,6 +15,21 @@ platforms:
 - watch
 - tv
 - spatial
+os:
+  mobile:
+  - ios
+  tablet:
+  - ios
+  desktop:
+  - macos
+  auto:
+  - carplay
+  watch:
+  - watchos
+  tv:
+  - tvos
+  spatial:
+  - visionos
 ---
 
 # mobile · tablet · desktop · auto · watch · tv · spatial — Swift · SwiftUI
