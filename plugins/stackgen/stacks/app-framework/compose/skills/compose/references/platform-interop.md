@@ -44,6 +44,26 @@ Access Framework), which need no permission at all.
 - **Incoming intents and deep links** are the navigation graph's — see
   [navigation](navigation.md); `MainActivity` hands them over and holds no
   routing logic of its own.
+- **The share sheet** is an `ACTION_SEND` intent carrying the content as extras
+  and a MIME type, wrapped in `Intent.createChooser` with a title from a string
+  resource, and launched from the event at the screen edge. Shared files go out
+  as `content://` URIs from a `FileProvider` with read permission granted.
+
+## Splash screen
+
+The launch screen is the SplashScreen API, through its compat library so every
+Android version looks the same, and is required from Android 12. A theme sets
+its appearance and `windowSplashScreenAnimationDuration` its duration. A
+dedicated splash `Activity`, or a screen held on a timer, adds start-up time
+and is migrated, never written.
+
+## Keep the screen on
+
+`Modifier.keepScreenOn()` on the screen that needs it — a player, a scanner, a
+live session — keeps the display on while that composable is in composition and
+releases it when the screen leaves. The window flag `FLAG_KEEP_SCREEN_ON` acts
+as a wake lock on the whole window, so it is set only for user-started playback
+and cleared when it stops; never set app-wide.
 
 ## Views
 
