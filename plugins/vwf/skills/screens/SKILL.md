@@ -55,22 +55,29 @@ the contract of record; the canvas is where screens get good.
   TV, `spatial` visionOS, Android XR and Quest).
 - **Frames** — inside a page, each screen frame is named by its pinned
   Screens-contract **Code** (`020a`, `020b`, …) — the per-screen sync key; state
-  variations hang off the coded frame as tweaks, never as extra frames.
+  variations hang off the coded frame as tweaks, never as extra frames — the
+  `device` tweak that switches a frame between its OS frames among them.
 - **Index** — each platform's canvas project carries its one
   **`index--<platform>`** page: the stitched whole-product mockup, chaining
   every flow page's happy path in NNN execution order, so the complete happy
   flow for a platform is walkable from its index alone.
 
-**One design project per platform.** Every registry project with a screen platform pins a separate
-design project per platform (`design.projects.<registry-project>.<platform>`;
-two platforms never share one), because the conventions differ per platform:
-each carries its own conventions doc, whose Layout block sets the platform's
-viewport. For a device platform that viewport is **resolved** — the
-per-product override `design.viewports.<registry-project>.<platform>` in
-`.config/vwf.yaml` when set, else the platform's default in the conventions
-template — and the brief's frame, the conventions file and import's frame check
-all use the resolved size. How those pins are resolved on the tool
-side is the **adapter's** business, not vwf's.
+**One design project per platform.** Every registry project with a screen
+platform pins a separate design project per platform
+(`design.projects.<registry-project>.<platform>`; two platforms never share
+one), because the conventions differ per platform: each carries its own
+conventions doc, whose Layout block sets the platform's viewport. For a device
+platform the frames are **resolved** from an OS list: the
+`design.viewports.<registry-project>.<platform>` list (in `.config/vwf.yaml`)
+when set, else `projects.<registry-project>.stack.os.<platform>`, else empty
+— an empty list gives the one generic frame, a non-empty one gives one frame
+per code with a `device` tweak over its OS tokens, the first the primary, each
+at its list size or its frame-table default. A scalar override resizes the
+generic frame when the list is empty, and the primary OS frame only when it is
+not. The frame table and the rule in full are the conventions template's
+Layout block; the brief, the conventions file and import's frame check all use
+the resolved frames. How those pins are resolved on the tool side is the
+**adapter's** business, not vwf's.
 
 Import matches by these names, and the same names make the canvas humanly
 reconcilable against the flows tree.
