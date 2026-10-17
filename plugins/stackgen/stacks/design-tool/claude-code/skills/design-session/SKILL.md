@@ -166,15 +166,60 @@ per platform, and that file is what this mode reads.
    `taste-skill:soft-skill`, `taste-skill:minimalist-skill` or
    `taste-skill:brutalist-skill` where the design system points there; on a
    **device** platform — `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`
-   or `spatial` — the page is laid out at that platform's resolved viewport:
-   `design.viewports.<project>.<platform>` from `.config/vwf.yaml` when set
-   (`<W>x<H>`, in points), else the platform's default — mobile 390×844,
-   tablet 834×1194, desktop 1440×900, auto 800×480, watch 208×248, tv
-   1920×1080, spatial 1280×720 — never a desktop viewport on a smaller
-   device; on `site` or `webapp` the page is laid out at a fixed 1440×900
-   in a desktop browser-chrome frame, one page per code, the narrow 390
-   layout a `width` tweak, never a second page, and `design.viewports`
-   does not apply. Write
+   or `spatial` — the page is laid out in that platform's resolved OS frames,
+   never a desktop viewport on a smaller device; on `site` or `webapp` the
+   page is laid out at a fixed 1440×900 in a desktop browser-chrome frame, one
+   page per code, the narrow 390 layout a `width` tweak, never a second page,
+   and `design.viewports` does not apply.
+
+   **Resolve the OS list** for `(<project>, <platform>)` from
+   `.config/vwf.yaml`: the list form of the key
+   `design.viewports.<project>.<platform>`, which is
+   `[ { os: <os>, size: <W>x<H> } ]`, when one is set, else
+   `projects.<project>.stack.os.<platform>`, else empty. An empty list gives
+   the one generic frame — the `(none)` row below — at its default size, or
+   at the scalar override `design.viewports.<project>.<platform>: <W>x<H>`.
+   A non-empty list gives **one frame with a `device` tweak**: the tweak's
+   values are the list's OS tokens, in order; the first is the primary and
+   the tweak's default. Each OS takes its size from its list entry, else from
+   the table below; a scalar override resizes the primary OS frame only. The
+   chrome always follows the OS. The other OS frames are the `device` tweak's
+   values on the same page — never a second page, never a second file.
+
+   | Platform | OS            | Size      | Chrome                                        |
+   | -------- | ------------- | --------- | --------------------------------------------- |
+   | mobile   | (none)        | 390×844   | generic notch or cutout                       |
+   | mobile   | `ios`         | 393×852   | Dynamic Island, home indicator                |
+   | mobile   | `android`     | 412×915   | punch-hole camera, gesture bar                |
+   | tablet   | (none)        | 834×1194  | camera cutout                                 |
+   | tablet   | `ios`         | 834×1194  | rounded corners, home indicator               |
+   | tablet   | `android`     | 800×1280  | camera in the bezel, gesture bar              |
+   | desktop  | (none)        | 1440×900  | neutral title bar                             |
+   | desktop  | `macos`       | 1440×900  | window controls on the left                   |
+   | desktop  | `windows`     | 1440×900  | window controls on the right                  |
+   | desktop  | `linux`       | 1440×900  | neutral title bar                             |
+   | auto     | (none)        | 800×480   | in-car display frame                          |
+   | auto     | `carplay`     | 800×480   | CarPlay status sidebar                        |
+   | auto     | `androidauto` | 800×480   | Android Auto navigation rail                  |
+   | watch    | (none)        | 208×248   | rounded watch face                            |
+   | watch    | `watchos`     | 208×248   | rounded rectangle                             |
+   | watch    | `wearos`      | 227×227   | round face                                    |
+   | tv       | (none)        | 1920×1080 | title-safe inset shown                        |
+   | tv       | `tvos`        | 1920×1080 | title-safe inset, 60 top and bottom, 80 sides |
+   | tv       | `androidtv`   | 960×540   | overscan margin, 27 top and bottom, 48 sides  |
+   | spatial  | (none)        | 1280×720  | floating window, glass material               |
+   | spatial  | `visionos`    | 1280×720  | glass window, window bar below                |
+   | spatial  | `androidxr`   | 1280×720  | panel with a top bar                          |
+
+   Sizes are points on Apple platforms and dp on Android. **A
+   `features:` entry** in the brief is drawn per frame: on the frame of the
+   `device` tweak whose OS equals the OS part of the entry's `scope` — the
+   text before any colon, so `android:samsung` matches `android` — show the
+   feature; on every other frame, the generic one included, show the entry's
+   `fallback`.
+   `/vwf:screens import` diffs the primary frame only.
+
+   Write
    `docs/design/<project>/screens/<flow>--<platform>/<CODE>.html` for every
    screen code the brief names, and only those. Each page is
    **self-contained**: inline `<style>` built from the design system's tokens,

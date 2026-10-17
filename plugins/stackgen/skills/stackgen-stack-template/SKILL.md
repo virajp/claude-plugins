@@ -82,6 +82,8 @@ components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated
 platforms: [ <platform> ] # project axis only
+os: # project axis only — the bundle's os: map, passed through; omitted when the bundle declares none
+  <platform>: [ <os> ]
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
   <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> | { name: <name>, probe: <command> } ] } # binaries passed through from pack.yaml in either form; omitted when the pack declares none
@@ -103,6 +105,10 @@ covers is still *known* to vwf when its pin is a stackgen template carrying
 these emitted facts — doctor verifies against them instead of against a
 language plugin. Emitting them honestly (`n/a` included) is what keeps that
 check real.
+
+`os` is the bundle's own `os:` map, copied as it stands — the payload adds
+no token and orders none. A generated bundle may emit it under the same
+rule; when it does not, the key is omitted and vwf draws its generic frame.
 
 A value only the machine can answer — swiftui's `XCODE_VERSION` — is not a
 payload field. It is a `@@NAME@@` tag in the pack's `templates/`, stored

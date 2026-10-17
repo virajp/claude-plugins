@@ -94,6 +94,8 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       ] # CLOSED vocabulary — the union of what the INSTALLED stack plugins declare (assets/stack-vocabulary.md); vwf holds no table of its own. At least one, EXCEPT while `template` reads `unresolved` — a project whose language nobody has chosen yet records `[]`, and that is the one legal empty. Drives doctor's LSP + toolchain checks. A token no plugin declares is doctor's `unknown` finding — BLOCKING once this project's `template` is pinned, a degradation while it reads `unresolved` (assets/stack-vocabulary.md) — never a recorded-and-ignored value
       frameworks: [] # open, lowercase-kebab; 0..n. What the code is written against
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
+      os: # OPTIONAL — which OPERATING SYSTEM the pinned template targets on each platform, copied by /vwf:setup from the template payload's `os:` field, filtered to the platforms this project declares in the registry. Each value is a token from the OS vocabulary in assets/standard-flows.md for that platform, the first being the primary. An absent key, or an absent platform in it, reads as NO OS KNOWN — the platform's generic canvas frame, as before the key existed. Additive, so it carries no config_format bump. Read by the design.viewports resolution below, through which the canvas picks each platform's OS frames
+        <platform>: [ <os> ]
       note: <one
         line> # optional — why this stack, when the reason is not obvious from the template name
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
@@ -139,9 +141,10 @@ design: # CANVAS STATE only — ids and flow names, never content. The design TO
   projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
     <registry-project>:
       <platform>: <uuid> # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp — the one vocabulary (assets/standard-flows.md), minus `cli`: a terminal surface has no canvas project
-  viewports: # OPTIONAL, hand-edited — a per-product override of a DEVICE screen platform's canvas viewport, beside the canvas pin it sizes. Additive: an absent block, project or platform reads as the platform's DEFAULT (assets/templates/canvas-claude.md's Layout block — mobile 390x844, tablet 834x1194, desktop 1440x900, auto 800x480, watch 208x248, tv 1920x1080, spatial 1280x720), so it carries no config_format bump
+  viewports: # OPTIONAL, hand-edited — a per-product override of a DEVICE screen platform's canvas frames, beside the canvas pin it sizes. Additive: an absent block, project or platform reads as the frames projects.<name>.stack.os picks, at the sizes the frame table gives — the sizes live in ONE place, assets/templates/canvas-claude.md's Layout block — so it carries no config_format bump. Two forms per platform, below; the resolution is the Reading rules' `design.viewports` entry
     <registry-project>:
-      <platform>: <W>x<H> # e.g. `watch: 205x251` — two positive integers in POINTS, width first. Valid only for a device platform (mobile | tablet | desktop | auto | watch | tv | spatial) that this project declares in the registry — never `site`, `webapp` or `cli`. Read, override first then default, by /vwf:screens (the brief's frame and the generated Layout block of each CLAUDE--<platform>.md) and by the pinned design adapter when it lays out or pushes a page
+      <platform>: <W>x<H> # the SCALAR form, e.g. `watch: 205x251` — two positive integers in POINTS, width first. Resizes the PRIMARY frame only: the first OS of the resolved list, or the generic frame when no OS is known. Valid only for a device platform (mobile | tablet | desktop | auto | watch | tv | spatial) that this project declares in the registry — never `site`, `webapp` or `cli`. Read by /vwf:screens (the brief's frame and the generated Layout block of each CLAUDE--<platform>.md) and by the pinned design adapter when it lays out or pushes a page
+      # <platform>: [ { os: <os>, size: <W>x<H> } ] — the LIST form: REPLACES the OS list projects.<name>.stack.os gives this platform, its order setting the primary (the first entry) and the `device` tweak's values. `os` is a token the OS vocabulary (assets/standard-flows.md) names for this platform; `size` is optional and falls back to that OS frame's default size. The chrome always follows the OS — there is no chrome field
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/mockups/<platform>/<route>/index.html tree (one served site per platform), NEVER on the canvas; the stamp entry stays one per flow platform
 
 memory:
@@ -263,14 +266,25 @@ earlier than 65/90/80), never loosen.
   `/vwf:blueprint` runs (self-healing on repos configured before config_format
   2).
 - **`design.viewports.<project>.<platform>`** overrides one device screen
-  platform's canvas viewport for one project, as `<W>x<H>` in points — two
-  positive integers. It is valid only for a device platform (`mobile`,
-  `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial`) the project declares;
-  a value on any other platform, or one that does not parse, is reported and
-  ignored. Every reader resolves the viewport the same way: the override when
-  set, else the platform's default in the canvas conventions template's Layout
-  block. The key is **additive** — absent means the default — so it needed no
-  `config_format` bump.
+  platform's canvas frames for one project, in one of two forms. The **scalar**
+  `<W>x<H>` (points, two positive integers) resizes the primary frame. The
+  **list** `[ { os: <os>, size: <W>x<H> } ]` replaces the OS list the stack
+  gives, its order setting the primary; `size` is optional. Either form is
+  valid only for a device platform (`mobile`, `tablet`, `desktop`, `auto`,
+  `watch`, `tv`, `spatial`) the project declares; a value on any other
+  platform, a scalar that does not parse, a list entry whose `os` is not a
+  token `assets/standard-flows.md`'s OS vocabulary names for that platform, or
+  whose `size` does not parse, is reported by `/vwf:doctor` as non-blocking and
+  ignored — the entry alone, the rest of the list still read. Every reader
+  resolves the frames the same way, for `(project, platform)`: the **OS list**
+  is the `design.viewports` list when one is set, else
+  `projects.<name>.stack.os.<platform>`, else empty. An empty list gives the
+  one generic frame at its default size, or at the scalar override. A
+  non-empty list gives **one** frame with a `device` tweak; each OS takes its
+  size from its list entry, else from the frame table in the canvas
+  conventions template's Layout block. A scalar override resizes the primary
+  OS frame only. Both keys are **additive** — absent means the generic frame,
+  as before — so neither needed a `config_format` bump.
 - **`after_landing`** is a list of shell commands the user edits by hand;
   absent or empty means none. `/vwf:execute` runs them after each green
   landing, after the plan's own After landing rows, as `run` steps — each

@@ -36,7 +36,9 @@ their own conventions.
   plus this platform's suffix. The name is the sync key — never rename it.
 - Inside a page, each screen frame is named by its pinned blueprint **code**
   (`<NNN><letter>`, e.g. `020a`) — the per-screen sync key. State variations
-  ride as **tweaks** on the coded frame, never as extra frames or pages.
+  ride as **tweaks** on the coded frame, never as extra frames or pages — the
+  `device` tweak, which switches the frame between its OS frames, is one such
+  variant.
 - Revise existing pages **in place** under the same name — never duplicate, fork
   per revision, or rebuild from scratch.
 - **`index--<platform>`** stitches every flow page's happy path in flow-number
@@ -45,22 +47,75 @@ their own conventions.
 
 ## Layout
 
-<!-- Keep only this platform's block; drop the others. Each size below is the
-     platform's DEFAULT viewport. For a device token only (never site or
-     webapp, whose sizes are fixed), when .config/vwf.yaml sets
-     design.viewports.<project>.<platform>: <W>x<H>, write that size into the
-     kept block in place of the default. -->
+<!-- Keep only this platform's block and this platform's rows of the frame
+     table; drop the others. The OS frames resolve per (project, platform),
+     for a device platform only (never site or webapp, whose sizes are
+     fixed), from .config/vwf.yaml:
+     1. The OS list is the design.viewports.<project>.<platform> list when
+        one is set ([ { os: <os>, size: <W>x<H> } ], size optional), else
+        projects.<project>.stack.os.<platform>, else empty.
+     2. An empty list gives the one generic frame (the "(none)" row) at its
+        default size, or at the scalar override
+        design.viewports.<project>.<platform>: <W>x<H> when set.
+     3. A non-empty list gives one frame with a `device` tweak; each OS takes
+        its size from its list entry, else from its row below. The first OS
+        is the primary and the tweak's default. A scalar override resizes the
+        primary OS frame only.
+     Keep the rows of the resolved OS list (or the "(none)" row when it is
+     empty), with each resolved size written in place of the default, and
+     write the resolved list and its primary into the kept block. The chrome
+     always follows the OS. -->
 
-- **mobile** — every screen renders at **390×844** (portrait) in a phone frame:
-  dark bezel **with the camera notch/cutout** for a true visual, toggleable via
-  the `frame` tweak (default on); theme via `darkMode` (default on).
-- **tablet** — every screen renders at **834×1194** (portrait) in a tablet frame
-  **with the camera cutout**, toggleable via the `frame` tweak (default on);
-  theme via `darkMode` (default on).
-- **desktop** (a natively installed app) — every screen renders at
-  **1440×900** in a neutral native app window frame: a title bar with window
-  controls, no address bar and no tabs, toggleable via the `frame` tweak
-  (default on); theme via `darkMode` (default on).
+**Frame table** — the one place that holds each frame's size and chrome. Sizes
+are in points (Apple OSes) or dp (Android OSes). The `(none)` row of each
+platform is the generic frame used when no OS is known.
+
+| Platform | OS            | Size      | Chrome                                        |
+| -------- | ------------- | --------- | --------------------------------------------- |
+| mobile   | (none)        | 390×844   | generic notch or cutout                       |
+| mobile   | `ios`         | 393×852   | Dynamic Island, home indicator                |
+| mobile   | `android`     | 412×915   | punch-hole camera, gesture bar                |
+| tablet   | (none)        | 834×1194  | camera cutout                                 |
+| tablet   | `ios`         | 834×1194  | rounded corners, home indicator               |
+| tablet   | `android`     | 800×1280  | camera in the bezel, gesture bar              |
+| desktop  | (none)        | 1440×900  | neutral title bar                             |
+| desktop  | `macos`       | 1440×900  | window controls on the left                   |
+| desktop  | `windows`     | 1440×900  | window controls on the right                  |
+| desktop  | `linux`       | 1440×900  | neutral title bar                             |
+| auto     | (none)        | 800×480   | in-car display frame                          |
+| auto     | `carplay`     | 800×480   | CarPlay status sidebar                        |
+| auto     | `androidauto` | 800×480   | Android Auto navigation rail                  |
+| watch    | (none)        | 208×248   | rounded watch face                            |
+| watch    | `watchos`     | 208×248   | rounded rectangle                             |
+| watch    | `wearos`      | 227×227   | round face                                    |
+| tv       | (none)        | 1920×1080 | title-safe inset shown                        |
+| tv       | `tvos`        | 1920×1080 | title-safe inset, 60 top and bottom, 80 sides |
+| tv       | `androidtv`   | 960×540   | overscan margin, 27 top and bottom, 48 sides  |
+| spatial  | (none)        | 1280×720  | floating window, glass material               |
+| spatial  | `visionos`    | 1280×720  | glass window, window bar below                |
+| spatial  | `androidxr`   | 1280×720  | panel with a top bar                          |
+
+On a device platform whose resolved OS list has **two or more** entries, every
+coded frame carries the `device` tweak: its values are the OS tokens of the list
+in order, its default is the primary, and switching it redraws the same coded
+frame at that OS's size and chrome — never a second frame or page. With one OS
+there is no `device` tweak; with none, the generic frame.
+
+- **mobile** — every screen renders at its resolved frame (portrait; the
+  generic **390×844**) in a phone frame: dark bezel **with the OS's camera
+  chrome** — the Dynamic Island on `ios`, the punch-hole camera on `android`,
+  the generic notch/cutout when no OS is known — for a true visual, toggleable
+  via the `frame` tweak (default on); theme via `darkMode` (default on).
+- **tablet** — every screen renders at its resolved frame (portrait; the
+  generic **834×1194**) in a tablet frame **with the OS's camera chrome**,
+  toggleable via the `frame` tweak (default on); theme via `darkMode` (default
+  on).
+- **desktop** (a natively installed app) — every screen renders at its
+  resolved frame (the generic **1440×900**) in a native app window frame: a
+  title bar with the OS's window controls (left on `macos`, right on
+  `windows`, neutral on `linux` and when no OS is known), no address bar and
+  no tabs, toggleable via the `frame` tweak (default on); theme via
+  `darkMode` (default on).
 - **site** — every screen renders at **1440×900** in a desktop browser-chrome
   frame by default. A `width` tweak (`1440` | `390`, default `1440`) switches
   the same coded frame to **390×844** in a mobile browser frame with a status
@@ -75,29 +130,34 @@ their own conventions.
   (default on). The size is fixed: `design.viewports` does not apply to
   `webapp`.
 - **auto** (in-car — CarPlay and Android Auto together) — every screen renders
-  at **800×480** landscape (the CarPlay base resolution; Android Auto head units
-  are commonly 1280×720 — same layout, more pixels) in the in-car display frame
-  (`frame` default on). Screens are **template-constrained by the OS** (list /
-  grid / map / now-playing) and glanceable — minimal interaction while driving;
-  the design system reaches only as far as the platform allows. Where CarPlay
-  and Android Auto genuinely diverge, the flow's `auto.md` records it as a
-  deviation.
-- **watch** (watchOS and Wear OS together) — every screen renders at
-  **208×248** (the 46mm Apple Watch, in points) in a watch-face frame with its
-  rounded corners, toggleable via the `frame` tweak (default on); theme via
+  at its resolved frame (landscape; the generic **800×480**, the CarPlay base
+  resolution; Android Auto head units are commonly 1280×720 — same layout, more
+  pixels) in the in-car display frame with the OS's chrome — the CarPlay status
+  sidebar on `carplay`, the navigation rail on `androidauto` (`frame` default
+  on). Screens are **template-constrained by the OS** (list / grid / map /
+  now-playing) and glanceable — minimal interaction while driving; the design
+  system reaches only as far as the platform allows. Where CarPlay and Android
+  Auto genuinely diverge, the flow's `auto.md` records it as a deviation.
+- **watch** (watchOS and Wear OS together) — every screen renders at its
+  resolved frame (the generic **208×248**, the 46mm Apple Watch, in points) in
+  a watch-face frame — a rounded rectangle on `watchos`, a round **227×227**
+  face on `wearos` — toggleable via the `frame` tweak (default on); theme via
   `darkMode` (default on). Screens are **glanceable** — one idea per screen,
   short sessions, Digital Crown scrolling, complications where the flow pins
-  them. Where watchOS and Wear OS genuinely diverge (a round Wear OS face), the
-  flow's `watch.md` records it as a deviation.
-- **tv** (tvOS and Android TV together) — every screen renders at
-  **1920×1080** landscape (the tvOS point grid) in a TV frame with the
-  title-safe inset shown, toggleable via the `frame` tweak (default on); theme
-  via `darkMode` (default on). Screens are read from **ten feet** and driven by
-  **focus** with a remote — the focused element is always visible, there is no
-  touch and no pointer.
+  them. Where watchOS and Wear OS genuinely diverge beyond the frame, the flow's
+  `watch.md` records it as a deviation.
+- **tv** (tvOS and Android TV together) — every screen renders at its resolved
+  frame (landscape; the generic **1920×1080**, the tvOS point grid) in a TV
+  frame with the OS's safe area shown — the title-safe inset on `tvos`, the
+  overscan margin on `androidtv` — toggleable via the `frame` tweak (default
+  on); theme via `darkMode` (default on). Screens are read from **ten feet**
+  and driven by **focus** with a remote — the focused element is always
+  visible, there is no touch and no pointer.
 - **spatial** (visionOS, Android XR and Quest together) — every screen renders
-  at **1280×720** (the visionOS default window) as a floating window with its
-  glass material, toggleable via the `frame` tweak (default on); theme via
+  at its resolved frame (the generic **1280×720**, the visionOS default window)
+  as a floating window — glass with the window bar below on `visionos`, a panel
+  with a top bar on `androidxr`, the generic window for Quest, which has no OS
+  token — toggleable via the `frame` tweak (default on); theme via
   `darkMode` (default on). Input is **gaze and pinch**; a flow that pins a
   volume or an immersive space draws it as its own coded frame. Where the
   platforms genuinely diverge, the flow's `spatial.md` records it as a
@@ -112,7 +172,13 @@ their own conventions.
   (default on), one tweak per pinned **sad state**, one tweak per pinned
   **conditional product state** (empty data, entity-state variants). On `site`
   and `webapp` every coded frame also carries the `width` tweak (`1440` |
-  `390`, default `1440`) — still one frame per code.
+  `390`, default `1440`) — still one frame per code. On a device platform whose
+  resolved OS list has two or more entries, every coded frame also carries the
+  `device` tweak (values the OS tokens in list order, default the primary) —
+  still one frame per code.
+- A screen element the brief marks as an OS **feature** shows on the frames of
+  its OS only; every other `device` value shows the brief's fallback in its
+  place.
 - Info/warning/error popup messages appear **close to the point of interaction**
   — a message for a control in the bottom part of the screen never lands at the
   top, where the user would miss it.

@@ -2094,13 +2094,21 @@ a gap for a missing fallback or an unknown scope, and no vendor token is added.
 All four are device platforms, and each carries its own interaction rules in the
 blueprint contract: in-car screens for a driver, glanceable wrist screens driven
 by the crown and complications, focus-based navigation with a remote at ten
-feet, and gaze and pinch across windows, volumes and immersive spaces. `cli` is
-the one platform with **no screens**: it takes no platform file and never
-reaches the design canvas, mockups, or the scratchpad — what it requires instead
-is the design system's **Terminal UX** section. An in-car journey is therefore a
-*platform file of the same flow* — `100-home/auto.md`, same number, same steps,
-its own screens — not a separate subset flow. Which platforms a flow implements
-is elicited per flow (signing in while driving makes no sense) and listed in the
+feet, and gaze and pinch across windows, volumes and immersive spaces. Inside
+each device form factor, one closed **OS vocabulary** names the operating
+systems it runs on — `mobile` and `tablet` `ios` `android`, `desktop` `macos`
+`windows` `linux`, `auto` `carplay` `androidauto`, `watch` `watchos` `wearos`,
+`tv` `tvos` `androidtv`, `spatial` `visionos` `androidxr` (Quest has no token).
+A token names an OS inside the platform, never a platform of its own: it is the
+OS part of a `features:` scope (the text before any `:`, so `android:samsung` is
+`android`), and it picks a platform's canvas frames, so an entry shows on the
+frame of its own OS and its fallback on every other. `cli` is the one platform
+with **no screens**: it takes no platform file and never reaches the design
+canvas, mockups, or the scratchpad — what it requires instead is the design
+system's **Terminal UX** section. An in-car journey is therefore a *platform
+file of the same flow* — `100-home/auto.md`, same number, same steps, its own
+screens — not a separate subset flow. Which platforms a flow implements is
+elicited per flow (signing in while driving makes no sense) and listed in the
 contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
@@ -2337,24 +2345,57 @@ contract, one **interactive** page per flow per platform revised in place, the
 happy path clickable end to end and stitched into an `index--<platform>` page
 that chains every flow in execution order, the platform's device frame, and the
 standing tweak set (dark mode, device frame, one tweak per pinned sad and
-conditional state, and a `width` tweak on `site` and `webapp`). Its generated
-sections regenerate; a **canvas-owned section** holds what you discover while
-designing, preserved across regenerations and folded back by `import`.
+conditional state, a `width` tweak on `site` and `webapp`, and a `device` tweak
+on a device platform that resolves to more than one OS). Its generated sections
+regenerate; a **canvas-owned section** holds what you discover while designing,
+preserved across regenerations and folded back by `import`.
 
-Each device platform's frame has a default viewport — `mobile` 390×844, `tablet`
-834×1194, `desktop` 1440×900, `auto` 800×480, `watch` 208×248, `tv` 1920×1080,
-`spatial` 1280×720 — and `desktop` renders in a neutral native app window (a
-title bar with window controls, no address bar and no tabs). `site` and `webapp`
-render at a fixed 1440×900 in a desktop browser-chrome frame, and their `width`
-tweak (`1440` or `390`) switches the same coded frame to 390×844 in a mobile
-browser frame — one frame per code, and `import` diffs the 1440 layout. A
-product overrides a device platform's viewport per project in
-`.config/vwf.yaml`, beside the canvas pin, as
-`design.viewports.<project>.<platform>: <W>x<H>` (`390x844`); the briefs, the
-generated conventions file and both design adapters read the resolved size.
-Nothing writes the key — you edit it by hand — and an entry that is malformed or
-names a platform the project does not declare is reported by `/vwf:doctor` and
-ignored, falling back to the default.
+A device platform's frame follows **the OS the product ships on**. The canvas
+conventions template holds one frame table, keyed by (platform, OS), that gives
+each frame its size and chrome:
+
+| Platform  | OS (size, chrome)                                                                                                                                          | No OS known |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `mobile`  | `ios` 393×852, Dynamic Island and home indicator; `android` 412×915, punch-hole camera and gesture bar                                                     | 390×844     |
+| `tablet`  | `ios` 834×1194, rounded corners and home indicator; `android` 800×1280, camera in the bezel and gesture bar                                                | 834×1194    |
+| `desktop` | 1440×900 for each: `macos` window controls on the left, `windows` on the right, `linux` a neutral title bar                                                | 1440×900    |
+| `auto`    | 800×480 for each: `carplay` the CarPlay status sidebar, `androidauto` the Android Auto navigation rail                                                     | 800×480     |
+| `watch`   | `watchos` 208×248, a rounded rectangle; `wearos` 227×227, a round face                                                                                     | 208×248     |
+| `tv`      | `tvos` 1920×1080, title-safe inset of 60 top and bottom and 80 at the sides; `androidtv` 960×540, overscan margin of 27 top and bottom and 48 at the sides | 1920×1080   |
+| `spatial` | 1280×720 for each: `visionos` a glass window with the window bar below, `androidxr` a panel with a top bar; Quest has no OS token                          | 1280×720    |
+
+Sizes are points on Apple OSes and dp on Android. A `desktop` frame is a native
+app window — a title bar with the OS's window controls, no address bar and no
+tabs. `site` and `webapp` have no OS frame: they render at a fixed 1440×900 in a
+desktop browser-chrome frame, and their `width` tweak (`1440` or `390`) switches
+the same coded frame to 390×844 in a mobile browser frame — one frame per code,
+and `import` diffs the 1440 layout.
+
+Which OS frames a project gets is resolved per (project, platform). The **OS
+list** is the `design.viewports.<project>.<platform>` list when you set one,
+else `projects.<name>.stack.os.<platform>` — which `/vwf:setup` copies from the
+pinned stack's `os:` map, so a SwiftUI phone is `ios`, a Compose phone is
+`android` and Flutter on `mobile` is `ios` then `android` — else empty. An empty
+list gives the one generic frame (the last column). A non-empty list gives
+**one** coded frame; when it holds two or more OSes the frame carries a `device`
+tweak whose values are the list's OS tokens in order, the first being the
+primary and the default — never a second frame or page — and `import` diffs the
+primary frame only. A flow's `features:` entry shows on the frames of its own
+OS, and its fallback on every other `device` value.
+
+A product overrides the frames per project in `.config/vwf.yaml`, beside the
+canvas pin, in one of two forms. The scalar
+`design.viewports.<project>.<platform>: <W>x<H>` (`390x844`) resizes the primary
+frame — the generic one when no OS is known. The list form, a list of
+`{ os: <os>, size: <W>x<H> }` entries with `size` optional, replaces the stack's
+OS list and its order sets the primary; each OS takes its size from its list
+entry, else from the frame table's row for that OS, and the chrome always
+follows the OS. The briefs, the generated conventions file, both design adapters
+and the SwiftUI and Compose ux-gates read the resolved frames. Nothing writes
+the key — you edit it by hand — and an entry that is malformed, names a platform
+the project does not declare, or names an OS token that platform's vocabulary
+does not, is reported by `/vwf:doctor` as non-blocking and ignored, falling back
+to the default.
 
 So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
 (`100-home--mobile` — the sync key `import` matches back by), a one-line goal,
