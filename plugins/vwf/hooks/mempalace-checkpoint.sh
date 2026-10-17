@@ -80,9 +80,12 @@ speak() {
   printf '{"decision":"block","reason":"%s"}\n' "$escaped"
 }
 
+# Read stdin before any exit: one before the read closes the pipe under the
+# writer, which gets EPIPE.
+INPUT=$(cat)
+
 auto_save_enabled || exit 0
 
-INPUT=$(cat)
 SESSION=$(field "$INPUT" session_id)
 [ -n "$SESSION" ] || SESSION=default
 
