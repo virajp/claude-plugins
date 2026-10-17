@@ -31,21 +31,24 @@ on a simulator the test run boots and shuts itself. Never drive a simulator
 interactively.
 
 1. **Resolve the viewport and the destination** for each changed screen's
-   platform: the viewport is `design.viewports.<project>.<platform>` in
-   `.config/vwf.yaml` when it is set, otherwise the platform default below, in
-   points — the same defaults vwf's design canvas uses. Never a size read back
-   from the goldens, which is what is being judged. The destination is the
-   platform the table names.
+   platform, at the platform's Apple OS frame — the OS token the table names.
+   Read `design.viewports.<project>.<platform>` in `.config/vwf.yaml`: when it
+   is a list of `{ os, size }` entries, the viewport is the `size` of the entry
+   whose `os` is that token, else the table default; when it is a scalar
+   `<W>x<H>`, the viewport is the scalar; when it is unset, the table default.
+   Sizes are in points — the same OS frames vwf's design canvas uses. Never a
+   size read back from the goldens, which is what is being judged. The
+   destination is the platform the table names.
 
-   | Platform | Default viewport | Destination platform |
-   | --- | --- | --- |
-   | `mobile` | 390×844, portrait | `iOS Simulator` |
-   | `tablet` | 834×1194, portrait | `iOS Simulator` |
-   | `desktop` | 1440×900 | `macOS` |
-   | `auto` | 800×480, landscape | `iOS Simulator` |
-   | `watch` | 208×248 | `watchOS Simulator` |
-   | `tv` | 1920×1080, landscape | `tvOS Simulator` |
-   | `spatial` | 1280×720, the default window | `visionOS Simulator` |
+   | Platform | OS token | Default viewport | Destination platform |
+   | --- | --- | --- | --- |
+   | `mobile` | `ios` | 393×852, portrait | `iOS Simulator` |
+   | `tablet` | `ios` | 834×1194, portrait | `iOS Simulator` |
+   | `desktop` | `macos` | 1440×900 | `macOS` |
+   | `auto` | `carplay` | 800×480, landscape | `iOS Simulator` |
+   | `watch` | `watchos` | 208×248 | `watchOS Simulator` |
+   | `tv` | `tvos` | 1920×1080, landscape | `tvOS Simulator` |
+   | `spatial` | `visionos` | 1280×720, the default window | `visionOS Simulator` |
 
    Name the viewport you used in every finding's `where`; a golden rendered
    at another size is not evidence for this one.
