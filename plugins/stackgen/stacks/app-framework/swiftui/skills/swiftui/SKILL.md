@@ -52,9 +52,8 @@ screen you are building runs on.
 
 ## Integrations (topic 12)
 
-One per Apple integration the app wires. Each is wiring only — setup order,
-platform configuration, anti-patterns; its API surface is Context7's at use
-time.
+One per integration the app wires. Each is wiring only — setup order, platform
+configuration, anti-patterns; its API surface is Context7's at use time.
 
 | Wiring | Read |
 | --- | --- |
@@ -63,3 +62,14 @@ time.
 | Remote notifications through APNs | [Push notifications](references/integrations/push-notifications.md) |
 | In-app purchases and subscriptions | [StoreKit](references/integrations/storekit.md) |
 | Signing users in with their Apple Account | [Sign in with Apple](references/integrations/sign-in-with-apple.md) |
+| Maps, the user's location and its permissions | [Maps & location](references/integrations/maps-and-location.md) |
+| Showing web content inside the app | [Web views](references/integrations/webview.md) |
+| Product analytics and consent | [Firebase Analytics](references/integrations/firebase-analytics.md) |
+| Attesting that requests come from the genuine app | [Firebase App Check](references/integrations/firebase-app-check.md) |
+| Signing users in through Firebase | [Firebase Authentication](references/integrations/firebase-auth.md) |
+| Crash reporting and symbol upload | [Firebase Crashlytics](references/integrations/firebase-crashlytics.md) |
+| Remote notifications through Firebase | [Firebase Cloud Messaging](references/integrations/firebase-messaging.md) |
+| Uploading and downloading user files | [Cloud Storage for Firebase](references/integrations/firebase-storage.md) |
+| In-app purchases and subscriptions through RevenueCat | [RevenueCat](references/integrations/revenuecat.md) |
+| Loading, caching and cropping remote images | [Image handling](references/integrations/image-handling.md) |
+| Real-time audio and video calls | [WebRTC & LiveKit](references/integrations/webrtc.md) |

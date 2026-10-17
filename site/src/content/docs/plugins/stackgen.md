@@ -344,16 +344,23 @@ some goldens were compared. Its doctrine covers the whole app-framework bar.
 Beside topics 1–11 its router carries one reference per Apple platform, keyed by
 the vwf token it realises — iOS and iPadOS for `mobile` and `tablet`, macOS for
 `desktop`, CarPlay for `auto`, watchOS for `watch`, tvOS for `tv`, visionOS for
-`spatial` — and topic 12, the wiring for Apple's core integrations: widgets and
-complications, App Intents, push notifications, StoreKit and Sign in with Apple.
-Its iOS reference builds a flow's declared OS-specific feature (a `features:`
-entry with `scope: ios`, the Dynamic Island its worked case) behind an
-`#available` guard at the smallest scope, showing the entry's declared
-`fallback` wherever the guard fails and never inventing one, where it once left
-device and OS features to a prose deviation. Like Flutter's, those integration
-references are wiring only — setup order, platform configuration, anti-patterns
-— with the API surface left to Context7 at use time. Third-party integrations
-are not covered yet.
+`spatial` — and topic 12, sixteen integration references: Apple's core
+integrations — widgets and complications, App Intents, push notifications,
+StoreKit and Sign in with Apple — and, since 2026-10-10, the third-party set a
+Flutter product reaches for: Firebase Analytics, App Check, Authentication (with
+Google Sign-In), Crashlytics, Cloud Messaging and Storage, RevenueCat, remote
+images and cropping (Nuke, TOCropViewController), WebRTC (a community
+distribution of the official, unmodified WebRTC framework, then LiveKit), maps
+and location (MapKit, Core Location) and web views (WebKit). Its topic files
+answer the rest natively — localization with String Catalogs, `ShareLink`, the
+launch screen, keep-screen-on, `PhotosPicker`, usage strings, `@AppStorage` and
+an app version gate. Its iOS reference builds a flow's declared OS-specific
+feature (a `features:` entry with `scope: ios`, the Dynamic Island its worked
+case) behind an `#available` guard at the smallest scope, showing the entry's
+declared `fallback` wherever the guard fails and never inventing one, where it
+once left device and OS features to a prose deviation. Like Flutter's, those
+integration references are wiring only — setup order, platform configuration,
+anti-patterns — with the API surface left to Context7 at use time.
 
 **Kotlin** arrived on 2026-10-09 as the fifth language a language-bundle is
 rooted at: `kotlin-library`, a Kotlin/JVM library published as a JAR on the
@@ -413,16 +420,23 @@ creates, boots headless and tears down: by default
 `connectedCheck` on an emulator or device already attached. The compose pack
 teaches Jetpack Compose with **Material 3** as the only UI toolkit — no
 Views/XML — and the app doctrine of a ViewModel exposing StateFlow, **Hilt**,
-**Navigation Compose** and **Room**, with Jetpack integration references for
-Hilt, Navigation Compose, Room, DataStore, Paging, WorkManager and CameraX,
-wiring only like Flutter's and SwiftUI's. Its goldens are
-[Roborazzi](https://github.com/takahirom/roborazzi) captures rendered on the JVM
-under Robolectric, committed under `src/test/screenshots/`: `test:golden`
-verifies them, `mise run test:golden -- --record` re-records them. Its `ux-gate`
-runs them on a Pixel 7 qualifier for `mobile`, a medium tablet for `tablet`, a
-large round Wear OS watch for `watch` and a 1080p television for `tv`, reads the
-Accessibility Test Framework's checks off the same run, and returns the
-`renders:` list.
+**Navigation Compose** and **Room**, with twenty integration references, wiring
+only like Flutter's and SwiftUI's: the Jetpack set — Hilt, Navigation Compose,
+Room, DataStore, Paging, WorkManager and CameraX — and, since 2026-10-10,
+Firebase Analytics, App Check (Play Integrity), Authentication (with the Apple
+provider), Crashlytics, Cloud Messaging and Storage, RevenueCat (with Google
+Play Billing), image loading and cropping (Coil 3, CanHub
+Android-Image-Cropper), WebRTC (`io.github.webrtc-sdk:android`, then LiveKit),
+maps and location (Maps Compose, the fused location provider), WebView,
+Credential Manager and Play In-App Updates. Its topic files add localization
+with string resources, the share sheet, the SplashScreen API and keep-screen-on.
+Its goldens are [Roborazzi](https://github.com/takahirom/roborazzi) captures
+rendered on the JVM under Robolectric, committed under `src/test/screenshots/`:
+`test:golden` verifies them, `mise run test:golden -- --record` re-records them.
+Its `ux-gate` runs them on a Pixel 7 qualifier for `mobile`, a medium tablet for
+`tablet`, a large round Wear OS watch for `watch` and a 1080p television for
+`tv`, reads the Accessibility Test Framework's checks off the same run, and
+returns the `renders:` list.
 
 The two packs then went to **0.2.0** and the bundle took every Android form
 factor but XR: `watch` is Wear OS, `tv` is Android TV and Google TV, and `auto`
