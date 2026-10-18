@@ -159,10 +159,12 @@ command that picks it up. The candidates are every `Backlog` item and every
 `Partially done` item whose body has no `Planned in:` line, ranked together; a
 `Partially done` item with a plan still pending is already being worked. When
 the item named is `Partially done`, print its `Landed:` lines too, so the next
-plan starts from what remains rather than from the whole item. The command:
+plan starts from what remains rather than from the whole item. The command
+carries the id first, so the planner records it on the folder's `source:`
+list and the landing marks the item:
 
-- `/vwf:change-plan <item>` for work the blueprint does not describe;
-- `/vwf:plan <slice>` when the item names a blueprint slice.
+- `/vwf:change-plan Bnn <item>` for work the blueprint does not describe;
+- `/vwf:plan Bnn <slice>` when the item names a blueprint slice.
 
 Ask which of the two it is when the item does not say. Print the group when the
 item has one, since the group is usually the plan's real scope. An empty backlog

@@ -2507,14 +2507,16 @@ approval gate, where you change a level you disagree with.
 Its recall also reads the base repo's [backlog project](#vwfbacklog) through
 `/vwf:backlog list`, since the slice in front of it is often already an item
 there — and records the backlog as unreadable, with the reason, when `gh` cannot
-reach it. For each matched id the interview asks whether this plan **finishes**
-the item or lands **one piece** of it: a finishing id goes into the folder's
-`backlog:` frontmatter, a piece id into `backlog_pieces:`, and a piece plan
-writes what remains as `- Bnn: <piece>` lines under *Parked* — at least one per
-piece id, naming the chained folder where one already covers the piece. The last
-plan of a chain moves the id to `backlog:`. The hand-off marks the ids of both
-lists `planned` through `/vwf:backlog` — the only thing that writes the project
-— so no item is planned twice.
+reach it. Every matched id — and a `Bnn` id typed before the slice, the form
+`/vwf:backlog next` prints — goes into the folder's `source:` frontmatter, the
+items the plan was made for. For each one the interview asks whether this plan
+**finishes** the item or lands **one piece** of it: a finishing id goes into
+`backlog:`, a piece id into `backlog_pieces:`, and a piece plan writes what
+remains as `- Bnn: <piece>` lines under *Parked* — at least one per piece id,
+naming the chained folder where one already covers the piece. The last plan of a
+chain moves the id to `backlog:`. The hand-off marks the ids of both lists
+`planned` through `/vwf:backlog` — the only thing that writes the project — so
+no item is planned twice.
 
 Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
@@ -2771,6 +2773,11 @@ What it does, by rule:
   what is left). Each refusal names the id; the fix is the id moved to the list
   its Parked lines say it belongs on, then the plan re-approved. An absent
   `backlog_pieces:` reads as empty, so an older folder passes as written.
+- **Every source item is on a list.** A `source:` id — a backlog item the plan
+  was made for — that sits on neither `backlog:` nor `backlog_pieces:` would
+  never be marked at landing, so the board would drift from what landed. The
+  preflight refuses it, names the id, and points at the planner to re-run. An
+  absent `source:` reads as empty, so an older folder passes as written.
 - **The review runs at the review row, and only there.** A `code` unit is TDD →
   coverage → commit, and moves on. At a `review` row the run goes
   `engines → review ‖ security` over the row's range — the orchestrator runs the
@@ -3273,15 +3280,17 @@ other host is unsupported and named.
 `next` names the top item by priority then id and the command that picks it up —
 [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not describe,
 [`/vwf:plan`](#vwfplan) when the item names a slice — and asks which it is when
-the item does not say. Its candidates are every `Backlog` item and every
-`Partially done` item with no `Planned in:` line, ranked together; a partial
-item named this way comes with its `Landed:` lines, so the next plan starts from
-what remains rather than from the whole item. `list` prints the items as a
-five-column table (Id, Item, Group, Priority, Status), `Done` and `Closed`
-folded into a trailing count — a `Partially done` item is listed, its Status
-cell counting its landed pieces, `Partially done (2 landed)` — and ends with the
-project's URL. Ids are never renumbered, and an item is never deleted or
-archived by this skill.
+the item does not say. The command carries the id first —
+`/vwf:change-plan Bnn <item>` — so the planner records it on the folder's
+`source:` list and the landing marks the item. Its candidates are every
+`Backlog` item and every `Partially done` item with no `Planned in:` line,
+ranked together; a partial item named this way comes with its `Landed:` lines,
+so the next plan starts from what remains rather than from the whole item.
+`list` prints the items as a five-column table (Id, Item, Group, Priority,
+Status), `Done` and `Closed` folded into a trailing count — a `Partially done`
+item is listed, its Status cell counting its landed pieces,
+`Partially done (2 landed)` — and ends with the project's URL. Ids are never
+renumbered, and an item is never deleted or archived by this skill.
 
 `unplanned [priority]` lists, read-only, the items no plan covers yet at one
 priority — the same candidates `next` ranks, id and title one per line, then a
@@ -3405,10 +3414,12 @@ can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.md` with
-frontmatter `type: vwf-change-plan`, a `backlog:` list naming the ids this plan
-finishes and a `backlog_pieces:` list naming those it lands one piece of — the
-interview asks which, per recalled id, and a piece id's remainder is written as
-`- Bnn: <piece>` lines under *Parked* — plus one `NN-<unit>.md` per subagent
+frontmatter `type: vwf-change-plan`, a `source:` list naming every backlog item
+the plan was made for — a `Bnn` id in the arguments always among them — a
+`backlog:` list naming the ids this plan finishes and a `backlog_pieces:` list
+naming those it lands one piece of — the interview asks which, per recalled id,
+every `source:` id goes on one of the two, and a piece id's remainder is written
+as `- Bnn: <piece>` lines under *Parked* — plus one `NN-<unit>.md` per subagent
 unit, every unit `Kind: edit`. A change plan gets **no review row by default** —
 the wave review is its only check; a `Kind: review` row, the one at which
 `execute` runs `/code-review` and `/security-review`, is written only when the

@@ -16,7 +16,11 @@ rewrites them — the Status block through `plan-management`, the rest itself.
 this element implements — one path, or the cycle element's set; the list the
 `implementation:` stamp is written to), **`requires:`** (the folder paths of
 this element's direct prerequisites in the chain, matched on the basename —
-empty for the first), **`backlog:`** (the `Bnn` prefixes of the backlog
+empty for the first), **`source:`** (the `Bnn` prefixes of the backlog items
+this element was made for — the ids `$ARGUMENTS` named and the items §2's
+recall matched to the slice; each also sits on `backlog:` or
+`backlog_pieces:`, and the list is empty only when no item asked for the
+slice), **`backlog:`** (the `Bnn` prefixes of the backlog
 project's items this element **finishes**, matched by §2's recall — landing
 sets them `Done`; empty when the slice came from nowhere in the backlog),
 **`backlog_pieces:`** (the `Bnn` prefixes of the items this element lands **one
