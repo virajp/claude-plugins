@@ -16,11 +16,10 @@
 //
 // A `#` link is correct. A root-absolute link is correct when the review
 // server would serve it — a file, a [param] folder, or the placeholder of a
-// code in __mockups/routes.json with no file yet; a `?state=` page, or that
-// screen's default page when the state page is missing (the server shows it
-// with a "state not rendered" banner) — but never a `?state=` link to a screen
-// with no page at all; and a `?overlay=<code>` link names an overlay of the
-// screen at that route. The target is read by lib/link.mjs and matched by
+// code in __mockups/routes.json with no file yet, with or without `?state=`; a
+// `?state=` page, or that screen's default page when the state page is missing
+// (the server shows it with a "state not rendered" banner); and a
+// `?overlay=<code>` link names an overlay of the screen at that route. The target is read by lib/link.mjs and matched by
 // lib/routes.mjs, the parser and matcher the server uses, so the two agree.
 // Every other link — relative, `http:`, `mailto:`, protocol-relative — is
 // broken, and so is a form that submits by POST (its own method="post", or

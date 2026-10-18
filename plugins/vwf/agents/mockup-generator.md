@@ -91,9 +91,9 @@ before the user sees a page:
   `?overlay=<code>` (`/orders/1042?overlay=200f`), and closed by a link to the
   parent's route alone.
 - **A target in another flow** is linked the same way — the server serves a
-  placeholder page when that screen has no render yet. A `?state=` link to a
-  target with no page at all is broken; one whose state page is missing but
-  whose default page exists is served the default page.
+  placeholder page when that screen has no render yet, with or without
+  `?state=`; a `?state=` link whose state page is missing but whose default
+  page exists is served the default page.
 - **Every other `href`** is `#` or absent: never a relative path, never an
   external URL, never a guessed route, never a code missing from the route map.
 - **No target.** An action whose rules pin no coded screen it navigates to gets

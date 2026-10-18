@@ -2257,14 +2257,14 @@ target in contract", and reported as a contract gap.
 
 **Every link is checked before you look.** The link check reads every page and
 every link in it — each `href`, form `action` and `formaction`: a root-absolute
-link to a file, a `[param]` match or a screen not rendered yet passes, and so
-does a `?state=` link whose state page is missing while the screen's default
-page exists; a `?state=` link to a screen with no page at all, an `?overlay=`
-link that names no overlay of that screen, a relative link, an external URL, a
-form that submits by POST or anything that would leave the server is broken.
-Broken links go back to the generator of the flow that owns the page, for at
-most two rounds; if any are still broken, the run stops with the list — no
-server, no URL, no review, no render stamp.
+link to a file, a `[param]` match or a screen not rendered yet (with or without
+`?state=`) passes, and so does a `?state=` link whose state page is missing
+while the screen's default page exists; an `?overlay=` link that names no
+overlay of that screen, a relative link, an external URL, a form that submits by
+POST or anything that would leave the server is broken. Broken links go back to
+the generator of the flow that owns the page, for at most two rounds; if any are
+still broken, the run stops with the list — no server, no URL, no review, no
+render stamp.
 
 **One URL per platform.** It then starts one review server per platform, all at
 once, each printing one `URL: http://127.0.0.1:<port>/` line, and gives you

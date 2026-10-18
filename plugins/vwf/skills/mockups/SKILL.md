@@ -287,12 +287,12 @@ It reads every link of every page — each `<a>`/`<area>` `href`, `<form>`
 `action` and `formaction` — and prints `LINKS OK: <n> links in <m> pages` and
 exits 0, or one `BROKEN: <page> -> <href> — <reason>` line per broken link and
 exits 1; a form that submits by POST is broken, as the server answers GET
-only. A link to a screen in `routes.json` that has no file yet is not broken —
-the server answers it with a "not rendered yet" placeholder — and neither is a
-`?state=` link whose state page is missing while the screen's default page
-exists: the server shows the default page with a "state not rendered" banner.
-A `?state=` link to a screen with no page at all is broken, and so is an
-`?overlay=<code>` link that names no overlay of the screen at that route.
+only. A link to a screen in `routes.json` that has no file yet is not broken,
+with or without `?state=` — the server answers it with a "not rendered yet"
+placeholder that names the state — and neither is a `?state=` link whose state
+page is missing while the screen's default page exists: the server shows the
+default page with a "state not rendered" banner. An `?overlay=<code>` link that
+names no overlay of the screen at that route is broken.
 
 On `BROKEN:` lines, find the flow that owns each page in `routes.json`,
 re-dispatch that flow's `mockup-generator` with its own lines to fix, and check

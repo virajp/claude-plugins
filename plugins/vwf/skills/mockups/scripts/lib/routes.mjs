@@ -402,28 +402,28 @@ export function findScreen(routes, urlPath) {
 }
 
 // The page of a screen (or an overlay) in its folder: the state's page; with
-// no state, the placeholder when there is no page yet; with a state whose page
-// is missing, the default page marked `fallback` when it exists.
+// a state whose page is missing, the default page marked `fallback` when it
+// exists; else the placeholder, which names the state — a screen with no page
+// yet is not rendered, whatever state a link asks for.
 function pageOf(root, dir, screen, state, overlay) {
   const name = pageName(state, overlay);
   const file = servable(root, join(dir, name));
   if (file && isFile(file)) {
     return { kind: "file", file, dir: dirname(file), screen };
   }
-  if (state === null) {
-    return { kind: "placeholder", screen };
+  if (state !== null) {
+    const plain = servable(root, join(dir, pageName(null, overlay)));
+    if (plain && isFile(plain)) {
+      return {
+        kind: "file",
+        file: plain,
+        dir: dirname(plain),
+        screen,
+        fallback: true,
+      };
+    }
   }
-  const plain = servable(root, join(dir, pageName(null, overlay)));
-  if (plain && isFile(plain)) {
-    return {
-      kind: "file",
-      file: plain,
-      dir: dirname(plain),
-      screen,
-      fallback: true,
-    };
-  }
-  return { kind: "none", reason: `no state file ${name}` };
+  return { kind: "placeholder", screen, state };
 }
 
 /**
@@ -435,7 +435,8 @@ function pageOf(root, dir, screen, state, overlay) {
  *                                        overlay), or null. `fallback: true`
  *                                        when the state has no page and this
  *                                        is the screen's default page
- *   { kind: "placeholder", screen }      a code in routes.json with no file yet
+ *   { kind: "placeholder", screen,       a code in routes.json with no file yet;
+ *     state }                            state is the one asked for, or null
  *   { kind: "none", reason }             nothing — a 404, a broken link
  * `/__mockups/` itself is the server's to answer; every path under it is none.
  * A path no screen owns serves a non-HTML file at that path, or a folder on

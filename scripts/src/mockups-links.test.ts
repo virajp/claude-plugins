@@ -126,13 +126,12 @@ describe("links.mjs", () => {
     const { status, stdout } = run();
     expect(status).toBe(1);
     const lines = stdout.trimEnd().split("\n");
-    expect(lines).toHaveLength(5);
+    expect(lines).toHaveLength(4);
     for (const line of lines) {
       expect(line).toMatch(/^BROKEN: orders\/index\.html -> \S+ — .+$/);
     }
     expect(lines.map(line => line.split(" ")[3])).toEqual([
       "/nowhere",
-      "/200c-receipt?state=empty",
       "signin",
       "http://example.com/",
       "mailto:a@b.c",
@@ -152,18 +151,15 @@ describe("links.mjs", () => {
     expect(run().status).toBe(0);
   });
 
-  it("never matches a fixed route to its [param] sibling", () => {
+  it("takes a state of a fixed route with no file as its placeholder", () => {
+    // The server answers /orders/new?state=error with the placeholder of the
+    // fixed route, never the [id] sibling's error page (mockups-serve.test.ts).
     write(
       "orders/[id]/index.html",
       html("/orders/new", "/orders/1?state=error"),
     );
     write("orders/[id]/index--error.html", html("/orders/new?state=error"));
-    const { status, stdout } = run();
-    expect(status).toBe(1);
-    expect(stdout).toBe(
-      "BROKEN: orders/[id]/index--error.html -> /orders/new?state=error — "
-        + "no state file index--error.html\n",
-    );
+    expect(run().status).toBe(0);
   });
 
   it("refuses an href a browser reads as another host", () => {
@@ -349,15 +345,10 @@ describe("links.mjs", () => {
     expect(run().stdout).toBe("LINKS OK: 3 links in 2 pages\n");
   });
 
-  it("takes a missing state page as the default page when it exists", () => {
+  it("takes a missing state page as the default page, else the placeholder", () => {
     write("signin/index.html", html("/"));
     write("index.html", html("/signin?state=empty", "/200c-receipt?state=x"));
-    const { status, stdout } = run();
-    expect(status).toBe(1);
-    expect(stdout).toBe(
-      "BROKEN: index.html -> /200c-receipt?state=x — no state file "
-        + "index--x.html\n",
-    );
+    expect(run().status).toBe(0);
   });
 
   it("checks an overlay link against its parent's route", () => {

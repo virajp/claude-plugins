@@ -57,8 +57,8 @@
 //                             state has no page but the screen's default page
 //                             exists, the default page with a "state not
 //                             rendered" banner — or a placeholder page for a
-//                             code in routes.json with no file yet; a state of
-//                             a screen with no page at all is 404. HTML gets
+//                             code in routes.json with no file yet, which
+//                             names the state a link asked for. HTML gets
 //                             the overlay; any other file under --root is
 //                             served with its MIME type, and an HTML file only
 //                             as a screen's page, never by its own name
@@ -569,8 +569,9 @@ function listPage() {
   );
 }
 
-// The D10 placeholder: a code in routes.json with no file yet.
-function placeholderPage(screen) {
+// The D10 placeholder: a code in routes.json with no file yet, and the state a
+// link asked for, if any.
+function placeholderPage(screen, state) {
   return page(
     `${screen.code} — not rendered yet`,
     `<h1><code>${escapeHtml(screen.code)}</code> ${
@@ -581,7 +582,9 @@ function placeholderPage(screen) {
       screen.overlay === undefined
         ? ""
         : `, an overlay of <code>${escapeHtml(screen.overlay)}</code>`
-    }.</p>\n<p><b>Not rendered yet.</b></p>\n`
+    }.</p>\n${
+      state ? `<p>State <code>${escapeHtml(state)}</code>.</p>\n` : ""
+    }<p><b>Not rendered yet.</b></p>\n`
       + `<p><a href="/${RESERVED}/">All mockups</a></p>`,
   );
 }
@@ -950,7 +953,12 @@ async function handle(req, res) {
     const match = resolveTarget(root, routes, url);
     const { state, overlay } = match;
     if (match.kind === "placeholder") {
-      send(res, 200, TYPES[".html"], placeholderPage(match.screen));
+      send(
+        res,
+        200,
+        TYPES[".html"],
+        placeholderPage(match.screen, match.state),
+      );
       return;
     }
     if (match.kind === "none") {

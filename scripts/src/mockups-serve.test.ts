@@ -242,8 +242,13 @@ describe("serve.mjs", () => {
     expect(body).toContain("200e");
     expect(body).toContain("Not rendered yet");
     expect(body).not.toContain("order detail page");
-    expect((await fetch(new URL("/orders/archive?state=error", url))).status)
-      .toBe(404);
+    const state = await fetch(new URL("/orders/archive?state=error", url));
+    expect(state.status).toBe(200);
+    const stateBody = await state.text();
+    expect(stateBody).toContain("200e");
+    expect(stateBody).toContain("Not rendered yet");
+    expect(stateBody).toContain("<code>error</code>");
+    expect(stateBody).not.toContain("order detail");
     expect(await (await fetch(new URL("/orders/7?state=error", url))).text())
       .toContain("order detail error page");
   });
@@ -313,14 +318,15 @@ describe("serve.mjs", () => {
     expect(body).toMatch(/fetch\("\/done", \{[^}]*application\/json/);
   });
 
-  it("serves a state file, and 404 for a state of a screen with no page", async () => {
+  it("serves a state file, and the placeholder for a screen with no page", async () => {
     const { url } = await start();
     const res = await fetch(new URL("/signin?state=error", url));
     const body = await res.text();
     expect(body).toContain("signin error page");
     expect(body).toContain("\"states\":[\"error\"]");
-    expect((await fetch(new URL("/200c-receipt?state=empty", url))).status)
-      .toBe(404);
+    const none = await fetch(new URL("/200c-receipt?state=empty", url));
+    expect(none.status).toBe(200);
+    expect(await none.text()).toContain("Not rendered yet");
   });
 
   it("lists every code at /__mockups/ and serves nothing else under it", async () => {
@@ -345,6 +351,11 @@ describe("serve.mjs", () => {
     expect(body).toContain("Not rendered yet");
     expect(body).toContain("href=\"/__mockups/\"");
     expect(existsSync(join(root, "200c-receipt"))).toBe(false);
+    const state = await fetch(new URL("/200c-receipt?state=empty", url));
+    expect(state.status).toBe(200);
+    const stateBody = await state.text();
+    expect(stateBody).toContain("Not rendered yet");
+    expect(stateBody).toContain("State <code>empty</code>");
   });
 
   it("serves nothing outside the root", async () => {
@@ -482,9 +493,8 @@ describe("serve.mjs", () => {
     const body = await res.text();
     expect(body).toContain("signin page");
     expect(body).toContain("State empty not rendered");
-    expect((await fetch(new URL("/200c-receipt?state=x", url))).status).toBe(
-      404,
-    );
+    expect(await (await fetch(new URL("/200c-receipt?state=x", url))).text())
+      .toContain("Not rendered yet");
     expect(await (await fetch(new URL("/signin?state=error", url))).text())
       .not
       .toContain("not rendered");
