@@ -68,11 +68,11 @@ The first thing it does is **read before it asks**. It looks through
 `docs/memory/decisions/`, the last archived plan that touched the same tree, the
 base repo's [backlog project](../../plugins/vwf.md#vwfbacklog) through
 `/vwf:backlog list` if the product keeps one — the request is often an item
-already on it. For each id it covers the interview asks whether this plan
-finishes the item or lands one piece of it: a finishing id goes into the plan's
-`backlog:` frontmatter, a piece id into `backlog_pieces:`, with what remains
-written as a `- Bnn: <piece>` line under *Parked*; when `gh` cannot reach the
-project the recall says so and reads nothing — and the memory palace's
+already on it. Each id it covers goes into the plan's `source:` frontmatter, and
+the interview asks whether this plan finishes the item or lands one piece of it:
+a finishing id goes into `backlog:`, a piece id into `backlog_pieces:`, with
+what remains written as a `- Bnn: <piece>` line under *Parked*; when `gh` cannot
+reach the project the recall says so and reads nothing — and the memory palace's
 `planning`, `decisions` and `gaps` rooms. This matters more than it sounds:
 Relay's release-notes request turns out to be sitting in the *Parked* list of
 the plan that set up its CI six weeks earlier, together with the reason it was

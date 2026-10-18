@@ -37,6 +37,8 @@ frontmatter.
 type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
+source: [] # ids (Bnn) this plan was made for — each must also sit on backlog:
+           # or backlog_pieces:; [] when no backlog item asked for it
 backlog: [] # ids (Bnn) this plan finishes — landing sets them Done
 backlog_pieces: [] # ids (Bnn) this plan lands one piece of — landing sets them
                    # Partially done; each needs a Bnn line under Parked
@@ -247,7 +249,8 @@ lands one piece of is a line of its own that begins with the id —
 folder where one already covers the piece; anything else is free prose. The
 executor's preflight refuses a folder that names an id on both `backlog:` and
 `backlog_pieces:`, an id on `backlog:` with a `- Bnn:` line here, or an id on
-`backlog_pieces:` with none. An absent `backlog_pieces:` reads as empty.>
+`backlog_pieces:` with none — and a `source:` id on neither list. An absent
+`backlog_pieces:` or `source:` reads as empty.>
 
 ## Run log
 

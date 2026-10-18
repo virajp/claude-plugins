@@ -134,7 +134,9 @@ into a repo you do not have.
 shaped by `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`; `execute`
 reads folders only, and a single-file plan from an earlier release is not an
 input (finish it on the release that wrote it, or re-plan it). Read the
-frontmatter — `type:`, `covers:` when present, `requires:`, `backlog:` (the
+frontmatter — `type:`, `covers:` when present, `requires:`, `source:` (the
+ids of the backlog items the plan was made for, each of which must sit on one
+of the next two lists; absent reads as empty), `backlog:` (the
 ids the plan **finishes**, which the landing hands to `/vwf:backlog done`) and
 `backlog_pieces:` (the ids it lands **a piece of**, which the landing hands to
 `/vwf:backlog partial`), each empty or absent when the plan covers no such
@@ -197,7 +199,7 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   the step, `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`; and a
   `## Release levels` Level cell that is not one of the four levels, per
   [the preflight reads](references/preflight.md), naming the row.
-- Status `APPROVED` with an `APPROVED` row → a fresh run. Eight refusals are
+- Status `APPROVED` with an `APPROVED` row → a fresh run. Nine refusals are
   read off the folder here, before the claim, each stopping the run with the
   fix — amend the row and re-approve the plan — since execute runs what is
   written and infers no row. **A `code` unit no `review` row covers** — a row
@@ -219,8 +221,12 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   is valid and exempt. **A `## Release levels` row whose Level is not one of
   `NONE`, `PATCH`, `MINOR`, `MAJOR`** — naming the row; a folder with no such
   section is an old-shape folder and is not refused, per *The release levels*
-  in [the preflight reads](references/preflight.md). The last three read the
-  backlog lists against Parked,
+  in [the preflight reads](references/preflight.md). **A `source:` id on
+  neither `backlog:` nor `backlog_pieces:`** — the plan was made for an item
+  its landing would never mark, so the board would drift from what landed;
+  the refusal names each such id, and the fix is to re-run the planner named
+  by the folder's `type:` and put the id on the list that matches the plan.
+  The last three read the backlog lists against Parked,
   since a landing turns `backlog:` into `Done` and `backlog_pieces:` into
   `Partially done` and checks nothing else; each names the id, and the fix is
   to move the id to the list its Parked lines say it belongs on. **An id on both `backlog:` and `backlog_pieces:`** — the plan
