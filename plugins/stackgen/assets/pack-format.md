@@ -180,6 +180,14 @@ The second entry is why the key is a list: an app's lockfile sits inside
 the Xcode project Xcode writes it into, a library's at the root, and one
 pack serves both.
 
+A package-manager pack also states, in its `conventions.md` or its
+skill, that the lockfile is never edited by hand, with an editor tool,
+`sed` or a script, and names the CLI commands that write it — `pnpm install`,
+`uv lock`, `swift package resolve`, a Gradle `--write-locks` run. The
+generator writes that passage into the `conventions.md` of every
+package-manager pack it generates, with how a merge conflict in the lockfile
+is resolved by that CLI rather than by merging its lines.
+
 ### `templates/` — the pack's own mise files
 
 A pack that needs a tool pin, an env value or an alias ships them as a mise

@@ -2755,6 +2755,12 @@ What it does, by rule:
   and an After landing table with no mode column or a step whose mode is not
   `run`, and a `## Release levels` Level cell that is not one of the four levels
   — each with the fix: edit the folder by hand in the worktree, then re-launch.
+- **Lock files belong to the package manager.** No unit, coder or gate fix
+  writes `pnpm-lock.yaml`, `Cargo.lock`, `uv.lock`, `Package.resolved` or any
+  other lock file with an editor tool, `sed` or a script. A lock file changes
+  only as the output of the CLI that owns it — `pnpm install`, `cargo update`,
+  `uv lock`, `swift package resolve`, `flutter pub get` — and a unit whose
+  manifest change moves one lists it in its Owns.
 - **The release levels are read, never inferred.** A fresh run refuses a
   `## Release levels` row whose Level is not `NONE`, `PATCH`, `MINOR` or
   `MAJOR`, naming the row. A folder with no such section is an older folder: it

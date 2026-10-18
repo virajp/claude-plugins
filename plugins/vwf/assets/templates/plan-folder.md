@@ -222,7 +222,12 @@ paths plus "touch nothing outside this list", the facts section, the shared-file
 rule, and the return block below. A unit never bumps a version, never runs a
 generator, never edits a doc, never adds a dependency this file does not list,
 never commits. A unit deletes with plain `rm`, never `git rm` — it stages
-nothing.
+nothing. A unit never writes a lock file — the file a package manager or a
+toolchain manager writes to pin what it resolved — with Write, Edit, `sed` or
+a script: a lock file changes only as the output of the CLI that owns it, the
+command the stack's package-manager conventions name, and the unit keeps what
+that CLI wrote. A unit whose manifest change moves a lock file lists that lock
+file in its Owns beside the manifest.
 
 A unit returns exactly this block and nothing else — no file contents, no diff:
 

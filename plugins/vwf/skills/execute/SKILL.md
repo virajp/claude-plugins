@@ -1059,6 +1059,12 @@ and answered at the end.
 - Lowers or clears a key in `.config/releases.yaml`, or writes it anywhere
   but the release-levels write on a merged landing
 - Asks the user anything at run time
+- Writes a lock file — the file a package manager or a toolchain manager
+  writes to pin what it resolved — with Write, Edit, `sed` or a script, or
+  lets a unit do it: a lock file changes only as the output of the CLI that
+  owns it, per the unit contract in
+  `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, and a gate fix or a
+  landing that needs a new lock file runs that CLI
 - Runs an after-landing step on a landing that was not green, or merges past
   the integration branch
 - Edits `docs/plans/index.md` or a folder's Status block itself — every such

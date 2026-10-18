@@ -6,7 +6,11 @@ uv and runs with a hand-activated virtualenv has two environments and only one
 of them is locked.
 
 **The lockfile is committed and authoritative.** `uv sync` resolves from it;
-nothing in the ordinary install path is allowed to move it.
+nothing in the ordinary install path is allowed to move it. `uv.lock` is never
+edited by hand, with an editor tool, `sed` or a script: it changes only as the
+output of `uv lock`, `uv add`, `uv remove` or `uv sync`, and a merge conflict in
+it is resolved by taking either side and running `uv lock`, never by merging its
+lines.
 
 **Nothing runs outside the environment.** Every Python entrypoint the task
 library invokes goes through `uv run`, so the version that executes is the
