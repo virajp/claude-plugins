@@ -66,3 +66,20 @@ A body re-evaluates when any observable property it read changes. So:
   a cache, a dependency, a task handle.
 
 The rebuild cost itself is [performance](performance.md)'s.
+
+## Small settings: `@AppStorage`
+
+`@AppStorage` binds a view to a value in user defaults and re-renders when it
+changes — the right home for a small user preference a settings screen
+toggles: a display option, a dismissed hint, a sort order.
+
+- **Small values only.** Booleans, numbers, short strings and raw-value enums;
+  anything larger, or anything with structure, goes to SwiftData — see
+  [data & networking](data-and-networking.md).
+- **No secrets.** A token or a credential lives in the keychain behind its
+  client, never in user defaults.
+- **Keys are named once**, as constants beside the settings they back, so two
+  views never spell one setting two ways.
+- **It sits beside the state owner, not instead of it.** A preference a model
+  or a test must read goes through a settings client the model owns; a store
+  shared with an extension is set once on the scene, not per view.

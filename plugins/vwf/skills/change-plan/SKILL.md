@@ -59,7 +59,11 @@ subagent reads. Nothing lives in conversation.
   The request is often one of its items; note every id it covers, and for each
   whether this plan finishes the item or lands one piece of it — interview item
   2a settles it — so the plan's frontmatter can carry them on the right list.
-  The same read tells the interview which items share the plan's priority —
+  A `Bnn` id in `$ARGUMENTS` — `/vwf:backlog next` prints the launch line with
+  it — is always one of them, and is never dropped for a weaker match. Every
+  id noted here is a **source** id, recorded on the frontmatter's `source:`
+  list, so the executor can tell a plan made for an item from one made for
+  none. The same read tells the interview which items share the plan's priority —
   what §8's check counts before it recommends `/vwf:execute`. Reading the
   backlog is this skill's business; editing it never is —
   `/vwf:backlog` is its sole writer
@@ -70,8 +74,10 @@ subagent reads. Nothing lives in conversation.
   the shape, and `plan-management` its only writer. Like the backlog it is the
   base's alone, read from a member repo and never duplicated there. The
   `Priority` column of the rows a new plan will require — rows of either kind
-  — is what §5's derived priority stands on. Reading the file is this skill's
-  business; editing it never is — §8's `plan-management add` appends the row
+  — is what §5's derived priority stands on. A row whose `Gaps` cell is a
+  count above `0` is a landed plan with gaps that no plan took yet; a request
+  that takes them puts its folder on `gaps_of:` — interview item 2b. Reading
+  the file is this skill's business; editing it never is — §8's `plan-management add` appends the row
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -244,11 +250,17 @@ the template does not mark *cycle plans only* is required; the frontmatter and
 the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
 **Run log** blocks have a fixed shape because `/vwf:execute` parses and
 rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and it carries
-two lists of the `Bnn` ids recalled in §1, each possibly empty: `backlog:`
-names the items this plan **finishes** — landing sets them `Done` — and
-`backlog_pieces:` the items it lands **one piece of** — landing sets them
-`Partially done`. No id sits on both. The last plan of a chain moves the id to
-`backlog:`; an absent `backlog_pieces:` reads as empty.
+three lists of the `Bnn` ids recalled in §1, each possibly empty: `source:`
+names every item this plan was made for, and each of them also sits on one of
+the other two; `backlog:` names the items this plan **finishes** — landing
+sets them `Done` — and `backlog_pieces:` the items it lands **one piece of** —
+landing sets them `Partially done`. No id sits on both. The last plan of a
+chain moves the id to `backlog:`; an absent `backlog_pieces:` or `source:`
+reads as empty. `source:` is empty only when no backlog item asked for the
+plan — work the user brought that the backlog does not hold. A fourth list,
+`gaps_of:`, names the landed plan folders whose gaps this plan takes —
+interview item 2b — and is empty otherwise; an absent `gaps_of:` reads as
+empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -327,6 +339,11 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on both
   `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:` Parked
   line
+- every id §1 noted is on `source:`, and every `source:` id sits on `backlog:`
+  or `backlog_pieces:` — a folder made for a backlog item with both lists
+  empty is not approved
+- no `gaps_of:` entry names a row of the plan index that is not `COMPLETE`,
+  or whose `Gaps` cell reads `-` or `0`
 - the derived priority equals what `plan-management priority <folder>` returns
 - every project the units touch has a `## Release levels` row with a reason,
   and the Consent block has no `Release` row

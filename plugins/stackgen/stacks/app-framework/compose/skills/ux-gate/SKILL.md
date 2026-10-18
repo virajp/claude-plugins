@@ -42,9 +42,18 @@ driven interactively.
    | `watch`  | `RobolectricDeviceQualifiers.WearOSLargeRound` | large round Wear OS watch   |
    | `tv`     | `RobolectricDeviceQualifiers.Television1080p`  | 1080p television, landscape |
 
-   When `design.viewports.<project>.<platform>` in `.config/vwf.yaml` names a
-   size the golden tests' qualifiers do not render, say so in a finding — a
-   golden rendered at another size is not evidence for that one.
+   Resolve the viewport at the platform's Android OS frame, whose OS token is
+   `android` for `mobile` and `tablet`, `wearos` for `watch`, `androidtv` for
+   `tv` and `androidauto` for `auto`. Read
+   `design.viewports.<project>.<platform>` in `.config/vwf.yaml`: when it is
+   a list of `{ os, size }` entries, the viewport is the `size` of the entry
+   whose `os` is that token, else the OS frame's default; when it is a scalar
+   `<W>x<H>`, the scalar; when it is unset, the OS frame's default — in dp,
+   `mobile` 412×915, `tablet` 800×1280, `watch` 227×227, `tv` 960×540,
+   `auto` 800×480. A default is the frame the platform's qualifier stands for
+   and draws no finding of its own. When a size the config sets is one the
+   golden tests' qualifiers do not render, say so in a finding — a golden
+   rendered at another size is not evidence for that one.
    **An `auto` screen is not rendered.** It is a Car App Library template the
    car host draws, and Roborazzi cannot render one. Report each changed `auto`
    screen as a finding — severity `low`, `what` saying it was not rendered

@@ -11,6 +11,20 @@ platforms:
 - tablet
 - desktop
 - auto
+os:
+  mobile:
+  - ios
+  - android
+  tablet:
+  - ios
+  - android
+  desktop:
+  - macos
+  - windows
+  - linux
+  auto:
+  - carplay
+  - androidauto
 ---
 
 # mobile · tablet · desktop · auto — Dart · Flutter

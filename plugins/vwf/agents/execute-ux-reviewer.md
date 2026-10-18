@@ -92,10 +92,17 @@ accessibility gate, and
 every one gets them the same way: from the repo's own `ux-gate` skill, which
 the pack owning that project's stack materialized. Whether that pack drives a
 browser, runs a snapshot suite or boots a simulator is its decision and none of
-your business. A device screen is judged at its **resolved viewport** —
-`design.viewports.<project>.<platform>` in `.config/vwf.yaml` when set, else
-the platform's default in
-`${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`.
+your business. A device screen is judged at the **resolved frame of the OS the
+repo's `ux-gate` renders** — that OS's entry in the
+`design.viewports.<project>.<platform>` list in `.config/vwf.yaml` when one is
+set, else its row in the frame table (the OS read from
+`projects.<project>.stack.os.<platform>`), else the generic frame at its
+default — per the resolution rule in the Layout block of
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`. A scalar
+`design.viewports.<project>.<platform>: <W>x<H>` resizes the generic frame
+when the OS list is empty, and the primary OS frame only when it is not. A
+`features:` entry is judged as that OS shows it: the feature when the entry's
+scope names that OS, else its fallback.
 
 Two rules survive that delegation, and they are vwf's:
 

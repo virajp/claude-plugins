@@ -20,6 +20,8 @@ monorepo the workspace globs live in the root `pnpm-workspace.yaml` (see the
 - Use `"latest"` for every dependency version — pinning is the lockfile's job
   (`pnpm-lock.yaml`).
 - After any `package.json` change, run `pnpm install` from the repo root.
+- Never edit `pnpm-lock.yaml` by hand, with an editor tool, `sed` or a script —
+  only `pnpm install`, `pnpm add`, `pnpm remove` and `pnpm update` write it.
 - Commit `pnpm-lock.yaml` changes separately: `ops: update pnpm lockfile`.
 - **Monorepo:** local workspace packages link via the workspace protocol:
   `"workspace:*"`.

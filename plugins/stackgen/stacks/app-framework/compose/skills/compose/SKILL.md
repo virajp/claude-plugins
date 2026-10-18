@@ -53,8 +53,8 @@ realises: a flow's `<token>.md` take is built on that file.
 
 ## Integrations (topic 12)
 
-One per Jetpack library the app wires. Each is wiring only — setup order,
-configuration, anti-patterns; its API surface is Context7's at use time.
+One per library the app wires. Each is wiring only — setup order, configuration,
+anti-patterns; its API surface is Context7's at use time.
 
 | Wiring | Read |
 | --- | --- |
@@ -65,3 +65,16 @@ configuration, anti-patterns; its API surface is Context7's at use time.
 | Deferrable work that must survive process death | [WorkManager](references/integrations/workmanager.md) |
 | Large lists loaded page by page | [Paging](references/integrations/paging.md) |
 | The camera preview, capture and analysis | [CameraX](references/integrations/camerax.md) |
+| A map in a composable, and the device's location | [Maps & location](references/integrations/maps-and-location.md) |
+| Web content inside the app | [WebView](references/integrations/webview.md) |
+| Product analytics, events and consent | [Firebase Analytics](references/integrations/firebase-analytics.md) |
+| Attesting that requests come from the genuine app | [Firebase App Check](references/integrations/firebase-app-check.md) |
+| Sign-in through Firebase, the Apple provider among them | [Firebase Authentication](references/integrations/firebase-auth.md) |
+| Crash and non-fatal reporting | [Firebase Crashlytics](references/integrations/firebase-crashlytics.md) |
+| Push notifications and their channels | [Firebase Cloud Messaging](references/integrations/firebase-messaging.md) |
+| User file uploads and downloads | [Cloud Storage for Firebase](references/integrations/firebase-storage.md) |
+| Google sign-in and passkeys | [Credential Manager](references/integrations/credential-manager.md) |
+| Subscriptions and in-app purchases over Google Play Billing | [RevenueCat](references/integrations/revenuecat.md) |
+| Loading, caching and cropping images | [Image handling](references/integrations/image-handling.md) |
+| Real-time audio and video | [WebRTC](references/integrations/webrtc.md) |
+| Prompting the user to install a newer version | [Play In-App Updates](references/integrations/in-app-updates.md) |

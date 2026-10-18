@@ -27,14 +27,14 @@ header row, then its own row; a writer finding the file writes only its row.
 
     ## Plans
 
-    | Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
-    | ------ | ---- | ---- | ----------- | -------- | ------ | -------- | ------- |
+    | Folder | Kind | Plan | Target repo | Priority | Status | Gaps | Requires | Backlog |
+    | ------ | ---- | ---- | ----------- | -------- | ------ | ---- | -------- | ------- |
 
 ## The columns
 
 Header row, exactly:
 
-    | Folder | Kind | Plan | Target repo | Priority | Status | Requires | Backlog |
+    | Folder | Kind | Plan | Target repo | Priority | Status | Gaps | Requires | Backlog |
 
 | Column        | Meaning                                                                                                          |
 | ------------- | ---------------------------------------------------------------------------------------------------------------- |
@@ -44,6 +44,7 @@ Header row, exactly:
 | `Target repo` | for a cycle plan, the member repo whose code it changes, resolved per `assets/membership.md`; `—` for a change plan, and for any plan in a `repo` or `monorepo` topology |
 | `Priority`    | the derived integer — `10 + max(Priority of every unarchived plan in its requires:)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `Status`      | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                               |
+| `Gaps`        | `-` until the plan lands; then the count of entries in the folder's *Gaps surfaced during execution* — `0` when it holds none; `0 — moved to <basename>` once a later plan's `gaps_of:` takes them, each later plan's basename added after a comma |
 | `Requires`    | the **basenames** of the folder's `requires:` entries, or `—`                                                    |
 | `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items, the ones the plan finishes — then the ids from its `backlog_pieces:` frontmatter, the ones it lands a piece of, each written `Bnn (piece)`; `—` when both are empty, and an absent `backlog_pieces:` reads as empty |
 
@@ -56,14 +57,18 @@ The three statuses:
   `RUNNING` row is opaque to every reader whatever the folder says;
 - `COMPLETE` — landed, and kept only while another row's `Requires` names it.
 
+A file whose header has no `Gaps` column is an older shape. The first writer
+that finds it inserts the column after `Status`, with `-` in every row that is
+already there, and then makes its own edit.
+
 ## Writers and their edits
 
 | Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, in the planner's hand-off commit                                                                                                                                                                                                                                                                         |
+| `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, `Gaps` `-`, and sets the `Gaps` cell of each row its `gaps_of:` names to `0 — moved to <basename>`, in the planner's hand-off commit                                                                                                                                                                     |
 | `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                                                                         |
 | `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                                                         |
-| `complete` | `/vwf:execute`                  | sets `COMPLETE` after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list and no completion warning from `archive`) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
+| `complete` | `/vwf:execute`                  | sets `COMPLETE` and the `Gaps` count after the merge lands, re-pointing `Folder` under `archived/` when the landing archived the folder (an empty gap list and no completion warning from `archive`) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
 | `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                                                                 |
 
 No verb commits: the caller named in each row commits the edit.
@@ -209,7 +214,9 @@ was taken.
    - **Claim** — the folder's row `Status` from `APPROVED` to `RUNNING`.
    - **Unclaim** — the row `Status` from `RUNNING` back to `APPROVED`, once
      the verb's liveness check and the user's consent have passed.
-   - **Completion** — the row `Status` to `COMPLETE`, then the sweep below.
+   - **Completion** — the row `Status` to `COMPLETE` and its `Gaps` cell to
+     the count of entries in the folder's *Gaps surfaced during execution*,
+     then the sweep below.
      The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
      whichever skill moves the folder: the completion edit itself when the
      landing's gap list is empty, `archive` returned no completion warning,

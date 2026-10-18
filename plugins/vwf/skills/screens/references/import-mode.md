@@ -34,12 +34,16 @@ it.
      tweaks vs pinned states** (a pinned sad or conditional state with no tweak,
      or a state tweak the contract doesn't pin, is a delta), the **standing
      tweaks** (a frame missing its `darkMode` tweak, or its device `frame` tweak
-     — the right frame for the platform (camera cutout included on
-     mobile/tablet; the watch-face, TV and floating-window frames on `watch`,
-     `tv` and `spatial`), sized to the platform's resolved viewport, the
-     `design.viewports.<project>.<platform>` override when set, else the default
-     — `site` and `webapp` resolve to the fixed 1440×900 — is a delta: canvas
-     rework, the contract does not change), **components vs the pinned
+     — the right frame for the platform and its primary OS, with that OS's
+     chrome from the conventions template's frame table (the OS's camera chrome
+     on mobile/tablet; the watch-face, TV and floating-window frames on
+     `watch`, `tv` and `spatial`), sized to the resolved primary frame per the
+     Layout block's resolution rule (`design.viewports.<project>.<platform>`,
+     else `projects.<project>.stack.os.<platform>`, else the generic frame) —
+     `site` and `webapp` resolve to the fixed 1440×900 — or, when the resolved
+     OS list has two or more entries, missing its `device` tweak over those
+     tokens, is a delta: canvas rework, the contract does not change),
+     **components vs the pinned
      Components blocks** (a pinned component with no element on the frame, an
      element the contract doesn't pin, or behavior/content against a component's
      rules — clickability/visibility conditions, pinned copy — is a delta), form
@@ -47,7 +51,12 @@ it.
      where a tweak or on-page section belongs (canvas rework). On a `site` or
      `webapp` page, read each coded frame at its default `1440` width and diff
      that layout alone — the `390` `width` tweak is not diffed; a frame missing
-     the `width` tweak is a standing-tweak delta like `frame`.
+     the `width` tweak is a standing-tweak delta like `frame`. On a device page
+     whose frames carry the `device` tweak, read each coded frame at the
+     primary OS alone and diff that layout — the tweak's other values are not
+     diffed, as for the `390` `width` tweak, and a `features:` entry is diffed
+     as the primary frame shows it (the feature when the primary is its OS,
+     else the fallback).
    - **Journey level**, against the flow's Trigger & Actors, Steps, and sequence
      diagram: entry points present vs triggers, the navigable happy path vs step
      order, a transition the steps don't back (or a step no screen serves), the

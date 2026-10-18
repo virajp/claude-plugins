@@ -282,6 +282,8 @@ languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab
 dependencies: [] # open, lowercase-kebab
+os: # optional, project axis only — which OS the template targets on each platform; vwf maps (platform, OS) to a canvas frame; absent means no OS known
+  <platform>: [ <os> ] # tokens from standard-flows.md's OS vocabulary, primary first
 capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
 package_manager: <token> # any axis composing a package manager

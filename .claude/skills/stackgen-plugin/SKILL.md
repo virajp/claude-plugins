@@ -192,6 +192,15 @@ canvas, carries no auth and no TLS, and appends each comment to a **committed**
 through its own `setup/ai/claude-code` subtask, which `setup:ai:all` calls, so
 the repo installs it at user scope when no scope serving the repo has it.
 
+A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,
+since 2026-10-10: its keys a subset of the bundle's `platforms:`, the first OS
+on each list the primary. `stackgen-stack-template` passes it through in the
+payload, and `/vwf:setup` records it as `projects.<name>.stack.os`, beside
+`languages` and `frameworks`; vwf alone maps a (platform, OS) pair to a device
+frame, so the bundle names no frame. Three carry one — `swift-swiftui`,
+`kotlin-compose` and `dart-flutter`; an absent map, or a platform absent from
+it, reads as no OS known.
+
 ## Where it lands, and the consent tiers
 
 Both paths land **directly in the repo's committed `.claude/` tree** — output

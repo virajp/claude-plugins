@@ -34,9 +34,14 @@ returning anything: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 and one of `mobile` / `tablet` / `desktop` / `auto` / `watch` / `tv` /
 `spatial` / `site` / `webapp`. vwf also passes the **registry project** the
 flow belongs to, plus whatever canvas pins that tool needs — vwf passes the
-`design:` block's per-project, per-platform entries (the canvas pin, and a
-`design.viewports` override where one is set) through without interpreting
-them, since which of them matter is the adapter's business and not vwf's.
+`design:` block's per-project, per-platform canvas pin through without
+interpreting it, since which pins matter is the adapter's business and not
+vwf's. In place of the raw `design.viewports` value, vwf passes the platform's
+**resolved frames**: the OS list in order (from the `design.viewports` list,
+else `projects.<project>.stack.os.<platform>`, else empty), the primary first,
+each OS with its size — or, when the list is empty, the one generic frame and
+its size — per the Layout block of the conventions template. Read the primary
+frame; a `device` tweak's other values are never extra screens.
 
 ## 1. Resolve the project's design tool
 

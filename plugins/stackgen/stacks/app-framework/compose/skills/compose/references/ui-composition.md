@@ -53,6 +53,29 @@
 - **Respect reduced motion**: when the system's animator duration scale is 0,
   transitions are instant, and nothing essential is conveyed by motion alone.
 
+## Localization
+
+- **Every user-facing string is a string resource**, read with
+  `stringResource`; a count goes through a `<plurals>` resource and
+  `pluralStringResource`, never an `if (n == 1)` in a screen. A string literal
+  in a screen is a translation the app cannot ship.
+- **Per-app language** is the system's: turn on `generateLocaleConfig` in the
+  module's `androidResources` block and set the default in
+  `res/resources.properties` (`unqualifiedResLocale`), so the locales come from
+  the `values-*` folders. An in-app picker calls
+  `AppCompatDelegate.setApplicationLocales`; on Android 13 and later the system
+  stores the choice, below it the app opts into the library's storage.
+- **Numbers, dates and times go through a formatter** for the current locale —
+  the `android.icu.text` formatters — never a hard-coded pattern; a time
+  observes the user's 12- or 24-hour setting.
+- **Preview each shipped locale** with the `@Preview` `locale` parameter,
+  grouped into one multipreview annotation, so a long translation is seen
+  before it ships.
+- **Right-to-left comes for free with `start` and `end`.** Padding and
+  alignment use `start`/`end`, a custom layout places children with
+  `placeRelative`, and an RTL preview sets `LocalLayoutDirection` — never
+  `left`/`right` for anything that should mirror.
+
 ## Anti-patterns
 
 | Anti-pattern                        | Why                                   | Instead                              |

@@ -136,7 +136,16 @@ source: # provenance, so a diff can cite where a delta came from
 **`code` is the join key.** A tool whose designs cannot recover the pinned
 screen codes cannot produce a diffable payload — the adapter should return the
 screens it has with `code: null` and say so in `notes`, rather than inventing
-codes.
+codes. A `device` tweak, which switches a coded frame between its OS frames,
+never adds a frame, so `code` stays the join and a screen appears once in the
+payload, read at its primary OS.
+
+**What the adapter receives.** Beside the canvas pin, vwf passes the platform's
+resolved frames rather than the raw `design.viewports` value: the OS list in
+order, primary first, each OS with its size (or the one generic frame and its
+size when no OS is known), resolved per the conventions template's Layout
+block. The payload carries no size, device or frame field; the frames are input
+only.
 
 ## Payload 2 — design system
 

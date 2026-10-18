@@ -10,7 +10,7 @@ description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
   cycle builds on a gap. Requires the blueprint coverage stamp to read complete,
   and halts on any /vwf:doctor blocking finding across the chain's projects.
-argument-hint: "[flow/<name> | entity/<name> | <name>]"
+argument-hint: "[Bnn] [flow/<name> | entity/<name> | <name>]"
 model: opus
 
 disable-model-invocation: false
@@ -76,7 +76,8 @@ the sweep — a plan cut from a partial blueprint builds gaps into the code." A
 missing block means no sweep has stamped this repo yet — same halt.
 
 The slice is a single unit from `$ARGUMENTS`: `flow/<name>`, `entity/<name>`, or
-a bare `<name>` — resolve a bare name against `docs/blueprint/flows/` first
+a bare `<name>`, after an optional leading `Bnn` backlog id — the form
+`/vwf:backlog next` prints, held for §2 and never read as the slice — resolve a bare name against `docs/blueprint/flows/` first
 (matching the flow **slug**, ignoring the project group and `NNN-` prefix —
 `signin` matches `flows/app/020-signin/`; the same slug in two projects → MCQ),
 then `docs/blueprint/entities/`; if both exist, ask (MCQ). There is no `api/`
@@ -105,9 +106,9 @@ reports the backlog unreadable — `gh` absent, unauthenticated or without the
 `project` scope, or no project yet — record that with its reason in the plan's
 facts and continue with nothing. A slice that is already a backlog item carries
 its id into §7's frontmatter, so the item is marked planned rather than planned
-twice — on `backlog:` when this element finishes the item, on
-`backlog_pieces:` when it lands one piece of it; interview item 2a settles
-which.
+twice — on `source:` always, and on `backlog:` when this element finishes the
+item, on `backlog_pieces:` when it lands one piece of it; interview item 2a
+settles which. A `Bnn` id in `$ARGUMENTS` is always such an id.
 
 Derive the slice's dependency graph from the blueprint's typed links:
 
@@ -389,7 +390,8 @@ and skip silently if mempalace is unavailable.
 Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
 [Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
-(`type: vwf-plan`, `covers:`, `requires:`, `backlog:`, `backlog_pieces:`), the
+(`type: vwf-plan`, `covers:`, `requires:`, `source:`, `backlog:`,
+`backlog_pieces:`, `gaps_of:`), the
 Status block at `DRAFT`, the Consent block, the `## Release levels` table
 (Project, Level, Reason), the cycle-only sections (Slice,
 Acceptance criteria (from blueprint), Gaps surfaced during execution), the
@@ -422,9 +424,17 @@ element: `backlog:` names the items this element **finishes** — landing sets
 them `Done` — and `backlog_pieces:` the items it lands **one piece of** —
 landing sets them `Partially done`, and each needs at least one
 `- Bnn: <piece>` line under *Parked*. No id sits on both; the last plan of a
-chain moves the id to `backlog:`. Write both empty when the slice came from
-nowhere in the backlog; an empty or absent list reads as empty, and when both
-are, §8 calls nothing.
+chain moves the id to `backlog:`. A third list, `source:`, names every item
+§2 matched — the items this element was made for — and each of its ids also
+sits on `backlog:` or `backlog_pieces:`. Write all three empty when the slice
+came from nowhere in the backlog; an empty or absent list reads as empty, and
+when `backlog:` and `backlog_pieces:` both are, §8 calls nothing.
+
+**`gaps_of:`.** The landed plan folders whose gaps this element takes —
+interview item 2b, for a slice re-derived to close the plan holes a run
+surfaced. At hand-off `plan-management add` sets each one's `Gaps` cell in the
+plan index to `0 — moved to <this folder>`. Empty otherwise; an absent list
+reads as empty.
 
 **Dark exposure.** A plan may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
@@ -460,7 +470,10 @@ Verification names a gate line (a `review` row has none, by shape); every
 `plan-management resolve <folder>` and treat an *unresolvable* entry as a
 finding; every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on
 both `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:`
-Parked line; the derived priority matches what
+Parked line; every id §2 matched is on `source:`, and every `source:` id sits
+on `backlog:` or `backlog_pieces:`; no `gaps_of:` entry names a row of the
+plan index that is not `COMPLETE`, or whose `Gaps` cell reads `-` or `0`; the
+derived priority matches what
 `plan-management priority <folder>` returns; every Consent row carries an
 answer, and no After landing step carries a mode other than `run`; the launch
 line names this folder.

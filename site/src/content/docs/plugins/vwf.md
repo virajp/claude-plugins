@@ -2094,13 +2094,21 @@ a gap for a missing fallback or an unknown scope, and no vendor token is added.
 All four are device platforms, and each carries its own interaction rules in the
 blueprint contract: in-car screens for a driver, glanceable wrist screens driven
 by the crown and complications, focus-based navigation with a remote at ten
-feet, and gaze and pinch across windows, volumes and immersive spaces. `cli` is
-the one platform with **no screens**: it takes no platform file and never
-reaches the design canvas, mockups, or the scratchpad — what it requires instead
-is the design system's **Terminal UX** section. An in-car journey is therefore a
-*platform file of the same flow* — `100-home/auto.md`, same number, same steps,
-its own screens — not a separate subset flow. Which platforms a flow implements
-is elicited per flow (signing in while driving makes no sense) and listed in the
+feet, and gaze and pinch across windows, volumes and immersive spaces. Inside
+each device form factor, one closed **OS vocabulary** names the operating
+systems it runs on — `mobile` and `tablet` `ios` `android`, `desktop` `macos`
+`windows` `linux`, `auto` `carplay` `androidauto`, `watch` `watchos` `wearos`,
+`tv` `tvos` `androidtv`, `spatial` `visionos` `androidxr` (Quest has no token).
+A token names an OS inside the platform, never a platform of its own: it is the
+OS part of a `features:` scope (the text before any `:`, so `android:samsung` is
+`android`), and it picks a platform's canvas frames, so an entry shows on the
+frame of its own OS and its fallback on every other. `cli` is the one platform
+with **no screens**: it takes no platform file and never reaches the design
+canvas, mockups, or the scratchpad — what it requires instead is the design
+system's **Terminal UX** section. An in-car journey is therefore a *platform
+file of the same flow* — `100-home/auto.md`, same number, same steps, its own
+screens — not a separate subset flow. Which platforms a flow implements is
+elicited per flow (signing in while driving makes no sense) and listed in the
 contract's Platforms table.
 
 Per flow, `blueprint` elicits the journey with you under the
@@ -2351,24 +2359,57 @@ contract, one **interactive** page per flow per platform revised in place, the
 happy path clickable end to end and stitched into an `index--<platform>` page
 that chains every flow in execution order, the platform's device frame, and the
 standing tweak set (dark mode, device frame, one tweak per pinned sad and
-conditional state, and a `width` tweak on `site` and `webapp`). Its generated
-sections regenerate; a **canvas-owned section** holds what you discover while
-designing, preserved across regenerations and folded back by `import`.
+conditional state, a `width` tweak on `site` and `webapp`, and a `device` tweak
+on a device platform that resolves to more than one OS). Its generated sections
+regenerate; a **canvas-owned section** holds what you discover while designing,
+preserved across regenerations and folded back by `import`.
 
-Each device platform's frame has a default viewport — `mobile` 390×844, `tablet`
-834×1194, `desktop` 1440×900, `auto` 800×480, `watch` 208×248, `tv` 1920×1080,
-`spatial` 1280×720 — and `desktop` renders in a neutral native app window (a
-title bar with window controls, no address bar and no tabs). `site` and `webapp`
-render at a fixed 1440×900 in a desktop browser-chrome frame, and their `width`
-tweak (`1440` or `390`) switches the same coded frame to 390×844 in a mobile
-browser frame — one frame per code, and `import` diffs the 1440 layout. A
-product overrides a device platform's viewport per project in
-`.config/vwf.yaml`, beside the canvas pin, as
-`design.viewports.<project>.<platform>: <W>x<H>` (`390x844`); the briefs, the
-generated conventions file and both design adapters read the resolved size.
-Nothing writes the key — you edit it by hand — and an entry that is malformed or
-names a platform the project does not declare is reported by `/vwf:doctor` and
-ignored, falling back to the default.
+A device platform's frame follows **the OS the product ships on**. The canvas
+conventions template holds one frame table, keyed by (platform, OS), that gives
+each frame its size and chrome:
+
+| Platform  | OS (size, chrome)                                                                                                                                          | No OS known |
+| --------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| `mobile`  | `ios` 393×852, Dynamic Island and home indicator; `android` 412×915, punch-hole camera and gesture bar                                                     | 390×844     |
+| `tablet`  | `ios` 834×1194, rounded corners and home indicator; `android` 800×1280, camera in the bezel and gesture bar                                                | 834×1194    |
+| `desktop` | 1440×900 for each: `macos` window controls on the left, `windows` on the right, `linux` a neutral title bar                                                | 1440×900    |
+| `auto`    | 800×480 for each: `carplay` the CarPlay status sidebar, `androidauto` the Android Auto navigation rail                                                     | 800×480     |
+| `watch`   | `watchos` 208×248, a rounded rectangle; `wearos` 227×227, a round face                                                                                     | 208×248     |
+| `tv`      | `tvos` 1920×1080, title-safe inset of 60 top and bottom and 80 at the sides; `androidtv` 960×540, overscan margin of 27 top and bottom and 48 at the sides | 1920×1080   |
+| `spatial` | 1280×720 for each: `visionos` a glass window with the window bar below, `androidxr` a panel with a top bar; Quest has no OS token                          | 1280×720    |
+
+Sizes are points on Apple OSes and dp on Android. A `desktop` frame is a native
+app window — a title bar with the OS's window controls, no address bar and no
+tabs. `site` and `webapp` have no OS frame: they render at a fixed 1440×900 in a
+desktop browser-chrome frame, and their `width` tweak (`1440` or `390`) switches
+the same coded frame to 390×844 in a mobile browser frame — one frame per code,
+and `import` diffs the 1440 layout.
+
+Which OS frames a project gets is resolved per (project, platform). The **OS
+list** is the `design.viewports.<project>.<platform>` list when you set one,
+else `projects.<name>.stack.os.<platform>` — which `/vwf:setup` copies from the
+pinned stack's `os:` map, so a SwiftUI phone is `ios`, a Compose phone is
+`android` and Flutter on `mobile` is `ios` then `android` — else empty. An empty
+list gives the one generic frame (the last column). A non-empty list gives
+**one** coded frame; when it holds two or more OSes the frame carries a `device`
+tweak whose values are the list's OS tokens in order, the first being the
+primary and the default — never a second frame or page — and `import` diffs the
+primary frame only. A flow's `features:` entry shows on the frames of its own
+OS, and its fallback on every other `device` value.
+
+A product overrides the frames per project in `.config/vwf.yaml`, beside the
+canvas pin, in one of two forms. The scalar
+`design.viewports.<project>.<platform>: <W>x<H>` (`390x844`) resizes the primary
+frame — the generic one when no OS is known. The list form, a list of
+`{ os: <os>, size: <W>x<H> }` entries with `size` optional, replaces the stack's
+OS list and its order sets the primary; each OS takes its size from its list
+entry, else from the frame table's row for that OS, and the chrome always
+follows the OS. The briefs, the generated conventions file, both design adapters
+and the SwiftUI and Compose ux-gates read the resolved frames. Nothing writes
+the key — you edit it by hand — and an entry that is malformed, names a platform
+the project does not declare, or names an OS token that platform's vocabulary
+does not, is reported by `/vwf:doctor` as non-blocking and ignored, falling back
+to the default.
 
 So a brief carries only the per-flow payload: the page name `<flow>--<platform>`
 (`100-home--mobile` — the sync key `import` matches back by), a one-line goal,
@@ -2480,14 +2521,18 @@ approval gate, where you change a level you disagree with.
 Its recall also reads the base repo's [backlog project](#vwfbacklog) through
 `/vwf:backlog list`, since the slice in front of it is often already an item
 there — and records the backlog as unreadable, with the reason, when `gh` cannot
-reach it. For each matched id the interview asks whether this plan **finishes**
-the item or lands **one piece** of it: a finishing id goes into the folder's
-`backlog:` frontmatter, a piece id into `backlog_pieces:`, and a piece plan
-writes what remains as `- Bnn: <piece>` lines under *Parked* — at least one per
-piece id, naming the chained folder where one already covers the piece. The last
-plan of a chain moves the id to `backlog:`. The hand-off marks the ids of both
-lists `planned` through `/vwf:backlog` — the only thing that writes the project
-— so no item is planned twice.
+reach it. Every matched id — and a `Bnn` id typed before the slice, the form
+`/vwf:backlog next` prints — goes into the folder's `source:` frontmatter, the
+items the plan was made for. For each one the interview asks whether this plan
+**finishes** the item or lands **one piece** of it: a finishing id goes into
+`backlog:`, a piece id into `backlog_pieces:`, and a piece plan writes what
+remains as `- Bnn: <piece>` lines under *Parked* — at least one per piece id,
+naming the chained folder where one already covers the piece. The last plan of a
+chain moves the id to `backlog:`. The hand-off marks the ids of both lists
+`planned` through `/vwf:backlog` — the only thing that writes the project — so
+no item is planned twice. A slice re-derived to close the gaps of a landed plan
+names that folder on `gaps_of:`, and the hand-off sets the folder's `Gaps` cell
+in the plan index to `0 — moved to <this plan>`.
 
 Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
@@ -2558,15 +2603,20 @@ launch line.
 
 **The queue.** The one table of the base repo's `docs/plans/index.md` is where
 every approved plan of either kind waits: one row per folder — `Folder`, `Kind`,
-`Plan`, `Target repo`, `Priority`, `Status`, `Requires`, `Backlog` (the `Bnn`
-ids of the backlog project's items the plan finishes, then those it lands a
-piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
+`Plan`, `Target repo`, `Priority`, `Status`, `Gaps`, `Requires`, `Backlog` (the
+`Bnn` ids of the backlog project's items the plan finishes, then those it lands
+a piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
 or `COMPLETE` and nothing else; the folder's own Status block keeps the run
 detail (`BLOCKED`, a pause, the worktree path), which the index never mirrors.
-The planner adds the row at hand-off; this skill flips it; every edit is a
-direct commit on the integration branch from the main checkout, never a
-worktree's, so the run branch never carries the file and two plans landing in
-parallel cannot conflict on it.
+`Gaps` reads `-` until the plan lands, then the count of entries in the folder's
+*Gaps surfaced during execution* — `0` when there are none. A later plan that
+takes those gaps lists the folder on its `gaps_of:` frontmatter, and its
+hand-off sets the cell to `0 — moved to <that plan>`. An index without the
+column gets it from the next writer, with `-` in every row already there. The
+planner adds the row at hand-off; this skill flips it; every edit is a direct
+commit on the integration branch from the main checkout, never a worktree's, so
+the run branch never carries the file and two plans landing in parallel cannot
+conflict on it.
 
 `next` reads that table, at the integration branch's tip, with **no Kind
 filter**, and takes the `APPROVED` row of lowest `Priority` whose every
@@ -2726,6 +2776,12 @@ What it does, by rule:
   and an After landing table with no mode column or a step whose mode is not
   `run`, and a `## Release levels` Level cell that is not one of the four levels
   — each with the fix: edit the folder by hand in the worktree, then re-launch.
+- **Lock files belong to the package manager.** No unit, coder or gate fix
+  writes `pnpm-lock.yaml`, `Cargo.lock`, `uv.lock`, `Package.resolved` or any
+  other lock file with an editor tool, `sed` or a script. A lock file changes
+  only as the output of the CLI that owns it — `pnpm install`, `cargo update`,
+  `uv lock`, `swift package resolve`, `flutter pub get` — and a unit whose
+  manifest change moves one lists it in its Owns.
 - **The release levels are read, never inferred.** A fresh run refuses a
   `## Release levels` row whose Level is not `NONE`, `PATCH`, `MINOR` or
   `MAJOR`, naming the row. A folder with no such section is an older folder: it
@@ -2744,6 +2800,11 @@ What it does, by rule:
   what is left). Each refusal names the id; the fix is the id moved to the list
   its Parked lines say it belongs on, then the plan re-approved. An absent
   `backlog_pieces:` reads as empty, so an older folder passes as written.
+- **Every source item is on a list.** A `source:` id — a backlog item the plan
+  was made for — that sits on neither `backlog:` nor `backlog_pieces:` would
+  never be marked at landing, so the board would drift from what landed. The
+  preflight refuses it, names the id, and points at the planner to re-run. An
+  absent `source:` reads as empty, so an older folder passes as written.
 - **The review runs at the review row, and only there.** A `code` unit is TDD →
   coverage → commit, and moves on. At a `review` row the run goes
   `engines → review ‖ security` over the row's range — the orchestrator runs the
@@ -2901,19 +2962,24 @@ same commit carries the **release levels**: for each row of the folder's
 never lowers one; an absent key or file reads `NONE`, and only a release step
 clears a key. The run bumps no version. The file is written on the integration
 branch after the merge, never on the run branch, so two runs landing at once do
-not conflict on it. **Where the folder ends up depends on the gap list.** When
-no gap is open, the landing moves the folder whole to `docs/plans/archived/` and
-the row's `Folder` points there — it is finished and the archive is its record.
-When any gap is open, the folder stays live at its path as the working record of
-what needs reconciling, the row keeps the live path, and the report says to ask
-for the archive — [`plan-management`](#vwfplan-management)'s `archive` verb —
-after reconciliation. The archive is asked not to prompt: when it raises a
-completion warning, the folder stays live, the row still goes `COMPLETE`, and
-the report names the warning and the archive request to make once it is settled.
-When any condition fails, or consent said `no`, it **stops at the report** with
-what failed and the resume command, and asks nothing: the worktree stays intact
-and nothing merges. A fix goes into the folder — a ruling into the unit file or
-the decisions table, a finding appended to the unit — and you re-run
+not conflict on it. After that commit is pushed, the run calls
+`mise run code:graph` in the main checkout and waits for the task — not for the
+graphify rebuild, which the task starts in the background — so under
+`/vwf:execute all` each plan starts after a refresh of the graph that the merge
+changed; a repo with no `code:graph` task skips the step. **Where the folder
+ends up depends on the gap list.** When no gap is open, the landing moves the
+folder whole to `docs/plans/archived/` and the row's `Folder` points there — it
+is finished and the archive is its record. When any gap is open, the folder
+stays live at its path as the working record of what needs reconciling, the row
+keeps the live path, and the report says to ask for the archive —
+[`plan-management`](#vwfplan-management)'s `archive` verb — after
+reconciliation. The archive is asked not to prompt: when it raises a completion
+warning, the folder stays live, the row still goes `COMPLETE`, and the report
+names the warning and the archive request to make once it is settled. When any
+condition fails, or consent said `no`, it **stops at the report** with what
+failed and the resume command, and asks nothing: the worktree stays intact and
+nothing merges. A fix goes into the folder — a ruling into the unit file or the
+decisions table, a finding appended to the unit — and you re-run
 `/vwf:execute <folder>`, whose resume loops the affected units back through
 their pipeline (a `code` unit's coder re-dispatched with the finding and the
 last review row that covers it re-run over the fix commits as a new loop, an
@@ -2978,11 +3044,11 @@ calls and never edits.
 
 | Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Called by                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `plan`, `change-plan`                                                                           |
+| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`, `Gaps` `-`), and each `gaps_of:` row's `Gaps` cell set to `0 — moved to <folder>`                                                                                                                                                                                                                                                                                                                                                                   | `plan`, `change-plan`                                                                           |
 | `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `execute`, before the worktree is cut                                                           |
 | `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                               | `execute`, at start, pause, block and landing                                                   |
-| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `execute`, in the main checkout                                                                 |
+| `complete <folder>`                | After the merge: the row `COMPLETE` and its `Gaps` count, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                   | `execute`, in the main checkout                                                                 |
 | `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog:` id still open and `/vwf:backlog partial` for every `backlog_pieces:` id, the mempalace `runs` drawer marked archived | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
 | `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                                                                                                                                                                                                                                      | `execute next`                                                                                  |
 | `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                                                                                                                                                                                                                                 | the planners at self-review; `execute` at preflight                                             |
@@ -3246,15 +3312,17 @@ other host is unsupported and named.
 `next` names the top item by priority then id and the command that picks it up —
 [`/vwf:change-plan`](#vwfchange-plan) for work the blueprint does not describe,
 [`/vwf:plan`](#vwfplan) when the item names a slice — and asks which it is when
-the item does not say. Its candidates are every `Backlog` item and every
-`Partially done` item with no `Planned in:` line, ranked together; a partial
-item named this way comes with its `Landed:` lines, so the next plan starts from
-what remains rather than from the whole item. `list` prints the items as a
-five-column table (Id, Item, Group, Priority, Status), `Done` and `Closed`
-folded into a trailing count — a `Partially done` item is listed, its Status
-cell counting its landed pieces, `Partially done (2 landed)` — and ends with the
-project's URL. Ids are never renumbered, and an item is never deleted or
-archived by this skill.
+the item does not say. The command carries the id first —
+`/vwf:change-plan Bnn <item>` — so the planner records it on the folder's
+`source:` list and the landing marks the item. Its candidates are every
+`Backlog` item and every `Partially done` item with no `Planned in:` line,
+ranked together; a partial item named this way comes with its `Landed:` lines,
+so the next plan starts from what remains rather than from the whole item.
+`list` prints the items as a five-column table (Id, Item, Group, Priority,
+Status), `Done` and `Closed` folded into a trailing count — a `Partially done`
+item is listed, its Status cell counting its landed pieces,
+`Partially done (2 landed)` — and ends with the project's URL. Ids are never
+renumbered, and an item is never deleted or archived by this skill.
 
 `unplanned [priority]` lists, read-only, the items no plan covers yet at one
 priority — the same candidates `next` ranks, id and title one per line, then a
@@ -3378,25 +3446,28 @@ can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.md` with
-frontmatter `type: vwf-change-plan`, a `backlog:` list naming the ids this plan
-finishes and a `backlog_pieces:` list naming those it lands one piece of — the
-interview asks which, per recalled id, and a piece id's remainder is written as
-`- Bnn: <piece>` lines under *Parked* — plus one `NN-<unit>.md` per subagent
-unit, every unit `Kind: edit`. A change plan gets **no review row by default** —
-the wave review is its only check; a `Kind: review` row, the one at which
-`execute` runs `/code-review` and `/security-review`, is written only when the
-change lands runnable code — anything that executes rather than is read: shipped
-shell or hook scripts, build or tooling source, an installable package — with
-its reason in the decisions table. The row sits in a wave strictly later than
-the units it covers and still reviews the whole range since the previous row: a
-review finding on a file whose unit it does not cover is dropped and counted, a
-security finding is routed to that unit all the same. The sections the template
-marks *cycle plans only* — the slice, the acceptance criteria, the gaps — are
-omitted. Units in a wave own **disjoint paths** (the shared-file rule), a change
-that needs a new or altered check plans that as an owned edit rather than
-"update the gates", and the last two units are fixed: a docs unit and a gates
-unit, `NN-gates.md`, which runs the generators and the full gate and bumps
-nothing.
+frontmatter `type: vwf-change-plan`, a `source:` list naming every backlog item
+the plan was made for — a `Bnn` id in the arguments always among them — a
+`backlog:` list naming the ids this plan finishes and a `backlog_pieces:` list
+naming those it lands one piece of — the interview asks which, per recalled id,
+every `source:` id goes on one of the two, and a piece id's remainder is written
+as `- Bnn: <piece>` lines under *Parked* — a `gaps_of:` list naming the landed
+plan folders whose gaps this plan takes, if any — plus one `NN-<unit>.md` per
+subagent unit, every unit `Kind: edit`. A change plan gets **no review row by
+default** — the wave review is its only check; a `Kind: review` row, the one at
+which `execute` runs `/code-review` and `/security-review`, is written only when
+the change lands runnable code — anything that executes rather than is read:
+shipped shell or hook scripts, build or tooling source, an installable package —
+with its reason in the decisions table. The row sits in a wave strictly later
+than the units it covers and still reviews the whole range since the previous
+row: a review finding on a file whose unit it does not cover is dropped and
+counted, a security finding is routed to that unit all the same. The sections
+the template marks *cycle plans only* — the slice, the acceptance criteria, the
+gaps — are omitted. Units in a wave own **disjoint paths** (the shared-file
+rule), a change that needs a new or altered check plans that as an owned edit
+rather than "update the gates", and the last two units are fixed: a docs unit
+and a gates unit, `NN-gates.md`, which runs the generators and the full gate and
+bumps nothing.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —

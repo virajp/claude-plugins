@@ -180,6 +180,14 @@ The second entry is why the key is a list: an app's lockfile sits inside
 the Xcode project Xcode writes it into, a library's at the root, and one
 pack serves both.
 
+A package-manager pack also states, in its `conventions.md` or its
+skill, that the lockfile is never edited by hand, with an editor tool,
+`sed` or a script, and names the CLI commands that write it — `pnpm install`,
+`uv lock`, `swift package resolve`, a Gradle `--write-locks` run. The
+generator writes that passage into the `conventions.md` of every
+package-manager pack it generates, with how a merge conflict in the lockfile
+is resolved by that CLI rather than by merging its lines.
+
 ### `templates/` — the pack's own mise files
 
 A pack that needs a tool pin, an env value or an alias ships them as a mise
@@ -357,6 +365,8 @@ name: <display name>
 axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
+os: # optional, project axis only — the OS tokens each platform targets
+  <platform>: [ <os> ] # a key in platforms:; first token is the primary
 artifact: <token> # deploy axis only
 default: true # optional — what vwf preselects; one per axis per platform
 components:
@@ -390,6 +400,20 @@ nondeterminism, and the checker refuses the tree, naming both files and the
 platform they share. An axis whose flagged bundles all declare platforms
 may therefore carry one flagged bundle per platform, and a round filtered to
 one platform sees exactly one.
+
+**`os:` names the operating systems the bundle targets on each platform.**
+It is optional and belongs to the project axis alone: a map from a platform
+in the bundle's `platforms:` list to the OS tokens it targets there, in the
+order the design canvas shows them — the first token is the primary frame
+and the `device` tweak's default. Every key must be a platform the
+`platforms:` list names. The tokens are vwf's OS vocabulary, one set per
+platform: `mobile` `ios` `android`; `tablet` `ios` `android`;
+`desktop` `macos` `windows` `linux`; `auto` `carplay` `androidauto`;
+`watch` `watchos` `wearos`; `tv` `tvos` `androidtv`;
+`spatial` `visionos` `androidxr`. The bundle states only which OSes it
+ships on — vwf keeps the one table that maps a (platform, OS) pair to a
+frame, so no bundle carries a size or a chrome. A bundle with no `os:`, or a platform missing from it,
+gets vwf's generic frame for that platform.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the

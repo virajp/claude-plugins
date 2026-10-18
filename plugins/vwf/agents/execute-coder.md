@@ -93,7 +93,12 @@ exists:
    it — the plan's approval gate is where the user consented to it. If a
    dependency the plan's *New dependencies* section doesn't name seems
    necessary, do **not** install it: capture it as a plan gap (per
-   Blueprint/plan gaps above) and implement the minimum without it. Nothing
+   Blueprint/plan gaps above) and implement the minimum without it. A
+   dependency change reaches the lock file only through the package
+   manager's own CLI, the command the stack's package-manager conventions
+   name — never through Write, Edit, `sed` or a script on the lock file;
+   keep what the CLI wrote, and when it fails, report the failure rather
+   than repairing the lock file by hand. Nothing
    speculative; nothing not in the unit — but never
    trade away a safety guardrail (validation, data-loss, security,
    accessibility) for brevity.

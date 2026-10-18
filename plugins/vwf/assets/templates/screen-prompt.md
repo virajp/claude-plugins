@@ -13,12 +13,11 @@
      drop sections marked (if any) when empty. The standing conventions — the
      naming contract (pages, frame codes, the index--<platform> stitch),
      revise-in-place, the interactive-journey mandate, the standing tweak set
-     (darkMode on, device frame on with the mobile/tablet camera cutout,
-     a tweak per pinned sad and conditional state, and on site/webapp
-     the width tweak, 1440 | 390), the device frame at the
-     platform's RESOLVED viewport (design.viewports.<project>.<platform> in
-     .config/vwf.yaml when set, else the platform's default), stub
-     treatment — live in
+     (darkMode on, device frame on with the OS's camera chrome,
+     a tweak per pinned sad and conditional state, on site/webapp
+     the width tweak, 1440 | 390, and the device tweak when the OS list
+     has two or more entries), the frame table and each OS frame's size and
+     chrome, stub treatment — live in
      the canvas project's own CLAUDE.md (its repo-side source is the sibling
      CLAUDE--<platform>.md, from the adapter's conventions template) and are never
      restated here; the brief carries only the per-flow payload. The page name
@@ -28,7 +27,13 @@
      Design System project, and visual treatment is decided in the canvas
      chat. What each screen SHOWS and how it BEHAVES is contract: the
      components and their rules are transcribed from the flow doc's Components
-     blocks, never left for the canvas to decide. -->
+     blocks, never left for the canvas to decide. The brief DOES name, per
+     flow, the platform's RESOLVED OS list (the
+     design.viewports.<project>.<platform> list in .config/vwf.yaml when
+     set, else projects.<project>.stack.os.<platform>, else empty — the
+     generic frame), its primary, and each features: entry of the flow
+     platform file with its fallback; drop the Devices section on site,
+     webapp and cli. -->
 
 # Screens brief — `<flow>` (`<platform>`)
 
@@ -39,6 +44,18 @@ Design the **`<flow>`** flow of **`<product name>`** for **`<platform>`** as
 
 - **`<flow>--<platform>`** — revise in place if it exists; stitch its happy path
   into **`index--<platform>`** in flow-number order.
+
+## Devices
+
+- **OS frames:** `<the resolved OS list, in order>` (or "none known — the
+  generic frame"); primary **`<first OS>`**. With two or more, every
+  coded frame carries the `device` tweak over these values, default the
+  primary — one frame per code, never a frame per device.
+- **OS features (if any):** one line per `features:` entry of the flow
+  platform file — `<name>` on the `<scope>` frame: show the feature on each
+  `device` value equal to the OS part of its scope (the text before any `:`, so
+  `android:samsung` matches `android`), and show `<fallback>` in its place on
+  every other `device` value.
 
 ## Goal
 

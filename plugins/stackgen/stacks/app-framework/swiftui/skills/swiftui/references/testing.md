@@ -67,9 +67,12 @@ the run's result bundle, which the task always writes to
   loading, loaded, error, and each variant the contract pins — rendered with
   preview dependencies so the image is deterministic.
 - **Render at the resolved viewport.** A golden's size is the platform's
-  viewport as the product resolves it: the per-product override
-  `design.viewports.<project>.<platform>` in `.config/vwf.yaml` when set, else
-  the platform default. Use the library's device layout where one matches that
+  viewport as the product resolves it for the platform's Apple OS frame:
+  `design.viewports.<project>.<platform>` in `.config/vwf.yaml` — the `size` of
+  the list entry whose `os` is that Apple token (`ios`, `macos`, `carplay`,
+  `watchos`, `tvos` or `visionos`), else the scalar when it is one — else the
+  OS frame's default, `mobile` 393×852 among them. Use the library's device
+  layout where one matches that
   size, a fixed layout of that size where none does. A golden at a size the
   design never specified checks nothing the design cares about.
 - **Cover the axes that change rendering**: light and dark, the default and the

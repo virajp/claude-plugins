@@ -5,7 +5,11 @@ graphs and resolves differently depending on who ran what.
 
 **The lockfile is committed and authoritative.** CI installs frozen and fails on
 drift rather than resolving something new — an install that can resolve
-differently in CI than locally is not a gate.
+differently in CI than locally is not a gate. `pnpm-lock.yaml` is never edited
+by hand, with an editor tool, `sed` or a script: it changes only as the output
+of `pnpm install`, `pnpm add`, `pnpm remove` or `pnpm update`, and a merge
+conflict in it is resolved by taking either side and running `pnpm install`,
+never by merging its lines.
 
 **A publish cooldown guards the supply chain**, so neither a routine install nor
 an automated update adopts a release published minutes ago.

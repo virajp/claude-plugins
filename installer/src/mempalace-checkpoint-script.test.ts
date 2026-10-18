@@ -130,6 +130,15 @@ describe("mempalace-checkpoint.sh", () => {
     expect(stops(20, "s1", env).every(out => out.trim() === "")).toBe(true);
   });
 
+  it("reads the whole payload before it opts out", () => {
+    // An exit before stdin is read closes the pipe under the writer, which
+    // gets EPIPE — a race on a small payload, certain on one past the pipe
+    // buffer. This flaked CI on the opt-out test above.
+    const env = { MEMPALACE_HOOKS_AUTO_SAVE: "false" };
+    const out = run({ session_id: "s1", pad: "x".repeat(1 << 20) }, { env });
+    expect(out.trim()).toBe("");
+  });
+
   it("respects a custom interval", () => {
     const env = { MEMPALACE_SAVE_INTERVAL: "3" };
     const responses = stops(3, "s1", env);

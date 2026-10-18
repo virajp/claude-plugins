@@ -123,3 +123,28 @@ and mise names in `stackgen-reputation`, third-party SwiftUI integrations, a
 server-side Swift bundle, OS- and vendor-specific features inside a form factor,
 and retrofitting `binaries` onto the older packs. Kotlin and Android native is
 B57.
+
+## Addendum — 2026-10-10: the parked third-party set shipped
+
+E4's parked third-party SwiftUI integrations shipped in
+[`2026-10-10-swiftui-third-party-integrations/`](../../plans/2026-10-10-swiftui-third-party-integrations/index.md),
+which completes B61 (and B99, its Compose counterpart). E4 and the parked list
+above stand as history; the full Flutter dependency map is
+[`2026-10-10-flutter-dependency-parity.md`](./2026-10-10-flutter-dependency-parity.md).
+
+- **T1 SwiftUI set.** Eleven integration files beside the five Apple ones:
+  `firebase-analytics.md`, `firebase-app-check.md`, `firebase-auth.md`,
+  `firebase-crashlytics.md`, `firebase-messaging.md`, `firebase-storage.md`,
+  `revenuecat.md`, `image-handling.md`, `webrtc.md`, `maps-and-location.md`
+  (MapKit and Core Location) and `webview.md` (`WKWebView`) — sixteen in all.
+  Rejected: third-party only (9 files); Firebase and RevenueCat only (7).
+- **T2 Images.** `image-handling.md` wires Nuke — `LazyImage` and its pipeline.
+  Rejected: Kingfisher; `AsyncImage` with a sized `URLCache`.
+- **T3 WebRTC.** `webrtc.md` has two sections: plain WebRTC through the
+  community distribution of the official, unmodified WebRTC framework (bring
+  your own signalling), then the LiveKit Swift SDK. Rejected: either one alone.
+- **T12 Gaps closed in place.** `firebase-auth.md` gained a Google Sign-In
+  section (GoogleSignIn-iOS with Firebase); `image-handling.md` a cropping
+  section on TOCropViewController, the one candidate Context7 carried;
+  `data-and-networking.md` an app version gate section. Rejected: separate
+  `google-sign-in.md` and `app-updates.md`; leaving them as gaps.

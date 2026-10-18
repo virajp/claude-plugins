@@ -37,9 +37,13 @@ frontmatter.
 type: vwf-plan | vwf-change-plan
 title: <title>
 requires: [] # earlier plan folders this one stands on, e.g. docs/plans/2026-09-01-x
+source: [] # ids (Bnn) this plan was made for — each must also sit on backlog:
+           # or backlog_pieces:; [] when no backlog item asked for it
 backlog: [] # ids (Bnn) this plan finishes — landing sets them Done
 backlog_pieces: [] # ids (Bnn) this plan lands one piece of — landing sets them
                    # Partially done; each needs a Bnn line under Parked
+gaps_of: [] # landed plan folders whose gaps this plan takes, e.g.
+            # docs/plans/2026-09-01-x — add sets their index Gaps cell to 0
 covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
            # list the implementation: stamp is written to
 exposure: dark # cycle plans only, optional — the slice ships behind a flag
@@ -220,7 +224,12 @@ paths plus "touch nothing outside this list", the facts section, the shared-file
 rule, and the return block below. A unit never bumps a version, never runs a
 generator, never edits a doc, never adds a dependency this file does not list,
 never commits. A unit deletes with plain `rm`, never `git rm` — it stages
-nothing.
+nothing. A unit never writes a lock file — the file a package manager or a
+toolchain manager writes to pin what it resolved — with Write, Edit, `sed` or
+a script: a lock file changes only as the output of the CLI that owns it, the
+command the stack's package-manager conventions name, and the unit keeps what
+that CLI wrote. A unit whose manifest change moves a lock file lists that lock
+file in its Owns beside the manifest.
 
 A unit returns exactly this block and nothing else — no file contents, no diff:
 
@@ -247,7 +256,8 @@ lands one piece of is a line of its own that begins with the id —
 folder where one already covers the piece; anything else is free prose. The
 executor's preflight refuses a folder that names an id on both `backlog:` and
 `backlog_pieces:`, an id on `backlog:` with a `- Bnn:` line here, or an id on
-`backlog_pieces:` with none. An absent `backlog_pieces:` reads as empty.>
+`backlog_pieces:` with none — and a `source:` id on neither list. An absent
+`backlog_pieces:` or `source:` reads as empty.>
 
 ## Run log
 

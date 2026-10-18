@@ -67,3 +67,18 @@ Decide it per feature, and write it into the flow, not into the code alone:
 
 Connectivity is observed through a client, so a test can drive a model through
 going offline and back.
+
+## App version gate
+
+When an old build must stop talking to a changed backend, the gate is the
+app's own, not a store feature:
+
+- **The server publishes a minimum supported version**, and optionally a
+  recommended one, beside the API — never a constant baked into the build.
+- **The app compares at launch**, through a client, its own bundle version
+  against those values, and again when it returns to the foreground.
+- **Below the minimum, a blocking prompt**; below the recommended version, a
+  soft one the user can dismiss. Both open the app's App Store page — on iOS,
+  a store product sheet presented over the app, or the App Store URL.
+- **The check fails open.** A gate that cannot reach the server lets the app
+  run; offline must never lock a user out of a build that still works.

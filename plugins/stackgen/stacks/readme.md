@@ -131,16 +131,22 @@ pins. Its doctrine landed on 2026-09-25 with one reference per Apple platform �
 iOS and iPadOS, macOS, CarPlay, watchOS, tvOS, visionOS, each keyed by the vwf
 token it realises — and topic 12's wiring for Apple's core integrations: widgets
 and complications, App Intents, push notifications, StoreKit and Sign in with
-Apple. Like Flutter's, they are wiring only; third-party integrations are not
-covered yet.
+Apple. On 2026-10-10 eleven third-party references joined them — the six
+Firebase products (Authentication with Google Sign-In), RevenueCat, Nuke with
+TOCropViewController, WebRTC with LiveKit, MapKit with Core Location, and
+WebKit — sixteen in all. Like Flutter's, they are wiring only.
 
 **`app-framework/compose` made the third on 2026-10-09**, the second in
 `native-ui`, rooting the `kotlin-compose` bundle — first on `mobile` and
 `tablet`.
 Jetpack Compose with Material 3 is the only toolkit; the app doctrine is a
-ViewModel with StateFlow, Hilt, Navigation Compose and Room, with Jetpack
-integration references, wiring only. Its goldens are Roborazzi captures on
-Robolectric under `test:golden`, and its `ux-gate` returns them as `renders:`.
+ViewModel with StateFlow, Hilt, Navigation Compose and Room, with twenty
+integration references, wiring only — the seven Jetpack ones and, since
+2026-10-10, the six Firebase products, RevenueCat, Coil 3 with CanHub
+Android-Image-Cropper, WebRTC with LiveKit, Maps Compose with the fused
+location provider, WebView, Credential Manager and Play In-App Updates. Its
+goldens are Roborazzi captures on Robolectric under `test:golden`, and its
+`ux-gate` returns them as `renders:`.
 The four-part ownership test does not hold — Gradle and AGP own the manifest
 and the build — so the type is kept for the doctrine, with the reason in the
 pack's `conventions.md`.

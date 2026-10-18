@@ -25,12 +25,20 @@ idiomatic answer given the repo, do not ask — state it and move on.
    *Cycle plans:* scope is the resolved dependency chain, one folder per chain
    element, each `requires:` the one before it — not a split the user draws.
 
-2a. **Finishes or a piece.** For each backlog id the recall matched: does this
-plan finish the item, or land one piece of it? A finishing id goes on
+2a. **Finishes or a piece.** For each backlog id the recall matched — every
+id the arguments named, and every item the request turns out to be — does this
+plan finish the item, or land one piece of it? Each such id goes on `source:`,
+the items the plan was made for, and on exactly one of the two lists below; an
+id a plan was made for is never left off both. A finishing id goes on
 `backlog:` — landing sets it `Done`; a piece id goes on `backlog_pieces:` —
 landing sets it `Partially done` — and what remains is written as
 `- Bnn: <piece>` Parked lines, at least one per piece id (section F). The last
 plan of a chain moves the id to `backlog:`.
+
+2b. **Gaps of a landed plan.** Does this plan take the gaps of a landed plan —
+a row of the plan index whose `Gaps` cell is a count above `0`? Each such
+folder goes on `gaps_of:`; at hand-off `plan-management add` sets that row's
+cell to `0 — moved to <this folder>`.
 
 3. **Non-goals.** What the user is explicitly not asking for, especially the
    adjacent thing the survey found. Goes to *Out of scope* with the reason.
@@ -181,7 +189,7 @@ conversation. A Parked entry that belongs to a backlog item begins with its id �
 `- Bnn: <piece>` — naming the chained folder where one already covers the
 piece. Every `backlog_pieces:` id needs at least one such line, and a
 `backlog:` id may have none; the executor's preflight refuses a folder that
-breaks either, or names one id on both lists.
+breaks either, names one id on both lists, or names a `source:` id on neither.
 
 ## G. The gate
 
