@@ -2948,19 +2948,24 @@ same commit carries the **release levels**: for each row of the folder's
 never lowers one; an absent key or file reads `NONE`, and only a release step
 clears a key. The run bumps no version. The file is written on the integration
 branch after the merge, never on the run branch, so two runs landing at once do
-not conflict on it. **Where the folder ends up depends on the gap list.** When
-no gap is open, the landing moves the folder whole to `docs/plans/archived/` and
-the row's `Folder` points there — it is finished and the archive is its record.
-When any gap is open, the folder stays live at its path as the working record of
-what needs reconciling, the row keeps the live path, and the report says to ask
-for the archive — [`plan-management`](#vwfplan-management)'s `archive` verb —
-after reconciliation. The archive is asked not to prompt: when it raises a
-completion warning, the folder stays live, the row still goes `COMPLETE`, and
-the report names the warning and the archive request to make once it is settled.
-When any condition fails, or consent said `no`, it **stops at the report** with
-what failed and the resume command, and asks nothing: the worktree stays intact
-and nothing merges. A fix goes into the folder — a ruling into the unit file or
-the decisions table, a finding appended to the unit — and you re-run
+not conflict on it. After that commit is pushed, the run calls
+`mise run code:graph` in the main checkout and waits for the task — not for the
+graphify rebuild, which the task starts in the background — so under
+`/vwf:execute all` each plan starts after a refresh of the graph that the merge
+changed; a repo with no `code:graph` task skips the step. **Where the folder
+ends up depends on the gap list.** When no gap is open, the landing moves the
+folder whole to `docs/plans/archived/` and the row's `Folder` points there — it
+is finished and the archive is its record. When any gap is open, the folder
+stays live at its path as the working record of what needs reconciling, the row
+keeps the live path, and the report says to ask for the archive —
+[`plan-management`](#vwfplan-management)'s `archive` verb — after
+reconciliation. The archive is asked not to prompt: when it raises a completion
+warning, the folder stays live, the row still goes `COMPLETE`, and the report
+names the warning and the archive request to make once it is settled. When any
+condition fails, or consent said `no`, it **stops at the report** with what
+failed and the resume command, and asks nothing: the worktree stays intact and
+nothing merges. A fix goes into the folder — a ruling into the unit file or the
+decisions table, a finding appended to the unit — and you re-run
 `/vwf:execute <folder>`, whose resume loops the affected units back through
 their pipeline (a `code` unit's coder re-dispatched with the finding and the
 last review row that covers it re-run over the fix commits as a new loop, an

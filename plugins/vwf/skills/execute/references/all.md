@@ -37,7 +37,8 @@ changed.
      worktree on branch `all-<date>-<HHMM>`, the time this question is asked,
      refreshed from the integration branch before each plan, each plan landing
      in turn while the worktree is kept; the loop's exit removes it, except
-     on a `STOPPED` end.
+     on a `STOPPED` end. Each landing runs the skill's graph refresh, in the
+     main checkout, before the next plan starts.
    - **Deduped after-landing steps** — asked when one step command would run
      after two or more reached plans: a plan step recorded `run` by two or
      more of them, or a command in `.config/vwf.yaml`'s `after_landing:` list,

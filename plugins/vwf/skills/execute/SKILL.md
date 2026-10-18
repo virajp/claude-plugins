@@ -953,6 +953,18 @@ is what keeps two concurrent runs from conflicting on the file at merge time.
 When the branch did **not** merge — `no`, or a merge conflict — nothing is
 written.
 
+**The graph refresh — on a merged landing only.** Once the
+`docs: plan queue — <folder> complete` commit is pushed, run
+`mise x -- mise run code:graph` in the main checkout, on the integration
+branch, and wait for the task to exit. The task starts the graphify rebuild in
+the background and returns, and that is by design: wait for the task, never
+for the rebuild. Under `all` this runs after each plan's landing, before the
+next plan starts, so each plan reads a graph started after the last merge. A
+repo whose `mise tasks ls` lists no `code:graph` skips the step silently. A
+non-zero exit is reported in the final report and stops nothing. When the
+branch did not merge, the main checkout did not change, and the step does not
+run.
+
 When any landing condition fails — a red gate line, a unit that is not green,
 a blocking gap → **stop at the report** with what failed and the exact resume
 command, `/vwf:execute <folder>`. The worktree stays committed and nothing
