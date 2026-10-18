@@ -564,6 +564,54 @@ describe("serve.mjs", () => {
     expect(res.status).toBe(204);
     const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
     expect(yaml).toContain("  code: \"200f\"");
+    expect(yaml).toContain("  overlay: \"200f\"");
+  });
+
+  it("records no overlay field on a comment that is not on an overlay", async () => {
+    const { url } = await start();
+    const res = await fetch(new URL("/comment", url), {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: COMMENT,
+    });
+    expect(res.status).toBe(204);
+    const yaml = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    expect(yaml).not.toMatch(/^ {2}overlay: /m);
+  });
+
+  it("files a comment on a state-fallback page under the state shown", async () => {
+    const { url } = await start();
+    const post = (state: string) =>
+      fetch(new URL("/comment", url), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          path: "/signin",
+          state,
+          selector: "p",
+          text: "x",
+        }),
+      });
+    expect((await post("empty")).status).toBe(204);
+    expect((await post("error")).status).toBe(204);
+    const file = readFileSync(join(root, "__mockups", "comments.yaml"), "utf8");
+    const [fallback, shown] = parseYaml(file) as Array<Record<string, unknown>>;
+    expect(fallback).toMatchObject({
+      code: "100b",
+      state: null,
+      requested_state: "empty",
+    });
+    expect(shown).toMatchObject({ code: "100b", state: "error" });
+    expect(shown).not.toHaveProperty("requested_state");
+  });
+
+  it("hands the page ?state=default as the default state", async () => {
+    const { url } = await start();
+    const body = await (await fetch(new URL("/signin?state=default", url)))
+      .text();
+    expect(body).toContain("signin page");
+    expect(body).toContain("\"state\":\"\"");
+    expect(body).not.toContain("\"state\":\"default\"");
   });
 
   it("serves an HTML file only as a screen's page, never by its name", async () => {

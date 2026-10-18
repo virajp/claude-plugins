@@ -512,22 +512,39 @@ export function matchPath(root, routes, urlPath, state, overlay = null) {
   return fallback ?? { kind: "none", reason: "no such route" };
 }
 
+// The folder paths of a map's screens, and its overlays as `<path>\0<code>`.
+function namedBy(screens) {
+  return {
+    paths: new Set(
+      screens.filter(s => s.overlay === undefined).map(s => s.path),
+    ),
+    overlays: new Set(
+      screens.filter(s => s.overlay !== undefined).map(s =>
+        `${s.path}\0${s.code}`
+      ),
+    ),
+  };
+}
+
 /**
  * Every mockup page — index.html or index--*.html, never another file, never
- * a folder — under the root at a path the route map no longer names, deleted;
- * an overlay page is kept only at its own screen's path. A symlink is removed,
- * never followed, so nothing outside the root is touched, and nothing under
- * the reserved folder. Returns the deleted paths, root-relative.
+ * a folder — under the root that the previous route map named and the new one
+ * does not, deleted: each page at a path the previous map named and the new
+ * one does not, overlay pages there included, and each page of an overlay the
+ * previous map put on a path and the new one does not. `previous` is the
+ * previous map's screens, or null when there was none or it could not be
+ * read — then nothing is deleted, so a page at a path no map ever named is
+ * never touched. A symlink is removed, never followed, so nothing outside the
+ * root is touched, and nothing under the reserved folder. Returns the deleted
+ * paths, root-relative.
  */
-export function prunePages(root, screens) {
-  const named = new Set(
-    screens.filter(s => s.overlay === undefined).map(s => s.path),
-  );
-  const overlays = new Set(
-    screens.filter(s => s.overlay !== undefined).map(s =>
-      `${s.path}\0${s.code}`
-    ),
-  );
+export function prunePages(root, previous, screens) {
+  if (previous === null) {
+    return [];
+  }
+  const was = namedBy(previous);
+  const now = namedBy(screens);
+  const gonePath = rel => was.paths.has(rel) && !now.paths.has(rel);
   const pruned = [];
   const visit = (dir, rel) => {
     const entries = readdirSync(dir, { withFileTypes: true })
@@ -547,10 +564,11 @@ export function prunePages(root, screens) {
         continue;
       }
       const code = overlayOfPage(entry.name);
-      const keep = code === null
-        ? named.has(rel)
-        : overlays.has(`${rel}\0${code}`);
-      if (!keep) {
+      const key = `${rel}\0${code}`;
+      const prune = code === null
+        ? gonePath(rel)
+        : !now.overlays.has(key) && (gonePath(rel) || was.overlays.has(key));
+      if (prune) {
         rmSync(join(dir, entry.name));
         pruned.push(at);
       }

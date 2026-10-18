@@ -38,7 +38,7 @@ You receive:
   `{ "project", "platform", "screens": [ { "code", "screen", "slug", "flow", "route", "path", "routed" } ] }`.
   It names every screen of the platform, across all flows; `path` is the
   screen's directory under the root (empty for the route `/`). An **overlay**
-  — a modal, dialog or sheet whose Route cell reads `modal of <code>`,
+  — a modal, dialog or sheet whose whole Route cell is `modal of <code>`,
   `dialog of <code>` or `sheet of <code>` — also carries
   `"overlay": "<parent code>"`, and its `route` and `path` are its parent's.
   Read the map before writing a file or a link.

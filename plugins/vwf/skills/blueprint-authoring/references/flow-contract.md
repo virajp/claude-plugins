@@ -142,11 +142,14 @@ defined twice.
 route of its own: its Route cell names its parent's code instead — `modal of
 <code>`, `dialog of <code>` or `sheet of <code>` (e.g. `sheet of 004b`), where
 the parent is a screen of the same platform, in any flow, that is not itself
-an overlay. It may share the parent's route (a route in the cell beside the
-marker must be the parent's); it keeps its own code, row, states and
-Components block. Two screens on one route are a contract error unless all
-but one of them carry this marker. The mockup review serves an overlay at
-`<parent route>?overlay=<code>`.
+an overlay. The marker is the **whole cell**, optionally after one route word,
+which must be the parent's route (`/orders/:id sheet of 004b`); a cell holding
+any other text is a plain Route cell, so `/confirm (shown as a modal)` is a
+route, not a marker. The overlay's code and its parent's are letters, digits
+and `_` only — the code names the overlay's page. It keeps its own code, row,
+states and Components block. Two screens on one route are a contract error
+unless all but one of them carry this marker. The mockup review serves an
+overlay at `<parent route>?overlay=<code>`.
 
 Visual and interaction *language* — tokens, typography, spacing, motion,
 component behavior — comes from `docs/blueprint/design-system.md`; reference it

@@ -45,7 +45,8 @@ export function parseTarget(raw) {
 /**
  * What the mockup tree under `root` serves for a parsed target: matchPath
  * over its path, its `?state=` and its `?overlay=`, with the state and the
- * overlay it read (each null when absent).
+ * overlay it read (each null when absent; `?state=default` is the default
+ * state, so null too).
  */
 export function resolveTarget(root, routes, target) {
   const states = target.searchParams.getAll("state");
@@ -60,7 +61,7 @@ export function resolveTarget(root, routes, target) {
   }
   return {
     ...matchPath(root, routes, target.pathname, state, overlay),
-    state,
+    state: state === "default" ? null : state,
     overlay,
   };
 }

@@ -74,7 +74,10 @@
 //                             is served
 //   POST /comment             { path, state, overlay?, selector, text } → one
 //                             YAML list item in __mockups/comments.yaml, filed
-//                             under the screen the same GET would serve, 204
+//                             under the screen the same GET would serve — an
+//                             overlay's with `overlay: <c>`; for a state shown
+//                             by fallback, `state` the default (null) and
+//                             `requested_state: <s>` the one asked — 204
 //   POST /done                appends a done marker, responds 204, exits 0
 //
 // A request target is read by lib/link.mjs, the parser links.mjs uses, so the
@@ -794,11 +797,13 @@ function isComment(body) {
     && (body.overlay === undefined || typeof body.overlay === "string");
 }
 
-// The screen a comment is about: the one the same GET serves — an overlay's
-// own screen for an overlay — or, in renders mode, the screen of the path.
-function commentScreen(body) {
+// What a comment is about: { screen, fallback } — the screen the same GET
+// serves (an overlay's own screen for an overlay), and fallback true when
+// that GET shows the default page for a state not rendered — or, in renders
+// mode, the screen of the path.
+function commentTarget(body) {
   if (RENDER_MODE) {
-    return findScreen(routes, body.path);
+    return { screen: findScreen(routes, body.path), fallback: false };
   }
   const match = matchPath(
     root,
@@ -807,7 +812,9 @@ function commentScreen(body) {
     body.state || null,
     body.overlay || null,
   );
-  return match.kind === "none" ? null : match.screen;
+  return match.kind === "none"
+    ? { screen: null, fallback: false }
+    : { screen: match.screen, fallback: match.fallback === true };
 }
 
 async function postComment(req, res) {
@@ -823,7 +830,7 @@ async function postComment(req, res) {
     res.writeHead(400).end();
     return;
   }
-  const screen = commentScreen(body);
+  const { screen, fallback } = commentTarget(body);
   const yamlOrNull = value => (value ? yamlString(value) : "null");
   // Renders mode: the plan that made the image, from renders.json.
   const plan = RENDER_MODE && screen
@@ -844,7 +851,14 @@ async function postComment(req, res) {
       `  code: ${yamlOrNull(screen?.code)}`,
       `  route: ${yamlOrNull(screen?.route)}`,
       ...plan,
-      `  state: ${yamlOrNull(body.state)}`,
+      // An overlay's own code, beside the parent's route it sits on.
+      ...(screen?.overlay !== undefined
+        ? [`  overlay: ${yamlString(screen.code)}`]
+        : []),
+      // A state not rendered shows the default page: file the comment there,
+      // and keep the state the link asked for.
+      `  state: ${yamlOrNull(fallback ? null : body.state)}`,
+      ...(fallback ? [`  requested_state: ${yamlString(body.state)}`] : []),
       `  selector: ${yamlString(body.selector)}`,
       `  text: ${yamlString(body.text)}`,
       `  status: open`,

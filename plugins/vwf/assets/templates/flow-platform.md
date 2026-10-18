@@ -67,10 +67,13 @@ Flow contract: [<Flow name>](./index.md)
 
      OVERLAYS: a modal, dialog or sheet that opens over another screen puts
      its parent's code in the Route cell instead of a route — `modal of 004b`,
-     `dialog of 004b` or `sheet of 004b` — and shares the parent's route (a
-     route beside the marker must be the parent's). The parent is a screen of
-     this platform, in any flow, and not itself an overlay. Two screens on one
-     route are an error unless all but one carry the marker.
+     `dialog of 004b` or `sheet of 004b` — and shares the parent's route. The
+     marker is the whole cell, optionally after one route word, which must be
+     the parent's (`/orders/:id sheet of 004b`); any other text makes it a
+     plain Route cell. Both codes are letters, digits and _ only. The parent
+     is a screen of this platform, in any flow, and not itself an overlay.
+     Two screens on one route are an error unless all but one carry the
+     marker.
 
      Error and empty are MANDATORY pins per screen (or an explicit
      "n/a — <why>") — sad paths are contract; so are the CONDITIONAL product

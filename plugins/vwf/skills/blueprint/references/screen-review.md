@@ -98,7 +98,10 @@ modal, dialog or sheet whose Route cell reads `modal of <code>`, `dialog of
       for a platform whose link check passed.
 3. **Review.** Read each platform's `<root>/__mockups/comments.yaml`. Each
    item carries `id`, `code`, `route`, `state`, `selector`, `text`, `status`,
-   `created_at` and `applied_at`. Each `open` item is a **proposed
+   `created_at` and `applied_at`; an item on an overlay also carries
+   `overlay: <code>`, and one on a state-fallback page carries
+   `requested_state: <state>`, its `state` being the default the page showed.
+   Each `open` item is a **proposed
    Screens-contract change**, taken one at a time: show it, the user confirms
    or declines, and a confirmed one is edited into the doc. Set its `status` to
    `applied` or `declined` and `applied_at` to the time (ISO 8601, UTC). A

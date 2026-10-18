@@ -15,15 +15,19 @@
 // link (`[004a](../004-checkout/mobile.md#004a)`) points at the screen's home
 // flow and is not a second definition.
 //
-// An overlay — a Route cell holding `modal of <code>`, `dialog of <code>` or
-// `sheet of <code>` — sits on its parent's route: it takes the parent's route,
-// path and routed, plus `overlay: <parent code>`, and holds no route of its
-// own. Its parent is a screen of the platform, in any flow, that is not an
-// overlay; a route word in the cell must have the parent's route shape.
+// An overlay — a Route cell that is, whole, `modal of <code>`, `dialog of
+// <code>` or `sheet of <code>`, after at most one route word — sits on its
+// parent's route: it takes the parent's route, path and routed, plus
+// `overlay: <parent code>`, and holds no route of its own. Any other cell is a
+// route cell, whatever words it holds. Its parent is a screen of the platform,
+// in any flow, that is not an overlay; the route word must have the parent's
+// route shape. The overlay's code and its parent's are letters, digits and _
+// only (OVERLAY_RE): the code is the `?overlay=` value and part of a file name.
 //
 // `errors` lists two non-overlay codes with one route, one code twice, a route
-// `pathError` refuses, and an overlay whose parent is missing, an overlay, or
-// on another route; a caller writes nothing when it is not empty. A missing
+// `pathError` refuses, a marker whose parent is not such a code, an overlay
+// whose own code is not, and an overlay whose parent is missing, an overlay,
+// or on another route; a caller writes nothing when it is not empty. A missing
 // flows directory, no `<platform>.md`, or a table with no Code, Screen and
 // Route columns throws.
 //
@@ -37,6 +41,7 @@ import {
 } from "node:fs";
 import { join } from "node:path";
 import {
+  OVERLAY_RE,
   pathError,
   routeShape,
   routeToPath,
@@ -108,10 +113,19 @@ function routeToken(cell) {
   return null;
 }
 
-// The parent code a Route cell marks this screen an overlay of, or null.
+// The overlay marker a Route cell is, whole: `<kind> of <parent>`, after an
+// optional route word. { parent } when the parent is a code OVERLAY_RE takes,
+// { bad: parent } when it is not, null when the cell is not a marker.
 function overlayOf(cell) {
-  return /\b(?:modal|dialog|sheet)\s+of\s+([A-Za-z0-9_]+)\b/i.exec(cell)?.[1]
-    ?? null;
+  const marker = /^(?:\/\S*\s+)?(?:modal|dialog|sheet)\s+of\s+(\S+)$/i.exec(
+    cell.trim(),
+  );
+  if (!marker) {
+    return null;
+  }
+  return OVERLAY_RE.test(marker[1])
+    ? { parent: marker[1] }
+    : { bad: marker[1] };
 }
 
 /** The route map of one platform's flows; see the header. */
@@ -146,11 +160,26 @@ export function buildRouteMap(flowsDir, platform) {
         byCode.set(row.code, flow);
       }
       const token = routeToken(row.route);
-      const parent = overlayOf(row.route);
+      const marker = overlayOf(row.route);
       const screen = { code: row.code, screen: row.screen, slug, flow };
       screens.push(screen);
-      if (parent !== null) {
-        overlays.push({ screen, parent, token });
+      if (marker !== null) {
+        if (marker.bad !== undefined) {
+          errors.push(
+            `Route cell "${row.route}" of ${row.code} names ${marker.bad}, `
+              + "not a screen code (letters, digits and _ only)",
+          );
+          continue;
+        }
+        // The code becomes ?overlay=<code> and part of the page's file name.
+        if (!OVERLAY_RE.test(row.code)) {
+          errors.push(
+            `overlay code ${row.code} breaks the overlay code rule: `
+              + "letters, digits and _ only",
+          );
+          continue;
+        }
+        overlays.push({ screen, parent: marker.parent, token });
         continue;
       }
       const routed = token !== null;

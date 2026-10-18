@@ -331,6 +331,49 @@ describe("routes.mjs", () => {
     }
   });
 
+  it("refuses an overlay whose own code breaks the overlay code rule", () => {
+    twoFlows();
+    writeFlow(
+      "300-cancel",
+      "web",
+      flowDoc(["| 300-a | Cancel | sheet of 200b | — | — | — | — |"]),
+    );
+    const { status, stderr } = run();
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/overlay code 300-a .*letters, digits and _/);
+    expect(existsSync(join(repo, ...OUT))).toBe(false);
+  });
+
+  it("reads a Route cell as an overlay only when the whole cell is the marker", () => {
+    twoFlows();
+    writeFlow(
+      "300-cancel",
+      "web",
+      flowDoc([
+        "| 300a | Confirm | `/confirm` (shown as a modal of the app) | — | — | — | — |",
+      ]),
+    );
+    const { status, stderr } = run();
+    expect(stderr).toBe("");
+    expect(status).toBe(0);
+    const by = Object.fromEntries(routesJson().screens.map(s => [s.code, s]));
+    expect(by["300a"]).toMatchObject({ route: "/confirm", path: "confirm" });
+    expect(by["300a"]).not.toHaveProperty("overlay");
+  });
+
+  it("refuses a marker whose parent is not a screen code, naming the cell", () => {
+    twoFlows();
+    writeFlow(
+      "300-cancel",
+      "web",
+      flowDoc(["| 300a | Cancel | sheet of 200-b | — | — | — | — |"]),
+    );
+    const { status, stderr } = run();
+    expect(status).not.toBe(0);
+    expect(stderr).toMatch(/Route cell "sheet of 200-b" of 300a/);
+    expect(existsSync(join(repo, ...OUT))).toBe(false);
+  });
+
   it("drops the punctuation around a route token", () => {
     writeFlow(
       "200-orders",
@@ -349,20 +392,40 @@ describe("routes.mjs", () => {
     ]);
   });
 
-  it("deletes every page at a path the map no longer names", () => {
+  // A flow the first run maps and the second no longer has: a screen at /old,
+  // an overlay on /old and an overlay on /signin.
+  function oldFlow() {
+    writeFlow(
+      "300-old",
+      "web",
+      flowDoc([
+        "| 300z | Old | `/old` | — | — | — | — |",
+        "| 300y | Old sheet | sheet of 300z | — | — | — | — |",
+        "| 300a | Sign in sheet | sheet of 100b | — | — | — | — |",
+      ]),
+    );
+  }
+
+  function pageIn(tree: string, rel: string) {
+    const file = join(tree, ...rel.split("/"));
+    mkdirSync(dirname(file), { recursive: true });
+    writeFileSync(file, "<p>x</p>");
+    return file;
+  }
+
+  it("deletes only the pages at paths the previous map named and this one does not", () => {
     twoFlows();
+    oldFlow();
     const tree = join(repo, ...OUT.slice(0, -2));
-    const page = (rel: string) => {
-      const file = join(tree, ...rel.split("/"));
-      mkdirSync(dirname(file), { recursive: true });
-      writeFileSync(file, "<p>x</p>");
-      return file;
-    };
+    const page = (rel: string) => pageIn(tree, rel);
     const kept = [
       page("index.html"),
       page("signin/index.html"),
       page("signin/index--error.html"),
+      page("signin/index--overlay-999.html"),
       page("orders/[id]/index.html"),
+      page("orders/[orderId]/index.html"),
+      page("hand/index.html"),
       page("old/notes.txt"),
       page("__mockups/x/index.html"),
       page("__Mockups/index.html"),
@@ -370,7 +433,7 @@ describe("routes.mjs", () => {
     const gone = [
       page("old/index.html"),
       page("old/index--error.html"),
-      page("orders/[orderId]/index.html"),
+      page("old/index--overlay-300y.html"),
       page("signin/index--overlay-300a.html"),
     ];
     const outside = join(repo, "outside");
@@ -381,6 +444,15 @@ describe("routes.mjs", () => {
       join(outside, "index.html"),
       join(tree, "old", "index--x.html"),
     );
+    const first = run();
+    expect(first.status).toBe(0);
+    expect(first.stdout).not.toContain("PRUNED:");
+    for (const file of [...kept, ...gone]) {
+      expect(existsSync(file), file).toBe(true);
+    }
+    rmSync(join(repo, "docs", "blueprint", "flows", "demo", "300-old"), {
+      recursive: true,
+    });
     const { status, stdout } = run();
     expect(status).toBe(0);
     for (const file of kept) {
@@ -393,7 +465,20 @@ describe("routes.mjs", () => {
     expect(existsSync(join(tree, "old", "index--x.html"))).toBe(false);
     expect(existsSync(join(outside, "index.html"))).toBe(true);
     expect(stdout).toContain("PRUNED: old/index.html\n");
+    expect(stdout).toContain("PRUNED: old/index--overlay-300y.html\n");
     expect(stdout).toContain("PRUNED: signin/index--overlay-300a.html\n");
+  });
+
+  it("prunes nothing when the previous routes.json is unreadable", () => {
+    twoFlows();
+    const tree = join(repo, ...OUT.slice(0, -2));
+    const stale = pageIn(tree, "old/index.html");
+    pageIn(tree, "__mockups/routes.json");
+    writeFileSync(join(repo, ...OUT), "{ not json");
+    const { status, stdout } = run();
+    expect(status).toBe(0);
+    expect(stdout).not.toContain("PRUNED:");
+    expect(existsSync(stale)).toBe(true);
   });
 
   it("fails when the platform has no flow file", () => {

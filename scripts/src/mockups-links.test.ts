@@ -285,6 +285,24 @@ describe("links.mjs", () => {
     );
   });
 
+  it("breaks a POST form whatever its action, # and none included", () => {
+    write(
+      "index.html",
+      "<form method=\"post\"><button>a</button></form>\n"
+        + "<form method=post action=\"#\"><button>b</button></form>\n"
+        + "<form action=\"#\"><button>c</button></form>\n"
+        + "<form><button>d</button></form>\n",
+    );
+    const { status, stdout } = run();
+    expect(status).toBe(1);
+    expect(stdout).toBe(
+      "BROKEN: index.html ->  — a POST form; the review server answers GET "
+        + "only\n"
+        + "BROKEN: index.html -> # — a POST form; the review server answers GET "
+        + "only\n",
+    );
+  });
+
   it("reads only the href of a link, never other attributes or text", () => {
     write(
       "index.html",
@@ -390,6 +408,23 @@ describe("links.mjs", () => {
         + "BROKEN: index.html -> /orders/1?state=overlay-200f — malformed state "
         + "overlay-200f\n",
     );
+  });
+
+  it("passes an overlay link whose parent or overlay page is not rendered yet", () => {
+    write(
+      "__mockups/routes.json",
+      JSON.stringify({
+        ...ROUTES,
+        screens: [
+          ...ROUTES.screens,
+          { ...ROUTES.screens[3], code: "200f", overlay: "200b" },
+          { ...ROUTES.screens[1], code: "100f", overlay: "100b" },
+        ],
+      }),
+    );
+    write("signin/index.html", html("/"));
+    write("index.html", html("/orders/1?overlay=200f", "/signin?overlay=100f"));
+    expect(run().stdout).toBe("LINKS OK: 3 links in 2 pages\n");
   });
 
   it("refuses a routes.json whose path is reserved or climbs", () => {

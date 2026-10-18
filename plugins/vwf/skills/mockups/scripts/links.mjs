@@ -19,11 +19,14 @@
 // code in __mockups/routes.json with no file yet, with or without `?state=`; a
 // `?state=` page, or that screen's default page when the state page is missing
 // (the server shows it with a "state not rendered" banner); and a
-// `?overlay=<code>` link names an overlay of the screen at that route. The target is read by lib/link.mjs and matched by
-// lib/routes.mjs, the parser and matcher the server uses, so the two agree.
+// `?overlay=<code>` link names an overlay of the screen at that route — its
+// parent page or its own page not rendered yet is the placeholder too. The
+// target is read by lib/link.mjs and matched by lib/routes.mjs, the parser and
+// matcher the server uses, so the two agree.
 // Every other link — relative, `http:`, `mailto:`, protocol-relative — is
 // broken, and so is a form that submits by POST (its own method="post", or
-// its button's formmethod): the review server answers GET only.
+// its button's formmethod), whatever its action — `#` or none included: the
+// review server answers GET only.
 //
 // Broken links: one `BROKEN: <page> -> <href> — <reason>` line each on stdout,
 // exit 1. None: one `LINKS OK: <n> links in <m> pages` line, exit 0. A root
@@ -140,7 +143,8 @@ function linksOf(html) {
     }
     else if (name === "form") {
       formPost = isPost(attrs.get("method"));
-      href = attrs.get("action") ?? null;
+      // A POST form with no action still submits, to the page itself.
+      href = attrs.get("action") ?? (formPost ? "" : null);
       post = formPost;
     }
     else if (name === "button" || name === "input") {
@@ -265,6 +269,10 @@ function verdict(raw, post) {
     end--;
   }
   const href = decoded.slice(start, end);
+  // A POST submit is broken whatever its target, `#` and none included.
+  if (post) {
+    return "a POST form; the review server answers GET only";
+  }
   if (href.startsWith("#")) {
     return null;
   }
@@ -283,10 +291,7 @@ function verdict(raw, post) {
     return "malformed path";
   }
   const match = resolveTarget(root, routes, target);
-  if (match.kind === "none") {
-    return match.reason;
-  }
-  return post ? "a POST form; the review server answers GET only" : null;
+  return match.kind === "none" ? match.reason : null;
 }
 
 const broken = [];
