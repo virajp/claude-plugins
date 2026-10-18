@@ -391,7 +391,7 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
 [Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
 (`type: vwf-plan`, `covers:`, `requires:`, `source:`, `backlog:`,
-`backlog_pieces:`), the
+`backlog_pieces:`, `gaps_of:`), the
 Status block at `DRAFT`, the Consent block, the `## Release levels` table
 (Project, Level, Reason), the cycle-only sections (Slice,
 Acceptance criteria (from blueprint), Gaps surfaced during execution), the
@@ -430,6 +430,12 @@ sits on `backlog:` or `backlog_pieces:`. Write all three empty when the slice
 came from nowhere in the backlog; an empty or absent list reads as empty, and
 when `backlog:` and `backlog_pieces:` both are, §8 calls nothing.
 
+**`gaps_of:`.** The landed plan folders whose gaps this element takes —
+interview item 2b, for a slice re-derived to close the plan holes a run
+surfaced. At hand-off `plan-management add` sets each one's `Gaps` cell in the
+plan index to `0 — moved to <this folder>`. Empty otherwise; an absent list
+reads as empty.
+
 **Dark exposure.** A plan may declare `exposure: dark` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
 runtime-settings foundation: same schema/cache/audit path, no new
@@ -465,7 +471,9 @@ Verification names a gate line (a `review` row has none, by shape); every
 finding; every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on
 both `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:`
 Parked line; every id §2 matched is on `source:`, and every `source:` id sits
-on `backlog:` or `backlog_pieces:`; the derived priority matches what
+on `backlog:` or `backlog_pieces:`; no `gaps_of:` entry names a row of the
+plan index that is not `COMPLETE`, or whose `Gaps` cell reads `-` or `0`; the
+derived priority matches what
 `plan-management priority <folder>` returns; every Consent row carries an
 answer, and no After landing step carries a mode other than `run`; the launch
 line names this folder.

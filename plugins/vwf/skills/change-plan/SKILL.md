@@ -74,8 +74,10 @@ subagent reads. Nothing lives in conversation.
   the shape, and `plan-management` its only writer. Like the backlog it is the
   base's alone, read from a member repo and never duplicated there. The
   `Priority` column of the rows a new plan will require — rows of either kind
-  — is what §5's derived priority stands on. Reading the file is this skill's
-  business; editing it never is — §8's `plan-management add` appends the row
+  — is what §5's derived priority stands on. A row whose `Gaps` cell is a
+  count above `0` is a landed plan with gaps that no plan took yet; a request
+  that takes them puts its folder on `gaps_of:` — interview item 2b. Reading
+  the file is this skill's business; editing it never is — §8's `plan-management add` appends the row
 - the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
   when the server is up; **skip silently** when it is not. Resolve the wing and
   apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
@@ -255,7 +257,10 @@ sets them `Done` — and `backlog_pieces:` the items it lands **one piece of** �
 landing sets them `Partially done`. No id sits on both. The last plan of a
 chain moves the id to `backlog:`; an absent `backlog_pieces:` or `source:`
 reads as empty. `source:` is empty only when no backlog item asked for the
-plan — work the user brought that the backlog does not hold.
+plan — work the user brought that the backlog does not hold. A fourth list,
+`gaps_of:`, names the landed plan folders whose gaps this plan takes —
+interview item 2b — and is empty otherwise; an absent `gaps_of:` reads as
+empty.
 
 Rules the plan must obey, learned from the plans that came before:
 
@@ -337,6 +342,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
 - every id §1 noted is on `source:`, and every `source:` id sits on `backlog:`
   or `backlog_pieces:` — a folder made for a backlog item with both lists
   empty is not approved
+- no `gaps_of:` entry names a row of the plan index that is not `COMPLETE`,
+  or whose `Gaps` cell reads `-` or `0`
 - the derived priority equals what `plan-management priority <folder>` returns
 - every project the units touch has a `## Release levels` row with a reason,
   and the Consent block has no `Release` row

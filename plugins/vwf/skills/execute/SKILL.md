@@ -888,7 +888,8 @@ Then act on that consent row:
   invoke `plan-management status <folder> BLOCKED "<the conflicting files>"`
   there, report the files. When step 4 returns from the merge and push,
   invoke `plan-management complete <folder>` in the main checkout — it sets
-  the row `COMPLETE`, re-points `Folder` under `archived/` when step 3 moved
+  the row `COMPLETE` and its `Gaps` cell to the count of entries in the
+  consolidated gap list, re-points `Folder` under `archived/` when step 3 moved
   the folder and leaves it at the live path otherwise, and runs the sweep, per
   the contract's *Writing a row — the completion* and *The sweep* in
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.

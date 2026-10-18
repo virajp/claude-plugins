@@ -101,7 +101,8 @@ the run's worktree no longer exists, so the folder is only there.
 ### `add <folder>`
 
 The planner's hand-off. Read the folder's frontmatter — `type:`, `title:`,
-`requires:`, `backlog:`, `backlog_pieces:` (absent reads as empty). A folder
+`requires:`, `backlog:`, `backlog_pieces:`, `gaps_of:` (absent reads as
+empty). A folder
 whose Status block does not read `DRAFT` is refused in one line: it was handed
 off already, or never came from a planner. Then:
 
@@ -113,12 +114,21 @@ off already, or never came from a planner. Then:
    `vwf-change-plan` is `change` — `Plan` the `title:`, `Target repo` per
    membership (the member whose code a cycle plan changes under `multi-repo`;
    `—` for a change plan, and for any plan in a `repo` or `monorepo`
-   topology), `Priority`, `Status` `APPROVED`, `Requires` the basenames of
-   the `requires:` entries or `—`, `Backlog` the `backlog:` ids — the `Bnn`
-   prefixes of the backlog project's items — then the `backlog_pieces:` ids,
-   each written `Bnn (piece)`, or `—` when both lists are empty. When the
-   file is absent, write the contract's *prose frame* — the intro and the
-   header row — first, then the row.
+   topology), `Priority`, `Status` `APPROVED`, `Gaps` `-`, `Requires` the
+   basenames of the `requires:` entries or `—`, `Backlog` the `backlog:` ids
+   — the `Bnn` prefixes of the backlog project's items — then the
+   `backlog_pieces:` ids, each written `Bnn (piece)`, or `—` when both lists
+   are empty. When the file is absent, write the contract's *prose frame* —
+   the intro and the header row — first, then the row;
+4. for each `gaps_of:` entry, find the row by basename and set its `Gaps`
+   cell to `0 — moved to <this folder's basename>`. When the cell already
+   reads `0 — moved to …`, add `, <this folder's basename>` after it.
+
+Before step 1, examine each `gaps_of:` entry. Refuse the `add` in one line,
+naming the entry, when its row is not `COMPLETE` or its cell reads `-` or
+`0`: that plan has no gaps to move. A refused `add` edits nothing. An entry
+that matches no row — the sweep removed it — gets no edit, and the report
+names it.
 
 The edit rides the planner's approval commit.
 
@@ -209,8 +219,9 @@ caller's next commit in whatever checkout the folder sits.
 
 The contract's *Writing a row — the completion* plus *The sweep*: in the main
 checkout, on the integration branch, after the merge has landed, set the
-folder's row `COMPLETE`; re-point `Folder` to `docs/plans/archived/<basename>`
-when that directory exists on disk in the folder's repo — the landing's
+folder's row `COMPLETE` and its `Gaps` cell to the count of entries in the
+folder's *Gaps surfaced during execution* — `0` when it holds none; re-point
+`Folder` to `docs/plans/archived/<basename>` when that directory exists on disk in the folder's repo — the landing's
 `archive` moved it — and leave it at the live path otherwise; then run the
 sweep. Report the edit for the caller's
 `docs: plan queue — <folder> complete` commit and push; a rejected push
@@ -334,8 +345,8 @@ Then **the folder's row**, per *Where each verb runs*. When this verb runs in
 the main checkout, apply the landing edit to the row in the base repo's
 `docs/plans/index.md` — the same edit `complete` makes: set the row's Status to
 `COMPLETE` — already so on a plan `/vwf:execute` landed with open gaps and left
-live — and its `Folder` to `docs/plans/archived/<basename>`, then run the
-contract's *sweep* — remove every `COMPLETE` row whose `Folder` points under
+live — its `Gaps` cell to the count when it still reads `-`, and its `Folder`
+to `docs/plans/archived/<basename>`, then run the contract's *sweep* — remove every `COMPLETE` row whose `Folder` points under
 `docs/plans/archived/` and that no `APPROVED` or `RUNNING` row's `Requires`
 names; a `COMPLETE` row whose `Folder` is still a live path is never swept,
 since its folder has not moved. A folder with no row gets none — archiving does

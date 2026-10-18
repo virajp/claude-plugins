@@ -35,6 +35,11 @@ landing sets it `Partially done` — and what remains is written as
 `- Bnn: <piece>` Parked lines, at least one per piece id (section F). The last
 plan of a chain moves the id to `backlog:`.
 
+2b. **Gaps of a landed plan.** Does this plan take the gaps of a landed plan —
+a row of the plan index whose `Gaps` cell is a count above `0`? Each such
+folder goes on `gaps_of:`; at hand-off `plan-management add` sets that row's
+cell to `0 — moved to <this folder>`.
+
 3. **Non-goals.** What the user is explicitly not asking for, especially the
    adjacent thing the survey found. Goes to *Out of scope* with the reason.
 4. **Reversals.** Does any part contradict a standing decision — a memory, a

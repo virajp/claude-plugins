@@ -42,6 +42,8 @@ source: [] # ids (Bnn) this plan was made for — each must also sit on backlog:
 backlog: [] # ids (Bnn) this plan finishes — landing sets them Done
 backlog_pieces: [] # ids (Bnn) this plan lands one piece of — landing sets them
                    # Partially done; each needs a Bnn line under Parked
+gaps_of: [] # landed plan folders whose gaps this plan takes, e.g.
+            # docs/plans/2026-09-01-x — add sets their index Gaps cell to 0
 covers: [] # cycle plans only — the blueprint doc(s) this plan implements; the
            # list the implementation: stamp is written to
 exposure: dark # cycle plans only, optional — the slice ships behind a flag

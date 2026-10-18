@@ -27,7 +27,10 @@ sets them `Done`; empty when the slice came from nowhere in the backlog),
 piece of** — landing sets them `Partially done`; each needs at least one
 `- Bnn: <piece>` line under *Parked*, naming the chained folder where one
 already covers the piece; no id sits on both lists, the last plan of a chain
-moves the id to `backlog:`, and an absent list reads as empty), and
+moves the id to `backlog:`, and an absent list reads as empty),
+**`gaps_of:`** (the landed plan folders whose gaps this element takes —
+interview item 2b; `plan-management add` sets each one's `Gaps` cell in the
+plan index to `0 — moved to <this folder>`; an absent list reads as empty), and
 `exposure: dark` when the slice ships behind a flag. There is no `status:` key:
 the **Status** block is the one status, `DRAFT` until §8's `plan-management add`
 sets `APPROVED`; from then on that skill rewrites it on the executor's behalf,

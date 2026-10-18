@@ -2516,7 +2516,9 @@ remains as `- Bnn: <piece>` lines under *Parked* — at least one per piece id,
 naming the chained folder where one already covers the piece. The last plan of a
 chain moves the id to `backlog:`. The hand-off marks the ids of both lists
 `planned` through `/vwf:backlog` — the only thing that writes the project — so
-no item is planned twice.
+no item is planned twice. A slice re-derived to close the gaps of a landed plan
+names that folder on `gaps_of:`, and the hand-off sets the folder's `Gaps` cell
+in the plan index to `0 — moved to <this plan>`.
 
 Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
@@ -2587,15 +2589,20 @@ launch line.
 
 **The queue.** The one table of the base repo's `docs/plans/index.md` is where
 every approved plan of either kind waits: one row per folder — `Folder`, `Kind`,
-`Plan`, `Target repo`, `Priority`, `Status`, `Requires`, `Backlog` (the `Bnn`
-ids of the backlog project's items the plan finishes, then those it lands a
-piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
+`Plan`, `Target repo`, `Priority`, `Status`, `Gaps`, `Requires`, `Backlog` (the
+`Bnn` ids of the backlog project's items the plan finishes, then those it lands
+a piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
 or `COMPLETE` and nothing else; the folder's own Status block keeps the run
 detail (`BLOCKED`, a pause, the worktree path), which the index never mirrors.
-The planner adds the row at hand-off; this skill flips it; every edit is a
-direct commit on the integration branch from the main checkout, never a
-worktree's, so the run branch never carries the file and two plans landing in
-parallel cannot conflict on it.
+`Gaps` reads `-` until the plan lands, then the count of entries in the folder's
+*Gaps surfaced during execution* — `0` when there are none. A later plan that
+takes those gaps lists the folder on its `gaps_of:` frontmatter, and its
+hand-off sets the cell to `0 — moved to <that plan>`. An index without the
+column gets it from the next writer, with `-` in every row already there. The
+planner adds the row at hand-off; this skill flips it; every edit is a direct
+commit on the integration branch from the main checkout, never a worktree's, so
+the run branch never carries the file and two plans landing in parallel cannot
+conflict on it.
 
 `next` reads that table, at the integration branch's tip, with **no Kind
 filter**, and takes the `APPROVED` row of lowest `Priority` whose every
@@ -3018,11 +3025,11 @@ calls and never edits.
 
 | Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Called by                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`)                                                                                                                                                                                                                                                                                                                                                                                                                                                     | `plan`, `change-plan`                                                                           |
+| `add <folder>`                     | The hand-off: Status `APPROVED`, the priority derived, the row appended to the one table (`Kind` from the folder's `type:`, `Gaps` `-`), and each `gaps_of:` row's `Gaps` cell set to `0 — moved to <folder>`                                                                                                                                                                                                                                                                                                                                                                   | `plan`, `change-plan`                                                                           |
 | `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `execute`, before the worktree is cut                                                           |
 | `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's Status block to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's Status block alone — `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED` and the line under it; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                               | `execute`, at start, pause, block and landing                                                   |
-| `complete <folder>`                | After the merge: the row `COMPLETE`, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `execute`, in the main checkout                                                                 |
+| `complete <folder>`                | After the merge: the row `COMPLETE` and its `Gaps` count, its `Folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                   | `execute`, in the main checkout                                                                 |
 | `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the Status block set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog:` id still open and `/vwf:backlog partial` for every `backlog_pieces:` id, the mempalace `runs` drawer marked archived | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
 | `next`                             | The pick: every `APPROVED` row whose `Requires` are all satisfied, lowest `Priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                                                                                                                                                                                                                                      | `execute next`                                                                                  |
 | `resolve <folder>`                 | The `requires:` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers:` doc stamped `implementation: complete`; an entry matching nothing is named, never re-pointed                                                                                                                                                                                                                                                                                                                                                 | the planners at self-review; `execute` at preflight                                             |
@@ -3425,22 +3432,23 @@ the plan was made for — a `Bnn` id in the arguments always among them — a
 `backlog:` list naming the ids this plan finishes and a `backlog_pieces:` list
 naming those it lands one piece of — the interview asks which, per recalled id,
 every `source:` id goes on one of the two, and a piece id's remainder is written
-as `- Bnn: <piece>` lines under *Parked* — plus one `NN-<unit>.md` per subagent
-unit, every unit `Kind: edit`. A change plan gets **no review row by default** —
-the wave review is its only check; a `Kind: review` row, the one at which
-`execute` runs `/code-review` and `/security-review`, is written only when the
-change lands runnable code — anything that executes rather than is read: shipped
-shell or hook scripts, build or tooling source, an installable package — with
-its reason in the decisions table. The row sits in a wave strictly later than
-the units it covers and still reviews the whole range since the previous row: a
-review finding on a file whose unit it does not cover is dropped and counted, a
-security finding is routed to that unit all the same. The sections the template
-marks *cycle plans only* — the slice, the acceptance criteria, the gaps — are
-omitted. Units in a wave own **disjoint paths** (the shared-file rule), a change
-that needs a new or altered check plans that as an owned edit rather than
-"update the gates", and the last two units are fixed: a docs unit and a gates
-unit, `NN-gates.md`, which runs the generators and the full gate and bumps
-nothing.
+as `- Bnn: <piece>` lines under *Parked* — a `gaps_of:` list naming the landed
+plan folders whose gaps this plan takes, if any — plus one `NN-<unit>.md` per
+subagent unit, every unit `Kind: edit`. A change plan gets **no review row by
+default** — the wave review is its only check; a `Kind: review` row, the one at
+which `execute` runs `/code-review` and `/security-review`, is written only when
+the change lands runnable code — anything that executes rather than is read:
+shipped shell or hook scripts, build or tooling source, an installable package —
+with its reason in the decisions table. The row sits in a wave strictly later
+than the units it covers and still reviews the whole range since the previous
+row: a review finding on a file whose unit it does not cover is dropped and
+counted, a security finding is routed to that unit all the same. The sections
+the template marks *cycle plans only* — the slice, the acceptance criteria, the
+gaps — are omitted. Units in a wave own **disjoint paths** (the shared-file
+rule), a change that needs a new or altered check plans that as an owned edit
+rather than "update the gates", and the last two units are fixed: a docs unit
+and a gates unit, `NN-gates.md`, which runs the generators and the full gate and
+bumps nothing.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —
