@@ -318,45 +318,52 @@ All non-blocking; the run proceeded on the assumption stated.
   dialog or sheet screen sits on its parent's route
   (`plugins/vwf/skills/mockups/scripts/routes.mjs:168`), so one such screen
   stops the whole platform. Assumed: D8 as written. Closes in a follow-up plan.
-  **Ruling (user, 2026-10-18):** a modal, dialog or sheet screen is an overlay
-  state of its parent route, served at `<route>?state=<code>`; D8 permits that
-  shared route. Fixed by the vwf gap follow-up plan.
+  **Ruling (user, 2026-10-10, kept 2026-10-18):** an overlay screen marks its
+  Route cell `modal of <code>`, `dialog of <code>` or `sheet of <code>`, shares
+  its parent's route, and is served at `<route>?overlay=<code>`; `?state=` keeps
+  one meaning. `renders.mjs` skips an overlay code with a `SKIPPED:` line, as
+  its image would overwrite the parent's. Fixed on the branch fix-mockups-gaps.
 - **G2 (U1 GAP, R1 review).** The HOME-rule reference row has no pinned format;
   U1 assumed a markdown link in the Code cell (`routes.mjs:115`). Any other form
-  counts as a second definition. **Ruling (user, 2026-10-18):** the form U1
-  assumed is the contract — the Code cell is a markdown link to the home flow's
-  platform file. `flow-contract.md` pins it in the vwf gap follow-up plan; the
-  parse stays.
+  counts as a second definition. **Ruling (user, 2026-10-10, kept 2026-10-18):**
+  the form U1 assumed is the contract — the Code cell is a markdown link to the
+  home flow's platform file; `flow-contract.md` pins it. Fixed on the branch
+  fix-mockups-gaps.
 - **G3 (R1 review, plan gap).** D11 checks `href` only, while the generator
   allows a form action to navigate; a broken form action is never reported.
-  **Ruling (user, 2026-10-18):** `links.mjs` checks each form `action` by the
-  same D11 rules as an `href`. Fixed by the vwf gap follow-up plan.
+  **Ruling (user, 2026-10-10, kept 2026-10-18):** `links.mjs` checks each form
+  `action` and `formaction` by the same D11 rules as an `href`, and a form that
+  submits by POST is broken, as the server answers GET only. Fixed on the branch
+  fix-mockups-gaps.
 - **G4 (U2 GAP).** In a flow-scoped run, a stale page at a path `routes.json` no
   longer names has no owning flow, so its `BROKEN:` lines hit the D12 stop; the
-  remedy is a sweep. **Ruling (user, 2026-10-18):** `links.mjs` skips a page no
-  flow owns and prints one `STALE:` line for it; the skill tells the user to run
-  a sweep, and there is no D12 stop. Fixed by the vwf gap follow-up plan.
+  remedy is a sweep. **Ruling (user, 2026-10-10, kept 2026-10-18):**
+  `routes.mjs` deletes each page at a path the route map no longer names, in a
+  sweep and a flow-scoped run alike, and prints one `PRUNED: <path>` line each;
+  it never touches `__mockups/` and never follows a symlink. Fixed on the branch
+  fix-mockups-gaps. (A 2026-10-18 ruling to skip the page with a `STALE:` line
+  was reversed the same day.)
 - **G5 (R1 wave review, contested).** `screen-review.md:55` — after the D12
   stop, nothing records the deferred review in `blueprint.remaining` or names
-  the halt. **Ruling (user, 2026-10-18):** the stop writes
+  the halt. **Ruling (user, 2026-10-10, kept 2026-10-18):** the stop writes
   `screens/<project>/<NNN>-<flow>/<platform>` into `blueprint.remaining`, so the
-  stamp reads partial, and names the halt in the run report. Fixed by the vwf
-  gap follow-up plan.
+  stamp reads partial, and names the halt. Fixed on the branch fix-mockups-gaps.
 - **G6 (R1 review round 2, plan gap).** D4 does not say what `GET /` does when
   no screen has the route `/` (a mobile platform, or D7 routes only):
   `lib/routes.mjs:323` returns a blank 404, yet `/vwf:mockups` step 9 hands the
   user that root URL. Assumed: D4 as written; a ruling (for example a redirect
-  to `/__mockups/`) closes it. **Ruling (user, 2026-10-18):** `GET /` redirects
-  (302) to `/__mockups/` when no screen has the route `/`. Fixed by the vwf gap
-  follow-up plan.
+  to `/__mockups/`) closes it. **Ruling (user, 2026-10-10, kept 2026-10-18):**
+  `GET /` redirects (302) to `/__mockups/` when no screen has the route `/`.
+  Fixed on the branch fix-mockups-gaps.
 - **G7 (R1 review round 3, plan gap).** D5 and D11 make a missing `?state=` file
   a 404 and a broken link, while D10 and the generator link `?state=` to an
   unrendered cross-flow target; `lib/routes.mjs:319` returns no match, which
   leads to the D12 stop on a fresh tree. A ruling is needed. **Ruling (user,
-  2026-10-18):** the placeholder wins — a `?state=` link to a screen with no
-  file is correct and opens the D10 placeholder, which names the state; a link
-  whose screen file exists but whose state file does not is broken. Fixed by the
-  vwf gap follow-up plan.
+  2026-10-18, combining the 2026-10-10 ruling):** a link to a screen with no
+  page yet, with or without `?state=`, opens the D10 placeholder, which names
+  the state; a `?state=` link whose state page is missing while the default page
+  exists opens the default page with a "state not rendered" banner. Only a code
+  in no Screens table is broken. Fixed on the branch fix-mockups-gaps.
 - **G8 (R1 review, convergence guard, contested).** Round 3 raised 5 findings on
   U1 against round 2's 4, so the review loop ended at the guard, not the cap;
   the loop, not the contract, is the suspect. Open on U1: `links.mjs:81` (href
@@ -374,9 +381,11 @@ All non-blocking; the run proceeded on the assumption stated.
   href stops at `=`), `serve.mjs:345` (a literal file URL filed under a
   `[param]` screen), `links.mjs:85` (duplicate reference tables),
   `links.mjs:165` (numeric references 0x80-0x9F not mapped as browsers do).
-  **Ruling (user, 2026-10-18):** the vwf gap follow-up plan fixes the bare `&`
-  regression at `links.mjs:135`, and any residual its G1-G7 fixes touch; every
-  other residual closes as out of scope.
+  **Ruling (user, 2026-10-18):** keep the 16 fixes the branch fix-mockups-gaps
+  made (3 more were already fixed), with `serve.mjs` and `links.mjs` sharing one
+  parser, `lib/link.mjs`; a code review of the branch runs before it merges. (A
+  2026-10-18 ruling to fix the bare `&` regression alone was reversed the same
+  day, once the finished work was found.)
 - **G9 (R1 security — RESOLVED in round 5).** The security findings of the
   review row did not converge: round 1 raised 3, round 2 raised 1, round 3
   raised 1 and round 4 raised 2, each fix holding but each round finding
