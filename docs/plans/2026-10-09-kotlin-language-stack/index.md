@@ -263,41 +263,70 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   install outside mise with `lsp_servers` running the bare binary, or no
   `lsp_servers` entry), written into K8 and `01-language-kotlin.md`.
 - U1 (non-blocking): java is pinned `temurin-25`, against pack-format.md:203
-  (`latest` only): `latest` renders non-LTS 27.0.0+35, so K3 wins.
+  (`latest` only): `latest` renders non-LTS 27.0.0+35, so K3 wins. **Ruling
+  (user, 2026-10-18):** a tool pin is bootstrap's; input for bootstrap — `java`
+  needs one owner tool that `kotlin` and `flutter` both depend on, at one
+  version. The pack pin stays until the tool-config removal plan. Closed here.
 - U2 (non-blocking): `.editorconfig` is not on the pack root allowlist; ktlint
   settings ship as `.config/ktlint.editorconfig`, passed with `--editorconfig`.
+  **Ruling (user, 2026-10-18):** the ktlint config and its format and lint tasks
+  are generic, so bootstrap owns them; input for bootstrap. The workaround stays
+  until the tool-config removal plan. Closed here.
 - U1 (non-blocking): kotlin-lsp has no Windows entry — the `.win.zip` launcher
-  is unverified; the pack docs say Windows users install it by hand.
+  is unverified; the pack docs say Windows users install it by hand. **Ruling
+  (user, 2026-10-18):** no Windows support, macOS only. The stackgen gap
+  follow-up plan removes the Windows sentence at
+  `kotlin/references/toolchain.md:83`.
 - Orchestrator (GAP): U6's Owns widened to
   `plugins/stackgen/skills/tool-config/references/gitleaks.md:49` and
   `references/git.md:32-34` — wave review rule-5 findings in no unit's Owns.
+  Closed by that widening during the run.
 - R1 (non-blocking, dropped as uncovered U4):
   `plugins/vwf/skills/init/SKILL.md:356` — the Gradle rows have no root or
   nesting guard, so a Flutter app's `android/settings.gradle(.kts)` reads as a
   kotlin sub-project, and Groovy `settings.gradle` labels a Java-only build
   kotlin. K11 says "at the root"; the ruling is ambiguous for a Gradle build
   nested in another stack. Plan holes: `/vwf:change-plan` for a follow-up.
+  **Ruling (user, 2026-10-18):** a Gradle build or `*.xcodeproj` below a
+  directory that holds `pubspec.yaml` is a platform edge of that Flutter
+  project, never a sub-project; a Gradle build reads as kotlin only with a
+  `settings.gradle.kts` or a `*.kt` file, else init names no language for it.
+  Fixed by the vwf gap follow-up plan.
 - R1 plan gap: K5 and U1 edit 3 name the root-only `dependencies --write-locks`
   as the lock writer, with no all-projects lock task for multi-module builds.
+  **Ruling (user, 2026-10-18):** already fixed in round 1 — the `setup:deps`
+  tasks resolve every project (`stackgenResolveAll --write-locks`); K5's text is
+  superseded. Closed, no change.
 - R1 (non-blocking, dropped as uncovered U3):
   `plugins/stackgen/stacks/bundles/kotlin-library.md:31` still says the lockfile
   is written only by `./gradlew dependencies --write-locks`, which the round-1
-  fixes made stale (every-project locking via the `setup:deps` tasks).
+  fixes made stale (every-project locking via the `setup:deps` tasks). **Ruling
+  (user, 2026-10-18):** the stackgen gap follow-up plan corrects the sentence,
+  in the same edit as the Android-library passage of that file.
 - R1 plan gaps (R1/gap/2): K9's `manifest: settings.gradle.kts` holds no
   dependencies, so doctor reads every declared dependency as drift; K5's ruling
-  text names `dependencies --write-locks`, no longer the lock writer.
+  text names `dependencies --write-locks`, no longer the lock writer. **Ruling
+  (user, 2026-10-18):** the manifest fact of the Kotlin and Compose packs
+  becomes `gradle/libs.versions.toml`; `settings.gradle.kts` stays the project
+  marker init reads. Fixed by the stackgen gap follow-up plan.
 - U1 (non-blocking): `lsp_servers.kotlin-lsp` clashes with
   `app-framework/flutter/pack.yaml:48` (same key, `mise x kotlin@latest --`);
   the local-plugin merge writes the first and reports the second. The Parked
-  Flutter fix (`mise x -- kotlin-lsp`) makes them identical.
+  Flutter fix (`mise x -- kotlin-lsp`) makes them identical. **Ruling (user,
+  2026-10-18):** make them identical — the Flutter entry becomes
+  `mise x -- kotlin-lsp --stdio`. Fixed by the stackgen gap follow-up plan.
 - R1 contested at the round cap (4) — blueprint/plan was not thorough enough:
   (U2) the ktlint and detekt `*/build/*` and `*/generated/*` filter skips real
   package directories named build or generated; (U2) detekt skips a path
   containing whitespace with a warning and exits 0; (U1) `--frozen` treats the
   build as locked once any `*gradle.lockfile` exists, so a new module resolves
-  unlocked unless the build sets `LockMode.STRICT`.
+  unlocked unless the build sets `LockMode.STRICT`. **Ruling (user,
+  2026-10-18):** the two ktlint and detekt items, and the task part of the
+  `--frozen` item, are inputs for bootstrap (generic tasks). The stackgen gap
+  follow-up plan adds `LockMode.STRICT` to the Kotlin build doctrine.
 - U2 DOCS FALSIFIED for U6: `plugins/stackgen/assets/pack-format.md:12-14` says
-  six toolchain-gate packs; there are now eight.
+  six toolchain-gate packs; there are now eight. Closed — the file now names
+  eight packs.
 
 ## Run log
 
