@@ -363,9 +363,15 @@ one project at the directory holding `settings.gradle.kts` or
 `settings.gradle`; the `build.gradle.kts` or `build.gradle` files of its
 modules below it are never read as further projects. A `build.gradle(.kts)` is
 a manifest alone only where no settings file sits beside it or above it in the
-same build. A `blank` repo reads nothing, and a `shaped` repo proposes from
-its registry or from question 2. Say in one line, per repo, what the read
-found.
+same build. A Gradle build reads as kotlin only when it holds a
+`settings.gradle.kts` or any `*.kt` file; a build with neither (Groovy build
+files and Java code alone) names no language. A Gradle build or a `*.xcodeproj`
+in a directory below one that holds `pubspec.yaml` — a Flutter app's
+`android/` and `ios/` — is a platform edge of that Flutter project, never a
+sub-project, so the read proposes none for it. A `blank` repo reads nothing,
+and a `shaped` repo proposes from its registry or from question 2. Say in one
+line, per repo, what the read found, a build that names no language and an
+edge it skipped among it.
 
 Nothing else keys on a language. The ignore set `/stackgen:tool-config`
 lands is a universal superset, every stack's section in every repo, so no

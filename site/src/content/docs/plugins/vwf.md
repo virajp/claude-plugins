@@ -1074,14 +1074,17 @@ python, `pubspec.yaml` → dart, `go.mod` → go, `Cargo.toml` → rust,
 the table admits, and only at the top of the directory being read, since an
 Xcode app keeps its dependency list inside it — and `settings.gradle(.kts)`, or
 a `build.gradle(.kts)` with no settings file beside or above it, → kotlin: a
-Gradle build is one project, its modules' build files never read as more. A
-`blank` repo reads nothing, and a `shaped` repo proposes from its registry or
-from question 2. Nothing else keys on a language: the ignore set
-`/stackgen:tool-config` lands is a universal superset, every stack's section in
-every repo, so no ignore template is asked for; and the skill's `NODE` value
-starts as `init`'s `--node true` on a repo whose `stackgen.yaml` holds none yet,
-which [`/vwf:setup`](#the-materialize-pass) then re-derives from the packs it
-pins.
+Gradle build is one project, its modules' build files never read as more, and it
+is kotlin only when it holds a `settings.gradle.kts` or a `*.kt` file, else it
+names no language. A Gradle build or an `*.xcodeproj` below a directory that
+holds `pubspec.yaml` (a Flutter app's `android/` and `ios/`) is a platform edge
+of that Flutter project, never a sub-project. A `blank` repo reads nothing, and
+a `shaped` repo proposes from its registry or from question 2. Nothing else keys
+on a language: the ignore set `/stackgen:tool-config` lands is a universal
+superset, every stack's section in every repo, so no ignore template is asked
+for; and the skill's `NODE` value starts as `init`'s `--node true` on a repo
+whose `stackgen.yaml` holds none yet, which
+[`/vwf:setup`](#the-materialize-pass) then re-derives from the packs it pins.
 
 **Five questions in six rounds**, asked *before* the plan so one yes covers all
 of it. **A round is one round for the whole product**, however many repos
