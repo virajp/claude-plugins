@@ -333,12 +333,19 @@ the unit could not proceed without; it blocks the unit and its dependents.
   qualifiers disagree: `Pixel7` renders about 411×914 against 412×915, and
   `MediumTablet` is landscape 1280×800 against portrait 800×1280 · the
   qualifiers were kept, and the mismatch finding fires only for a size set in
-  `.config/vwf.yaml`. A ruling must change the qualifiers or the table.
+  `.config/vwf.yaml`. A ruling must change the qualifiers or the table. **Ruling
+  (user, 2026-10-18):** change the qualifiers — the Compose ux-gate and golden
+  doctrine use explicit qualifier strings at the D6 sizes (for example
+  `w412dp-h915dp`, `w800dp-h1280dp-port`); the table stays, and the tablet stays
+  portrait. Fixed by the stackgen gap follow-up plan.
 - U1 (wave 1) · D7's Context7 check found Apple HIG sources for 393×852,
   834×1194 and the tvOS 60/80 safe area, but no source for the Android, Wear OS,
   Android TV and watchOS values · the plan values were kept, unconfirmed.
+  **Ruling (user, 2026-10-18):** one unit of the stackgen gap follow-up plan
+  finds and records a source for each value, and corrects a value that is wrong.
 - R1 (wave 1) · contested at the cap: `plugins/stackgen/assets/pack-format.md`
-  line 407 is a 102-column prose line · left as it is; a fold fix only.
+  line 407 is a 102-column prose line · left as it is; a fold fix only. **Ruling
+  (user, 2026-10-18):** the stackgen gap follow-up plan folds it.
 
 ## Run log
 
