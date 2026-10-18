@@ -293,7 +293,7 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   directory that holds `pubspec.yaml` is a platform edge of that Flutter
   project, never a sub-project; a Gradle build reads as kotlin only with a
   `settings.gradle.kts` or a `*.kt` file, else init names no language for it.
-  Fixed by the vwf gap follow-up plan.
+  Fixed directly, with no plan, in d67fcee1.
 - R1 plan gap: K5 and U1 edit 3 name the root-only `dependencies --write-locks`
   as the lock writer, with no all-projects lock task for multi-module builds.
   **Ruling (user, 2026-10-18):** already fixed in round 1 — the `setup:deps`

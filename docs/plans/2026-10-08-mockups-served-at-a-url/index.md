@@ -338,11 +338,13 @@ All non-blocking; the run proceeded on the assumption stated.
 - **G4 (U2 GAP).** In a flow-scoped run, a stale page at a path `routes.json` no
   longer names has no owning flow, so its `BROKEN:` lines hit the D12 stop; the
   remedy is a sweep. **Ruling (user, 2026-10-10, kept 2026-10-18):**
-  `routes.mjs` deletes each page at a path the route map no longer names, in a
-  sweep and a flow-scoped run alike, and prints one `PRUNED: <path>` line each;
-  it never touches `__mockups/` and never follows a symlink. Fixed on the branch
-  fix-mockups-gaps. (A 2026-10-18 ruling to skip the page with a `STALE:` line
-  was reversed the same day.)
+  `routes.mjs` deletes each page at a path the previous `routes.json` named and
+  the new one does not (a removed overlay's page included), in a sweep and a
+  flow-scoped run alike, and prints one `PRUNED: <path>` line each; with no
+  readable previous map it prunes nothing (narrowed 2026-10-18 by the branch
+  review, finding 8); it never touches `__mockups/` and never follows a symlink.
+  Fixed on the branch fix-mockups-gaps. (A 2026-10-18 ruling to skip the page
+  with a `STALE:` line was reversed the same day.)
 - **G5 (R1 wave review, contested).** `screen-review.md:55` — after the D12
   stop, nothing records the deferred review in `blueprint.remaining` or names
   the halt. **Ruling (user, 2026-10-10, kept 2026-10-18):** the stop writes
@@ -383,9 +385,13 @@ All non-blocking; the run proceeded on the assumption stated.
   `links.mjs:165` (numeric references 0x80-0x9F not mapped as browsers do).
   **Ruling (user, 2026-10-18):** keep the 16 fixes the branch fix-mockups-gaps
   made (3 more were already fixed), with `serve.mjs` and `links.mjs` sharing one
-  parser, `lib/link.mjs`; a code review of the branch runs before it merges. (A
-  2026-10-18 ruling to fix the bare `&` regression alone was reversed the same
-  day, once the finished work was found.)
+  parser, `lib/link.mjs`; a code review of the branch runs before it merges. The
+  review (2026-10-18) raised 10 findings: 8 are fixed in 170a884c; finding 7
+  (the `/` redirect when a non-screen `index.html` sits at the root) and finding
+  9 (the hand-kept table of character references) closed with no change — G6
+  rules the redirect, and the table fails closed. (A 2026-10-18 ruling to fix
+  the bare `&` regression alone was reversed the same day, once the finished
+  work was found.)
 - **G9 (R1 security — RESOLVED in round 5).** The security findings of the
   review row did not converge: round 1 raised 3, round 2 raised 1, round 3
   raised 1 and round 4 raised 2, each fix holding but each round finding
