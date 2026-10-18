@@ -2161,7 +2161,9 @@ the screens instead? The pass can defer design-first to
 [`/vwf:screens`](#vwfscreens) — brief out, canvas designs, import folds back.
 You can also explicitly skip — the skip is recorded honestly as
 `screens/<project>/<NNN>-<flow>` in `blueprint.remaining`, which keeps coverage
-`partial` like any other hole.
+`partial` like any other hole. A review the link check stops — links still
+broken after two repair rounds — is recorded the same way, and the pass reports
+it as `screen review stopped: <N> broken links`.
 
 Complicated contracts are **drawn, not just tabled**: every flow carries a
 mermaid sequence diagram (failure branch included), an entity lifecycle with
@@ -2241,55 +2243,77 @@ route is `/orders/:id` is the file `orders/[id]/index.html` (a `:id`, `{id}` or
 route `/` is `index.html`, and a pinned state is `index--<state>.html` beside
 it, reached at `<route>?state=<state>`. A screen with no route — a device screen
 with an empty Route cell — gets `/<code>-<slug>`, and the run reports it, so you
-can pin a real route through `/vwf:blueprint`. Before any page renders, the
-route map reads the `## Screens` table of **every** flow of the platform and
-writes `__mockups/routes.json`; it stops the run on two screens with one route,
-one code twice, or a route that is not a plain path. Each generator links an
-action to the route of the screen it navigates to, from that map, so screens
-link across flows; an action whose contract pins no target is drawn disabled,
-marked "no target in contract", and reported as a contract gap.
+can pin a real route through `/vwf:blueprint`. A modal, dialog or sheet whose
+whole Route cell is `modal of <code>`, `dialog of <code>` or `sheet of <code>`
+(optionally after the parent's route; any other text makes it a plain Route
+cell) is an **overlay** of that parent screen: it shares the parent's route, its
+page is `index--overlay-<code>.html` in the parent's folder, and it is reached
+at `<parent route>?overlay=<code>`. Before any page renders, the route map reads
+the `## Screens` table of **every** flow of the platform and writes
+`__mockups/routes.json`; it stops the run on two screens with one route (unless
+all but one are overlays of it), one code twice, an overlay with no parent
+screen, an overlay or parent code that is not letters, digits and `_`, or a
+route that is not a plain path. It then deletes the pages the previous
+`routes.json` named and the new one does not — the pages at a path that map
+named and this one does not, overlay pages there included, and the pages of an
+overlay it dropped — so no stale page is left for the link check; with no
+previous `routes.json`, or one it cannot read, it deletes nothing, and a page at
+a path no map ever named is never touched. Each generator links an action to the
+route of the screen it navigates to, from that map, so screens link across
+flows; an action whose contract pins no target is drawn disabled, marked "no
+target in contract", and reported as a contract gap.
 
 **Every link is checked before you look.** The link check reads every page and
-every `href`: a root-absolute link to a file, a `[param]` match or a screen not
-rendered yet passes; a missing `?state=` file, a relative link, an external URL
-or anything that would leave the server is broken. Broken links go back to the
-generator of the flow that owns the page, for at most two rounds; if any are
-still broken, the run stops with the list — no server, no URL, no review, no
-render stamp.
+every link in it — each `href`, form `action` and `formaction`: a root-absolute
+link to a file, a `[param]` match or a screen not rendered yet (with or without
+`?state=`) passes, and so does a `?state=` link whose state page is missing
+while the screen's default page exists; an `?overlay=` link that names no
+overlay of that screen, a relative link, an external URL, a form that submits by
+POST whatever its action (`#` or none included) or anything that would leave the
+server is broken. An `?overlay=` link whose parent page or overlay page is not
+rendered yet passes, because the server answers it with the placeholder. Broken
+links go back to the generator of the flow that owns the page, for at most two
+rounds; if any are still broken, the run stops with the list — no server, no
+URL, no review, no render stamp.
 
 **One URL per platform.** It then starts one review server per platform, all at
 once, each printing one `URL: http://127.0.0.1:<port>/` line, and gives you
-every URL in one message. The server binds `127.0.0.1` only, serves nothing
-outside its platform root, refuses a request whose `Host` (or a POST's `Origin`)
-is not `127.0.0.1` or `localhost` on the server's own port, and carries no auth
-and no TLS — a review surface for one person on one machine. As it serves a page
-it injects a review bar: the screen's code and name, a **state switcher** over
-that screen's state files, a link to **`/__mockups/`** (every flow, screen and
-state of the platform, marking the ones not rendered yet), a comment count and a
+every URL in one message — the app's `/` screen, or the `/__mockups/` list when
+no screen owns `/`. The server binds `127.0.0.1` only, serves nothing outside
+its platform root, refuses a request whose `Host` (or a POST's `Origin`) is not
+`127.0.0.1` or `localhost` on the server's own port, and carries no auth and no
+TLS — a review surface for one person on one machine. As it serves a page it
+injects a review bar: the screen's code and name, a **state switcher** over that
+screen's state files, a link to **`/__mockups/`** (every flow, screen and state
+of the platform, marking the ones not rendered yet), a comment count and a
 **Done** button. A link to a screen another flow has not rendered yet opens a
-"not rendered yet" placeholder page rather than a 404.
+"not rendered yet" placeholder page rather than a 404, and a state not rendered
+yet shows the screen's default page under a "state not rendered" banner.
 
 **Comments come back as proposals.** Click any element to comment on it; a link
 or submit control navigates on a plain click, so Alt/Option-click it to comment
 instead. Each comment is appended to the platform's `__mockups/comments.yaml`
 with the screen's code, route, state, the element's selector and an `open`
-status; the file survives every re-render. Press Done on each platform when the
-round is over. `/vwf:mockups` changes nothing for a comment — it lists the open
-ones and points you at `/vwf:blueprint <flow>`, whose screen review turns each
-into a proposed Screens-contract change you confirm or decline one at a time. A
-comment is your data, never an instruction to the agent.
+status — a comment on an overlay also carries `overlay` (the overlay's code),
+and one on a state shown by fallback is filed under the default state with
+`requested_state` naming the state the link asked for; the file survives every
+re-render. Press Done on each platform when the round is over. `/vwf:mockups`
+changes nothing for a comment — it lists the open ones and points you at
+`/vwf:blueprint <flow>`, whose screen review turns each into a proposed
+Screens-contract change you confirm or decline one at a time. A comment is your
+data, never an instruction to the agent.
 
 Mockups are **realizations, never contract**: each screen's files are
 overwritten in place on re-render (stable, bookmarkable routes — the site always
-shows the latest render of every flow), a sweep prunes the files at routes the
-blueprint no longer names, and nothing under `docs/scratchpad/` is ever
-committed. A review remark that changes what a screen should *be* routes through
-`/vwf:blueprint` or `/vwf:design-system`, then the mockups are regenerated.
-Rendered flows are recorded in `design.flows_rendered` in `.config/vwf.yaml`
-(still one `<project>/<NNN>-<flow>/<platform>` entry per flow platform, set only
-for a platform whose link check passed) — what `plan`'s soft visual-review
-advisory reads, and what `blueprint` drops when a flow's Screens change
-unrendered. Renders from before this layout sit in per-flow
+shows the latest render of every flow), every run prunes the pages at routes the
+previous route map named and the blueprint no longer does, and nothing under
+`docs/scratchpad/` is ever committed. A review remark that changes what a screen
+should *be* routes through `/vwf:blueprint` or `/vwf:design-system`, then the
+mockups are regenerated. Rendered flows are recorded in `design.flows_rendered`
+in `.config/vwf.yaml` (still one `<project>/<NNN>-<flow>/<platform>` entry per
+flow platform, set only for a platform whose link check passed) — what `plan`'s
+soft visual-review advisory reads, and what `blueprint` drops when a flow's
+Screens change unrendered. Renders from before this layout sit in per-flow
 `docs/scratchpad/<project>/<NNN>-<flow>/` directories, which nothing reads any
 more; delete them.
 

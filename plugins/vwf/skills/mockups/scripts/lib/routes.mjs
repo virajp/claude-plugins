@@ -7,10 +7,15 @@
 //   <root>/a/b/index.html                 the screen whose route is /a/b
 //   <root>/a/b/index--<state>.html        that screen in one pinned state
 //   <root>/orders/[id]/index.html         the route /orders/:id, {id} or [id]
+//   <root>/a/b/index--overlay-<code>.html the modal, dialog or sheet <code> on
+//                                         /a/b, served at /a/b?overlay=<code>
+//   <root>/a/b/index--overlay-<code>--<state>.html  that overlay in a state
 //   <root>/__mockups/routes.json          the route map routes.mjs writes
 //
 // Nothing here ever resolves outside the root: every candidate is realpath'd
-// and must sit under the root's own realpath.
+// and must sit under the root's own realpath. A URL segment matches a folder
+// in its exact case, whatever the file system folds, as a production router
+// does.
 //
 // Zero dependencies — node: modules only.
 
@@ -18,6 +23,7 @@ import {
   readdirSync,
   readFileSync,
   realpathSync,
+  rmSync,
   statSync,
 } from "node:fs";
 import {
@@ -31,7 +37,40 @@ export const RESERVED = "__mockups";
 export const RENDERS = "__renders";
 
 export const STATE_RE = /^[A-Za-z0-9_-]+$/;
+// An overlay's code: no `-`, so `index--overlay-<code>--<state>` splits one way.
+export const OVERLAY_RE = /^[A-Za-z0-9_]+$/;
 const PARAM_RE = /^\[[^\]/]+\]$/;
+
+/**
+ * A page state of the mockup tree: STATE_RE, and never `overlay-…`, which
+ * names an overlay's page.
+ */
+export function isState(state) {
+  return STATE_RE.test(String(state)) && !/^overlay-/i.test(String(state));
+}
+
+/**
+ * A page's file name: index.html, index--<state>.html, and for an overlay
+ * index--overlay-<code>.html and index--overlay-<code>--<state>.html.
+ */
+export function pageName(state, overlay) {
+  return "index"
+    + (overlay ? `--overlay-${overlay}` : "")
+    + (state ? `--${state}` : "")
+    + ".html";
+}
+
+/** True for a file name a mockup page can have: index.html or index--*.html. */
+export function isPageName(name) {
+  return /^index(--.+)?\.html$/.test(String(name));
+}
+
+/** The overlay code of an overlay page's file name, or null. */
+export function overlayOfPage(name) {
+  return /^index--overlay-([A-Za-z0-9_]+)(?:--.+)?\.html$/
+    .exec(String(name))
+    ?.[1] ?? null;
+}
 
 /**
  * The image name of a render state: `default` (or null) is index.png, any
@@ -119,6 +158,19 @@ export function isReserved(segment) {
   return String(segment).toLowerCase() === RESERVED;
 }
 
+// Why a list of segments can name no folder, or null: a NUL or a `.` or `..`
+// segment — the one rule a route's path (pathError) and a URL path
+// (splitPath) share.
+function segmentError(segments) {
+  if (segments.some(segment => segment.includes("\0"))) {
+    return "holds a NUL";
+  }
+  if (segments.some(segment => segment === "." || segment === "..")) {
+    return "holds a . or .. segment";
+  }
+  return null;
+}
+
 /**
  * Why a route's `path` cannot be served, or null when it can: a `.` or `..`
  * segment, a NUL, or a first segment that is the reserved `__mockups` or
@@ -127,11 +179,9 @@ export function isReserved(segment) {
  */
 export function pathError(path) {
   const segments = String(path).split("/").filter(segment => segment !== "");
-  if (String(path).includes("\0")) {
-    return "holds a NUL";
-  }
-  if (segments.some(segment => segment === "." || segment === "..")) {
-    return "holds a . or .. segment";
+  const bad = segmentError(segments);
+  if (bad) {
+    return bad;
   }
   if (segments.length > 0 && isReserved(segments[0])) {
     return `starts with the reserved /${RESERVED}/`;
@@ -181,7 +231,10 @@ export function readRoutes(root, reserved = RESERVED) {
       && ["code", "screen", "slug", "flow", "route", "path"].every(key =>
         typeof screen[key] === "string"
       )
-      && typeof screen.routed === "boolean";
+      && typeof screen.routed === "boolean"
+      && (screen.overlay === undefined
+        || (typeof screen.overlay === "string"
+          && OVERLAY_RE.test(screen.overlay)));
     if (!ok) {
       throw new Error(`${file}: screens[${index}] is malformed`);
     }
@@ -232,42 +285,42 @@ export function isDir(path) {
   }
 }
 
-/** The state names of a page directory, from its `index--<state>.html` files. */
-export function statesIn(dir) {
-  let names;
+function namesIn(dir) {
   try {
-    names = readdirSync(dir);
+    return readdirSync(dir).sort();
   }
   catch {
     return [];
   }
-  return names
-    .map(name => /^index--(.+)\.html$/.exec(name)?.[1])
-    .filter(state => state !== undefined && STATE_RE.test(state))
-    .sort();
+}
+
+/**
+ * The state names of a page directory, from its `index--<state>.html` files —
+ * or, for an overlay code, from its `index--overlay-<code>--<state>.html`.
+ */
+export function statesIn(dir, overlay = null) {
+  const re = overlay
+    ? new RegExp(`^index--overlay-${overlay}--(.+)\\.html$`)
+    : /^index--(.+)\.html$/;
+  return namesIn(dir)
+    .map(name => re.exec(name)?.[1])
+    .filter(state => state !== undefined && isState(state));
 }
 
 // Every directory the segments can reach, a static folder before a [param]
-// folder at each level.
+// folder at each level; a static folder only in the segment's exact case.
 function* walk(root, dir, segments) {
   if (segments.length === 0) {
     yield dir;
     return;
   }
   const [segment, ...rest] = segments;
-  const atRoot = dir === root;
-  if (!(atRoot && isReserved(segment))) {
+  const names = namesIn(dir);
+  if (names.includes(segment)) {
     const literal = servable(root, join(dir, segment));
     if (literal && isDir(literal)) {
       yield* walk(root, literal, rest);
     }
-  }
-  let names;
-  try {
-    names = readdirSync(dir).sort();
-  }
-  catch {
-    return;
   }
   for (const name of names) {
     if (!PARAM_RE.test(name) || name === segment) {
@@ -289,20 +342,27 @@ export function splitPath(urlPath) {
   catch {
     return null;
   }
-  if (decoded.includes("\0")) {
-    return null;
-  }
   const segments = decoded.split("/").filter(segment => segment !== "");
-  if (segments.some(segment => segment === "." || segment === "..")) {
-    return null;
+  return segmentError(segments) ? null : segments;
+}
+
+// True when every segment is a folder or file under the root in its exact
+// case, whatever the file system folds.
+function exactCase(root, segments) {
+  let dir = root;
+  for (const segment of segments) {
+    if (!namesIn(dir).includes(segment)) {
+      return false;
+    }
+    dir = join(dir, segment);
   }
-  return segments;
+  return true;
 }
 
 /**
  * The screen of routes.json a URL path belongs to, or null. A static segment
  * outranks a [param] segment at the first place they differ, so /orders/new
- * beats /orders/[id].
+ * beats /orders/[id]. An overlay screen owns no path of its own.
  */
 export function findScreen(routes, urlPath) {
   const segments = Array.isArray(urlPath) ? urlPath : splitPath(urlPath);
@@ -312,6 +372,9 @@ export function findScreen(routes, urlPath) {
   let best = null;
   let bestScore = "";
   for (const screen of routes.screens) {
+    if (screen.overlay !== undefined) {
+      continue;
+    }
     const pattern = screen.path ? screen.path.split("/") : [];
     if (pattern.length !== segments.length) {
       continue;
@@ -338,17 +401,48 @@ export function findScreen(routes, urlPath) {
   return best;
 }
 
+// The page of a screen (or an overlay) in its folder: the state's page; with
+// a state whose page is missing, the default page marked `fallback` when it
+// exists; else the placeholder, which names the state — a screen with no page
+// yet is not rendered, whatever state a link asks for.
+function pageOf(root, dir, screen, state, overlay) {
+  const name = pageName(state, overlay);
+  const file = servable(root, join(dir, name));
+  if (file && isFile(file)) {
+    return { kind: "file", file, dir: dirname(file), screen };
+  }
+  if (state !== null) {
+    const plain = servable(root, join(dir, pageName(null, overlay)));
+    if (plain && isFile(plain)) {
+      return {
+        kind: "file",
+        file: plain,
+        dir: dirname(plain),
+        screen,
+        fallback: true,
+      };
+    }
+  }
+  return { kind: "placeholder", screen, state };
+}
+
 /**
- * What a GET of `urlPath` with `?state=<state>` (state null when absent;
- * `default` is the same as absent) serves:
+ * What a GET of `urlPath` with `?state=<state>` and `?overlay=<code>` (each
+ * null when absent; state `default` is the same as absent) serves:
  *   { kind: "file", file, dir, screen }  a real file under the root; screen
  *                                        is the routes.json screen the path
- *                                        belongs to, or null
- *   { kind: "placeholder", screen }      a code in routes.json with no file yet
- *   { kind: "none", reason }          nothing — a 404, a broken link
+ *                                        belongs to (the overlay's for an
+ *                                        overlay), or null. `fallback: true`
+ *                                        when the state has no page and this
+ *                                        is the screen's default page
+ *   { kind: "placeholder", screen,       a code in routes.json with no file yet;
+ *     state }                            state is the one asked for, or null
+ *   { kind: "none", reason }             nothing — a 404, a broken link
  * `/__mockups/` itself is the server's to answer; every path under it is none.
+ * A path no screen owns serves a non-HTML file at that path, or a folder on
+ * disk; an HTML file is served only as a screen's page, never by its name.
  */
-export function matchPath(root, routes, urlPath, state) {
+export function matchPath(root, routes, urlPath, state, overlay = null) {
   const segments = splitPath(urlPath);
   if (!segments) {
     return { kind: "none", reason: "malformed path" };
@@ -356,15 +450,35 @@ export function matchPath(root, routes, urlPath, state) {
   if (segments.length > 0 && isReserved(segments[0])) {
     return { kind: "none", reason: `/${RESERVED}/ is reserved` };
   }
-  if (state !== null && state !== undefined && !STATE_RE.test(state)) {
+  if (state !== null && state !== undefined && !isState(state)) {
     return { kind: "none", reason: `malformed state ${state}` };
   }
+  if (overlay !== null && overlay !== undefined && !OVERLAY_RE.test(overlay)) {
+    return { kind: "none", reason: `malformed overlay ${overlay}` };
+  }
   // `default` is the plain index.html, as it is the plain index.png of a render.
-  const hasState = state !== null && state !== undefined && state !== "default";
-  const name = hasState ? `index--${state}.html` : "index.html";
+  const wanted = state !== null && state !== undefined && state !== "default"
+    ? state
+    : null;
   const screen = findScreen(routes, segments);
 
-  if (!hasState && segments.length > 0) {
+  if (overlay !== null && overlay !== undefined) {
+    const sheet = screen
+      && routes.screens.find(s =>
+        s.code === overlay && s.overlay === screen.code
+      );
+    if (!sheet) {
+      return { kind: "none", reason: `no overlay ${overlay} on this route` };
+    }
+    return pageOf(root, routeDir(root, screen.path), sheet, wanted, overlay);
+  }
+
+  if (
+    wanted === null
+    && segments.length > 0
+    && !/\.html$/i.test(segments[segments.length - 1])
+    && exactCase(root, segments)
+  ) {
     const literal = servable(root, join(root, ...segments));
     if (literal && isFile(literal)) {
       return { kind: "file", file: literal, dir: dirname(literal), screen };
@@ -375,28 +489,91 @@ export function matchPath(root, routes, urlPath, state) {
   // placeholder — never a [param] sibling, so a fixed route not rendered yet
   // still wins over /orders/[id].
   if (screen) {
-    const dir = routeDir(root, screen.path);
-    const file = servable(root, join(dir, name));
-    if (file && isFile(file)) {
-      return { kind: "file", file, dir: dirname(file), screen };
-    }
-    return hasState
-      ? { kind: "none", reason: `no state file ${name}` }
-      : { kind: "placeholder", screen };
+    return pageOf(root, routeDir(root, screen.path), screen, wanted, null);
   }
 
-  let pageWithoutState = false;
+  let fallback = null;
   for (const dir of walk(root, root, segments)) {
-    const file = servable(root, join(dir, name));
+    const file = servable(root, join(dir, pageName(wanted, null)));
     if (file && isFile(file)) {
       return { kind: "file", file, dir, screen: null };
     }
-    if (hasState && isFile(join(dir, "index.html"))) {
-      pageWithoutState = true;
+    const plain = wanted !== null && servable(root, join(dir, "index.html"));
+    if (fallback === null && plain && isFile(plain)) {
+      fallback = {
+        kind: "file",
+        file: plain,
+        dir,
+        screen: null,
+        fallback: true,
+      };
     }
   }
-  if (pageWithoutState) {
-    return { kind: "none", reason: `no state file ${name}` };
+  return fallback ?? { kind: "none", reason: "no such route" };
+}
+
+// The folder paths of a map's screens, and its overlays as `<path>\0<code>`.
+function namedBy(screens) {
+  return {
+    paths: new Set(
+      screens.filter(s => s.overlay === undefined).map(s => s.path),
+    ),
+    overlays: new Set(
+      screens.filter(s => s.overlay !== undefined).map(s =>
+        `${s.path}\0${s.code}`
+      ),
+    ),
+  };
+}
+
+/**
+ * Every mockup page — index.html or index--*.html, never another file, never
+ * a folder — under the root that the previous route map named and the new one
+ * does not, deleted: each page at a path the previous map named and the new
+ * one does not, overlay pages there included, and each page of an overlay the
+ * previous map put on a path and the new one does not. `previous` is the
+ * previous map's screens, or null when there was none or it could not be
+ * read — then nothing is deleted, so a page at a path no map ever named is
+ * never touched. A symlink is removed, never followed, so nothing outside the
+ * root is touched, and nothing under the reserved folder. Returns the deleted
+ * paths, root-relative.
+ */
+export function prunePages(root, previous, screens) {
+  if (previous === null) {
+    return [];
   }
-  return { kind: "none", reason: "no such route" };
+  const was = namedBy(previous);
+  const now = namedBy(screens);
+  const gonePath = rel => was.paths.has(rel) && !now.paths.has(rel);
+  const pruned = [];
+  const visit = (dir, rel) => {
+    const entries = readdirSync(dir, { withFileTypes: true })
+      .sort((a, b) => a.name.localeCompare(b.name));
+    for (const entry of entries) {
+      const at = rel ? `${rel}/${entry.name}` : entry.name;
+      if (entry.isDirectory()) {
+        if (!(rel === "" && isReserved(entry.name))) {
+          visit(join(dir, entry.name), at);
+        }
+        continue;
+      }
+      if (
+        !(entry.isFile() || entry.isSymbolicLink())
+        || !isPageName(entry.name)
+      ) {
+        continue;
+      }
+      const code = overlayOfPage(entry.name);
+      const key = `${rel}\0${code}`;
+      const prune = code === null
+        ? gonePath(rel)
+        : !now.overlays.has(key) && (gonePath(rel) || was.overlays.has(key));
+      if (prune) {
+        rmSync(join(dir, entry.name));
+        pruned.push(at);
+      }
+    }
+  };
+  visit(root, "");
+  return pruned;
 }

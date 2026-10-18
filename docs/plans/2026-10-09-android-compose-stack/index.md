@@ -235,8 +235,9 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   no version list before its file exists; `tool-config upgrade` will never move
   it. The fix belongs in tool-config (teach it integer build ids), outside this
   plan. **Ruling (user, 2026-10-18):** bootstrap owns the cmdline-tools pin (its
-  mise tool `android-sdk`); input for bootstrap. The pack pin stays until the
-  plan that removes tool-config and the pack toolchain files. Closed here.
+  mise tool `android-sdk`); recorded in item B03 of the bootstrap project
+  (github.com/users/virajp/projects/5). The pack pin stays until the plan that
+  removes tool-config and the pack toolchain files. Closed here.
 - G2 (U1, non-blocking): the taxonomy has no build-framework category;
   `framework/android` uses `meta-framework`, and its harness capability
   `e2e_local` → `test:e2e` is used by no other pack yet. **Ruling (user,
@@ -259,24 +260,29 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   `linter.yaml` ignores hold every stack's generated folders; the plan never
   said whether a new stack's folders join those lists outside rule 15. **Ruling
   (user, 2026-10-18):** a stack's generated folders go into the shared lists of
-  bootstrap's `base` tool, which already has the Android block; input for
-  bootstrap. No tool-config change. Closed here.
+  bootstrap's `base` tool, which already has the Android block. No tool-config
+  change (this reverses the 2026-10-10 ruling to edit the tool-config lists).
+  Closed here.
 
 - G6 (U4, non-blocking): `captures/` stays unanchored in the universal
   `.gitignore` and the three formatter lists, as ruling C8 wrote it — Android
   Studio writes it at the Gradle project root, which in a monorepo can sit at
   any depth — so a `captures/` source folder in any repo tool-config shapes is
   ignored and skipped by the formatters. Narrowing it needs a new ruling.
-  **Ruling (user, 2026-10-18):** keep `captures/` unanchored, as C8 wrote it.
+  **Ruling (user, 2026-10-18):** keep `captures/` unanchored, as C8 wrote it
+  (this reverses the 2026-10-10 ruling to ignore it in Android repos only).
   Closed, no change.
 - G7 (U1, non-blocking): from API 37.1 Google appears to publish `google_apis`
   system images only as `_ps16k` variants; `EMULATOR_IMAGE` must name an id that
   exists. Confirmed 2026-10-18 from `sys-img2-3.xml`: `google_apis` exists to
   `android-37.0`, only `google_apis_ps16k` from `android-37.1`, and
-  `google_apis_ps16k` for each level from 36. **Ruling (user, 2026-10-18):** the
-  `EMULATOR_IMAGE` detect proposes `google_apis_ps16k`. The stackgen gap
-  follow-up plan first confirms that the managed device's `systemImageSource`
-  accepts a ps16k image.
+  `google_apis_ps16k` for each level from 36. **Ruling (user, 2026-10-18, with
+  the 2026-10-10 ruling):** the `EMULATOR_IMAGE` detect proposes
+  `google_apis_ps16k`; the stackgen gap follow-up plan first confirms that the
+  managed device's `systemImageSource` accepts a ps16k image. The install-time
+  check with `sdkmanager --list`, which installs the `_ps16k` variant when the
+  plain id is missing and stops when neither exists, is recorded in item B03 of
+  the bootstrap project (github.com/users/virajp/projects/5).
 
 - G8 (R1, oscillation — convergence guard, non-blocking): the review loop
   stopped after round 2 because the covered finding count did not decrease (8 →
@@ -292,11 +298,13 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   ignores `--variant`/`--device`); U1 `code/lint/android:51` (full multi-module
   lint per commit); U4 `references/pre-commit.md:71` (one 120-character line).
   Reconciliation looks at the loop first, not the plan. **Ruling (user,
-  2026-10-18):** the stackgen gap follow-up plan fixes the Robolectric goldens,
-  the flavors, the convention-plugin detect, the raw `EMULATOR_IMAGE` and the
-  `--connected` flags. The two `code/lint/android` items are inputs for
-  bootstrap (generic lint task). The `pre-commit.md` line closes, because
-  tool-config goes away.
+  2026-10-18, with the 2026-10-10 choices):** the stackgen gap follow-up plan
+  fixes the Robolectric goldens (recorded on the CI OS, Linux, and the doc says
+  so), the flavors, the convention-plugin detect, the raw `EMULATOR_IMAGE` and
+  the `--connected` flags. The two `code/lint/android` items — the trigger, and
+  lint on the changed modules only — are recorded in item B03 of the bootstrap
+  project (github.com/users/virajp/projects/5). The `pre-commit.md` line closes,
+  because tool-config goes away.
 - G9 (R1/gap/2, non-blocking): ruling C2 and U1 Edit 3 still name build-tools,
   which U1 dropped on R1's advice (AGP fetches its own build-tools). **Ruling
   (user, 2026-10-18):** what shipped is correct, and C2's text is superseded.

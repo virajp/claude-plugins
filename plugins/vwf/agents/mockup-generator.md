@@ -37,8 +37,11 @@ You receive:
 - **Route map** — the absolute path of `<root>/__mockups/routes.json`:
   `{ "project", "platform", "screens": [ { "code", "screen", "slug", "flow", "route", "path", "routed" } ] }`.
   It names every screen of the platform, across all flows; `path` is the
-  screen's directory under the root (empty for the route `/`). Read it before
-  writing a file or a link.
+  screen's directory under the root (empty for the route `/`). An **overlay**
+  — a modal, dialog or sheet whose whole Route cell is `modal of <code>`,
+  `dialog of <code>` or `sheet of <code>` — also carries
+  `"overlay": "<parent code>"`, and its `route` and `path` are its parent's.
+  Read the map before writing a file or a link.
 - **Broken links** (re-dispatch only) — `BROKEN: <page> -> <href> — <reason>`
   lines from the calling skill's link check.
 
@@ -58,7 +61,14 @@ map, looked up by its code:
 - `<root>/<path>/index.html` — the default view (`<root>/index.html` for the
   route `/`)
 - `<root>/<path>/index--<state>.html` — one per pinned state (`--` separates
-  the page from the state); the server serves it at `<route>?state=<state>`
+  the page from the state); the server serves it at `<route>?state=<state>`.
+  A state name is letters, digits, `_` and `-` only, and never starts with
+  `overlay-`
+- an **overlay** sits in its parent's directory, never its own:
+  `<root>/<path>/index--overlay-<code>.html` for its default view and
+  `index--overlay-<code>--<state>.html` for each pinned state, served at
+  `<route>?overlay=<code>` (`&state=<state>`). Draw the parent screen beneath,
+  dimmed, with the overlay on top
 
 A route segment `:id`, `{id}` or `[id]` is already the folder `[id]` in `path`
 (`orders/[id]/index.html`). Create the directories as you write. Never write
@@ -74,9 +84,16 @@ before the user sees a page:
   screen is an `<a href>` (or a form `action`) to that code's `route` from the
   route map, root-absolute, with a sample value for each `[param]` segment
   (`/orders/1042` for `/orders/[id]`), and with `?state=<state>` only when the
-  contract names a state of the target.
+  contract names a state of the target. A form that navigates submits by GET
+  — never `method="post"`: the review server answers GET only. The link check
+  reads every `href`, form `action` and `formaction` alike.
+- **An overlay** is opened by a link to its parent's route plus
+  `?overlay=<code>` (`/orders/1042?overlay=200f`), and closed by a link to the
+  parent's route alone.
 - **A target in another flow** is linked the same way — the server serves a
-  placeholder page when that screen has no render yet.
+  placeholder page when that screen has no render yet, with or without
+  `?state=`; a `?state=` link whose state page is missing but whose default
+  page exists is served the default page.
 - **Every other `href`** is `#` or absent: never a relative path, never an
   external URL, never a guessed route, never a code missing from the route map.
 - **No target.** An action whose rules pin no coded screen it navigates to gets

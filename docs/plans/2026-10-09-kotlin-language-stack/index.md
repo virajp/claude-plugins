@@ -264,14 +264,16 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   `lsp_servers` entry), written into K8 and `01-language-kotlin.md`.
 - U1 (non-blocking): java is pinned `temurin-25`, against pack-format.md:203
   (`latest` only): `latest` renders non-LTS 27.0.0+35, so K3 wins. **Ruling
-  (user, 2026-10-18):** a tool pin is bootstrap's; input for bootstrap — `java`
-  needs one owner tool that `kotlin` and `flutter` both depend on, at one
-  version. The pack pin stays until the tool-config removal plan. Closed here.
+  (user, 2026-10-18):** a tool pin is bootstrap's; recorded in item B03 of the
+  bootstrap project (github.com/users/virajp/projects/5) — `java` needs one
+  owner tool that `kotlin` and `flutter` both depend on, at one version. The
+  pack pin stays until the tool-config removal plan. Closed here.
 - U2 (non-blocking): `.editorconfig` is not on the pack root allowlist; ktlint
   settings ship as `.config/ktlint.editorconfig`, passed with `--editorconfig`.
   **Ruling (user, 2026-10-18):** the ktlint config and its format and lint tasks
-  are generic, so bootstrap owns them; input for bootstrap. The workaround stays
-  until the tool-config removal plan. Closed here.
+  are generic, so bootstrap owns them; recorded in item B04 of the bootstrap
+  project (github.com/users/virajp/projects/5). The workaround stays until the
+  tool-config removal plan. Closed here.
 - U1 (non-blocking): kotlin-lsp has no Windows entry — the `.win.zip` launcher
   is unverified; the pack docs say Windows users install it by hand. **Ruling
   (user, 2026-10-18):** no Windows support, macOS only. The stackgen gap
@@ -291,7 +293,7 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   directory that holds `pubspec.yaml` is a platform edge of that Flutter
   project, never a sub-project; a Gradle build reads as kotlin only with a
   `settings.gradle.kts` or a `*.kt` file, else init names no language for it.
-  Fixed by the vwf gap follow-up plan.
+  Fixed directly, with no plan, in d67fcee1.
 - R1 plan gap: K5 and U1 edit 3 name the root-only `dependencies --write-locks`
   as the lock writer, with no all-projects lock task for multi-module builds.
   **Ruling (user, 2026-10-18):** already fixed in round 1 — the `setup:deps`
@@ -321,9 +323,11 @@ A unit returns exactly this block and nothing else — no file contents, no diff
   containing whitespace with a warning and exits 0; (U1) `--frozen` treats the
   build as locked once any `*gradle.lockfile` exists, so a new module resolves
   unlocked unless the build sets `LockMode.STRICT`. **Ruling (user,
-  2026-10-18):** the two ktlint and detekt items, and the task part of the
-  `--frozen` item, are inputs for bootstrap (generic tasks). The stackgen gap
-  follow-up plan adds `LockMode.STRICT` to the Kotlin build doctrine.
+  2026-10-18):** the two ktlint and detekt items are recorded in item B04 of the
+  bootstrap project (github.com/users/virajp/projects/5), and the task part of
+  the `--frozen` item in item B03 of the bootstrap project
+  (github.com/users/virajp/projects/5). The stackgen gap follow-up plan adds
+  `LockMode.STRICT` to the Kotlin build doctrine.
 - U2 DOCS FALSIFIED for U6: `plugins/stackgen/assets/pack-format.md:12-14` says
   six toolchain-gate packs; there are now eight. Closed — the file now names
   eight packs.
