@@ -12,9 +12,11 @@ gaps_of: [ docs/plans/2026-10-21-execute-monitor-in-vwf ]
 
 ## Status
 
-**APPROVED**
+**BLOCKED**
 
-APPROVED 2026-10-21 by the user
+BLOCKED at wave 0 — preflight: `/vwf:doctor` blocking finding, the graphify CLI
+fails (`ModuleNotFoundError: No module named 'graphify'`); worktree
+/Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-21-execute-monitor-gap-fixes
 
 ## Consent
 
@@ -246,8 +248,9 @@ A unit returns exactly this block and nothing else — no file contents, no diff
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                        | Commit |
+| ---- | --------- | ----- | ----- | ------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | failed  | wave gate: 5 of 5 lines green; `/vwf:doctor`: blocking — graphify CLI broken (`ModuleNotFoundError: No module named 'graphify'`), fix `MISE_ENV=dev mise install` (reinstall `pipx:graphifyy`); 4 non-blocking findings noted; no LSP finding | —      |
 
 ## Launch
 
