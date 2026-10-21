@@ -1,0 +1,77 @@
+## /security-review — U2 round 1
+
+NO FINDINGS. I looked at the monitor hook diff (83dfc8e8..HEAD: register.tsx, plan.ts) and spot-checked the mockups `serve.mjs` and `mempalace-checkpoint.sh` from the wider branch diff. Nothing was written.
+
+- **Git calls:** `git` runs through `$.run(["git", ...args], { cwd })`, an argv array with no shell. Every argument is a fixed literal (`rev-parse --show-toplevel`, `--path-format=absolute`, `worktree list --porcelain`), so repo content never reaches an argument.
+- **File operations:** the monitor only reads (`$.fs.read`, `$.fs.stat`) and never writes or deletes.
+- **`host:` and `members:` paths:** a malicious clone could make the monitor read files outside the repo (a `vwf.yaml` or `index.md`), or run read-only `git worktree list` with a member path as cwd. That is low impact, and those commands run nothing set in a repo's git config.
+- **YAML parsing:** it is line and regex based, with no deserializer and no eval.
+- **Secrets:** none found in the monitor diff.
+- **Mockups server:** `--root`, `--url-file` and `--peer-file` are realpath-checked to stay under `docs/scratchpad/`, and the peer URL is limited to an http origin on 127.0.0.1 or localhost.
+
+## /code-review high — U2 round 1
+
+```json
+[
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 261,
+    "summary": "In an `all` run, `locate` reads the main checkout's out-of-date copy of index.md and then keeps using it, because no worktree is named after the plan folder.",
+    "failure_scenario": "`/vwf:execute all` runs every plan in one shared worktree named `all-<date>-<HHMM>` and never cuts one named after a folder (execute/SKILL.md:545-546, all.md:36-37). So `nameOf(root) === folder` never matches. The `ordered` list then starts with the session cwd and the base, which is the main checkout. The main checkout holds the folder as the planner pushed it, so `${main}/docs/plans/<folder>/index.md` exists and is returned. Line 257 then keeps that path for as long as it exists. The pane shows no run log, no unit statuses and no COMPLETE until the merge lands on develop. The old newest-mtime pick, now removed, did not have this problem."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/plan.ts",
+    "line": 166,
+    "summary": "`unitFor` now takes the first plan unit id it finds anywhere in the prompt before it checks the unit file name, so coder agents get counted against the wrong unit.",
+    "failure_scenario": "The coder's prompt carries the unit file plus the index's assumed decisions and facts (execute-stages.md:69-75). The decisions table has a Unit column (`U1`, `U2`, …), and unit files contain `Depends on U1`. A coder for U3 whose prompt mentions U1 first is mapped to U1. U1 then shows as running and gets U3's times, and U3's row stays pending. Ruling 1 says to map a coder by the unit file in its prompt. Only review-row reviewers should use the id-first match."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 696,
+    "summary": "The `agent.spawn` hook appends the new agent without checking its id, so a refresh that runs in between leaves the agent in the list twice. A refresh holding an agent list fetched before the spawn also marks a newly started agent completed.",
+    "failure_scenario": "`next(e)` registers the agent. While the hook is still awaiting `read` and `clock.now`, the 3 s timer or another subagent's tool call runs `refresh`. That refresh adopts the agent from `agent.list()` with no `startedAt`, and the hook then appends it again. `agents[0]` is now the adopted copy, so the unit row shows Start `—` and Time `—`. In the reverse order, `listed` comes back before the spawn registers but the update callback sees the new agent. Line 459 then sets `status = \"completed\"` and `endedAt = now` on a unit that is still running. Ruling 4 asked for a merge by id."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 379,
+    "summary": "`isGuess` is only cleared when a runner spawns. In `next` and bare `/vwf-monitor` runs it stays true, so `pick()` runs on every refresh and can move the pane to another session's plan.",
+    "failure_scenario": "`/vwf:execute next` starts the run before the skill has claimed its row. The first `pick()` sees only another session's RUNNING plan B and selects it. Agents named `U1`… that match B's units are then recorded against B. Later, whenever the RUNNING rows change (one plan lands or a new one is claimed), line 417 renames the head plan to the newly picked folder and carries the earlier agents over to it."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 315,
+    "summary": "The second tier of `pick` uses every linked worktree of the repo, not just this session's, so it can never choose between several RUNNING plans.",
+    "failure_scenario": "Each RUNNING plan has its own worktree under `.worktrees/`, and `git worktree list` returns them all, other sessions' included. Whenever two plans read RUNNING and the session cwd is the main checkout, tier 1 is empty and tier 2 finds two matches, so the result is always the `N plans read RUNNING` problem. Ruling 5 asks for this session's worktrees, and the code only manages that when the cwd is already inside the plan's worktree."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 507,
+    "summary": "`endRun` ends the run as soon as the status reads BLOCKED or COMPLETE, even if agents are still live. `refresh` then returns early for an ended run, so those agents show as running forever.",
+    "failure_scenario": "One unit in a parallel wave fails and the folder reads BLOCKED while its sibling units are still running. `endRun` sets `r.endedAt`. Every later `refresh` returns at line 371, so `settle` never runs again, and the sibling rows (and any wave-review line) stay `running` with no End time. The `isLanded && agents.every(isOver)` guard at line 478 does nothing, because `endRun` sets `endedAt` anyway."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 505,
+    "summary": "The 10-minute timeout only starts once a main-loop `turn.complete` finds no live agent. A run that is interrupted, or whose turn ends while an agent still reads live, never ends, and the 3-second timer keeps running.",
+    "failure_scenario": "The person interrupts `/vwf:execute` mid-wave. Either no `turn.complete` fires, or it fires before `agent.list` drops the killed subagents, so `isIdle` is false. After that `waitingSince` stays undefined and `isStale` is never true. The run stays live, so the timer runs `refresh` (fs reads, `agent.list`, git) every 3 s for the rest of the session, and the tool rows stay compacted. Ruling 7 says the timer should run only while a run is live, and this run is effectively dead."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 381,
+    "summary": "The `problem` from `pick()` is shown even when the refresh keeps an already-known folder, so the pane shows a red error over a plan it is displaying correctly.",
+    "failure_scenario": "With `isGuess` set, a guessed plan whose row has just flipped to COMPLETE gets `problem = \"No plan reads RUNNING in docs/plans/index.md.\"`. With two RUNNING rows it gets `\"2 plans read RUNNING…\"`, while `folder` falls back to the current one. The red line stays under a plan that is being tracked correctly."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/plan.ts",
+    "line": 190,
+    "summary": "`memberPaths` treats any line starting at column 0 as a new top-level key, so it drops `members:` entries written as a zero-indented YAML sequence.",
+    "failure_scenario": "`members:` followed by `- name: api` / `  path: ../api` is valid YAML. The line `- name: api` matches `/^\\S/`, `isIn` becomes false, and every following `path:` is skipped. Member repos are never searched, and a member-repo cycle plan is reported as `Cannot read the index.md of <folder>`."
+  },
+  {
+    "file": "plugins/vwf/hooks/monitor/register.tsx",
+    "line": 260,
+    "summary": "On every refresh where the path isn't already known (and on every refresh in a guessed run), `roots()` and `pick()` re-read `.config/vwf.yaml`, run `git worktree list` once per root and `git rev-parse`, and stat every candidate.",
+    "failure_scenario": "Until the plan is found (a member repo not on this machine, or the whole of a guessed `next` run), each 3-second refresh starts several git subprocesses and re-reads the config. The member list and worktree list barely change during a run. They could be cached the way `bases` already is, or recomputed only when the known path disappears."
+  }
+]
+```
