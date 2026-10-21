@@ -113,7 +113,8 @@ Nothing beyond the `mempalace` tool, Qdrant and the repo's mise environment
 needs installing for memory. The two mempalace skills are **vendored into
 `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its auto-save hooks are
 reimplemented here, so memory arrives with the plugin rather than depending on
-anything being reachable at install time.
+anything being reachable at install time. Beside those hooks, `vwf` ships one
+hooks module, the [`/vwf:execute` progress pane](#the-progress-pane).
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -3040,6 +3041,42 @@ cannot be installed at all — size a long autonomous run accordingly.
 Install it before an autonomous run or that pause won't fire. The hook must read
 `.config/vwf.yaml` → `pipeline.execute_caps` **tighten-only**; vwf never invokes
 it and cannot detect its absence.
+
+#### The progress pane
+
+`vwf` ships a progress pane for `/vwf:execute`. It is a Claude Code mod, and the
+mod API it is built on is **early access**, so its behaviour can change with a
+Claude Code release.
+
+**When it opens.** The pane opens when you type `/vwf:execute`, at any width.
+When the model starts the skill itself, nobody asked for the pane, and Claude
+Code places such a pane only on a terminal of 144 columns or more (110 once you
+have opened it yourself); narrower, it waits undrawn until you open it or widen
+the terminal. `/vwf-monitor` opens it by hand, also for a run already in progress, and
+`/vwf-monitor <folder>` starts it over on the named plan folder. The command is
+`/vwf-monitor`, not `/vwf:monitor`, because a registered command name cannot
+contain a colon.
+
+**What it shows.** The plan, the run's start and end times, and one progress
+segment per unit — pending dim, running plain, failed red, skipped gray,
+finished green, and finished with gaps yellow. Below that, one row per unit with
+its status, its times and its gaps. Plan text is stripped of terminal control
+characters before it renders. Select a unit row to open that unit's subagent
+transcript; the **Main transcript** button goes back.
+
+**How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
+then `c`. When the run asks you a question, the pane steps aside until you
+answer.
+
+**Its limits.**
+
+- In the fullscreen layout the pane docks beside the transcript. It cannot cover
+  the whole screen.
+- In the normal layout (`CLAUDE_CODE_NO_FLICKER=0`) it shows above the prompt at
+  full width, and the normal layout reports no mouse clicks.
+- The pane follows only the `vwf:execute-*` subagents. An `edit` unit runs as a
+  general-purpose subagent, so on a plan made only of `edit` units the pane ends
+  the run at the first idle turn and stops updating.
 
 ### /vwf:plan-management
 

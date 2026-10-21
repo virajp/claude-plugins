@@ -16,10 +16,11 @@ paths:
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
 workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
 subagents they delegate to, the shared doctrine in `assets/`, the two mempalace
-auto-save hooks, and two MCP servers. It names **no** technology — no stack
-templates, no language list; what each axis offers comes from a stack plugin
-behind the stack-adapter contract, and `p:plugins:check`'s technology-free guard
-enforces it.
+auto-save hooks, the `/vwf:execute` progress pane (one TypeScript hooks module),
+and two MCP servers. It names **no** technology — no stack templates, no
+language list; what each axis offers comes from a stack plugin behind the
+stack-adapter contract, and `p:plugins:check`'s technology-free guard enforces
+it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
 The references below are an index of which file owns what, not a second copy of
@@ -385,9 +386,10 @@ not correctness, and `prefixSkillNames` is gone.
 ## Hooks
 
 `hooks/hooks.json` is authored directly in Claude's own format, with the scripts
-beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`). Plugin
-hooks are auto-discovered from that file and **never written to
-`settings.json`**, so verify them with `/hooks`.
+beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`), plus one
+hooks module under `modules`, described below. Plugin hooks are auto-discovered
+from that file and **never written to `settings.json`**, so verify them with
+`/hooks`.
 
 The verdict trap that shipped here: **a script's verdict shape is decided by its
 event**. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop`
@@ -402,6 +404,20 @@ Why the mempalace hooks are reimplemented rather than vendored, and the host
 rules a hook must satisfy (BSD `sed`, the per-event verdict shapes), are
 `plugins/stackgen/assets/artifact-doctrine.md` §4 and the `plugin-authoring`
 skill.
+
+The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
+`hooks/monitor/register.tsx`, a Claude Code mod that draws the `/vwf:execute`
+progress pane and registers `/vwf-monitor` (no colon: a registered command name
+refuses one). `plan.ts` beside it parses the plan folder and strips terminal
+control characters from plan text before it renders; `plan.test.ts`,
+`pane.test.tsx` and `refresh.test.tsx` are its tests. Its `$.state` keys
+(`monitorRun`, `monitorQuiet`, `monitorViewing`) sit under the plugin name `vwf`
+and are declared in `types/index.d.ts`, which the manifest's `types` key names.
+It follows only `vwf:execute-*` subagents, so an `edit`-only plan is not
+followed. `claude plugin test plugins/vwf` and
+`claude plugin validate --strict plugins/vwf` are its gates, run locally — CI
+has no `claude`. Why it lives inside vwf rather than as its own plugin is
+`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`.
 
 ## Documentation
 

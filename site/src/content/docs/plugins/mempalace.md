@@ -98,7 +98,9 @@ directly). Wrapping upstream's would mean owning a JSONL format nobody here
 controls in order to answer a question a counter already answers.
 
 The two shell hooks, declared in `plugins/vwf/hooks/hooks.json`, are all there
-is:
+is to memory. The same file also lists vwf's one hooks module, the
+[`/vwf:execute` progress pane](./vwf.md#the-progress-pane), under `modules`; it
+writes no memory.
 
 - **`hooks/mempalace-checkpoint.sh`** — POSIX sh, on the `Stop` event. It counts
   stops in a state file under `$XDG_STATE_HOME/ai-plugins/mempalace`. Every 15th
