@@ -37,10 +37,14 @@ is a map of which file owns which subject, not a summary of their contents.
   not shared doctrine, because no other skill reads it directly.
 
 - `hooks/hooks.json` — the two mempalace auto-save hooks (`Stop` +
-  `PreCompact`), whose scripts sit beside it. The npm→pnpm/bun normalizer is not
-  here: it ships inside stackgen's `package-manager/pnpm` pack, copied into the
-  target repo rather than discovered as a plugin hook — a JS/TS rewrite has no
-  business in a language-agnostic workflow plugin.
+  `PreCompact`), whose scripts sit beside it, and under `modules` the one hooks
+  module, `hooks/monitor/register.tsx`, the `/vwf:execute` progress pane, whose
+  state contract is `types/index.d.ts`, named by the manifest's `types` key. The
+  npm→pnpm/bun normalizer is not here: it ships inside stackgen's
+  `package-manager/pnpm` pack, copied into the target repo rather than
+  discovered as a plugin hook. The workflow doctrine stays language-agnostic;
+  the one TypeScript module is engine glue for the progress pane, not doctrine
+  (`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`).
 - `vendor/` — provenance, licence position and resync policy for the vendored
   third-party skills: `mempalace/` (the two memory skills, MIT with upstream's
   own LICENSE) and `andrej-karpathy-skills/` (`karpathy-guidelines`, MIT

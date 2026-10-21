@@ -194,8 +194,9 @@ Paste one of these, adjusting the plugin name:
 > `.claude-plugin/plugin.json` first — it declares the MCP servers and
 > dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md` with
 > YAML frontmatter; hooks are declared in `hooks/hooks.json` with their scripts
-> beside them. Port each of those to this tool's equivalent mechanism, and tell
-> me plainly what has no equivalent rather than dropping it silently.
+> beside them, plus one Claude Code hooks module (the `/vwf:execute` progress
+> pane) under `modules`. Port each of those to this tool's equivalent mechanism,
+> and tell me plainly what has no equivalent rather than dropping it silently.
 
 **The whole marketplace, to pick from:**
 

@@ -12,9 +12,9 @@ gaps_of: []
 
 ## Status
 
-**APPROVED**
+**COMPLETE**
 
-APPROVED 2026-10-21 by the user
+COMPLETE 2026-10-21 — c570b395, c5c457a6, d67fd5a4
 
 ## Consent
 
@@ -140,12 +140,12 @@ provides.
 
 ## Units
 
-| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                                                             | Depends on | Status  | Commit |
-| -- | ---- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------ |
-| U1 | 1    | [01-monitor-into-vwf.md](01-monitor-into-vwf.md) | edit   | `plugins/vwf/hooks/monitor/**` (new), `plugins/vwf/types/index.d.ts` (new), `plugins/vwf/hooks/hooks.json`, `plugins/vwf/.claude-plugin/plugin.json` (the `types` key only)                                                                      | —          | pending |        |
-| U2 | 2    | [02-review.md](02-review.md)                     | review | —                                                                                                                                                                                                                                                | U1         | pending |        |
-| U3 | 3    | [03-docs.md](03-docs.md)                         | edit   | `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `.claude/skills/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | pending |        |
-| U4 | 4    | [04-gates.md](04-gates.md)                       | edit   | none — it runs the gates and fixes nothing outside a finding's own unit                                                                                                                                                                          | U3         | pending |        |
+| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                                                             | Depends on | Status | Commit             |
+| -- | ---- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------ | ------------------ |
+| U1 | 1    | [01-monitor-into-vwf.md](01-monitor-into-vwf.md) | edit   | `plugins/vwf/hooks/monitor/**` (new), `plugins/vwf/types/index.d.ts` (new), `plugins/vwf/hooks/hooks.json`, `plugins/vwf/.claude-plugin/plugin.json` (the `types` key only)                                                                      | —          | green  | c570b395, c5c457a6 |
+| U2 | 2    | [02-review.md](02-review.md)                     | review | —                                                                                                                                                                                                                                                | U1         | green  |                    |
+| U3 | 3    | [03-docs.md](03-docs.md)                         | edit   | `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `.claude/skills/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | green  | d67fd5a4           |
+| U4 | 4    | [04-gates.md](04-gates.md)                       | edit   | none — it runs the gates and fixes nothing outside a finding's own unit                                                                                                                                                                          | U3         | green  | —                  |
 
 ## Shared-file rule
 
@@ -237,10 +237,56 @@ A unit returns exactly this block and nothing else — no file contents, no diff
 - A `Started` column or signal in the Run log, so that a unit that started
   before the pane loaded has a start time.
 
+## Gaps surfaced during execution
+
+1. **Plan gap — the pane cannot follow an `edit`-only plan** (U2 round 2,
+   `[medium]`, `contested`). `register.tsx` follows only subagents whose type
+   starts with `vwf:execute-` (`:240`, `:365`), but `/vwf:execute` dispatches
+   `edit` units and the wave reviewer as `general-purpose`. On an `edit`-only
+   plan, `turn.complete` (`:424`) ends the run at the first idle turn, and the
+   pane stops updating. Decision 6 and Out of scope hold the prototype's
+   behaviour, so the run did not fix it; no ruling says whether `edit` plans
+   must be covered. Closes with a follow-up `/vwf:change-plan`.
+2. **Carried-over prototype defects** (U2 rounds 1 and 2, `[low]`, `contested`).
+   The `/code-review` engine findings that the move copied unchanged: the
+   refresh race (`register.tsx:280`), the first-RUNNING-row pick (`:205`),
+   finished agents stuck `running` (`:252`), the newest-mtime index pick
+   (`:153`), tool rows collapsed with the pane closed (`:441`), the blocking
+   `poke` in `tool.call` (`:341`), member-repo plans not found (`:138`),
+   reviewers counted against the covered unit (`plan.ts:114`), and escaped pipes
+   in table cells (`plan.ts:36`). Full text in `engine/U2-1.log` and
+   `engine/U2-2.log`. The review loop ended at round 2 with `VERDICT: approve`;
+   the residuals stand because decision 6 scopes the plan to a move, not because
+   the loop failed to settle. Closes with the same follow-up `/vwf:change-plan`.
+
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit       | Model | Round | Outcome            | Detail                                                                                                                                                                                                                                                                                                                         | Commit   |
+| ---- | ---------- | ----- | ----- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------- |
+| 0    | preflight  | —     | 1     | green              | doctor blocking checks: mise, graphify CLI, graph in main checkout, claude 2.1.306 present; wave gate 5/5 green; format check skipped (no `covers:`); stack conventions skipped (no `code` unit); order U1 → U2 → U3 → U4                                                                                                      |          |
+| 1    | U1         | opus  | 1     | green              | 8 files changed; DECIDED: hooks.json hooks block gains only the trailing comma JSON needs before `modules`; GAP: none; plugin test 5 pass, validate --strict pass (warnings: missing icon, gating hook without .catch, both from the prototype)                                                                                | c570b395 |
+| 1    | R1         | opus  | 1     | pass               | FINDINGS: 0; CONTRACT: clean; RULINGS: clean                                                                                                                                                                                                                                                                                   |          |
+| 1    | gate       | —     | 1     | green              | wave gate 5/5 green; `claude plugin test plugins/vwf` 5 pass                                                                                                                                                                                                                                                                   |          |
+| 2    | U2         | opus  | 1     | findings(1)        | security, range 52100f5a..481816ee, 8 files → U1: [low] register.tsx:537 plan text rendered without stripping ANSI/OSC escapes (needs a hostile cloned repo; no code execution); VERDICT approve                                                                                                                               |          |
+| 2    | U2         | opus  | 1     | findings(2)        | review, range 52100f5a..481816ee: [high] register.tsx:517 dprint at commit turned five spacers into empty Text and cut the hint indent (:526,569,604,609,535), breaks decision 6; [low] engine findings 2–9 carried over from the prototype unchanged, out of scope under decision 6; API COMPAT n/a; VERDICT changes-required |          |
+| 2    | U1         | opus  | 2     | green              | fix from U2 round 1: spacers as {" "} and hint as a string expression (survive dprint); plan.ts parseIndex strips C0/C1 controls except \n and \t, + 1 test; plugin test 6 pass, validate pass                                                                                                                                 | c5c457a6 |
+| 2    | U2         | opus  | 2     | pass               | security, range 52100f5a..c5c457a6: escape strip verified complete; FINDINGS none; VERDICT approve                                                                                                                                                                                                                             |          |
+| 2    | U2         | opus  | 2     | pass (contested 2) | review, range 52100f5a..c5c457a6: round-1 fixes verified; [medium] register.tsx:424 edit-only plans not followed (prototype, decision 6) → gap 1 contested; [low] engine findings 2–10 carried over → gap 2 contested; VERDICT approve. Loop ends: verdict approve, residuals held out of scope by decision 6. Row green       |          |
+| 2    | R2         | opus  | 1     | pass               | over c5c457a6: FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                       |          |
+| 2    | gate       | —     | 1     | green              | wave gate 5/5 green                                                                                                                                                                                                                                                                                                            |          |
+| —    | acceptance | —     | —     | skipped            | no `covers:` — no acceptance criteria                                                                                                                                                                                                                                                                                          |          |
+| —    | ux         | —     | —     | skipped            | no `covers:` — no Screens contract                                                                                                                                                                                                                                                                                             |          |
+| —    | renders    | —     | —     | skipped            | no ux stage ran                                                                                                                                                                                                                                                                                                                |          |
+| —    | reconcile  | —     | —     | skipped            | no `covers:`: no stamps, registry or harness; no `code` unit: nothing to persist                                                                                                                                                                                                                                               |          |
+| 3    | U3         | opus  | 1     | green              | 11 files: decision doc, CLAUDE.md, readme.md, .claude/docs/plugins.md, vwf-plugin skill + assets.md, plugin-authoring skill + structure.md + checks.md, site vwf.md (progress pane subsection, edit-only limit) + mempalace.md; docs-sync applied; GAP none                                                                    |          |
+| 3    | R3         | opus  | 1     | findings(4)        | repo-shape.md:276 and stackgen-plugin SKILL.md:428 still say no JS/TS in vwf; site vwf.md:3052 144-column rule not backed by register.tsx (open() has no width test); CLAUDE.md:112 tree listing lacks types/; CONTRACT clean; RULINGS clean                                                                                   |          |
+| 3    | U3         | opus  | 2     | green              | fix from R3 r1: repo-shape.md + stackgen-plugin SKILL.md JS/TS ruling reworded; manual width rule attributed to Claude Code (engine types $.ui.open doc), no number claimed for the module; CLAUDE.md tree adds types/                                                                                                         | d67fd5a4 |
+| 3    | R3         | opus  | 2     | pass               | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                      |          |
+| 3    | gate       | —     | 1     | green              | wave gate 5/5 green                                                                                                                                                                                                                                                                                                            |          |
+| 4    | U4         | opus  | 1     | green              | CHANGED none; wave gate 5/5 exit 0; plugin test 6 pass; validate --strict pass; GAP: 04-gates.md says 5 tests, the review row's escape test makes 6                                                                                                                                                                            |          |
+| 4    | R4         | —     | 1     | pass               | U4 diff empty (git diff HEAD outside docs/plans: 0 lines); nothing to review                                                                                                                                                                                                                                                   |          |
+| —    | reconcile  | —     | —     | green              | final: wave gate 5/5 green; claude plugin test plugins/vwf 6 pass; claude plugin validate --strict plugins/vwf pass; live-pane checks left to the user (Gates the orchestrator keeps, items 1–3)                                                                                                                               |          |
+| —    | landing    | —     | —     | green              | B101 → Partially done via /vwf:backlog partial (Landed line written); folder kept live: 2 gaps open                                                                                                                                                                                                                            |          |
 
 ## Launch
 

@@ -1,0 +1,18 @@
+## /code-review high — loop U2, round 2, range 52100f5a..c5c457a6
+
+1. plugins/vwf/hooks/monitor/register.tsx:365 — The pane tracks only subagents whose type starts with `vwf:execute-` (also :240), but `/vwf:execute` dispatches edit units and the wave reviewer as `general-purpose` (edit-unit.md:15,39); on an edit-only plan the pane sees no subagent and `turn.complete` (:424) ends the run at the first idle turn — the pane freezes on a stale snapshot. (new in this round's report; code unchanged from the prototype)
+2. plugins/vwf/hooks/monitor/register.tsx:280 — refresh writes back a stale `r.plans` copy, losing what agent.spawn added meanwhile; `turn.complete` (:422) calls refresh outside poke's guard. (round 1 #3)
+3. plugins/vwf/hooks/monitor/plan.ts:114 — unitFor returns the first unit whose file name appears in the prompt; a review row's reviewers and the wave reviewer carry the covered unit files, so their work is counted against U1, not the review row. (new in this report; prototype code)
+4. plugins/vwf/hooks/monitor/register.tsx:205 — with no folder named, the first RUNNING row of docs/plans/index.md is taken and never re-read; it can be another session's plan. (round 1 #2)
+5. plugins/vwf/hooks/monitor/register.tsx:252 — an agent that leaves `agent.list()` before a refresh sees it finish stays `running` forever. (round 1 #4)
+6. plugins/vwf/hooks/monitor/register.tsx:153 — locate picks the newest-mtime copy of index.md across worktrees; a fresh checkout's stale copy wins. (round 1 #5)
+7. plugins/vwf/hooks/monitor/register.tsx:441 — tool rows stay collapsed while the run is live even with the pane closed; the AskUserQuestion hook (:355) reopens a pane the person closed. (new in this report; prototype code)
+8. plugins/vwf/hooks/monitor/register.tsx:341 — the tool.call hook awaits `poke($)`, holding every tool result behind an in-flight refresh; `void poke($)` would not block. (round 1 #8)
+9. plugins/vwf/hooks/monitor/plan.ts:36 — table() splits on escaped `\|` too, shifting later columns. (round 1 #9, line moved by the fix)
+10. plugins/vwf/hooks/monitor/register.tsx:138 — candidates() searches only the session repo's worktrees; a cycle plan in a member repo is never found. (new in this report; prototype code)
+
+Below the cap: the CLAUDE.md docs rule at c570b395/c5c457a6 (U3 pending); the 3-second timer runs in every vwf session.
+
+## /security-review — loop U2, round 2, range 52100f5a..c5c457a6
+
+No high-confidence vulnerabilities found. The escape fix is complete: `parseIndex` (plan.ts:66) strips C0 (except \t, \n), DEL and C1 from the raw file before parsing, so title, status, unit rows, run-log rows and gap bullets are clean. Folder names match `[a-z0-9-]` only; agent descriptions are matched, never drawn; `process.run` takes an argument array with no shell; no eval, dynamic import or deserialization.

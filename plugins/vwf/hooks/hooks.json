@@ -22,5 +22,6 @@
         ]
       }
     ]
-  }
+  },
+  "modules": ["./monitor/register.tsx"]
 }

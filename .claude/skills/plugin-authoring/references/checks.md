@@ -51,7 +51,9 @@ much smaller than the one it replaced: whole families of assertion became
    what is left to check is that the name points at something.
 3. **Hook scripts exist and are executable.** A `hooks.json` naming a script
    that is missing or non-executable fails at hook time, in a context with
-   nowhere good to report it.
+   nowhere good to report it. The rule reads only the command hooks; a `modules`
+   entry is not checked here — `claude plugin validate --strict` and
+   `claude plugin test` cover a hooks module, locally.
 4. **Strict-YAML frontmatter.** Claude's parser is lenient and accepts what a
    strict parser rejects — and **a rejected skill is dropped silently**. This is
    the highest-value rule in the file. It reads every skill and agent a plugin

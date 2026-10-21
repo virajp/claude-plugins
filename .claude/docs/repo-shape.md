@@ -273,8 +273,10 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   selects pnpm or bun, so resolution is exercised alongside the rewrite. It runs
   against `plugins/stackgen/stacks/package-manager/pnpm/hooks/`, which is both
   the source and what the pack copies into a target repo. The hook lives with
-  the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite has no
-  business in a language-agnostic workflow plugin.
+  the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite is
+  stack doctrine, and vwf's workflow doctrine stays language-agnostic — the one
+  TypeScript module vwf ships is engine glue for the progress pane, not
+  doctrine.
 - **`vitest run`** — the `scripts/` and `installer/` suites. The `scripts/`
   suite is also the gate on `stackgen:tool-config`'s shipped node script:
   `tool-config-render.test.ts` and `tool-config-pack.test.ts` spawn it in temp

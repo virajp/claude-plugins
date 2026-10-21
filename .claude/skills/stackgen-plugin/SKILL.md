@@ -425,8 +425,10 @@ One hook script ships here as a **pack payload**, copied into the target repo by
 a materialization rather than discovered from a `hooks/hooks.json`: the
 `package-manager/pnpm` pack's npm→pnpm/bun normalizer (`PreToolUse` on `Bash`,
 via `updatedInput`), which moved here from the retired `typescript` plugin with
-the package manager it rewrites for — a JS/TS rewrite has no business in vwf.
-The `capability-provider/fnox` pack's ciphertext guard was the second, and was
+the package manager it rewrites for — a JS/TS rewrite is stack doctrine, and
+vwf's workflow doctrine stays language-agnostic; the one TypeScript module vwf
+ships is engine glue for the progress pane, not doctrine. The
+`capability-provider/fnox` pack's ciphertext guard was the second, and was
 deleted on 2026-10-07 with the encrypted mode it gated.
 
 It is still gated here, as payload rather than as a hook: rule 11 asserts the

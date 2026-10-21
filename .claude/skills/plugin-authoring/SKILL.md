@@ -89,8 +89,8 @@ the two files that still have the problem.
 ## Hooks
 
 Hooks are authored directly as a plugin's `hooks/hooks.json`, in Claude's own
-format, with the scripts beside it. Three rules that bite, whichever plugin the
-hook belongs to:
+format, with the scripts beside it. Three rules that bite every command hook,
+whichever plugin it belongs to:
 
 1. **Scripts must be portable to macOS BSD `sed`** — no `\s`, no `\b`.
 2. **Plugin hooks are never written to `settings.json`.** They are
@@ -101,13 +101,25 @@ hook belongs to:
    the whole verdict if a `hookSpecificOutput` arrives without a matching
    `hookEventName` — which reads exactly like a hook that decided to stay quiet.
 
-`p:plugins:check`'s hook *rule* reads only a plugin's own `hooks/hooks.json`,
-but rule 11 covers a stackgen pack's payload scripts from the other end — exec
-bit and shebang, `bash` or `sh` only; nothing lints their bodies. The shebang
-set is narrower than a task's on purpose: a hook is wired into `settings.json`
-as a bare path, so only a shell the host can find on `PATH` will do. What the
-`stackgen-plugin` skill still owns is what those scripts are *for*. The host
-rules in full are stackgen's `assets/artifact-doctrine.md` §4.
+**A hooks module** is the other kind: a Claude Code mod in TypeScript, listed
+under `modules` in the same `hooks/hooks.json`, beside the `hooks` block. vwf
+ships one, `hooks/monitor/register.tsx`, the `/vwf:execute` progress pane. Its
+`$.state` keys sit under the plugin's own name, because a ref's `plugin` must be
+the plugin that loads the module, and they are declared in a `types` contract
+(`types/index.d.ts`) the manifest's `types` key names. Its local gates are
+`claude plugin test <plugin>`, which runs only the `*.test.ts(x)` inside the
+plugin folder, and `claude plugin validate --strict <plugin>`, which
+`p:plugins:check` also runs when `claude` is on `PATH`. CI has no `claude`, so
+neither runs there. The three rules above are for command hooks; a module has no
+script, verdict or `sed`.
+
+`p:plugins:check`'s hook *rule* reads only the command hooks of a plugin's own
+`hooks/hooks.json`, but rule 11 covers a stackgen pack's payload scripts from
+the other end — exec bit and shebang, `bash` or `sh` only; nothing lints their
+bodies. The shebang set is narrower than a task's on purpose: a hook is wired
+into `settings.json` as a bare path, so only a shell the host can find on `PATH`
+will do. What the `stackgen-plugin` skill still owns is what those scripts are
+*for*. The host rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its
 **prose**: no citation a pack or `stackgen:tool-config` lands may be

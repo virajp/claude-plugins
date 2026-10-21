@@ -11,17 +11,18 @@ because stackgen generates those artifacts and gates them against it.
 Everything a plugin holds is discovered **by directory convention**, so adding
 any of it is a single file and the manifest names none of it:
 
-| Path                         | Is                                                       |
-| ---------------------------- | -------------------------------------------------------- |
-| `.claude-plugin/plugin.json` | the manifest — name, version, description, servers, deps |
-| `skills/<name>/SKILL.md`     | a skill; auto-discovered                                 |
-| `skills/<name>/references/`  | on-demand prose the SKILL.md points at                   |
-| `skills/<name>/scripts/`     | a node entry plus `lib/` modules, zero deps (rule 16)    |
-| `agents/<name>.md`           | a subagent; auto-discovered                              |
-| `hooks/hooks.json`           | hooks, plus the scripts beside them                      |
-| `assets/`                    | shared doctrine and data the skills read                 |
-| `stacks/`                    | pack and bundle data, on stackgen                        |
-| `vendor/`                    | provenance for vendored third-party skills               |
+| Path                         | Is                                                        |
+| ---------------------------- | --------------------------------------------------------- |
+| `.claude-plugin/plugin.json` | the manifest — name, version, description, servers, deps  |
+| `skills/<name>/SKILL.md`     | a skill; auto-discovered                                  |
+| `skills/<name>/references/`  | on-demand prose the SKILL.md points at                    |
+| `skills/<name>/scripts/`     | a node entry plus `lib/` modules, zero deps (rule 16)     |
+| `agents/<name>.md`           | a subagent; auto-discovered                               |
+| `hooks/hooks.json`           | hooks, plus the scripts beside them; `modules` lists mods |
+| `types/index.d.ts`           | a hooks module's state contract, named by `types`         |
+| `assets/`                    | shared doctrine and data the skills read                  |
+| `stacks/`                    | pack and bundle data, on stackgen                         |
+| `vendor/`                    | provenance for vendored third-party skills                |
 
 **Discovery by path cuts both ways.** Registering nothing is the upside; the
 downside is that a file in the wrong place is not an error — it is simply never
@@ -84,6 +85,9 @@ single file.
 
 Optional blocks:
 
+- **`types`** — the path of a hooks module's state contract, such as
+  `./types/index.d.ts`, which declares the module's `$.state` keys under the
+  plugin's own name. Only a plugin that ships a hooks module needs it.
 - **`lspServers`** — keyed by language id; each needs `command`, `args` and
   `extensions`, optionally `startupTimeout`.
 - **`mcpServers`** — keyed by name, declaring a transport. **Which transport,
