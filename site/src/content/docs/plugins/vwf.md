@@ -2518,7 +2518,9 @@ covers, so the commit range it reviews and the units it covers are one set. No
 code unit triggers a review by itself, and `execute` infers no row: a plan whose
 code units no review row covers, or whose rows break either placement rule, is
 refused at its preflight. Three things are always agreed before anything is
-written: the **wave gate** (the exact commands the run must pass), the
+written: the **three gates** — the **unit gate**, run once before each unit's
+commit, the **wave gate**, run once before wave 1 and after every wave, and
+the **plan gate**, run once over the finished tree — the
 **after-landing steps** (each recorded `run`, or dropped), and the **consent
 block** — whether the run may merge and push on green, the LSP rows, and End an
 `all` run after landing — asked only when the plan edits a plugin the session
@@ -2693,8 +2695,10 @@ that is not those five lines is recorded `STOPPED`, never re-dispatched. Plain
 one layer deeper — the runner at one, its units and reviewers at two, the
 docs-sync surveyor at three — which is the default nesting limit.
 
-The first thing it does, named or picked, is **claim the row**: the folder's row
-is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
+The first thing it does, named or picked, is run **`/vwf:doctor`** in the main
+checkout, scoped to the plan's projects: a `blocking` finding halts the run
+there, with no claim, no worktree and no Status edit to undo. Then it **claims
+the row**: the folder's row is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
 on the integration branch from the main checkout, before any worktree exists.
 That pushed row is what makes a second session safe beside this one; a rejected
 push means the plan was claimed first, so `next` re-picks and a named run stops.
@@ -2716,12 +2720,12 @@ unit's ruling is in its file. Nothing else differs by kind: the claim, the
 worktree, the wave loop, the review, the gate, the report and the landing are
 the same for both.
 
-Then the preflight, unattended: `/vwf:doctor` scoped to the plan's projects
-halts on a `blocking` finding alone. When a `code` unit is planned, a missing
-LSP server was `plan`'s question, and the answer is the folder's
-`LSP <language>` consent row, which this run reads and never asks; on `edit`
-units alone it is a Run log detail. Then every line of the folder's wave gate,
-once, before the first unit — what is written and nothing inferred; a red line
+Then the preflight, unattended, which reads the rest of doctor's report. When a
+`code` unit is planned, a missing LSP server was `plan`'s question, and the
+answer is the folder's `LSP <language>` consent row, which this run reads and
+never asks; on `edit` units alone it is a Run log detail. Then every line of
+the folder's unit gate and wave gate, once, before the first unit — what is
+written and nothing inferred; a red line
 here is the branch's, not the plan's, and is reported as such rather than worked
 around.
 
@@ -2731,7 +2735,9 @@ around.
 committed tree and nothing in flight: every unit a row covers sits in an earlier
 wave, which the preflight guaranteed. It runs the `review` and `security` stages
 over the branch delta since the previous review row, or the branch base when it
-is the first. Then every `edit` unit is dispatched in one message as its own
+is the first; each later round of the row reviews only the fix commits of the
+round before it. A row that covers `edit` units alone runs the `security` stage
+only, since the wave review has already judged those units. Then every `edit` unit is dispatched in one message as its own
 subagent, on the model its unit file names, given paths and never conversation
 context; its report and the wave review are its whole pipeline. Then each `code`
 unit runs **one at a time** through the `code` stage to its commit. Each stage
@@ -2753,8 +2759,9 @@ checks. Findings loop back to the owning unit for at most two rounds under the
 convergence guard, with one exception: a docs finding in a file no unit owns has
 nobody to loop to, so it goes to the docs unit, whose owned paths the
 orchestrator widens to cover that passage, recorded as a `GAP:` and listed in
-the final report. Then the **wave gate** — every line the plan names, plus every
-report read for `UNRESOLVED:`; then one commit per green unit, each staging
+the final report. Then the **unit gate** for each green unit and the **wave
+gate** — every line the plan names, each once, plus every report read for
+`UNRESOLVED:`; then one commit per green unit, each staging
 **exactly** that unit's owned paths — anything else that reached the index is
 unstaged before the commit, so no unit's work rides another's; a `code` unit was
 committed inside its pipeline on the same discipline. Units delete with plain
@@ -2827,7 +2834,9 @@ What it does, by rule:
   file; the run maps it to the unit whose **commit** last touched that file on
   the branch — never read from owned paths — and re-dispatches that unit by its
   Kind: a `code` unit's coder in fix-first mode, an `edit` unit through the
-  wave-review loop-back; then the row re-runs in full, engines first. A finding
+  wave-review loop-back; then the row's next round runs, engines first, over
+  those fix commits alone. A row that covers `edit` units alone runs only
+  `/security-review` and the security reviewer. A finding
   on a file whose unit the row does not cover follows one rule: a security
   finding is routed to that unit all the same, the widening recorded in the Run
   log; a non-security finding is dropped and counted. **Security findings are
@@ -2996,7 +3005,8 @@ nothing merges. A fix goes into the folder — a ruling into the unit file or th
 decisions table, a finding appended to the unit — and you re-run
 `/vwf:execute <folder>`, whose resume loops the affected units back through
 their pipeline (a `code` unit's coder re-dispatched with the finding and the
-last review row that covers it re-run over the fix commits as a new loop, an
+last review row that covers it re-run over the fix commits as a new loop —
+security alone when the row covers `edit` units alone — an
 `edit` unit re-dispatched and reviewed again). A landing you did not consent to
 leaves the row `RUNNING` until your hand merge is followed by asking for the
 folder to be archived, which makes the row edit a landing would have made. Then
@@ -3452,11 +3462,17 @@ reasonable answer given the repo, proposes two or three approaches with their
 trade-offs, and records every ruling with the alternative it rejected. Three
 things are always agreed before anything is written:
 
-- **The wave gate** — the exact commands the run must pass, proposed from the
+- **The three gates** — the exact commands the run must pass, proposed from the
   repo's own task list, its `harness:` stamp and what CI already runs over the
-  touched trees. `/vwf:execute` runs what is written and nothing it infers.
-  Every line has to be green **before wave 1**, since the gate runs as the
-  preflight too — so a check that only starts holding once a particular unit has
+  touched trees, in three tiers: the **unit gate**, run once before each unit's
+  commit; the **wave gate**, run once after every wave; and the **plan gate**,
+  run once over the finished tree. When the repo has them, the proposal is
+  `mise x -- mise run code:format`, `mise x -- mise run code:lint` and
+  `mise x -- mise run code:precommit`, in that order: the cheap check runs most
+  often, and the full hook pass runs once. A folder with no plan gate runs its
+  wave gate once more at the end. `/vwf:execute` runs what is written and
+  nothing it infers. Every unit gate and wave gate line has to be green
+  **before wave 1**, since those gates run as the preflight too — so a check that only starts holding once a particular unit has
   landed is not a gate line at all. It goes in that unit's *Verification*, and
   again in the gates unit's. A repo with neither task runner nor stamp records
   `none`, and the plan says plainly that the wave review is then the only check.
@@ -3505,16 +3521,21 @@ as `- Bnn: <piece>` lines under *Parked* — a `gaps_of:` list naming the landed
 plan folders whose gaps this plan takes, if any — plus one `NN-<unit>.md` per
 subagent unit, every unit `Kind: edit`. A change plan gets **no review row by
 default** — the wave review is its only check; a `Kind: review` row, the one at
-which `execute` runs `/code-review` and `/security-review`, is written only when
-the change lands runnable code — anything that executes rather than is read:
+which `execute` runs `/security-review` and the security reviewer — the
+security half alone, since every change-plan unit is `edit` — is written only
+when the change lands runnable code — anything that executes rather than is read:
 shipped shell or hook scripts, build or tooling source, an installable package —
 with its reason in the decisions table. The row sits in a wave strictly later
 than the units it covers and still reviews the whole range since the previous
 row: a review finding on a file whose unit it does not cover is dropped and
 counted, a security finding is routed to that unit all the same. The sections
 the template marks *cycle plans only* — the slice, the acceptance criteria, the
-gaps — are omitted. Units in a wave own **disjoint paths** (the shared-file
-rule), a change that needs a new or altered check plans that as an owned edit
+gaps — are omitted. Every unit sits in **wave 1** unless it has a named reason
+to wait — it edits a path an earlier unit creates or moves, or its verification
+needs an earlier unit's output — and the folder's Waves section states that
+reason, which the self-review checks: the `edit` units of one wave run at once,
+so each needless wave is a serial step. Units in a wave own **disjoint paths**
+(the shared-file rule), a change that needs a new or altered check plans that as an owned edit
 rather than "update the gates", and the last two units are fixed: a docs unit
 and a gates unit, `NN-gates.md`, which runs the generators and the full gate and
 bumps nothing.
@@ -3890,7 +3911,7 @@ start step 1; it runs none of them.)
 # 5. Execute — in a fresh session, unattended (per chained plan, in order;
 #    /vwf:execute all runs the whole chain, one runner per plan)
 /vwf:execute next
-#    → claims the row, cuts a worktree
+#    → runs /vwf:doctor, claims the row, cuts a worktree
 #    → per code unit: code (TDD) → commit
 #    → the plan's review row, first in its wave: engines → review ‖ security
 #      (findings loop back to the unit whose commit touched the file;

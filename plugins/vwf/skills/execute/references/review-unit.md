@@ -12,6 +12,16 @@ table, the dispatch contracts and the shared stage rules are
 `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`; this file is the loop that
 runs them over the row.
 
+**A row that covers `edit` units alone is security only.** When no unit the
+row covers is `code`, the row runs one engine, `/security-review`, and one
+reviewer, `execute-security-reviewer`: the wave review has already judged
+those units against their files, and running `/code-review` and the code
+reviewer over the same lines is the second review of one change. Every step
+below then reads its `/code-review` and `execute-code-reviewer` parts as
+absent — the row writes no `review` Run log row and no `REVIEW:` block is
+expected — and its loop is the security loop alone: cap-exempt, under the
+convergence guard. A row that covers one `code` unit or more runs both halves.
+
 The row's unit file, `NN-review.md`, carries only the header lines and a
 **Scope** section naming what it reviews. Its Owns is `—`: the row edits
 nothing, commits nothing and stages nothing. The fix commits a round produces
@@ -57,8 +67,9 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    the coverage widened to it; any other finding is dropped with the
    dropped-count clause. Record the range (`<from>..<to>`), the file list and
    its unit map in the row's Run log row — **every round records its own
-   `from..to`**, since `to` grows as fixes land, and the next row's `from`
-   reads the main loop's last `to`. The file list and its map are what
+   `from..to`**: round 1 reviews the row's range as above, and each later
+   round reviews only the fix commits of the round before it, per step 4. The
+   next row's `from` reads the main loop's last `to`. The file list and its map are what
    the reviewers receive as their scope, never a unit. A file in the list that
    the row's Scope section does not name is still in scope: the list is the
    contract, the section its description. Preflight guarantees the range and
@@ -68,9 +79,10 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    earlier row covers, so no covered commit is reviewed by a row that does not
    cover its unit.
 2. **engines** — in **one message**, invoke `/code-review` at high effort and
-   `/security-review` through the `Skill` tool. The engines are
-   **branch-scoped**, not range-scoped: `/code-review` takes the branch,
-   `/security-review` takes no target, and each reads the whole branch delta.
+   `/security-review` through the `Skill` tool — `/security-review` alone on a
+   security-only row. `/code-review` takes the round's range as its target,
+   `<from>..<to>`; `/security-review` takes no target and reads the whole
+   branch delta, so its output is filtered to the round's file list below.
    Each may run as a background task; note the task each reports. Wait on each
    with `TaskOutput`, blocking, up to 30 minutes from invocation. An engine
    that errors or times out is stopped with `TaskStop` and counted
@@ -87,7 +99,8 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    range** is kept too —
    an in-range change can break a caller the range does not touch — **unless
    the same finding (path, line, text) appeared in the saved engine output
-   of a previous row or this row's earlier loop** — read from those files,
+   of a previous row, this row's earlier loop or this loop's earlier rounds**
+   — read from those files,
    never from the journal alone — in which case it is that
    loop's and is dropped, said in one clause of the row's Run log row,
    "n engine findings already reported by <row> dropped". A kept out-of-range
@@ -117,7 +130,8 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    the registry (`docs/blueprint/registry.yaml`, for the security reviewer's
    capabilities and threat notes); a row covering `edit` units alone passes
    none of these, and the reviewers review against the unit files and rulings
-   alone. Each dispatch prompt ends with a
+   alone — and a security-only row dispatches `execute-security-reviewer`
+   alone, per the rule above this list. Each dispatch prompt ends with a
    section headed
    `## Engine` holding either that engine's output verbatim or the single line
    `ENGINE: unavailable — <reason>`. They are independent read-only passes over
@@ -146,9 +160,12 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    coder recalls the drawers and fixes only the findings labelled with its id;
    an `edit` unit — a change plan may place a row over `edit` units — per
    [edit-unit.md](edit-unit.md)'s loop-back, the same prompt plus the finding
-   lines labelled with its id, no tag and no stack. Then repeat the row
-   **in full, engines first** — steps 1 to 3, the range's `from` unchanged and
-   its `to` extended to the new `HEAD`, recorded on the round's own row.
+   lines labelled with its id, no tag and no stack. Then run the next round,
+   **engines first** — steps 1 to 3 over the **fix delta alone**: the round's
+   `from` is the previous round's `to`, its `to` the new `HEAD`, recorded on
+   the round's own row, and its file list and the reviewers' unit files are
+   the files the fix commits touched and the units fixed. A later round
+   proves the fixes and what they broke; round 1 already reviewed the rest.
    Merging the two
    reviewers' findings into one fix pass is
    what keeps the two stages from rewriting each other's lines. Gating is
@@ -174,7 +191,7 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    folder's edits ride the commit that closes the wave. The **Run log rows**
    are written **as each node
    returns**, not batched here: one `review` row and one `security` row per
-   round, each carrying the row id in the unit cell and the row's wave in the
+   round — the `security` row alone on a security-only row — each carrying the row id in the unit cell and the row's wave in the
    wave cell (`Wave | Unit | Model | Round | Outcome | Detail | Commit`), plus
    one `code` row per coder re-dispatched with its fix commit, appended to the
    folder's `index.md` and mirrored to the journal before the next dispatch, so
@@ -204,10 +221,12 @@ wave review triggered waits until the wave's green `edit` units are committed
 (the Waves section's step 6) and runs at its step 7, the gate lines run again
 after it, so the engines see a committed tree — the same guarantee as the
 row's first run. The re-run's
-range is its own: `from` is the parent of its first fix commit, `to` the
-newest fix commit of its latest round, and a round after the first extends
-`to` only; the file list and unit map come from that range as in step 1. Then
-engines first, both reviewers, steps 2-6. The re-run is a **new loop** over
+range is its own: round 1's `from` is the parent of the loop-back's first fix
+commit and its `to` the loop-back's newest fix commit, and a round after the
+first reviews the fix delta of the round before it, as step 4 states; the
+file list and unit map come from each round's range as in step 1. Then
+engines first, both reviewers — the security half alone on a security-only
+row — steps 2-6. The re-run is a **new loop** over
 its own range, not a further round of the finished one: its loop id is
 `<row-id>-late<n>`, n the same counter as its `re-run n` — the engine files
 and the recall tags key on it, so round 1 of one late loop never overwrites

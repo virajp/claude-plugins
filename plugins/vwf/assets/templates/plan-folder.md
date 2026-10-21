@@ -19,8 +19,8 @@ folder.
 
 Every section below is required unless marked *cycle plans only*. The
 frontmatter and the **Status**, **Consent**, **Release levels**, **Units**,
-**Wave gate**, **After landing** and **Run log** blocks have a fixed shape the
-executor parses, so keep the headings and the column order exactly. The
+**Unit gate**, **Wave gate**, **Plan gate**, **After landing** and **Run log**
+blocks have a fixed shape the executor parses, so keep the headings and the column order exactly. The
 **Status** block is the one status a plan has — there is no `status:` key in the
 frontmatter.
 
@@ -155,7 +155,10 @@ TDD, the coverage gate and its commit — the `code` units one at a time; an
 together; and a `review` row through `/code-review` and `/security-review`
 followed by the two reviewers — one loop per row, under the review round cap —
 over the **branch delta since the previous `review` row**, or since the branch
-base when it is the first. A `review` row
+base when it is the first, and each later round over the fix commits of the
+round before it alone. A row that covers `edit` units alone runs the security
+half only — `/security-review` and the security reviewer — since the wave
+review has already judged those units against their files. A `review` row
 owns nothing (`—`) and **covers** the units its Depends on reaches, directly or
 transitively — so its Depends on names **at least one** unit, on a cycle plan
 and a change plan alike; a row with Depends on `—` covers nothing and reviews
@@ -192,16 +195,35 @@ covers is refused at preflight.
 
 ## Waves
 
-<one line per wave: which units, why they are safe together. A cycle plan's
-waves are ordering only — `execute` runs its units serially in dependency
-order.>
+<one line per wave: which units, why they are safe together. Every unit sits
+in wave 1 unless it has a named reason to wait — it edits a path an earlier
+unit creates or moves, or its Verification needs an earlier unit's output —
+and the line for each later wave states that reason for each unit in it. A
+cycle plan's waves are ordering only — `execute` runs its units serially in
+dependency order.>
+
+## Unit gate
+
+<the exact commands confirmed in the interview, one per line, or `none`>.
+`/vwf:execute` runs every line once before each commit it makes on a unit's
+behalf — the unit's own commit and each fix commit — and never while another
+unit is still editing. A red line is that unit's failure. Every line here must
+be green before wave 1.
 
 ## Wave gate
 
 <the exact commands confirmed in the interview, one per line, or `none`> plus
 the wave review, plus every report read for `UNRESOLVED:`. <Add the plan's own
-checks here.> Every line here must be green before wave 1 — a check that holds
-only once a unit has landed belongs in that unit's **Verification**, not here.
+checks here.> `/vwf:execute` runs every line once after each wave. Every line
+here must be green before wave 1 — a check that holds only once a unit has
+landed belongs in that unit's **Verification**, not here.
+
+## Plan gate
+
+<the exact commands confirmed in the interview, one per line, or `none`>.
+`/vwf:execute` runs every line once, after the fixed final waves, over the
+finished tree, before it calls the run green. A folder with no such section is
+an old-shape folder: it runs every Wave gate line once more there instead.
 
 ## After landing
 
@@ -354,8 +376,8 @@ never paraphrased>
 
 ## Commit
 
-`<type>: <description>` — written by the orchestrator after the wave gate, not
-by the unit. The type, and the scope where the repo's convention file lists any,
+`<type>: <description>` — written by the orchestrator after the unit gate and
+the wave gate, not by the unit. The type, and the scope where the repo's convention file lists any,
 comes from the file the survey read — `.config/git-conventional-commits.yaml` or
 the repo's equivalent — never a type that file does not allow.
 ```

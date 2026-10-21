@@ -137,5 +137,5 @@ later or to wait for anything, is forbidden — the orchestrator waits for the
 block alone, and a return without it is treated as a failed subagent.
 
 A finding rated high or critical means `changes-required`; the orchestrator
-re-dispatches each unit a finding names, by its Kind, then re-runs the review
-row in full.
+re-dispatches each unit a finding names, by its Kind, then runs the review
+row's next round over those fix commits alone.

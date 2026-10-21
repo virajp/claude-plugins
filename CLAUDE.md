@@ -55,17 +55,18 @@ context, by the one executor, `/vwf:execute <folder>` — or `/vwf:execute next`
 which reads that table alone, of either kind, and picks the runnable plan with
 the lowest `Priority` value, or `/vwf:execute all`, which runs every runnable
 plan in turn, each in its own `execute-runner` subagent, until one stops — which
-refuses a folder that is not on that branch, claims the row `RUNNING` with a
-pushed commit before it cuts a worktree, and marks it `COMPLETE` once the merge
-lands (archiving the folder there and re-pointing the row when no gap is open;
-leaving it live when one is, archived once you ask) — each plan folder carries
-this repo's gate lines, `mise run p:plugins:local` as an after-landing step,
-recorded `run` at the interview or dropped, and the release levels it derives
-per project, which `/vwf:execute` writes to `.config/releases.yaml` at landing:
-it runs the step on a green landing without a prompt, bumps no version, releases
-nothing, and asks nothing at run time, save the run-level questions
-`/vwf:execute all` asks once, before its first plan — every stop is a report
-with its resume command.
+refuses a folder that is not on that branch, runs `/vwf:doctor`, claims the row
+`RUNNING` with a pushed commit before it cuts a worktree, and marks it
+`COMPLETE` once the merge lands (archiving the folder there and re-pointing the
+row when no gap is open; leaving it live when one is, archived once you ask) —
+each plan folder carries this repo's gate lines in three tiers (a unit gate
+before each unit commit, a wave gate after each wave, a plan gate once at the
+end), `mise run p:plugins:local` as an after-landing step, recorded `run` at the
+interview or dropped, and the release levels it derives per project, which
+`/vwf:execute` writes to `.config/releases.yaml` at landing: it runs the step on
+a green landing without a prompt, bumps no version, releases nothing, and asks
+nothing at run time, save the run-level questions `/vwf:execute all` asks once,
+before its first plan — every stop is a report with its resume command.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

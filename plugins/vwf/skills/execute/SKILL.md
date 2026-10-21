@@ -7,7 +7,9 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
   unit's Kind from the Units table; a code unit runs TDD, coverage and its
   commit one unit at a time, the edit units of a wave are dispatched together
   and judged by the wave review, and a review row runs the code and security
-  engines and reviewers over the branch delta the row covers; the acceptance
+  engines and reviewers over the branch delta the row covers — security alone
+  when it covers edit units alone — each later round over the last round's
+  fixes; the acceptance
   and UX pass and the blueprint reconcile run when the plan has a covers list.
   It claims the plan's row in docs/plans/index.md through plan-management,
   keeps a run log the final report renders, lands per the plan's recorded
@@ -39,8 +41,10 @@ three values: a `code` unit passes code under TDD to the coverage gate and its
 commit; an `edit` unit is dispatched with the other `edit` units of its wave
 and judged by the wave review; a `review` row — the planner placed it, by
 default once after the last code unit — runs the two review engines and the
-two reviewers over the branch delta since the previous review row, with
-findings looped back to the owning units' coders before it counts as done.
+two reviewers over the branch delta since the previous review row, the
+security half alone when it covers `edit` units alone, with findings looped
+back to the owning units before it counts as done, each later round over the
+previous round's fixes alone.
 Acceptance and UX conformance run once after all units when the plan has
 `covers:`. There are **no per-stage human gates** — decisions come from the
 **Autonomous Rules** below, and the run stops only at a runtime stop — the
@@ -245,6 +249,21 @@ sees it from its first commit. A folder that is not on that branch is refused,
 not swept into a unit commit: stop and say to run the planner again on it, or
 to commit and push it by hand, then re-launch.
 
+**Run doctor before the claim.** On every run — a fresh run, and a resume —
+run `/vwf:doctor` in the main checkout, scoped to the plan's projects — the
+base repo's own when the plan names none — before the claim and before the
+worktree is cut. It reads each project's `stack.languages` from
+`.config/vwf.yaml` and checks LSP servers, toolchains, manifests, and the
+harness. **Halt on any `blocking` finding** — mise, the graphify CLI, no
+graph reachable from the main checkout, or a stack no installed plugin
+defines (an **unknown** language, a `custom` template pin). These are
+mandated tooling and the closed stack menu, so this is a hard halt with the
+remedy, not a question: a run started without them fails later and less
+legibly, and one started against an undefined stack does not fail at all — it
+builds with the conventions, harness and UX gate silently absent. Report and
+stop. A halt here leaves no claim, no worktree and no Status edit, so the fix
+and a re-run need no unclaim. Keep the report: Setup step 2 reads it.
+
 **Claim the row.** Before the worktree is cut, and before the folder's own
 Status is touched, invoke `plan-management claim <folder>` in the main
 checkout — it sets the row `RUNNING` and nothing else — then commit and push
@@ -312,7 +331,8 @@ otherwise.
   runs first, serially, over the committed tree — every unit it covers is in
   an earlier wave — before anything else is dispatched; then every `edit` unit
   is dispatched in one message and awaited; then each `code` unit runs
-  serially through its pipeline; then the wave review; then the wave gate.
+  serially through its pipeline; then the wave review; then the unit gate and
+  the wave gate.
   Reorder only to honor a real dependency
   the table left implicit. If the derivation finds a **cycle or genuine
   ambiguity**, fall back to the table's **written order** as-is; if even that
@@ -326,7 +346,10 @@ otherwise.
   TDD → coverage → commit; the `review` and `security` stages run when wave
   order reaches the `review` row that covers it — the orchestrator runs the two
   review engines itself, filters their output to the row's range and hands it
-  to the two reviewers, dispatched concurrently — and both findings sets merge
+  to the two reviewers, dispatched concurrently; a row that covers `edit`
+  units alone runs the security engine and reviewer only; each round after
+  the first reviews the previous round's fix commits alone — and both
+  findings sets merge
   into one loop-back to the units whose commits the findings fall on, by Kind,
   before the row is done, never a separate round per reviewer; the loop, its
   scope, the commit-based unit map and the one rule for an uncovered unit's
@@ -395,6 +418,16 @@ otherwise.
   never merge/push** (its Step 4). Without these, git-workflow's post-commit
   gate fires on every unit commit and stalls the run. The final merge/push (via
   git-workflow) happens only at the landing, per the plan's Consent.
+- **The three gate tiers, each line once.** The folder's **Unit gate** runs
+  before every commit the orchestrator makes on a unit's behalf — a unit's own
+  commit and each fix commit — and never while another unit is still editing,
+  so in a wave of `edit` units it runs after every report is in; its **Wave
+  gate** runs after each wave; its **Plan gate** runs once, over the finished
+  tree. Each line runs **once** at each of those points. A red Unit gate line
+  is that unit's failure, handled as the Waves section's step 5 handles a red
+  gate line. A folder with no Unit gate section runs no unit gate, and a
+  folder with no Plan gate section runs every Wave gate line once more in its
+  place.
 - **One commit per unit, staged to its Owns.** Every green unit, of either
   Kind, is committed on its own, in wave order. Stage exactly that unit's Owns
   — `git add -- <every owned path>`, which stages a deletion as readily as an
@@ -569,22 +602,11 @@ Skip every memory step silently if mempalace is unavailable.
      to the base's own docs — go to the base checkout as a second working
      tree. Commit the two separately, **base repo last**, so a half-finished
      run never leaves a doc claiming work that has not landed.
-2. **Preflight (unattended — nothing here asks).** For every plan, run
-   `/vwf:doctor` scoped to the plan's projects — the base repo's own when the
-   plan names none. It reads each project's `stack.languages` from
-   `.config/vwf.yaml` and checks LSP servers, toolchains, manifests, and the
-   harness.
+2. **Preflight (unattended — nothing here asks).** Doctor already ran before
+   the claim, under *Run doctor before the claim* above, and its blocking
+   findings already halted the run; this step reads the rest of its report.
 
-   **Halt on any `blocking` finding** — mise, the graphify CLI, no graph
-   reachable from either this worktree or the main checkout, or a stack no
-   installed plugin defines (an **unknown** language, a `custom` template pin).
-   These are mandated tooling and the closed stack menu, so this is a hard halt
-   with the remedy, not a question: a run started without them fails later and
-   less legibly, and one started against an undefined stack does not fail at all
-   — it builds with the conventions, harness and UX gate silently absent. Report
-   and stop.
-
-   **Then, when the Units table holds a `code` unit, read the LSP findings
+   **When the Units table holds a `code` unit, read the LSP findings
    against the plan's Consent block** — everything else doctor reports is
    noted and carried into the run's gap list, not blocked on. A missing LSP
    server was a question at `/vwf:plan`'s stack gate, and its answer is the
@@ -593,11 +615,13 @@ Skip every memory step silently if mempalace is unavailable.
    doctor reports one. On a plan of `edit` units alone, a missing LSP server
    is a Run log detail and nothing more.
 
-   Then run every line of the folder's **Wave gate** section, in order, from the
-   worktree root — what is written and nothing inferred; a gate the plan does
-   not name is not this run's to invent, however obvious it looks in the tree.
-   When the section reads `none`, say so in the Run log and continue: the wave
-   review is then the only gate. A red line here is the integration branch's,
+   Then run every line of the folder's **Unit gate** and **Wave gate**
+   sections, in that order, once, from the worktree root — what is written and
+   nothing inferred; a gate the plan does not name is not this run's to
+   invent, however obvious it looks in the tree. The **Plan gate** does not run
+   here: it runs once, at the end. When a section reads `none`, or the folder
+   has no Unit gate section, say so in the Run log and continue: when both read
+   `none`, the wave review is the only gate before the end. A red line here is the integration branch's,
    not the plan's: stop and report it as such — never start a run that would be
    blamed for a failure it inherited. Record the green preflight as the first
    Run log row (`wave 0`, `preflight`).
@@ -630,10 +654,12 @@ For each wave in index.md order, skipping units already `green` on a resume:
    committed tree and nothing in flight: every unit a row covers sits in an
    earlier wave and is committed, which preflight guaranteed. Per
    [review-unit.md](references/review-unit.md): the range since the previous
-   green row's main loop or the branch base, the two engines filtered to it,
+   green row's main loop or the branch base, the two engines filtered to it —
+   the security engine alone on a row that covers `edit` units alone —
    both reviewers concurrently, each finding mapped by the commit that last
-   touched its file and that unit re-dispatched by Kind, the row re-run
-   engines first, under the round cap and the convergence guard. A Run log
+   touched its file and that unit re-dispatched by Kind, the next round run
+   engines first over those fix commits alone, under the round cap and the
+   convergence guard. A Run log
    row per node as it returns. A wave with no `review` row runs no engine.
 2. **Dispatch the `edit` units** — every `edit` unit in the wave, in one
    message, per [edit-unit.md](references/edit-unit.md)'s dispatch; wait for
@@ -657,8 +683,11 @@ For each wave in index.md order, skipping units already `green` on a resume:
    fixed here after the last `review` row covering it marks that row for a
    late re-run, taken at step 7 — *Late loop-backs re-run the last row* in
    [review-unit.md](references/review-unit.md).
-5. **Wave gate**, run by the orchestrator: every line of index.md's *Wave gate*
-   section, plus every report read for `UNRESOLVED:`. A unit that returned
+5. **Unit gate, then wave gate**, run by the orchestrator once every unit of
+   the wave has returned: for each green `edit` unit, in wave order, every
+   line of index.md's *Unit gate* section — a `code` unit ran its unit gate
+   inside its pipeline — then every line of its *Wave gate* section, once,
+   plus every report read for `UNRESOLVED:`. A unit that returned
    `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
    per [blocking and resume](references/blocking.md) — a skipped `review` row
    takes every later `review` row and every later `code` unit one covers with
@@ -787,11 +816,14 @@ plus every `DOCS FALSIFIED:` line the units returned; the gates unit runs the
 generators the plan names and passes the full wave gate. It bumps no version:
 a release level is recorded at the landing, in `.config/releases.yaml`, and
 the version is bumped by the release step a person runs. Each runs the wave
-loop above in full — dispatch, wave review, wave gate, commit. Then run every
-line of the folder's **Wave gate** section once more over the finished tree,
-and every item under *Gates the orchestrator keeps* — those are the checks a
-diff cannot prove — before calling the run green; each is a Run log row
-(`wave —`, `reconcile`).
+loop above in full — dispatch, wave review, unit gate, wave gate, commit.
+Then run every line of the folder's **Plan gate** section once over the
+finished tree — every line of its **Wave gate** section once more on a folder
+with no Plan gate section — and every item under *Gates the orchestrator
+keeps* — those are the checks a diff cannot prove — before calling the run
+green; each is a Run log row (`wave —`, `reconcile`). A red Plan gate line is
+attributed and handled as a red wave gate line is, and the gate runs again
+once its fix is committed.
 
 ## The final report
 
@@ -810,7 +842,7 @@ intact. Read the Run log table back and present:
   that caused it
 - the review findings that survived the cap, marked `contested`
 - **model downgrades**, named on the nodes that ran under them
-- the wave gate and orchestrator gate results
+- the unit gate, wave gate, plan gate and orchestrator gate results
 - the release levels recorded — the folder's `## Release levels` rows, and,
   once the landing has written them, each key it raised in
   `.config/releases.yaml`, from and to; or the one line *old-shape folder — no
@@ -843,7 +875,8 @@ notice and the run stops here with the status set to `BLOCKED`.
 
 ## Land
 
-With every unit `green`, every Wave gate line and orchestrator gate passed, and
+With every unit `green`, every Unit gate, Wave gate and Plan gate line and
+every orchestrator gate passed, and
 the gap list holding no blocking gap, prepare the landing commit:
 
 1. Read the Consent row *Merge to the integration branch and push on green*.
@@ -1092,6 +1125,7 @@ and answered at the end.
   `backlog_pieces:`
 - Edits a blueprint doc beyond the `implementation:` stamp, or runs a
   blueprint-bound step on a plan without `covers:`
-- Runs a gate the plan's *Wave gate* section does not name, or skips one it does
+- Runs a gate the plan's *Unit gate*, *Wave gate* or *Plan gate* sections do
+  not name, skips one they do, or runs a line twice at one point
 - Picks up an item from *Out of scope* or *Parked*, however adjacent
 - Reports the run from recollection when the run log exists

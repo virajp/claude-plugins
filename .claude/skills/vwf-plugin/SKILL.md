@@ -74,34 +74,38 @@ than carrying it: `plan` and `change-plan` append the row at hand-off with a
 derived priority and push the folder; the **one executor**, `execute <folder>` —
 or `execute next`, which reads the table with no `Kind` filter, or
 `execute all`, which repeats `next` and hands each pick to an `execute-runner`
-subagent, one at a time, until one stops — claims it `RUNNING` with a pushed
-commit before cutting a worktree, runs each unit by its `Kind` (a `code` unit
-through TDD and the coverage gate, a `review` row through the two engines plus
-the code and security reviewers over the branch delta since the last row, the
-`edit` units of a wave concurrently under the wave review, the acceptance and UX
-pass and the blueprint reconcile only when the plan has `covers:`), and sets the
-row `COMPLETE` after the merge lands — moving the folder to `archived/` and
-re-pointing the row when no gap is open, leaving it live when one is, for the
-`archive` verb once the user asks in prose, raising the folder's
-`## Release levels` in `.config/releases.yaml` in that same commit and bumping
-no version — and runs each after-landing step without a prompt on a green
-landing — every one is recorded `run` at the interview, none releases, and the
-`.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at run
-time, save the run-level questions `execute all` asks once, before its first
-plan — one shared worktree, deduped after-landing steps, landing a plan recorded
-not to merge — each an override for that run only. `init` is not a command on
-that line: since 2026-09-06 it is **skill-invoked** and runs inside setup's Step
-0, or alone via `/vwf:setup reshape`. `init` shapes the **base repo and every
-member repo the product has** and `setup` sets up **vwf** in the base — two
-different things, and a repo can have either without the other. It resolves that
-set itself and takes no argument: the base per the membership asset (so a run
-started inside a member walks up and shapes the product), the members as the
-**union** of `.gitmodules` walked recursively and the config's `members:` list,
-deduped on realpath, with a path in only one of two present sources reported as
-a disagreement and never shaped, and an absent member offered a **clone row
-inside the same plan**. Mode resolves per repo from what its tree contains,
-never a flag or setup's fork — `shaped` (`.config/stackgen.yaml` with
-`format: 1`), **shaped on the old layout** (no `stackgen.yaml`, but
+subagent, one at a time, until one stops — runs `/vwf:doctor` in the main
+checkout, then claims it `RUNNING` with a pushed commit before cutting a
+worktree, runs each unit by its `Kind` (a `code` unit through TDD and the
+coverage gate, a `review` row through the two engines plus the code and security
+reviewers over the branch delta since the last row — each later round over the
+last round's fix commits alone, the security half alone on a row covering `edit`
+units alone — the `edit` units of a wave concurrently under the wave review, the
+acceptance and UX pass and the blueprint reconcile only when the plan has
+`covers:`), runs the folder's unit gate before each unit commit, its wave gate
+after each wave and its plan gate once at the end, and sets the row `COMPLETE`
+after the merge lands — moving the folder to `archived/` and re-pointing the row
+when no gap is open, leaving it live when one is, for the `archive` verb once
+the user asks in prose, raising the folder's `## Release levels` in
+`.config/releases.yaml` in that same commit and bumping no version — and runs
+each after-landing step without a prompt on a green landing — every one is
+recorded `run` at the interview, none releases, and the `.config/vwf.yaml`
+`after_landing:` commands follow — and it asks nothing at run time, save the
+run-level questions `execute all` asks once, before its first plan — one shared
+worktree, deduped after-landing steps, landing a plan recorded not to merge —
+each an override for that run only. `init` is not a command on that line: since
+2026-09-06 it is **skill-invoked** and runs inside setup's Step 0, or alone via
+`/vwf:setup reshape`. `init` shapes the **base repo and every member repo the
+product has** and `setup` sets up **vwf** in the base — two different things,
+and a repo can have either without the other. It resolves that set itself and
+takes no argument: the base per the membership asset (so a run started inside a
+member walks up and shapes the product), the members as the **union** of
+`.gitmodules` walked recursively and the config's `members:` list, deduped on
+realpath, with a path in only one of two present sources reported as a
+disagreement and never shaped, and an absent member offered a **clone row inside
+the same plan**. Mode resolves per repo from what its tree contains, never a
+flag or setup's fork — `shaped` (`.config/stackgen.yaml` with `format: 1`),
+**shaped on the old layout** (no `stackgen.yaml`, but
 `.config/mise/conf.d/tools.toml`, `conf.d/env.toml` or a root
 `.config/mise.dev.toml` — init names each such repo and **stops before the
 plan**, writing nothing anywhere, until the old-layout reshape ships), `source`

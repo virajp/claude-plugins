@@ -41,13 +41,15 @@ each file (never Owns), the one rule for a finding on an uncovered unit's file
 dropped-count clause — applied by the orchestrator to what the reviewers
 report in full), late re-runs and per-loop round counts. In outline: the
 orchestrator invokes `/code-review` (high effort) and `/security-review` in
-one message, waits on each with `TaskOutput` (blocking, up to 30 minutes from
+one message — `/security-review` alone, and the security reviewer alone, on a
+row that covers `edit` units alone — waits on each with `TaskOutput` (blocking, up to 30 minutes from
 invocation; an engine that errors or times out is stopped with `TaskStop` and
 counted unavailable, reason kept), filters each branch-scoped output to the
 row's range, and only then dispatches both reviewers in a single message so
 they run concurrently, each handed its engine's filtered output in its
 prompt. It merges their findings into **one** loop-back, each finding's unit
-re-dispatched **by its Kind**; then the row re-runs in full, engines first.
+re-dispatched **by its Kind**; then the next round runs, engines first, over
+the fix commits of the round before it alone.
 Their gating is unchanged and stays per-stage (security and `[breaking-api]`
 always fixed; other review findings capped). No `code` unit runs an engine by
 itself, and the orchestrator infers no row.
@@ -195,8 +197,9 @@ blueprint-bound and never fires on a plan without one.
   re-dispatches that unit by its Kind — a `code` unit's coder with the two
   **tags**, the plan folder path and its own unit id, so it fixes only the
   findings labelled with that id; an `edit` unit per its own loop-back, the
-  finding lines appended — re-commits via `/vwf:git-workflow`, then re-runs
-  the row — engines first, then both reviewers. Send **both** reviewers' tags
+  finding lines appended — re-commits via `/vwf:git-workflow`, then runs the
+  row's next round over those fix commits alone — engines first, then both
+  reviewers. Send **both** reviewers' tags
   in a single `code`
   dispatch per unit: one merged fix pass keeps the two stages from rewriting
   each other's lines, and a round counts once even though two reviewers ran
