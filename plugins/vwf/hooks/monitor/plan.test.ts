@@ -6,8 +6,14 @@ import {
 import {
   folderIn,
   gapsOf,
+  hostOf,
   isFinished,
+  isFollowed,
+  joinPath,
+  memberPaths,
   parseIndex,
+  resolveBase,
+  reviewName,
   runningFolders,
   unitFor,
   unitState,
@@ -109,4 +115,66 @@ test("maps a dispatch to its unit and finds folders", async () => {
 | docs/plans/2026-10-19-b-plan | change | APPROVED |
 `;
   expect(runningFolders(index)).toEqual(["2026-10-18-a-plan"]);
+});
+
+test("follows unit and wave-review names, and maps a reviewer to its row", async () => {
+  const plan = parseIndex(INDEX);
+  expect(isFollowed({ name: "U2", type: "general-purpose" }, plan.units))
+    .toBe(true);
+  expect(isFollowed({ name: "U9", type: "general-purpose" }, plan.units))
+    .toBe(false);
+  expect(isFollowed({ name: "R1-late", type: "general-purpose" }, plan.units))
+    .toBe(true);
+  expect(isFollowed({ type: "Explore" }, plan.units)).toBe(false);
+  expect(isFollowed({ type: "vwf:execute-coder" }, plan.units)).toBe(true);
+  expect(isFollowed({ type: "vwf:execute-runner" }, plan.units)).toBe(false);
+  expect(reviewName("R2")).toBe("R2");
+  expect(reviewName("R-late")).toBe("R-late");
+  expect(reviewName("run-1")).toBe(undefined);
+  // The row id comes before the files of the units the row covers.
+  expect(
+    unitFor("loop U3-late1, round 1: 01-checker-accepts.md", plan.units),
+  )
+    .toBe("U3");
+  expect(unitFor("01-checker-accepts.md", plan.units, "U2")).toBe("U2");
+});
+
+test("splits a table row on unescaped pipes only", async () => {
+  const plan = parseIndex(
+    INDEX.replace("node edit;", "node a \\| b;"),
+  );
+  expect(plan.log[2]!.detail).toBe("node a | b; GAP: pack X has no owner");
+  expect(plan.log[2]!.commit).toBe("—");
+});
+
+test("reads members and the host, and resolves the base repo", async () => {
+  expect(
+    memberPaths(`topology: multi-repo
+members:
+  - name: api
+    path: ../api # the API
+  - name: app
+    path: "../app"
+other:
+  path: nope
+`),
+  )
+    .toEqual(["../api", "../app"]);
+  expect(hostOf("vwf_membership: 1\nhost: ../product\n")).toBe("../product");
+  expect(joinPath("/w/api", "../product")).toBe("/w/product");
+  // A worktree of a member: its main checkout, then the host.
+  const files: Record<string, string> = {
+    "/w/api/.config/vwf-membership.yaml": "host: ../product\n",
+    "/w/product/.config/vwf.yaml": "members: []\n",
+  };
+  const base = await resolveBase("/w/api/.worktrees/x", {
+    read: async path => files[path],
+    git: async (cwd, args) =>
+      args.includes("--show-toplevel")
+        ? `${cwd}\n`
+        : cwd.startsWith("/w/api")
+        ? "/w/api/.git\n"
+        : undefined,
+  });
+  expect(base).toBe("/w/product");
 });
