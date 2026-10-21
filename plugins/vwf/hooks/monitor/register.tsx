@@ -19,6 +19,7 @@ import type {
 import {
   folderIn,
   gapsOf,
+  isClaimedIn,
   isFinished,
   isFollowed,
   joinPath,
@@ -131,12 +132,32 @@ let timer: Timer | undefined;
 let waitingSince: number | undefined;
 let lastChangeAt = 0;
 let lastSeen = "";
-// True while the plan was picked from docs/plans/index.md, not named.
+// The main loop's tool calls in flight: a run with one is not stale.
+let mainCalls = 0;
+// True while the plan was picked from docs/plans/index.md and nothing has
+// confirmed it is this session's.
 let isGuess = false;
+// Agents of a guessed plan given up for another: never adopted again.
+const disowned = new Set<string>();
 // The runner of each plan of an `all` run, by folder.
 const runners = new Map<string, string>();
 // The base repo of each checkout, once resolved.
 const bases = new Map<string, string | undefined>();
+// What the search reads from git and the config, kept for the run: each
+// checkout's worktrees (its main checkout first), each cwd's toplevel, each
+// base's members. Cleared when a run starts, and when a search misses.
+const worktrees = new Map<string, string[]>();
+const toplevels = new Map<string, string>();
+const members = new Map<string, string[]>();
+const RETRY_MS = 30 * 1000;
+// When a search last missed and read everything again.
+let missedAt = -Infinity;
+
+function clearCaches() {
+  worktrees.clear();
+  toplevels.clear();
+  members.clear();
+}
 
 function stopTimer() {
   timer?.cancel();
@@ -157,6 +178,9 @@ async function start($: $, args: string) {
   lastSeen = "";
   lastChangeAt = now;
   isGuess = !folder;
+  disowned.clear();
+  clearCaches();
+  missedAt = -Infinity;
   await update($, run, () => ({
     mode,
     cwd,
@@ -209,8 +233,40 @@ async function baseOf($: $, cwd: string): Promise<string | undefined> {
   return bases.get(cwd);
 }
 
-/** The checkouts a plan can be in: the cwds, the base repo, its members, and each one's worktrees. */
-async function roots($: $, cwds: string[]): Promise<string[]> {
+/** The checkouts of the repo at `root`, its main checkout first. */
+async function worktreesOf($: $, root: string): Promise<string[]> {
+  let listed = worktrees.get(root);
+  if (listed === undefined) {
+    listed = (await git($, root, ["worktree", "list", "--porcelain"]))
+      ?.split("\n")
+      .filter(line => line.startsWith("worktree "))
+      .map(line => line.slice("worktree ".length)) ?? [];
+    worktrees.set(root, listed);
+  }
+
+  return listed;
+}
+
+/** The checkout `cwd` is in, else `cwd` itself. */
+async function toplevelOf($: $, cwd: string): Promise<string> {
+  let top = toplevels.get(cwd);
+  if (top === undefined) {
+    const out = (await git($, cwd, ["rev-parse", "--show-toplevel"]))?.trim();
+    top = out && !out.includes("\n") && out.startsWith("/") ? out : cwd;
+    toplevels.set(cwd, top);
+  }
+
+  return top;
+}
+
+const nameOf = (path: string) => path.split("/").pop() ?? "";
+
+/**
+ * The checkouts a plan can be in: the cwds, the base repo, its members, and
+ * each one's worktrees — the worktree named for the folder first, then the
+ * other linked worktrees, where a run writes, then the main checkouts.
+ */
+async function roots($: $, cwds: string[], folder: string): Promise<string[]> {
   const found = new Set<string>(cwds);
   for (const cwd of cwds) {
     const base = await baseOf($, cwd);
@@ -218,73 +274,84 @@ async function roots($: $, cwds: string[]): Promise<string[]> {
       continue;
     }
     found.add(base);
-    const config = await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => "");
-    for (const path of memberPaths(config)) {
+    let paths = members.get(base);
+    if (paths === undefined) {
+      paths = memberPaths(
+        await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => ""),
+      );
+      members.set(base, paths);
+    }
+    for (const path of paths) {
       found.add(joinPath(base, path));
     }
   }
+  const linked = new Set<string>();
   for (const root of [...found]) {
-    for (
-      const line of (await git($, root, ["worktree", "list", "--porcelain"]))
-        ?.split("\n") ?? []
-    ) {
-      if (line.startsWith("worktree ")) {
-        found.add(line.slice("worktree ".length));
+    (await worktreesOf($, root)).forEach((tree, i) => {
+      found.add(tree);
+      if (i > 0) {
+        linked.add(tree);
       }
-    }
+    });
   }
+  const rank = (root: string) =>
+    nameOf(root) === folder ? 0 : linked.has(root) ? 1 : 2;
 
-  return [...found];
+  return [...found].sort((a, b) => rank(a) - rank(b));
 }
 
 async function exists($: $, path: string): Promise<boolean> {
   return (await $.fs.stat(path).catch(() => undefined)) !== undefined;
 }
 
-const nameOf = (path: string) => path.split("/").pop() ?? "";
-
 /**
  * The plan's index.md: the known one while it exists, else the first live
- * copy (the worktree named for the folder first), else an archived one.
+ * copy (a linked worktree before a main checkout), else an archived one.
  */
 async function locate(
   $: $,
   cwds: string[],
   folder: string,
   known: string | undefined,
+  now: number,
 ): Promise<{ path: string; isArchived: boolean; } | undefined> {
   const live = `/docs/plans/${folder}/index.md`;
   if (known?.endsWith(live) && (await exists($, known))) {
     return { path: known, isArchived: false };
   }
-  const all = await roots($, cwds);
-  const ordered = [
-    ...all.filter(root => nameOf(root) === folder),
-    ...all.filter(root => nameOf(root) !== folder),
-  ];
-  for (const root of ordered) {
-    if (await exists($, `${root}${live}`)) {
-      return { path: `${root}${live}`, isArchived: false };
+  for (let attempt = 0; attempt < 2; attempt++) {
+    const ordered = await roots($, cwds, folder);
+    for (const root of ordered) {
+      if (await exists($, `${root}${live}`)) {
+        return { path: `${root}${live}`, isArchived: false };
+      }
     }
-  }
-  for (const root of ordered) {
-    const path = `${root}/docs/plans/archived/${folder}/index.md`;
-    if (await exists($, path)) {
-      return { path, isArchived: true };
+    for (const root of ordered) {
+      const path = `${root}/docs/plans/archived/${folder}/index.md`;
+      if (await exists($, path)) {
+        return { path, isArchived: true };
+      }
     }
+    // A miss: read git and the config again, at most once each RETRY_MS.
+    if (now - missedAt < RETRY_MS) {
+      break;
+    }
+    missedAt = now;
+    clearCaches();
   }
 
   return undefined;
 }
 
 /**
- * With no folder named: the one RUNNING row of the plan index, or among
- * several, the one in this session's checkout or one of its worktrees.
+ * With no folder named: the RUNNING row of the plan index that this
+ * session's own linked worktree holds — named for it, or named in its Status
+ * — which is sure; else the one RUNNING row, a guess; else a problem.
  */
 async function pick(
   $: $,
   cwds: string[],
-): Promise<{ folder?: string; problem?: string; }> {
+): Promise<{ folder?: string; problem?: string; isSure?: boolean; }> {
   const folders = new Set<string>();
   for (const cwd of cwds) {
     const base = (await baseOf($, cwd)) ?? cwd;
@@ -300,36 +367,37 @@ async function pick(
   if (rows.length === 0) {
     return { problem: "No plan reads RUNNING in docs/plans/index.md." };
   }
-  if (rows.length === 1) {
-    return { folder: rows[0] };
+  // Where the session is now and where the run started, when either is a
+  // linked worktree: other sessions' worktrees are not this session's.
+  const own: string[] = [];
+  for (const cwd of cwds) {
+    const here = await toplevelOf($, cwd);
+    const listed = await worktreesOf($, here);
+    if (listed.indexOf(here) > 0 && !own.includes(here)) {
+      own.push(here);
+    }
   }
-  const cwd = cwds[0] ?? "";
-  const listed = (await git($, cwd, ["worktree", "list", "--porcelain"]))
-    ?.split("\n")
-    .filter(line => line.startsWith("worktree "))
-    .map(line => line.slice("worktree ".length)) ?? [];
-  const main = listed[0];
-  const here = (await git($, cwd, ["rev-parse", "--show-toplevel"]))?.trim();
-  const tiers = [
-    here && here !== main ? [here] : [],
-    listed.slice(1),
-  ];
-  for (const tier of tiers) {
-    const hits: string[] = [];
-    for (const folder of rows) {
-      for (const root of tier) {
-        if (await exists($, `${root}/docs/plans/${folder}/index.md`)) {
-          hits.push(folder);
-          break;
-        }
+  const hits: string[] = [];
+  for (const folder of rows) {
+    for (const root of own) {
+      const text = await $
+        .fs
+        .read(`${root}/docs/plans/${folder}/index.md`)
+        .catch(() => undefined);
+      if (
+        text !== undefined
+        && (nameOf(root) === folder || isClaimedIn(text, root))
+      ) {
+        hits.push(folder);
+        break;
       }
     }
-    if (hits.length === 1) {
-      return { folder: hits[0] };
-    }
-    if (hits.length > 1) {
-      break;
-    }
+  }
+  if (hits.length === 1) {
+    return { folder: hits[0], isSure: true };
+  }
+  if (rows.length === 1) {
+    return { folder: rows[0] };
   }
 
   return {
@@ -361,8 +429,9 @@ function mapUnit(
   name: string | undefined,
   text: string,
   units: UnitRow[],
+  type: string,
 ): string | undefined {
-  return reviewName(name) ?? unitFor(text, units, name);
+  return reviewName(name) ?? unitFor(text, units, name, type);
 }
 
 /** Reads the plan files and the agent list again, and merges them into the run. */
@@ -376,10 +445,20 @@ async function refresh($: $) {
   const cwds = [...new Set([await $.session.cwd(), r.cwd])];
   let folder = current(r)?.folder;
   let problem: string | undefined;
+  const repick = isGuess;
   if (isGuess || folder === undefined) {
     const picked = await pick($, cwds);
-    problem = picked.problem;
-    folder = picked.folder ?? folder;
+    if (picked.folder !== undefined) {
+      folder = picked.folder;
+      // In this session's own worktree: no longer a guess.
+      if (picked.isSure) {
+        isGuess = false;
+      }
+    }
+    else if (folder === undefined) {
+      // A plan already shown keeps showing, with no problem under it.
+      problem = picked.problem;
+    }
   }
   if (folder === undefined) {
     await update(
@@ -392,7 +471,7 @@ async function refresh($: $) {
   const known = current(r)?.folder === folder
     ? current(r)?.indexPath
     : undefined;
-  const found = await locate($, cwds, folder, known);
+  const found = await locate($, cwds, folder, known, now);
   const text = found
     ? await $.fs.read(found.path).catch(() => undefined)
     : undefined;
@@ -400,6 +479,8 @@ async function refresh($: $) {
     ? `Cannot read the index.md of ${folder}.`
     : undefined;
   const plan = text === undefined ? undefined : parseIndex(text);
+  // An agent spawned after this point may be missing from the list: not ended.
+  const listedAt = await $.clock.now();
   const listed: AgentInfo[] | undefined = await $
     .agent
     .list()
@@ -414,13 +495,13 @@ async function refresh($: $) {
     if (!head) {
       plans = [{ folder, startedAt: value.startedAt, agents: [] }];
     }
-    else if (head.folder !== folder && isGuess) {
-      // A better pick: the agents seen so far are this session's.
+    else if (head.folder !== folder && repick) {
+      // A better pick: the agents seen under the guess are not carried across.
+      head.agents.forEach(agent => disowned.add(agent.id));
       plans = [...plans.slice(0, -1), {
-        ...head,
         folder,
-        indexPath: undefined,
-        plan: undefined,
+        startedAt: head.startedAt,
+        agents: [],
       }];
     }
     const lastIndex = plans.length - 1;
@@ -436,6 +517,7 @@ async function refresh($: $) {
     const adopted: AgentRun[] = (listed ?? [])
       .filter(info =>
         !knownIds.has(info.id)
+        && !disowned.has(info.id)
         && isFollowed({ name: info.name, type: info.type }, units)
         && (runner !== undefined
           ? info.parentId === runner
@@ -446,13 +528,16 @@ async function refresh($: $) {
         type: info.type,
         description: info.description,
         status: info.status,
-        unit: mapUnit(info.name, info.description, units),
+        unit: mapUnit(info.name, info.description, units, info.type),
       }));
     const settle = (agent: AgentRun): AgentRun => {
       const info = listed?.find(one => one.id === agent.id);
       const unit = agent.unit
-        ?? mapUnit(info?.name, agent.description, units);
-      if (isOver(agent) || listed === undefined) {
+        ?? mapUnit(info?.name, agent.description, units, agent.type);
+      const isNewer = !info
+        && agent.startedAt !== undefined
+        && agent.startedAt >= listedAt;
+      if (isOver(agent) || listed === undefined || isNewer) {
         return { ...agent, unit };
       }
       // An agent gone from the list has ended.
@@ -495,15 +580,20 @@ async function refresh($: $) {
   }`;
   if (seen !== lastSeen) {
     lastSeen = seen;
-    lastChangeAt = now;
+    lastChangeAt = Math.max(lastChangeAt, now);
   }
   const status = p.plan?.status;
-  // In every mode: the next plan of an `all` run is a new run.
-  const isDone = status === "BLOCKED"
+  const isLive = after.plans.some(one => one.agents.some(a => !isOver(a)));
+  // In every mode: the next plan of an `all` run is a new run. Agents still
+  // live are followed to their end first.
+  const isDone = (status === "BLOCKED"
     || status === "COMPLETE"
-    || found?.isArchived === true;
-  const isStale = waitingSince !== undefined
-    && now - Math.max(waitingSince, lastChangeAt) >= WAIT_MS;
+    || found?.isArchived === true) && !isLive;
+  // No agent live and the main loop idle — its turn ended, or it was
+  // interrupted — with no change for WAIT_MS.
+  const isStale = !isLive
+    && mainCalls === 0
+    && now - Math.max(waitingSince ?? -Infinity, lastChangeAt) >= WAIT_MS;
   if (isDone || isStale) {
     await endRun($, now);
   }
@@ -567,10 +657,21 @@ export const register: Register = on => {
 
   // Each tool call in the session also refreshes, at most once each THROTTLE_MS.
   on("tool.call", async ($, e, next) => {
-    const result = await next(e);
+    const isMain = e.agentId === undefined;
     // The main loop is working again: the run is not waiting.
-    if (e.agentId === undefined) {
+    if (isMain) {
       waitingSince = undefined;
+      mainCalls++;
+    }
+    let result: Awaited<ReturnType<typeof next>>;
+    try {
+      result = await next(e);
+    }
+    finally {
+      if (isMain) {
+        mainCalls = Math.max(0, mainCalls - 1);
+        lastChangeAt = Math.max(lastChangeAt, await $.clock.now());
+      }
     }
     const r = await read($, run);
     if (r && r.endedAt === undefined) {
@@ -641,9 +742,17 @@ export const register: Register = on => {
     }
     if (folder) {
       runners.set(folder, agentId);
+      // The runner's plan may sit in a worktree cut since the last search.
+      clearCaches();
     }
     const wasGuess = isGuess;
-    if (folder) {
+    const guessed = current(r)?.folder;
+    // A runner names its plan; a unit's prompt that names the guessed
+    // plan's folder confirms it.
+    if (
+      folder
+      || (guessed !== undefined && e.prompt.includes(`docs/plans/${guessed}/`))
+    ) {
       isGuess = false;
     }
     await update($, run, value => {
@@ -684,16 +793,31 @@ export const register: Register = on => {
           e.name,
           `${e.description}\n${e.prompt}`,
           last.plan?.units ?? [],
+          e.subagentType,
         ),
         startedAt: now,
         status: "running",
       };
+      // A refresh may have adopted it already: merge by id.
+      const isKnown = last.agents.some(one => one.id === agentId);
 
       return {
         ...value,
         plans: [...plans.slice(0, -1), {
           ...last,
-          agents: [...last.agents, agent],
+          agents: isKnown
+            ? last.agents.map(one =>
+              one.id === agentId
+                ? {
+                  ...one,
+                  type: agent.type,
+                  description: agent.description,
+                  unit: agent.unit ?? one.unit,
+                  startedAt: one.startedAt ?? now,
+                }
+                : one
+            )
+            : [...last.agents, agent],
         }],
       };
     });
@@ -713,6 +837,9 @@ export const register: Register = on => {
     if (!r || r.endedAt !== undefined || e.agentId !== undefined) {
       return done;
     }
+    // The turn is over: no main-loop call is in flight.
+    mainCalls = 0;
+    lastChangeAt = Math.max(lastChangeAt, await $.clock.now());
     await poke($, true);
     const after = await read($, run);
     if (!after || after.endedAt !== undefined) {

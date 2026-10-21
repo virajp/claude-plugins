@@ -149,28 +149,41 @@ export function isFollowed(
   return agent.type.startsWith(PREFIX) && agent.type !== RUNNER;
 }
 
+// A review row's reviewers: their prompt names the row before the files of
+// the units the row covers.
+const REVIEWER = /(?:^|:)execute-(?:code|security)-reviewer$/;
+
 /**
- * The unit that a dispatch is for: the agent's name, then the first row id
- * of the plan in the text, then a unit file's name. A review row's reviewers
- * carry their row id before the files of the units they cover.
+ * The unit that a dispatch is for: the agent's name; then, for a review-row
+ * reviewer, the first row id of the plan in the text before a unit file's
+ * name; for any other agent, a unit file's name before a row id.
  */
 export function unitFor(
   text: string,
   units: UnitRow[],
   name?: string,
+  type?: string,
 ): string | undefined {
   const named = name?.match(UNIT_NAME)?.[1];
   if (named && (units.length === 0 || units.some(unit => unit.id === named))) {
     return named;
   }
-  for (const match of text.matchAll(ROW_ID)) {
-    const id = match[0].match(UNIT_ID)?.[0];
-    if (units.some(unit => unit.id === id)) {
-      return id;
+  const byRow = () => {
+    for (const match of text.matchAll(ROW_ID)) {
+      const id = match[0].match(UNIT_ID)?.[0];
+      if (units.some(unit => unit.id === id)) {
+        return id;
+      }
     }
-  }
 
-  return units.find(unit => unit.file !== "" && text.includes(unit.file))?.id;
+    return undefined;
+  };
+  const byFile = () =>
+    units.find(unit => unit.file !== "" && text.includes(unit.file))?.id;
+
+  return type !== undefined && REVIEWER.test(type)
+    ? byRow() ?? byFile()
+    : byFile() ?? byRow();
 }
 
 /** The value of a `key:` line, its quotes and trailing comment dropped. */
@@ -187,7 +200,8 @@ export function memberPaths(yaml: string): string[] {
   const out: string[] = [];
   let isIn = false;
   for (const line of yaml.split("\n")) {
-    if (/^\S/.test(line) && !line.startsWith("#")) {
+    // A sequence written with no indent stays inside its key.
+    if (/^[^\s#-]/.test(line)) {
       isIn = /^members:/.test(line);
       continue;
     }
@@ -280,6 +294,14 @@ export async function resolveBase(
   }
 
   return undefined;
+}
+
+/** True when the Status section of an index.md names `root`, where the plan runs. */
+export function isClaimedIn(text: string, root: string): boolean {
+  return section(text, /^## Status\b/)
+    .join(" ")
+    .split(/\s+/)
+    .some(word => word.replace(/^`|[`.,;:]+$/g, "") === root);
 }
 
 /** A unit's state, from the live agents first and then the files. */

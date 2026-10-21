@@ -133,10 +133,27 @@ test("follows unit and wave-review names, and maps a reviewer to its row", async
   expect(reviewName("run-1")).toBe(undefined);
   // The row id comes before the files of the units the row covers.
   expect(
-    unitFor("loop U3-late1, round 1: 01-checker-accepts.md", plan.units),
+    unitFor(
+      "loop U3-late1, round 1: 01-checker-accepts.md",
+      plan.units,
+      undefined,
+      "vwf:execute-code-reviewer",
+    ),
   )
     .toBe("U3");
   expect(unitFor("01-checker-accepts.md", plan.units, "U2")).toBe("U2");
+});
+
+test("maps a coder by its unit file, not the first unit id in its prompt", async () => {
+  const plan = parseIndex(INDEX);
+  const prompt =
+    "Decisions: | 1 | Matching | … | U1 |\nDepends on U1.\nUnit file: docs/plans/x/03-review.md";
+  expect(unitFor(prompt, plan.units, undefined, "vwf:execute-coder"))
+    .toBe("U3");
+  expect(
+    unitFor(prompt, plan.units, undefined, "vwf:execute-security-reviewer"),
+  )
+    .toBe("U1");
 });
 
 test("splits a table row on unescaped pipes only", async () => {
@@ -159,6 +176,9 @@ other:
   path: nope
 `),
   )
+    .toEqual(["../api", "../app"]);
+  // A sequence with no indent is valid YAML.
+  expect(memberPaths("members:\n- name: api\n  path: ../api\n- path: ../app\n"))
     .toEqual(["../api", "../app"]);
   expect(hostOf("vwf_membership: 1\nhost: ../product\n")).toBe("../product");
   expect(joinPath("/w/api", "../product")).toBe("/w/product");
