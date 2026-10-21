@@ -12,9 +12,9 @@ gaps_of: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-21 by the user
+RUNNING since 2026-10-21 in .worktrees/2026-10-21-execute-monitor-in-vwf
 
 ## Consent
 
@@ -239,8 +239,12 @@ A unit returns exactly this block and nothing else — no file contents, no diff
 
 ## Run log
 
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| Wave | Unit      | Model | Round | Outcome | Detail                                                                                                                                                                                                                                          | Commit |
+| ---- | --------- | ----- | ----- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| 0    | preflight | —     | 1     | green   | doctor blocking checks: mise, graphify CLI, graph in main checkout, claude 2.1.306 present; wave gate 5/5 green; format check skipped (no `covers:`); stack conventions skipped (no `code` unit); order U1 → U2 → U3 → U4                       |        |
+| 1    | U1        | opus  | 1     | green   | 8 files changed; DECIDED: hooks.json hooks block gains only the trailing comma JSON needs before `modules`; GAP: none; plugin test 5 pass, validate --strict pass (warnings: missing icon, gating hook without .catch, both from the prototype) |        |
+| 1    | R1        | opus  | 1     | pass    | FINDINGS: 0; CONTRACT: clean; RULINGS: clean                                                                                                                                                                                                    |        |
+| 1    | gate      | —     | 1     | green   | wave gate 5/5 green; `claude plugin test plugins/vwf` 5 pass                                                                                                                                                                                    |        |
 
 ## Launch
 
