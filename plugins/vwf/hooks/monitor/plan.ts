@@ -8,6 +8,10 @@ import type {
 const FOLDER = /\b(\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*)\b/;
 const UNIT_ID = /\bU\d+\b/;
 const LIVE = ["pending", "running", "waiting"];
+// C0/C1 control characters but the newline and the tab: no escape sequence
+// from a plan file reaches the terminal.
+// eslint-disable-next-line no-control-regex
+const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
 
 /** The lines of one `## <heading>` section, the heading excluded. */
 function section(text: string, heading: RegExp): string[] {
@@ -58,7 +62,8 @@ function bullets(lines: string[]): string[] {
 }
 
 /** Reads the parts of a plan folder's index.md that the pane shows. */
-export function parseIndex(text: string): PlanSnapshot {
+export function parseIndex(raw: string): PlanSnapshot {
+  const text = raw.replace(CONTROL, "");
   const title =
     (text.match(/^# Plan — (.+)$/m)?.[1] ?? text.match(/^# (.+)$/m)?.[1] ?? "")
       .trim();

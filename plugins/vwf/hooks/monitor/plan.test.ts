@@ -62,6 +62,15 @@ test("parses the plan title, status, units, run log and gaps", async () => {
   ]);
 });
 
+test("strips terminal escape sequences from the parsed text", async () => {
+  const plan = parseIndex(
+    INDEX.replace("node edit;", "node \u001b]0;pwned\u0007\u001b[31medit;"),
+  );
+  expect(plan.log[2]!.detail).toBe(
+    "node ]0;pwned[31medit; GAP: pack X has no owner",
+  );
+});
+
 test("derives each unit state and its gaps", async () => {
   const plan = parseIndex(INDEX);
   const [u1, u2, u3] = plan.units;

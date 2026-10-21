@@ -514,7 +514,7 @@ export const register: Register = on => {
             hotkey="c"
             onPress={() => $.ui.close({ id: PANE })}
           />
-          {!isMainView && <Text></Text>}
+          {!isMainView && <Text>{" "}</Text>}
           {!isMainView && (
             <Button
               key="back"
@@ -523,7 +523,7 @@ export const register: Register = on => {
               onPress={back}
             />
           )}
-          {r.endedAt === undefined && <Text></Text>}
+          {r.endedAt === undefined && <Text>{" "}</Text>}
           {r.endedAt === undefined && (
             <Button
               key="quiet"
@@ -532,7 +532,7 @@ export const register: Register = on => {
               onPress={() => update($, isQuiet, value => !value)}
             />
           )}
-          <Text dimColor>Esc closes · ctrl+x tab, then a hotkey</Text>
+          <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>
         </Box>
         <Text bold>{fit(plan?.title || p.folder, width)}</Text>
         <Text dimColor>
@@ -566,7 +566,7 @@ export const register: Register = on => {
               );
           })} {done}/{units.length}
         </Text>
-        <Text></Text>
+        <Text>{" "}</Text>
         <Text dimColor>
           {fit(
             "Unit  Wave Kind    Status        Start  End    Time   Gaps",
@@ -601,12 +601,12 @@ export const register: Register = on => {
             </Button>
           );
         })}
-        {plan && plan.gaps.length > 0 && <Text></Text>}
+        {plan && plan.gaps.length > 0 && <Text>{" "}</Text>}
         {plan && plan.gaps.length > 0 && <Text bold>Gaps</Text>}
         {(plan?.gaps ?? []).map(gap => (
           <Text color="yellow">{fit(`- ${gap}`, width)}</Text>
         ))}
-        <Text></Text>
+        <Text>{" "}</Text>
         <Text dimColor>
           {fit(
             `Read ${
