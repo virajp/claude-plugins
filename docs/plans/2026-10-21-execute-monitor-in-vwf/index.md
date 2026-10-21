@@ -12,9 +12,9 @@ gaps_of: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-10-21 in .worktrees/2026-10-21-execute-monitor-in-vwf
+COMPLETE 2026-10-21 — c570b395, c5c457a6, d67fd5a4
 
 ## Consent
 
@@ -140,12 +140,12 @@ provides.
 
 ## Units
 
-| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                                                             | Depends on | Status  | Commit             |
-| -- | ---- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------- | ------------------ |
-| U1 | 1    | [01-monitor-into-vwf.md](01-monitor-into-vwf.md) | edit   | `plugins/vwf/hooks/monitor/**` (new), `plugins/vwf/types/index.d.ts` (new), `plugins/vwf/hooks/hooks.json`, `plugins/vwf/.claude-plugin/plugin.json` (the `types` key only)                                                                      | —          | green   | c570b395, c5c457a6 |
-| U2 | 2    | [02-review.md](02-review.md)                     | review | —                                                                                                                                                                                                                                                | U1         | green   |                    |
-| U3 | 3    | [03-docs.md](03-docs.md)                         | edit   | `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `.claude/skills/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | pending |                    |
-| U4 | 4    | [04-gates.md](04-gates.md)                       | edit   | none — it runs the gates and fixes nothing outside a finding's own unit                                                                                                                                                                          | U3         | pending |                    |
+| Id | Wave | Unit file                                        | Kind   | Owns                                                                                                                                                                                                                                             | Depends on | Status | Commit             |
+| -- | ---- | ------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------- | ------ | ------------------ |
+| U1 | 1    | [01-monitor-into-vwf.md](01-monitor-into-vwf.md) | edit   | `plugins/vwf/hooks/monitor/**` (new), `plugins/vwf/types/index.d.ts` (new), `plugins/vwf/hooks/hooks.json`, `plugins/vwf/.claude-plugin/plugin.json` (the `types` key only)                                                                      | —          | green  | c570b395, c5c457a6 |
+| U2 | 2    | [02-review.md](02-review.md)                     | review | —                                                                                                                                                                                                                                                | U1         | green  |                    |
+| U3 | 3    | [03-docs.md](03-docs.md)                         | edit   | `CLAUDE.md`, `readme.md`, `.claude/docs/**`, `.claude/skills/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | green  | d67fd5a4           |
+| U4 | 4    | [04-gates.md](04-gates.md)                       | edit   | none — it runs the gates and fixes nothing outside a finding's own unit                                                                                                                                                                          | U3         | green  | —                  |
 
 ## Shared-file rule
 
@@ -280,9 +280,13 @@ A unit returns exactly this block and nothing else — no file contents, no diff
 | —    | reconcile  | —     | —     | skipped            | no `covers:`: no stamps, registry or harness; no `code` unit: nothing to persist                                                                                                                                                                                                                                               |          |
 | 3    | U3         | opus  | 1     | green              | 11 files: decision doc, CLAUDE.md, readme.md, .claude/docs/plugins.md, vwf-plugin skill + assets.md, plugin-authoring skill + structure.md + checks.md, site vwf.md (progress pane subsection, edit-only limit) + mempalace.md; docs-sync applied; GAP none                                                                    |          |
 | 3    | R3         | opus  | 1     | findings(4)        | repo-shape.md:276 and stackgen-plugin SKILL.md:428 still say no JS/TS in vwf; site vwf.md:3052 144-column rule not backed by register.tsx (open() has no width test); CLAUDE.md:112 tree listing lacks types/; CONTRACT clean; RULINGS clean                                                                                   |          |
-| 3    | U3         | opus  | 2     | green              | fix from R3 r1: repo-shape.md + stackgen-plugin SKILL.md JS/TS ruling reworded; manual width rule attributed to Claude Code (engine types $.ui.open doc), no number claimed for the module; CLAUDE.md tree adds types/                                                                                                         |          |
+| 3    | U3         | opus  | 2     | green              | fix from R3 r1: repo-shape.md + stackgen-plugin SKILL.md JS/TS ruling reworded; manual width rule attributed to Claude Code (engine types $.ui.open doc), no number claimed for the module; CLAUDE.md tree adds types/                                                                                                         | d67fd5a4 |
 | 3    | R3         | opus  | 2     | pass               | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                      |          |
 | 3    | gate       | —     | 1     | green              | wave gate 5/5 green                                                                                                                                                                                                                                                                                                            |          |
+| 4    | U4         | opus  | 1     | green              | CHANGED none; wave gate 5/5 exit 0; plugin test 6 pass; validate --strict pass; GAP: 04-gates.md says 5 tests, the review row's escape test makes 6                                                                                                                                                                            |          |
+| 4    | R4         | —     | 1     | pass               | U4 diff empty (git diff HEAD outside docs/plans: 0 lines); nothing to review                                                                                                                                                                                                                                                   |          |
+| —    | reconcile  | —     | —     | green              | final: wave gate 5/5 green; claude plugin test plugins/vwf 6 pass; claude plugin validate --strict plugins/vwf pass; live-pane checks left to the user (Gates the orchestrator keeps, items 1–3)                                                                                                                               |          |
+| —    | landing    | —     | —     | green              | B101 → Partially done via /vwf:backlog partial (Landed line written); folder kept live: 2 gaps open                                                                                                                                                                                                                            |          |
 
 ## Launch
 
