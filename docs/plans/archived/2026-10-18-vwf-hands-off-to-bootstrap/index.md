@@ -12,9 +12,10 @@ gaps_of: []
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-18 by the user
+ARCHIVED 2026-10-22 — not run; was APPROVED. Superseded: the B102 work is done
+in place, because bootstrap shipped differently than this plan assumed.
 
 ## Consent
 
