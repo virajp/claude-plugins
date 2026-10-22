@@ -165,20 +165,30 @@ the user; (c) is derived and stated, never confirmed here — the user changes a
 level at the §5 gate. All four are written into `index.md`, and `/vwf:execute`
 runs **what is written and nothing it infers**.
 
-**(a) The wave gate.** Propose the exact commands the run must pass, one per
-line, drawn from the survey's gate list — the repo's own task runner tasks, the
-capabilities the `harness:` stamp records, the checks CI already runs over the
-touched trees. Confirm them. These become `index.md`'s **Wave gate** section,
-and `/vwf:execute` runs them before wave 1 and after every wave. A check
+**(a) The three gates.** Propose the exact commands the run must pass, one per
+line, for each of three tiers, drawn from the survey's gate list — the repo's
+own task runner tasks, the capabilities the `harness:` stamp records, the
+checks CI already runs over the touched trees. Confirm them. They become
+`index.md`'s **Unit gate** section, which `/vwf:execute` runs once before
+each unit's commit; its **Wave gate** section, run once before wave 1 and
+after every wave; and its **Plan gate** section, run once over the finished
+tree. When the repo's `mise tasks ls` lists them, the default proposal is
+`mise x -- mise run code:format` for the unit gate,
+`mise x -- mise run code:lint` for the wave gate and
+`mise x -- mise run code:precommit` for the plan gate: the cheap check runs
+most often, and the full hook pass runs once. A check that runs the whole
+hook pass or a slow test suite belongs in the plan gate, not in the wave
+gate. A check
 that only holds once a particular unit has landed is **not** a wave-gate line —
 the gate runs before wave 1 and must be green then — it is that unit's
 *Verification*, repeated in the gates unit's. A repo with no task
 runner and no harness stamp records `none` — say plainly, in that case, that the
 run has no automated gate and the wave review is the only check. The wave
 review is the only review a change plan runs by default: a `Kind: review` row
-— the one that runs `/code-review` and `/security-review` — is written only
-when the change lands runnable code (item 10a), with its reason in the
-decisions table.
+is written only when the change lands runnable code (item 10a), with its
+reason in the decisions table. Over a change plan's `edit` units it runs
+`/security-review` and the security reviewer alone — the wave review has
+already judged the units against their files.
 
 **(b) After landing.** Propose the ordered steps that follow a consented
 landing, and confirm each. Each step is confirmed at the interview (item 17) as
@@ -218,12 +228,13 @@ their weight and confirmed one at a time:
 
 1. the goal and the reversals, if any
 2. the assumed decisions table — every ruling, its rejected alternatives
-3. the unit map — id, wave, owned paths, depends-on — and why each wave is safe
-   to run concurrently
+3. the unit map — id, wave, owned paths, depends-on — why each wave is safe
+   to run concurrently, and the named reason each unit in a later wave waits
 4. every new third-party dependency any unit introduces: package, what for,
    which unit. The gate is where the user consents to a dependency; a unit never
    adds one the plan does not name
-5. the wave gate, the after-landing steps, the gates the orchestrator keeps —
+5. the unit gate, the wave gate, the plan gate, the after-landing steps, the
+   gates the orchestrator keeps —
    and the **derived priority**, what `plan-management priority <requires…>`
    returns — passed the `requires:` entries item 12 settled, folder basenames
    or none, since no folder exists before §6 — stated as a fact with the
@@ -247,8 +258,8 @@ what was decided, so the next attempt can recall it. Only approve continues.
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — the one folder shape
 both planners write: `index.md` plus one `NN-<unit>.md` per unit. Every section
 the template does not mark *cycle plans only* is required; the frontmatter and
-the **Status**, **Consent**, **Units**, **Wave gate**, **After landing** and
-**Run log** blocks have a fixed shape because `/vwf:execute` parses and
+the **Status**, **Consent**, **Units**, **Unit gate**, **Wave gate**, **Plan
+gate**, **After landing** and **Run log** blocks have a fixed shape because `/vwf:execute` parses and
 rewrites them. The frontmatter's `type:` is `vwf-change-plan`, and it carries
 three lists of the `Bnn` ids recalled in §1, each possibly empty: `source:`
 names every item this plan was made for, and each of them also sits on one of
@@ -291,6 +302,13 @@ Rules the plan must obey, learned from the plans that came before:
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
 - **A unit deletes with plain `rm`, never `git rm`.** A unit stages nothing, so
   no unit's deletion can ride another unit's commit.
+- **Fewest waves.** Every unit sits in wave 1 unless it has a named reason to
+  wait: it edits a path an earlier unit creates or moves, or its Verification
+  needs an earlier unit's output. A unit that only reads the same files, or
+  edits a neighbour of another unit's files, shares the wave. The **Waves**
+  section states the reason for each unit in a later wave — the edit units of
+  one wave run at once, so each needless wave is a serial step the run pays
+  for. The fixed final units and a `review` row keep their own waves.
 - **Shared-file rule.** Any file two units would write is owned by exactly one,
   or by the orchestrator. Version files are nobody's — the release task bumps
   them; generated files and every doc are always the orchestrator's or the
@@ -324,6 +342,8 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   *Unit* column names — a ruling no unit carries is a ruling the run re-derives
 - every owned path appears in exactly one unit per wave, and every file in the
   shared-file rule has an owner
+- every unit in a wave after wave 1 — the fixed final units and a `review`
+  row aside — has its reason to wait in the **Waves** section
 - every gate delta from the interview is an owned edit somewhere
 - a `review` row, when present, names its reason in the decisions table,
   covers — directly or transitively — every unit that lands runnable code, so

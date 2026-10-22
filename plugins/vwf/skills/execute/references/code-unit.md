@@ -28,8 +28,10 @@ For the unit (skip it when the folder's Run log already shows it done — its
 3. **gaps** — the coder's gap pointer → mirror into the "Gaps surfaced during
    execution" section of the folder's `index.md` and file to mempalace room
    `gaps`. Decide blocking vs non-blocking and act per the rules.
-4. **commit** — commit the unit's work via `/vwf:git-workflow`, **per the
-   commit-only preference**, with the unit file's Commit line. The folder's
+4. **commit** — run every line of the folder's *Unit gate* section once; a
+   red line is the unit's failure, per the Waves section's step 5. Then
+   commit the unit's work via `/vwf:git-workflow`, **per the commit-only
+   preference**, with the unit file's Commit line. The folder's
    edits — the Run log rows, the Units table cells, the gap section — ride the
    same commit: the folder is edited in the worktree, never in the main
    checkout.
@@ -49,7 +51,7 @@ the acceptance and UX pass — re-enters this pipeline from step 2 with the
 finding lines or tags appended, then steps 3-5; its `code` row carries the next
 round number. Who reviews the fix depends on where the loop-back came from:
 from the **running** `review` row, that row's own loop continues
-(review-unit.md step 4 — `from` unchanged, `to` extended); from a row still
-**ahead** that covers this unit, that row; otherwise the last row covering it
+(review-unit.md step 4 — the next round over the fix commits alone); from a
+row still **ahead** that covers this unit, that row; otherwise the last row covering it
 is re-run over the fix delta, per *Late loop-backs re-run the last row* in
 [review-unit.md](review-unit.md).

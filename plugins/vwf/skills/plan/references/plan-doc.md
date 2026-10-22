@@ -8,9 +8,19 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — `index.md` plus one
 `NN-<unit>.md` per unit. The template's sections are all required, the
 cycle-only ones included; the frontmatter, the Status block, the Consent block,
-the Release levels table, the Units table, the Wave gate, the After landing
-table and the Run log have a fixed shape because `/vwf:execute` parses and
-rewrites them — the Status block through `plan-management`, the rest itself.
+the Release levels table, the Units table, the Unit gate, the Wave gate, the
+Plan gate, the After landing table and the Run log have a fixed shape because
+`/vwf:execute` parses and rewrites them — the Status block through
+`plan-management`, the rest itself.
+
+**The three gates.** The Unit gate runs once before each unit's commit, the
+Wave gate once before wave 1 and after every wave, the Plan gate once over the
+finished tree. When the repo's `mise tasks ls` lists them, propose
+`mise x -- mise run code:format` for the unit gate,
+`mise x -- mise run code:lint` for the wave gate and
+`mise x -- mise run code:precommit` for the plan gate, beside the harness
+lines the slice needs; the user confirms them at §6. A check that runs the
+whole hook pass or a slow test suite belongs in the plan gate.
 
 **Frontmatter.** `type: vwf-plan`, `title`, **`covers:`** (the blueprint doc(s)
 this element implements — one path, or the cycle element's set; the list the

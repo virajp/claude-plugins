@@ -360,8 +360,8 @@ per `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
 weight and confirmed one at a time: the goal and the Slice (chain position);
 the assumed-decisions table, every ruling with its rejected alternative and
 every drift row; the unit map — id, wave, owns, depends-on, the failing test
-each names; every new dependency (package, what for, which unit); the wave
-gate, the after-landing steps, the gates the orchestrator keeps, and the
+each names; every new dependency (package, what for, which unit); the unit
+gate, the wave gate and the plan gate, the after-landing steps, the gates the orchestrator keeps, and the
 derived priority with its arithmetic; the consent block, LSP rows and the
 End an `all` run after landing row included; the release levels, each with its
 reason; the

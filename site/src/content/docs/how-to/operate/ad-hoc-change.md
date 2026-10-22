@@ -113,16 +113,21 @@ rejected** — which is what stops the next plan re-opening the same argument.
 Two of the questions are the ones that make the run unattended later, and they
 are worth answering carefully; a third thing is stated rather than asked:
 
-- **The wave gate.** The exact commands the run must pass, proposed from your
-  repo's own task list and its `harness:` stamp. Relay's is its lint task, its
-  test task, and the workflow linter. `/vwf:execute` runs **what is written and
-  nothing it infers** — a check you leave out is a check the run will not do,
-  however obvious it looks in the tree. It also runs the whole gate once
-  **before** the first wave, so every line has to be green on the untouched
-  branch — which means a check that can only pass once one of the units has
-  landed does not belong here. That one goes in the unit's own verification. If
-  the repo has no task runner and no stamp, the answer is `none`, and the plan
-  says plainly that the wave review is then the only gate.
+- **The three gates.** The exact commands the run must pass, proposed from your
+  repo's own task list and its `harness:` stamp, in three tiers: the **unit
+  gate** runs once before each unit's commit, the **wave gate** once after every
+  wave, and the **plan gate** once over the finished tree. When your repo has
+  them, the proposal is `code:format`, `code:lint` and `code:precommit`, in that
+  order, so the cheap check runs most often and the full hook pass runs once.
+  Relay's wave gate is its lint task and the workflow linter, and its plan gate
+  adds its test task. `/vwf:execute` runs **what is written and nothing it
+  infers** — a check you leave out is a check the run will not do, however
+  obvious it looks in the tree. It also runs the unit gate and the wave gate
+  once **before** the first wave, so every line in them has to be green on the
+  untouched branch — which means a check that can only pass once one of the
+  units has landed does not belong there. That one goes in the unit's own
+  verification. If the repo has no task runner and no stamp, the answer is
+  `none`, and the plan says plainly that the wave review is then the only gate.
 - **The after-landing steps.** What happens once the branch is in. Each one is
   recorded `run`, here, or dropped: a `run` step runs on a green landing without
   a prompt — the yes you give now is the consent. A step you want to check first
@@ -158,7 +163,10 @@ Read the **unit map** and the **decisions table** properly; they are the review
 surface. A unit is one subagent with one commit and no memory of this
 conversation, so anything you would have to explain in person has to be in its
 file. Units in the same wave own disjoint paths — that is the rule that lets
-them run concurrently without fighting over a file.
+them run concurrently without fighting over a file. Every unit sits in wave 1
+unless the map names a reason for it to wait — it edits a path an earlier unit
+creates or moves, or its verification needs an earlier unit's output. A later
+wave with no reason is a serial step the run pays for, so question it here.
 
 Then: **approve**, **revise** or **abandon**. Abandoning leaves nothing on disk
 except a one-line note the next attempt can recall. Approving writes
@@ -242,30 +250,33 @@ It refuses a folder that is not committed on the integration branch, which after
 a normal approval it always is. If you wrote or moved one by hand, commit and
 push it first — or re-run `/vwf:change-plan` on it — then re-launch.
 
-The first thing it does is **claim the plan**: the row in `docs/plans/index.md`
-is set to `RUNNING` in a commit pushed on the integration branch, before any
-worktree exists. That pushed row is what makes a second session safe: another
-`/vwf:execute next` or `all` running at the same time sees the row taken and
-picks something else, and if two sessions race for the same row, the push that
-lands second is rejected, so that session re-reads the queue and re-picks — or,
-for a named folder, stops and tells you another session has it. A `RUNNING` row
-is never taken over, however long it has sat there; if the session that claimed
-it is gone, set the row back to `APPROVED` by hand in a commit on the
-integration branch, and the plan is runnable again.
+The first thing it does is run **`/vwf:doctor`** in your main checkout: a
+blocking finding stops the run there, before it has claimed anything, so the fix
+and a re-launch need no clean-up. Then it **claims the plan**: the row in
+`docs/plans/index.md` is set to `RUNNING` in a commit pushed on the integration
+branch, before any worktree exists. That pushed row is what makes a second
+session safe: another `/vwf:execute next` or `all` running at the same time sees
+the row taken and picks something else, and if two sessions race for the same
+row, the push that lands second is rejected, so that session re-reads the queue
+and re-picks — or, for a named folder, stops and tells you another session has
+it. A `RUNNING` row is never taken over, however long it has sat there; if the
+session that claimed it is gone, set the row back to `APPROVED` by hand in a
+commit on the integration branch, and the plan is runnable again.
 
 From there you are not needed. It creates one worktree (or, under `all` with the
-shared worktree answered yes, reuses the run's), runs `/vwf:doctor` and the
-plan's gate once as a preflight (a red line here is the branch's problem, not
-the plan's, and it says so rather than fixing it), then works wave by wave:
-every unit in a wave — all `edit` units, in a change plan — dispatched at once
-as its own subagent, a reviewer over the wave's diff with at most two rounds of
-findings, the gate again, and one commit per green unit. Each of those commits
-stages only what that unit owns, and unstages anything else that reached the
-index first, so one unit's work never rides another's commit. The two-round loop
-has one exception: a docs finding in a file no unit owns has nowhere to loop
-back to, so it goes to the docs unit, which is given that passage to own for the
-rest of the run, and you see it in the report as a `GAP:`. The last two units
-are fixed — a docs unit that runs
+shared worktree answered yes, reuses the run's), runs the plan's unit gate and
+wave gate once as a preflight (a red line here is the branch's problem, not the
+plan's, and it says so rather than fixing it), then works wave by wave: every
+unit in a wave — all `edit` units, in a change plan — dispatched at once as its
+own subagent, a reviewer over the wave's diff with at most two rounds of
+findings, the unit gate for each unit and the wave gate, each line once, and one
+commit per green unit. The plan gate runs once, at the end. Each of those
+commits stages only what that unit owns, and unstages anything else that reached
+the index first, so one unit's work never rides another's commit. The two-round
+loop has one exception: a docs finding in a file no unit owns has nowhere to
+loop back to, so it goes to the docs unit, which is given that passage to own
+for the rest of the run, and you see it in the report as a `GAP:`. The last two
+units are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
 a gates unit, which runs the generators and the full gate and bumps nothing.
 Relay's docs unit is what actually deletes the hand-written step from the
@@ -345,8 +356,8 @@ the next plan's recall still reads it.
 - **It will not read the blueprint**, so it will not notice that your "small
   refactor" changes a contract. That judgment is step 0 of this guide, and it is
   yours.
-- **It will not gate on what you did not name.** The wave gate is a list you
-  wrote in the interview.
+- **It will not gate on what you did not name.** The unit, wave and plan gates
+  are lists you wrote in the interview.
 - **It will not pick up an item from *Out of scope* or *Parked***, however
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.

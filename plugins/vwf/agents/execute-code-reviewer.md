@@ -180,4 +180,5 @@ Any finding rated `[high]` or worse forces
 `VERDICT: changes-required`; a `[breaking-api]` finding likewise forces it, and
 the orchestrator — treating it like a security finding — always fixes it, exempt
 from the review round cap. If `changes-required`, the orchestrator re-dispatches
-each unit a finding names, by its Kind, then re-runs the review row in full.
+each unit a finding names, by its Kind, then runs the review row's next round
+over those fix commits alone.
