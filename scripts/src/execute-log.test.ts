@@ -508,6 +508,65 @@ describe("action-log hook", () => {
   });
 });
 
+describe("action-log hook redaction", () => {
+  function summaryOf(command: string) {
+    const file = startRun();
+    hook({
+      session_id: SID,
+      hook_event_name: "PreToolUse",
+      tool_name: "Bash",
+      tool_use_id: "t1",
+      tool_input: { command },
+    });
+    rmSync(markerOf());
+    return lines(file).at(-1).summary;
+  }
+
+  it.each([
+    ["GITHUB_TOKEN=ghp_abc123 gh pr list", "GITHUB_TOKEN=*** gh pr list"],
+    ["export db_password='s3 cr3t'", "export db_password=***"],
+    [
+      "MY_API_KEY=\"k\" API_SECRET=x AUTH=y PASS=z run",
+      "MY_API_KEY=*** API_SECRET=*** AUTH=*** PASS=*** run",
+    ],
+    ["cli --token abc123 go", "cli --token *** go"],
+    ["cli --password=hunter2", "cli --password=***"],
+    ["cli --secret 's x' --api-key=k1", "cli --secret *** --api-key=***"],
+    [
+      "curl -H 'Authorization: Bearer abc.def' x",
+      "curl -H 'Authorization: Bearer ***' x",
+    ],
+    [
+      "curl -H \"Authorization: Basic dXNlcjpw\"",
+      "curl -H \"Authorization: Basic ***\"",
+    ],
+    ["http get x 'bearer zzz'", "http get x 'bearer ***'"],
+    [
+      "git clone https://user:pa55@github.com/o/r",
+      "git clone https://***@github.com/o/r",
+    ],
+  ])("redacts %s", (command, want) => {
+    const got = summaryOf(command);
+    expect(got).toBe(want);
+  });
+
+  it("leaves a plain command unchanged", () => {
+    const command = "mise x -- mise run code:lint && git status --short";
+    expect(summaryOf(command)).toBe(command);
+  });
+
+  it("keeps a description as given", () => {
+    const file = startRun();
+    hook({
+      session_id: SID,
+      hook_event_name: "PreToolUse",
+      tool_name: "Bash",
+      tool_input: { command: "TOKEN=x run", description: "Run it" },
+    });
+    expect(lines(file).at(-1).summary).toBe("Run it");
+  });
+});
+
 describe("log.mjs summary", () => {
   it("pairs phases, rows, gaps and totals gates by tier", () => {
     const file = startRun();

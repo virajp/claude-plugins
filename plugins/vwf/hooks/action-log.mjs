@@ -42,10 +42,43 @@ const clip = s => (typeof s === "string"
   ? s.replace(/\s+/g, " ").trim().slice(0, MAX)
   : undefined);
 
+// A secret-looking value in a command line, replaced with *** before the
+// command can reach the log: NAME=value where NAME names a secret, a
+// --token/--password/--secret/--api-key-style flag's value (`--f v` and
+// `--f=v`), an Authorization or Bearer header value, and URL userinfo.
+const VALUE = String.raw`("[^"]*"|'[^']*'|[^\s'"]+)`;
+const SECRET = "token|secret|passwd|password|pass|api[-_]?key|key|auth";
+const REDACT = [
+  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/gi, "$1***@"],
+  [/(authorization:\s*)((?:bearer|basic|token)\s+)?[^\s'"]+/gi, "$1$2***"],
+  [/\b(bearer\s+)[^\s'"*]+/gi, "$1***"],
+  [
+    new RegExp(
+      String.raw`(--?[A-Za-z0-9-]*(?:${SECRET})[A-Za-z0-9-]*)(=|\s+)${VALUE}`,
+      "gi",
+    ),
+    "$1$2***",
+  ],
+  [
+    new RegExp(
+      String.raw`\b([A-Za-z0-9_]*(?:${SECRET})[A-Za-z0-9_]*)=${VALUE}`,
+      "gi",
+    ),
+    "$1=***",
+  ],
+];
+
+function redact(s) {
+  if (typeof s !== "string") {
+    return s;
+  }
+  return REDACT.reduce((t, [re, to]) => t.replace(re, to), s);
+}
+
 function summary(tool, input = {}) {
   switch (tool) {
     case "Bash":
-      return clip(input.description || input.command);
+      return clip(input.description || redact(input.command));
     case "Read":
     case "Write":
     case "Edit":
