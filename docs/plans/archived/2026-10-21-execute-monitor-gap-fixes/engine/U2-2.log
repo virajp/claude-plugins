@@ -1,0 +1,9 @@
+/security-review — loop U2, round 2, range 3eb53ba0..464b469e, scoped to plugins/vwf/hooks/monitor
+
+No high-confidence vulnerabilities found.
+
+- Command injection through `git` arguments (`register.tsx:209-220`): dropped, confidence 2. `git` runs through `$.process.run` with an argument array and no shell. Every argument is a fixed literal (`worktree list --porcelain`, `rev-parse --show-toplevel`). Nothing from plan files or YAML reaches argv.
+- Running `git` in a working directory taken from a `members:` path, which a hostile repo's `core.fsmonitor` could abuse: dropped, confidence 3. The change did not add this. The base repo's own `.config/vwf.yaml` already supplied these paths, and the cwd before. The diff only caches them and loosens how the YAML is parsed, so no new source of paths appears.
+- Path traversal through the Status line in `isClaimedIn` (`plan.ts:300`): dropped, confidence 1. It only compares words against roots that are already known, and it never builds a path from them.
+- Paths built in `locate` and `pick` from the folder name: dropped, confidence 2. The folder name comes from the local plan index or the user's argument, the code only reads the files, and only the parsed state ends up in the pane.
+- Unsafe deserialization, eval, or secret exposure: none found, confidence 1. Parsing is done with regex and line splitting, and the pane renders text only.

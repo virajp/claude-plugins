@@ -32,8 +32,14 @@ function table(lines: string[]): Record<string, string>[] {
   if (rows.length < 2) {
     return [];
   }
+  // An escaped pipe (`\|`) stays inside its cell.
   const cells = (line: string) =>
-    line.trim().replace(/^\||\|$/g, "").split("|").map(cell => cell.trim());
+    line
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/(?<!\\)\|$/, "")
+      .split(/(?<!\\)\|/)
+      .map(cell => cell.trim().replace(/\\\|/g, "|"));
   const header = cells(rows[0] ?? "").map(name => name.toLowerCase());
 
   return rows.slice(2).map(line => {
@@ -109,17 +115,193 @@ export function folderIn(text: string): string | undefined {
   return text.match(FOLDER)?.[1];
 }
 
-/** The unit that a dispatch is for: its id, or its unit file's name. */
-export function unitFor(text: string, units: UnitRow[]): string | undefined {
-  const byFile = units.find(unit =>
-    unit.file !== "" && text.includes(unit.file)
-  );
-  if (byFile) {
-    return byFile.id;
-  }
-  const id = text.match(UNIT_ID)?.[0];
+// The names /vwf:execute gives its agents: a unit (`U<n>`, a late loop
+// `U<n>-late<k>`) and a wave review (`R<wave>`, `R<wave>-late`, `R-late`). A
+// name already taken may carry a `-<n>` suffix.
+const UNIT_NAME = /^(U\d+)(?:-late\d+)?(?:-\d+)?$/;
+const REVIEW_NAME = /^(R\d+(?:-late)?|R-late)(?:-\d+)?$/;
+const ROW_ID = /\bU\d+(?:-late\d+)?\b/g;
+const PREFIX = "vwf:execute-";
+const RUNNER = "vwf:execute-runner";
 
-  return units.some(unit => unit.id === id) ? id : undefined;
+/** The wave review an agent's name says it is (`R2`, `R2-late`, `R-late`). */
+export function reviewName(name: string | undefined): string | undefined {
+  return name?.match(REVIEW_NAME)?.[1];
+}
+
+/**
+ * True for an agent the pane follows: one named for a unit of the plan or a
+ * wave review, or a `vwf:execute-*` agent other than the runner.
+ */
+export function isFollowed(
+  agent: { name?: string; type: string; },
+  units: UnitRow[],
+): boolean {
+  if (reviewName(agent.name) !== undefined) {
+    return true;
+  }
+  const id = agent.name?.match(UNIT_NAME)?.[1];
+  // Before the plan is read, any unit name counts.
+  if (id && (units.length === 0 || units.some(unit => unit.id === id))) {
+    return true;
+  }
+
+  return agent.type.startsWith(PREFIX) && agent.type !== RUNNER;
+}
+
+// A review row's reviewers: their prompt names the row before the files of
+// the units the row covers.
+const REVIEWER = /(?:^|:)execute-(?:code|security)-reviewer$/;
+
+/**
+ * The unit that a dispatch is for: the agent's name; then, for a review-row
+ * reviewer, the first row id of the plan in the text before a unit file's
+ * name; for any other agent, a unit file's name before a row id.
+ */
+export function unitFor(
+  text: string,
+  units: UnitRow[],
+  name?: string,
+  type?: string,
+): string | undefined {
+  const named = name?.match(UNIT_NAME)?.[1];
+  if (named && (units.length === 0 || units.some(unit => unit.id === named))) {
+    return named;
+  }
+  const byRow = () => {
+    for (const match of text.matchAll(ROW_ID)) {
+      const id = match[0].match(UNIT_ID)?.[0];
+      if (units.some(unit => unit.id === id)) {
+        return id;
+      }
+    }
+
+    return undefined;
+  };
+  const byFile = () =>
+    units.find(unit => unit.file !== "" && text.includes(unit.file))?.id;
+
+  return type !== undefined && REVIEWER.test(type)
+    ? byRow() ?? byFile()
+    : byFile() ?? byRow();
+}
+
+/** The value of a `key:` line, its quotes and trailing comment dropped. */
+function value(line: string): string {
+  return line
+    .replace(/^[^:]*:\s*/, "")
+    .replace(/\s+#.*$/, "")
+    .trim()
+    .replace(/^(["'])(.*)\1$/, "$2");
+}
+
+/** The `path:` of each `members:` entry of a `.config/vwf.yaml`. */
+export function memberPaths(yaml: string): string[] {
+  const out: string[] = [];
+  let isIn = false;
+  for (const line of yaml.split("\n")) {
+    // A sequence written with no indent stays inside its key.
+    if (/^[^\s#-]/.test(line)) {
+      isIn = /^members:/.test(line);
+      continue;
+    }
+    if (isIn && /^\s*(-\s+)?path:/.test(line)) {
+      const path = value(line.replace(/^\s*-\s+/, ""));
+      if (path !== "") {
+        out.push(path);
+      }
+    }
+  }
+
+  return out;
+}
+
+/** The `host:` of a `.config/vwf-membership.yaml`. */
+export function hostOf(yaml: string): string | undefined {
+  const line = yaml.split("\n").find(one => /^host:/.test(one));
+  const host = line === undefined ? "" : value(line);
+
+  return host === "" ? undefined : host;
+}
+
+/** `rel` resolved against the directory `base`, `.` and `..` folded. */
+export function joinPath(base: string, rel: string): string {
+  const parts: string[] = [];
+  for (
+    const part of (rel.startsWith("/") ? rel : `${base}/${rel}`).split("/")
+  ) {
+    if (part === "..") {
+      parts.pop();
+    }
+    else if (part !== "" && part !== ".") {
+      parts.push(part);
+    }
+  }
+
+  return "/" + parts.join("/");
+}
+
+/** What `resolveBase` reads with: a file's text, a git command's stdout. */
+export type BaseIo = {
+  read: (path: string) => Promise<string | undefined>;
+  git: (cwd: string, args: string[]) => Promise<string | undefined>;
+};
+
+/** One absolute path from a git command's stdout, else undefined. */
+function onePath(out: string | undefined): string | undefined {
+  const line = out?.trim();
+
+  return line && !line.includes("\n") && line.startsWith("/")
+    ? line
+    : undefined;
+}
+
+/**
+ * The base repo of a checkout: `.config/vwf.yaml` here, else the membership
+ * `host:`, else a linked worktree's main checkout, tried again from there.
+ */
+export async function resolveBase(
+  cwd: string,
+  io: BaseIo,
+): Promise<string | undefined> {
+  let dir = cwd;
+  for (let hop = 0; hop < 3; hop++) {
+    const root = onePath(await io.git(dir, ["rev-parse", "--show-toplevel"]))
+      ?? dir;
+    if ((await io.read(`${root}/.config/vwf.yaml`)) !== undefined) {
+      return root;
+    }
+    const membership = await io.read(`${root}/.config/vwf-membership.yaml`);
+    const host = membership === undefined ? undefined : hostOf(membership);
+    if (host !== undefined) {
+      const base = joinPath(root, host);
+      if ((await io.read(`${base}/.config/vwf.yaml`)) !== undefined) {
+        return base;
+      }
+    }
+    const common = onePath(
+      await io.git(root, [
+        "rev-parse",
+        "--path-format=absolute",
+        "--git-common-dir",
+      ]),
+    );
+    const main = common?.endsWith("/.git") ? common.slice(0, -5) : undefined;
+    if (!main || main === root) {
+      return undefined;
+    }
+    dir = main;
+  }
+
+  return undefined;
+}
+
+/** True when the Status section of an index.md names `root`, where the plan runs. */
+export function isClaimedIn(text: string, root: string): boolean {
+  return section(text, /^## Status\b/)
+    .join(" ")
+    .split(/\s+/)
+    .some(word => word.replace(/^`|[`.,;:]+$/g, "") === root);
 }
 
 /** A unit's state, from the live agents first and then the files. */

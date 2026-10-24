@@ -51,6 +51,11 @@
 >   the run ends.
 > - Decision 8: One new test case for each of rulings 1 to 7, in the existing
 >   test files or a new `agents.test.tsx` under `hooks/monitor/`.
+> - Decision 12: Decision 4's known `index.md` path is kept only while no linked
+>   worktree for the run exists. A main-checkout copy is known until then; once
+>   the run's worktree exists, its copy replaces the main-checkout copy on the
+>   next refresh. Add one test: a run whose pane first finds the main-checkout
+>   copy reads the worktree copy once that worktree appears.
 
 ## Edits
 
