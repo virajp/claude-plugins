@@ -16,9 +16,11 @@ gaps_of:
 
 ## Status
 
-**APPROVED**
+**ARCHIVED**
 
-APPROVED 2026-10-19 by the user
+ARCHIVED 2026-10-24 — not run; was APPROVED. Superseded: its still-needed
+rulings are done in place with the B102 packs work, because bootstrap now owns
+part of its scope.
 
 ## Consent
 
