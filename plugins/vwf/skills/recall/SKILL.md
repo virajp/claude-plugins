@@ -135,8 +135,9 @@ the user whether to run it now**:
   `/vwf:execute <folder>` is the exception: `execute` is launched only by a
   person in a fresh context — a fresh session, or a runner that
   `/vwf:execute all` dispatches — so print that launch line and stop — the
-  run resumes from the folder's Run log, which records every unit that
-  returned.
+  run resumes from its row `RUNNING` in `docs/plans/index.json` and the unit
+  fields of the folder's `index.json` (`status`, `commit`, `rounds`), which
+  record every unit that returned.
   Resuming a cap-paused run that way is the primary use of this command.
   That resume line is printed as it is — a folder already claimed (its row
   `RUNNING`, a paused or blocked run) is never replaced. For a folder not yet

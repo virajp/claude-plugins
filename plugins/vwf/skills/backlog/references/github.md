@@ -274,17 +274,18 @@ to two digits:
         --jq '[.items[].title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber]
               | max // 0'
 
-- every id in the `backlog:` and `backlog_pieces:` frontmatter lists of every
-  plan folder directly under `docs/plans/` and `docs/plans/archived/` in the
-  base repo — the `^backlog:` and `^backlog_pieces:` lines of each
-  `index.md`, each `[ … ]` list split on commas, each entry matched with
-  `^B([0-9]{2,})$`. Frontmatter lists only, never prose — an id cited only as
-  a piece is spent as surely as a finished one:
+- every id in the `backlog` and `backlog_pieces` lists of every row of the
+  base repo's plan index, `docs/plans/index.json` — every row it still holds;
+  a row the sweep removed spent its ids in its backlog items' titles, which
+  the first source reads. No plan folder is read. An absent
+  `docs/plans/index.json` reads as no rows. Each list entry is matched with
+  `^B([0-9]{2,})$` — an id cited only as a piece is spent as surely as a
+  finished one:
 
-      grep -hE '^backlog(_pieces)?:' \
-          docs/plans/*/index.md docs/plans/archived/*/index.md \
-        | sed 's/^backlog[a-z_]*:[[:space:]]*\[\(.*\)\].*/\1/' | tr ',' '\n' \
-        | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^B[0-9]{2,}$' \
+      test -f docs/plans/index.json && \
+        node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs \
+          get docs/plans/index.json plans \
+        | grep -oE '"B[0-9]{2,}"' | tr -d '"' \
         | sed 's/^B//' | sort -n | tail -1
 
 A project starts at `B01` only when both sources are empty — so an id spent by
@@ -348,9 +349,13 @@ each `Landed:` line sits above it:
 - `partial` and `done` — remove `<folder>` from `Planned in:`, dropping the
   line when the list empties, and add `Landed: <plan title> in <folder>`
   after the last existing `Landed:` line, or, with none, above `Planned in:`
-  or at the end after a blank line. `<plan title>` is the `title:` value of
-  `<folder>/index.md`'s frontmatter, folded onto one line. A `done` with no
-  folder rewrites no line.
+  or at the end after a blank line. `<plan title>` is the `title` of
+  `<folder>/index.json`, folded onto one line:
+
+      node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs \
+        get <folder>/index.json title --raw
+
+  A `done` with no folder rewrites no line.
 - `close` — append the reason after a blank line. `close` runs the `Status`
   bootstrap first when `Closed` is absent.
 
