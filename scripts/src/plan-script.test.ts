@@ -70,6 +70,12 @@ function parse(file: string): Json {
   return JSON.parse(read(file));
 }
 
+/** The run paths claim writes into a folder's index.json. */
+const RUN = JSON.stringify({
+  worktree: ".worktrees/sign-in",
+  log: "~/Library/Caches/vwf/repo/2026-10-24-sign-in.jsonl",
+});
+
 /** The bytes plan.mjs writes for a document. */
 function bytes(doc: Json): string {
   return `${JSON.stringify(doc, null, 2)}\n`;
@@ -159,23 +165,23 @@ describe("set", () => {
   it.each([["--force the push"], ["--json"], ["--raw"]])(
     "sets a value that starts with -- (%s) as a string",
     value => {
-      const r = plan(["set", change, "run.detail", value]);
+      const r = plan(["set", change, "status.detail", value]);
       expect(r.status).toBe(0);
-      expect(parse(change).run.detail).toBe(value);
+      expect(parse(change).status.detail).toBe(value);
     },
   );
 
   it("takes a value of --json as the value when --json follows it", () => {
-    const r = plan(["set", change, "run.detail", "\"--json\"", "--json"]);
+    const r = plan(["set", change, "status.detail", "\"--json\"", "--json"]);
     expect(r.status).toBe(0);
-    expect(parse(change).run.detail).toBe("--json");
+    expect(parse(change).status.detail).toBe("--json");
   });
 
   it("keeps the key order and puts a new key at the end", () => {
-    const r = plan(["set", change, "run.started", "2026-10-24T10:00"]);
+    const r = plan(["set", change, "run", RUN, "--json"]);
     expect(r.status).toBe(0);
     const doc = parse(change);
-    expect(doc.run).toEqual({ started: "2026-10-24T10:00" });
+    expect(doc.run).toEqual(JSON.parse(RUN));
     expect(Object.keys(doc)).toEqual(
       Object.keys(parse(join(FIXTURES, "change", "index.json"))),
     );
@@ -503,11 +509,47 @@ describe("validate", () => {
     expect(plan(["validate", cycle]).status).toBe(0);
   });
 
-  it("accepts any key under run", () => {
+  it.each([
+    ["an empty run", {}],
+    ["run with worktree and log", JSON.parse(RUN)],
+  ])("accepts %s", (_, run) => {
     const doc = parse(change);
-    doc.run = { log: "/tmp/x", nested: { a: 1 } };
+    doc.run = run;
     writeFileSync(change, bytes(doc));
     expect(plan(["validate", change]).status).toBe(0);
+  });
+
+  it.each([
+    [
+      "an unknown key in run",
+      { ...JSON.parse(RUN), started: "x" },
+      "run.started: is not a key the schema names",
+    ],
+    [
+      "an empty log",
+      { ...JSON.parse(RUN), log: "" },
+      "run.log: must not be empty",
+    ],
+    [
+      "run without worktree",
+      { log: JSON.parse(RUN).log },
+      "run.worktree: is missing",
+    ],
+  ])("is red on %s", (_, run, expected) => {
+    const doc = parse(change);
+    doc.run = run;
+    writeFileSync(change, bytes(doc));
+    const r = plan(["validate", change]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain(expected);
+  });
+
+  it("refuses a set that leaves run half filled", () => {
+    const before = read(change);
+    const r = plan(["set", change, "run.worktree", ".worktrees/x"]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("run.log: is missing");
+    expect(read(change)).toBe(before);
   });
 
   const indexCases: [string, (doc: Json) => void, string][] = [

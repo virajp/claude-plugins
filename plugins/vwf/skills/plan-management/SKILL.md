@@ -26,13 +26,16 @@ disable-model-invocation: false
 
 ## What it owns, and what it does not
 
-Three things, and nothing else, are written here:
+Four things, and nothing else, are written here:
 
 - the **rows** of the base repo's `docs/plans/index.json` — the one plan index
   every vwf command reads to find a plan;
 - the **status** of every plan folder — `status.state` and `status.detail` in
   the folder's `index.json`;
-- the **move** that retires a folder into `docs/plans/archived/`.
+- the **run paths** of every plan folder — its `run`, the worktree and the
+  action log a run uses, set at `claim` and reset at `unclaim`;
+- the **move** that retires a folder into `docs/plans/archived/`, and the
+  prune of old action logs that follows it.
 
 The rest of a plan folder stays with whoever writes it. The folder's content —
 every other key of `index.json`, the prose of `index.md`, and every unit file
@@ -110,12 +113,16 @@ The index is edited **only in the main checkout, on the integration branch** —
 a run branch never touches it, which is what lets two sessions land in
 parallel without a conflict on it; the contract's *Writing a row* is the
 procedure, one plain git command per step — `claim`, `unclaim` and `complete`
-are the verbs that edit it. A folder's `status` and the move are edited
-**wherever the folder is** — a worktree during a run, the main checkout
-otherwise. A verb that edits both, invoked from a worktree, does the folder
-half and says the row is left for the landing's `complete`. `unclaim` is the
-one verb that edits both halves in the main checkout: by its own precondition
-the run's worktree no longer exists, so the folder is only there.
+are the verbs that edit it. `claim` and `unclaim` also edit one key of the
+folder there, its `run` — the worktree and log paths, written at claim and
+reset to `{}` at unclaim — in the same commit as the row: the worktree does
+not exist yet at claim, and no longer exists at unclaim. A folder's `status`
+and the move are edited **wherever the folder is** — a worktree during a run,
+the main checkout otherwise. A verb that edits both, invoked from a worktree,
+does the folder half and says the row is left for the landing's `complete`.
+`unclaim` is the one verb that edits both halves in the main checkout: by its
+own precondition the run's worktree no longer exists, so the folder is only
+there.
 
 ## The format test
 
@@ -201,7 +208,29 @@ edit for the caller's `docs: plan queue — <folder> running` commit and push; a
 rejected push is the caller's to handle per that procedure — a clean rebase
 pushes again, a conflict means another session may have claimed first, and
 the caller re-picks or stops. A row already `RUNNING`, or absent, is refused
-in one line. Edits no folder status — the worktree does not exist yet.
+in one line.
+
+After the row, in the same checkout, write the folder's run paths with one
+`set <folder>/index.json run --json '{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}'`:
+
+- `worktree` is the repo-relative path of the worktree this run will use —
+  `<branch>` the plan's name (the `<name>` of `docs/plans/<date>-<name>/`,
+  the `<slice>` of `docs/plans/<date>-<HHMM>-<slice>/`), `<dir>` the
+  directory `/vwf:git-workflow`'s own rule picks (`.worktrees` wins over
+  `worktrees`; the default is `.worktrees`). Under an `all` override that
+  shares one worktree across plans, it is that shared worktree's path;
+- `log` is the plan's action log. `<repo>` is the basename of the directory
+  that holds the git common dir of the repo holding the folder — the name
+  `log.mjs` derives. The `~` is written literally: no home path is
+  committed, and `VWF_LOG_ROOT` does not change the value.
+
+Both files ride the claim commit. This reverses the older rule that the row
+is the one edit the run makes in the main checkout. When the folder lives in
+a member repo, the `run` edit is a direct commit on that repo's integration
+branch, beside the base repo's claim commit and with the same message;
+`worktree` is relative to that repo and `<repo>` is its name. The claim edits
+the folder's `run` key only — its `status` is still the run's, set in the
+worktree.
 
 ### `unclaim <folder>`
 
@@ -250,7 +279,9 @@ nothing else in the row. The folder's status: when `status.state` already
 reads `APPROVED`, leave it — at claim the status is set in the worktree, so
 on the integration branch it usually still does; otherwise set
 `status.state` to `APPROVED` and `status.detail` to
-`APPROVED <date> — unclaimed; was: <previous detail>`.
+`APPROVED <date> — unclaimed; was: <previous detail>`. Then reset the run
+paths, `set <folder>/index.json run --json '{}'`. The log file stays where it
+is: a later claim writes the same `log` path, and the next run appends to it.
 
 **The report.** The edit for the caller's
 `docs: plan queue — <folder> unclaimed` commit, plus the branch note when the
@@ -455,6 +486,20 @@ left for `complete`, and the commit message the caller should use —
 mempalace journal (room `runs`, drawer `<folder basename>`) mirrors it, so if
 mempalace is available mark that drawer **archived**
 (`mempalace_update_drawer`); skip silently otherwise.
+
+**5. Prune old logs.** Last, and only when this archive moved a folder into
+`docs/plans/archived/` — the later archive of a folder a landing kept live
+included — run
+
+    node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs prune --repo <root> --days 30 --keep <folder basename>
+
+once per moved folder, `<root>` the root of the checkout this verb runs in —
+the run's worktree at a landing, the main checkout for a later archive by
+hand; for a cycle folder, that checkout of its target repo. It deletes only
+the action logs of archived plans whose file is more than 30 days old, never
+the log of the folder just moved, and never a live plan's log. A failure is a
+warning in the report, never a stop of the archive. An archive that moved
+nothing runs no prune, and `/vwf:execute` never runs it itself.
 
 ### `next`
 

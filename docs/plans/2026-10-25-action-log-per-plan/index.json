@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-10-25 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-10-25T01:45 in .worktrees/action-log-per-plan"
   },
   "consent": {
     "merge": true,
@@ -64,9 +64,9 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -88,9 +88,9 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U1",
@@ -504,7 +504,22 @@
       "detail": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The row JSON for a review row late-loop to is not specified · range is logged only for the main loop set, as index.json holds it",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133); the closing-pass rewrap joined the next sentence onto the line · left as is, fold width only, meaning intact",
+      "state": "open"
+    }
+  ],
   "overrides": [],
   "run": {}
 }

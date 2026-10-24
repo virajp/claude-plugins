@@ -286,14 +286,14 @@ The rules for each key — JSON has no comments, so they sit here:
   *cycle-only* keys `covers`, `exposure`, `acceptance` and `consent.lsp`: each
   is required on a `vwf-plan` (`exposure` optional) and a `validate` finding on
   a `vwf-change-plan`. An empty list is written `[]`. An object allows only the
-  keys named here — an unknown key is a finding — save `run` and
-  `consent.lsp`, which are open.
-- **Empty strings.** `validate` refuses `""` in five places only: the plan
-  `title`, a unit's `title` and `file`, a gap's `text`, and every `id`. Every
-  other string may be `""` — a `commit` not yet made, a `range` not yet run, a
-  stage `detail`, a note — save `waits`, which keeps its own rule under
-  `units`. In `docs/plans/index.json` the same holds for a row's `id`,
-  `folder` and `title`.
+  keys named here — an unknown key is a finding — save `consent.lsp`, which
+  is open: its keys are language names.
+- **Empty strings.** `validate` refuses `""` in these places only: the plan
+  `title`, a unit's `title` and `file`, a gap's `text`, `run`'s `worktree`
+  and `log`, and every `id`. Every other string may be `""` — a `commit` not
+  yet made, a `range` not yet run, a stage `detail`, a note — save `waits`,
+  which keeps its own rule under `units`. In `docs/plans/index.json` the same
+  holds for a row's `id`, `folder` and `title`.
 - **`id`.** Every list of objects has an `id` key, unique in that list,
   matching `^[A-Za-z0-9_-]+$`: `U<n>` for units, `D<n>` decisions, `S<n>`
   shared files, `A<n>` after-landing steps, `K<n>` kept gates, `N<n>`
@@ -450,13 +450,24 @@ The rules for each key — JSON has no comments, so they sit here:
   cycle end.
 - **`overrides`** — `[]` at approval; an `all` run's `override:` block, one
   entry each, its lines joined by `; `. It never changes `consent`.
-- **`run`** — `{}`; the planner writes it empty.
+- **`run`** — `{}` or exactly `{"worktree": …, "log": …}`, both non-empty
+  strings; any other key or shape is a finding. The planner writes it `{}`.
+  `plan-management`'s `claim` sets both keys in the claim commit, in the main
+  checkout: `worktree` the repo-relative path of the run's worktree
+  (`.worktrees/<name>`, `<name>` the plan's name, in the common case), and
+  `log` the plan's action log,
+  `~/Library/Caches/vwf/<repo>/<folder basename>.jsonl`, the `~` written
+  literally so no home path is committed. `unclaim` resets it to `{}`; a
+  later claim writes the same `log` path.
 
-There is no run log. The executor records each unit's `status`, `commit` and
-`rounds`, and a review unit's `range`, in `index.json` as the run goes, sets
-`status` and the `stages`, appends to `gaps`, and mirrors each fact to the
-mempalace journal. A resume reads those fields, the `gaps` list and
-`git log`.
+The run fields stay in `index.json`: the executor records each unit's
+`status`, `commit` and `rounds`, and a review unit's `range`, there as the run
+goes, sets `status` and the `stages`, appends to `gaps`, and mirrors each fact
+to the mempalace journal. A resume and the final report read those fields,
+the `gaps` list and `git log` — the file is committed and survives a lost
+machine. `/vwf:execute` also appends each of those facts, as an event, to the
+plan's action log at `run.log` — one append-only file per plan, which the
+progress pane reads.
 
 ## index.md
 
