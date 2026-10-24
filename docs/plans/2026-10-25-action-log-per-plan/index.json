@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-10-25T01:45 in .worktrees/action-log-per-plan"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at wave 3 — U4 UNRESOLVED: security finding on plugins/vwf/hooks/action-log.mjs (secret values in the hook's Bash summary) did not converge in 2 rounds; ruling needed (G3); U5, U6 not run (depend on U4) — worktree .worktrees/action-log-per-plan"
   },
   "consent": {
     "merge": true,
@@ -111,7 +111,7 @@
       ],
       "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
       "status": "green",
-      "commit": "e2b1ed82",
+      "commit": "e6a01cb1",
       "rounds": 2
     },
     {
@@ -128,12 +128,12 @@
         "U3"
       ],
       "waits": "",
-      "status": "running",
+      "status": "unresolved",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "c619c5c3",
-        "to": "25a84889"
+        "from": "25a84889",
+        "to": "e6a01cb1"
       }
     },
     {
@@ -517,6 +517,13 @@
       "unit": "U3",
       "stage": "edit",
       "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133); the closing-pass rewrap joined the next sentence onto the line · left as is, fold width only, meaning intact",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "security",
+      "text": "oscillation (cap-exempt security, U4 rounds 1-2): plugins/vwf/hooks/action-log.mjs:46/:50 (U1) secret persistence in the hook command summary. Round 1: the first 200 chars of a Bash command with no description were logged, so inline tokens were stored. U1 added denylist redaction (e6a01cb1). Round 2: the denylist still misses curl -u user:pass, -H \"X-Api-Key: …\" / PRIVATE-TOKEN header form, --with-token <<< tok, echo tok | … --with-token, mysql -p<pw>. Count 1 → 1, so the convergence guard tripped; a security finding cannot become a gap, so the run paused · ruling needed: how the hook summarises a Bash call with no description — e.g. log only the first word of the command (both engine and reviewer recommend it), or extend the denylist and accept the residual",
       "state": "open"
     }
   ],

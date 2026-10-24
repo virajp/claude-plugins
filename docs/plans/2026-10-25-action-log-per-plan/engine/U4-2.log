@@ -1,0 +1,8 @@
+security-review engine — loop U4, round 2, range 25a84889..e6a01cb1
+
+Vuln 1: Incomplete secret redaction: plugins/vwf/hooks/action-log.mjs:50-67 — Medium, confidence 9/10.
+Handled: export GITHUB_TOKEN=x, -H "Authorization: Bearer x", quoted values with spaces, URL userinfo.
+Still leak: curl -u admin:hunter2 / --user admin:hunter2; -H "X-Api-Key: sk_live…" and -H "PRIVATE-TOKEN: glpat-…" (header form uses :); gh auth login --with-token <<< ghp_abc becomes "--with-token *** ghp_abc"; echo ghp_abc | gh auth login --with-token; mysql -phunter2.
+Exploit: a Bash call with no description runs curl -u user:pass; the password is written to ~/Library/Caches/vwf/*.jsonl until pruned.
+Recommendation: redact -u/--user args, secret-named header form, <<< here-strings and echo/printf piped into --with-token, attached -p<value>; simpler: log only the command first word when there is no description.
+No injection or file-write path added.
