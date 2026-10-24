@@ -29,20 +29,23 @@ through `plan.mjs`:
   with `--json`.
 - `append <file> <path> --json <value>` adds one entry to the list at the
   path; an object entry carries an `id` the list does not hold.
+- `remove <file> <path>` removes the one list entry the path names by its
+  `id`; it never removes a key of an object.
 - `validate <file>` examines the file against its schema and prints
   `<file>: valid`, or one finding per line on stderr and exit 1.
 
 A path is dot-separated keys; a segment after a list chooses the entry whose
 `id` equals it — `units.U3.status`, `gaps.G2.state`, `consent.lsp.dart`. A
-wrong id is an error, never a new entry. `set` and `append` validate the
-result before they write, and write nothing on any error.
+wrong id is an error, never a new entry. `set`, `append` and `remove`
+validate the result before they write, and write nothing on any error.
 
 The planner **creates** `index.json` in one step: a whole-file Write with the
 Write tool, then `plan.mjs validate` on it. A red validate means the creation
 is not finished — the planner corrects the content, Writes the whole file
 again and validates again, until it prints `<folder>/index.json: valid`. No
 Edit ever touches `index.json`. From the first green validate on, every change
-is one `set` or one `append` — never an Edit, never a whole-file rewrite.
+is one `set`, `append` or `remove` — never an Edit, never a whole-file
+rewrite.
 `index.md` is never parsed for data, save the `- Bnn:` lines under Parked,
 which `validate` matches against `backlog_pieces`.
 
@@ -75,7 +78,7 @@ A change plan:
   "gates": {
     "unit": ["mise x -- mise run code:format"],
     "wave": ["mise x -- mise run code:lint"],
-    "plan": ["mise x -- mise run code:precommit"],
+    "plan": ["mise x -- mise run code:precommit --all"],
     "keeps": [
       { "id": "K1", "check": "<what a diff cannot prove>", "pass": "<its pass condition>" }
     ]
@@ -235,7 +238,7 @@ A cycle plan:
       "kind": "edit",
       "model": "opus",
       "owns": ["README.md", "docs/**"],
-      "depends_on": ["U3"],
+      "depends_on": ["U1", "U2", "U3"],
       "waits": "",
       "status": "pending",
       "commit": "",
@@ -285,6 +288,12 @@ The rules for each key — JSON has no comments, so they sit here:
   a `vwf-change-plan`. An empty list is written `[]`. An object allows only the
   keys named here — an unknown key is a finding — save `run` and
   `consent.lsp`, which are open.
+- **Empty strings.** `validate` refuses `""` in five places only: the plan
+  `title`, a unit's `title` and `file`, a gap's `text`, and every `id`. Every
+  other string may be `""` — a `commit` not yet made, a `range` not yet run, a
+  stage `detail`, a note — save `waits`, which keeps its own rule under
+  `units`. In `docs/plans/index.json` the same holds for a row's `id`,
+  `folder` and `title`.
 - **`id`.** Every list of objects has an `id` key, unique in that list,
   matching `^[A-Za-z0-9_-]+$`: `U<n>` for units, `D<n>` decisions, `S<n>`
   shared files, `A<n>` after-landing steps, `K<n>` kept gates, `N<n>`
@@ -363,7 +372,9 @@ The rules for each key — JSON has no comments, so they sit here:
     moves, or its Verification needs an earlier unit's output. Every unit sits
     in wave 1 unless it has such a reason; `waits` is `""` in wave 1, on a
     `review` unit, and on the two fixed final units (the files ending in
-    `-docs.md` and `-gates.md`), and required everywhere else. A cycle plan's
+    `-docs.md` and `-gates.md`), and required everywhere else. The docs
+    unit's `depends_on` names every other unit save the gates unit, and the
+    gates unit's names the docs unit alone. A cycle plan's
     waves are ordering only — `execute` runs its units serially in dependency
     order.
   - `status` is `pending`, `running`, `green`, `failed`, `unresolved` or
@@ -612,12 +623,16 @@ also lands here, as a
 `docs/memory/decisions/<date>-<slug>.md` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
-**Gates.** Runs the generators the plan names and passes the full wave gate. It
-bumps no version — the plan's `release_levels` are what `/vwf:execute` records
-at landing. Its report is the run's final gate. It does not write the
-`implementation:` stamps on a cycle plan's `covers` docs — those are the
-executor's Reconcile step, gated on `covers` and run before the docs unit's
-wave, so the docs unit's delta is complete.
+Its `depends_on` names every other unit save the gates unit, since it
+documents the whole delta.
+
+**Gates.** Its `depends_on` names the docs unit alone. It runs the generators
+the plan names and passes the full wave gate. It bumps no version — the plan's
+`release_levels` are what `/vwf:execute` records at landing. Its report is the
+run's final gate. It does not write the `implementation:` stamps on a cycle
+plan's `covers` docs — those are the executor's Reconcile step, gated on
+`covers` and run before the docs unit's wave, so the docs unit's delta is
+complete.
 
 It does **not** run the after-landing steps — those are the orchestrator's,
 after the landing, because an after-landing step mutates the machine rather than

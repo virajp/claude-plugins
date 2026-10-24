@@ -103,3 +103,23 @@ export function append(doc, segments, value) {
   }
   list.push(value);
 }
+
+/**
+ * Remove one list entry, chosen by the `id` the last segment names. Only a
+ * list entry can be removed; a key of an object cannot.
+ */
+export function remove(doc, segments) {
+  if (segments.length === 0) {
+    throw new PathError("remove needs a path");
+  }
+  const list = get(doc, segments.slice(0, -1));
+  if (!Array.isArray(list)) {
+    throw new PathError("remove needs a path to a list entry");
+  }
+  const last = segments[segments.length - 1];
+  const i = entry(list, last);
+  if (i < 0) {
+    throw new PathError(`no entry with id ${last}`);
+  }
+  list.splice(i, 1);
+}

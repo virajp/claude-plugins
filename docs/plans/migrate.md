@@ -65,8 +65,9 @@ Find the old worktree:
 1. Read the path from the folder's Status line
    (`RUNNING since <time> in <worktree path> …`).
 2. If that line names no path (for example a `BLOCKED` line), run
-   `git worktree list` and find the worktree whose branch is named after the
-   folder (the folder basename, often without its date prefix). If no
+   `git worktree list` and find the worktree whose branch is the plan's name:
+   the folder basename without its date prefix — the `<name>` of
+   `<date>-<name>`, or the `<slice>` of `<date>-<HHMM>-<slice>`. If no
    worktree matches, write `unknown` as `<worktree>`.
 
 Do not delete the worktree or the branch. At the end, tell the user the

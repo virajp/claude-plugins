@@ -28,8 +28,10 @@ call; never an Edit, never a whole-file rewrite.
 the finished tree — each a list of command lines. When the repo's
 `mise tasks ls` lists them, propose `mise x -- mise run code:format` for the
 unit gate, `mise x -- mise run code:lint` for the wave gate and
-`mise x -- mise run code:precommit` for the plan gate, beside the harness
-lines the slice needs; the user confirms them at §6. A check that runs the
+`mise x -- mise run code:precommit --all` for the plan gate, beside the
+harness lines the slice needs; the user confirms them at §6. The plan gate
+takes `--all` because it runs over the finished, committed tree, where
+`code:precommit` alone checks nothing. A check that runs the
 whole hook pass or a slow test suite belongs in the plan gate.
 `gates.keeps` lists the gates the orchestrator keeps, each
 `{id, check, pass}`.

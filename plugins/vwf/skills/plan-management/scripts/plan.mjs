@@ -5,6 +5,7 @@
 //   node plan.mjs get <file> [<path>] [--raw]
 //   node plan.mjs set <file> <path> <value> [--json]
 //   node plan.mjs append <file> <path> --json <value>
+//   node plan.mjs remove <file> <path>
 //   node plan.mjs validate <file>
 //
 // `get` prints the value at the path as JSON; --raw prints a string without
@@ -17,7 +18,8 @@
 // `set` sets one field: the value is a string, or JSON with --json. A missing
 // key on an object is created, at the end of the object; a list entry must
 // already exist. `append` adds one entry to the list at the path; an object
-// entry must carry an `id` the list does not hold.
+// entry must carry an `id` the list does not hold. `remove` deletes the one
+// list entry the path names by its `id`; it never removes a key of an object.
 //
 // A path is dot-separated keys. A segment that follows a list chooses the
 // entry whose `id` equals the segment — `units.U3.status`, `gaps.G2.state`,
@@ -26,10 +28,10 @@
 //
 // `validate` examines the file against its schema: a path ending in
 // docs/plans/index.json is the plan index, any other is a plan folder's file.
-// `set` and `append` validate the result before they write, then write a
-// temporary file in the same directory and rename it over the original, so
-// an error leaves the file as it was. A write is JSON.stringify(value, null,
-// 2) plus one newline, in the file's own key order.
+// `set`, `append` and `remove` validate the result before they write, then
+// write a temporary file in the same directory and rename it over the
+// original, so an error leaves the file as it was. A write is JSON.stringify(value,
+// null, 2) plus one newline, in the file's own key order.
 //
 // Exit 0 on success. Exit 1 on a validation error, one finding per line on
 // stderr as `<file>: <path>: <message>`. Exit 2 on a usage error, a path the
@@ -50,6 +52,7 @@ import {
   append,
   get,
   PathError,
+  remove,
   set,
   split,
 } from "./lib/path.mjs";
@@ -59,6 +62,7 @@ const USAGE = `usage:
   plan.mjs get <file> [<path>] [--raw]
   plan.mjs set <file> <path> <value> [--json]
   plan.mjs append <file> <path> --json <value>
+  plan.mjs remove <file> <path>
   plan.mjs validate <file>
 `;
 
@@ -173,6 +177,9 @@ function parseArgs(verb, rest) {
       }
       flags.add("--json");
       return { args: [rest[0], rest[1], rest[3]], flags };
+    case "remove":
+      flagsIn(rest.slice(2), undefined);
+      return { args: rest.slice(0, 2), flags };
     case "validate":
       flagsIn(rest.slice(1), undefined);
       return { args: rest.slice(0, 1), flags };
@@ -228,6 +235,16 @@ switch (verb) {
     const doc = load(file);
     const value = parseValue(file, path, raw, true);
     at(file, path, () => append(doc, split(path), value));
+    write(file, doc);
+    break;
+  }
+  case "remove": {
+    if (args.length !== 2) {
+      usage("remove takes a file and a path");
+    }
+    const [, path] = args;
+    const doc = load(file);
+    at(file, path, () => remove(doc, split(path)));
     write(file, doc);
     break;
   }

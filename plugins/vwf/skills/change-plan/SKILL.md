@@ -180,8 +180,11 @@ wave; and its `gates.plan` list, run once over the finished tree. When the
 repo's `mise tasks ls` lists them, the default proposal is
 `mise x -- mise run code:format` for the unit gate,
 `mise x -- mise run code:lint` for the wave gate and
-`mise x -- mise run code:precommit` for the plan gate: the cheap check runs
-most often, and the full hook pass runs once. A check that runs the whole
+`mise x -- mise run code:precommit --all` for the plan gate: the cheap check
+runs most often, and the full hook pass runs once. The plan gate takes
+`--all` because it runs over the finished, committed tree — without it,
+`code:precommit` checks only uncommitted files, and on a clean tree it checks
+nothing. A check that runs the whole
 hook pass or a slow test suite belongs in the plan gate, not in the wave
 gate. A check
 that only holds once a particular unit has landed is **not** a wave-gate line —

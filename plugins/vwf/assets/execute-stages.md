@@ -328,10 +328,14 @@ these fields:
 | `commit`  | the ref for a `code` node, a landed `edit` unit, the `reconcile` record, or any record whose node committed on a unit's behalf; `—` otherwise |
 | `why`     | **required** when `outcome` is `skipped` or `blocked`                                      |
 
-It is written for **every plan**, whatever its units' `kind`. It is read when
-the folder is unreachable, and for the two facts `index.json` does not hold:
-the unit of a fix commit an earlier `commit` value named, and the `to` of a
-`review` row's late loops.
+It is written for **every plan**, whatever its units' `kind`. It is the
+**only** record of each round's result — the node, the round, the outcome,
+the finding counts: `index.json` keeps the outcome of each unit, never the
+rounds that led to it. It is read when the folder is unreachable, and for the
+one fact `index.json` does not hold, the `to` of a `review` row's late loops;
+without it, a finished late re-run runs again on a resume. The review commit
+map never reads it — it reads `git log` and `index.json` alone, per
+`references/review-unit.md`.
 
 - **The journal opens with the unit sequence** written at Setup — every unit
   `pending` — and accumulates records beneath it. A `code` unit is done when
@@ -360,11 +364,12 @@ the unit of a fix commit an earlier `commit` value named, and the `to` of a
   then mirror the record to the journal, before dispatching the next. This is
   the checkpoint: a field written late is a unit a resumed run repeats.
 - **A resume reads the folder first.** The journal is consulted only for the
-  two facts above, or when the folder cannot be read; when the two disagree,
-  the worktree's commits win.
+  late-loop `to` above, or when the folder cannot be read; when the two
+  disagree, the worktree's commits win.
 - **When mempalace is down**, the journal is simply not written — `index.json`
   still is, so the final gate renders from its keys, the `gaps` list and
-  `git log`, and says the per-round detail is absent. Only when the folder
+  `git log`, and says the per-round detail is absent — no other record
+  keeps it. Only when the folder
   itself is missing its fields must the gate say the report was
   **reconstructed**, not rendered. Whoever approves the merge needs to know
   which one they are reading.

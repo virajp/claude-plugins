@@ -14,7 +14,7 @@ gaps_of: []
 
 **COMPLETE**
 
-COMPLETE 2026-10-25 — e2afcba7 a75dfa4f 2830f331 cfa764b4 99d8d138 2aba7573 2235929e b5d76f6a bab1f6af; 6 open gaps — folder stays live
+COMPLETE 2026-10-25 — e2afcba7 a75dfa4f 2830f331 cfa764b4 99d8d138 2aba7573 2235929e b5d76f6a bab1f6af; 6 gaps closed 2026-10-25 on ops/gaps-plan-json-format
 
 ## Consent
 
@@ -581,13 +581,13 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 ## Gaps surfaced during execution
 
-- open · U9 edit · the plan does not say how `/vwf:execute` names a run's branch · the migration guide assumes the folder basename, often without its date prefix
-- open · U1 edit · the plan does not say which string values may be empty · `validate` requires non-empty only titles, the unit `file`, gap `text` and ids
-- open · U5 edit · the plan does not say how a row is removed from `docs/plans/index.json` (`plan.mjs` has no remove verb) · the sweep sets the whole `plans` list with one `set … --json`
-- open · U3 edit · the plan leaves the template's docs-unit `depends_on` open (the old table said "all") · the sample names the previous wave's unit — the review row, or U1 on a change plan
+- closed · U9 edit · the plan does not say how `/vwf:execute` names a run's branch · the migration guide assumes the folder basename, often without its date prefix — ruled 2026-10-25: the branch and the worktree take the plan's name, the `<name>` or `<slice>` of the folder; execute, git-workflow and `migrate.md` say so
+- closed · U1 edit · the plan does not say which string values may be empty · `validate` requires non-empty only titles, the unit `file`, gap `text` and ids — ruled 2026-10-25: keep the rule; the template's key rules now list the five strings `validate` requires
+- closed · U5 edit · the plan does not say how a row is removed from `docs/plans/index.json` (`plan.mjs` has no remove verb) · the sweep sets the whole `plans` list with one `set … --json` — ruled 2026-10-25: `plan.mjs remove <file> <path>` added; the sweep removes each row with one call
+- closed · U3 edit · the plan leaves the template's docs-unit `depends_on` open (the old table said "all") · the sample names the previous wave's unit — the review row, or U1 on a change plan — ruled 2026-10-25: the docs unit's `depends_on` names every other unit save the gates unit, and the gates unit's names the docs unit; the template's sample and rules say so
 - closed · U7 edit · `index.json` keeps one `commit` per unit and one `range` per review row, so an earlier fix commit and a late loop's `to` are kept only in the mempalace journal · the commit map reads the journal; with mempalace down such a commit is refused at map time, and a late re-run repeats once — closed by R2 round 1: the map now reads `git log` and `index.json` alone, a commit placed by its unit's `commit` or by the one unit whose `owns` covers it
-- open · U6 edit · the plan does not say where per-node round results go once the Run log is gone · the run journal alone holds them
-- open · U12 gates · `mise run code:precommit` scans only staged files, so on a clean tree the plan gate line covers nothing already committed · each unit commit ran the same hooks on its own files
+- closed · U6 edit · the plan does not say where per-node round results go once the Run log is gone · the run journal alone holds them — ruled 2026-10-25: accepted until plan B's action log; `execute-stages.md` says the journal is the only record of each round
+- closed · U12 gates · `mise run code:precommit` scans only staged files, so on a clean tree the plan gate line covers nothing already committed · each unit commit ran the same hooks on its own files — ruled 2026-10-25: the planners propose `mise x -- mise run code:precommit --all` for the plan gate
 
 ## Run log
 

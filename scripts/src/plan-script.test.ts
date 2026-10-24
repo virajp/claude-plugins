@@ -1,7 +1,7 @@
 /**
  * vwf's plan.mjs, run for real over copies of the fixtures in a temp
- * directory: get, set, append and validate on a plan folder's index.json and
- * on the plan index, docs/plans/index.json.
+ * directory: get, set, append, remove and validate on a plan folder's
+ * index.json and on the plan index, docs/plans/index.json.
  */
 import { spawnSync } from "node:child_process";
 import {
@@ -300,6 +300,56 @@ describe("append", () => {
 
   it("needs --json", () => {
     expect(plan(["append", change, "gaps", "{}"]).status).toBe(2);
+  });
+});
+
+describe("remove", () => {
+  it("removes a plan index row by its id", () => {
+    const before = parse(index);
+    const r = plan(["remove", index, "plans.2026-10-24-plan-json-format"]);
+    expect(r.status).toBe(0);
+    const after = parse(index);
+    expect(after.plans.map((p: Json) => p.id)).toEqual(
+      before
+        .plans
+        .map((p: Json) => p.id)
+        .filter((id: string) => id !== "2026-10-24-plan-json-format"),
+    );
+    expect(read(index)).toBe(bytes(after));
+  });
+
+  it("removes a gap by its id", () => {
+    const r = plan(["remove", cycle, "gaps.G1"]);
+    expect(r.status).toBe(0);
+    expect(parse(cycle).gaps.some((g: Json) => g.id === "G1")).toBe(false);
+  });
+
+  it("refuses a wrong id with exit 2, leaving the file unchanged", () => {
+    const before = read(index);
+    const r = plan(["remove", index, "plans.no-such-plan"]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("no entry with id no-such-plan");
+    expect(read(index)).toBe(before);
+  });
+
+  it("refuses a key of an object with exit 2", () => {
+    const before = read(change);
+    const r = plan(["remove", change, "consent.merge"]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toContain("remove needs a path to a list entry");
+    expect(read(change)).toBe(before);
+  });
+
+  it("refuses a removal that makes the file invalid", () => {
+    const before = read(change);
+    const r = plan(["remove", change, "units.U1"]);
+    expect(r.status).toBe(1);
+    expect(read(change)).toBe(before);
+  });
+
+  it("refuses a missing path and extra arguments", () => {
+    expect(plan(["remove", change]).status).toBe(2);
+    expect(plan(["remove", change, "gaps.G1", "--json"]).status).toBe(2);
   });
 });
 

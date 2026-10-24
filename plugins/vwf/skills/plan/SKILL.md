@@ -53,7 +53,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.json`, `index.md` and one `NN-<unit>.md` per unit |
 | Plan index     | `docs/plans/index.json` (base repo) — its `plans` list, one row per plan folder of either kind, written only by `plan-management` (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`) |
 | Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — the `index.json` keys, the `index.md` sections, the unit file shape |
-| Plan script    | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` — `get`, `set`, `append` and `validate` over both JSON files |
+| Plan script    | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` — `get`, `set`, `append`, `remove` and `validate` over both JSON files |
 | Interview      | `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`                                    |
 | Backlog        | a project on the base repo's forge, never a path — read at §2 via `/vwf:backlog list`; marked planned via `/vwf:backlog` |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |

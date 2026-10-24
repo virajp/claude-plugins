@@ -652,7 +652,10 @@ Skip every memory step silently if mempalace is unavailable.
 
 1. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree,
    passing the declared preferences (isolate without prompting; branch from the
-   repo's integration branch, named after the plan folder; commit-only, no
+   repo's integration branch, named with the plan's name — the `<name>` of a
+   change plan's `docs/plans/<date>-<name>/`, the `<slice>` of a cycle plan's
+   `docs/plans/<date>-<HHMM>-<slice>/` — so `2026-10-24-plan-json-format`
+   runs on the branch and worktree `plan-json-format`; commit-only, no
    post-commit prompt; never merge/push). That skill resolves which branch the
    integration branch is; this one never assumes a name. All subsequent work
    and commits happen here; **no unit gets `isolation: "worktree"`** — units
@@ -662,13 +665,13 @@ Skip every memory step silently if mempalace is unavailable.
    **Under an `all` override** — the dispatch prompt's overrides block names a
    `shared worktree: <branch>`, per
    [`all` and runner mode](references/all.md) — cut no worktree of the
-   folder's name. When a worktree on that branch exists, reuse it: stop when
+   plan's name. When a worktree on that branch exists, reuse it: stop when
    it is not clean, then bring it up to date with a plain
    `git merge <integration branch>` run inside it — where the plan before it
    landed — and treat a conflict as the hard halt *Land* names: abort, keep
    the worktree, mark the folder `BLOCKED` with the conflicting files. When
    none exists, invoke `/vwf:git-workflow` with the same preferences, the
-   branch named as given instead of after the folder. Record that path in
+   branch named as given instead of with the plan's name. Record that path in
    the status line. Once the preflight below is green, append the one
    `overrides` entry the reference describes.
 
