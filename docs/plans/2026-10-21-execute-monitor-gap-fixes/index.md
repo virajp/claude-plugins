@@ -14,10 +14,9 @@ gaps_of: [ docs/plans/2026-10-21-execute-monitor-in-vwf ]
 
 **BLOCKED**
 
-BLOCKED at wave 2 — U1 UNRESOLVED: does decision 4's "keep the known index.md
-path while it exists" cover a main-checkout copy, or must a linked worktree's
-copy replace it once that worktree exists?; U2, U3, U4 skipped (depend on U1);
-worktree
+BLOCKED at wave 2 — U1's ruling is now decision 12 (the run's worktree copy of
+index.md replaces a main-checkout copy); resume at U1; U2, U3, U4 skipped
+(depend on U1); worktree
 /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/2026-10-21-execute-monitor-gap-fixes
 
 ## Consent
@@ -153,6 +152,7 @@ The reviewer's full text is in
 | 9  | Review               | A review row covers U1, because U1 changes runnable code that runs in every vwf session                                                                                                                                                                                                                                                                                                                                                                                                                                     | the wave review only                    | U2   |
 | 10 | Decision doc         | The docs unit writes `docs/memory/decisions/2026-10-21-execute-monitor-gap-fixes.md`; the dated `2026-10-21-execute-monitor-inside-vwf.md` stays                                                                                                                                                                                                                                                                                                                                                                            | edit the dated doc                      | U3   |
 | 11 | Chain                | The plan requires nothing; priority 10                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | —                                       | —    |
+| 12 | Known index.md       | Decision 4's known `index.md` path is kept only while no linked worktree for the run exists. A main-checkout copy is known until then; once the run's worktree exists, its copy replaces the main-checkout copy on the next refresh. Recording the worktree and log paths in the plan frontmatter at the claim is the next plan's, not this one's                                                                                                                                                                           | the main-checkout copy stays known      | U1   |
 
 ## New dependencies
 
@@ -160,12 +160,12 @@ none
 
 ## Units
 
-| Id | Wave | Unit file                    | Kind   | Owns                                                                                                                                                                                                                      | Depends on | Status     | Commit   |
-| -- | ---- | ---------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ---------- | -------- |
-| U1 | 1    | [01-fixes.md](01-fixes.md)   | edit   | `plugins/vwf/hooks/monitor/**`                                                                                                                                                                                            | —          | unresolved | 3eb53ba0 |
-| U2 | 2    | [02-review.md](02-review.md) | review | —                                                                                                                                                                                                                         | U1         | skipped    |          |
-| U3 | 3    | [03-docs.md](03-docs.md)     | edit   | `site/src/content/docs/plugins/vwf.md`, `.claude/skills/vwf-plugin/**`, `docs/memory/decisions/2026-10-21-execute-monitor-gap-fixes.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | skipped    |          |
-| U4 | 4    | [04-gates.md](04-gates.md)   | edit   | none                                                                                                                                                                                                                      | U3         | skipped    |          |
+| Id | Wave | Unit file                    | Kind   | Owns                                                                                                                                                                                                                      | Depends on | Status  | Commit   |
+| -- | ---- | ---------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------- | -------- |
+| U1 | 1    | [01-fixes.md](01-fixes.md)   | edit   | `plugins/vwf/hooks/monitor/**`                                                                                                                                                                                            | —          | pending | 3eb53ba0 |
+| U2 | 2    | [02-review.md](02-review.md) | review | —                                                                                                                                                                                                                         | U1         | skipped |          |
+| U3 | 3    | [03-docs.md](03-docs.md)     | edit   | `site/src/content/docs/plugins/vwf.md`, `.claude/skills/vwf-plugin/**`, `docs/memory/decisions/2026-10-21-execute-monitor-gap-fixes.md` (new), and any other human-facing passage `vwf:docs-sync` finds outside U1's Owns | U2         | skipped |          |
+| U4 | 4    | [04-gates.md](04-gates.md)   | edit   | none                                                                                                                                                                                                                      | U3         | skipped |          |
 
 ## Shared-file rule
 
