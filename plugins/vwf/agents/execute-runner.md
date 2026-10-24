@@ -36,10 +36,11 @@ only. Any of three lines may appear:
 - **`skip as deduped: <command>; <command>`** — the after-landing step
   commands to leave unrun, the plan's own or the repo's `after_landing:`
   defaults, because the loop runs each once after the last landed plan.
-- **`land: yes`** — land this folder although its Consent records merge `no`.
+- **`land: yes`** — land this folder although its `consent.merge` is
+  `false`.
 
-`Overrides: none`, or no block at all, means none: the folder's Consent alone
-decides.
+`Overrides: none`, or no block at all, means none: the folder's `consent`
+alone decides.
 
 ## What to do
 
@@ -53,10 +54,11 @@ decides.
    a stop, reported in your return block with its resume command.
 4. **Never read unit work inline.** Dispatch every unit, reviewer and docs pass
    as that file says; keep only their return blocks.
-5. **Apply each override over the folder's Consent** as that file describes
-   for an `all` override, and write it as one `override:` line in the folder's
-   Run log. Never change the folder's Consent block. Name every skipped step
-   in your `DETAIL:` line.
+5. **Apply each override over the folder's `consent`** as that file
+   describes for an `all` override, and record the block as one entry
+   appended to the folder's `overrides` list in its `index.json`, with
+   `plan.mjs append`, as that file's `all` reference shows. Never change the
+   folder's `consent`. Name every skipped step in your `DETAIL:` line.
 6. Take no other plan. When the folder lands or stops, you are done.
 
 ## Return contract
@@ -67,7 +69,7 @@ these five lines — no preamble, no narrative, nothing after:
 ```text
 PLAN: <plan folder path>
 OUTCOME: <COMPLETE | COMPLETE with gaps | STOPPED>
-DETAIL: <the folder's Status block detail line, as last written>
+DETAIL: <the folder's status.detail, as last written>
 RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
 ```

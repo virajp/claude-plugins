@@ -1,0 +1,119 @@
+{
+  "format": 1,
+  "type": "vwf-plan",
+  "title": "Sign-in flow",
+  "requires": ["2026-10-20-accounts"],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "covers": ["docs/blueprint/flows/sign-in"],
+  "exposure": "dark",
+  "status": {
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-10-24 10:00 in .claude/worktrees/sign-in"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true,
+    "lsp": {
+      "dart": "installed",
+      "typescript": "proceed without"
+    }
+  },
+  "gates": {
+    "unit": ["mise x -- mise run code:format"],
+    "wave": ["mise x -- mise run code:lint"],
+    "plan": ["mise x -- mise run code:precommit"],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "api",
+      "level": "MINOR",
+      "reason": "a new endpoint"
+    }
+  ],
+  "dependencies": [
+    {
+      "id": "N1",
+      "package": "jose",
+      "purpose": "JWT signing",
+      "preferred_over": "jsonwebtoken",
+      "unit": "U1"
+    }
+  ],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The sign-in endpoint",
+      "wave": 1,
+      "file": "01-api.md",
+      "kind": "code",
+      "model": "opus",
+      "owns": ["apps/api/src/sign-in/**"],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "commit": "0123abcd",
+      "rounds": 1
+    },
+    {
+      "id": "R2",
+      "title": "Review: the sign-in endpoint",
+      "wave": 2,
+      "file": "02-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": ["U1"],
+      "waits": "",
+      "status": "running",
+      "commit": "",
+      "rounds": 1,
+      "range": {
+        "from": "a5dcb9d3",
+        "to": "0123abcd"
+      }
+    }
+  ],
+  "shared_files": [],
+  "decisions": [],
+  "acceptance": [
+    {
+      "id": "AC1",
+      "text": "Given a known user, when they sign in, then a session starts",
+      "flow": "docs/blueprint/flows/sign-in/index.md"
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "green",
+      "detail": "3 screens"
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": ""
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "code",
+      "text": "the token lifetime is unstated; assumed 15 minutes",
+      "state": "open"
+    }
+  ],
+  "overrides": [],
+  "run": {}
+}

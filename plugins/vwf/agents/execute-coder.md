@@ -22,9 +22,11 @@ to adopt the project's actual stack vocabulary.
 ## Inputs
 
 You are given one **unit** of the approved plan folder (in `docs/plans/`) —
-its `NN-<unit>.md` file, with its ruling, Test first line, Owns and
-Verification — plus the folder `index.md`'s *Facts the survey established*,
-*Assumed decisions* and *Shared-file rule* sections (never the whole folder),
+its `NN-<unit>.md` file, with its ruling, Test first line and Verification,
+and its entry in the folder's `index.json`, whose `owns` list names the paths
+you may touch (the unit file carries no header lines) — plus the `decisions`
+and `shared_files` lists of that `index.json` and the folder `index.md`'s
+*Facts the survey established* section (never the whole folder),
 the blueprint slice it implements (in `docs/blueprint/`), the project's
 **resolved stack** — the
 `projects.<name>.stack` block from `.config/vwf.yaml` (**not** the registry,
@@ -33,10 +35,11 @@ each template it pins, which is the layout, testing and placement you write to �
 the project's mempalace **wing**, your **unit id**, the **plan folder path**
 (repo-relative, `docs/plans/<folder>`, no trailing slash — the one string every
 `source_file` is filed and filtered with),
-the plan's **`covers:` doc names** and the **round number** for your gap
-drawers (never invent them). On a **fix loop-back** you are also given findings
-**recall tags** instead of the findings text — from a review row, the row's
-two, `<loop-id>/review/<round>` and `<loop-id>/security/<round>`, where the
+the **`covers` doc names** — the `covers` list of the folder's `index.json` —
+and the **round number** for your gap drawers (never invent them). On a
+**fix loop-back** you are also given findings **recall tags** instead of the
+findings text — from a review row, the row's two,
+`<loop-id>/review/<round>` and `<loop-id>/security/<round>`, where the
 loop id is the row id for the row's main loop and `<row-id>-late<n>` for its
 n-th late re-run, e.g. `U7/review/2` or `U7-late1/security/1`; from the
 acceptance or UX pass, its one,
@@ -63,7 +66,7 @@ assumption to keep moving, but **capture the gap**. Per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full gap to room `gaps` in
 the given wing with `mempalace_add_drawer` — `source_file` set to the **plan
 folder path**, tagged `<unit>/gap/<round>`, its content **opening with the plan
-folder path and the `covers:` doc names** the dispatch carries, so
+folder path and the `covers` doc names** the dispatch carries, so
 `/vwf:plan`'s slice-keyed recall still finds it — then what the blueprint/plan
 under-/mis-specified, where, and the assumption you proceeded on; and surface a
 terse one-liner in your return block. Skip the mempalace write silently if it
@@ -77,7 +80,7 @@ behaviour — the minimalism ladder's reuse rung. The graph never contains your
 own uncommitted work; verify every lead by reading the file, and fall back
 silently to Grep/Glob when no graph exists.
 
-Implement the unit under strict TDD, touching only the paths its Owns list
+Implement the unit under strict TDD, touching only the paths its `owns` list
 names. Take one behavior at a time and run the **RED → GREEN → REFACTOR**
 cycle for every change — never write implementation code before a failing test
 exists:
@@ -91,8 +94,8 @@ exists:
    dependency before writing new code or adding a dependency; prefer one line
    where it reads clearly. Install a **new** dependency only if the plan names
    it — the plan's approval gate is where the user consented to it. If a
-   dependency the plan's *New dependencies* section doesn't name seems
-   necessary, do **not** install it: capture it as a plan gap (per
+   dependency the `dependencies` list of the plan's `index.json` doesn't name
+   seems necessary, do **not** install it: capture it as a plan gap (per
    Blueprint/plan gaps above) and implement the minimum without it. A
    dependency change reaches the lock file only through the package
    manager's own CLI, the command the stack's package-manager conventions

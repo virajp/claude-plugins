@@ -26,7 +26,8 @@ paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
 registry entry for the project (role, platforms and stack), the project wing, the
 **slice** and **round number** for your recall tag, and the **plan folder
-path** and its **`covers:` doc names** for your gap drawers.
+path** and the **doc names in the `covers` list** of the folder's
+`index.json` for your gap drawers.
 
 ## What to do
 
@@ -132,8 +133,9 @@ stays terse. Skip silently if mempalace is unavailable.
 neither the design system nor the flow's Screens section pins down (the docs are
 silent, not the code wrong), that is a **gap** — file it to room `gaps`,
 `source_file` set to the **plan folder path**, tagged `ux/gap/<round>`, its
-content **opening with the plan folder path and the `covers:` doc names** the
-dispatch carries, and report it on the gaps contract line.
+content **opening with the plan folder path and the doc names in the
+`covers` list** of the folder's `index.json`, as the dispatch carries them,
+and report it on the gaps contract line.
 
 ## Return contract
 

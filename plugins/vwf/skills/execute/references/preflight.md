@@ -1,55 +1,76 @@
 # The preflight reads (Resolve; Setup steps 2 and 3)
 
+## Validate (Resolve, every plan)
+
+Preflight starts with the folder's file, before any other read of it, on a
+fresh run and a resume alike — after the format test in `SKILL.md` found the
+new format:
+
+```sh
+node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json
+```
+
+Below, `plan.mjs` names that script, as in *The plan files* in `SKILL.md`.
+Exit 0 prints `<folder>/index.json: valid`, and the run reads on. Any other
+exit is a **refusal**: print every finding it wrote to stderr, one
+`<file>: <path>: <message>` line each, and stop — before the claim, before
+the worktree, writing nothing. The fix depends on the run: on a fresh run, the
+planner named by the folder's `type` corrects the folder and re-approves it;
+on a resume, the folder is corrected in the worktree with one `plan.mjs set`
+or `append` per finding, and the run re-launched. `validate` is what refuses
+an `after_landing` mode other than `run`, a `release_levels` level outside
+the four, and the backlog lists that disagree with each other or with
+Parked; `SKILL.md` names them.
+
 ## The release levels (Resolve, every plan)
 
 Read at Resolve, before the claim, on a fresh run and a resume alike. The
-folder's `index.md` carries a `## Release levels` section after its Consent
-block — a table with the columns Project, Level, Reason, one row per project
-the units touch, `NONE` rows included. The landing reads it to raise
+folder's `release_levels` list holds one entry per project the units touch,
+`NONE` entries included: `id` the project, `level` one of `NONE`, `PATCH`,
+`MINOR`, `MAJOR`, and its `reason`. The landing reads it to raise
 `.config/releases.yaml`, per *The release-levels write* in `SKILL.md`.
 
-- **No `## Release levels` section** → an old-shape folder, written before
-  levels were recorded. **Not a refusal**: its units run as written, the
-  landing writes nothing to `.config/releases.yaml`, and the final report says
-  *old-shape folder — no release levels recorded* in one line.
-- **A row whose Level cell is not one of `NONE`, `PATCH`, `MINOR`, `MAJOR`** →
-  a refusal naming the row and its cell; the fix is the cell corrected in the
-  folder, then the folder re-approved, or, on a resume, edited by hand in the
-  worktree and the run re-launched.
-- **A `Release <project>` row in an old-shape folder's Consent block** →
-  ignored. It is neither a bump nor a release step; the run bumps no version
-  and releases nothing, whatever that row reads.
+- **An empty list, `[]`** → the old-shape case, which only a migrated folder
+  can have — the planners always write one entry per project. **Not a
+  refusal**: its units run as written, the landing writes nothing to
+  `.config/releases.yaml`, and the final report says *old-shape folder — no
+  release levels recorded* in one line.
+- **An entry whose `level` is not one of the four** → never reaches here:
+  `validate` refused it above, naming the entry's path.
 
 ## The `code`-unit preflight (Setup steps 2 and 3)
 
-Read this at Setup step 2 **only when the Units table holds a `code` unit** — a
-plan of `edit` units alone writes no code, so neither branch below applies to
-it: a missing LSP server is a Run log detail there, and no conventions are
-fetched. A `blocking` doctor finding is a hard halt handled in `SKILL.md`, not
-here, whatever the plan's units.
+Read this at Setup step 2 **only when the plan has a `code` unit** — a `units`
+entry whose `kind` is `code`. A plan of `edit` units alone writes no code, so
+neither branch below applies to it: a missing LSP server is a run journal
+detail there, and no conventions are fetched. A `blocking` doctor finding is
+a hard halt handled in `SKILL.md`, not here, whatever the plan's units.
 
 ### The LSP rule (Setup step 2)
 
 Applies **only when `doctor` reports a missing LSP server**. A clean preflight,
 or one whose only findings are non-LSP, never needs it.
 
-The question was asked once, at `/vwf:plan`'s stack gate, and its answer is a
-row in the folder's **Consent** block — `LSP <language>`, reading `installed` or
-`proceed without`. This run reads the row and asks nothing:
+The question was asked once, at `/vwf:plan`'s stack gate, and its answer is
+the folder's `consent.lsp.<language>`, reading `installed` or
+`proceed without` — `plan.mjs get <folder>/index.json consent.lsp`. This run
+reads it and asks nothing:
 
 - **`installed`, and the server is still missing** → halt with the remedy: the
   plan was approved on a promise that did not hold. Name the language, say to
-  install the server via `/plugin` (Discover) or to change the row to
-  `proceed without` in the folder, then re-launch `/vwf:execute <folder>`.
-- **`proceed without`** → log it as a Run log detail and continue; degraded
-  type-safety is a known condition of the run, not a gap.
-- **No row for the flagged language** → treat it as `proceed without`, and
-  write one `open` entry into the folder's *Gaps surfaced during execution*:
-  the plan did not carry the LSP answer for `<language>`, and the run proceeded
-  without the server.
+  install the server via `/plugin` (Discover) or to set it to
+  `proceed without` in the folder —
+  `plan.mjs set <folder>/index.json consent.lsp.<language> "proceed without"`
+  — then re-launch `/vwf:execute <folder>`.
+- **`proceed without`** → log it as a run journal detail and continue;
+  degraded type-safety is a known condition of the run, not a gap.
+- **No key for the flagged language**, or no `consent.lsp` at all → treat it
+  as `proceed without`, and append one `open` entry to the folder's `gaps`,
+  `unit` `""` and `stage` `preflight`: the plan did not carry the LSP answer
+  for `<language>`, and the run proceeded without the server.
 - A language doctor reports as **unavailable** (no LSP ships in this
-  marketplace) is not gated — there is nothing to install. Note it as a gap and
-  proceed.
+  marketplace) is not gated — there is nothing to install. Append it to
+  `gaps` and proceed.
 - A language doctor reports as **unknown** is not handled here at all: no
   installed plugin declares it, so it is a `blocking` finding and a hard halt in
   `SKILL.md`. It is not a missing LSP — it is a stack vwf has no template,

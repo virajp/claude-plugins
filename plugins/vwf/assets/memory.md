@@ -71,7 +71,8 @@ vwf skill writes the file.
 
 `doctor` is ignored because its findings are about *this machine's* toolchain,
 not the repo. `runs` is ignored because it mirrors one developer's run — the
-record itself is the plan folder's Run log, which is committed with the folder.
+record itself is the unit fields of the plan folder's `index.json`, which is
+committed with the folder.
 Both still exist locally, and both still survive a mempalace outage — they just
 do not enter anyone else's diff.
 
@@ -96,8 +97,9 @@ do not enter anyone else's diff.
   resolved), `planning` (plan rationale and deferred options), `gaps`
   (blueprint/plan holes surfaced **during execution** + how they were
   reconciled, and out-of-scope points **parked during elicitation** — see
-  below), `runs` (the **execute** run journal — the mirror of the plan folder's
-  Run log, written for every plan, per node for a `code` unit and per report
+  below), `runs` (the **execute** run journal — the mirror of the run facts in
+  the plan folder's `index.json`, written for every plan, per node for a `code`
+  unit and per report
   for an `edit` unit, read only when the folder is unreachable; see below),
   `doctor` (`/vwf:doctor`'s
   findings per run, so a later run reports a known one as **known** rather than
@@ -291,16 +293,16 @@ markers, these are technical memories. Example:
 ## Findings memory — execute loop-backs
 
 This is the `review` row's loop — the row the plan placed over its `code`
-units. The wave review's findings ride the plan folder's Run log, not this
-room.
+units. The wave review's findings ride the `runs` journal, not this room.
 
 Each review/security subagent files its **full** findings to room `problems`,
 tagged `<loop-id>/<stage>/<round>` (e.g. `U7/review/2`; the loop id is the
 `review` row's id for its main loop, `<row-id>-late<n>` for its n-th late
 re-run — `U7-late1` — whose rounds restart at 1) with the plan folder
 path as the drawer's `source_file` — in one pinned form, the repo-relative
-`docs/plans/<folder>` with no trailing slash, exactly as the plan index's
-Folder cell names it, the same string filed and filtered on; loop ids repeat
+`docs/plans/<folder>` with no trailing slash, exactly as the `folder` of its
+row in `docs/plans/index.json` names it, the same string filed and filtered
+on; loop ids repeat
 across plans filed to one wing, so every recall of a tag filters on that path
 — each finding labelled
 `(<unit>)` with the unit whose commit last touched its file in the row's
@@ -329,15 +331,15 @@ acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
 `<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in
 the same pinned form as above (ids repeat across plans in one wing, so recall
 filters on it), and the
-content opening with the plan folder and the plan's `covers:` doc names, so
+content opening with the plan folder and the plan's `covers` doc names, so
 `/vwf:plan`'s slice recall still finds it — then what is under/mis-specified,
 where, and the assumption it proceeded on — and surfaces only a terse
 one-line pointer in its return block. The orchestrator mirrors that terse line
-into a durable
-**"Gaps surfaced during execution"** section in the plan folder's `index.md`
-(the on-disk copy that survives a mempalace outage), and at reconcile recalls
+into a durable entry of the **`gaps`** list in the plan folder's `index.json`
+— one `plan.mjs append` — (the on-disk copy that survives a mempalace
+outage), and at reconcile recalls
 the `gaps` room to drive the blueprint/plan fixes. Because mempalace is
-skip-if-unavailable, the folder's line is the source of truth when recall is
+skip-if-unavailable, the folder's entry is the source of truth when recall is
 empty; the `gaps` room and `docs/memory/gaps/` carry the rich detail.
 
 **Parked scope — out-of-scope points raised during elicitation.** The same room
@@ -352,22 +354,26 @@ working and treat closing recalled gaps as a first-class goal of the pass — so
 scope change arriving in a fresh session finds the parked point instead of
 losing it. Same fallback rule: the doc line survives a mempalace outage.
 
-## Run journal — the Run log's mirror (execute only)
+## Run journal — the mirror of `index.json`'s run facts (execute only)
 
-**The plan folder's Run log table is the authoritative record.** `/vwf:execute`
-appends one row to `index.md`'s Run log as each node returns for a `code` unit
-— coder, reviewer, security, acceptance — and as each report returns for an
-`edit` unit, and mirrors that same data into a single drawer per plan in room
-`runs` (drawer = `<plan folder>`), for **every plan** whatever its units' Kind:
-the result of the plan's `requires:` prerequisite check (each prerequisite plan
+**The plan folder's `index.json` is the authoritative record.** `/vwf:execute`
+sets each unit's `status`, `commit` and `rounds`, a review unit's `range`, the
+`gaps` list and the plan-level `stages` there with `plan.mjs set` or `append`
+as each node returns for a `code` unit — coder, reviewer, security, acceptance
+— and as each report returns for an `edit` unit, and mirrors each fact into a
+single drawer per plan in room `runs` (drawer = `<plan folder>`), for **every
+plan** whatever its units' Kind:
+the result of the plan's `requires` prerequisite check (each prerequisite plan
 and whether it is satisfied), the dependency-ordered unit sequence and, per
-unit, its status (pending/done), commit ref, review/security round counts, and
+unit, its status (`pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`), commit ref, review/security round counts, and
 gap tags. The orchestrator writes the drawer when it derives the order and
-updates it as each row is written (`mempalace_add_drawer` then
+updates it as each fact is set (`mempalace_add_drawer` then
 `mempalace_update_drawer`), the cadence `/vwf:execute` and `execute-stages.md`
 state. Because an autonomous run's
 primary pause is a resource cap (`/vwf:handoff` → later `/vwf:recall next`), a
-resumed run reads the folder's Run log first to skip finished units and pick up
+resumed run reads the unit fields and `stages` of the folder's `index.json`
+first to skip finished units and pick up
 at the current one, and the journal only when the folder is unreachable —
 without either, resume would re-implement completed work. Skip the journal
 silently if mempalace is unavailable; when the two disagree, the worktree's

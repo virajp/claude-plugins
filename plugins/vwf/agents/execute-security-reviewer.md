@@ -38,10 +38,14 @@ high-severity issues.
    review row, or since the branch base when this is the first), the file
    list with its **unit map** — each file paired with the unit whose commit
    last touched it; the map covers **every file the branch touched**, not only
-   the range — and the unit files, with their Owns —
+   the range — and the unit files —
    each `NN-<unit>.md` in the plan folder under `docs/plans/` — of every unit
-   the row covers, several units, not one. Read those unit files and the
-   folder `index.md`'s rulings. Then — **only when a unit the row covers is
+   the row covers, several units, not one. A unit file carries no header
+   lines: read each covered unit's `owns`, `kind` and `depends_on` from its
+   entry in the `units` list of the folder's `index.json`. Read those unit
+   files, the rulings — the `decisions` list of `index.json` — its
+   `shared_files` list and the folder `index.md`'s *Facts the survey
+   established*. Then — **only when a unit the row covers is
    `code`**, in which case the dispatch carries the registry and the resolved
    stack with its `conventions:` prose — read the architecture
    registry's declared `capabilities`, `threat_notes`, and `stack`, and
@@ -108,7 +112,7 @@ requirement the blueprint never stated for this surface, or the unit never
 carried — that is a **gap**, not just a code finding. File it separately to
 room `gaps` — `source_file` set to the **plan folder path**, tagged
 `<loop-id>/gap/<round>`, its content **opening with the plan folder path and the
-`covers:` doc names** the dispatch carries, so `/vwf:plan`'s slice-keyed recall
+`covers` doc names** the dispatch carries, so `/vwf:plan`'s slice-keyed recall
 still finds it — then what the blueprint or the unit should have required and
 where; and report it on its own contract line. Still rate and report any
 concrete exploitable code issue under FINDINGS as usual.

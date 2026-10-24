@@ -5,7 +5,8 @@ that only adds or edits in place does not need it.
 
 Grep `docs/blueprint/` (both catalogs, every flow and entity folder,
 `conventions.md`, `environment.md`) and the active plans under `docs/plans/`
-(including their `covers:` frontmatter) for inbound links to the old doc.
+(including the `covers` list of each folder's `index.json`) for inbound links
+to the old doc.
 
 - **Rename** → update every inbound link (and the catalogs) in this same pass.
 - **Delete** → list every inbound link and require the user to resolve each

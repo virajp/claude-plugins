@@ -26,12 +26,17 @@ precisely enough that the planner can turn it into one question.
 
 ## Inputs
 
-- the plan folder — `index.md` (the Goal, the assumed decisions table, the
-  survey facts, the Units table, the Waves, the gates) and one `NN-<unit>.md`
-  per unit (Owns, Edits, Verification, Commit);
+- the plan folder — `index.json` (the `decisions`, the `units` with their
+  `owns`, `depends_on` and `waits`, the `gates`, the `shared_files`, the
+  `after_landing` steps, the `release_levels`, the `consent` and the rest),
+  `index.md` (the Goal, the survey facts, Out of scope, Parked) and one
+  `NN-<unit>.md` per unit (Ruling, Edits, Verification, Commit);
 - the repo root, to read the files the folder cites and to run **read-only**
-  commands — `git`, `grep`, `mise tasks`, a tool's `--help`. Never write,
-  stage, commit, install or run a gate.
+  commands — `git`, `grep`, `mise tasks`, a tool's `--help`, and
+  `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` with
+  its `get` and `validate` verbs, which read `index.json` and write nothing.
+  Never write, stage, commit, install or run a gate, and never run the
+  script's `set` or `append`.
 
 ## Checklist
 
@@ -44,8 +49,8 @@ tree.
       run over the result of the first. A case a unit must decide and no
       ruling decides is a gap. A case no unit meets is not.
 - [ ] **Contradictions.** Two rulings that cannot both hold; a ruling against a
-      unit's Edits or Verification; a ruling against a gate line; a Waves
-      reason against the Owns it names.
+      unit's Edits or Verification; a ruling against a gate line; a unit's
+      `waits` reason against the `owns` it names.
 - [ ] **Undefined terms.** A term a ruling or an Edit uses as if defined — "the
       release step", "a plugin the run loads", "one line" — that the folder
       does not define and the tree does not define either.
@@ -55,7 +60,7 @@ tree.
 - [ ] **Falsified passages no unit owns.** What the Goal makes untrue — a
       count, a list of names, a "planned" or "not yet", a retired name, a
       described behaviour — grep the tree for it. Each hit outside every
-      unit's Owns, and outside the docs unit's reach, is a gap naming the
+      unit's `owns`, and outside the docs unit's reach, is a gap naming the
       `file:line`.
 - [ ] **Gates and order.** Each gate line runs as written — the task exists
       (`mise tasks`), its flags exist, a `mise run <task>` with flags carries
@@ -69,10 +74,11 @@ tree.
       saying what to verify.
 - [ ] **Scope edges.** A defect the change exposes in a file the plan puts out
       of scope, which the run will meet and must record. Name it, so the user
-      decides now: widen an Owns, or accept it as out of scope.
+      decides now: widen an `owns`, or accept it as out of scope.
 
-A row of the assumed decisions table that already says a case is accepted,
-deferred or out of scope is a ruling — never a gap.
+An entry of the `decisions` list that already says a case is accepted,
+deferred or out of scope is a ruling — never a gap. A finding of
+`plan.mjs validate` is a gap too, naming the path it reports.
 
 ## Return contract
 

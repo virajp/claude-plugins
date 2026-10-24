@@ -290,8 +290,9 @@ built on, and the stack menu is what its conventions and harness come from, so
 proceeding without either produces a run that fails later and less clearly, or
 one that fails to fail at all. The LSP findings are `/vwf:plan`'s question: at
 its stack gate it asks, per flagged language, whether to install now or proceed
-without, and records the answer as an `LSP <language>` row in the plan folder's
-Consent block. `/vwf:execute` halts on `blocking` alone and reads that row; it
-never asks. `/vwf:recall` calls the `baseline` invocation alone, at session
-start, and prints its result as one shape-drift line pointing at
+without, and records the answer as `consent.lsp.<language>` in the plan
+folder's `index.json` (`installed` or `proceed without`). `/vwf:execute` halts
+on `blocking` alone and reads that key; it never asks. `/vwf:recall` calls the
+`baseline` invocation alone, at session start, and prints its result as one
+shape-drift line pointing at
 `/vwf:setup reshape` — it never runs doctor whole, and it never reads the forge.

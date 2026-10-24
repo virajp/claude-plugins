@@ -1,0 +1,11 @@
+/security-review — row R10, loop R10, round 1, range a5dcb9d3..9edba857
+(The skill's own diff read origin/main..HEAD; this scan was scoped to the row's range.)
+
+No vulnerabilities with confidence >= 8 found.
+
+- Prototype pollution in lib/path.mjs set/step: rejected. step needs Object.hasOwn, so __proto__, constructor and prototype can't be walked through unless JSON.parse made them own keys. A final __proto__ segment only changes that one parsed object's prototype, not Object.prototype. The input is the owner's own file plus local CLI arguments, so there's no real impact.
+- Temp file in plan.mjs write(): rejected. The name (.<basename>.<pid>.tmp) is predictable, but it sits in the owner's own plan folder. Planting a symlink there already needs write access to the repo, which gives nothing new.
+- Path traversal through unit file keys and index.md in lib/schema.mjs (lines 308-312, 391-399): rejected. A traversal path only reveals whether a file exists (existsSync) or reads the folder's own index.md for checking. Nothing is written or leaked outside the folder, and the JSON is written by the owner.
+- <file> argument resolved anywhere: rejected. The CLI arguments are trusted per scope, and the tool runs locally as the user.
+- Agent instructions that put gap or override text into plan.mjs append ... --json '{...}' in single quotes (execute SKILL.md and references): rejected. The text is plan-run findings that the owner's own agents write. A stray quote breaks the command rather than enabling injection, and no forge or other external text is routed into these commands.
+- Backlog Landed: line reading the title with plan.mjs get ... title --raw: rejected. The title comes from the owner's own plan file and is passed through by the agent, not run in a shell. The old version read the same value from index.md frontmatter, so the exposure didn't change.

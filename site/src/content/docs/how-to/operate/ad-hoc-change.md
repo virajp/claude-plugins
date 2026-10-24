@@ -12,7 +12,7 @@ through `/vwf:plan` would mean inventing a slice to hang it on.
 
 That work has its own planner:
 **[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan)** writes a plan
-folder and queues it in `docs/plans/index.md`, and the one executor,
+folder and queues it in `docs/plans/index.json`, and the one executor,
 **[`/vwf:execute`](../../plugins/vwf.md#vwfexecute)**, runs it unattended in a
 fresh context — by name, `next` to take the queue's pick, or `all` to run every
 runnable plan in turn. The planner sits beside the chain rather than in it, and
@@ -68,14 +68,14 @@ The first thing it does is **read before it asks**. It looks through
 `docs/memory/decisions/`, the last archived plan that touched the same tree, the
 base repo's [backlog project](../../plugins/vwf.md#vwfbacklog) through
 `/vwf:backlog list` if the product keeps one — the request is often an item
-already on it. Each id it covers goes into the plan's `source:` frontmatter, and
-the interview asks whether this plan finishes the item or lands one piece of it:
-a finishing id goes into `backlog:`, a piece id into `backlog_pieces:`, with
-what remains written as a `- Bnn: <piece>` line under *Parked*. A request that
-takes the gaps of a landed plan — a plan index row whose `Gaps` cell is a count
-above `0` — names that folder on `gaps_of:`, and the hand-off sets the cell to
-`0 — moved to <this plan>`; when `gh` cannot reach the project the recall says
-so and reads nothing — and the memory palace's `planning`, `decisions` and
+already on it. Each id it covers goes into the plan's `source` list, and the
+interview asks whether this plan finishes the item or lands one piece of it: a
+finishing id goes into `backlog`, a piece id into `backlog_pieces`, with what
+remains written as a `- Bnn: <piece>` line under *Parked*. A request that takes
+the gaps of a landed plan — a plan index row whose `gaps.open` is above `0` —
+names that folder in `gaps_of`, and the hand-off sets `gaps.open` to `0` and
+adds this plan to `gaps.moved_to`; when `gh` cannot reach the project the recall
+says so and reads nothing — and the memory palace's `planning`, `decisions` and
 `gaps` rooms. This matters more than it sounds: Relay's release-notes request
 turns out to be sitting in the *Parked* list of the plan that set up its CI six
 weeks earlier, together with the reason it was deferred. That is a fact the
@@ -146,11 +146,12 @@ raises each project's key in `.config/releases.yaml` — the highest level wins 
 and the release itself is always a later hand step, `/release` or your repo's
 own.
 
-One more consent row is asked only when the plan edits a plugin your session
-itself has loaded: **End an `all` run after landing**. Say `yes` and a
+One more consent question is asked only when the plan edits a plugin your
+session itself has loaded: **End an `all` run after landing**. Say `yes` and a
 `/vwf:execute all` run stops after this plan, telling you to restart before the
 next, since the running session would otherwise go on using the old copy.
-Relay's change touches no plugin, so the row is written `no` without asking.
+Relay's change touches no plugin, so the answer is written `false` without
+asking.
 
 ### 3. Approve the shape, then walk away
 
@@ -170,8 +171,9 @@ wave with no reason is a serial step the run pays for, so question it here.
 
 Then: **approve**, **revise** or **abandon**. Abandoning leaves nothing on disk
 except a one-line note the next attempt can recall. Approving writes
-`docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
-unit.
+`docs/plans/2026-09-08-ci-release-notes/` — an `index.json` holding every
+structured fact (the units, the rulings, the gates, the consent, the release
+levels), an `index.md` holding the prose, and one file per unit.
 
 Expect a few more questions before you walk away. A fresh reviewer reads the
 written folder against the tree and lists the cases the rulings leave open — an
@@ -180,12 +182,12 @@ untrue in a file no unit owns. `change-plan` asks you each one, one at a time,
 and writes your answer into the folder, until the reviewer finds nothing, four
 rounds at most. Each answer here is a gap the run does not record later.
 
-Then it finishes the hand-off for you. A row for the plan is appended to the one
-table of `docs/plans/index.md` — the queue every plan of either kind sits in,
-this one with `Kind` `change` — reading `APPROVED`, with a **priority** it works
-out rather than asks: `10` for a plan that requires nothing still active, `10`
-more than the highest `Priority` value among the plans it requires otherwise, so
-a chain runs in order. Any backlog item the plan covers, finished or a piece, is
+Then it finishes the hand-off for you. A row for the plan is appended to
+`docs/plans/index.json` — the queue every plan of either kind sits in, this one
+with `kind` `change` — reading `APPROVED`, with a **priority** it works out
+rather than asks: `10` for a plan that requires nothing still active, `10` more
+than the highest `priority` value among the plans it requires otherwise, so a
+chain runs in order. Any backlog item the plan covers, finished or a piece, is
 marked `planned` with this folder added to its `Planned in:` list — an edit to
 the project on the forge, nothing in the tree — and the folder and the index are
 **committed and pushed on the branch you are on** — in place, no worktree,
@@ -218,7 +220,7 @@ or, when you would rather the queue decide:
 /vwf:execute next
 ```
 
-`next` reads that table — every row, cycle plan and change plan alike — and
+`next` reads that index — every row, cycle plan and change plan alike — and
 takes the `APPROVED` row of lowest priority whose requirements have all landed,
 tells you which it took and why the others were passed over, and runs it as if
 you had named it. With Relay's one plan in the queue the two lines do the same
@@ -241,11 +243,11 @@ time, each a yes or no — questions about the run of several plans, which no
 single folder can answer: whether every plan runs in **one shared worktree**,
 each landing in turn; whether an after-landing step several plans record runs
 **once**, after the last plan that landed; whether each release a plan records
-is **held** and run once at the end; and, for each plan whose Consent says not
+is **held** and run once at the end; and, for each plan whose consent says not
 to merge, whether to **land it this run**. Each is asked only when it applies,
-the shared worktree always. A yes is an override for this run only, written to
-each folder's Run log; a folder's Consent block never changes. After the last
-answer it asks nothing until it ends.
+the shared worktree always. A yes is an override for this run only, appended to
+each folder's `overrides` list; a folder's `consent` never changes. After the
+last answer it asks nothing until it ends.
 
 The fresh context is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. Under
@@ -255,20 +257,24 @@ you a clean window.
 
 It refuses a folder that is not committed on the integration branch, which after
 a normal approval it always is. If you wrote or moved one by hand, commit and
-push it first — or re-run `/vwf:change-plan` on it — then re-launch.
+push it first — or re-run `/vwf:change-plan` on it — then re-launch. It also
+stops, before it changes anything, on a repo still in the old markdown plan
+format — a `docs/plans/index.md` — and points you to the
+[migration guide](https://github.com/virajp/claude-plugins/blob/main/docs/plans/migrate.md);
+migrate, then re-run the same command.
 
 The first thing it does is run **`/vwf:doctor`** in your main checkout: a
 blocking finding stops the run there, before it has claimed anything, so the fix
 and a re-launch need no clean-up. Then it **claims the plan**: the row in
-`docs/plans/index.md` is set to `RUNNING` in a commit pushed on the integration
-branch, before any worktree exists. That pushed row is what makes a second
-session safe: another `/vwf:execute next` or `all` running at the same time sees
-the row taken and picks something else, and if two sessions race for the same
-row, the push that lands second is rejected, so that session re-reads the queue
-and re-picks — or, for a named folder, stops and tells you another session has
-it. A `RUNNING` row is never taken over, however long it has sat there; if the
-session that claimed it is gone, set the row back to `APPROVED` by hand in a
-commit on the integration branch, and the plan is runnable again.
+`docs/plans/index.json` is set to `RUNNING` in a commit pushed on the
+integration branch, before any worktree exists. That pushed row is what makes a
+second session safe: another `/vwf:execute next` or `all` running at the same
+time sees the row taken and picks something else, and if two sessions race for
+the same row, the push that lands second is rejected, so that session re-reads
+the queue and re-picks — or, for a named folder, stops and tells you another
+session has it. A `RUNNING` row is never taken over, however long it has sat
+there; if the session that claimed it is gone, ask the session to unclaim it —
+its worktree must be gone first — and the plan is runnable again.
 
 From there you are not needed. It creates one worktree (or, under `all` with the
 shared worktree answered yes, reuses the run's), runs the plan's unit gate and
@@ -296,12 +302,12 @@ size of the reports, not the size of the diff.
 
 ### 5. Read the report
 
-The final report is rendered from the run log rather than from memory — by then
-the run may have spanned dozens of dispatches. It gives you every unit with its
-outcome and commit, every `GAP:` a unit proceeded past and the assumption it
-took — including every unit whose owned paths the run widened, with the finding
-that widened them (read these) — the review findings that survived the cap, the
-gate results, and the worktree path.
+The final report is rendered from the run state in the folder's `index.json`
+rather than from memory — by then the run may have spanned dozens of dispatches.
+It gives you every unit with its outcome and commit, every `GAP:` a unit
+proceeded past and the assumption it took — including every unit whose owned
+paths the run widened, with the finding that widened them (read these) — the
+review findings that survived the cap, the gate results, and the worktree path.
 
 If everything is green it marks every backlog item the plan finishes `done` and
 every item it landed a piece of `Partially done` — the item stays open, with a
@@ -331,14 +337,14 @@ the end** with everything it needs — never mid-wave with "how should I proceed
 What you get is the same final report, plus a `BLOCKED` status naming the ruling
 that is missing. Resuming is two steps:
 
-1. Write the answer into `index.md` where the block names it — the ruling in the
-   decisions table, the scope in the unit file. Everything already green stays
-   green.
+1. Write the answer into the folder where the block names it — the ruling in the
+   `decisions` list of `index.json`, the scope in the unit file. Everything
+   already green stays green.
 2. Re-run the same command. It reads the status, sees a resume, and starts at
    the first unit that is not `green`.
 
-A context cap ends the same way: rows written, green units committed, the status
-set to `RUNNING — paused at wave <n> for context`, and the launch line to
+A context cap ends the same way: run state written, green units committed, the
+status set to `RUNNING — paused at wave <n> for context`, and the launch line to
 re-run. Nothing that has landed is redone.
 
 A **merge conflict at the landing** is the one hard halt: the worktree is kept,
@@ -349,9 +355,9 @@ yourself.
 A plan you decide **not** to run at all is retired the same way a completed one
 is: ask for it to be archived, and the session invokes
 [`plan-management`](../../plugins/vwf.md#vwfplan-management)'s `archive` verb,
-which moves the whole folder into `docs/plans/archived/` and marks its Status as
+which moves the whole folder into `docs/plans/archived/` and marks its status as
 archived-and-not-run, naming what it was before — gives its row in
-`docs/plans/index.md` the same `COMPLETE`-and-sweep edit a landing would — and
+`docs/plans/index.json` the same `COMPLETE`-and-sweep edit a landing would — and
 marks every backlog item the folder still has open `done` — or `Partially done`
 for an item the folder lists as a piece — so nothing is left waiting on a plan
 that will not run. A folder that lists an id as finished while its *Parked* list
