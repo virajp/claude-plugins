@@ -583,6 +583,10 @@ the unit could not proceed without; it blocks the unit and its dependents.
 
 - open · U9 edit · the plan does not say how `/vwf:execute` names a run's branch · the migration guide assumes the folder basename, often without its date prefix
 - open · U1 edit · the plan does not say which string values may be empty · `validate` requires non-empty only titles, the unit `file`, gap `text` and ids
+- open · U5 edit · the plan does not say how a row is removed from `docs/plans/index.json` (`plan.mjs` has no remove verb) · the sweep sets the whole `plans` list with one `set … --json`
+- open · U3 edit · the plan leaves the template's docs-unit `depends_on` open (the old table said "all") · the sample names the previous wave's unit — the review row, or U1 on a change plan
+- closed · U7 edit · `index.json` keeps one `commit` per unit and one `range` per review row, so an earlier fix commit and a late loop's `to` are kept only in the mempalace journal · the commit map reads the journal; with mempalace down such a commit is refused at map time, and a late re-run repeats once — closed by R2 round 1: the map now reads `git log` and `index.json` alone, a commit placed by its unit's `commit` or by the one unit whose `owns` covers it
+- open · U6 edit · the plan does not say where per-node round results go once the Run log is gone · the run journal alone holds them
 
 ## Run log
 
@@ -598,6 +602,29 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 1 | R1 | opus | 2 | pass | both round-1 findings resolved; CONTRACT clean; RULINGS clean | — |
 | 1 | U1 plan.mjs | — | — | commit | unit commit | e2afcba7 |
 | 1 | U9 migrate guide | — | — | commit | unit commit | a75dfa4f |
+| 2 | U8 readers | opus | 1 | pass | edit; 10 files; backlog ids from index.json rows, titles via plan.mjs get; recall/doctor/membership/memory/multi-repo/blueprint-authoring/rename-and-delete re-pointed. DECIDED: onboard-pipeline.md unchanged (names no plan index); wave-review findings in memory.md go to the runs journal | — |
+| 2 | U5 plan-management | opus | 1 | pass | edit; SKILL.md + plan-index.md rewritten for index.json; format test section; add refuses while docs/plans/index.md exists; resolve: archived folder w/o index.json satisfied. DECIDED: sweep = one set of the whole plans list; archive open-gap warning stays cycle-only; gaps_of appends to moved_to. GAP: row removal not specified — assumed one set of the plans list | — |
+| 2 | U3 template | opus | 1 | pass | edit; plan-folder.md rewritten (index.json section, change + cycle samples both validate, no unit header lines, no Run log); plan-interview.md items re-pointed to index.json keys. DECIDED: sample release id 'api'; folder requires/gaps_of keep paths; item 16 names consent.merge; section F 'has none'. GAP: docs unit depends_on open — assumed the previous wave's unit | — |
+| 2 | U4 planners | opus | 1 | pass | edit; change-plan + plan SKILL.md, plan-doc.md, plan-rulings-reviewer.md re-pointed: write index.json once, validate, prose-only index.md, add refusal stops at DRAFT. DECIDED: fixes before first green validate use Edit (set refuses an invalid file); unasked end_all_run written false | — |
+| 2 | U7 execute references | opus | 1 | pass | edit; 6 references + execute-stages.md + 5 agents re-pointed to index.json fields and the journal. DECIDED: a review row ends failed/unresolved, not blocked (not a schema value); contested residuals appended to gaps. DOCS FALSIFIED: execute/SKILL.md:671,735 (U6's) cites the old Run log section. GAP: an overwritten fix commit and a late loop's to are kept only in the journal — with mempalace down such a commit is refused and a late re-run repeats once | — |
+| 2 | U6 execute main | opus | 1 | pass | edit; execute SKILL.md, preflight.md, all.md, execute-runner.md: format test first, plan.mjs reads/writes, Run log gone, wave commit 'docs: plan state', release_levels [] old-shape. DECIDED: a failed set/append is a blocking-gap stop; resume skips green/skipped stages; validate-covered refusals point to validate; widened Owns = set units.<id>.owns + closed gap; reconcile hash in stages.reconcile.detail. GAP: per-node round results go to the run journal alone | — |
+| 2 | R2 | opus | 1 | findings(7) | github.md:278 [U8] sweep removes archived rows; SKILL.md:352 [U5] archive gap warning cycle-only; SKILL.md:186 [U5] gaps_of path as id; review-unit.md:60 [U7] commit map needs journal (decision 1); edit-unit.md:108 [U7]/SKILL.md:516,:112 [U6] widened-Owns gap state + --json; memory.md:368 [U8] journal status enum; fold >80 cols [U3,U4,U6,U7]. RULINGS: U4 departed from decision 8 (Edit before first green validate). CONTRACT clean | — |
+| 2 | U5 plan-management | opus | 2 | pass | edit fix of R2 findings: archive open-gap warning for both kinds; gaps_of write uses plans.<basename> | — |
+| 2 | U8 readers | opus | 2 | pass | edit fix of R2 findings: backlog id source states the sweep truthfully (github.md, SKILL.md); memory.md journal status uses the unit enum | — |
+| 2 | U4 planners | opus | 2 | pass | edit fix of R2: creation = Write + validate; a red validate re-Writes the whole file until green; from the first green validate only set/append; plan/SKILL.md refolded. Its UNRESOLVED line is a wording note ('once' in plan-doc.md), not a ruling — passed to R2 round 2 | — |
+| 2 | U6 execute main | opus | 2 | pass | edit fix of R2: --json for any non-string value; widened Owns set with --json; 3 lines refolded. Its UNRESOLVED lines name table rows, a code span and fenced commands over 80 cols that cannot fold — a note, not a ruling | — |
+| 2 | U3 template | opus | 2 | pass | edit fix of R2: prose lines refolded to 80 cols in plan-interview.md and plan-folder.md; code-block lines left. Its UNRESOLVED line asks whether the fold covers code blocks — a note, not a ruling; prose only (house practice) | — |
+| 2 | U7 execute references | opus | 2 | pass | edit fix of R2: commit map from git log + index.json only (by commit hash, else by covering owns; uncovered/split commit refused); late loop range from git log; widened-Owns gap closed + --json list; lines refolded. UNRESOLVED/GAP lines are width notes (byte vs char count; a one-line code span) — not rulings | — |
+| 2 | R2 | opus | 2 | findings(2) | round-1 items 1–7 RESOLVED; RULINGS clean (U4 honours decision 8); new: execute/SKILL.md:123 [U6] 'status is never set here' contradicts the list; plan-folder.md:40 [U3] template lacks the Write+validate creation step / re-Write on red. Cap reached → closing pass | — |
+| 2 | U3 template | opus | closing | pass | closing-pass fix: plan-folder.md:40 states the Write + validate creation step and the re-Write on red | — |
+| 2 | U6 execute main | opus | closing | pass | closing-pass fix: SKILL.md:123 names status.state/status.detail as plan-management's | — |
+| 2 | R2 | opus | closing | pass | closing check: both open findings RESOLVED; no regression | — |
+| 2 | U3 2830f331 | — | — | commit | unit commit |
+| 2 | U4 cfa764b4 | — | — | commit | unit commit |
+| 2 | U5 99d8d138 | — | — | commit | unit commit |
+| 2 | U6 2aba7573 | — | — | commit | unit commit |
+| 2 | U7 2235929e | — | — | commit | unit commit |
+| 2 | U8 b5d76f6a | — | — | commit | unit commit |
 
 ## Launch
 
