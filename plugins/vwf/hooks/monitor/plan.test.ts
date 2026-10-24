@@ -68,6 +68,23 @@ test("parses the plan title, status, units, run log and gaps", async () => {
   ]);
 });
 
+test("keeps the open and untagged gaps and leaves out the closed ones", async () => {
+  const plan = parseIndex(
+    INDEX.replace(
+      "- **Owns widened — U2.** a file that no unit\n  owned, widened by the orchestrator.\n",
+      "- open · U2 · the plan does not say which wins · took the ruling\n"
+        + "- closed · U2 · Owns widened to a nobody-owned file\n"
+        + "- Closed · U1 · resolved in round 2\n"
+        + "- U1 · an old entry with no state tag\n",
+    ),
+  );
+  expect(plan.gaps).toEqual([
+    "open · U2 · the plan does not say which wins · took the ruling",
+    "U1 · an old entry with no state tag",
+  ]);
+  expect(gapsOf("U2", plan).length).toBe(2);
+});
+
 test("strips terminal escape sequences from the parsed text", async () => {
   const plan = parseIndex(
     INDEX.replace("node edit;", "node \u001b]0;pwned\u0007\u001b[31medit;"),

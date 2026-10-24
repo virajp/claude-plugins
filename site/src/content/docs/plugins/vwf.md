@@ -2555,8 +2555,17 @@ Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
 gates and the derived priority, the consent block, the acceptance criteria the
 units cover, and the parked list — presented for *Approve & plan next*
-(mid-chain), *Approve only*, or *Reject*. Then the **hand-off**: the status is
-set to `APPROVED`; one row is appended to the one table of the base repo's
+(mid-chain), *Approve only*, or *Reject*. Once the folder is written, and
+while it is still `DRAFT`, the **rulings review** runs: a fresh, stateless
+`plan-rulings-reviewer` subagent reads the folder and the tree and returns the
+cases the rulings leave open — an unhandled input, a contradiction, an undefined
+term, a wrong citation, a falsified passage no unit owns, a gate line that
+cannot run, an unverified outside fact. `plan` asks you each one, one at a time,
+writes each answer into the folder, and runs a fresh reviewer again, until it
+returns `NO GAPS`, four rounds at most; a gap left after round four is ruled on
+or accepted, in the decisions table. These are the last questions the plan gets,
+since `execute` asks none — each one answered here is a gap the run never
+records. Then the **hand-off**: the status is set to `APPROVED`; one row is appended to the one table of the base repo's
 `docs/plans/index.md` — the folder, `Kind` `cycle`, the title, the target repo,
 the derived priority, `APPROVED`, the basenames it requires, the backlog ids;
 the backlog ids are marked `planned`, an edit to the project and nothing in the
@@ -2625,8 +2634,8 @@ every approved plan of either kind waits: one row per folder — `Folder`, `Kind
 a piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
 or `COMPLETE` and nothing else; the folder's own Status block keeps the run
 detail (`BLOCKED`, a pause, the worktree path), which the index never mirrors.
-`Gaps` reads `-` until the plan lands, then the count of entries in the folder's
-*Gaps surfaced during execution* — `0` when there are none. A later plan that
+`Gaps` reads `-` until the plan lands, then the count of `open` entries in the
+folder's *Gaps surfaced during execution* — `0` when none is open. A later plan that
 takes those gaps lists the folder on its `gaps_of:` frontmatter, and its
 hand-off sets the cell to `0 — moved to <that plan>`. An index without the
 column gets it from the next writer, with `-` in every row already there. The
@@ -2789,10 +2798,10 @@ What it does, by rule:
   runs only when its predecessor is green or explicitly skipped. Two placement
   rules hold, and the preflight refuses a fresh run that breaks either: a
   `review` row sits in a wave **strictly later** than every unit it covers — in
-  the same wave it would run before their commit and review nothing — and on a
-  cycle plan it covers every earlier-wave `code` unit no earlier row already
-  covers, so the range it reviews and the units it covers are one set; on a
-  change plan a row covers the units that land runnable code. A resume runs what
+  the same wave it would run before their commit and review nothing — and it
+  covers every earlier-wave unit no earlier row already covers, of any Kind, on
+  a cycle plan and a change plan alike, so the range it reviews and the units it
+  covers are one set. A resume runs what
   its folder says and takes neither placement refusal; it refuses two things of
   its own — a non-green `code` unit with no covering `review` row ahead of it,
   and an After landing table with no mode column or a step whose mode is not
@@ -2838,16 +2847,21 @@ What it does, by rule:
   wave-review loop-back; then the row's next round runs, engines first, over
   those fix commits alone. A row that covers `edit` units alone runs only
   `/security-review` and the security reviewer. A finding
-  on a file whose unit the row does not cover follows one rule: a security
-  finding is routed to that unit all the same, the widening recorded in the Run
-  log; a non-security finding is dropped and counted. **Security findings are
+  on a file whose unit the row does not cover, which only a folder written
+  before the coverage rule can hold, follows one rule: it is routed to that unit
+  all the same, whatever its stage, the widening recorded in the Run log, and is
+  never dropped. **Security findings are
   always fixed**, and so is any **breaking-released-API finding** (a change that
   would break a contract frozen under `apis/released/` — cap-exempt, never
   downgraded to a gap); other **code-review findings loop up to 4 rounds** per
-  row, whatever number of units it covers, after which any residual is recorded
-  as a gap marked `contested` — the blueprint/plan wasn't thorough enough. A row
-  is green when its last round is clean, or when it ended at the cap or the
-  convergence guard with its residuals `contested`. The row owns nothing and
+  row, whatever number of units it covers. A loop that ends at the cap or the
+  convergence guard with findings still open then runs one **closing pass**:
+  the owning units fix exactly those findings, and the two reviewers, with no
+  engine, check each one `RESOLVED` or `OPEN` and report only a regression the
+  fix caused. What stays open is recorded as a gap marked `contested` — at the
+  cap, the blueprint/plan wasn't thorough enough. A row is green when its last
+  round is clean, or when its closing pass closed or recorded every open
+  finding. The row owns nothing and
   commits nothing: its fix commits belong to the units fixed. A fix that lands
   after the last row covering its unit — from a wave review, the acceptance or
   UX pass, or a fix-first loop-back at the report — re-runs that row over the
@@ -2873,7 +2887,10 @@ What it does, by rule:
   alike — also runs under a **convergence guard**: a round that doesn't strictly
   reduce the finding count, or that resurfaces a finding an earlier round
   already fixed, ends the loop right there instead of burning the remaining
-  rounds. The residual is recorded as an **oscillation** gap that says so — the
+  rounds. Then the **closing pass** runs, for a review row and a wave review
+  alike: one fix aimed at the open findings alone, checked narrowly with no
+  engine, so no new layer of findings is raised. It is not a round and never
+  loops. What it leaves open is recorded as an **oscillation** gap that says so — the
   loop failed to settle, which is a different problem from a contract that left
   something open, and points you somewhere different when you go to fix it. A
   wave-review residual is marked `contested` and does not block: the plan and
@@ -2992,7 +3009,14 @@ not conflict on it. After that commit is pushed, the run calls
 graphify rebuild, which the task starts in the background — so under
 `/vwf:execute all` each plan starts after a refresh of the graph that the merge
 changed; a repo with no `code:graph` task skips the step. **Where the folder
-ends up depends on the gap list.** When no gap is open, the landing moves the
+ends up depends on the gap list.** Each entry of *Gaps surfaced during
+execution* starts with its state, `open` or `closed`. The run writes `closed`
+only for what it settled itself with no ruling owed — an Owns widened and the
+fix applied, a finding a later round or the closing pass resolved — and `open`
+for everything that still wants you: an assumption a unit took, a `contested`
+finding, an oscillation. An entry with no state word, from an older run, counts
+as `open`. When you rule on an entry, change its word to `closed` and add the
+ruling. When no entry is open, the landing moves the
 folder whole to `docs/plans/archived/` and the row's `Folder` points there — it
 is finished and the archive is its record. When any gap is open, the folder
 stays live at its path as the working record of what needs reconciling, the row
@@ -3585,9 +3609,9 @@ security half alone, since every change-plan unit is `edit` — is written only
 when the change lands runnable code — anything that executes rather than is read:
 shipped shell or hook scripts, build or tooling source, an installable package —
 with its reason in the decisions table. The row sits in a wave strictly later
-than the units it covers and still reviews the whole range since the previous
-row: a review finding on a file whose unit it does not cover is dropped and
-counted, a security finding is routed to that unit all the same. The sections
+than the units it covers, and covers every earlier-wave unit no earlier row
+covers — not only the units that land the code — since it reviews the whole
+range since the previous row. The sections
 the template marks *cycle plans only* — the slice, the acceptance criteria, the
 gaps — are omitted. Every unit sits in **wave 1** unless it has a named reason
 to wait — it edits a path an earlier unit creates or moves, or its verification
@@ -3598,6 +3622,12 @@ so each needless wave is a serial step. Units in a wave own **disjoint paths**
 rather than "update the gates", and the last two units are fixed: a docs unit
 and a gates unit, `NN-gates.md`, which runs the generators and the full gate and
 bumps nothing.
+
+Before the hand-off, while the folder is still `DRAFT`, the **rulings review**
+runs, the same as `plan`'s: a fresh `plan-rulings-reviewer` subagent returns the
+cases the rulings leave open, `change-plan` asks you each one, one at a time,
+writes the answer into the folder, and loops until `NO GAPS`, four rounds at
+most.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —

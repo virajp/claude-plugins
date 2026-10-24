@@ -173,6 +173,13 @@ except a one-line note the next attempt can recall. Approving writes
 `docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
 unit.
 
+Expect a few more questions before you walk away. A fresh reviewer reads the
+written folder against the tree and lists the cases the rulings leave open — an
+input no ruling handles, two rulings that disagree, a passage the change makes
+untrue in a file no unit owns. `change-plan` asks you each one, one at a time,
+and writes your answer into the folder, until the reviewer finds nothing, four
+rounds at most. Each answer here is a gap the run does not record later.
+
 Then it finishes the hand-off for you. A row for the plan is appended to the one
 table of `docs/plans/index.md` — the queue every plan of either kind sits in,
 this one with `Kind` `change` — reading `APPROVED`, with a **priority** it works
@@ -275,8 +282,10 @@ commits stages only what that unit owns, and unstages anything else that reached
 the index first, so one unit's work never rides another's commit. The two-round
 loop has one exception: a docs finding in a file no unit owns has nowhere to
 loop back to, so it goes to the docs unit, which is given that passage to own
-for the rest of the run, and you see it in the report as a `GAP:`. The last two
-units are fixed — a docs unit that runs
+for the rest of the run, and you see it in the report as a `GAP:`. When the two
+rounds end with findings still open, one closing pass fixes exactly those
+findings and a fresh reviewer checks each one; only what it leaves open reaches
+the report as `contested`. The last two units are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
 a gates unit, which runs the generators and the full gate and bumps nothing.
 Relay's docs unit is what actually deletes the hand-written step from the

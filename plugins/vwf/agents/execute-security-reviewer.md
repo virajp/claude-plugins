@@ -113,6 +113,22 @@ still finds it — then what the blueprint or the unit should have required and
 where; and report it on its own contract line. Still rate and report any
 concrete exploitable code issue under FINDINGS as usual.
 
+## Closing check
+
+A dispatch headed `## Closing check` is the **closing pass** of a loop that
+ended at the cap or the convergence guard
+(`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`). A security finding is never
+left open, so the pass lists none for you: it hands you the closing fix delta —
+the commits that aimed at the open review findings alone — and no engine
+output. Do not review the range again and raise nothing else: read the delta
+alone for a security defect it introduced. Skip mempalace. Output **only** this
+block, in place of the one under Return contract:
+
+```text
+REGRESSIONS:   # security defects the closing fix delta introduced, or the single line "none"
+- [severity] file:line (<unit>) — what the fix broke
+```
+
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window.

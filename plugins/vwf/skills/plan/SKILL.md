@@ -403,16 +403,16 @@ touches, its Depends-on, its **Test first** line, its ruling quoted from
 bootstrap units and the expand / backfill / contract units of `delta-checks.md`
 are units like any other, ordered before what depends on them. Then **one
 `Kind: review` row** after the last code unit and before the docs unit — Owns
-`—`, Depends on naming every code unit, Model `opus`, its `NN-review.md` the
+`—`, Depends on naming every earlier unit, Model `opus`, its `NN-review.md` the
 header lines and a Scope section as the template's `NN-review.md` shape says. An
 earlier `review` row is written only on a ruling item 10a recorded in the
 decisions table, and its Scope names that reason. Every `review` row sits in a
 wave strictly later than every unit it covers — a row in the same wave runs
 before their commit and reviews nothing — and it covers, directly or
-transitively through Depends on, every `code` unit in an earlier wave that no
-earlier `review` row already covers, so the commit range it reviews and the
-units it covers are one set. No code unit triggers a review by itself, and
-`/vwf:execute` refuses a plan whose code units no later `review` row covers, or
+transitively through Depends on, every unit in an earlier wave that no
+earlier `review` row already covers, of any Kind, so the commit range it
+reviews and the units it covers are one set. No code unit triggers a review
+by itself, and `/vwf:execute` refuses a plan whose code units no later `review` row covers, or
 whose rows break either placement rule. The two fixed final units — the docs
 unit and the gates unit, `NN-gates.md`, which runs the generators the plan names
 and passes the full wave gate and bumps nothing — are written as the template
@@ -462,7 +462,7 @@ is quoted in the unit file its *Unit* column names; every owned path appears in
 exactly one unit per wave; every acceptance criterion is covered by some unit's
 E2E test; every `code` unit is covered by a later `review` row, every `review`
 row's wave is strictly later than every unit it covers, it covers — directly or
-transitively — every earlier-wave `code` unit no earlier row covers, and a
+transitively — every earlier-wave unit no earlier row covers, of any Kind, and a
 `review` row placed
 before the last code unit names its reason; every unit's
 Verification names a gate line (a `review` row has none, by shape); every
@@ -477,6 +477,15 @@ derived priority matches what
 `plan-management priority <folder>` returns; every Consent row carries an
 answer, and no After landing step carries a mode other than `run`; the launch
 line names this folder.
+
+Then the **rulings review**, item 20 of
+`${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`: a fresh
+`plan-rulings-reviewer` over the `DRAFT` folder, each gap it returns asked of
+the user one at a time and written into the folder, looped until `NO GAPS`,
+four rounds at most. A gap that is a hole in the blueprint contract, not in the
+plan, is routed back through `/vwf:blueprint` as §4 routes any blueprint gap,
+and the folder waits for it. These are the last questions the plan gets —
+`/vwf:execute` asks none.
 
 ### 8. Hand off
 

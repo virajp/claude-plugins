@@ -106,8 +106,12 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   loop fixes the cap at two rounds because it reviews the contract — scope,
   rulings, completeness, docs — not the code, whose quality and security the
   covering `review` row loops on under the configured cap.
-- Findings still open when the loop ends are recorded as `contested` in the run
-  log with the rounds tried, and the wave proceeds to its gate. They are listed
+- Findings still open when the loop ends go through the **closing pass** in
+  `execute-stages.md` first: the owning units fix exactly those findings, and
+  a fresh wave reviewer, handed the open findings and the closing fix delta
+  alone, answers `RESOLVED` or `OPEN` for each and reports only a regression
+  the fix caused. What stays open is recorded as `contested` in the run log
+  with the rounds tried, and the wave proceeds to its gate. They are listed
   in the final report; they do not block, because the plan and its rulings are
   the contract and a reviewer's residual is an opinion about it.
 

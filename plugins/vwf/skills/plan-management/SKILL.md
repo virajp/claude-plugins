@@ -219,8 +219,9 @@ caller's next commit in whatever checkout the folder sits.
 
 The contract's *Writing a row — the completion* plus *The sweep*: in the main
 checkout, on the integration branch, after the merge has landed, set the
-folder's row `COMPLETE` and its `Gaps` cell to the count of entries in the
-folder's *Gaps surfaced during execution* — `0` when it holds none; re-point
+folder's row `COMPLETE` and its `Gaps` cell to the count of `open` entries in
+the folder's *Gaps surfaced during execution* — an entry with no state word
+counts as `open`, a `closed` one never counts — `0` when none is open; re-point
 `Folder` to `docs/plans/archived/<basename>` when that directory exists on disk in the folder's repo — the landing's
 `archive` moved it — and leave it at the live path otherwise; then run the
 sweep. Report the edit for the caller's
@@ -282,7 +283,8 @@ unfinished:
   record of the run, so a `failed`, `unresolved` or `skipped` row is work that
   never finished;
 - for a cycle plan, the "Gaps surfaced during execution" section of its
-  `index.md` has **unresolved entries**;
+  `index.md` has an **`open` entry** — one whose state word is `open`, or
+  that has none; a `closed` entry never warns;
 - an unarchived plan's `requires:` names this plan **and** this plan's Status
   block is not `COMPLETE`. An unarchived plan is any `APPROVED` or `RUNNING`
   row of the index, or any folder still sitting directly under `docs/plans/`;

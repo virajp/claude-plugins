@@ -97,7 +97,9 @@ export function parseIndex(raw: string): PlanSnapshot {
     detail: row["detail"] ?? "",
     commit: row["commit"] ?? "",
   }));
-  const gaps = bullets(section(text, /^## Gaps surfaced during execution\b/));
+  // A gap the run settled itself starts with `closed`; an untagged one is open.
+  const gaps = bullets(section(text, /^## Gaps surfaced during execution\b/))
+    .filter(gap => !/^closed\b/i.test(gap));
 
   return { title, status, units, log, gaps };
 }

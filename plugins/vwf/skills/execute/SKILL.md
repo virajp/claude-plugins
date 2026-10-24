@@ -215,10 +215,10 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   row. **A `review` row
   placed wrong** — its wave is not strictly greater than the wave of every
   unit it covers (a row reviews a commit range, and a unit in its own wave is
-  committed after it runs), or it fails to cover a `code` unit in an earlier
-  wave than itself that no earlier `review` row covers (the range would carry
-  that unit's commits while the coverage would not, so the row's range and
-  its coverage must agree) — naming the row and the unit. **An After landing
+  committed after it runs), or it fails to cover a unit of any Kind in an
+  earlier wave than itself that no earlier `review` row covers (the range
+  would carry that unit's commits while the coverage would not, so the row's
+  range and its coverage must agree) — naming the row and the unit. **An After landing
   table with no *Mode* column, or a step whose mode is not `run`** — an `ask`
   step included, a mode no longer issued — naming the planner that wrote it,
   `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`, to re-run and
@@ -394,9 +394,11 @@ otherwise.
   contested findings as an **oscillation** gap naming them and the rounds
   tried. The wave review's own loop is capped at two rounds under the same
   guard, per [edit-unit.md](references/edit-unit.md).
-  - Any review finding still unresolved when the loop ends — at the cap, or
-    early at the guard — is **documented as a gap** and execution continues; it
-    does not block.
+  - A loop that ends at the cap or the guard with findings open first runs the
+    **closing pass** in `execute-stages.md` — one fix aimed at the open set
+    alone, checked narrowly with no engine, never a round.
+  - Any review finding still unresolved after the closing pass is
+    **documented as a gap** and execution continues; it does not block.
   - The gap's diagnosis differs by exit. At the **cap**, "blueprint/plan was not
     thorough enough" — the contract left something open. At the **guard**, the
     contract is not the suspect and must not be named as one: the loop itself
@@ -412,6 +414,19 @@ otherwise.
   units can) → skip that unit **and its dependents**, document, continue — per
   [blocking and resume](references/blocking.md), where a unit's `UNRESOLVED:`
   is the same thing.
+- **Every gap entry carries its state.** Each bullet of the "Gaps surfaced
+  during execution" section starts with one word, `open` or `closed`, then
+  ` · ` and the line: `- open · <stage> · <what the plan left open> · <the
+  assumption taken>`. An entry is `closed` only when the run settled it with
+  no ruling owed — an Owns widened under the plan's Goal and the fix applied,
+  a finding a later round or the closing pass resolved, a citation corrected
+  — and its line ends with how. Everything that still wants a person — an
+  assumption a unit took, a `contested` finding, an oscillation, an
+  `UNRESOLVED:` — is `open`. An entry with no state word, written before this
+  rule, reads `open`. Only the `open` entries are the gap list: the count,
+  the archive rule and the reconciliation below read them alone. A person who
+  later rules on an entry changes its word to `closed` and ends its line with
+  the ruling.
 - **The backlog is never edited here.** The backlog project has one writer,
   `/vwf:backlog`; this command only calls it at the landing — `done` with the
   plan's `backlog:` ids, `partial` with its `backlog_pieces:` ids — and no
@@ -875,8 +890,9 @@ With `covers:`, also:
   `skipped`, its reason and no review command
 - **the implementation stamps written** — each `covers:` doc and the state it
   was set to, with why anything is short of `complete`
-- **the consolidated gap list** from the "Gaps surfaced during execution"
-  section of the folder's `index.md`, marking which came from a **cap** and
+- **the consolidated gap list** — the `open` entries of the "Gaps surfaced
+  during execution" section of the folder's `index.md`, plus one line counting
+  the `closed` ones — marking which came from a **cap** and
   which from the **convergence guard** — they point reconciliation at different
   places
 
@@ -902,7 +918,8 @@ the gap list holding no blocking gap, prepare the landing commit:
    on `yes`, and
    `plan-management status <folder> RUNNING "RUNNING — ready to land by hand on <branch>"`
    on `no`.
-3. **The folder.** On `yes`, when the gap list is **empty**, invoke
+3. **The folder.** On `yes`, when the gap list is **empty** — no `open`
+   entry, whatever number of `closed` ones — invoke
    `plan-management archive <folder>` in the worktree, with the declared
    preference **do not ask** — on any completion warning the verb raises, the
    folder is **not** archived: it stays live at its path, the backlog split
@@ -936,8 +953,8 @@ Then act on that consent row:
   invoke `plan-management status <folder> BLOCKED "<the conflicting files>"`
   there, report the files. When step 4 returns from the merge and push,
   invoke `plan-management complete <folder>` in the main checkout — it sets
-  the row `COMPLETE` and its `Gaps` cell to the count of entries in the
-  consolidated gap list, re-points `Folder` under `archived/` when step 3 moved
+  the row `COMPLETE` and its `Gaps` cell to the count of `open` entries in
+  the consolidated gap list, re-points `Folder` under `archived/` when step 3 moved
   the folder and leaves it at the live path otherwise, and runs the sweep, per
   the contract's *Writing a row — the completion* and *The sweep* in
   `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
@@ -1030,7 +1047,8 @@ that closes it, and offer nothing — **never silently rewrite either doc**:
 blueprint holes → `/vwf:blueprint` (the sweep re-stamps coverage); plan holes →
 `/vwf:plan` to re-derive the slice against the now-updated blueprint. Whoever
 closes a gap notes its resolution back into the `gaps` room so a later cycle's
-recall sees it as closed. Say too that once no gap is open, the folder that
+recall sees it as closed, and changes the entry's word to `closed` with the
+ruling. Say too that once no entry reads `open`, the folder that
 stayed live is retired by the `plan-management archive <folder>` request,
 which the person makes in prose, never by a typed command.
 

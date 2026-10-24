@@ -115,8 +115,8 @@ Merge both into one findings list. Every finding names the file and is
 labelled with the unit the dispatch's **unit map** gives for it — the unit
 whose commit last touched the file inside the range, covered by the row or
 not. Report **every** finding on a file in the dispatch's file list; the
-orchestrator, not you, re-dispatches each unit by its Kind and drops a
-non-security finding on an uncovered unit, recording the count. A file outside
+orchestrator, not you, re-dispatches each unit by its Kind, an uncovered
+unit's included, and records the coverage widened to it. A file outside
 the file list is outside the scope **unless its cause is inside the range** —
 a caller broken by an in-range change is a finding on that caller, labelled
 with the unit the branch-wide map gives for its file; the orchestrator decides
@@ -150,6 +150,26 @@ set to the **plan folder path**, tagged `<loop-id>/gap/<round>`, its content
 carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
 under-/mis-specified and where; and report it on its own contract line, not
 under FINDINGS.
+
+## Closing check
+
+A dispatch headed `## Closing check` is the **closing pass** of a loop that
+ended at the cap or the convergence guard
+(`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`). It hands you the open
+review findings, as the loop last reported them, and the closing fix delta — the
+commits that aimed at them alone — and no engine output. Do not review the
+range again and raise nothing new: for each listed finding, read the tree at the
+delta's `to` and answer whether it is fixed; then read the delta alone for a
+defect it introduced. Skip mempalace. Output **only** this block, in place of
+the one under Return contract:
+
+```text
+CLOSING:   # one line per listed finding, in the order given
+- RESOLVED file:line (<unit>) — <the finding, as given>
+- OPEN file:line (<unit>) — <why it still holds>
+REGRESSIONS:   # defects the closing fix delta itself introduced, or the single line "none"
+- [severity] file:line (<unit>) — what the fix broke
+```
 
 ## Return contract
 

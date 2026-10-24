@@ -61,11 +61,13 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    its hash named, since a commit no unit answers for cannot be reviewed. The
    map is unambiguous and never read from Owns, and the reviewers receive it.
    **The one rule for a finding on a file whose unit the row does not cover**
-   — a change plan's row covers only the units landing runnable code: a
-   **security** or **`[breaking-api]`** finding is never dropped or deferred —
-   it routes to that unit all the same, and the round's Run log row records
-   the coverage widened to it; any other finding is dropped with the
-   dropped-count clause. Record the range (`<from>..<to>`), the file list and
+   — the planners write every row to cover every earlier unit no earlier row
+   covers, so this fires only on a folder written before that rule: **every**
+   finding — security, `[breaking-api]` and review alike — is never dropped or
+   deferred. It routes to that unit all the same, and the round's Run log row
+   records the coverage widened to it, "n findings routed to uncovered units".
+   A review finding routed so counts under the row's round cap like any other.
+   Record the range (`<from>..<to>`), the file list and
    its unit map in the row's Run log row — **every round records its own
    `from..to`**: round 1 reviews the row's range as above, and each later
    round reviews only the fix commits of the round before it, per step 4. The
@@ -150,9 +152,9 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    touched that file in the range, read off the unit map the reviewers were
    handed; the orchestrator checks the label against the same map, then
    applies the one rule of step 1 to every finding whose unit the row does not
-   cover — security routed to that unit with the widening recorded,
-   non-security dropped with the dropped-count clause, "n findings on
-   uncovered units dropped", on the round's Run log row. For each unit
+   cover — routed to that unit, whatever its stage, with the widening recorded,
+   "n findings routed to uncovered units", on the round's Run log row. For
+   each unit
    remaining, re-dispatch it **by its Kind**, one dispatch per unit, the units
    serially in wave order, each re-committed per the staging discipline: a
    `code` unit's coder in fix-first mode, per the `code` contract in
@@ -171,11 +173,14 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    what keeps the two stages from rewriting each other's lines. Gating is
    per-stage and unchanged: every security finding and every `[breaking-api]`
    finding **must** be fixed (cap-exempt); other review findings loop under
-   `pipeline.review_round_cap` (residuals after the cap → documented as gaps,
+   `pipeline.review_round_cap` (residuals after the cap → the **closing pass**
+   in `execute-stages.md`, and what it leaves open → documented as gaps,
    marked `contested`). A round counts once, even though it ran two reviewers
    and may have re-dispatched several units. Before each new round, apply the
-   **convergence guard** in `execute-stages.md` — the `contested` exit and the
-   cap-exempt pause apply to the row exactly as they applied to a unit. The
+   **convergence guard** in `execute-stages.md` — the closing pass, the
+   `contested` exit and the cap-exempt pause apply to the row exactly as they
+   applied to a unit. The closing pass's check dispatches both reviewers with
+   the open findings and the closing fix delta alone, and runs no engine. The
    guard ignores a kept out-of-range finding a previous row or this row's
    earlier loop marked `contested`: it is that loop's residual, not this
    loop's oscillation.
@@ -184,7 +189,8 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    room `gaps`. Decide blocking vs non-blocking and act per the rules.
 6. **journal** — fill the row's Units table cell: Status `green` when the last
    round is clean, **or** when the loop ended at the cap or the convergence
-   guard with its residuals recorded `contested` — contested findings never
+   guard and its closing pass recorded what stayed open `contested` — or
+   closed it all — contested findings never
    block, per the Autonomous Rules, so the row is done, the next row's range
    starts after it, and a resume skips it; `blocked` / `failed` per the rules.
    The Commit cell stays empty — the row has no commit of its own, and the

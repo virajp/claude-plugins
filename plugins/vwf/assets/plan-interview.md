@@ -109,6 +109,9 @@ review is the only check. One is written only when the change lands runnable
 code — anything that executes rather than is read: shipped shell or hook
 scripts, build or tooling source, an installable package — and the decisions
 table says why.
+*Both kinds:* a row covers every unit in an earlier wave that no earlier row
+covers, of any Kind — not only the units that land code — so no finding in
+its range falls on a unit it does not cover.
 
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier
@@ -197,3 +200,18 @@ breaks either, names one id on both lists, or names a `source:` id on neither.
     revise or abandon. Only an explicit approve writes the folder — and the
     hand-off commits and pushes it — and only a later explicit yes after
     self-review sets the status to `APPROVED`.
+20. **The rulings review.** At self-review, once the planner's own checks are
+    fixed and while the folder is still `DRAFT`, dispatch a fresh
+    `plan-rulings-reviewer` subagent with the folder path and the repo root
+    alone. It returns `NO GAPS` or a numbered `GAPS:` list — the cases the
+    rulings leave open, which the run would otherwise meet as gaps. Ask the
+    user each gap **one at a time**, the same way as A–E, and write each answer
+    into the folder before the next question: a new or amended row of the
+    assumed decisions table, quoted in the unit file it reaches, an Owns
+    widened, or a Parked line. An answer that a case is accepted or out of
+    scope is a ruling too, and goes into the decisions table. Then dispatch a
+    fresh reviewer again, over the changed folder. Loop until it returns
+    `NO GAPS`, **four rounds at most**. When round four still returns gaps,
+    show the list and have the user rule on each one or accept it as an open
+    gap, written into the decisions table — never hand off with an unread
+    list.
