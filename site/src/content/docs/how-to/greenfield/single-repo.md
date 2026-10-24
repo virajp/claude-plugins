@@ -298,15 +298,16 @@ maps it to), written as the delta and nothing else. On a greenfield repo the
 delta is nearly everything, which is exactly why the dependency chain matters —
 `110-create-task` stands on the `task` entity, which nothing has built, so that
 entity becomes its own plan first, planned and approved behind its own gate and
-linked to the flow's plan by frontmatter.
+linked to the flow's plan by the `requires` list of its `index.json`.
 
-Relay reviews two plan folders in `docs/plans/`, in order — each an `index.md`
-plus one file per unit. Each unit names the failing test that defines "done",
-and the folder names every third-party package the run is allowed to install and
-carries a consent block — whether the run may merge on green, and what ships —
-so approving the plan is where you consent to each of those. Relay approves the
+Relay reviews two plan folders in `docs/plans/`, in order — each an `index.json`
+holding the plan's structured facts, an `index.md` holding its prose, and one
+file per unit. Each unit names the failing test that defines "done", and the
+folder names every third-party package the run is allowed to install and carries
+a consent block — whether the run may merge on green, and what ships — so
+approving the plan is where you consent to each of those. Relay approves the
 entity plan, then the flow plan; each is committed and pushed with its row in
-`docs/plans/index.md`, and the flow plan, the last of the chain, ends on a
+`docs/plans/index.json`, and the flow plan, the last of the chain, ends on a
 launch line for a fresh session — once nothing at its priority is left to plan.
 See [`/vwf:plan`](../../plugins/vwf.md#vwfplan).
 
@@ -318,7 +319,7 @@ See [`/vwf:plan`](../../plugins/vwf.md#vwfplan).
 
 This is the unattended stage, run in a **fresh session** — or, with
 `/vwf:execute all`, every runnable plan in turn, each in its own runner
-subagent, until one stops. `next` reads `docs/plans/index.md` and takes the
+subagent, until one stops. `next` reads `docs/plans/index.json` and takes the
 runnable cycle plan of lowest priority — the entity plan first, since the flow
 plan requires it. It claims the row, cuts a dedicated worktree — under `all`,
 the run may share one worktree across its plans, if you answer yes to its
@@ -330,12 +331,12 @@ against the whole slice. Nothing asks you anything unless it hits a pause
 condition — those are listed under
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
-It ends at a **final report**, read back out of the Run log in the plan folder:
-per-unit commits, coverage, the acceptance and UX results, the implementation
-stamps it wrote onto the blueprint docs, and the consolidated gap list. Relay's
-entity run reaches the report clean; the flow run carries one gap — the
-blueprint never said what happens to a task whose assignee leaves the team —
-recorded rather than guessed at.
+It ends at a **final report**, read back out of the run state in the plan
+folder's `index.json`: per-unit commits, coverage, the acceptance and UX
+results, the implementation stamps it wrote onto the blueprint docs, and the
+consolidated gap list. Relay's entity run reaches the report clean; the flow run
+carries one gap — the blueprint never said what happens to a task whose assignee
+leaves the team — recorded rather than guessed at.
 
 Both folders recorded consent to merge on green, so each run lands itself —
 merge and push through `/vwf:git-workflow`, the index row set `COMPLETE` — and

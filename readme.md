@@ -243,26 +243,30 @@ knowledge-graph layer, session handoff and recall, the
 and the Markdown and Context7 docs surfaces it absorbed. Both planners write the
 same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
 ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
-CI, docs, a refactor) — an `index.md` plus one file per unit, which each commits
-and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
-the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
-runs a folder of either kind unattended in a fresh context — a `code` unit
-through TDD and coverage, the code and security review at the plan's `review`
-rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
-runnable plan with the lowest `Priority` value from that table, of either kind,
-and runs it, running each after-landing step the plan recorded `run` and asking
-nothing at run time. No plan releases anything: each records a release level per
-project it changes, which the landing raises in `.config/releases.yaml`, and a
-release is always a hand step. `/vwf:execute all` runs every runnable plan in
-turn, highest priority first, each in its own `execute-runner` subagent, and
-stops at the first plan that stops — keeping one line per plan in the session,
-and asking its run-level questions (one shared worktree, deduped after-landing
-steps, landing a plan recorded not to merge) once, before the first plan. Beside
-both sits `/vwf:backlog`, the sole writer of the backlog project on the repo's
-forge — a GitHub Project named for the base repo, the prioritised list of work
-that cannot be picked up now, which every planning and landing command calls to
-move an item. It names **no** technology — no language, no framework, no cloud —
-which is what lets the rest of this list exist. `vwf@virajp-plugins`
+CI, docs, a refactor) — an `index.json` holding every structured fact, an
+`index.md` holding the prose, and one file per unit — which each commits and
+pushes at hand-off with a row in `docs/plans/index.json`, the one plan index, so
+the fresh session can see it. One node script, `plan.mjs`, reads, validates and
+writes both JSON files; a repo still on the old markdown format is pointed to
+the migration guide, `docs/plans/migrate.md`, and nothing runs until it is
+migrated. One executor runs both: `/vwf:execute <folder>` runs a folder of
+either kind unattended in a fresh context — a `code` unit through TDD and
+coverage, the code and security review at the plan's `review` rows, an `edit`
+unit through the wave review — and `/vwf:execute next` picks the runnable plan
+with the lowest `priority` value from that index, of either kind, and runs it,
+running each after-landing step the plan recorded `run` and asking nothing at
+run time. No plan releases anything: each records a release level per project it
+changes, which the landing raises in `.config/releases.yaml`, and a release is
+always a hand step. `/vwf:execute all` runs every runnable plan in turn, highest
+priority first, each in its own `execute-runner` subagent, and stops at the
+first plan that stops — keeping one line per plan in the session, and asking its
+run-level questions (one shared worktree, deduped after-landing steps, landing a
+plan recorded not to merge) once, before the first plan. Beside both sits
+`/vwf:backlog`, the sole writer of the backlog project on the repo's forge — a
+GitHub Project named for the base repo, the prioritised list of work that cannot
+be picked up now, which every planning and landing command calls to move an
+item. It names **no** technology — no language, no framework, no cloud — which
+is what lets the rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 

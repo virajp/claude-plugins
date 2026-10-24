@@ -113,9 +113,10 @@ identical step runs once, from the main checkout, after the last plan that
 landed (`references/all.md` in the execute skill) — and the author's next
 **restarted** session is on the plugin that just landed — which is why a plan
 editing a plugin the session running `/vwf:execute all` loads is asked, at its
-interview, for the Consent row End an `all` run after landing — `yes` ends the
-run there. Only the last line reaches users, and it is the one `CLAUDE.md`'s
-hard rule guards.
+interview, whether to end an `all` run after landing — recorded as
+`consent.end_all_run` in the folder's `index.json`; `true` ends the run there.
+Only the last line reaches users, and it is the one `CLAUDE.md`'s hard rule
+guards.
 
 The tracked version is always plain `X.Y.Z` — `p:plugins:check` fails a manifest
 carrying build metadata, and fails one whose version has a **13 or 17
