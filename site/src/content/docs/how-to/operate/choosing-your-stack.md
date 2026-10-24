@@ -55,25 +55,24 @@ stack for it, as a `site` or `webapp` project of its own beside the app. A
 native Apple app pins `swift-swiftui` instead — `app-framework/swiftui`, serving
 `mobile`, `tablet`, `desktop` and `auto` like Flutter plus `watch`, `tv` and
 `spatial`, from a committed Xcode project a person creates in Xcode, with the
-Xcode version pinned as `XCODE_VERSION` in the pack's own
-`.config/mise/conf.d/swiftui/mise.toml`, which `/vwf:setup` reads off your
-machine as it lands the pack — the pack's `values:` list gives each value a
-`detect` command — and asks for only when it cannot detect it. Pick it when the
-app ships on Apple platforms alone or reaches one Flutter does not. A Swift
-library on the `packages` platform pins `swift-package` — SwiftPM, swift-format
-and SwiftLint over the host's Swift toolchain, which must be on `PATH`; it
-carries no app target. A Kotlin/JVM library on the same platform pins
-`kotlin-library` — Gradle through the committed wrapper, ktlint and detekt, on
-the Temurin JDK mise pins; it carries no Android target and no Kotlin
-Multiplatform. A native Android app pins `kotlin-compose` — Jetpack Compose with
-Material 3 over the same Kotlin, Gradle, ktlint and detekt packs plus
-`framework/android`, whose SDK levels and emulator image `/vwf:setup` reads off
-the module build scripts as it lands the pack — serving `mobile`, `tablet`,
-`watch` (Wear OS), `tv` (Android TV and Google TV) and `auto` (Android Auto and
-Automotive OS, Car App Library templates declared alongside `mobile`) from one
-Gradle project; it does not serve `spatial` (Android XR). An Android library
-published as an AAR on `packages` pins `android-library`, the same stack without
-Compose. Anything else takes the **generate** entry — see below.
+Xcode your machine has selected. A repo that must build with one Xcode sets
+`XCODE_VERSION` in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml`
+and commits it. Pick it when the app ships on Apple platforms alone or reaches
+one Flutter does not. A Swift library on the `packages` platform pins
+`swift-package` — SwiftPM, swift-format and SwiftLint over the host's Swift
+toolchain, which must be on `PATH`; it carries no app target. A Kotlin/JVM
+library on the same platform pins `kotlin-library` — Gradle through the
+committed wrapper, ktlint and detekt, on the Temurin JDK the repo's toolchain
+pins; it carries no Android target and no Kotlin Multiplatform. A native Android
+app pins `kotlin-compose` — Jetpack Compose with Material 3 over the same
+Kotlin, Gradle, ktlint and detekt packs plus `framework/android`, whose SDK
+levels live in the module build files, where the repo's setup task reads them —
+serving `mobile`, `tablet`, `watch` (Wear OS), `tv` (Android TV and Google TV)
+and `auto` (Android Auto and Automotive OS, Car App Library templates declared
+alongside `mobile`) from one Gradle project; it does not serve `spatial`
+(Android XR). An Android library published as an AAR on `packages` pins
+`android-library`, the same stack without Compose. Anything else takes the
+**generate** entry — see below.
 
 **A mobile app picks between three.** Pick `kotlin-compose` when the app is
 Android-only or Android-first, or reaches Wear OS or Android TV, which Flutter's
@@ -299,12 +298,16 @@ replacing one.
 ### Where a language server comes from
 
 Most of what a bundle materializes is plain files in your repo, which every
-collaborator gets with a `git pull`. A **language server** cannot be — it is a
-plugin-manifest feature no project file can express — so stackgen writes one
-small local plugin on your machine and prints the two commands that register it,
-rather than running them. It is user-scoped, so it serves every repo you work in
-and **your collaborators get none of it**: their editor tooling is their own
-machine's business. Expect to do that once, and to be asked before it happens.
+collaborator gets with a `git pull`. The toolchain a stack needs — its tool
+pins, gates and their tasks — is not a pack's: stackgen asks
+[bootstrap](https://github.com/virajp/bootstrap) for those tools, behind its own
+consent line, and bootstrap's `mise run setup:configs` writes them. A **language
+server** cannot be — it is a plugin-manifest feature no project file can express
+— so stackgen writes one small local plugin on your machine and prints the two
+commands that register it, rather than running them. It is user-scoped, so it
+serves every repo you work in and **your collaborators get none of it**: their
+editor tooling is their own machine's business. Expect to do that once, and to
+be asked before it happens.
 
 ## See also
 

@@ -3,10 +3,10 @@ name: Swift · package
 axis: project
 kind: language-bundle
 components:
-- language/swift@0.2.1
-- package-manager/swiftpm@0.3.1
-- toolchain-gate/swift-format@0.1.3
-- toolchain-gate/swiftlint@0.2.1
+- language/swift@1.0.0
+- package-manager/swiftpm@0.3.2
+- toolchain-gate/swift-format@1.0.0
+- toolchain-gate/swiftlint@1.0.0
 platforms:
 - packages
 ---
@@ -25,13 +25,12 @@ other packages and apps through SwiftPM, tagged with semantic versions.
   blocks when it is not. **sourcekit-lsp** ships with it and is the language
   server.
 - **SwiftPM** owns the manifest and the lockfile. No pack lands
-  `Package.swift` — `swift package init --type library` creates it; the tasks
-  resolve, update and clean through `swift package`.
+  `Package.swift` — `swift package init --type library` creates it;
+  `mise run setup` resolves and `mise run setup --upgrade` updates through
+  `swift package`.
 - **swift-format** (`swift format`, from the toolchain) formats, and
   **SwiftLint**, through mise, lints. Both read their configuration from
-  `.config/`. Each pack ships its own subtasks — `code:format:swift-format`
-  and `code:lint:swift-format`, and `code:lint:swiftlint` — which the repo's
-  `code:format:all` and `code:lint:all` run.
+  `.config/`. Both are bootstrap's, and `mise run code` runs them.
 
 ## Multi-platform availability
 

@@ -62,21 +62,17 @@ relative path, no script — and marks its non-default states as
 
 **Loopback only.** The review server binds `127.0.0.1` on an ephemeral port,
 serves only the canvas directory, carries no auth and no TLS — a surface for
-one person on one machine, never a deployment. It needs `node`, which the
-repo's toolchain manager provides: every shaped repo pins it in
-`.config/mise/conf.d/_base/`, and `MISE_ENV=dev mise run setup:all` installs
-it — through the repo-local mise skill where the repo has one.
+one person on one machine, never a deployment. It needs `node` on `PATH`,
+which the repo's toolchain provides: `mise run setup` installs it.
 
 **The plugin this pack requires.** Authoring runs through the `taste-skill`
-plugin's design skills, so this pack ships the `setup/ai/claude-code`
-subtask, which the repo's `setup:ai:all` runs: it installs
-`taste-skill@taste-skill` at user scope unless it is already installed at user
-scope, or at local or project scope for this repo. The pack
-vendors none of that doctrine and vwf depends on none of it. Every skill here
-that needs the plugin checks for it first and halts with the one sentence
-below when it is absent:
+plugin's design skills, so this pack lists it under `## Claude plugins`
+below, and `mise run setup` installs it. The pack vendors none of that
+doctrine and vwf depends on none of it. Every skill here that needs the
+plugin checks for it first and halts with the one sentence below when it is
+absent:
 
-> `taste-skill` is not installed. Run `mise run setup:ai:all`, which installs
+> `taste-skill` is not installed. Run `mise run setup`, which installs
 > `taste-skill@taste-skill` at user scope, then restart the session.
 
 **The `design_system_id` is the canvas path** —
@@ -92,3 +88,7 @@ constructs one from configuration, and it never learns which tool answered.
 The fourth skill, `design-session`, is the tool's authoring surface — the one
 a user invokes — and vwf never calls it. Its `scripts/serve.mjs` lands beside
 it, a single-file Node program with no dependencies.
+
+## Claude plugins
+
+- `taste-skill@taste-skill` — marketplace `Leonxlnx/taste-skill`, user scope.

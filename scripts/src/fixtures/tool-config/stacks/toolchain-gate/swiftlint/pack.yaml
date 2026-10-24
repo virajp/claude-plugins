@@ -1,0 +1,11 @@
+name: SwiftLint
+summary: The correctness gate for Swift — SwiftLint through mise, strict, with
+  every layout rule left to swift-format.
+version: 0.2.1
+type: toolchain-gate
+kind: language-bundle
+axis: repo
+# Topic 10 of the language-bundle bar, the lint half. NOT a repo gate:
+# this linter is meaningful only for one toolchain, so it belongs to its
+# language's bundle — and to the Swift app bundle, which reuses it unchanged.
+harness: n/a

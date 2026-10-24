@@ -95,6 +95,24 @@ platform is the generic frame used when no OS is known.
 | spatial  | `visionos`    | 1280×720  | glass window, window bar below                |
 | spatial  | `androidxr`   | 1280×720  | panel with a top bar                          |
 
+Sources:
+
+- Android `mobile` 412×915: unconfirmed. No vendor page states it; the Compose
+  phone preview is 411×891 (the `tablet` link below).
+- Android `tablet` 800×1280 (the Compose 1280×800 dp tablet, portrait):
+  https://developer.android.com/reference/kotlin/androidx/compose/ui/tooling/preview/PreviewScreenSizes
+- Wear OS 227×227, round (the large round device):
+  https://developer.android.com/reference/kotlin/androidx/wear/tooling/preview/devices/WearDevices
+- Android TV 960×540, margin 48 at the sides and 27 top and bottom:
+  https://developer.android.com/design/ui/tv/guides/styles/layouts
+- Android Auto 800×480 (the head unit default; 1280×720 is one more option):
+  https://developer.android.com/training/cars/testing/dhu
+- CarPlay 800×480 (a common CarPlay screen size):
+  https://developer.apple.com/design/human-interface-guidelines/carplay
+- watchOS 208×248 (the 46mm watch, 416×496 pixels at @2x; Apple's live page no
+  longer shows the table, so this is the September 2025 copy):
+  https://web.archive.org/web/20250925130912/https://developer.apple.com/design/human-interface-guidelines/layout
+
 On a device platform whose resolved OS list has **two or more** entries, every
 coded frame carries the `device` tweak: its values are the OS tokens of the list
 in order, its default is the primary, and switching it redraws the same coded

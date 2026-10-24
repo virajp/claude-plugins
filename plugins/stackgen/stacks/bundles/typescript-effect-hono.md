@@ -4,9 +4,9 @@ axis: project
 kind: language-bundle
 components:
 - language/typescript@0.4.0
-- package-manager/pnpm@0.6.2
+- package-manager/pnpm@1.0.0
 - toolchain-gate/tsconfig@0.2.2
-- toolchain-gate/eslint@0.3.4
+- toolchain-gate/eslint@0.3.5
 - framework/effect@0.1.0
 - framework/hono@generated
 platforms:

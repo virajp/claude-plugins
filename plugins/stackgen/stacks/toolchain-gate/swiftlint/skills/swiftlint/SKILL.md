@@ -17,10 +17,8 @@ paths:
 
 # SwiftLint
 
-SwiftLint is the Swift correctness gate. It is installed through mise
-(`aqua:realm/SwiftLint`, pinned at an exact version in
-`.config/mise/conf.d/swiftlint/mise.toml`), configured at
-`.config/swiftlint.yml`, and run strict: a warning fails the gate exactly as an
+SwiftLint is the Swift correctness gate. It is installed through mise, as
+bootstrap pins it, configured at `.config/swiftlint.yml`, and run strict: a warning fails the gate exactly as an
 error does. Moving the pin is its own change, with the whole-tree lint run and
 its fixes in the same commit — a new release adds rules, and strict mode fails
 on them.
@@ -30,8 +28,7 @@ on them.
 Through the task library, so the gate and a developer run the same command:
 
 ```bash
-mise run code:lint:swiftlint   # SwiftLint alone
-mise run code:lint:all         # every lint subtask, as the hook runs it
+mise run code:lint   # every linter, SwiftLint among them, as the hook runs it
 ```
 
 Directly:

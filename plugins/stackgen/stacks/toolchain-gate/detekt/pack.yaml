@@ -1,7 +1,7 @@
 name: detekt
 summary: The correctness gate for Kotlin — detekt's CLI through mise, building
   on its default rules, with every layout rule left to ktlint.
-version: 0.1.0
+version: 1.0.0
 type: toolchain-gate
 kind: language-bundle
 axis: repo

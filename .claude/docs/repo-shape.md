@@ -127,7 +127,8 @@ this repo's own, hand-edited config; the shape `stackgen:tool-config` lands has
 four such hooks calling `code:format:all --fix`, `code:lint:all --fix`,
 `code:check:all` and `code:sec --staged`, each `…:all` task calling every
 subtask beside it — dprint and shfmt under `code/format/`, the house linter,
-shellcheck and actionlint under `code/lint/`, plus each pack's own.
+shellcheck and actionlint under `code/lint/`. No pack adds one: a stack's own
+gates are bootstrap's.
 
 - **`p:plugins:marketplace`** — generates **both** marketplace manifests from
   the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -162,15 +163,15 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (seven assertions in one rule, the
-  landed-tree ones also run over a pack's `templates/` tier, over
-  `stackgen:tool-config`'s `skills/tool-config/assets/` and
-  `skills/tool-config/templates/` trees, each landed whole at the repo root and
-  admitting the git and graphify ignore files, `.vscode/` and the repo-local
-  mise skill — `.claude/skills/mise/SKILL.md`, nothing else under `.claude/` —
-  and over `/vwf:init`'s `skills/init/assets/<name>/` trees against init's own
-  allowlist (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`,
-  `.github/ISSUE_TEMPLATE/`): exec bit *and* a known shebang on every file under
+  payload tier being materializable as-is** (six assertions in one rule, the
+  landed-tree ones also run over `stackgen:tool-config`'s
+  `skills/tool-config/assets/` and `skills/tool-config/templates/` trees, each
+  landed whole at the repo root and admitting the git and graphify ignore files,
+  `.vscode/` and the repo-local mise skill — `.claude/skills/mise/SKILL.md`,
+  nothing else under `.claude/` — and over `/vwf:init`'s
+  `skills/init/assets/<name>/` trees against init's own allowlist
+  (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`):
+  exec bit *and* a known shebang on every file under
   `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
   same two on every `hooks/*.sh`, which the host execs from a bare path in
@@ -179,27 +180,16 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   whose sibling tier — the root files vwf writes, `CLAUDE.md` and
   `mempalace.yaml` — no pack may land; a **CI workflow refused inside
   `.github/`**, since a pack names the task CI runs and never the workflow;
-  every `conditional:` entry in the pack's `pack.yaml` naming a relative path or
-  glob with no `..` segment that matches at least one file under `config/` —
-  resolved by the checker's own walk, so `**` enters dot-directories — and a
-  `when:` of exactly one known axis, `forge` or `secrets`, with a value that
-  axis takes, `secrets: none` refused, since an unknown axis is one no caller
-  answers and its file lands everywhere silently; the pack's two doctor-read
-  facts in the shapes their readers trust — every `binaries` entry a bare name
-  or a map of exactly `name` and an optional non-empty `probe`, and `lockfile` a
-  non-empty list of relative paths or globs with no `..` — and a `tool-config:`
-  or `machine_env:` key refused outright, since a pack now ships files and `@@`
-  names instead; an optional `values:` list of entries carrying exactly `name`
-  (upper snake, unique, never `FORMAT` or a tool-config global name), `detect`
-  and `question`, every declared name read in the pack's `templates/`; every
-  `@@` tag in a template tree one the engine reads, tool-config's own held to
-  the global names and a pack's to those plus its `values:` names; and no mise
-  `conf.d` fragment and no `pre-commit.d` file in `config/`, a pack's mise files
-  in its own `templates/.config/mise/conf.d/<slug>/` alone, a subtask's leaf its
-  own slug and never a universal subtask's, no reserved slug (`all`, `ai`,
-  `_base`), and no pack file at a path tool-config ships, bar a `#PLACEHOLDER`
-  slot); **strict-YAML frontmatter** (every skill and agent a plugin ships,
-  every repo-local skill a tool-config asset tree lands, and every
+  under `.config/`, an allowlist — only a `test/` task or a `p/_project/` task,
+  since the toolchain is bootstrap's — and no pack `templates/` tier; the pack's
+  two doctor-read facts in the shapes their readers trust — every `binaries`
+  entry a bare name or a map of exactly `name` and an optional non-empty
+  `probe`, and `lockfile` a non-empty list of relative paths or globs with no
+  `..` — and a `tool-config:`, `machine_env:`, `values:` or `conditional:` key
+  refused outright, since nothing reads any of them; and every `@@` tag in
+  tool-config's `templates/` one the engine reads, held to the global names);
+  **strict-YAML frontmatter** (every skill and agent a plugin ships, every
+  repo-local skill a tool-config asset tree lands, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
   larger half, and the half that actually lands in a user's repo; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under
@@ -281,11 +271,11 @@ shellcheck and actionlint under `code/lint/`, plus each pack's own.
   suite also runs `/vwf:execute`'s action log for real — `execute-log.test.ts`
   spawns `log.mjs` and the `action-log.sh` hook over a temp `$VWF_LOG_ROOT` —
   and is the gate on `stackgen:tool-config`'s shipped node script:
-  `tool-config-render.test.ts` and `tool-config-pack.test.ts` spawn it in temp
-  repos against a fake `mise`, through the shared harness and the golden
-  greenfield render under `scripts/src/fixtures/tool-config/`, and
-  `tool-config-template.test.ts` and `tool-config-values.test.ts` unit-test the
-  template engine and the values reader.
+  `tool-config-render.test.ts` spawns it in temp repos against a fake `mise`,
+  through the shared harness and the golden greenfield render under
+  `scripts/src/fixtures/tool-config/`, and `tool-config-template.test.ts` and
+  `tool-config-values.test.ts` unit-test the template engine and the values
+  reader.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.

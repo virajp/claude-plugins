@@ -50,7 +50,7 @@ Two more grammars the id reaches, neither of which tolerates the same
 characters:
 
 - **A `#USAGE` flag name.** `#USAGE flag "--virajp.dev"` is not a flag
-  name a caller can type as written, and the flag is how `setup:all`
+  name a caller can type as written, and the flag is how `setup`
   reaches one member.
 - **A shell alias key.** `[shell_alias]` entries become ordinary shell
   aliases, and `setup-virajp.dev` is not a name every shell will accept as

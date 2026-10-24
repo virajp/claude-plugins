@@ -9,26 +9,20 @@ polyglot repo acquires one gate per language.
 the lockfile pinned, or CI and a developer's machine can disagree about what
 passes. See the `uv` package-manager pack.
 
-**`--fix` is a flag, not the default.** `code:lint:ruff` and
-`code:format:ruff` check by default and mutate only when asked, so the same
-task is a gate in CI and a tool locally.
+**`--fix` is a flag, not the default.** The gate checks by default and
+mutates only when asked, so the same task is a gate in CI and a tool
+locally.
 
 ## The seam with the repo formatter
 
-**This pack owns two subtasks, `code/format/ruff` and `code/lint/ruff`**, and
-nothing else in the task tree. The repo's `code:format:all` and
-`code:lint:all`, which tool-config renders, call every subtask by name — so
-dprint, through the universal `code:format:dprint`, formats every file type it
-has a plugin for across the whole repo, and ruff formats Python, without
-either file knowing of the other.
-
-**Both subtasks take an optional file list, and the empty case is the whole
-tree.** That is the whole pre-commit story for this pack: it ships **no
-fragment**, because the gate config's `format` and `lint` hooks call
-`code:format:all` and `code:lint:all` with the staged files, and each passes
-them on. `ruff format` narrows to the Python files it is given; `ruff check`
-stays whole-project either way, since its per-file settings resolve from the
-project root and a staged subset would answer differently from CI.
+**This pack ships no task.** The ruff tasks, the repo formatter and the
+pre-commit hooks are bootstrap's. `mise run code:format` formats every file
+type the repo formatter has a plugin for, and ruff formats Python, without
+either knowing of the other. `mise run code:lint` runs `ruff check`. The
+hooks pass the staged files: `ruff format` narrows to the Python files it is
+given; `ruff check` stays whole-project either way, since its per-file
+settings resolve from the project root and a staged subset would answer
+differently from CI.
 
 ## Not yet reachable
 

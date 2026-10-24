@@ -18,21 +18,18 @@ repo's tasks wrap the rest, so a contributor and CI run the same thing.
 
 ## The task wiring
 
-The repo's tasks are the interface; the tools behind them are detail. This
-pack ships the five dependency subtasks; the **ktlint** and **detekt** packs
-ship the format and lint ones, and the repo's `code:format:all`,
-`code:lint:all` and `setup:deps:<verb>:all` call every subtask by name.
+The repo's tasks are the interface; the tools behind them are detail. The
+toolchain bootstrap syncs ships them; this pack ships none.
 
 | Task | Runs |
 | --- | --- |
-| `setup:deps:install:kotlin` | resolves every project against its lockfile; with no lockfile, `--write-locks` writes them — `--frozen` refuses instead |
-| `setup:deps:outdated:kotlin` | `./gradlew dependencyUpdates`, the `com.github.ben-manes.versions` plugin's report |
-| `setup:deps:upgrade:kotlin` | every project re-locked under `--write-locks`, after the catalog edit |
-| `setup:deps:audit:kotlin` | grype over every `*gradle.lockfile` — advisory |
-| `setup:deps:cleanup:kotlin` | `./gradlew clean` |
+| `mise run setup` | resolves every project against its lockfile, and fails when one disagrees |
+| `mise run setup --upgrade` | re-locks every project, after the catalog edit — the one writer of the lockfiles |
+| `mise run code` | the format and lint gates, ktlint and detekt among them |
 
-Each skips itself with a warning when there is no executable `./gradlew`,
-except `install --frozen`, which fails.
+Beside them, plain Gradle: `./gradlew dependencyUpdates` prints the
+outdated report of the `com.github.ben-manes.versions` plugin, and
+`./gradlew clean` removes the build output; the lockfiles stay.
 
 ## Warnings
 

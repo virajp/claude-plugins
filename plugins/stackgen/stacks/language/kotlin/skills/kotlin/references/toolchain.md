@@ -4,19 +4,19 @@ Three things build a Kotlin/JVM library, and each comes from exactly one place.
 
 | Piece | Comes from | Pinned in |
 | --- | --- | --- |
-| The JDK | mise (`java`, Temurin, the LTS line) | `.config/mise/conf.d/kotlin/mise.toml` |
+| The JDK | the toolchain bootstrap syncs (Temurin, the LTS line) | bootstrap's pins |
 | Gradle | the committed wrapper | `gradle/wrapper/gradle-wrapper.properties` |
 | The Kotlin compiler | the Kotlin Gradle plugin | the version catalog |
 
 Nothing else installs them: no system Gradle, no `kotlinc` on `PATH`, no
-`brew install openjdk`. A contributor runs `mise install` and `./gradlew`, and
-gets exactly what CI gets.
+`brew install openjdk`. A contributor runs `mise run setup` and `./gradlew`,
+and gets exactly what CI gets.
 
 ## The JDK
 
-- mise pins Temurin on the current LTS line, so the build runs on a supported,
-  long-lived JDK. A move to the next LTS is a deliberate edit of that file,
-  reviewed as its own diff.
+- The toolchain bootstrap syncs pins Temurin on the current LTS line, so the
+  build runs on a supported, long-lived JDK. A move to the next LTS is
+  bootstrap's change, not this repo's.
 - JDK 25 runs only on Gradle 9.1.0 or later, so the committed wrapper is 9.1
   or newer; an older wrapper fails before the build configures.
 - The JDK the build **runs on** is not the bytecode it **emits**. Set the
@@ -53,8 +53,8 @@ gets exactly what CI gets.
   hook and CI step calls `./gradlew`, never a bare `gradle`.
 - The wrapper is upgraded with `./gradlew wrapper --gradle-version <v>` —
   run twice, so the second run regenerates the scripts with the new version —
-  and the `distributionSha256Sum` it writes stays in the properties file;
-  `setup:deps:install:kotlin --frozen` fails without it.
+  and the `distributionSha256Sum` it writes stays in the properties file, so
+  CI never runs an unverified Gradle distribution.
 - `gradle-wrapper.jar` runs on every `./gradlew`, so CI validates it first —
   `gradle/actions/wrapper-validation`, or `gradle/actions/setup-gradle`,
   which validates it built in — before any Gradle step.
@@ -73,14 +73,9 @@ gets exactly what CI gets.
 ## The language server
 
 `kotlin-lsp` is JetBrains' Kotlin language server; this pack declares it as
-the `kotlin-lsp` server, started as `mise x -- kotlin-lsp --stdio`. mise
-installs it in the development environment alone, from
-`.config/mise/conf.d/kotlin/mise.dev.toml`: it publishes no GitHub release
-asset, so the `http:` backend reads the version from the release tag and
-downloads the JetBrains archive, checksum-verified, for macOS and Linux
-(arm64 and x64), renaming its launcher to `kotlin-lsp`. CI never loads that
-file, so the pin stays `latest` and `mise install` moves it forward. On
-Windows mise has no url for it, and it is installed by hand. `mise x --` runs
+the `kotlin-lsp` server, started as `mise x -- kotlin-lsp --stdio`. The
+toolchain bootstrap syncs installs it in the development environment alone,
+for macOS and Linux (arm64 and x64); CI never installs it. `mise x --` runs
 it inside the repo's environment, so it sees the pinned JDK. It imports the
 Gradle build itself; a build that does not configure from the command line
 does not configure for the server either.

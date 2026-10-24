@@ -35,7 +35,7 @@ production from the cloud provider's own store, where neither mise nor fnox
 runs. No deployed environment can fall back to a development value, because
 no deployed environment asks fnox for anything.
 
-The shipped config is a single root `[secrets]` block. The profile shape — a
+The seed config is a single root `[secrets]` block. The profile shape — a
 development profile and a `ci` profile, selected by `FNOX_PROFILE` — is the
 repo's setup tool's (bootstrap's) to render, not this pack's.
 
@@ -48,8 +48,8 @@ its environment. fnox holds no CI credential and ships nothing for a runner.
 
 ## Clause 3 — onboard and offboard at a stated cost
 
-**Onboarding**: install the pinned CLI (`mise install`), run
-`mise run setup:secrets` to confirm the CLI and `fnox.toml` are in place, then
+**Onboarding**: run `mise run setup`, which installs the pinned CLI and
+confirms the CLI and `fnox.toml` are in place, then
 populate each declared name in your own keychain —
 `fnox set NAME --provider keychain` — or authenticate to the cloud store a
 reference names. Nothing is committed and nobody else acts; the cost is one

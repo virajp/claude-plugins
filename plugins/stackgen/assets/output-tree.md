@@ -22,10 +22,7 @@ The facts the template payload carries for its callers, all passed through
 from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 `language_facts` per language — `binaries` entries included, in either form,
 a bare name or a `{ name, probe }` map; and `package_manager` and, beside
-it, `lockfile`, the paths or globs doctor's resolve check reads. A value
-only the machine can answer is not a fact here: it is a `@@NAME@@` tag in
-the pack's `templates/`, filled when tool-config renders them, and found by
-the caller through the pack's `values:` list.
+it, `lockfile`, the paths or globs doctor's resolve check reads.
 
 **`.mcp.json` was excluded and is not any more**, decided at Wave D. The
 reasoning that changed: an MCP server is genuinely a project file — this
@@ -110,76 +107,54 @@ the directory and the registration down only when the last key goes.
 ## The fourth target — repo config files
 
 `.claude/`, `.mcp.json` and the local plugin are the three targets above, and
-a repo's own configuration is none of them. A gate's config file and a
-subtask are repo files a component genuinely owns, so a
-pack declares them in a **`config/` tree that mirrors the repo root**
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
+a repo's own configuration is none of them. The toolchain of a repo — tool
+pins, gates, gate configs, generic tasks, pre-commit hooks — is bootstrap's,
+and stackgen asks bootstrap for it (the stack-template skill's bootstrap
+handoff). What is left is the repo-specific part, which a component
+genuinely owns, so a pack declares it in a **`config/` tree that mirrors the
+repo root** (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 
 ```text
 stacks/<type>/<slug>/
 └── config/              # tree mirrors the repo root
 ```
 
-`config/.config/mise/tasks/code/lint/swiftlint` lands at
-`<repo>/.config/mise/tasks/code/lint/swiftlint`, the same way `skills/`
-mirrors `.claude/skills/`. A pack's **`templates/`** tree mirrors the root
-the same way, but it is not this tier's: `stackgen:tool-config` renders it
-with the pack's `pack` call, and the materializer copies nothing from it
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
+`config/.config/mise/tasks/test/golden` lands at
+`<repo>/.config/mise/tasks/test/golden`, the same way `skills/` mirrors
+`.claude/skills/`.
 
-**What the tier covers**, since it is wider than the toolchain manager it
-started as:
+**What the tier covers is an allowlist**, and `p:plugins:check` rule 11
+refuses any other path:
 
-- **(a) Subtasks and project tasks** — a file under `.config/mise/tasks/`
-  a pack ships beside the baseline library: a subtask named for the pack
-  under one of the `…:all` folders (`code/lint/<slug>`,
-  `setup/deps/install/<slug>`, …), which the `…:all` task tool-config
-  renders then calls, or a task of its own (`test/golden`). The baseline
-  and the `…:all` tasks are written by `stackgen:tool-config`, never
-  copied, and a pack ships no file at a path they hold — save a
-  `#PLACEHOLDER` slot, which is a pack's to fill (`setup/secrets`).
-- **(b) A gate's own config file** — `.config/swiftlint.yml`,
-  `.config/swift-format.json`. A gate whose doctrine ships without the file
-  that configures it is doctrine about a gate nobody has. The repo-wide
-  gates' files — dprint, pre-commit, gitleaks, grype — are written by
-  `stackgen:tool-config`, not copied (since 2026-09-26).
-- **(c) Retired 2026-09-27.** The hygiene files are `stackgen:tool-config`'s
-  tools and `/vwf:init`'s own assets, not a pack's copies. Everything
-  landing at the **repo root** is on the fixed allowlist below; everything
-  else goes under `.config/`.
-- **(d) Retired 2026-09-26.** A provider's environment is a mise file in
-  its `templates/` tree, rendered by tool-config, not a `conf.d/` file it
-  copies.
-- **(e) Retired 2026-09-26.** A pack's pre-commit hook is a subtask the
-  universal hooks reach through a `…:all` task, not a hook fragment.
-- **(f) A deploy target's own config and its deploy task** — a root
-  `wrangler.jsonc` and a `.config/mise/tasks/p/_project/deploy` task,
-  which `cloud-service/workers-static-assets` was the first
-  `cloud-provider`/`cloud-service` pack to ship at all. `_project` is a
-  **marked position** the materializer renames to the pinned project's id,
-  not a task group. A deploy stack that names the task CI must run and then
-  leaves both that task and the config it reads to be typed by hand is the
-  failure (b) describes, one axis up.
-- **(g) A project task a framework pack owns** — the same `p/_project/`
-  marked position, renamed the same way, landed from the **project** axis
-  rather than the deploy one: `framework/astro` ships an `icons` task
-  there, which rasterizes the favicon set from the product's mark. The
-  position is shared on purpose — a project has one task group, and two
+- **A test task** — `.config/mise/tasks/test/<name>`, for example
+  `test/golden` or `test/e2e`. A test task needs a model decision, so it
+  stays with the pack and is not bootstrap's.
+- **A project task** — `.config/mise/tasks/p/_project/<name>`.
+  `_project` is a **marked position** the materializer renames to the
+  pinned project's id, not a task group. A deploy target ships its deploy
+  task there (`cloud-service/workers-static-assets` was the first), and a
+  framework pack its own project task (`framework/astro` ships `icons`).
+  The position is shared on purpose — a project has one task group, and two
   packs contributing a file each into it is how it fills up — so a pack
   adding one names a task no other pack in the same bundle already ships.
+- **A root file on the allowlist below** — a deploy target's root
+  `wrangler.jsonc` is the case.
+- **`config/_<name>/`** — pack-private payload, never copied.
+
+A task that a pack ships sources bootstrap's `_scripts/helpers`, so the
+repo must have adopted bootstrap before anything lands.
 
 **The root allowlist** is stackgen's, and the materializer enforces it as
 a ceiling. It is the list of what may **sit** at a shaped repo's root —
 these entries and only these — and it has four tiers:
 
-- **What a pack may land**: `.npmrc`, `readme.md`, `fnox.toml`,
-  `eslint.config.mjs`, `dprint.json`, `wrangler.jsonc`, and the directory
-  `.github/` — **excluding `.github/workflows/`**. This is the tier
-  `p:plugins:check` enforces over a pack's `config/` root.
-- **What `stackgen:tool-config` writes**: `.gitignore`, `.gitattributes`,
-  `.graphifyignore` and `.vscode/settings.json` — universal supersets,
-  carrying every stack's lines whether or not the repo uses it, so a pack
-  never ships one and adds no line to one.
+- **What a pack may land**: `readme.md`, `eslint.config.mjs`,
+  `wrangler.jsonc`, and the directory `.github/` — **excluding
+  `.github/workflows/`**. This is the tier `p:plugins:check` enforces over a
+  pack's `config/` root.
+- **What bootstrap's sync writes** — its own list, read from bootstrap,
+  never restated here. A pack never ships one of those files and adds no
+  line to one.
 - **What `/vwf:init` writes from its own assets**: `CONTRIBUTING.md`,
   `SECURITY.md`, `LICENSE` and `.github/ISSUE_TEMPLATE/`.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
@@ -201,26 +176,10 @@ shadow. A `config/` tree landing a root path that is not on this list is a
 rather than quietly adding one more dotfile to a place the doctrine says is
 closed. Everything else a pack configures lives under `.config/`.
 
-**Why each of the five added on 2026-09-06 is at the root**, and the answer
-is the same shape every time — the tool that reads it discovers it there
-and cannot be pointed elsewhere:
-
-- `dprint.json` — dprint's config discovery is root-only (`dprint.json`,
-  `.dprint.json`, `dprint.jsonc`, `.dprint.jsonc`), with `--config` the
-  only override, so the file at the root is a **shim** whose whole content
-  is `extends` into `.config/` — the same shape `eslint.config.mjs` already
-  has, and for the same reason.
-- `.npmrc` — the package manager reads it from the project root; a flag on
-  every install is the alternative.
-- `CONTRIBUTING.md` — the forge links to it from a pull request only when
-  it is at the root (or in `.github/`), and a contribution guide nobody is
-  shown is not one.
-- `.graphifyignore` — the tool reads it beside `.gitignore`, the file it
-  parallels, which is also where a person looks for it.
-- `.github/` — the forge discovers issue templates, and the rest of its
-  furniture, only from that directory. `.github/workflows/` is **refused
-  inside it**: the CI fence below is unchanged, and a pack that may write a
-  template still may not write a pipeline.
+**Why `.github/` is at the root**: the forge discovers issue templates, and
+the rest of its furniture, only from that directory. `.github/workflows/` is
+**refused inside it**: the CI fence below is unchanged, and a pack that may
+write a template still may not write a pipeline.
 
 `wrangler.jsonc` joined on 2026-09-05, and it is the same exception
 `eslint.config.mjs` already is: a deploy tool that discovers its config only
@@ -260,13 +219,12 @@ later component's file wins, and the lockfile records per file which
 component supplied the version that landed.
 
 The two ends are what the order is for. The baseline every pack lands
-beside — the whole task library, its slots and its `…:all` tasks — is
-`stackgen:tool-config`'s, written before any pack lands. The **deploy target
+beside — the whole task library and the toolchain — is bootstrap's,
+synced before any pack lands. The **deploy target
 goes last** because it is the most specific thing a repo pins: a
 `cloud-service` pack's `wrangler.jsonc`, and the `p/<id>/deploy` task beside
 it, are the answer to how this repo actually ships, and nothing may
-overwrite that. The **secrets provider fills `setup/secrets`**, the one slot
-tool-config ships as a `#PLACEHOLDER`, so no other pack ships that path.
+overwrite that.
 
 The two cloud types were absent from this order until 2026-09-05, for a
 plain reason rather than an oversight: no `cloud-provider` or
@@ -281,19 +239,13 @@ a hook script copied into a target repo, so packs already write outside
 the same reason: the alternative is that the one thing which writes a repo's
 config lives in a plugin that exists for no other reason.
 
-**The fence, and where it now runs.** The tier originally stopped at the
-toolchain manager: a gate pack named its config file as a prerequisite and
-wrote nothing. That line was **opened on 2026-09-05, deliberately and once**,
-for gate and provider config files — the (b), (c), (d), (e) and (f) rows
-above, (d) and (e) since retired — because a gate that ships its doctrine and
-not its config leaves every repo to hand-write the file the doctrine
-describes, which is the failure the tier exists to prevent. Row (f) is that
-one opening reaching the cloud types later the same day, when the first
-`cloud-service` pack shipped a `config/` tree: a deploy target that ships its
-doctrine and not its config leaves the repo hand-writing that file too. Row
-(g) is the same argument arriving on the **project** axis: a framework whose
-doctrine names a task the repo must have, and then ships no task, has
-described a command rather than given one.
+**The fence, and where it now runs.** The tier was opened on 2026-09-05 for
+gate and provider config files, and closed again for them on 2026-10-23, when
+bootstrap took the toolchain: a gate's config, a provider's environment and
+every generic task are bootstrap's now. What stays is what only the repo's
+own stack decides — its test tasks, its project tasks, and a deploy target's
+root config. A framework whose doctrine names a test the repo must run, and
+then ships no task, has described a command rather than given one.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -305,11 +257,8 @@ Four things stay **outside** the fence, and they are the whole of it:
    workflow that runs them is the repo's, and a generated pipeline nobody
    maintains is worse than none.
 3. **Editor settings.** A pack never ships `.vscode/` files or any other
-   editor configuration. The one editor file a shaped repo carries,
-   `.vscode/settings.json`, is `stackgen:tool-config`'s universal file
-   since 2026-10-05, the same for every stack — which reverses the
-   2026-10-01 ruling that no editor config lands at all
-   (`docs/memory/decisions/2026-10-01-editor-config-dropped.md`).
+   editor configuration. The editor files a shaped repo carries are
+   bootstrap's.
 4. **`CLAUDE.md`** — vwf's, out of scope outright, as it always was.
 
 **Charters ratchet**, which is why the four are enumerated rather than left
@@ -318,17 +267,11 @@ easier, and "gate configs went in, so why not the manifest" is exactly the
 argument this list exists to answer. Moving one of the four is a decision on
 the record, never an implementer's call.
 
-**The lockfile records what the materializer copied, and the paths a
-pack's templates rendered — never tool-config's own files.** `/vwf:init`
-lays the baseline down by calling `stackgen:tool-config` and fetching no
-bundle; tool-config keeps its values in `.config/stackgen.yaml`, writes no
-lockfile entry, and judges its own files by comparing them with a fresh
-render. A pack's `templates/` are rendered by tool-config too, but they
-belong to the pack, so after `pack` writes them the materializer records
-each rendered path with `rendered: true` and **no hash** — a rendered file
-is judged against a fresh render (`preview pack`), never against bytes
-recorded here. `.config/` holds the repo's own files too, and presence in
-the tree has never meant stackgen put it there.
+**The lockfile records what the materializer copied, and the bootstrap
+tools and plugins it asked for — never a file bootstrap's sync writes.**
+Those files are bootstrap's, kept by its `mise run setup:configs`.
+`.config/` holds the repo's own files too, and presence in the tree has
+never meant stackgen put it there.
 
 ## The three consent tiers
 
@@ -372,21 +315,17 @@ entries:
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
-  - path: .config/mise/tasks/code/lint/swiftlint # a `config/` tier file — outside .claude/
-    slug: swift-package
-    component: toolchain-gate/swiftlint # which component's version won, per file
-    source: pack/toolchain-gate/swiftlint@<version>
+  - path: .config/mise/tasks/test/golden # a `config/` tier file — outside .claude/
+    slug: swift-swiftui
+    component: app-framework/swiftui # which component's version won, per file
+    source: pack/app-framework/swiftui@<version>
     hash: <content hash — at landing, re-recorded by the composing skill after its fills>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
-  - path: .config/mise/conf.d/swiftui/mise.toml # a pack `templates/` file — rendered by tool-config's `pack`
-    slug: swift-swiftui
-    component: app-framework/swiftui
-    source: pack/app-framework/swiftui@<version>
-    rendered: true # no hash: judged against a fresh render, never a recorded one
-skipped: # config/ paths a pack declared `conditional:` whose condition was false at the last run
-  - path: .github/CODEOWNERS
-    pack: <type>/<slug> # the pack whose conditional: entry matched
-    when: { forge: github } # the condition, as the pack states it — re-evaluated by a later run
+bootstrap: # what stackgen asked bootstrap for — absent when it asked for nothing
+  tools:
+    <tool>: [ <component ref>, … ] # a tool this repo did not select before; the components that need it
+  plugins:
+    <name>@<marketplace>: { scope: user, source: <marketplace source>, components: [ <component ref>, … ] }
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
@@ -415,11 +354,6 @@ Rules the lockfile enforces:
   nothing lands and nothing is deleted. The sync report names every
   record it dropped. A path no longer shipped that is still present is
   not this rule's.
-- **A `rendered: true` entry carries no hash and is never byte-diffed.**
-  Its content is a render of the pack's `templates/` from the repo's
-  `.config/stackgen.yaml`, so it is current when `preview pack` for its
-  pack returns no row, and a newer pack version is applied by re-running
-  `pack`, never by comparing bytes.
 - **`hash:` has three writers, and a differing hash is drift only when none
   of them ran.** The materializer writes it at landing. The composing skill
   (`/vwf:init`) **re-records** it after every change it makes to a landed
@@ -429,40 +363,12 @@ Rules the lockfile enforces:
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
-- **A `skipped:` path is neither a create nor a conflict.** It is a
-  `config/` path a pack declared `conditional:` (the pack format) whose
-  condition read false against the answers the caller passed, so the
-  materializer left it out of the landing set on purpose and wrote it here
-  — `path`, the `pack` that declared it, and the `when` it failed — instead
-  of under `entries:`. It carries no hash, because nothing landed. Every
-  reader treats it as **intentionally absent**: `/vwf:doctor` never reports
-  it as missing, sync never diffs it, removal never looks for it, and a
-  file sitting at that path is the repo's own. **A path is in `entries:`
-  or in `skipped:`, never both**: `skipped:` holds only paths the
-  materializer has never landed here. A path with an `entries:` record
-  whose condition later turns false keeps that record, is never written to
-  `skipped:` and is never removed by the evaluation — the dry-run plan
-  names it as landed earlier, condition now false, kept — so doctor reads
-  it as any other landed file. A run rewrites the list **for the packs it
-  evaluated** — their entries replaced from that run's answers, every
-  other pack's kept — since a run materializes one slug and can judge no
-  other pack's conditions; a path whose condition now holds leaves it and
-  lands as an ordinary entry, subject to the same collision check as any
-  other create. **A pack's `skipped:` rows live and die with its
-  `entries:`**: a pack that is removed or un-pinned takes its rows with
-  it, so the list never carries the ghost of a pack the repo no longer
-  runs — a row left behind would go on telling every reader that a path
-  is intentionally absent for a condition nothing evaluates any more.
 - **Removal removes exactly the listed entries**, `settings_keys` and
-  `mcp_servers`, nothing else. A pack with `rendered: true` entries is
-  removed in order: tool-config's `pack-remove --slug <slug>` first, which
-  drops its `packs.<slug>` values and re-renders the `…:all` tasks, then
-  the pack's recorded files, rendered ones among them, are deleted — the
-  same receipt invariant this repo's installer CLI lives by — and drops
-  the removed pack's `skipped:` rows with its `entries:`. Those rows are the record of a decision about that
-  pack's paths; nothing lands and nothing is deleted on the way out, so
-  dropping them removes a claim, never a file, and a file sitting at a
-  dropped row's path was always the repo's own.
+  `mcp_servers`, nothing else — the same receipt invariant this repo's
+  installer CLI lives by. A tool or plugin under `bootstrap:` is removed
+  only when no remaining component needs it, through bootstrap's own
+  `remove` instruction; one the repo selected itself has no record and is
+  never removed.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
   only the keys under `local_plugin.lsp_servers` and
   `local_plugin.mcp_servers` from the generated manifest — another repo's

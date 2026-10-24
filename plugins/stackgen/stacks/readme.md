@@ -60,43 +60,30 @@ since the toolchain is the host's), `package-manager/swiftpm` (doctrine only,
 no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the root
 or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` — two more gates meaningful for one toolchain.
-swift-format ships with the toolchain; SwiftLint is pinned through mise by its
-pack's template, rendered into `.config/mise/conf.d/swiftlint/`. Each gate pack
-owns its subtasks — `code:format:swift-format`, `code:lint:swift-format`,
-`code:lint:swiftlint` — and `language/swift` the `setup:deps:<verb>:swift`
-ones. The gate subtasks take their file list from git, NUL-separated and
-`./`-prefixed — swift-format the hook's staged list when one is passed — stop
-with an error when `git ls-files` fails, walk the tree with `find` when there
-is neither a `.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no
-Swift source is in scope. No pack lands `Package.swift`: `swift package init`
-creates it.
+Since 2026-10-23 none of the four ships a task, a pin or a gate config: those
+are bootstrap's, which the materializer asks for them, and the packs carry
+the doctrine. No pack lands `Package.swift`: `swift package init` creates it.
 
 **The Kotlin library stack made Kotlin the fifth language root on
 2026-10-09.** `kotlin-library`, `platforms: [packages]`, a Kotlin/JVM library
-published as a JAR, pins four packs: `language/kotlin` (the root, its
-template pinning the JDK as mise `java` at `temurin-25`, an LTS line, and
-`kotlin-lsp` in `mise.dev.toml` through the `http:` backend from the
-JetBrains archive, macOS and Linux only — Windows installs it by hand),
+published as a JAR, pins four packs: `language/kotlin` (the root; the
+Temurin JDK on an LTS line and `kotlin-lsp` come from bootstrap),
 `package-manager/gradle` (doctrine only, no `config/` tier — Gradle is the
 committed wrapper's, the compiler the Kotlin Gradle plugin's — and a
 `lockfile` fact naming every `gradle.lockfile` and `settings-gradle.lockfile`),
 `toolchain-gate/ktlint` and `toolchain-gate/detekt` — two more gates
-meaningful for one toolchain, each pinned through mise by its pack's template.
-`language/kotlin` owns the `setup:deps:<verb>:kotlin` subtasks, which run
-`./gradlew` and lock every project of the build; ktlint owns
-`code:format:ktlint` and `code:lint:ktlint`, detekt `code:lint:detekt`. No
-Android and no Kotlin Multiplatform.
+meaningful for one toolchain. Since 2026-10-23 their pins, their tasks and the
+dependency tasks that run `./gradlew` are bootstrap's; the packs carry the
+doctrine. No Android and no Kotlin Multiplatform.
 
 **The Android stack followed the same day on those four packs.**
 `framework/android` (AGP, the Android SDK, Android Lint and the emulator;
-`meta-framework`, the nearest category) pins the SDK's cmdline-tools through
-mise's `http:` backend at an exact build with a sha256 per platform, sets
-`ANDROID_HOME`, and carries four values — `COMPILE_SDK`, `MIN_SDK`,
-`TARGET_SDK`, `EMULATOR_IMAGE` — in its template. It owns
-`setup:deps:install:android` (platform, emulator and system image through
-`sdkmanager`; no build-tools, which AGP fetches), `code:lint:android` and
-`test:e2e`, which runs the instrumented tests on the Gradle Managed Device
-`e2e`, or `connectedCheck` under `-- --connected`. Two bundles pin it:
+`meta-framework`, the nearest category) keeps the SDK levels in the build
+files alone. The cmdline-tools pin, `ANDROID_HOME`, the SDK install and
+Android Lint are bootstrap's, which finds `COMPILE_SDK` and `EMULATOR_IMAGE`
+in the build files. It owns `test:e2e`, which runs the instrumented tests on
+the Gradle Managed Device `e2e`, or `connected<Variant>AndroidTest` under
+`-- --connected`. Two bundles pin it:
 `android-library`, an AAR on `packages`, and `kotlin-compose`, the app on
 `mobile`, `tablet`, `watch`, `tv` and `auto`, which adds
 `app-framework/compose`.
@@ -119,15 +106,12 @@ permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 build from a committed Xcode project a person creates once — no pack lands it
 and no generator writes it — so the pack declares `swift` as a bare binary and
 `xcodebuild` with the probe `xcodebuild -version`, which doctor runs because a
-Command Line Tools stub is on `PATH` too. Its tasks check `xcodebuild -version`
-against the `XCODE_VERSION` mise exports, rendered from its pack's template
-into `.config/mise/conf.d/swiftui/mise.toml`, and refuse an unset or empty
-pin. That pin and the three `SIMULATOR_*` pins beside it are the pack's own
-template values, stored under `packs.swiftui` in `.config/stackgen.yaml` and
-filled by `/vwf:setup`, which reads this machine's answer and offers it as the
-default. Its
-`ux-gate` runs the swift-snapshot-testing goldens on the simulator the repo
-pins. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
+Command Line Tools stub is on `PATH` too. Its `test:golden` checks
+`xcodebuild -version` against the `XCODE_VERSION` mise exports. Bootstrap's
+tasks find that value and the three `SIMULATOR_*` values on the machine; a
+repo that must hold them still sets them in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml`. Its `ux-gate` runs the
+swift-snapshot-testing goldens on that simulator. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
 iOS and iPadOS, macOS, CarPlay, watchOS, tvOS, visionOS, each keyed by the vwf
 token it realises — and topic 12's wiring for Apple's core integrations: widgets
 and complications, App Intents, push notifications, StoreKit and Sign in with
