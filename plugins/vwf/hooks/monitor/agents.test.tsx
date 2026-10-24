@@ -377,25 +377,75 @@ test("ruling 4: an agent gone from the list has ended", async ($, on) => {
 });
 
 test(
-  "ruling 4: the known index.md is kept while it exists; searched only when gone",
+  "ruling 4: a known index.md in the run's worktree is kept while it exists; searched only when gone",
   async ($, on) => {
     const clock = mock.clock(on, { now: 1_000_000 });
+    const claimed = `${MAIN}/.worktrees/claimed`;
     const tree = `${MAIN}/.worktrees/${A}`;
     const w = world(on, {
       files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("Known copy", "RUNNING"),
+        // The run's worktree, named in the Status of the copy it holds.
+        [`${claimed}/docs/plans/${A}/index.md`]: index("Known copy", "RUNNING")
+          .replace("**RUNNING**", `**RUNNING** in \`${claimed}\``),
       },
+      worktrees: [MAIN, claimed],
     });
     await $.prompt.submit(execute(`docs/plans/${A}`));
     const ui = await $.ui.mount(PANE);
     expect(await ui.find({ type: "Text", text: /Known copy/ })).toBeDefined();
     // A worktree named for the folder appears: the known path still exists.
-    w.worktrees = [MAIN, tree];
+    w.worktrees = [MAIN, claimed, tree];
     w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: /Known copy/ })).toBeDefined();
     // The known path is gone: search.
-    delete w.files[`${MAIN}/docs/plans/${A}/index.md`];
+    delete w.files[`${claimed}/docs/plans/${A}/index.md`];
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
+  "ruling 12: a pane that first finds the main-checkout index.md reads the worktree copy once that worktree appears",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: 1_000_000 });
+    const tree = `${MAIN}/.worktrees/${A}`;
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/${A}/index.md`]: index("Main copy", "RUNNING"),
+      },
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /Main copy/ })).toBeDefined();
+    // The run cuts its worktree; the main-checkout copy still exists.
+    w.worktrees = [MAIN, tree];
+    w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
+  "ruling 12: a known index.md in another linked worktree gives way to the run's worktree copy once it appears",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: 1_000_000 });
+    const other = `${MAIN}/.worktrees/other`;
+    const tree = `${MAIN}/.worktrees/${A}`;
+    const w = world(on, {
+      files: {
+        [`${other}/docs/plans/${A}/index.md`]: index("Other copy", "RUNNING"),
+      },
+      worktrees: [MAIN, other],
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /Other copy/ })).toBeDefined();
+    // The run cuts its worktree; the other worktree's copy still exists.
+    w.worktrees = [MAIN, other, tree];
+    w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
     await ui.unmount();

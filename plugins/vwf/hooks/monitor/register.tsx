@@ -266,7 +266,11 @@ const nameOf = (path: string) => path.split("/").pop() ?? "";
  * each one's worktrees — the worktree named for the folder first, then the
  * other linked worktrees, where a run writes, then the main checkouts.
  */
-async function roots($: $, cwds: string[], folder: string): Promise<string[]> {
+async function roots(
+  $: $,
+  cwds: string[],
+  folder: string,
+): Promise<{ ordered: string[]; linked: Set<string>; }> {
   const found = new Set<string>(cwds);
   for (const cwd of cwds) {
     const base = await baseOf($, cwd);
@@ -297,7 +301,7 @@ async function roots($: $, cwds: string[], folder: string): Promise<string[]> {
   const rank = (root: string) =>
     nameOf(root) === folder ? 0 : linked.has(root) ? 1 : 2;
 
-  return [...found].sort((a, b) => rank(a) - rank(b));
+  return { ordered: [...found].sort((a, b) => rank(a) - rank(b)), linked };
 }
 
 async function exists($: $, path: string): Promise<boolean> {
@@ -305,7 +309,8 @@ async function exists($: $, path: string): Promise<boolean> {
 }
 
 /**
- * The plan's index.md: the known one while it exists, else the first live
+ * The plan's index.md: the known one while it exists — a copy outside the
+ * run's worktree only until the run's worktree holds one — else the first live
  * copy (a linked worktree before a main checkout), else an archived one.
  */
 async function locate(
@@ -316,11 +321,38 @@ async function locate(
   now: number,
 ): Promise<{ path: string; isArchived: boolean; } | undefined> {
   const live = `/docs/plans/${folder}/index.md`;
-  if (known?.endsWith(live) && (await exists($, known))) {
+  // The run's worktree: a linked one named for the folder, or named in the
+  // Status of the copy it holds.
+  const isRuns = (linked: Set<string>, root: string, text: string) =>
+    linked.has(root) && (nameOf(root) === folder || isClaimedIn(text, root));
+  const knownText = known?.endsWith(live)
+    ? await $.fs.read(known).catch(() => undefined)
+    : undefined;
+  if (known !== undefined && knownText !== undefined) {
+    const knownRoot = known.slice(0, -live.length);
+    if (isRuns((await roots($, cwds, folder)).linked, knownRoot, knownText)) {
+      return { path: known, isArchived: false };
+    }
+    // A copy outside the run's worktree — the main checkout's, or another
+    // linked worktree's: the run's worktree may have been cut since git was
+    // last read. Its copy replaces the known one.
+    worktrees.clear();
+    const { ordered, linked } = await roots($, cwds, folder);
+    for (const root of ordered) {
+      const path = `${root}${live}`;
+      if (path === known || !linked.has(root)) {
+        continue;
+      }
+      const text = await $.fs.read(path).catch(() => undefined);
+      if (text !== undefined && isRuns(linked, root, text)) {
+        return { path, isArchived: false };
+      }
+    }
+
     return { path: known, isArchived: false };
   }
   for (let attempt = 0; attempt < 2; attempt++) {
-    const ordered = await roots($, cwds, folder);
+    const { ordered } = await roots($, cwds, folder);
     for (const root of ordered) {
       if (await exists($, `${root}${live}`)) {
         return { path: `${root}${live}`, isArchived: false };
