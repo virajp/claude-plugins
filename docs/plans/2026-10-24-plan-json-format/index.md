@@ -12,9 +12,9 @@ gaps_of: []
 
 ## Status
 
-**RUNNING**
+**COMPLETE**
 
-RUNNING since 2026-10-24 23:12 in .claude/worktrees/plan-json-format (branch plan-json-format, base a5dcb9d3)
+COMPLETE 2026-10-25 — e2afcba7 a75dfa4f 2830f331 cfa764b4 99d8d138 2aba7573 2235929e b5d76f6a bab1f6af; 6 open gaps — folder stays live
 
 ## Consent
 
@@ -444,7 +444,7 @@ none — `plan.mjs` uses `node:` builtins only.
 | U9  | 1    | [09-migrate-guide.md](09-migrate-guide.md)  | edit   | `docs/plans/migrate.md`                                                                                                                                                                                                                                                                                                                                                              | —          | green | a75dfa4f |
 | R10 | 3    | [10-review.md](10-review.md)                | review | —                                                                                                                                                                                                                                                                                                                                                                                    | U1, U3, U4, U5, U6, U7, U8, U9 | green |  |
 | U11 | 4    | [11-docs.md](11-docs.md)                    | edit   | `readme.md`, `CLAUDE.md`, `.claude/docs/plugins.md`, `.claude/docs/ci-and-releases.md`, `.claude/skills/vwf-plugin/**`, `site/src/content/docs/**`, `docs/memory/decisions/2026-10-24-plan-json-format.md`                                                                                                                                                                          | R10        | green | bab1f6af |
-| U12 | 5    | [12-gates.md](12-gates.md)                  | edit   | `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                                                                                                    | U11        | pending |        |
+| U12 | 5    | [12-gates.md](12-gates.md)                  | edit   | `.claude-plugin/marketplace.json`                                                                                                                                                                                                                                                                                                                                                    | U11        | green | — (no change) |
 
 ## Shared-file rule
 
@@ -587,6 +587,7 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - open · U3 edit · the plan leaves the template's docs-unit `depends_on` open (the old table said "all") · the sample names the previous wave's unit — the review row, or U1 on a change plan
 - closed · U7 edit · `index.json` keeps one `commit` per unit and one `range` per review row, so an earlier fix commit and a late loop's `to` are kept only in the mempalace journal · the commit map reads the journal; with mempalace down such a commit is refused at map time, and a late re-run repeats once — closed by R2 round 1: the map now reads `git log` and `index.json` alone, a commit placed by its unit's `commit` or by the one unit whose `owns` covers it
 - open · U6 edit · the plan does not say where per-node round results go once the Run log is gone · the run journal alone holds them
+- open · U12 gates · `mise run code:precommit` scans only staged files, so on a clean tree the plan gate line covers nothing already committed · each unit commit ran the same hooks on its own files
 
 ## Run log
 
@@ -638,6 +639,9 @@ the unit could not proceed without; it blocks the unit and its dependents.
 | 4 | U11 docs | opus | closing | pass | closing-pass fix: vwf.md:2648 says created once with Write, validated, then set/append; reads via get | — |
 | 4 | R4 | opus | closing | pass | closing check: RESOLVED; no regression | — |
 | 4 | U11 | — | — | commit | unit commit | bab1f6af |
+| 5 | U12 gates | opus | 1 | pass | edit; marketplace.json unchanged (no commit); both template samples validate; vitest 801 pass; tsc green. GAP: code:precommit scanned no changed files — covers only staged files | — |
+| 5 | R5 | — | 1 | pass | wave review: U12 changed no file; empty diff | — |
+| — | plan gate | — | — | pass | code:precommit 0; vitest 801/801; tsc --noEmit -p scripts 0. Gates the orchestrator keeps: none | — |
 
 ## Launch
 
