@@ -166,15 +166,14 @@ nothing, and preflight refuses the folder for it. Two placement rules, which
 preflight refuses a folder for breaking as well: the row sits in a wave
 **strictly later** than every unit it covers —
 a row in the same wave as its units runs before their commit and reviews
-nothing, since it scopes by commit range; and on a cycle plan it covers **every
-earlier-wave `code` unit that no earlier `review` row already covers** — so
-the commit range it reviews and the units it covers are the same set, and no
-`code` unit lands between two rows covered by neither; preflight refuses an
-uncovered `code` unit. On a change plan the row covers the units that land
-runnable code, but still reviews the whole range since the previous row: a
-finding on a file whose unit it does not cover is dropped and counted when it
-is a review finding, and routed to that unit all the same when it is a
-**security** finding, the coverage widening recorded in the Run log — the one
+nothing, since it scopes by commit range; and it covers **every earlier-wave
+unit that no earlier `review` row already covers**, of any Kind, on a cycle
+plan and a change plan alike — so the commit range it reviews and the units it
+covers are the same set, and no unit lands between two rows covered by
+neither; preflight refuses a row that leaves such a unit out. A finding on a
+file whose unit a row does not cover — only a folder written before this rule
+has one — is routed to that unit all the same, whatever its stage, the
+coverage widening recorded in the Run log, and is never dropped — the one
 rule, in `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`.
 `/vwf:plan`
 writes `code` on every slice unit, **one** `review` row after the last code

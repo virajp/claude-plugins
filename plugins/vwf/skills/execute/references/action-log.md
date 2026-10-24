@@ -39,7 +39,8 @@ brackets are filled from the run.
   apply.
 - **Every commit on a unit's behalf:** `run --event commit --unit <id> -- <the commit command>`.
 - **Each `review` row round, as it returns:** `event review.round --row <id> --loop <loop id> --round <n>`
-  plus `--from <sha> --to <sha> --files <n> --review <n> --security <n> --dropped <n>`.
+  plus `--from <sha> --to <sha> --files <n> --review <n> --security <n> --routed <n>`,
+  the last the count of findings routed to an uncovered unit.
 - **Each gap recorded** — a `GAP:`, an `UNRESOLVED:`, a `contested` finding, an
   oscillation: `event gap --class <class> --source <source> --unit <id> --text "<the line>"`,
   the class one of `GAP`, `UNRESOLVED`, `contested`, `oscillation`, the source

@@ -215,10 +215,10 @@ tip, the way the contract's *Reading the queue* reads it. Then:
   row. **A `review` row
   placed wrong** — its wave is not strictly greater than the wave of every
   unit it covers (a row reviews a commit range, and a unit in its own wave is
-  committed after it runs), or it fails to cover a `code` unit in an earlier
-  wave than itself that no earlier `review` row covers (the range would carry
-  that unit's commits while the coverage would not, so the row's range and
-  its coverage must agree) — naming the row and the unit. **An After landing
+  committed after it runs), or it fails to cover a unit of any Kind in an
+  earlier wave than itself that no earlier `review` row covers (the range
+  would carry that unit's commits while the coverage would not, so the row's
+  range and its coverage must agree) — naming the row and the unit. **An After landing
   table with no *Mode* column, or a step whose mode is not `run`** — an `ask`
   step included, a mode no longer issued — naming the planner that wrote it,
   `/vwf:plan` or `/vwf:change-plan` by the folder's `type:`, to re-run and

@@ -109,6 +109,9 @@ review is the only check. One is written only when the change lands runnable
 code — anything that executes rather than is read: shipped shell or hook
 scripts, build or tooling source, an installable package — and the decisions
 table says why.
+*Both kinds:* a row covers every unit in an earlier wave that no earlier row
+covers, of any Kind — not only the units that land code — so no finding in
+its range falls on a unit it does not cover.
 
 11. **Model per unit.** Default is `opus`, written explicitly into every unit
     file's `Model:` line. A unit the user wants on a stronger or cheaper tier

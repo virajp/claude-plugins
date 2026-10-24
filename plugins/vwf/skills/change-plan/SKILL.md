@@ -289,14 +289,15 @@ Rules the plan must obey, learned from the plans that came before:
   table. The row sits in a wave strictly later than every unit it covers — in
   the same wave it runs before their commit and reviews nothing, since it
   scopes by commit range — and covers, directly or transitively through
-  Depends on, the units that land that code. It still reviews the whole range
-  since the previous row: a review finding on a file whose unit it does not
-  cover is dropped and counted; a **security** finding is routed to that unit
-  all the same, the coverage widening recorded in the Run log — the one rule,
+  Depends on, **every** unit in an earlier wave that no earlier row covers, the
+  units that land that code and every other `edit` unit alike, since it
+  reviews the whole range since the previous row and a finding on a unit it
+  left out would be routed there anyway — the one rule,
   `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`'s. Its
   Depends on names at least one unit it covers — never `—`: a row that covers
   nothing reviews nothing. Preflight refuses a row in the wave of a unit it
-  covers, and a row that covers nothing. The sections the template
+  covers, a row that covers nothing, and a row that leaves an earlier unit
+  no earlier row covers out. The sections the template
   marks *cycle plans only*
   — Slice, Acceptance criteria (from blueprint), Gaps surfaced during execution
   — and the `covers:` and `exposure:` frontmatter keys are omitted.
@@ -346,9 +347,9 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   row aside — has its reason to wait in the **Waves** section
 - every gate delta from the interview is an owned edit somewhere
 - a `review` row, when present, names its reason in the decisions table,
-  covers — directly or transitively — every unit that lands runnable code, so
-  its Depends on is never `—`, and sits in a wave strictly later than each of
-  them
+  covers — directly or transitively — every unit in an earlier wave that no
+  earlier row covers, so its Depends on is never `—`, and sits in a wave
+  strictly later than each of them
 - every unit's *Verification* names at least one gate line it must pass — a
   `review` row has none, by shape
 - every hit of the retired-name grep sits inside some unit's *Owns*, and every

@@ -37,9 +37,8 @@ and the row's loop in `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-un
 is the one authority for it — its placement first in its wave, its range and
 `from..to`, the file list mapped to units by the commit that last touched
 each file (never Owns), the one rule for a finding on an uncovered unit's file
-(security routed and the widening recorded, non-security dropped with the
-dropped-count clause — applied by the orchestrator to what the reviewers
-report in full), late re-runs and per-loop round counts. In outline: the
+(every finding routed to that unit and the widening recorded, none dropped —
+applied by the orchestrator to what the reviewers report in full), late re-runs and per-loop round counts. In outline: the
 orchestrator invokes `/code-review` (high effort) and `/security-review` in
 one message — `/security-review` alone, and the security reviewer alone, on a
 row that covers `edit` units alone — waits on each with `TaskOutput` (blocking, up to 30 minutes from
@@ -205,8 +204,8 @@ blueprint-bound and never fires on a plan without one.
   each other's lines, and a round counts once even though two reviewers ran
   and several units may have been re-dispatched. A finding on a file whose
   unit the row does not cover follows the one rule in
-  `references/review-unit.md`'s scope step — security routed and recorded,
-  the rest dropped with the count clause. If the coder's recall
+  `references/review-unit.md`'s scope step — routed to that unit and
+  recorded, whatever its stage. If the coder's recall
   of a tag misses (mempalace down or the drawer absent), the orchestrator
   passes the terse FINDINGS block it already holds from that reviewer's return
   — the loop never stalls on a recall miss. The invoking command sets the

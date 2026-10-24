@@ -115,8 +115,8 @@ Merge both into one findings list. Every finding names the file and is
 labelled with the unit the dispatch's **unit map** gives for it — the unit
 whose commit last touched the file inside the range, covered by the row or
 not. Report **every** finding on a file in the dispatch's file list; the
-orchestrator, not you, re-dispatches each unit by its Kind and drops a
-non-security finding on an uncovered unit, recording the count. A file outside
+orchestrator, not you, re-dispatches each unit by its Kind, an uncovered
+unit's included, and records the coverage widened to it. A file outside
 the file list is outside the scope **unless its cause is inside the range** —
 a caller broken by an in-range change is a finding on that caller, labelled
 with the unit the branch-wide map gives for its file; the orchestrator decides

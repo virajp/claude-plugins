@@ -2789,10 +2789,10 @@ What it does, by rule:
   runs only when its predecessor is green or explicitly skipped. Two placement
   rules hold, and the preflight refuses a fresh run that breaks either: a
   `review` row sits in a wave **strictly later** than every unit it covers — in
-  the same wave it would run before their commit and review nothing — and on a
-  cycle plan it covers every earlier-wave `code` unit no earlier row already
-  covers, so the range it reviews and the units it covers are one set; on a
-  change plan a row covers the units that land runnable code. A resume runs what
+  the same wave it would run before their commit and review nothing — and it
+  covers every earlier-wave unit no earlier row already covers, of any Kind, on
+  a cycle plan and a change plan alike, so the range it reviews and the units it
+  covers are one set. A resume runs what
   its folder says and takes neither placement refusal; it refuses two things of
   its own — a non-green `code` unit with no covering `review` row ahead of it,
   and an After landing table with no mode column or a step whose mode is not
@@ -2838,9 +2838,10 @@ What it does, by rule:
   wave-review loop-back; then the row's next round runs, engines first, over
   those fix commits alone. A row that covers `edit` units alone runs only
   `/security-review` and the security reviewer. A finding
-  on a file whose unit the row does not cover follows one rule: a security
-  finding is routed to that unit all the same, the widening recorded in the Run
-  log; a non-security finding is dropped and counted. **Security findings are
+  on a file whose unit the row does not cover, which only a folder written
+  before the coverage rule can hold, follows one rule: it is routed to that unit
+  all the same, whatever its stage, the widening recorded in the Run log, and is
+  never dropped. **Security findings are
   always fixed**, and so is any **breaking-released-API finding** (a change that
   would break a contract frozen under `apis/released/` — cap-exempt, never
   downgraded to a gap); other **code-review findings loop up to 4 rounds** per
@@ -3585,9 +3586,9 @@ security half alone, since every change-plan unit is `edit` — is written only
 when the change lands runnable code — anything that executes rather than is read:
 shipped shell or hook scripts, build or tooling source, an installable package —
 with its reason in the decisions table. The row sits in a wave strictly later
-than the units it covers and still reviews the whole range since the previous
-row: a review finding on a file whose unit it does not cover is dropped and
-counted, a security finding is routed to that unit all the same. The sections
+than the units it covers, and covers every earlier-wave unit no earlier row
+covers — not only the units that land the code — since it reviews the whole
+range since the previous row. The sections
 the template marks *cycle plans only* — the slice, the acceptance criteria, the
 gaps — are omitted. Every unit sits in **wave 1** unless it has a named reason
 to wait — it edits a path an earlier unit creates or moves, or its verification
