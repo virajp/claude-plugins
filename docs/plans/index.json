@@ -1,18 +1,4 @@
 {
   "format": 1,
-  "plans": [
-    {
-      "id": "2026-10-25-action-log-per-plan",
-      "folder": "docs/plans/2026-10-25-action-log-per-plan",
-      "kind": "change",
-      "title": "One append-only action log per plan",
-      "target_repo": null,
-      "priority": 10,
-      "status": "RUNNING",
-      "gaps": null,
-      "requires": [],
-      "backlog": [],
-      "backlog_pieces": []
-    }
-  ]
+  "plans": []
 }
