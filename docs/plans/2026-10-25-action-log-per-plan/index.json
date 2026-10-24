@@ -484,6 +484,24 @@
         "U1",
         "U2"
       ]
+    },
+    {
+      "id": "D30",
+      "decision": "How does the action-log hook summarise a Bash call with no description? (gap G3, review row U4)",
+      "ruling": "Log only the program name: the first word of the command that is not a NAME=value assignment. No argument is logged, so no inline secret can reach the log. A description, when given, is logged as before. Ruled by the user on 2026-10-25.",
+      "rejected": "A denylist that redacts secret-looking values (round 1 fix; it missed curl -u, secret headers, here-strings and mysql -p); program name plus the redacted rest",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "What does the row event of a review row log for a late re-run? (gap G1)",
+      "ruling": "Only the main loop range, as index.json holds it. A late re-run is logged by its review.round events, which carry their own --loop, --from and --to. No change to U3s edit. Ruled by the user on 2026-10-25.",
+      "rejected": "A row event with the late loop range (it would disagree with index.json)",
+      "units": [
+        "U3"
+      ]
     }
   ],
   "stages": {
@@ -509,22 +527,22 @@
       "id": "G1",
       "unit": "U3",
       "stage": "edit",
-      "text": "The row JSON for a review row late-loop to is not specified · range is logged only for the main loop set, as index.json holds it",
-      "state": "open"
+      "text": "The row JSON for a review row late-loop to is not specified · range is logged only for the main loop set, as index.json holds it · closed: ruled D31 by the user, U3's choice stands",
+      "state": "closed"
     },
     {
       "id": "G2",
       "unit": "U3",
       "stage": "edit",
-      "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133); the closing-pass rewrap joined the next sentence onto the line · left as is, fold width only, meaning intact",
-      "state": "open"
+      "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133) · closed: rewrapped in place on 2026-10-25 at the user's request",
+      "state": "closed"
     },
     {
       "id": "G3",
       "unit": "U4",
       "stage": "security",
-      "text": "oscillation (cap-exempt security, U4 rounds 1-2): plugins/vwf/hooks/action-log.mjs:46/:50 (U1) secret persistence in the hook command summary. Round 1: the first 200 chars of a Bash command with no description were logged, so inline tokens were stored. U1 added denylist redaction (e6a01cb1). Round 2: the denylist still misses curl -u user:pass, -H \"X-Api-Key: …\" / PRIVATE-TOKEN header form, --with-token <<< tok, echo tok | … --with-token, mysql -p<pw>. Count 1 → 1, so the convergence guard tripped; a security finding cannot become a gap, so the run paused · ruling needed: how the hook summarises a Bash call with no description — e.g. log only the first word of the command (both engine and reviewer recommend it), or extend the denylist and accept the residual",
-      "state": "open"
+      "text": "oscillation (cap-exempt security, U4 rounds 1-2): plugins/vwf/hooks/action-log.mjs secret values in the hook Bash summary; the denylist redaction did not converge · closed: ruled D30 by the user — the hook logs only the program name; fixed in place in U1's Owns; review row U4 re-runs over it on resume",
+      "state": "closed"
     }
   ],
   "overrides": [],

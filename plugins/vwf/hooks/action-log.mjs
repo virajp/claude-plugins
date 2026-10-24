@@ -20,7 +20,7 @@
 // Every line carries ts, run (the run id from the marker), session, agent (the payload's agent_id: null for
 // the orchestrator, set for a subagent's own tool calls) and event. The
 // summary is short and never a file's content: a Bash call's description or
-// the head of its command, a file tool's path, a search's pattern, a skill's
+// its program name, a file tool's path, a search's pattern, a skill's
 // name, an Agent call's subagent type and description.
 
 import {
@@ -42,43 +42,21 @@ const clip = s => (typeof s === "string"
   ? s.replace(/\s+/g, " ").trim().slice(0, MAX)
   : undefined);
 
-// A secret-looking value in a command line, replaced with *** before the
-// command can reach the log: NAME=value where NAME names a secret, a
-// --token/--password/--secret/--api-key-style flag's value (`--f v` and
-// `--f=v`), an Authorization or Bearer header value, and URL userinfo.
-const VALUE = String.raw`("[^"]*"|'[^']*'|[^\s'"]+)`;
-const SECRET = "token|secret|passwd|password|pass|api[-_]?key|key|auth";
-const REDACT = [
-  [/\b([a-z][a-z0-9+.-]*:\/\/)[^\s/@]+@/gi, "$1***@"],
-  [/(authorization:\s*)((?:bearer|basic|token)\s+)?[^\s'"]+/gi, "$1$2***"],
-  [/\b(bearer\s+)[^\s'"*]+/gi, "$1***"],
-  [
-    new RegExp(
-      String.raw`(--?[A-Za-z0-9-]*(?:${SECRET})[A-Za-z0-9-]*)(=|\s+)${VALUE}`,
-      "gi",
-    ),
-    "$1$2***",
-  ],
-  [
-    new RegExp(
-      String.raw`\b([A-Za-z0-9_]*(?:${SECRET})[A-Za-z0-9_]*)=${VALUE}`,
-      "gi",
-    ),
-    "$1=***",
-  ],
-];
-
-function redact(s) {
+// A Bash call with no description is logged by its program name alone — the
+// first word that is not a NAME=value assignment — so no argument, and no
+// inline secret, can reach the log (decision D30).
+function program(s) {
   if (typeof s !== "string") {
     return s;
   }
-  return REDACT.reduce((t, [re, to]) => t.replace(re, to), s);
+  return s.trim().split(/\s+/).find(w => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(w))
+    ?? "";
 }
 
 function summary(tool, input = {}) {
   switch (tool) {
     case "Bash":
-      return clip(input.description || redact(input.command));
+      return clip(input.description || program(input.command));
     case "Read":
     case "Write":
     case "Edit":

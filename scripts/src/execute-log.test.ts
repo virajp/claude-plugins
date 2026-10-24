@@ -508,7 +508,7 @@ describe("action-log hook", () => {
   });
 });
 
-describe("action-log hook redaction", () => {
+describe("action-log hook Bash summary", () => {
   function summaryOf(command: string) {
     const file = startRun();
     hook({
@@ -523,36 +523,25 @@ describe("action-log hook redaction", () => {
   }
 
   it.each([
-    ["GITHUB_TOKEN=ghp_abc123 gh pr list", "GITHUB_TOKEN=*** gh pr list"],
-    ["export db_password='s3 cr3t'", "export db_password=***"],
-    [
-      "MY_API_KEY=\"k\" API_SECRET=x AUTH=y PASS=z run",
-      "MY_API_KEY=*** API_SECRET=*** AUTH=*** PASS=*** run",
-    ],
-    ["cli --token abc123 go", "cli --token *** go"],
-    ["cli --password=hunter2", "cli --password=***"],
-    ["cli --secret 's x' --api-key=k1", "cli --secret *** --api-key=***"],
-    [
-      "curl -H 'Authorization: Bearer abc.def' x",
-      "curl -H 'Authorization: Bearer ***' x",
-    ],
-    [
-      "curl -H \"Authorization: Basic dXNlcjpw\"",
-      "curl -H \"Authorization: Basic ***\"",
-    ],
-    ["http get x 'bearer zzz'", "http get x 'bearer ***'"],
-    [
-      "git clone https://user:pa55@github.com/o/r",
-      "git clone https://***@github.com/o/r",
-    ],
-  ])("redacts %s", (command, want) => {
-    const got = summaryOf(command);
-    expect(got).toBe(want);
+    ["GITHUB_TOKEN=ghp_abc123 gh pr list", "gh"],
+    ["A=1 B='x' MY_API_KEY=k run --flag", "run"],
+    ["export db_password='s3 cr3t'", "export"],
+    ["curl -u admin:hunter2 https://x", "curl"],
+    ["curl -H 'X-Api-Key: sk_live_1' https://x", "curl"],
+    ["curl -H 'Authorization: Bearer abc.def' x", "curl"],
+    ["gh auth login --with-token <<< ghp_abc", "gh"],
+    ["echo ghp_abc | gh auth login --with-token", "echo"],
+    ["mysql -phunter2 db", "mysql"],
+    ["git clone https://user:pa55@github.com/o/r", "git"],
+    ["  mise x -- mise run code:lint && git status", "mise"],
+  ])("logs only the program of %s", (command, want) => {
+    expect(summaryOf(command)).toBe(want);
   });
 
-  it("leaves a plain command unchanged", () => {
-    const command = "mise x -- mise run code:lint && git status --short";
-    expect(summaryOf(command)).toBe(command);
+  it("logs no secret value of a command", () => {
+    for (const secret of ["ghp_abc", "hunter2", "sk_live_1", "pa55"]) {
+      expect(summaryOf(`curl -u u:${secret} ${secret}`)).not.toContain(secret);
+    }
   });
 
   it("keeps a description as given", () => {
