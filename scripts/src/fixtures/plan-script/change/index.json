@@ -1,0 +1,160 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "A change plan",
+  "requires": [],
+  "source": ["B1", "B2"],
+  "backlog": ["B1"],
+  "backlog_pieces": ["B2"],
+  "gaps_of": [],
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-10-24"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": ["mise x -- mise run code:format"],
+    "wave": ["mise x -- mise run code:lint"],
+    "plan": ["mise x -- mise run code:precommit"],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "the suite runs",
+        "pass": "exit 0"
+      }
+    ]
+  },
+  "after_landing": [
+    {
+      "id": "A1",
+      "step": "mise run p:plugins:local",
+      "mode": "run",
+      "notes": "stages the plugins"
+    }
+  ],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "the plan folder format changes"
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The script",
+      "wave": 1,
+      "file": "01-script.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": ["scripts/plan.mjs"],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "The tool",
+      "wave": 2,
+      "file": "02-tool.md",
+      "kind": "code",
+      "model": "sonnet",
+      "owns": ["scripts/tool.mjs"],
+      "depends_on": ["U1"],
+      "waits": "it imports the script U1 writes",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "R3",
+      "title": "Review: the script and the tool",
+      "wave": 3,
+      "file": "03-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": ["U1", "U2"],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U4",
+      "title": "Docs",
+      "wave": 4,
+      "file": "04-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": ["readme.md"],
+      "depends_on": ["R3"],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Gates",
+      "wave": 5,
+      "file": "05-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [".claude-plugin/marketplace.json"],
+      "depends_on": ["U4"],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "readme.md",
+      "why": "many units would edit it",
+      "owner": "U4"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "The format",
+      "ruling": "JSON",
+      "rejected": "YAML",
+      "units": ["U1"]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "a change plan renders nothing"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "a change plan has no acceptance"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "no UI"
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}

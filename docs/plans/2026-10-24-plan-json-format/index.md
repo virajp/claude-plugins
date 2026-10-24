@@ -12,9 +12,9 @@ gaps_of: []
 
 ## Status
 
-**APPROVED**
+**RUNNING**
 
-APPROVED 2026-10-24 by the user
+RUNNING since 2026-10-24 23:12 in .claude/worktrees/plan-json-format (branch plan-json-format, base a5dcb9d3)
 
 ## Consent
 
@@ -579,10 +579,23 @@ the unit could not proceed without; it blocks the unit and its dependents.
   `.config/linter.yaml`) also lack the exclusion; they are out of scope here,
   because bootstrap replaces `tool-config`.
 
+## Gaps surfaced during execution
+
+- open · U9 edit · the plan does not say how `/vwf:execute` names a run's branch · the migration guide assumes the folder basename, often without its date prefix
+- open · U1 edit · the plan does not say which string values may be empty · `validate` requires non-empty only titles, the unit `file`, gap `text` and ids
+
 ## Run log
 
 | Wave | Unit | Model | Round | Outcome | Detail | Commit |
 | ---- | ---- | ----- | ----- | ------- | ------ | ------ |
+| 0 | preflight | — | 1 | pass | doctor: no blocking (no registry; stack checks n/a); unit gate code:format green; wave gate code:lint green; no code unit — LSP and conventions skipped; Format Check skipped (no covers:) | — |
+| 0 | sequence | — | — | pass | W1: U1, U9 (edit) · W2: U3–U8 (edit) · W3: R10 (review, security-only) · W4: U11 docs · W5: U12 gates | — |
+| 1 | U9 migrate guide | opus | 1 | pass | edit; DECIDED: vwf 22.0.0 named; review range empty; stage map pass→green/skipped/else failed; waits empty on W1/review/docs/gates; model from Model line else inherit; missing worktree 'unknown'; index requires holds basenames. GAP: branch name of a run not stated — assumed folder basename, often without date prefix | — |
+| 1 | U1 plan.mjs | opus | 1 | pass | edit; 3 files + 78-test vitest suite green. DECIDED: bad path exit 2, duplicate id exit 1; set creates only the last key; index.md read only when backlog lists non-empty; validate prints '<file>: valid'; a value starting -- is a usage error. GAP: the plan does not say which strings may be empty — only titles, unit file, gap text, ids are required non-empty | — |
+| 1 | R1 | opus | 1 | findings(2) | migrate.md:129 [U9] rule 2 — waits '' on review/docs/gates units drops the Waves reason (decision 31); plan.mjs:138-143 [U1] rule 2 — a set value starting -- cannot be set. CONTRACT clean | — |
+| 1 | U9 migrate guide | opus | 2 | pass | edit fix of R1 finding; waits now copies the Waves reason for every unit, '' only where the schema allows, else 'migrated: no reason recorded' | — |
+| 1 | U1 plan.mjs | opus | 2 | pass | edit fix of R1 finding; arguments parsed by position (parseArgs), a set value may start with --; 86 tests, tsc, p:plugins:check green | — |
+| 1 | R1 | opus | 2 | pass | both round-1 findings resolved; CONTRACT clean; RULINGS clean | — |
 
 ## Launch
 
