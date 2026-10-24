@@ -309,8 +309,11 @@ the slice maps to no flow.>
 ## Gaps surfaced during execution <!-- cycle plans only -->
 
 <appended by `execute` as blueprint/plan holes surface — empty at approval. One
-terse line per gap: stage that found it · what the blueprint/plan under- or
-mis-specified · the assumption execution proceeded on. The durable,
+terse line per gap, starting with its state: `open` or `closed` · stage that
+found it · what the blueprint/plan under- or mis-specified · the assumption
+execution proceeded on, or how the run closed it. Only `open` entries count in
+the index's `Gaps` cell and keep the folder live; a person who rules on one
+changes its word to `closed` and adds the ruling. The durable,
 mempalace-independent copy; full detail lives in the mempalace `gaps` room.
 Reconciled into the blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at
 cycle end.>

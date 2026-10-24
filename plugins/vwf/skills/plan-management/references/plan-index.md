@@ -44,7 +44,7 @@ Header row, exactly:
 | `Target repo` | for a cycle plan, the member repo whose code it changes, resolved per `assets/membership.md`; `—` for a change plan, and for any plan in a `repo` or `monorepo` topology |
 | `Priority`    | the derived integer — `10 + max(Priority of every unarchived plan in its requires:)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `Status`      | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                               |
-| `Gaps`        | `-` until the plan lands; then the count of entries in the folder's *Gaps surfaced during execution* — `0` when it holds none; `0 — moved to <basename>` once a later plan's `gaps_of:` takes them, each later plan's basename added after a comma |
+| `Gaps`        | `-` until the plan lands; then the count of `open` entries in the folder's *Gaps surfaced during execution* (an entry with no state word counts, a `closed` one never does) — `0` when none is open; `0 — moved to <basename>` once a later plan's `gaps_of:` takes them, each later plan's basename added after a comma |
 | `Requires`    | the **basenames** of the folder's `requires:` entries, or `—`                                                    |
 | `Backlog`     | the ids from the folder's `backlog:` frontmatter — the `Bnn` prefixes of the backlog project's items, the ones the plan finishes — then the ids from its `backlog_pieces:` frontmatter, the ones it lands a piece of, each written `Bnn (piece)`; `—` when both are empty, and an absent `backlog_pieces:` reads as empty |
 
@@ -215,8 +215,8 @@ was taken.
    - **Unclaim** — the row `Status` from `RUNNING` back to `APPROVED`, once
      the verb's liveness check and the user's consent have passed.
    - **Completion** — the row `Status` to `COMPLETE` and its `Gaps` cell to
-     the count of entries in the folder's *Gaps surfaced during execution*,
-     then the sweep below.
+     the count of `open` entries in the folder's *Gaps surfaced during
+     execution*, then the sweep below.
      The `Folder` cell is re-pointed to `docs/plans/archived/<basename>` by
      whichever skill moves the folder: the completion edit itself when the
      landing's gap list is empty, `archive` returned no completion warning,

@@ -2634,8 +2634,8 @@ every approved plan of either kind waits: one row per folder — `Folder`, `Kind
 a piece of, each written `Bnn (piece)`) — with a status of `APPROVED`, `RUNNING`
 or `COMPLETE` and nothing else; the folder's own Status block keeps the run
 detail (`BLOCKED`, a pause, the worktree path), which the index never mirrors.
-`Gaps` reads `-` until the plan lands, then the count of entries in the folder's
-*Gaps surfaced during execution* — `0` when there are none. A later plan that
+`Gaps` reads `-` until the plan lands, then the count of `open` entries in the
+folder's *Gaps surfaced during execution* — `0` when none is open. A later plan that
 takes those gaps lists the folder on its `gaps_of:` frontmatter, and its
 hand-off sets the cell to `0 — moved to <that plan>`. An index without the
 column gets it from the next writer, with `-` in every row already there. The
@@ -3009,7 +3009,14 @@ not conflict on it. After that commit is pushed, the run calls
 graphify rebuild, which the task starts in the background — so under
 `/vwf:execute all` each plan starts after a refresh of the graph that the merge
 changed; a repo with no `code:graph` task skips the step. **Where the folder
-ends up depends on the gap list.** When no gap is open, the landing moves the
+ends up depends on the gap list.** Each entry of *Gaps surfaced during
+execution* starts with its state, `open` or `closed`. The run writes `closed`
+only for what it settled itself with no ruling owed — an Owns widened and the
+fix applied, a finding a later round or the closing pass resolved — and `open`
+for everything that still wants you: an assumption a unit took, a `contested`
+finding, an oscillation. An entry with no state word, from an older run, counts
+as `open`. When you rule on an entry, change its word to `closed` and add the
+ruling. When no entry is open, the landing moves the
 folder whole to `docs/plans/archived/` and the row's `Folder` points there — it
 is finished and the archive is its record. When any gap is open, the folder
 stays live at its path as the working record of what needs reconciling, the row

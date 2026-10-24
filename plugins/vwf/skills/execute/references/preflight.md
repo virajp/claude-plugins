@@ -44,7 +44,7 @@ row in the folder's **Consent** block — `LSP <language>`, reading `installed` 
 - **`proceed without`** → log it as a Run log detail and continue; degraded
   type-safety is a known condition of the run, not a gap.
 - **No row for the flagged language** → treat it as `proceed without`, and
-  write one `GAP:` line into the folder's *Gaps surfaced during execution*:
+  write one `open` entry into the folder's *Gaps surfaced during execution*:
   the plan did not carry the LSP answer for `<language>`, and the run proceeded
   without the server.
 - A language doctor reports as **unavailable** (no LSP ships in this
