@@ -10,7 +10,10 @@ Every write below is one call in the worktree to
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs`:
 `set <folder>/index.json stages.<stage>.state <state>` and
 `set <folder>/index.json stages.<stage>.detail "<one line>"` for the stage's
-result, `append <folder>/index.json gaps --json <entry>` for a gap.
+result, `append <folder>/index.json gaps --json <entry>` for a gap. Each
+`set` of a stage is followed by one `log.mjs event row`, `{"stage", "status"}`
+plus its `detail`, and each `append` by one `log.mjs event gap` with its
+`source` `acceptance` or `ux`, per *The plan files* in `SKILL.md`.
 
 - **Each stage's result** goes to `stages.acceptance` and `stages.ux`:
   `green` on a clean pass, or once the loop below leaves no residual;

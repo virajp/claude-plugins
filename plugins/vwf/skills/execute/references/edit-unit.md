@@ -46,6 +46,11 @@ checker a repo has.
    Write the fields **when the report arrives**, not at the end of the wave —
    a field written late is a unit a resumed run repeats. The unit's `commit`
    is set when the orchestrator commits it, per the staging discipline.
+   Each of those `set` calls of a unit's `status`, `rounds` or `commit` is
+   followed by one `log.mjs event row`, and each `append` to `gaps` in this
+   file — here, in the loop and in the closing pass — by one
+   `log.mjs event gap` with its `source` `unit` or `wave-review`, per *The
+   plan files* in `SKILL.md`.
 
 ## The reviewer
 
