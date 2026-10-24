@@ -35,8 +35,8 @@ gradle/wrapper/gradle-wrapper.properties # tracked — the Gradle version pin
   `gradle/actions/wrapper-validation` — or `gradle/actions/setup-gradle`, which
   validates it built in — before its first Gradle step. `distributionSha256Sum`
   covers the distribution the jar downloads; validation covers the jar itself.
-  The language pack's `setup:deps:install:kotlin --frozen` fails when
-  `distributionSha256Sum` is unset, and warns without `--frozen`.
+  Keep `distributionSha256Sum` set: CI must never run an unverified Gradle
+  distribution.
 
 ## The Kotlin DSL
 

@@ -10,7 +10,7 @@ that formats is the toolchain the repo already pins.
 
 **One configuration, under `.config/`.** swift-format discovers a
 `.swift-format` file by walking up from each source file; this pack puts its
-configuration at `.config/swift-format.json` instead, so every invocation names
+configuration is `.config/swift-format.json` instead, so every invocation names
 it with `--configuration`. No `.swift-format` belongs in the tree: the gate would
 ignore it while an editor picked it up, and the two would format differently.
 
@@ -24,16 +24,15 @@ blank line, trailing commas on multi-line collections. The lint-style rules
 swift-format also carries stay at upstream's defaults — SwiftLint is the
 correctness gate, and two linters reporting one finding is noise.
 
-**Formatting is a task, not an editor action.** This pack's
-`code:format:swift-format` subtask checks, and with `--fix` rewrites, through
-this configuration; `code:lint:swift-format` runs the strict lint, under
-`--fix` too. The repo's `code:format:all` and `code:lint:all` run them.
+**Formatting is a task, not an editor action.** `mise run code:format`
+checks through this configuration, and with `--fix` rewrites;
+`mise run code` runs it beside the lint gate.
 
 ## What this pack writes
 
-Three files: the two subtasks, and `.config/swift-format.json`, the
-configuration — every key spelled
-out, so a toolchain upgrade that changes a default does not change the layout
-unannounced.
+Nothing into the repo. The task and the configuration are bootstrap's; the
+configuration is a seed, which the repo owns once it lands. Every key in it
+is spelled out, so a toolchain upgrade that changes a default does not
+change the layout unannounced.
 
 Full judgment: the `swift-format` skill.

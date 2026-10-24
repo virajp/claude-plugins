@@ -32,8 +32,8 @@ anything bun does not cover natively.
 - **dprint** formats (one root config, symlinked into each member); **ESLint**
   lints; **gitleaks** and **grype** gate security — all wired through
   pre-commit: format → lint → tests.
-  The gates are `stackgen:tool-config`'s, whose dprint plugins and excludes
-  already cover every stack; this bundle's packs add their own subtasks.
+  The gates, their configs and the hooks are bootstrap's, and cover every
+  stack; `mise run code` runs them all.
 - **`bun test`** is the test runner. A project needing Vitest-specific APIs
   keeps Vitest and runs it under bun; record that in the project's own template
   choice rather than here.
@@ -42,8 +42,9 @@ anything bun does not cover natively.
 
 - **mise** manages tools with the three-file `MISE_ENV` split under `.config/`:
   base runtime (`bun`), `dev` (formatters, linters, security tools), `ci`
-  (production endpoints/overrides). File-based task library with per-project
-  prefixes plus `all:*`, `code:*`, `release:*`.
+  (production endpoints/overrides). bootstrap owns the tool pins and the
+  generic tasks (`mise run setup`, `mise run code`); the repo adds per-project
+  prefixes plus `all:*` and `release:*`.
 - **Secrets** are injected by the manager the backing axis names — every
   dev/test script runs under its wrapper rather than reading a committed file.
 

@@ -29,7 +29,7 @@ no fnox credential on a runner.
 ## The credentials fnox itself uses
 
 **The keychain** needs none beyond the developer's own login session: values
-sit in the OS keychain under the shipped provider's `service` and `prefix`,
+sit in the OS keychain under the seed provider's `service` and `prefix`,
 and `fnox.toml` holds only the entry names.
 
 **A cloud reference** authenticates the way that store's own CLI does — the

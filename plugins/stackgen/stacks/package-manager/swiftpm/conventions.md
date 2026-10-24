@@ -6,8 +6,9 @@ toolchain.
 
 Everything here governs a `Package.swift` the repo owns and the
 `Package.resolved` beside it; the `Package.resolved` Xcode keeps inside an
-`.xcodeproj` is the app's, resolved and updated through
-`mise run setup:deps:*`, never `swift package resolve` or `update`.
+`.xcodeproj` is the app's, resolved through `mise run setup` and updated
+through `mise run setup --upgrade`, never `swift package resolve` or
+`update`.
 
 **`Package.swift` is the manifest, and it is code.** It declares the tools
 version on its first line, the products, the targets and the dependencies.
@@ -31,16 +32,15 @@ releases, and says why in a comment.
 Moving a pin is `swift package update`, run on purpose and committed.
 
 **`.build/` is the one build tree**: regenerable, and ignored by the
-universal `.gitignore` tool-config lands in every repo, whose Swift section
-carries it. Nothing is checked in from it. `.swiftpm/`, SwiftPM's per-user
-state, is ignored by the same section, whole — git cannot re-include a path
+repo's `.gitignore`, whose Swift lines bootstrap owns. Nothing is checked in
+from it. `.swiftpm/`, SwiftPM's per-user state, is ignored by the same
+lines, whole — git cannot re-include a path
 under an ignored directory, so shared Xcode settings do not live in
 `.swiftpm/configuration/`.
 
 ## What this pack writes
 
-Nothing into the repo. The dependency subtasks —
-`setup/deps/<verb>/swift` — call `swift package`, and they belong to the
-language pack, which owns the toolchain they run.
+Nothing into the repo. The dependency tasks that call `swift package` are
+bootstrap's: `mise run setup` and `mise run setup --upgrade`.
 
 Full judgment: the `swiftpm` skill.

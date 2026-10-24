@@ -29,7 +29,7 @@ this reference is what the app adds.
   ```kotlin
   @RunWith(AndroidJUnit4::class)
   @GraphicsMode(GraphicsMode.Mode.NATIVE)
-  @Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)
+  @Config(qualifiers = "w412dp-h915dp-port")
   class OrderListGoldens {
     @get:Rule val compose = createComposeRule()
 
@@ -41,9 +41,10 @@ this reference is what the app adds.
   ```
 
   The file name is the screen's code and state, under the platform the
-  qualifiers render (`mobile` for a phone, `tablet` for `MediumTablet`, `watch`
-  for `WearOSLargeRound`, `tv` for `Television1080p`), so the `ux-gate` finds
-  it. Paths and properties are the conventions'.
+  qualifiers render (`mobile` for `w412dp-h915dp-port`, `tablet` for
+  `w800dp-h1280dp-port`, `watch` for `WearOSLargeRound`, `tv` for
+  `Television1080p`), so the `ux-gate` finds it. Paths and properties are the
+  conventions'.
 - **Every pinned state of a screen in the flow's Screens table has a golden**,
   on every platform the screen ships to. A state with no golden is a gap the
   `ux-gate` reports. An `auto` screen is the exception: it is a Car App
@@ -57,6 +58,10 @@ this reference is what the app adds.
   `mise run test:golden -- --record` re-records; the changed PNGs are reviewed
   as a diff before they are committed, and a recording is never committed to
   make a failing verification pass without that review.
+- **Goldens are recorded in CI, on Linux.** `GraphicsMode.NATIVE` renders
+  differ between macOS and Linux, so `--record` runs on a Linux CI runner. A
+  local run on macOS only verifies, and a diff there is not a failure of the
+  code.
 - **Goldens are deterministic.** No current time, random data or network in a
   golden: the sample UI states are fixed, animations are at rest, and fonts are
   bundled rather than the system's.

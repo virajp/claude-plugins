@@ -2,7 +2,7 @@
 
 Android Lint knows what the Kotlin tools cannot: API levels, resources, the
 manifest, accessibility of views, Compose rules shipped inside the AndroidX
-artifacts. It runs as `code:lint:android` — `./gradlew lint`, every Android
+artifacts. `mise run code:lint` runs it — `./gradlew lint`, every Android
 module — beside **ktlint** (layout) and **detekt** (Kotlin static analysis);
 the three do not overlap, and none is a substitute for another.
 
@@ -43,11 +43,10 @@ without fixing everything first. It is **debt with a ledger**:
 
 ## Fixes
 
-`mise run code:lint:android -- --fix` runs `lintFix`, which applies the fixes
-lint marks as safe and then reports what remains. Review the diff — a safe fix
-is mechanical, not necessarily right for the code around it. The commit hook
-passes a file list, and with one the task runs `lint` alone: `lintFix` rewrites
-across every module, so it runs only when asked for over the whole repo.
+`./gradlew lintFix` applies the fixes lint marks as safe and then reports what
+remains. Review the diff — a safe fix is mechanical, not necessarily right for
+the code around it. `lintFix` rewrites across every module, so run it over the
+whole repo, by hand, never from the commit hook.
 
 ## Custom checks
 

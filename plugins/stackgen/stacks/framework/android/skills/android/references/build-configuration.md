@@ -31,9 +31,9 @@ One block per Android module, and it states, in this order:
 
 ## The SDK levels
 
-Three numbers, written in the build script as literals and in
-`.config/mise/conf.d/android/mise.toml` as `COMPILE_SDK`, `MIN_SDK` and
-`TARGET_SDK`:
+Three numbers, written in the build files and nowhere else — `mise run setup`
+reads the compile and target levels from there to install the SDK platform
+and the emulator image:
 
 | Level | Means | Moves when |
 | --- | --- | --- |
@@ -52,10 +52,13 @@ three numbers in one place — a convention plugin in `build-logic/` (the
 
 - `debug` is debuggable and unshrunk; `release` is shrunk and signed by the
   release pipeline, never by a key in the repo.
-- Product flavors only for a real product dimension — a free and a paid app, a
-  staging and a production backend — each in a named `flavorDimensions` entry.
-  An environment value a flavor differs by is a `buildConfigField` or a
-  resource, never an `if` on the flavor name in code.
+- Product flavors only for a real product dimension — a free and a paid app —
+  each in a named `flavorDimensions` entry.
+- An environment (staging, production) is a build config field, set per build
+  type or read from the CI environment, never a product flavor: one build per
+  build type, no variant per environment, and the code reads one
+  `buildConfigField`, never an `if` on a flavor name. The Compose pack's
+  build-and-variants reference states the same rule.
 - Every flavor multiplies the variants, the build time and the test matrix. Two
   dimensions of two is already eight variants with both build types; prefer
   runtime configuration where the artifact need not differ.

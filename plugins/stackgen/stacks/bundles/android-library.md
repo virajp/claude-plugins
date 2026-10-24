@@ -3,11 +3,11 @@ name: Android · library
 axis: project
 kind: language-bundle
 components:
-- language/kotlin@0.1.0
-- package-manager/gradle@0.1.0
-- toolchain-gate/ktlint@0.1.0
-- toolchain-gate/detekt@0.1.0
-- framework/android@0.2.0
+- language/kotlin@1.0.0
+- package-manager/gradle@0.1.1
+- toolchain-gate/ktlint@1.0.0
+- toolchain-gate/detekt@1.0.0
+- framework/android@1.0.0
 platforms:
 - packages
 ---
@@ -30,27 +30,24 @@ use, Android apps included: it needs no SDK, no emulator and no Android Lint.
 
 ## Stack
 
-- **Kotlin on the JVM**, from the `kotlin` pack: mise pins the **JDK**, the
-  compiler is the Kotlin Gradle plugin's, and **kotlin-lsp** is the language
-  server.
+- **Kotlin on the JVM**, from the `kotlin` pack: the toolchain bootstrap
+  syncs pins the **JDK**, the compiler is the Kotlin Gradle plugin's, and
+  **kotlin-lsp** is the language server.
 - **Gradle**, from the `gradle` pack, owns the build through the committed
   wrapper, with versions in the version catalog `gradle/libs.versions.toml`
   and dependency locking in the tracked `gradle.lockfile`.
-- **ktlint** formats and lints and **detekt** lints for code smells, each
-  through its own subtasks, which the repo's `code:format:all` and
-  `code:lint:all` run.
+- **ktlint** formats and lints and **detekt** lints for code smells; the
+  toolchain bootstrap syncs pins both, and `mise run code` runs them.
 - **Android**, from the `android` pack: the **Android Gradle Plugin**'s
   library plugin, which fetches its own build-tools on first build; the
-  **Android SDK**, whose cmdline-tools mise pins and whose platform-tools,
-  compile platform, emulator and emulator system image
-  `setup:deps:install:android` installs with `sdkmanager` into `ANDROID_HOME`
-  (`~/.local/share/android/sdk`), from the `COMPILE_SDK` and `EMULATOR_IMAGE`
-  values `/vwf:setup` asks for as it lands the pack, beside `MIN_SDK` and
-  `TARGET_SDK`; **Android Lint** under `code:lint:android`; and **Gradle
-  Managed Devices** for instrumented tests on a headless emulator:
-  `mise run test:e2e` runs `./gradlew e2eDebugAndroidTest` on the module's one
-  managed device, `e2e`, while `mise run test:e2e -- --connected` runs
-  `connectedCheck` on an emulator or device already running.
+  **Android SDK**, which `mise run setup` installs into `ANDROID_HOME` —
+  platform-tools, the compile platform, the emulator and its system image,
+  at the levels it finds in the build files; **Android Lint**, which
+  `mise run code:lint` runs; and **Gradle Managed Devices** for instrumented
+  tests on a headless emulator: `mise run test:e2e` runs
+  `./gradlew e2eDebugAndroidTest` on the module's one managed device, `e2e`,
+  while `mise run test:e2e -- --connected` runs
+  `connected<Variant>AndroidTest` on an emulator or device already running.
 
 ## What it does not carry
 

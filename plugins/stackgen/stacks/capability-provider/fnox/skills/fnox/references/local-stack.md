@@ -29,10 +29,9 @@ Every value the local stack needs is declared in `fnox.toml` by name, and its
 value sits in the developer's keychain or behind a cloud reference. They are
 throwaways — a database password nobody outside the machine can reach.
 
-A fresh clone runs as soon as the keychain is populated: the shipped
-`if_missing = "warn"` lets a task start with a missing entry reported rather
-than refused, so the first hour is `mise install`, `mise run setup:secrets`,
-then a `fnox set` per declared name.
+A fresh clone runs as soon as the keychain is populated, so the first hour
+is `mise run setup`, which installs the tools and checks the secrets, then a
+`fnox set` per declared name.
 
 ## Tests need no manager
 

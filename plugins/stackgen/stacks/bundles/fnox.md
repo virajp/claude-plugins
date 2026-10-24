@@ -3,7 +3,7 @@ name: fnox
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/fnox@2.0.0
+- capability-provider/fnox@3.0.0
 ---
 
 # Backing — fnox
@@ -29,17 +29,12 @@ populating your own keychain. That is a different answer from a hosted
 platform's, not a better one — the argument belongs in the component's
 pick-and-trade reference, and neither the contract nor this bundle ranks them.
 
-**What it lands in the repo.** Its own config at the **repo root** — an
-accepted exception to the rule that everything configurable lives under
-`.config/`, because this tool discovers its config by walking up from the
-working directory and a nested one would be found from some directories and
-not others. Beside it: the tool's pin, rendered from the pack's template
-into `.config/mise/conf.d/fnox/`, which the toolchain manager auto-loads, and
-a fill of the manager's `setup/secrets` slot that verifies the tool is
-reachable and reports the keychain prefix in use — it replaces the shipped
-placeholder, the one tool-config path a pack may fill. The local override
-file, `fnox.local.toml`, is gitignored by the repo's universal `.gitignore`.
-It ships no hook and asks for no scanner, gitignore or mining edit. The
+**What it lands in the repo.** Nothing of its own. The tool's pin, its
+config and the secrets check are bootstrap's: the config is a seed the repo
+owns once it lands, and `mise run setup` checks that the tool is reachable
+and the secrets are configured. The local override file, `fnox.local.toml`,
+is gitignored by the repo's `.gitignore`. It ships no hook and asks for no
+scanner, gitignore or mining edit. The
 profile shape — a development and a `ci` profile under `FNOX_PROFILE` — is
 the repo's setup tool's to render, not this pack's.
 

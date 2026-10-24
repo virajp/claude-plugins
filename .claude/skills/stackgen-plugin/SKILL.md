@@ -46,8 +46,9 @@ only for the first `all` on a repo with no mise config), JSON on stdout, exit 0,
 renders `skills/tool-config/templates/` from `.config/stackgen.yaml` — the
 repo's values, which **the script alone writes** — in four calls: `all` (the
 repo's values as flags, every asset and template),
-`pack --slug <s> --dir <pack dir>` (a pack's `templates/` and its `--set`
-values), `pack-remove --slug <s>` and `upgrade` (the exact pins forward). Each
+`pack --slug <s> --dir <pack dir>` (a pack's `templates/` and its `--set` values
+— no shipped pack has either since 2026-10-23, so the materializer no longer
+calls it), `pack-remove --slug <s>` and `upgrade` (the exact pins forward). Each
 list a pack once appended to ships as a **universal superset**, and six files
 carry one `# >>> tool-config` / `# <<< tool-config` marker pair whose outside
 lines are the repo's own; every other file is owned whole. Dev-only mise files
@@ -136,28 +137,28 @@ the script alone writes; one with the old mise layout and no `stackgen.yaml` is
 moves it ships. What setup *does* fetch is every **pinned** axis — its
 materialize pass invokes `-stack-template` once per `(repo, slug)`, with the
 `repo:` line naming the member — which is the one landing path
-`/vwf:architecture` no longer takes. That pass carries an **`answers:` map**
-beside the `repo:` line, and so does `stackgen-sync`: all three callers read the
-two axes from the repo's own `.config/stackgen.yaml` — `secrets` and `forge`,
-which init passed to `tool-config all` as `--secrets` and `--forge` — and
-re-read `forge` live from that repo's `origin`, so a pinned pack's conditional
-files land there only where init's answers allow (no shipped pack declares one
-today). Since vwf's `config_format` 23 nothing reads a `.config/vwf.yaml`
-`answers:` block, and no caller edits `stackgen.yaml` by hand: a held `forge`
-the live host contradicts is passed again through `tool-config all --forge`, and
-landing the forge-conditioned files that staleness had skipped is
-`/vwf:setup reshape`'s, which `/vwf:doctor` names. The pass also carries a
-**`values:` map** — pack slug → lowercase name → value — of each pinned pack's
-`values:` entries (`name`, `detect`, `question` in its `pack.yaml`), which setup
-gathers by running `detect`, else asking `question`; the materializer copies the
-pack's `config/`, then runs
-`tool-config pack --slug <slug> --dir <pack dir> --set <name>=<value>…` for its
-`templates/`, and records each rendered path in the lockfile with
-`rendered: true` and **no hash** — judged against a fresh render
-(`preview pack`), never against bytes. Removal runs `pack-remove` first, then
-deletes the pack's recorded files, rendered ones among them; `stackgen-sync`
-refreshes rendered entries by re-running `pack` for a newer pack version, never
-by diffing them.
+`/vwf:architecture` no longer takes. The `repo:` line is the whole of the
+optional input beside the catalog paths: the `answers:` and `values:` maps
+retired on 2026-10-23 with the pack keys they fed.
+
+**A pack ships no toolchain.** The tool pins, gates, gate configs, generic tasks
+(`setup:deps`, `code:format`, `code:lint`), pre-commit hooks and secrets setup
+of a repo are **bootstrap**'s — a separate repo, selected in
+`.config/bootstrap.toml` and synced by `mise run setup:configs`. The
+materializer reads a fresh shallow clone of bootstrap to choose the tools a
+composition needs, from each component's `pack.yaml` facts and conventions, and
+sends `add tools` and `add user plugins` instructions through bootstrap's
+`docs/sync/vwf.md`, behind their own consent line. It never edits
+`.config/bootstrap.toml` and never names a bootstrap tool from memory; it
+records what it asked for in the lockfile's `bootstrap:` block, so removal sends
+the matching `remove` and `stackgen-sync` diffs that block. A pack names its
+Claude plugin in a `## Claude plugins` section of its `conventions.md`. A repo
+with no `.config/bootstrap.toml` gets nothing landed — a pack's tasks source
+bootstrap's `_scripts/helpers` — and the remedy named is `/vwf:setup reshape`. A
+value only the machine can answer (`XCODE_VERSION`, `SIMULATOR_*`,
+`COMPILE_SDK`, `EMULATOR_IMAGE`) is found by bootstrap's tasks, or set by the
+repo in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml`. The
+procedure is `skills/stackgen-stack-template/references/bootstrap-handoff.md`.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 `stackgen-stack-menu` copies it onto every entry whose bundle carries it and
@@ -188,9 +189,9 @@ the canvas from the repo, waits for **Done**, then applies every open comment).
 The server is the skill's own `scripts/serve.mjs`, a single-file Node program
 with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
 canvas, carries no auth and no TLS, and appends each comment to a **committed**
-`comments/<flow>--<platform>.yaml`. It requests `taste-skill@taste-skill`
-through its own `setup/ai/claude-code` subtask, which `setup:ai:all` calls, so
-the repo installs it at user scope when no scope serving the repo has it.
+`comments/<flow>--<platform>.yaml`. It names `taste-skill@taste-skill`, at user
+scope, in the `## Claude plugins` section of its `conventions.md`, and the
+materializer asks bootstrap to install it.
 
 A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,
 since 2026-10-10: its keys a subset of the bundle's `platforms:`, the first OS
@@ -216,163 +217,89 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   generated `lspServers` entry **must** carry an `extensionToLanguage` map;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
-  Four kinds of entry since 2026-09-27: **(a)** is retired — the toolchain
-  manager's own config and task library are `stackgen:tool-config`'s, landed
-  from its `assets/` and `templates/`, never a pack's `config/` tree — what a
-  pack adds is a **subtask** under `.config/mise/tasks/` —
-  `code/{check,format,lint}/<slug>`, `setup/ai/<slug>` or
-  `setup/deps/<verb>/<slug>`, the leaf always its slug — which the `…:all` task
-  tool-config renders calls; **(b)** a language gate's own config
-  (`.config/swiftlint.yml`, `.config/swift-format.json`, …) — dprint,
-  pre-commit, gitleaks and grype are the skill's since 2026-09-26; **(c)** is
-  retired too — since 2026-09-27 the hygiene config files (`.gitignore`,
-  `.gitattributes`, `.graphifyignore`) are `stackgen:tool-config`'s universal
-  files, the prose files (`CONTRIBUTING.md`, `SECURITY.md`, the licence texts,
-  the issue forms) are `/vwf:init`'s own assets, and `.editorconfig` lands
-  nowhere. What survives it is the **conditional** list, since 2026-09-21: a
-  pack's `pack.yaml` may carry a `conditional:` list, each entry a `config/`
-  path or glob and a `when:` of one axis to one value from the fixed vocabulary
-  `forge` (`github`, `gitlab`) or `secrets` (a provider slug) — no shipped pack
-  uses it today, since the per-pack editor settings it once guarded were dropped
-  on 2026-10-01 with the `editor` axis. The materializer evaluates each against
-  the `answers:` map the caller passes beside `repo:` — all three callers pass a
-  full map read from the repo's `.config/stackgen.yaml` (`forge`, `secrets`),
-  the forge re-read live from `origin`; an axis left out reads **true** and
-  lands, the fallback for a caller none of this describes — and writes a
-  never-landed false path to the lockfile's `skipped:` list as
-  `{ path, pack, when }`, never a create and never a conflict, so `/vwf:doctor`
-  never reports it missing and a file at that path is the repo's own; a path
-  with an `entries:` record whose answer since flipped keeps its record and is
-  never removed. A pack's `skipped:` rows **live and die with its `entries:`**:
-  removing or un-pinning the pack drops its rows too, so the list never claims a
-  path is intentionally absent for a condition nothing evaluates any more.
-  `stackgen-sync` evaluates the same conditions before it classifies a pack's
-  landing set, and gains three states beside its three — a false path with no
-  record is **skipped (condition)** and is its `skipped:` row; a never-landed
-  path whose condition now holds is **landable — condition now true** and is
-  offered as a create under the consent tier a new pack file already takes; a
-  landed path whose condition turned false is **kept**, reported once and never
-  removed. A pack's ignore and attribute lines are not its own at all:
-  tool-config's `.gitignore`, `.gitattributes`, exclude set, linter ignores and
-  formatter plugins are **universal supersets** carrying every stack's entries —
-  node's, Python's, Dart's, Flutter's, Swift's, Gradle's, Kotlin's and
-  Android's, fnox's `fnox.local.toml`, pnpm's and SwiftPM's lockfile markers —
-  whether or not the repo uses that stack; **(d)** is retired too — a mise
-  `conf.d/` file in `config/` is refused by rule 11: a pack's tool pin,
-  environment values and aliases (fnox's pin, pnpm's `npx`, swiftlint's pin,
-  swiftui's four Xcode and simulator values as `@@` names, android's
-  cmdline-tools pin and its four SDK and emulator values) live in its
-  **`templates/`** tree, in `templates/.config/mise/conf.d/<slug>/` and nowhere
-  else in `conf.d/`, which
-  `/stackgen:tool-config pack --slug <slug> --dir <pack dir>` renders, its
-  values declared in the pack's `values:` list, given with `--set` and stored
-  under `packs.<slug>` in `.config/stackgen.yaml`, and a pack dropped from a
-  composition gets `pack-remove --slug <slug>`, deleting `conf.d/<slug>/` and
-  every subtask named for it; **(e)** is retired too — a `.config/pre-commit.d/`
-  file is refused by rule 11: the hooks are tool-config's universal set, calling
-  the `…:all` tasks, so a pack's check is a subtask — uv's `uv lock --check` is
-  `code/check/uv`; **(f)** a deploy target's own config and its deploy task,
-  since 2026-09-05 — `cloud-service/workers-static-assets`, its `workers-ssr`
-  sibling and `cloud-service/containers` each ship `wrangler.jsonc` at the root
-  (the SSR and Containers ones both carrying `main`, the Containers one adding a
-  `containers` array, the Durable Object binding that addresses it and the
-  migration that declares the class) plus a
-  `.config/mise/tasks/p/_project/deploy` overlay, and the first two were the
-  first `cloud-provider`/`cloud-service` packs to ship a `config/` tree at all,
-  which is what put both types on the composition order (**last**, after
-  `capability-provider`); **(g)** a **project task a framework pack owns**,
-  since 2026-09-14 — the same `p/_project/` marked position and the same rename,
-  landed from the **project** axis rather than the deploy one: `framework/astro`
-  ships an `icons` overlay there, which rasterizes the favicon set from the
-  product's mark, and `framework/html` ships a byte-identical copy of it — rule
-  13 forbids a payload citing a sibling pack, and no tier offers a shared home
-  yet. The position is shared on purpose, so a pack adding a file to it names a
-  task no other pack in the same bundle already ships; and **(h)** is retired
-  too — since 2026-10-01 no pack ships **editor settings**; the one
-  `.vscode/settings.json` every repo gets is tool-config's universal asset since
-  2026-10-05 (`docs/memory/decisions/2026-10-05-vscode-settings-universal.md`).
-  Note the second underscore rule: `config/_<name>/` at the top of the tier is
-  pack-private and never copied, but nested deeper `p/_project/` is a **marked
-  position**, copied and renamed to the pinned project's id — **slugged** per
-  `assets/ids.md`, which owns that rule and the measured reason for it. Still
-  fenced out: `package.json`, any language manifest or lockfile, a pack's own
-  editor settings, and CI workflows — the last of those refused *inside*
-  `.github/`, which is otherwise an allowlisted root directory beside
-  `.config/`. What lands at the repo **root** is capped by a fixed allowlist,
-  whose doctrine is `assets/output-tree.md` and whose two tiers do not both
-  reach the checker: the **landable** tier is `PACK_CONFIG_ROOT_FILES` in
-  `scripts/src/check.ts`, enforced by `p:plugins:check` rule 11, and beside it
-  sits a second tier of root files **vwf** writes — `CLAUDE.md` and
-  `mempalace.yaml` — which may sit at a shaped root and which no pack may land.
-  `readme.md` is on the landable tier only because a shaped repo has one — **no
-  pack may ship it**. The git and graphify root files left the pack tier on
-  2026-09-27: tool-config's trees admit them beside its own root
-  (`TOOL_CONFIG_ROOT_FILES`), with `.vscode/`, and a pack ships none of their
-  lines. Renovate is gone altogether since 2026-10-05 — no asset, no reference,
-  no `update_bot` axis. The lockfile's per-file `hash:` — on every copied entry,
-  never a `rendered: true` one — is the landing hash **re-recorded by
-  `/vwf:init`** after its replace-or-keep offer, so a differing hash is drift
-  only when no such writer ran — `assets/output-tree.md` and the materializer
-  reference both say so.
+  Since 2026-10-23 the tier is an **allowlist**, and rule 11 refuses any other
+  path: a test task (`.config/mise/tasks/test/<name>` — swiftui's and compose's
+  `test/golden`, android's `test/e2e`), a project task at the
+  `.config/mise/tasks/p/_project/` marked position (the three Cloudflare deploy
+  packs' `deploy` overlay, `framework/astro`'s `icons` and `framework/html`'s
+  byte-identical copy of it — rule 13 forbids a payload citing a sibling pack),
+  a root file on the landable allowlist (the deploy packs' `wrangler.jsonc`),
+  and `config/_<name>/`, pack-private and never copied. Everything a pack once
+  shipped beyond that — subtasks, gate configs (`.config/swiftlint.yml`, …),
+  `templates/` mise folders, pnpm's `.npmrc` and `npx` alias, fnox's `fnox.toml`
+  and `setup/secrets` — is bootstrap's or gone; the `.npmrc` and
+  `code:format:pnpm` have no replacement. The `p/_project/` position is shared
+  on purpose, so a pack adding a file to it names a task no other pack in the
+  same bundle already ships. Note the second underscore rule: `config/_<name>/`
+  at the top of the tier is pack-private and never copied, but nested deeper
+  `p/_project/` is a **marked position**, copied and renamed to the pinned
+  project's id — **slugged** per `assets/ids.md`, which owns that rule and the
+  measured reason for it. Still fenced out: `package.json`, any language
+  manifest or lockfile, a pack's own editor settings, and CI workflows — the
+  last of those refused *inside* `.github/`, which is otherwise an allowlisted
+  root directory beside `.config/`. What lands at the repo **root** is capped by
+  a fixed allowlist, whose doctrine is `assets/output-tree.md` and whose tiers
+  do not all reach the checker: the **landable** tier is
+  `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
+  `p:plugins:check` rule 11, and beside it sits a tier of root files **vwf**
+  writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped root and
+  which no pack may land. `readme.md` is on the landable tier only because a
+  shaped repo has one — **no pack may ship it**. The files bootstrap's sync
+  writes are bootstrap's, and a pack ships none of their lines. The lockfile has
+  no `rendered:` entries and no `skipped:` list. Its per-file `hash:` — on every
+  copied entry — is the landing hash **re-recorded by `/vwf:init`** after its
+  replace-or-keep offer, so a differing hash is drift only when no such writer
+  ran — `assets/output-tree.md` and the materializer reference both say so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
-`settings.json`, `.mcp.json` and a pack's `config/` tree are never written
-without their own separate consent lines; and the local plugin is two separately
-declinable items — the manifest write, and the user-scoped registration, whose
-two `claude plugin` commands are **printed and confirmed, never auto-run**.
-CLAUDE.md is vwf's: the materializer recommends `/vwf:setup`.
+`settings.json`, `.mcp.json`, a pack's `config/` tree and the bootstrap
+instructions are never written or sent without their own separate consent lines;
+and the local plugin is two separately declinable items — the manifest write,
+and the user-scoped registration, whose two `claude plugin` commands are
+**printed and confirmed, never auto-run**. CLAUDE.md is vwf's: the materializer
+recommends `/vwf:setup`.
 
 ## Authoring a pack
 
 - **A landed file cites nothing by plugin path.** Everything under `skills/`,
-  `agents/`, `rules/`, `hooks/`, `config/` and `templates/`, plus a pack's
-  `conventions.md` and a bundle's body, is copied verbatim into a repo where
-  **no plugin is installed**, so `p:plugins:check` rule 13 refuses four forms in
-  them: the literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path, a `../`
-  climb leaving the tree the file lands in (only a file under `skills/` has one
-  — it may still reach a sibling skill of the same pack, which lands beside it;
-  an agent, a rule, a `conventions.md` and a bundle body each land as one file,
-  so any climb at all is a break), and a path into another pack. A bare
-  `<type>/<slug>` — or `<type>/<slug>@<version>` — is the identifier vocabulary
-  and stays legal. Name the asset by **role** ("stackgen's secrets contract"),
-  or state the rule it carries **inline**; a sibling component's conventions are
-  "the `<type>/<slug>` component's conventions, in this composition's template".
-  Never swap one path for another.
+  `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's `conventions.md`
+  and a bundle's body, is copied verbatim into a repo where **no plugin is
+  installed**, so `p:plugins:check` rule 13 refuses four forms in them: the
+  literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path, a `../` climb leaving
+  the tree the file lands in (only a file under `skills/` has one — it may still
+  reach a sibling skill of the same pack, which lands beside it; an agent, a
+  rule, a `conventions.md` and a bundle body each land as one file, so any climb
+  at all is a break), and a path into another pack. A bare `<type>/<slug>` — or
+  `<type>/<slug>@<version>` — is the identifier vocabulary and stays legal. Name
+  the asset by **role** ("stackgen's secrets contract"), or state the rule it
+  carries **inline**; a sibling component's conventions are "the `<type>/<slug>`
+  component's conventions, in this composition's template". Never swap one path
+  for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 makes **seven** assertions, over each pack's
-  `config/` and `templates/` tiers and over tool-config's `assets/` and
-  `templates/` alike (those also admitting `.vscode/` and
-  `.claude/skills/mise/SKILL.md`, nothing else under `.claude/`): the exec bit
-  and a known shebang on every task file (mise reports a 644 task as an
-  *unknown* one rather than a permission error) and on every `hooks/*.sh`; the
-  **landable** tier of the root allowlist over the tier's top level — the
+  `p:plugins:check` rule 11 runs over each pack's `config/` tier and over
+  tool-config's `assets/` and `templates/` alike (those also admitting
+  `.vscode/` and `.claude/skills/mise/SKILL.md`, nothing else under `.claude/`):
+  the exec bit and a known shebang on every task file (mise reports a 644 task
+  as an *unknown* one rather than a permission error) and on every `hooks/*.sh`;
+  the **landable** tier of the root allowlist over the tier's top level — the
   vwf-owned tier never reaches the checker, so a pack shipping `CLAUDE.md` or
   `mempalace.yaml` there is refused like any unallowlisted path — with a CI
-  workflow refused inside `.github/`; that every `conditional:` entry in the
-  pack's `pack.yaml` names a relative path or glob (no `..`) matching at least
-  one file under `config/` — the checker's own walk, so `**` enters `.config/` —
-  and a `when:` of exactly one vocabulary axis with a value it takes,
-  `secrets: none` refused; that the pack's `binaries` and `lockfile` facts take
-  the shapes doctor reads — a binary a bare name or `{ name, probe }`, a
-  lockfile a list of relative paths or globs with no `..` — and that a
-  `tool-config:` or `machine_env:` key is refused outright; that an optional
-  `values:` list is entries of exactly `name` (upper snake, unique, never
-  `FORMAT` or a tool-config global name), `detect` and `question`, each name
-  read as an `@@` tag in the pack's `templates/`; and that every `@@` tag in a
-  template tree is one the engine reads, tool-config's own limited to the global
-  names and a pack's to those plus its `values:` names. Beside those: no mise
-  `conf.d` file and no `pre-commit.d` file in `config/`; a pack's
-  `templates/.config/mise/conf.d/` holding one folder, named for its slug; a
-  subtask's leaf its own slug and never one of tool-config's universal subtask
-  leaves; no reserved slug (`all`, `ai`, `_base`); and no pack file at a path
-  tool-config ships, bar a `#PLACEHOLDER` slot — fnox's `setup/secrets`. Rule 15
-  holds the skill's exclusion lists to one invariant: `assets/.config/`'s
-  `dprint.json` (JSONC, a `../X` entry and its `**/X` twin one entry) and
-  `taplo.toml` and the global `exclude` in `pre-commit-config.yaml` (a `(?x)`
-  block of anchored alternatives) state **one set** after normalisation, and the
-  gitleaks `[allowlist] paths` — every entry anchored `(^|/)`, `.turbo/` among
-  them since 2026-09-21 — is a **subset** of it, never the reverse: the scanner
-  extends upstream's default allowlist and must still walk `.claude/`, which the
+  workflow refused inside `.github/`; under `.config/`, only `test/` and
+  `p/_project/` tasks (`PACK_CONFIG_DOTCONFIG_ALLOWLIST`), which names no
+  bootstrap tool; no pack `templates/` tier; that the pack's `binaries` and
+  `lockfile` facts take the shapes doctor reads — a binary a bare name or
+  `{ name, probe }`, a lockfile a list of relative paths or globs with no `..`;
+  that a `tool-config:`, `machine_env:`, `values:` or `conditional:` key is
+  refused outright; and that every `@@` tag in tool-config's `templates/` is one
+  the engine reads, limited to the global names. The rule in full is the
+  `plugin-authoring` skill's `references/checks.md`. Rule 15 holds the skill's
+  exclusion lists to one invariant: `assets/.config/`'s `dprint.json` (JSONC, a
+  `../X` entry and its `**/X` twin one entry) and `taplo.toml` and the global
+  `exclude` in `pre-commit-config.yaml` (a `(?x)` block of anchored
+  alternatives) state **one set** after normalisation, and the gitleaks
+  `[allowlist] paths` — every entry anchored `(^|/)`, `.turbo/` among them since
+  2026-09-21 — is a **subset** of it, never the reverse: the scanner extends
+  upstream's default allowlist and must still walk `.claude/`, which the
   formatters skip because in a shaped repo it is machine-owned. A list missing
   from the skill's assets is a finding. A pack widens no list: each is a
   universal superset, edited in tool-config's own assets. The house linter's

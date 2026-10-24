@@ -17,9 +17,8 @@ paths:
 
 # ktlint
 
-ktlint decides Kotlin layout, and nothing else does. It is installed through
-mise (`ktlint`, pinned at an exact version in
-`.config/mise/conf.d/ktlint/mise.toml`) and configured at
+ktlint decides Kotlin layout, and nothing else does. The toolchain bootstrap
+syncs installs it, pinned at an exact version, and seeds its configuration at
 `.config/ktlint.editorconfig`, which every invocation names. Moving the pin is
 its own change, with the whole-tree format run in the same commit — a new
 release adds rules.
@@ -29,13 +28,11 @@ release adds rules.
 Through the task library, so the gate and a developer run the same command:
 
 ```bash
-mise run code:format:ktlint        # check — non-zero on any unformatted file
-mise run code:format:ktlint --fix  # rewrite in place
-mise run code:lint:ktlint          # the check, as the lint gate runs it
+mise run code:format   # format, as the format gate runs it
+mise run code:lint     # the check, as the lint gate runs it
 ```
 
-The repo's `code:format:all` and `code:lint:all` run these beside every other
-subtask. Underneath, each hands ktlint the `.kt` and `.kts` files git lists —
+Both run every other gate beside ktlint. Underneath, each hands ktlint the `.kt` and `.kts` files git lists —
 tracked, plus untracked ones not ignored — by name, skipping `build/`,
 `.gradle/`, `.kotlin/` and any `generated/` tree:
 
@@ -69,7 +66,7 @@ answer.
   `ktlint_standard_<rule-id> = disabled`. Check the rule id against ktlint's
   rule list before writing it; an unknown property is ignored silently.
 - **A layout change is its own commit**: edit the file, run
-  `mise run code:format:all --fix` over the whole tree, commit both together
+  `mise run code:format` over the whole tree, commit both together
   with nothing else in it — a reviewer can then skip it as mechanical.
 - **Never add a detekt rule that decides layout.** If the two disagree, the
   detekt rule goes — the `detekt` skill carries the list.
