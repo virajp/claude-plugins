@@ -17,20 +17,18 @@ paths:
 
 # detekt
 
-detekt is the Kotlin correctness gate. It is installed through mise
-(`github:detekt/detekt`, the CLI release zip, pinned at an exact version in
-`.config/mise/conf.d/detekt/mise.toml`), configured at `.config/detekt.yml`,
-and run strict: any finding fails the gate. Moving the pin is its own change,
-with the whole-tree lint run and its fixes in the same commit — a new release
-adds rules.
+detekt is the Kotlin correctness gate. The toolchain bootstrap syncs installs
+it, pinned at an exact version, and seeds its configuration at
+`.config/detekt.yml`; it runs strict: any finding fails the gate. Moving the
+pin is its own change, with the whole-tree lint run and its fixes in the same
+commit — a new release adds rules.
 
 ## Running it
 
 Through the task library, so the gate and a developer run the same command:
 
 ```bash
-mise run code:lint:detekt   # detekt alone
-mise run code:lint:all      # every lint subtask, as the hook runs it
+mise run code:lint   # every lint gate, detekt among them, as the hook runs it
 ```
 
 Directly:

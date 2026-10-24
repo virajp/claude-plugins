@@ -5,8 +5,8 @@ half, deliberately not a repo gate: a linter meaningful for exactly one
 toolchain belongs to that toolchain's bundle. The format half is the
 `swift-format` pack.
 
-**Installed through mise**, as `aqua:realm/SwiftLint`, so the version that
-lints is pinned beside the rest of the toolchain rather than whatever a machine
+**Installed through mise**, as bootstrap pins it, so the version that lints
+is pinned beside the rest of the toolchain rather than whatever a machine
 happens to carry.
 
 **Strict.** The gate runs `swiftlint lint --strict`, which makes every warning
@@ -26,12 +26,11 @@ rule as another rule identifier.
 
 ## What this pack writes
 
-Two files and one template. `templates/.config/mise/conf.d/swiftlint/mise.toml`
-pins the tool; CI loads that file, so the render writes an exact version, never
-`latest`, because under `--strict` a release that adds a rule is a failing
-build nobody touched — only tool-config's `upgrade` moves it.
-`.config/mise/tasks/code/lint/swiftlint` is the subtask the repo's
-`code:lint:all` runs. `.config/swiftlint.yml` is the configuration. SwiftLint
+Nothing into the repo. The pin, the task and the configuration are
+bootstrap's; `mise run code:lint` runs the gate, and the configuration is a
+seed, which the repo owns once it lands. Under `--strict` a release that
+adds a rule fails a build nobody touched, so moving the pin is its own
+change. `.config/swiftlint.yml` is the configuration. SwiftLint
 resolves its `excluded:` paths **relative to the configuration file**, so every
 entry climbs one level to the repository root — a bare `.build` would name
 `.config/.build` and exclude nothing. It excludes SwiftPM's `.build/` and

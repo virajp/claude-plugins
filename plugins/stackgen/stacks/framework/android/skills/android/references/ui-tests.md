@@ -45,8 +45,10 @@ class SignInJourneyTest {
 ## Running
 
 - `mise run test:e2e` — the managed device, headless, as CI runs it.
-- `mise run test:e2e -- --connected` — `connectedCheck` on the emulator or
-  device already running, for a fast local loop while writing a test.
+- `mise run test:e2e -- --connected` — `connected<Variant>AndroidTest` on the
+  emulator or device already running, for a fast local loop while writing a
+  test. `--variant` applies; `--device` names a managed device, so it is an
+  error with `--connected`.
 
 Failures leave their reports under each module's `build/outputs/` and
 `build/reports/androidTests/`; CI uploads that directory on a failed run.

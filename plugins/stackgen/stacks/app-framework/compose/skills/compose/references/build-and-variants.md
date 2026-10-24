@@ -30,8 +30,10 @@ build, and how variants are used.
   goldens and CI's tests run; `release` is minified and is what ships.
 - **Product flavours only for a real difference in what ships** — a free and a
   paid edition, say. An environment (staging, production) is a build config
-  field or a runtime setting, not a flavour per environment multiplying every
-  task by N.
+  field, set per build type or read from the CI environment, never a product
+  flavour: one build per build type, no variant per environment multiplying
+  every task by N. The Android pack's build-configuration reference states
+  the same rule.
 - **`BuildConfig` fields** are enabled per module
   (`buildFeatures { buildConfig = true }`) only where read. Secrets are never
   in `BuildConfig` or in resources: anything shipped in the APK is readable.

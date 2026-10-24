@@ -53,18 +53,22 @@ interactively.
    Name the viewport you used in every finding's `where`; a golden rendered
    at another size is not evidence for this one.
 2. **Check the pins, and read the pinned platform.** Goldens are pixels from
-   one simulator, so the repo pins it once, in the environment mise exports:
-   `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS`, from which
-   the golden task builds the `-destination` — so the task, this gate and CI
-   render on the same simulator. `XCODE_VERSION` is pinned the same way. Read
-   all four with `mise env`, from the repo root. When `SIMULATOR_PLATFORM`
-   is empty, or a simulator pin lacks its device or OS, report
+   one simulator: `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and
+   `SIMULATOR_OS`, from which the golden task builds the `-destination` — so
+   the task, this gate and CI render on the same simulator. A repo pins them,
+   and `XCODE_VERSION`, in the `[env]` of
+   `.config/mise/conf.d/zz-repo/mise.<env>.toml`; a value it does not pin is
+   found by the repo's `_scripts/xcode` library. Read all four as the golden
+   task does: from the repo root, in a shell under `mise x --`, source the
+   repo's task helpers and then `_scripts/xcode`, run
+   `require_xcode ux-gate`, and print the four. When it fails — no Xcode
+   selected, an `XCODE_VERSION` the selected Xcode is not, no iPhone
+   simulator available — report `rendered: n/a` with its message and run
+   nothing: the golden task refuses there, and the audit below calls
+   `xcodebuild` directly, so this check is the only one it gets. When a
+   platform other than `iOS` or `macOS` lacks its device or OS, report
    `rendered: n/a` with that reason rather than choosing a simulator
-   yourself. When `XCODE_VERSION` is empty, or the first
-   line of `xcodebuild -version` does not name it, report `rendered: n/a`
-   with that reason and run nothing — the golden task refuses there, and the
-   audit below calls `xcodebuild` directly, so this check is the only one it
-   gets.
+   yourself.
 
    Then name the **pinned platform** — the one vwf platform the pin renders.
    A `macOS` pin is `desktop`. A simulator pin is read from the pinned

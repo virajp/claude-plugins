@@ -298,16 +298,16 @@ extension map, so it never starts in a repo with no matching files. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
-also declare **repo config files** it owns — a language gate's own config, a
-deploy target's own root config and the deploy task beside it, a project task a
-framework pack owns — the Astro pack's favicon rasterizer is the first — on the
-same merges-never-owns terms, behind their own consent line, and capped by a
-fixed allowlist of what may sit at a repo's root. The mise config, the
-file-based task library everything else runs through, the dprint, taplo,
-pre-commit, gitleaks, grype and house-linter configs, the ignore, attribute and
-graph-ignore files, the editor settings and the statusline config belong to no
-pack: they are written by `/stackgen:tool-config`, a skill you can also run
-yourself (`/stackgen:tool-config preview all`). A shipped node script copies its
+also declare **repo config files** it owns — a test task, a deploy target's own
+root config and the deploy task beside it, a project task a framework pack owns
+— the Astro pack's favicon rasterizer is the first — on the same
+merges-never-owns terms, behind their own consent line, and capped by a fixed
+allowlist of what may sit at a repo's root. The mise config, the file-based task
+library everything else runs through, the dprint, taplo, pre-commit, gitleaks,
+grype and house-linter configs, the ignore, attribute and graph-ignore files,
+the editor settings and the statusline config belong to no pack: they are
+written by `/stackgen:tool-config`, a skill you can also run yourself
+(`/stackgen:tool-config preview all`). A shipped node script copies its
 `assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
 — the repo's values, which the script alone writes — in four calls: `all`,
 `pack`, `pack-remove` and `upgrade`. Each list a pack once appended to — the
@@ -324,36 +324,36 @@ every file, then runs `MISE_ENV=dev mise run setup:all`. Trusting the repo's
 mise config is yours to do first — typically its path in `trusted_config_paths`
 in your global mise config; the script checks it and never grants it. It also
 lands a repo-local mise skill, and a tool is never added with a bare `mise use`.
-A pack asks it for nothing: it ships `config/` payload — its subtasks among it,
-which the rendered `code:lint:all`, `code:format:all`, `code:check:all`,
-`setup:ai:all` and `setup:deps:<verb>:all` tasks call — and a `templates/`
-folder, its own `conf.d/<slug>/` mise files and any file needing a value, which
-the script renders — each value the machine must answer declared in the pack's
-`values:` list with a `detect` command and a `question`, which `/vwf:setup` runs
-or asks as it lands the pack. Language manifests and CI workflow files stay
-outside that fence: they declare what the project *is*, and no pack decides
-either. The packs, bundles and kinds that ship are inventoried in
-[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
-the tree itself; the newest kind is `stylesheet`, the one that answers vwf's
-seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
-`stylex` and `plain-css` filling it and the design system's tokens staying the
-contract each of them realizes. The newest **category** is `workspace`, filled
-by `notion` — the place a team's docs, specs and tickets already live, wired for
-the agent to reach through one hosted MCP server the person authorises once, and
-nothing more: no part of the product runs against it. The newest **design tool**
-is the terminal itself — the `claude-code` pack, which vwf's architecture menu
-preselects on the design axis: the design system, the logo and a flow's screens
-are authored in session, through the `taste-skill` plugin a product pinning it
-declares, into a committed `docs/design/<project>/` that vwf imports like any
-hosted canvas, and reviewed in a browser served from the repo on loopback — you
-click, comment, press Done, and the session applies the comments. stackgen is
-now the only stack plugin: its packs are the covered path, its generator the
-uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
-what the installed stack plugins offer — with none present it comes back empty,
-and the axes carry no free-text escape. You can defer an axis and keep defining
-the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
-Having it installed commits you to nothing; it acts only once an axis is pinned.
-`stackgen@virajp-plugins`
+A pack ships no toolchain at all: its tool pins, its gates and their configs,
+and its generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s.
+The materializer reads a fresh clone of bootstrap to choose the tools a stack
+needs, and asks for them through bootstrap's own entry point, behind its own
+consent line; it never edits `.config/bootstrap.toml` itself. A value only the
+machine can answer — the Xcode a repo builds with — is found by bootstrap's
+task, or set by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests
+and CI workflow files stay outside that fence: they declare what the project
+*is*, and no pack decides either. The packs, bundles and kinds that ship are
+inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
+generated from the tree itself; the newest kind is `stylesheet`, the one that
+answers vwf's seventh axis — how a web frontend's styles are authored, with
+`tailwindcss`, `stylex` and `plain-css` filling it and the design system's
+tokens staying the contract each of them realizes. The newest **category** is
+`workspace`, filled by `notion` — the place a team's docs, specs and tickets
+already live, wired for the agent to reach through one hosted MCP server the
+person authorises once, and nothing more: no part of the product runs against
+it. The newest **design tool** is the terminal itself — the `claude-code` pack,
+which vwf's architecture menu preselects on the design axis: the design system,
+the logo and a flow's screens are authored in session, through the `taste-skill`
+plugin a product pinning it declares, into a committed `docs/design/<project>/`
+that vwf imports like any hosted canvas, and reviewed in a browser served from
+the repo on loopback — you click, comment, press Done, and the session applies
+the comments. stackgen is now the only stack plugin: its packs are the covered
+path, its generator the uncovered tail. A `vwf` dependency, because vwf's stack
+menu is the union of what the installed stack plugins offer — with none present
+it comes back empty, and the axes carry no free-text escape. You can defer an
+axis and keep defining the product, but `/vwf:plan` and `/vwf:execute` halt
+until it is answered. Having it installed commits you to nothing; it acts only
+once an axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding

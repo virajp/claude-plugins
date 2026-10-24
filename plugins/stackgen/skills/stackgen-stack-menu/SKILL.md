@@ -34,7 +34,7 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    the body's opening sentence.
 
    **The repo baseline is no bundle.** The toolchain manager, the gates and
-   the hygiene configs are `stackgen:tool-config`'s, and `/vwf:init` writes
+   the hygiene configs are bootstrap's, and `/vwf:init` writes
    the prose files from its own assets — so nothing here is a choice that
    is not one.
 
@@ -86,7 +86,7 @@ decision rather than an oversight — an unstated gap here reads as one
 either way, which is why it is written down. It is not generatable
 **today** (`toolchain-manager` and `repo-gate` are no kind since 2026-09-26,
 nor is repo hygiene since 2026-09-27; their files are
-`stackgen:tool-config`'s):
+bootstrap's):
 
 - **`workspace`** — newly minted. Generating one is untested capability, not
   preserved capability, and the open entry is a promise about the former

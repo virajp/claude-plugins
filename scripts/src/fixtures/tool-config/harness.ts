@@ -25,7 +25,8 @@ export const pluginRoot = join(
   "stackgen",
 );
 export const skillDir = join(pluginRoot, "skills", "tool-config");
-export const stacksDir = join(pluginRoot, "stacks");
+// Fixture packs in the retired shape: the real packs ship no templates/ now.
+export const stacksDir = join(import.meta.dirname, "stacks");
 const script = join(skillDir, "scripts", "tool-config.mjs");
 
 /**

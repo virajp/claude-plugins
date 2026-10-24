@@ -3,10 +3,10 @@ name: Kotlin · library
 axis: project
 kind: language-bundle
 components:
-- language/kotlin@0.1.0
-- package-manager/gradle@0.1.0
-- toolchain-gate/ktlint@0.1.0
-- toolchain-gate/detekt@0.1.0
+- language/kotlin@1.0.0
+- package-manager/gradle@0.1.1
+- toolchain-gate/ktlint@1.0.0
+- toolchain-gate/detekt@1.0.0
 platforms:
 - packages
 ---
@@ -21,24 +21,26 @@ projects through a Maven repository, tagged with semantic versions.
 ## Stack
 
 - **Kotlin on the JVM**, compiled by the Kotlin Gradle plugin — the compiler
-  version is the plugin's, never a separate install. mise pins the **JDK**
-  (Temurin LTS) in `.config/mise/conf.d/kotlin/`, and **kotlin-lsp** is the
-  language server.
+  version is the plugin's, never a separate install. The toolchain bootstrap
+  syncs pins the **JDK** (Temurin LTS), and **kotlin-lsp** is the language
+  server.
 - **Gradle** owns the build, through the committed wrapper (`gradlew` and
   `gradle/wrapper/gradle-wrapper.properties`) — mise does not pin Gradle.
   Versions live in the version catalog, `gradle/libs.versions.toml`, and
-  dependency locking writes `gradle.lockfile`, which is tracked and written
-  only by `./gradlew dependencies --write-locks`.
+  dependency locking writes `gradle.lockfile`, which is tracked:
+  `mise run setup --upgrade` writes the lockfile of every project, and
+  `mise run setup` checks them.
 - **ktlint** formats and lints, and **detekt** lints for code smells and
-  complexity, both through mise. Each pack ships its own subtasks, which the
-  repo's `code:format:all` and `code:lint:all` run.
+  complexity; the toolchain bootstrap syncs pins both, and `mise run code`
+  runs them.
 - Tests are **`kotlin.test`** on JUnit 5, with `kotlinx-coroutines-test` for
   coroutine code and Kover for coverage.
 
 ## What it does not carry
 
 - **No Android** — no Android library module (AAR), no Android app, no Android
-  SDK, no Android Lint. Those are not yet covered by a shipped bundle.
+  SDK, no Android Lint. An Android library module is the `android-library`
+  bundle, an Android app the `kotlin-compose` bundle.
 - **No Kotlin Multiplatform** — the library targets the JVM alone.
 - **No goldens** — a library is tested through `kotlin.test` against its
   public API.

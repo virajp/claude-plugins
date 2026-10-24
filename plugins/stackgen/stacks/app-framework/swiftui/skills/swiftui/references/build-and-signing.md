@@ -13,27 +13,27 @@ repo and Xcode. Packages are resolved by Xcode's own SwiftPM integration
 against the project, and their pinned versions are the `Package.resolved`
 committed inside it.
 
-The repo's `setup:deps:install` task resolves the project's packages without
-opening Xcode. Run it after a fresh checkout, after a package is added or
-moved, and after the lockfile moves. Its `--frozen` flag resolves exactly what
-`Package.resolved` records and fails when the project needs something else,
-rather than rewriting it — the mode CI runs. Build and test through the repo's
+`mise run setup` resolves the project's packages without opening Xcode.
+Run it after a fresh checkout, after a package is added or moved, and after
+the lockfile moves. It resolves exactly what `Package.resolved` records and
+fails when the project needs something else, rather than rewriting it.
+`mise run setup --upgrade` is the one run that moves the lockfile. Build and test through the repo's
 tasks rather than the tools by hand; a CI job runs the same tasks.
 
 ## The Xcode pin
 
 The Xcode version is part of the build's inputs: it decides the Swift compiler,
-the SDKs and the simulators. The repo pins it as `XCODE_VERSION` in mise's
-environment, which `/vwf:setup` fills from this machine and the repo
-commits, and every task that builds checks
-the selected Xcode against it before doing any work: `xcodebuild -version` must
-succeed — a Mac with only the Command Line Tools fails it, since they carry no
-`xcodebuild` that can build an app — and must report the pinned version. On a
-mismatch the task stops and names both the version it wants and the one
-selected, so the fix is switching Xcode, not reading a compiler error halfway
-through a build. An unset or empty `XCODE_VERSION` is refused the same way,
-since an unpinned build checks nothing. Xcode is not installed by mise; the pin
-says which one, and installing it stays a person's step.
+the SDKs and the simulators. The repo's `_scripts/xcode` library reads it as
+`XCODE_VERSION`. Without a value it takes the selected Xcode. A repo that
+must build with one Xcode pins it in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every task that
+builds checks the selected Xcode before doing any work: `xcodebuild -version`
+must succeed — a Mac with only the Command Line Tools fails it, since they
+carry no `xcodebuild` that can build an app — and must report the pinned
+version when there is one. On a mismatch the task stops and names both the
+version it wants and the one selected, so the fix is switching Xcode, not
+reading a compiler error halfway through a build. Xcode is not installed by
+mise; the pin says which one, and installing it stays a person's step.
 
 Moving to a new Xcode is one change: update the pin, fix what the new compiler
 and SDK report, re-record goldens whose rendering the new SDK changed (and say

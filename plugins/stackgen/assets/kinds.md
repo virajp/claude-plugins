@@ -97,7 +97,7 @@ recorded `n/a`, never silently absent.
 8. **Package manager & workspace** — lockfile discipline, supply-chain
    posture including the ecosystem's own audit tooling (the
    `cargo audit`/`deny` class); repo-generic scanners stay
-   `stackgen:tool-config`'s, never here. *(workspace half conditional —
+   bootstrap's, never here. *(workspace half conditional —
    `n/a` where the repo pins a `workspace` bundle, which is the kind that
    takes it)*
 9. **Compiler/toolchain config** — toolchain pinning, profiles, lint
@@ -269,22 +269,15 @@ component in the bundle:
 
 The repo-wide gates are no kind any more. dprint, gitleaks, grype and
 pre-commit — the formatter, the two scanners and the hook runner — are
-written by `stackgen:tool-config`
-(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), which also holds the
-doctrine this section used to bar. Nothing generates one, and no bundle
-composes one. The skill ships every stack's formatter plugins, excludes and
-ignores as universal supersets, and a pack adds a gate as a subtask the
-skill's `…:all` task calls (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`),
-never as a hook. The seam the
-kind held stands: a gate meaningful for one toolchain is topic 10 of that
-language's bundle, never the skill's.
+bootstrap's. Nothing generates one, and no bundle composes one. The seam
+the kind held stands: the doctrine of a gate meaningful for one toolchain is
+topic 10 of that language's bundle, while its pin, config and task are
+bootstrap's.
 
 ## Retired 2026-09-26: `toolchain-manager`
 
 The toolchain manager is no kind any more. Its files — the mise config,
-the universal `_base/` and `ai/` folders and the task library — are written by
-`stackgen:tool-config` (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`),
-which also holds the doctrine this section used to bar. Nothing generates
+the tool pins and the task library — are bootstrap's. Nothing generates
 one, and no bundle composes one.
 
 ## `workspace` — the repo's members and what crosses between them
@@ -326,7 +319,7 @@ workspace adds. That is the seam working, not a mis-declared pack.
   topics do not earn a router.
 - **Scope**: who the members are, how work crosses them, and what they
   inherit. Never a member's own internal layout — that is the language
-  bundle's. Never the task library, which is `stackgen:tool-config`'s: an
+  bundle's. Never the task library, which is bootstrap's: an
   orchestrator runs *beneath* the manager, and this kind states which
   orchestrator exists, never what the repo's task names are. Never what a
   gate checks. Never the built artifact, which is the deploy axis's even
@@ -378,7 +371,7 @@ never silently absent.
    (an `extends` key, a symlink, a path). Only the inheritance is this
    kind's: what the config *says* belongs to the kind that owns the tool —
    the compiler config to `language-bundle` topic 9, the formatter's to
-   `stackgen:tool-config`.
+   bootstrap.
 
 The bar maps onto components as follows: topics 1, 2, 4 and 5 belong to the
 **`package-manager`** component. **Topic 3 belongs to the
@@ -543,6 +536,12 @@ The test, verified against Flutter's own documentation:
 
 Where all four hold, the SDK is the root. Where they do not, it is an
 ordinary `framework` and topic 2 of a language bundle.
+
+**The Compose case.** A UI toolkit can pass the test with its build SDK. In
+Jetpack Compose the build SDK, the Android Gradle Plugin (AGP), owns the
+manifest and the build, so Compose alone fails two of the four parts. But AGP
+is a `framework` member of the same bundle, so the pair passes the test
+together, and the UI toolkit is the root: Compose is an `app-framework`.
 
 - **Axis**: `project`.
 - **Structure**: the **topic bar** below, hung per the kind-general rule —

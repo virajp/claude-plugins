@@ -31,21 +31,20 @@ buildscript {
 
 ## Writing and moving the lock
 
-The language pack's task library writes and checks every lockfile in the
-build:
+The toolchain bootstrap syncs ships the tasks that check and write every
+lockfile in the build:
 
 ```bash
-mise run setup:deps:install:kotlin   # check every lockfile; write them only when none exists
-mise run setup:deps:upgrade:kotlin   # re-lock every project after a catalog edit
+mise run setup             # check every lockfile
+mise run setup --upgrade   # re-lock every project after a catalog edit
 ```
 
-Both pass Gradle a throwaway init script that registers a
-`stackgenResolveAll` task in every project, resolving each resolvable
-configuration — under `--write-locks` when writing — so each module's
-`gradle.lockfile`, and `settings-gradle.lockfile`, is written in one run and
-nothing is added to the build. `./gradlew dependencies --write-locks` is not
-the same thing: it runs in the root project alone, and its report resolves
-leniently, so a lock violation prints `FAILED` and still exits 0.
+Both resolve every resolvable configuration of every project — under
+`--write-locks` when writing — so each module's `gradle.lockfile`, and
+`settings-gradle.lockfile`, is written in one run.
+`./gradlew dependencies --write-locks` is not the same thing: it runs in the
+root project alone, and its report resolves leniently, so a lock violation
+prints `FAILED` and still exits 0.
 
 To move one module's entry without re-resolving the rest, pass
 `--update-locks group:name` to the same resolve-everything run instead of
@@ -68,8 +67,7 @@ To move one module's entry without re-resolving the rest, pass
 
 - **The lockfile is a version record, not an integrity check.** It names
   every resolved module at its exact version, which is what a repo scanner
-  reads — the language pack's `setup:deps:audit:kotlin` runs grype over it —
-  and what stops a dependency moving without a reviewed diff. It holds no
+  reads and what stops a dependency moving without a reviewed diff. It holds no
   artifact hash. A repository or mirror that serves different bytes under the
   same coordinates and version, or a swapped plugin artifact, resolves cleanly
   against the lock and runs at build time.

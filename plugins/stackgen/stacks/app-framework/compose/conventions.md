@@ -7,11 +7,12 @@ the `framework/android` pack's; Kotlin, Gradle and the gates are their own
 packs'. This pack owns how screens are built, how state reaches them, and the
 goldens that prove what they look like.
 
-**Why this pack is typed `app-framework` though Gradle owns the build.** The
-four-part test for an SDK that roots its bundle does not hold for Compose:
-Gradle and the Android Gradle Plugin own the manifest and the build, Kotlin is
-the only language and is chosen before Compose is, and the Kotlin language
-server reaches the code without going through Compose. The pack is typed
+**Why this pack is typed `app-framework` though Gradle owns the build.**
+Compose is the Compose case of the four-part test for an SDK that roots its
+bundle. Alone, the UI toolkit fails two parts: the Android Gradle Plugin
+(AGP) owns the manifest and the build. But AGP is a `framework` member of the
+same bundle — the `framework/android` component — so the pair passes the
+test together, and the UI toolkit is the root. The pack is typed
 `app-framework` because it is what makes the bundle an **app** rather than a
 library — the screens, the goldens and the `ux-gate` are here, and the
 `android-library` bundle is the same composition without it.
@@ -42,8 +43,10 @@ other apps consume is an AAR on the `android-library` bundle, in its own repo.
 ## The goldens
 
 **Goldens are Roborazzi image captures of Compose screens, rendered on the JVM
-under Robolectric** — no emulator, no device, so a render is the same on every
-machine and in CI. Each golden is a JUnit test in the module's `src/test/`
+under Robolectric** — no emulator, no device. `GraphicsMode.NATIVE` renders
+differ between macOS and Linux, so **goldens are recorded in CI, on Linux**. A
+local run on macOS only verifies, and a diff there is not a failure of the
+code. Each golden is a JUnit test in the module's `src/test/`
 source set that sets one screen in one state and captures it.
 
 - **Goldens are committed, under `src/test/screenshots/`.** Roborazzi's default
@@ -59,10 +62,11 @@ source set that sets one screen in one state and captures it.
   these paths. An `auto` screen has no golden: the car host draws its
   template, not the app.
 - **The device is a Robolectric qualifier, never the machine's.** A `mobile`
-  golden runs under `@Config(qualifiers = RobolectricDeviceQualifiers.Pixel7)`,
-  a `tablet` golden under `RobolectricDeviceQualifiers.MediumTablet`, a `watch`
-  golden under `RobolectricDeviceQualifiers.WearOSLargeRound` and a `tv` golden
-  under `RobolectricDeviceQualifiers.Television1080p`, each with
+  golden runs under `@Config(qualifiers = "w412dp-h915dp-port")` and a
+  `tablet` golden under `"w800dp-h1280dp-port"` — the device frame sizes,
+  portrait — a `watch` golden under
+  `RobolectricDeviceQualifiers.WearOSLargeRound` and a `tv` golden under
+  `RobolectricDeviceQualifiers.Television1080p`, each with
   `@GraphicsMode(GraphicsMode.Mode.NATIVE)`.
 - **Accessibility is checked over the same captures.** The golden tests use
   Roborazzi's accessibility-check module with the Accessibility Test
@@ -89,7 +93,8 @@ and its report at `build/reports/roborazzi/index.html` — the three the
 **Emulator tests are not this task's.** End-to-end tests are Compose UI tests in
 `src/androidTest/`, run on a headless emulator through Gradle Managed Devices —
 the `framework/android` pack owns the device definitions and the task that runs
-them. Formatting and linting are the Kotlin gate packs' and Android Lint the
+them. The format and lint gates come from the toolchain bootstrap syncs; their
+doctrine is the Kotlin gate packs', and Android Lint's the
 `framework/android` pack's.
 
 Full judgment: the `compose` skill's references.

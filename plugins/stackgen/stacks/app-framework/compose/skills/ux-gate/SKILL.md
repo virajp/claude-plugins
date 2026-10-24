@@ -37,8 +37,8 @@ driven interactively.
 
    | Platform | Qualifier                                      | Viewport                    |
    | -------- | ---------------------------------------------- | --------------------------- |
-   | `mobile` | `RobolectricDeviceQualifiers.Pixel7`           | Pixel 7, portrait           |
-   | `tablet` | `RobolectricDeviceQualifiers.MediumTablet`     | medium tablet, landscape    |
+   | `mobile` | `w412dp-h915dp-port`                           | 412×915 dp, portrait        |
+   | `tablet` | `w800dp-h1280dp-port`                          | 800×1280 dp, portrait       |
    | `watch`  | `RobolectricDeviceQualifiers.WearOSLargeRound` | large round Wear OS watch   |
    | `tv`     | `RobolectricDeviceQualifiers.Television1080p`  | 1080p television, landscape |
 

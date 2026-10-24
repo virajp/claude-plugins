@@ -3,7 +3,7 @@ summary: Dependency declaration, resolution and locking for a Kotlin/JVM build
   —
   the committed wrapper, the Kotlin DSL, the version catalog as the one place a
   version is written, and gradle.lockfile as the pin.
-version: 0.1.0
+version: 0.1.1
 type: package-manager
 package_manager: gradle
 # Dependency locking writes one gradle.lockfile per project — the root's, and

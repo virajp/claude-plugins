@@ -3,7 +3,7 @@ name: pnpm · workspace
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@0.6.2
+- package-manager/pnpm@1.0.0
 ---
 
 # Monorepo — pnpm · workspace
@@ -39,16 +39,17 @@ config file and a daemon that buy nothing back.
 - **dprint** formats (one root config); **ESLint** lints; **gitleaks** and
   **grype** gate security — all wired through pre-commit, which calls the same
   task-runner tasks CI does, so one command runs in both places.
-  The gates are `stackgen:tool-config`'s, whose dprint plugins and excludes
-  already cover every stack; this bundle's packs add their own subtasks.
+  The gates, their configs and the hooks are bootstrap's, and cover every
+  stack; `mise run code` runs them all.
 
 ## Tooling & config
 
 - **mise** manages tools with the three-file `MISE_ENV` split under `.config/`:
   base runtime (`node`, `pnpm`), `dev` (formatters, linters, security tools),
-  `ci` (CI-only tools and overrides). The file-based task library is the
-  orchestration layer this axis has instead of Turborepo — per-member prefixes
-  plus `code:*` and `setup:*`.
+  `ci` (CI-only tools and overrides). bootstrap owns the tool pins and the
+  generic tasks (`mise run setup`, `mise run code`). The file-based task
+  library is the orchestration layer this axis has instead of Turborepo —
+  per-member prefixes on top of those.
 - **Secrets** are injected by the manager the backing axis names — every
   dev/test script runs under its wrapper rather than reading a committed file.
 

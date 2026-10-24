@@ -70,8 +70,7 @@ plugins {
 }
 ```
 
-It reports every dependency with a newer release; the language pack's
-`setup:deps:outdated:kotlin` runs it. Without the plugin applied, Gradle
+It reports every dependency with a newer release. Without the plugin applied, Gradle
 reports `dependencyUpdates` as an unknown task.
 
 ```bash

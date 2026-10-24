@@ -24,9 +24,9 @@ exact versions.
 also matches
 `<Name>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`,
 the lockfile Xcode keeps for an app's dependencies. Those dependencies are
-the project's: resolve, update and inspect them through
-`mise run setup:deps:*`, never `swift package resolve` or `swift package
-update`, and never edit that file by hand. Everything below governs a
+the project's: resolve them through `mise run setup` and update them
+through `mise run setup --upgrade`, never `swift package resolve` or
+`swift package update`, and never edit that file by hand. Everything below governs a
 `Package.swift` the repo owns — a package, or a local package an app splits
 out — and the `Package.resolved` beside it.
 
@@ -88,7 +88,7 @@ git add Package.swift Package.resolved   # commit: "deps: add <package>"
 ## Rules
 
 These govern a `Package.swift` the repo owns and its `Package.resolved`; the
-lockfile inside an `.xcodeproj` goes through `mise run setup:deps:*`.
+lockfile inside an `.xcodeproj` goes through `mise run setup`.
 
 - **Never edit `Package.resolved` by hand** — `swift package resolve` and
   `swift package update` write it.

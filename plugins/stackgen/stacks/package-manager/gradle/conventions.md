@@ -24,10 +24,10 @@ script reads `libs.<alias>` and never spells a coordinate with a version in it.
 **`gradle.lockfile` is the pin, and it is committed.** Dependency locking is on
 for every configuration, so a dynamic or ranged version still resolves to the
 exact versions the lockfile records. Only a resolve of every project under
-`--write-locks` (or `--update-locks <group>:<name>`) writes it — the language
-pack's `setup:deps:install:kotlin` and `setup:deps:upgrade:kotlin`, never the
-root-only `./gradlew dependencies`; a lockfile is never edited by hand, and CI
-never writes one — a stale lockfile fails the build. The lockfile pins
+`--write-locks` (or `--update-locks <group>:<name>`) writes it —
+`mise run setup --upgrade`, never the root-only `./gradlew dependencies`;
+`mise run setup` checks it. A lockfile is never edited by hand, and CI never
+writes one — a stale lockfile fails the build. The lockfile pins
 versions, not artifact bytes: Gradle's dependency verification is the
 integrity layer a repo adds when it needs one.
 
@@ -42,12 +42,12 @@ sets `org.gradle.caching=true` and `org.gradle.configuration-cache=true`, so a
 build that breaks either is caught the day it is written.
 
 **`build/`, `.gradle/` and `.kotlin/` are regenerable** and never committed;
-the universal `.gitignore` tool-config lands carries them.
+the repo's `.gitignore` carries them.
 
 ## What this pack writes
 
-Nothing into the repo. The dependency subtasks — `setup/deps/<verb>/kotlin` —
-call `./gradlew`, and they belong to the language pack, which owns the JDK they
-run on.
+Nothing into the repo. The dependency tasks that call `./gradlew` —
+`mise run setup` and `mise run setup --upgrade` — come from the toolchain
+bootstrap syncs, with the JDK they run on.
 
 Full judgment: the `gradle` skill.
