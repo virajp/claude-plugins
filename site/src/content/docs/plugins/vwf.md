@@ -3228,15 +3228,16 @@ the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skil
 calls and never edits.
 
 **One script reads and writes both files.** `plan.mjs`, under the skill's
-`scripts/`, uses `node:` builtins only and has four verbs: `get <file> [<path>]`
+`scripts/`, uses `node:` builtins only and has five verbs: `get <file> [<path>]`
 prints a value as JSON, `set <file> <path> <value> [--json]` sets one field,
-`append <file> <path> --json <value>` adds one list entry, and
+`append <file> <path> --json <value>` adds one list entry,
+`remove <file> <path>` removes one list entry by its `id`, and
 `validate <file>` checks a file against its schema and fails loudly, one line
 per finding. A path is dot-separated keys, and a segment after a list picks the
 entry by its `id` — `plans.<basename>.status`, `units.U3.status`,
-`gaps.G2.state`; a wrong id is an error, never a new entry. `set` and `append`
-validate the result first and write nothing on an error, so no caller ever
-rewrites a whole file. vwf needs neither `yq` nor `jq` for plans.
+`gaps.G2.state`; a wrong id is an error, never a new entry. `set`, `append` and
+`remove` validate the result first and write nothing on an error, so no caller
+ever rewrites a whole file. vwf needs neither `yq` nor `jq` for plans.
 
 **Every verb tests the format first.** A base repo with a `docs/plans/index.md`,
 or a named folder with an `index.md` and no `index.json`, is the old markdown
@@ -3614,8 +3615,10 @@ things are always agreed before anything is written:
   commit; the **wave gate**, run once after every wave; and the **plan gate**,
   run once over the finished tree. When the repo has them, the proposal is
   `mise x -- mise run code:format`, `mise x -- mise run code:lint` and
-  `mise x -- mise run code:precommit`, in that order: the cheap check runs most
-  often, and the full hook pass runs once. A folder with no plan gate runs its
+  `mise x -- mise run code:precommit --all`, in that order: the cheap check
+  runs most often, and the full hook pass runs once, over every file — the
+  plan gate runs over the committed tree, where `code:precommit` alone checks
+  only uncommitted files. A folder with no plan gate runs its
   wave gate once more at the end. `/vwf:execute` runs what is written and
   nothing it infers. Every unit gate and wave gate line has to be green
   **before wave 1**, since those gates run as the preflight too — so a check that only starts holding once a particular unit has

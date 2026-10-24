@@ -58,7 +58,8 @@ This command takes **no arguments** — callers parameterize its behavior throug
 without asking; commit only — never merge/push"). Honor any such declared
 preference: it drives the **Step 1** consent (skip the worktree prompt when
 isolation is pre-declared), the **Step 2** branch name (use the declared name;
-`/vwf:execute` names it after its plan folder) and the **Step 4** post-commit
+`/vwf:execute` names it with the plan's name, the folder's `<name>` or
+`<slice>` without its date) and the **Step 4** post-commit
 choice (take the declared action, skip the prompt). Absent a declared
 preference, ask as each step specifies.
 

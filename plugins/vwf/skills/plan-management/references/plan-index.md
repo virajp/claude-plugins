@@ -305,11 +305,10 @@ requires stays until the last row that names it is itself complete and swept
 path is not a candidate: it stays until the `archive` verb moves the folder
 and re-points it, after which that landing edit's own sweep may remove it.
 
-`plan.mjs` has no remove verb, so the sweep is one write of the list: read it
-with `plan.mjs get docs/plans/index.json plans`, drop the swept rows, keep
-every other row as it was and in its order, and
-`plan.mjs set docs/plans/index.json plans <list> --json`. No candidate → no
-write.
+The sweep removes each swept row with one call,
+`plan.mjs remove docs/plans/index.json plans.<id>`, and leaves every other
+row as it was and in its order. It never writes the whole `plans` list. No
+candidate → no write.
 
 ## After landing
 

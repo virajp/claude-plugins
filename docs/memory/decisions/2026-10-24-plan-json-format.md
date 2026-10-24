@@ -128,8 +128,34 @@ the format; Once format is updated, use that".
 32. **`release_levels: []`.** Only a migrated folder has an empty list. It is
     not a refusal; the landing writes no level.
 
+## Rulings on the gaps of the run (2026-10-25)
+
+The run closed with six open gaps. The user ruled on each one, and the fixes
+landed without a plan, on the branch `ops/gaps-plan-json-format`.
+
+1. **The branch and worktree name.** `/vwf:execute` names the branch and the
+   worktree with the plan's name: the `<name>` of a change plan folder
+   `<date>-<name>`, or the `<slice>` of a cycle plan folder
+   `<date>-<HHMM>-<slice>`. The user said: "use the `plan name` as worktree as
+   well as branch".
+2. **Empty strings.** No change. `validate` refuses `""` only for the plan
+   `title`, a unit's `title` and `file`, a gap's `text` and every `id`. The
+   template now says so.
+3. **Removing a row.** `plan.mjs` has a fifth verb, `remove <file> <path>`. It
+   removes one list entry by its `id`. The sweep removes each row with one call
+   and never writes the whole `plans` list.
+4. **The docs unit's `depends_on`.** It names every other unit except the gates
+   unit. The gates unit names the docs unit only.
+5. **The result of each round.** No change to the schema. The mempalace journal
+   is the only record of each round. The action log of plan B takes this record.
+   Decision 1 stands.
+6. **The plan gate.** The planners propose
+   `mise x -- mise run code:precommit --all`. Without `--all`, the task checks
+   only uncommitted files, so on the finished tree it checks nothing.
+
 ## Rejected
 
-YAML with `yq`; `jq`; a minimal pane read now; old-format skill copies; a
+YAML with `yq`; `jq`; a minimal pane read now; a `rounds` list in `index.json`
+(gap 5, as decision 1 already ruled); old-format skill copies; a
 `plan-management migrate` verb; migrating archived plans; a generated markdown
 view of `docs/plans/index.json`.

@@ -117,16 +117,16 @@ are worth answering carefully; a third thing is stated rather than asked:
   repo's own task list and its `harness:` stamp, in three tiers: the **unit
   gate** runs once before each unit's commit, the **wave gate** once after every
   wave, and the **plan gate** once over the finished tree. When your repo has
-  them, the proposal is `code:format`, `code:lint` and `code:precommit`, in that
-  order, so the cheap check runs most often and the full hook pass runs once.
-  Relay's wave gate is its lint task and the workflow linter, and its plan gate
-  adds its test task. `/vwf:execute` runs **what is written and nothing it
-  infers** — a check you leave out is a check the run will not do, however
-  obvious it looks in the tree. It also runs the unit gate and the wave gate
-  once **before** the first wave, so every line in them has to be green on the
-  untouched branch — which means a check that can only pass once one of the
-  units has landed does not belong there. That one goes in the unit's own
-  verification. If the repo has no task runner and no stamp, the answer is
+  them, the proposal is `code:format`, `code:lint` and `code:precommit --all`,
+  in that order, so the cheap check runs most often and the full hook pass runs
+  once, over every file. Relay's wave gate is its lint task and the workflow
+  linter, and its plan gate adds its test task. `/vwf:execute` runs **what is
+  written and nothing it infers** — a check you leave out is a check the run
+  will not do, however obvious it looks in the tree. It also runs the unit gate
+  and the wave gate once **before** the first wave, so every line in them has to
+  be green on the untouched branch — which means a check that can only pass once
+  one of the units has landed does not belong there. That one goes in the unit's
+  own verification. If the repo has no task runner and no stamp, the answer is
   `none`, and the plan says plainly that the wave review is then the only gate.
 - **The after-landing steps.** What happens once the branch is in. Each one is
   recorded `run`, here, or dropped: a `run` step runs on a green landing without
