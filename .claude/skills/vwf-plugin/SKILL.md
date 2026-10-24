@@ -410,14 +410,20 @@ The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
 progress pane and registers `/vwf-monitor` (no colon: a registered command name
 refuses one). `plan.ts` beside it parses the plan folder and strips terminal
 control characters from plan text before it renders; `plan.test.ts`,
-`pane.test.tsx` and `refresh.test.tsx` are its tests. Its `$.state` keys
-(`monitorRun`, `monitorQuiet`, `monitorViewing`) sit under the plugin name `vwf`
-and are declared in `types/index.d.ts`, which the manifest's `types` key names.
-It follows only `vwf:execute-*` subagents, so an `edit`-only plan is not
-followed. `claude plugin test plugins/vwf` and
+`pane.test.tsx`, `refresh.test.tsx` and `agents.test.tsx` are its tests. Its
+`$.state` keys (`monitorRun`, `monitorQuiet`, `monitorViewing`) sit under the
+plugin name `vwf` and are declared in `types/index.d.ts`, which the manifest's
+`types` key names. It follows a subagent named for a unit of the current plan
+(`U<n>`) or a wave review (`R<wave>`, `R<wave>-late`, `R-late`), whatever its
+type, and every `vwf:execute-*` subagent but the runner; a coder maps to its
+unit by the unit file in its prompt, a review-row reviewer by the row id in its
+prompt, read before any file name. In an `all` run it follows the current
+runner's subagents alone. `claude plugin test plugins/vwf` and
 `claude plugin validate --strict plugins/vwf` are its gates, run locally — CI
 has no `claude`. Why it lives inside vwf rather than as its own plugin is
-`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`.
+`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it matches
+agents, finds the plan and ends the run is
+`docs/memory/decisions/2026-10-21-execute-monitor-gap-fixes.md`.
 
 ## Documentation
 

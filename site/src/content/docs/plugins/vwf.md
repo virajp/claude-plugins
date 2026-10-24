@@ -3060,9 +3060,33 @@ contain a colon.
 **What it shows.** The plan, the run's start and end times, and one progress
 segment per unit — pending dim, running plain, failed red, skipped gray,
 finished green, and finished with gaps yellow. Below that, one row per unit with
-its status, its times and its gaps. Plan text is stripped of terminal control
-characters before it renders. Select a unit row to open that unit's subagent
-transcript; the **Main transcript** button goes back.
+its status, its times and its gaps, and under them one line per wave review —
+its status, start, end and time. The line under the plan title adds `waiting`
+while the main loop has stopped with no subagent live. Plan text is stripped of terminal
+control characters before it renders. Select a unit row or a wave-review line to
+open that subagent's transcript; the **Main transcript** button goes back.
+
+**What it follows.** Every unit of a run of either kind: a subagent named for a
+unit of the plan (`U<n>`) or for a wave review (`R<wave>`, `R<wave>-late`,
+`R-late`), whatever its type, and every `vwf:execute-*` subagent but the runner.
+A coder counts against the unit file in its prompt, and a review-row reviewer
+against the row id in its prompt, so a reviewer never counts against the units
+its row covers. In an `/vwf:execute all` run each plan is a run of its own, and
+the pane follows that plan's runner's subagents alone.
+
+**How it finds the plan.** With no folder named, the pane picks the plan whose
+row reads `RUNNING` in `docs/plans/index.md` — the base repo's, in a multi-repo
+product. When several rows read `RUNNING`, it prefers the one whose folder is in
+this session's own linked worktree; otherwise it asks you to run
+`/vwf-monitor <folder>`. It looks for the folder in the session's checkout, the
+base repo, each member repo and their worktrees, so a cycle plan in a member
+repo is found. Until the run's worktree exists it reads the main checkout's
+copy of the plan; once the worktree holds one, that copy replaces it.
+
+**When the run ends.** When the plan's Status reads `COMPLETE` or `BLOCKED`, or
+the folder has moved to `docs/plans/archived/`, once no subagent is still live
+— or after 10 minutes with no change in the plan file or its subagents while
+the run is waiting.
 
 **How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
 then `c`. When the run asks you a question, the pane steps aside until you
@@ -3074,9 +3098,6 @@ answer.
   the whole screen.
 - In the normal layout (`CLAUDE_CODE_NO_FLICKER=0`) it shows above the prompt at
   full width, and the normal layout reports no mouse clicks.
-- The pane follows only the `vwf:execute-*` subagents. An `edit` unit runs as a
-  general-purpose subagent, so on a plan made only of `edit` units the pane ends
-  the run at the first idle turn and stops updating.
 
 ### /vwf:plan-management
 
