@@ -9,11 +9,19 @@ time, each in its own runner subagent, and stops at the first point that
 needs the user. The session that typed it is **the loop**: it asks the run's
 questions once, it picks, it dispatches, it keeps a one-line result per plan,
 it runs what the answers deferred to its exit, and it does nothing else — it
-never reads a unit report or a Run log itself, and of a plan folder it reads
-the Consent block and the After landing table alone, once, for the questions
-— and of `.config/vwf.yaml`, the `after_landing:` key alone.
-Plain `/vwf:execute <folder>` and `/vwf:execute next` are unchanged by any of
-this.
+never reads a unit report or a unit's state itself, and of a plan folder it
+reads `consent` and `after_landing` alone, once, for the questions, with
+`plan.mjs get` — and of `.config/vwf.yaml`, the `after_landing:` key alone.
+`plan.mjs` names
+`node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs`, as in
+*The plan files* in `SKILL.md`. Plain `/vwf:execute <folder>` and
+`/vwf:execute next` are unchanged by any of this.
+
+Before anything else, the loop runs the format test of `SKILL.md`'s
+*Resolve and refuse early*, once: on the old format it prints the migration
+message and stops, asking nothing and dispatching no runner; a repo with
+neither `docs/plans/index.md` nor `docs/plans/index.json` has no runnable
+plan, and the loop ends as step 2 of *The loop* does.
 
 ## Run-level questions — once, before the first plan
 
@@ -21,16 +29,17 @@ A plan's folder answers every question its own run needs; these are questions
 about the **run of several plans**, which no single folder can answer. Each
 answer is an **override** of the plans' recorded steps for this run only —
 passed to each runner in its dispatch prompt and written by the runner as one
-`override:` row in that folder's Run log. A folder's Consent block is never
+entry of that folder's `overrides` list. A folder's `consent` is never
 changed.
 
-1. **The plans the loop will reach.** Invoke `plan-management list` and take
-   the runnable rows — the `APPROVED` rows `next` would take — then add every
-   `APPROVED` row whose each `requires:` entry is satisfied or is a row
-   already in the set, repeating until no row joins. None → ask nothing; the
-   loop's first pick ends it as before. Read each reached folder's Consent
-   block and After landing table, and nothing else of it, and the
-   `after_landing:` key of `.config/vwf.yaml`, when there is one.
+1. **The plans the loop will reach.** Invoke `plan-management list`, which
+   reads `docs/plans/index.json`, and take the runnable rows — the `APPROVED`
+   rows `next` would take — then add every `APPROVED` row whose each
+   `requires` entry is satisfied or is a row already in the set, repeating
+   until no row joins. None → ask nothing; the loop's first pick ends it as
+   before. Read each reached folder's `consent` and `after_landing`, and
+   nothing else of it, and the `after_landing:` key of `.config/vwf.yaml`,
+   when there is one.
 2. **Ask the questions that apply, one per turn**, each a yes or no, holding
    the answers:
    - **One shared worktree** — always asked. All the reached plans run in one
@@ -40,14 +49,16 @@ changed.
      on a `STOPPED` end. Each landing runs the skill's graph refresh, in the
      main checkout, before the next plan starts.
    - **Deduped after-landing steps** — asked when one step command would run
-     after two or more reached plans: a plan step recorded `run` by two or
-     more of them, or a command in `.config/vwf.yaml`'s `after_landing:` list,
-     which runs after every landing, whenever two or more plans are reached.
+     after two or more reached plans: an `after_landing` `step` recorded by
+     two or more of them, or a command in `.config/vwf.yaml`'s
+     `after_landing:` list, which runs after every landing, whenever two or
+     more plans are reached.
      List each such command and its plans. Yes → each runs once, from the
      main checkout, after the last plan that landed — on an early stop too —
      and no runner runs it.
-   - **Landing** — asked when a reached plan's Consent row *Merge to the
-     integration branch and push on green* reads `no`. List every such plan
+   - **Landing** — asked when a reached plan's `consent.merge` — *merge to
+     the integration branch and push on green* — reads `false`. List every
+     such plan
      together first, then ask once per plan, one per turn: land `<folder>`
      this run? Yes → that runner lands it as if the row read `yes`. No → it
      stops at its landing as recorded, and that stop ends the run.
@@ -70,9 +81,15 @@ Overrides:
 ```
 
 The runner applies each over the folder as `SKILL.md` describes for an `all`
-override — Setup, Land, After landing — and writes the one Run log row
-(`wave 0`, unit `override`, detail `override:` and the block's lines, `; `
-between them) right after its preflight row.
+override — Setup, Land, After landing — and, right after its preflight,
+appends the one entry, the block's lines joined by `; `, `O<n>` one past the
+highest `O` id in the list:
+
+```sh
+node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs append <folder>/index.json overrides --json '{"id": "O<n>", "text": "<line>; <line>"}'
+```
+
+It never changes `consent`. `Overrides: none`, or no block, appends nothing.
 
 ## The loop
 
@@ -91,8 +108,8 @@ Once the run-level questions above are answered, each iteration, in order:
    account-wide.
 2. **Pick.** Invoke `plan-management next`. Nothing runnable → the loop ends,
    stop reason the message the verb returns: each `APPROVED` row and what it
-   waits on, or that the table is absent or holds no rows. On a pick, print
-   one line — the folder, its `Kind` and its `Priority` — and nothing of the
+   waits on, or that the index is absent or holds no rows. On a pick, print
+   one line — the folder, its `kind` and its `priority` — and nothing of the
    other rows.
 3. **Dispatch one runner.** One `Agent` call,
    `subagent_type: "vwf:execute-runner"` — the `execute-runner` agent —
@@ -174,7 +191,7 @@ already defines. What differs is only this:
 - **It returns the block and nothing else.** Every report `SKILL.md` writes —
   the final report, a pause's report, a refusal, the gap reconciliation, the
   chain-forward launch lines — still goes where that file puts it: the
-  folder's Status block, Run log and gap section, the run journal. What the
+  folder's `status`, unit fields and `gaps`, the run journal. What the
   runner sends back to the loop is the five lines below, and no line more.
   The chain-forward lines are not returned: the loop's next `next` finds an
   unblocked plan on its own.
@@ -197,7 +214,7 @@ already defines. What differs is only this:
 ```text
 PLAN: <the folder, as handed>
 OUTCOME: <COMPLETE | COMPLETE with gaps | STOPPED>
-DETAIL: <the folder's Status block detail line, as last written>
+DETAIL: <the folder's status.detail, as last written>
 RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
 ```
@@ -210,16 +227,16 @@ block deferred to the loop's exit.
   the gap list was empty. `RESUME: none`.
 - **`COMPLETE with gaps`** — the same landing with a gap open, or with
   `plan-management archive` raising a warning, so the folder stayed live.
-  `RESUME: none`; the gaps are in the folder's gap section.
+  `RESUME: none`; the gaps are in the folder's `gaps`.
 - **`STOPPED`** — every other end: a refusal at Resolve, a hard halt, a pause
-  (a cap among them), a blocked final report, a merge conflict, the Consent
-  row reading `no` with no `land: yes` override (the branch waits to be
+  (a cap among them), a blocked final report, a merge conflict,
+  `consent.merge` reading `false` with no `land: yes` override (the branch
+  waits to be
   landed by hand — `RESUME:` names the branch), or an after-landing step that
   exited non-zero (`RESUME:` is that step's command and the ones not run).
   `RESUME:` is otherwise `/vwf:execute <folder>`.
 - **`ENDS RUN: yes`** only when the outcome is `COMPLETE` or
-  `COMPLETE with gaps` and the folder's Consent block holds the row
-  *End an `all` run after landing* reading `yes` — the plan edited a plugin
-  the run itself loads, so the next plan must start in a restarted session.
-  A folder without that row reads `no`. On `STOPPED` it reads `no`; the stop
-  ends the run anyway.
+  `COMPLETE with gaps` and the folder's `consent.end_all_run` — *end an
+  `all` run after landing* — reads `true`: the plan edited a plugin the run
+  itself loads, so the next plan must start in a restarted session. `false`
+  reads `no`. On `STOPPED` it reads `no`; the stop ends the run anyway.
