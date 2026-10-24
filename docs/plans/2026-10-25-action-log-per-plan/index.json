@@ -111,8 +111,8 @@
       ],
       "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
       "status": "green",
-      "commit": "7a2c0f4a",
-      "rounds": 3
+      "commit": "c3dd3650",
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -130,10 +130,10 @@
       "waits": "",
       "status": "running",
       "commit": "",
-      "rounds": 3,
+      "rounds": 4,
       "range": {
-        "from": "c619c5c3",
-        "to": "62bd46b1"
+        "from": "62bd46b1",
+        "to": "c3dd3650"
       }
     },
     {
@@ -501,6 +501,16 @@
       "rejected": "A row event with the late loop range (it would disagree with index.json)",
       "units": [
         "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "The convergence guard tripped at U4 round 4 (security findings 1 → 2: $(…)/backtick and Unicode-space bypasses of program()). Pause, or continue? (asked in session)",
+      "ruling": "Continue. Each leading NAME=value word must match /^[A-Za-z_]\\w*=[\\w./:@+,%=-]*$/ and the command is split on [ \\t\\n] only; anything else logs (command). Round 5 reviews it; any leak found there pauses the run. Ruled by the user on 2026-10-25.",
+      "rejected": "Pause the run per the guard; always log (command) for a Bash call with no description",
+      "units": [
+        "U1",
+        "U4"
       ]
     }
   ],

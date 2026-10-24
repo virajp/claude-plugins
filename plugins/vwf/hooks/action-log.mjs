@@ -45,26 +45,27 @@ const clip = s => (typeof s === "string"
 
 // A Bash call with no description is logged by its program name alone — the
 // first word that is not a NAME=value assignment — so no argument, and no
-// inline secret, can reach the log (decision D30). The split ignores shell
-// quoting, so a leading assignment holding a quote or a backslash, or a
-// program word that is not a plain path, logs the fixed `(command)`: a
-// quoted value with a space would otherwise leak its tail as the program.
+// inline secret, can reach the log (decision D30). The split is on the
+// spaces bash splits on and ignores shell quoting and expansion, so a
+// leading assignment whose value is not plain — a quote, a backslash, a $(…),
+// a backtick, a Unicode space — or a program word that is not a plain path
+// logs the fixed `(command)`, as does an empty command (decision D32).
 const PLACEHOLDER = "(command)";
 
 function program(s) {
   if (typeof s !== "string") {
     return s;
   }
-  for (const w of s.trim().split(/\s+/)) {
-    if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(w)) {
-      if (/['"\\]/.test(w)) {
+  for (const w of s.trim().split(/[ \t\n]+/)) {
+    if (/^[A-Za-z_]\w*=/.test(w)) {
+      if (!/^[A-Za-z_]\w*=[\w./:@+,%=-]*$/.test(w)) {
         return PLACEHOLDER;
       }
       continue;
     }
     return /^[\w./+-]+$/.test(w) ? w : PLACEHOLDER;
   }
-  return "";
+  return PLACEHOLDER;
 }
 
 function summary(tool, input = {}) {

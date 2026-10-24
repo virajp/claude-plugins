@@ -530,6 +530,12 @@ describe("action-log hook Bash summary", () => {
     ["PW=\"a b c\" run", "(command)"],
     ["\"/usr/bin/env\" ls", "(command)"],
     ["A=1 run", "run"],
+    ["TOKEN=$(echo ghp_x | base64) curl x", "(command)"],
+    ["AUTH=`echo pw` curl x", "(command)"],
+    ["N=$((1+2)) run", "(command)"],
+    ["A=s3cr3t\u00a0tail cmd", "(command)"],
+    ["A=1 B=x.y:z run", "run"],
+    ["", "(command)"],
     ["export db_password='s3 cr3t'", "export"],
     ["curl -u admin:hunter2 https://x", "curl"],
     ["curl -H 'X-Api-Key: sk_live_1' https://x", "curl"],
@@ -553,10 +559,14 @@ describe("action-log hook Bash summary", () => {
         "PGPASSWORD='my secret' psql",
         "PW=\"a b c\" run",
         "T=a\\ secret run",
+        "TOKEN=$(echo ghp_x | base64) curl x",
+        "AUTH=`echo pw` curl x",
       ]
     ) {
       const got = summaryOf(command);
-      for (const part of ["sk-live-x", "secret", "b", "Bearer"]) {
+      for (
+        const part of ["sk-live-x", "secret", "b", "Bearer", "ghp_x", "pw"]
+      ) {
         expect(got).not.toContain(part);
       }
     }
