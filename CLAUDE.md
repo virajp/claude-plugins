@@ -254,7 +254,7 @@ index.
 
 | Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the two mempalace auto-save hooks, the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`), and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the two mempalace auto-save hooks, the `/vwf:execute` action log (four command hooks and a JSONL file per run under `/tmp/vwf/`), the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`), and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                                                                |
 | `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. `stackgen:tool-config` owns the mise, dprint, taplo, pre-commit, gitleaks, grype, house linter, git, graphify, editor and statusline configs — a shipped node script copies its `assets/` and renders its `templates/` from `.config/stackgen.yaml`, exact pins only where CI loads them — and a pack ships no toolchain: its tool pins, gates and generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s, which the materializer reads from a clone and asks for through bootstrap's `docs/sync/vwf.md`; a pack's `config/` payload is its `test/` and `p/_project/` tasks. `/vwf:init` lands them and writes its own hygiene assets. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
@@ -366,14 +366,17 @@ ritual itself is the [`release`][rel] skill — run `/release`.
 ## Hooks
 
 What ships as a plugin hook today is vwf's only — the two mempalace auto-save
-hooks, plus one hooks module, `hooks/monitor/register.tsx`, listed under
-`modules` in `hooks/hooks.json`, which draws the `/vwf:execute` progress pane
-against the state contract the manifest's `types` key names — and is the
-[`vwf-plugin`][vwf] skill's. One more script ships as a **stackgen pack
-payload** copied into a target repo rather than discovered here, covered by the
-[`stackgen-plugin`][sg] skill. The three host rules that bite any command hook —
-BSD `sed`, never in `settings.json`, the per-event verdict shape — and the local
-gates of a hooks module are the [`plugin-authoring`][auth] skill's.
+hooks, the four `/vwf:execute` action-log hooks (`PreToolUse`, `PostToolUse`,
+`SubagentStart`, `SubagentStop`, each running `hooks/action-log.sh`, which exits
+at once unless a run is logging), plus one hooks module,
+`hooks/monitor/register.tsx`, listed under `modules` in `hooks/hooks.json`,
+which draws the `/vwf:execute` progress pane against the state contract the
+manifest's `types` key names — and is the [`vwf-plugin`][vwf] skill's. One more
+script ships as a **stackgen pack payload** copied into a target repo rather
+than discovered here, covered by the [`stackgen-plugin`][sg] skill. The three
+host rules that bite any command hook — BSD `sed`, never in `settings.json`, the
+per-event verdict shape — and the local gates of a hooks module are the
+[`plugin-authoring`][auth] skill's.
 
 ## Adding a Plugin
 

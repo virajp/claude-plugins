@@ -268,7 +268,9 @@ gates are bootstrap's.
   TypeScript module vwf ships is engine glue for the progress pane, not
   doctrine.
 - **`vitest run`** — the `scripts/` and `installer/` suites. The `scripts/`
-  suite is also the gate on `stackgen:tool-config`'s shipped node script:
+  suite also runs `/vwf:execute`'s action log for real — `execute-log.test.ts`
+  spawns `log.mjs` and the `action-log.sh` hook over a temp `$VWF_LOG_ROOT` —
+  and is the gate on `stackgen:tool-config`'s shipped node script:
   `tool-config-render.test.ts` spawns it in temp repos against a fake `mise`,
   through the shared harness and the golden greenfield render under
   `scripts/src/fixtures/tool-config/`, and `tool-config-template.test.ts` and

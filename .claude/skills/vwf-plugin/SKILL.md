@@ -16,11 +16,11 @@ paths:
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
 workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
 subagents they delegate to, the shared doctrine in `assets/`, the two mempalace
-auto-save hooks, the `/vwf:execute` progress pane (one TypeScript hooks module),
-and two MCP servers. It names **no** technology — no stack templates, no
-language list; what each axis offers comes from a stack plugin behind the
-stack-adapter contract, and `p:plugins:check`'s technology-free guard enforces
-it.
+auto-save hooks, the four `/vwf:execute` action-log hooks, the `/vwf:execute`
+progress pane (one TypeScript hooks module), and two MCP servers. It names
+**no** technology — no stack templates, no language list; what each axis offers
+comes from a stack plugin behind the stack-adapter contract, and
+`p:plugins:check`'s technology-free guard enforces it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
 The references below are an index of which file owns what, not a second copy of
@@ -390,10 +390,11 @@ not correctness, and `prefixSkillNames` is gone.
 ## Hooks
 
 `hooks/hooks.json` is authored directly in Claude's own format, with the scripts
-beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`), plus one
-hooks module under `modules`, described below. Plugin hooks are auto-discovered
-from that file and **never written to `settings.json`**, so verify them with
-`/hooks`.
+beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`), the four
+action-log hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`),
+plus one hooks module under `modules`, described below. Plugin hooks are
+auto-discovered from that file and **never written to `settings.json`**, so
+verify them with `/hooks`.
 
 The verdict trap that shipped here: **a script's verdict shape is decided by its
 event**. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop`
@@ -403,6 +404,19 @@ the whole verdict if a `hookSpecificOutput` arrives without a matching
 a rejected verdict reads exactly like a hook that decided to stay quiet. Its
 shell-script test lives at `installer/src/mempalace-checkpoint-script.test.ts`,
 because `vitest.config.mts` collects only `{installer,scripts}/src/**`.
+
+The **action-log hooks** fire on every tool call of every session, so
+`hooks/action-log.sh` exits at once unless some session holds a run marker under
+`/tmp/vwf/active/`; only then does it run `hooks/action-log.mjs`, which appends
+the event to that session's log and prints nothing, ever — it gives no verdict
+and never blocks a tool. The marker and the file are written by the execute
+skill's `scripts/log.mjs`, which the orchestrator calls for what only it knows
+(phases, gates, commits, review rounds, gaps, stops), per
+`skills/execute/references/action-log.md`. The log is one JSONL file per run at
+`/tmp/vwf/<repo>/<plan folder>/<YYYYMMDD-HHMMSS>-<session8>.jsonl`, never
+committed, and removed by macOS's `tmp_cleaner` after three days unused;
+`$VWF_LOG_ROOT` moves the root, for the tests. Both scripts are tested for real
+in `scripts/src/execute-log.test.ts`.
 
 Why the mempalace hooks are reimplemented rather than vendored, and the host
 rules a hook must satisfy (BSD `sed`, the per-event verdict shapes), are
