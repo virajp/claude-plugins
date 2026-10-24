@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-10-25T02:07 in .worktrees/action-log-per-plan (resumed)"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-25 — c6b24dc5 0a6e981f e2b1ed82 e6a01cb1 7a2c0f4a d9658113 c3dd3650 1add34b9 0abffbe7 269a49a3"
   },
   "consent": {
     "merge": true,
@@ -180,9 +180,9 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "shared_files": [
