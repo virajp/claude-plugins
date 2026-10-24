@@ -372,6 +372,13 @@ Re-read the folder with fresh eyes before handing it off, and fix inline:
   other than `run` — `/vwf:execute` asks nothing at run time
 - the launch line names this folder
 
+Then the **rulings review**, item 20 of
+`${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`: a fresh
+`plan-rulings-reviewer` over the `DRAFT` folder, each gap it returns asked of
+the user one at a time and written into the folder, looped until `NO GAPS`,
+four rounds at most. These are the last questions the plan gets —
+`/vwf:execute` asks none.
+
 ### 8. Hand off
 
 In this order.

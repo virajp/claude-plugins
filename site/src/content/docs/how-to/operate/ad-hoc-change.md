@@ -173,6 +173,13 @@ except a one-line note the next attempt can recall. Approving writes
 `docs/plans/2026-09-08-ci-release-notes/` — an `index.md` plus one file per
 unit.
 
+Expect a few more questions before you walk away. A fresh reviewer reads the
+written folder against the tree and lists the cases the rulings leave open — an
+input no ruling handles, two rulings that disagree, a passage the change makes
+untrue in a file no unit owns. `change-plan` asks you each one, one at a time,
+and writes your answer into the folder, until the reviewer finds nothing, four
+rounds at most. Each answer here is a gap the run does not record later.
+
 Then it finishes the hand-off for you. A row for the plan is appended to the one
 table of `docs/plans/index.md` — the queue every plan of either kind sits in,
 this one with `Kind` `change` — reading `APPROVED`, with a **priority** it works

@@ -2555,8 +2555,17 @@ Nothing reaches disk before the **approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
 gates and the derived priority, the consent block, the acceptance criteria the
 units cover, and the parked list — presented for *Approve & plan next*
-(mid-chain), *Approve only*, or *Reject*. Then the **hand-off**: the status is
-set to `APPROVED`; one row is appended to the one table of the base repo's
+(mid-chain), *Approve only*, or *Reject*. Once the folder is written, and
+while it is still `DRAFT`, the **rulings review** runs: a fresh, stateless
+`plan-rulings-reviewer` subagent reads the folder and the tree and returns the
+cases the rulings leave open — an unhandled input, a contradiction, an undefined
+term, a wrong citation, a falsified passage no unit owns, a gate line that
+cannot run, an unverified outside fact. `plan` asks you each one, one at a time,
+writes each answer into the folder, and runs a fresh reviewer again, until it
+returns `NO GAPS`, four rounds at most; a gap left after round four is ruled on
+or accepted, in the decisions table. These are the last questions the plan gets,
+since `execute` asks none — each one answered here is a gap the run never
+records. Then the **hand-off**: the status is set to `APPROVED`; one row is appended to the one table of the base repo's
 `docs/plans/index.md` — the folder, `Kind` `cycle`, the title, the target repo,
 the derived priority, `APPROVED`, the basenames it requires, the backlog ids;
 the backlog ids are marked `planned`, an edit to the project and nothing in the
@@ -3599,6 +3608,12 @@ so each needless wave is a serial step. Units in a wave own **disjoint paths**
 rather than "update the gates", and the last two units are fixed: a docs unit
 and a gates unit, `NN-gates.md`, which runs the generators and the full gate and
 bumps nothing.
+
+Before the hand-off, while the folder is still `DRAFT`, the **rulings review**
+runs, the same as `plan`'s: a fresh `plan-rulings-reviewer` subagent returns the
+cases the rulings leave open, `change-plan` asks you each one, one at a time,
+writes the answer into the folder, and loops until `NO GAPS`, four rounds at
+most.
 
 The **hand-off is five steps, in order**: the status is set to `APPROVED`; one
 row is appended to the **one table** of the base repo's `docs/plans/index.md` —
