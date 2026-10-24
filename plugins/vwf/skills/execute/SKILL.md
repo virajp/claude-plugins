@@ -394,9 +394,11 @@ otherwise.
   contested findings as an **oscillation** gap naming them and the rounds
   tried. The wave review's own loop is capped at two rounds under the same
   guard, per [edit-unit.md](references/edit-unit.md).
-  - Any review finding still unresolved when the loop ends — at the cap, or
-    early at the guard — is **documented as a gap** and execution continues; it
-    does not block.
+  - A loop that ends at the cap or the guard with findings open first runs the
+    **closing pass** in `execute-stages.md` — one fix aimed at the open set
+    alone, checked narrowly with no engine, never a round.
+  - Any review finding still unresolved after the closing pass is
+    **documented as a gap** and execution continues; it does not block.
   - The gap's diagnosis differs by exit. At the **cap**, "blueprint/plan was not
     thorough enough" — the contract left something open. At the **guard**, the
     contract is not the suspect and must not be named as one: the loop itself

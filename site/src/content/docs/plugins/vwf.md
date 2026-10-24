@@ -2854,10 +2854,14 @@ What it does, by rule:
   always fixed**, and so is any **breaking-released-API finding** (a change that
   would break a contract frozen under `apis/released/` — cap-exempt, never
   downgraded to a gap); other **code-review findings loop up to 4 rounds** per
-  row, whatever number of units it covers, after which any residual is recorded
-  as a gap marked `contested` — the blueprint/plan wasn't thorough enough. A row
-  is green when its last round is clean, or when it ended at the cap or the
-  convergence guard with its residuals `contested`. The row owns nothing and
+  row, whatever number of units it covers. A loop that ends at the cap or the
+  convergence guard with findings still open then runs one **closing pass**:
+  the owning units fix exactly those findings, and the two reviewers, with no
+  engine, check each one `RESOLVED` or `OPEN` and report only a regression the
+  fix caused. What stays open is recorded as a gap marked `contested` — at the
+  cap, the blueprint/plan wasn't thorough enough. A row is green when its last
+  round is clean, or when its closing pass closed or recorded every open
+  finding. The row owns nothing and
   commits nothing: its fix commits belong to the units fixed. A fix that lands
   after the last row covering its unit — from a wave review, the acceptance or
   UX pass, or a fix-first loop-back at the report — re-runs that row over the
@@ -2883,7 +2887,10 @@ What it does, by rule:
   alike — also runs under a **convergence guard**: a round that doesn't strictly
   reduce the finding count, or that resurfaces a finding an earlier round
   already fixed, ends the loop right there instead of burning the remaining
-  rounds. The residual is recorded as an **oscillation** gap that says so — the
+  rounds. Then the **closing pass** runs, for a review row and a wave review
+  alike: one fix aimed at the open findings alone, checked narrowly with no
+  engine, so no new layer of findings is raised. It is not a round and never
+  loops. What it leaves open is recorded as an **oscillation** gap that says so — the
   loop failed to settle, which is a different problem from a contract that left
   something open, and points you somewhere different when you go to fix it. A
   wave-review residual is marked `contested` and does not block: the plan and

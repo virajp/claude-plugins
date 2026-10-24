@@ -173,11 +173,14 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    what keeps the two stages from rewriting each other's lines. Gating is
    per-stage and unchanged: every security finding and every `[breaking-api]`
    finding **must** be fixed (cap-exempt); other review findings loop under
-   `pipeline.review_round_cap` (residuals after the cap → documented as gaps,
+   `pipeline.review_round_cap` (residuals after the cap → the **closing pass**
+   in `execute-stages.md`, and what it leaves open → documented as gaps,
    marked `contested`). A round counts once, even though it ran two reviewers
    and may have re-dispatched several units. Before each new round, apply the
-   **convergence guard** in `execute-stages.md` — the `contested` exit and the
-   cap-exempt pause apply to the row exactly as they applied to a unit. The
+   **convergence guard** in `execute-stages.md` — the closing pass, the
+   `contested` exit and the cap-exempt pause apply to the row exactly as they
+   applied to a unit. The closing pass's check dispatches both reviewers with
+   the open findings and the closing fix delta alone, and runs no engine. The
    guard ignores a kept out-of-range finding a previous row or this row's
    earlier loop marked `contested`: it is that loop's residual, not this
    loop's oscillation.
@@ -186,7 +189,8 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    room `gaps`. Decide blocking vs non-blocking and act per the rules.
 6. **journal** — fill the row's Units table cell: Status `green` when the last
    round is clean, **or** when the loop ended at the cap or the convergence
-   guard with its residuals recorded `contested` — contested findings never
+   guard and its closing pass recorded what stayed open `contested` — or
+   closed it all — contested findings never
    block, per the Autonomous Rules, so the row is done, the next row's range
    starts after it, and a resume skips it; `blocked` / `failed` per the rules.
    The Commit cell stays empty — the row has no commit of its own, and the

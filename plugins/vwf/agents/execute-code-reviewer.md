@@ -151,6 +151,26 @@ carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
 under-/mis-specified and where; and report it on its own contract line, not
 under FINDINGS.
 
+## Closing check
+
+A dispatch headed `## Closing check` is the **closing pass** of a loop that
+ended at the cap or the convergence guard
+(`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`). It hands you the open
+review findings, as the loop last reported them, and the closing fix delta — the
+commits that aimed at them alone — and no engine output. Do not review the
+range again and raise nothing new: for each listed finding, read the tree at the
+delta's `to` and answer whether it is fixed; then read the delta alone for a
+defect it introduced. Skip mempalace. Output **only** this block, in place of
+the one under Return contract:
+
+```text
+CLOSING:   # one line per listed finding, in the order given
+- RESOLVED file:line (<unit>) — <the finding, as given>
+- OPEN file:line (<unit>) — <why it still holds>
+REGRESSIONS:   # defects the closing fix delta itself introduced, or the single line "none"
+- [severity] file:line (<unit>) — what the fix broke
+```
+
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window.

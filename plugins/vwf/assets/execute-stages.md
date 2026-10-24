@@ -233,6 +233,31 @@ blueprint-bound and never fires on a plan without one.
   findings must be fixed and can never be downgraded to gaps, so a guard trip on
   one is not a gap at all — it is a decision the rules do not cover, and the
   invoking command pauses on it.
+- **Closing pass** — *every unit.* A loop that ends at the cap or at the
+  convergence guard with findings still open — a `review` row's loop, a late
+  re-run's, the wave review's — does not record them yet. Each round's engines
+  re-read the fix delta and raise the next layer, so a full round can never
+  end at zero; one fix aimed at the open set alone can. Run it once:
+  1. **Fix.** Re-dispatch each unit the open findings name, by its Kind, with
+     those finding lines and the instruction to fix **exactly** them and change
+     nothing else — no recall tag, the lines themselves. Each unit re-commits
+     as any fix does.
+  2. **Check, narrowly.** Dispatch the loop's own reviewers again — the two
+     reviewers of a `review` row, the wave reviewer of a wave — with the open
+     findings and the closing fix delta alone under a `## Closing check`
+     heading, and no engine. Each answers
+     `RESOLVED` or `OPEN` for each listed finding, and reports a new finding
+     only when the closing fix itself caused it — a regression, labelled as
+     one. It raises nothing else.
+  3. **Record.** A finding `OPEN` and a regression are recorded `contested`, as
+     the loop's exit would have recorded them, with the diagnosis of that exit
+     (cap or guard); a `RESOLVED` finding is closed. A regression on a
+     security or `[breaking-api]` finding is cap-exempt and pauses, as the
+     guard's cap-exempt rule says.
+
+  The closing pass is **not a round**: the cap and the guard do not count it
+  and do not apply to it, and it never loops. Its Run log rows carry `closing`
+  in the Round cell. A loop that ends clean has no closing pass.
 - **Capture blueprint/plan gaps as they surface** — *`code` units with
   `covers:`.* A *gap* (a hole in the blueprint or plan, distinct from a code
   finding) reported by any stage is never silently worked around. The subagent
