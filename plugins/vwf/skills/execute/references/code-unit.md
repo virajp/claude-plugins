@@ -14,7 +14,10 @@ Every write to the folder's `index.json` below is one call in the worktree,
     node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.U<n>.<field> <value>
 
 `plan.mjs set` for short (`--json` for a number), or one `plan.mjs append` to
-a list; every read is one `plan.mjs get`.
+a list; every read is one `plan.mjs get`. Each `set` of the unit's `status`,
+`commit` or `rounds` below is followed by one `log.mjs event row`, and each
+`append` to `gaps` by one `log.mjs event gap`, per *The plan files* in the
+skill's `SKILL.md`.
 
 For the unit (skip it when its `status` in `index.json` already reads `green`
 with a `commit` set):

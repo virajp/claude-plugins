@@ -9,7 +9,10 @@ Every mark below is one call that sets the unit's `status` in the folder's
     node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.U<n>.status <status>
 
 A unit entry has no detail field: a mark's detail rides the status line below
-and the run journal (mempalace room `runs`, drawer `<plan folder>`).
+and the run journal (mempalace room `runs`, drawer `<plan folder>`). Each mark
+— the resets of Resume step 4 and 5 included — is followed by one
+`log.mjs event row`, `{"unit", "wave", "status"}`, and each `append` to
+`gaps` by one `log.mjs event gap`, per *The plan files* in `SKILL.md`.
 
 ## Isolated versus all-blocking
 

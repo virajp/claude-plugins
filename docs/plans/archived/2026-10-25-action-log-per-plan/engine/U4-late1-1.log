@@ -1,0 +1,4 @@
+security-review engine — loop U4-late1, round 1, range 1add34b9..0abffbe7
+
+No high-confidence vulnerabilities found.
+The only change rewraps the // header comment of plugins/vwf/hooks/action-log.mjs (lines 20-24), same wording; no code line changed.

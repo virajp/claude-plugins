@@ -81,10 +81,10 @@ The three statuses:
 | Verb       | Caller                          | Edit                                                                                                                                                                                                                                                                                                                                  |
 | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, `gaps` `null`, and sets the `gaps` of each row its `gaps_of` names to `{"open": 0, "moved_to": [… <basename>]}`, in the planner's hand-off commit                                                                                                                                                        |
-| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut; the commit `docs: plan queue — <folder> running`                                                                                                                                                                                                                                         |
-| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                                                         |
+| `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut — and the folder's `run` to the run's worktree and log paths; the commit `docs: plan queue — <folder> running`                                                                                                                                                                            |
+| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` and the folder's `run` back to `{}` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                     |
 | `complete` | `/vwf:execute`                  | sets `COMPLETE` and the `gaps` count after the merge lands, re-pointing `folder` under `archived/` when the landing archived the folder (an empty gap list and no completion warning from `archive`) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
-| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none                                                                                                                                                                                                                 |
+| `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none; after a move, prunes the action logs of archived plans older than 30 days                                                                                                                                      |
 
 No verb commits: the caller named in each row commits the edit.
 
@@ -102,7 +102,10 @@ how the `archive` verb finds the folder it has yet to move.
 
 **Every edit is a direct commit on the integration branch, made in the main
 checkout, never in a worktree.** The run branch never touches this file, so two
-parallel landings cannot conflict on it. The three commit messages:
+parallel landings cannot conflict on it. The claim and the unclaim also carry
+one edit of the folder's own `index.json` — its `run` key, set to the run's
+worktree and log paths at the claim and back to `{}` at the unclaim. The
+three commit messages:
 
 - the claim: `docs: plan queue — <folder> running`
 - the unclaim: `docs: plan queue — <folder> unclaimed`
@@ -222,9 +225,14 @@ what each row status means for a named run.
 
 ### Writing a row — the claim, and the completion
 
-The one edit the executor makes in the main checkout. `unclaim` follows the
-same procedure with the reverse edit — the row from `RUNNING` back to
-`APPROVED` — and the push-rejection rule applies unchanged. Record two facts
+The two edits the executor makes in the main checkout at the claim: the row,
+and the folder's `run` — the worktree and log paths (`plan-management`'s
+`claim`). This reverses the older rule that the row was the one edit the run
+made there (approved 2026-10-24): a reader of the folder now finds a running
+plan's worktree and action log without searching. `unclaim` follows the
+same procedure with the reverse edits — the row from `RUNNING` back to
+`APPROVED`, and `run` back to `{}` — and the push-rejection rule applies
+unchanged. Record two facts
 before touching anything: the branch the checkout is on, and whether a stash
 was taken.
 
@@ -235,10 +243,13 @@ was taken.
 3. `git pull --ff-only`.
 4. Edit the one row, each change one `plan.mjs set` on
    `docs/plans/index.json`:
-   - **Claim** — `plans.<basename>.status` from `APPROVED` to `RUNNING`.
+   - **Claim** — `plans.<basename>.status` from `APPROVED` to `RUNNING`;
+     then `set <folder>/index.json run --json` with the worktree and log
+     paths, as `plan-management`'s `claim` derives them.
    - **Unclaim** — `plans.<basename>.status` from `RUNNING` back to
      `APPROVED`, once the verb's liveness check and the user's consent have
-     passed.
+     passed; then the folder's status as that verb says, and
+     `set <folder>/index.json run --json '{}'`.
    - **Completion** — `plans.<basename>.status` to `COMPLETE`, and
      `plans.<basename>.gaps`, with `--json`, to
      `{"open": <n>, "moved_to": []}`, `<n>` the count of entries of the
@@ -252,8 +263,9 @@ was taken.
      whose `folder` is still a live path is one `archive` has yet to move, and
      the sweep leaves it alone until `archive`'s own landing edit re-points
      it.
-5. `git add -- docs/plans/index.json` — that file alone; nothing else the
-   checkout carries rides this commit. The one exception is a completion
+5. `git add -- docs/plans/index.json` — that file, plus
+   `<folder>/index.json` for a claim or an unclaim; nothing else the
+   checkout carries rides this commit. The one other exception is a completion
    whose folder's `release_levels` list raised a key: `/vwf:execute` stages
    `.config/releases.yaml` too, per its release-levels write, and nothing
    else.
@@ -268,8 +280,10 @@ was taken.
    - The rebase conflicts on `docs/plans/index.json` → read it as the same
      row. `git rebase --abort`, then drop the commit —
      `git reset --soft HEAD~1`, then
-     `git checkout HEAD -- docs/plans/index.json`, which restores the file in
-     both the index and the tree from the commit before the edit — then
+     `git checkout HEAD -- docs/plans/index.json` — with
+     `<folder>/index.json` beside it for a claim or an unclaim — which
+     restores the files in both the index and the tree from the commit before
+     the edit — then
      `git pull --ff-only`. Then, by kind of edit:
      - A **completion** re-applies the same row from step 4 and pushes again —
        a completion never re-picks; it repeats until the push lands, then
@@ -290,9 +304,9 @@ was taken.
 
 Every command is one plain call; none of them is `--force`, `reset --hard` or
 `--no-verify`, which `vwf:git-workflow` forbids everywhere. The push carries no
-plan-folder edit and no worktree commit: the run branch never touches
-`docs/plans/index.json`, which is what lets two sessions land in parallel
-without a conflict on it.
+plan-folder edit save the claim's and the unclaim's `run` key, and no worktree
+commit: the run branch never touches `docs/plans/index.json`, which is what
+lets two sessions land in parallel without a conflict on it.
 
 ### The sweep
 

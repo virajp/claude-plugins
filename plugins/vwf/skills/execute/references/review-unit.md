@@ -41,7 +41,12 @@ Every write below is one call in the worktree to the plan script,
     node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.<row-id>.<field> <value>
 
 `plan.mjs set` for short, with `--json` for a number, and every read one
-`plan.mjs get` of the same path.
+`plan.mjs get` of the same path. Each `set` below of the row's `status`,
+`rounds` or `range`, or of a re-dispatched unit's `commit`, is followed by
+one `log.mjs event row` — a `range` row carries
+`{"from": "<sha>", "to": "<sha>"}` — and each `append` to `gaps`, and each
+`contested` line, by one `log.mjs event gap` with its `source` `review-row`,
+per *The plan files* in `SKILL.md`.
 
 For the row (skip it when its `status` in `index.json` already reads `green` —
 its last round clean, or ended at the cap or the guard with its residuals

@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-10-25 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-25 — c6b24dc5 0a6e981f e2b1ed82 e6a01cb1 7a2c0f4a d9658113 c3dd3650 1add34b9 0abffbe7 269a49a3"
   },
   "consent": {
     "merge": true,
@@ -64,9 +64,9 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "commit": "c6b24dc5",
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -88,9 +88,9 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "commit": "d9658113",
+      "rounds": 2
     },
     {
       "id": "U1",
@@ -110,9 +110,9 @@
         "U2"
       ],
       "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
-      "status": "pending",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "commit": "0abffbe7",
+      "rounds": 5
     },
     {
       "id": "U4",
@@ -128,12 +128,12 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0,
+      "rounds": 5,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "c3dd3650",
+        "to": "1add34b9"
       }
     },
     {
@@ -162,9 +162,9 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "commit": "269a49a3",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -180,9 +180,9 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "shared_files": [
@@ -484,27 +484,77 @@
         "U1",
         "U2"
       ]
+    },
+    {
+      "id": "D30",
+      "decision": "How does the action-log hook summarise a Bash call with no description? (gap G3, review row U4)",
+      "ruling": "Log only the program name: the first word of the command that is not a NAME=value assignment. No argument is logged, so no inline secret can reach the log. A description, when given, is logged as before. Ruled by the user on 2026-10-25.",
+      "rejected": "A denylist that redacts secret-looking values (round 1 fix; it missed curl -u, secret headers, here-strings and mysql -p); program name plus the redacted rest",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "What does the row event of a review row log for a late re-run? (gap G1)",
+      "ruling": "Only the main loop range, as index.json holds it. A late re-run is logged by its review.round events, which carry their own --loop, --from and --to. No change to U3s edit. Ruled by the user on 2026-10-25.",
+      "rejected": "A row event with the late loop range (it would disagree with index.json)",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "The convergence guard tripped at U4 round 4 (security findings 1 → 2: $(…)/backtick and Unicode-space bypasses of program()). Pause, or continue? (asked in session)",
+      "ruling": "Continue. Each leading NAME=value word must match /^[A-Za-z_]\\w*=[\\w./:@+,%=-]*$/ and the command is split on [ \\t\\n] only; anything else logs (command). Round 5 reviews it; any leak found there pauses the run. Ruled by the user on 2026-10-25.",
+      "rejected": "Pause the run per the guard; always log (command) for a Bash call with no description",
+      "units": [
+        "U1",
+        "U4"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "ux": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, no registry or harness change, nothing to persist"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The row JSON for a review row late-loop to is not specified · range is logged only for the main loop set, as index.json holds it · closed: ruled D31 by the user, U3's choice stands",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133) · closed: rewrapped in place on 2026-10-25 at the user's request",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "security",
+      "text": "oscillation (cap-exempt security, U4 rounds 1-2): plugins/vwf/hooks/action-log.mjs secret values in the hook Bash summary; the denylist redaction did not converge · closed: ruled D30 by the user — the hook logs only the program name; fixed in place in U1's Owns; review row U4 re-runs over it on resume",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {}
 }

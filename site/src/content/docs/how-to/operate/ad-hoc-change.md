@@ -266,15 +266,17 @@ migrate, then re-run the same command.
 The first thing it does is run **`/vwf:doctor`** in your main checkout: a
 blocking finding stops the run there, before it has claimed anything, so the fix
 and a re-launch need no clean-up. Then it **claims the plan**: the row in
-`docs/plans/index.json` is set to `RUNNING` in a commit pushed on the
-integration branch, before any worktree exists. That pushed row is what makes a
-second session safe: another `/vwf:execute next` or `all` running at the same
-time sees the row taken and picks something else, and if two sessions race for
-the same row, the push that lands second is rejected, so that session re-reads
-the queue and re-picks — or, for a named folder, stops and tells you another
-session has it. A `RUNNING` row is never taken over, however long it has sat
-there; if the session that claimed it is gone, ask the session to unclaim it —
-its worktree must be gone first — and the plan is runnable again.
+`docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
+worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run
+will use, in a commit pushed on the integration branch, before any worktree
+exists. That pushed row is what makes a second session safe: another
+`/vwf:execute next` or `all` running at the same time sees the row taken and
+picks something else, and if two sessions race for the same row, the push that
+lands second is rejected, so that session re-reads the queue and re-picks — or,
+for a named folder, stops and tells you another session has it. A `RUNNING` row
+is never taken over, however long it has sat there; if the session that claimed
+it is gone, ask the session to unclaim it — its worktree must be gone first —
+and the plan is runnable again.
 
 From there you are not needed. It creates one worktree (or, under `all` with the
 shared worktree answered yes, reuses the run's), runs the plan's unit gate and
@@ -363,8 +365,9 @@ for an item the folder lists as a piece — so nothing is left waiting on a plan
 that will not run. A folder that lists an id as finished while its *Parked* list
 keeps a `- Bnn:` piece of it is refused, since closing that item would close
 work the folder itself says is left; `archive <folder> --force` archives it
-anyway and records the item as a piece, never `done`. Nothing is deleted, and
-the next plan's recall still reads it.
+anyway and records the item as a piece, never `done`. Nothing of the folder is
+deleted, and the next plan's recall still reads it; the archive deletes only the
+action logs of archived plans untouched for more than 30 days.
 
 ## What this will not do for you
 

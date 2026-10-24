@@ -2,10 +2,11 @@
 // The hook half of the /vwf:execute action log. action-log.sh runs it, with
 // the hook payload on stdin, only while some session holds a run marker.
 //
-// It appends one line to the session's log — the file named by
-// <root>/active/<session_id>, which skills/execute/scripts/log.mjs writes —
-// and does nothing for a session with no marker. <root> is $VWF_LOG_ROOT,
-// default /tmp/vwf. The event, by hook:
+// It appends one line to the session's log — the file named on the first
+// line of <root>/active/<session_id>, which skills/execute/scripts/log.mjs
+// writes, the run id on its second — and does nothing for a session with no
+// marker. <root> is $VWF_LOG_ROOT, default ~/Library/Caches/vwf. The event, by
+// hook:
 //
 //   PreToolUse     tool.start  tool, tool_use_id, summary
 //   PostToolUse    tool.end    tool, tool_use_id, dur_ms; an Agent call adds
@@ -13,34 +14,63 @@
 //   SubagentStart  agent.start agent_type
 //   SubagentStop   agent.end   agent_type, gaps — the GAP: and UNRESOLVED:
 //                              lines of the agent's last message
+//   SessionEnd     session.end reason — the payload's, "other" when absent;
+//                              then the session's marker is deleted
 //
-// Every line carries ts, run, session, agent (the payload's agent_id: null for
-// the orchestrator, set for a subagent's own tool calls) and event. The
-// summary is short and never a file's content: a Bash call's description or
-// the head of its command, a file tool's path, a search's pattern, a skill's
-// name, an Agent call's subagent type and description.
+// Every line carries ts, run (the run id from the marker), session, agent (the
+// payload's agent_id: null for the orchestrator, set for a subagent's own tool
+// calls) and event. The summary is short and never a file's content: a Bash
+// call's description or its program name, a file tool's path, a search's
+// pattern, a skill's name, an Agent call's subagent type and description.
 
 import {
   appendFileSync,
-  existsSync,
   readFileSync,
+  rmSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import {
   basename,
   join,
 } from "node:path";
 
-const ROOT = process.env.VWF_LOG_ROOT || "/tmp/vwf";
+const ROOT = process.env.VWF_LOG_ROOT
+  || join(homedir(), "Library", "Caches", "vwf");
 const MAX = 200;
 
 const clip = s => (typeof s === "string"
   ? s.replace(/\s+/g, " ").trim().slice(0, MAX)
   : undefined);
 
+// A Bash call with no description is logged by its program name alone — the
+// first word that is not a NAME=value assignment — so no argument, and no
+// inline secret, can reach the log (decision D30). The split is on the
+// spaces bash splits on and ignores shell quoting and expansion, so a
+// leading assignment whose value is not plain — a quote, a backslash, a $(…),
+// a backtick, a Unicode space — or a program word that is not a plain path
+// logs the fixed `(command)`, as does an empty command (decision D32).
+const PLACEHOLDER = "(command)";
+
+function program(s) {
+  if (typeof s !== "string") {
+    return s;
+  }
+  for (const w of s.trim().split(/[ \t\n]+/)) {
+    if (/^[A-Za-z_]\w*=/.test(w)) {
+      if (!/^[A-Za-z_]\w*=[\w./:@+,%=-]*$/.test(w)) {
+        return PLACEHOLDER;
+      }
+      continue;
+    }
+    return /^[\w./+-]+$/.test(w) ? w : PLACEHOLDER;
+  }
+  return PLACEHOLDER;
+}
+
 function summary(tool, input = {}) {
   switch (tool) {
     case "Bash":
-      return clip(input.description || input.command);
+      return clip(input.description || program(input.command));
     case "Read":
     case "Write":
     case "Edit":
@@ -87,17 +117,21 @@ function main() {
     return;
   }
   const marker = join(ROOT, "active", p.session_id);
-  if (!existsSync(marker)) {
-    return;
+  let text;
+  try {
+    text = readFileSync(marker, "utf8");
   }
-  const file = readFileSync(marker, "utf8").trim();
+  catch {
+    return; // no marker, or one removed before the read: no run
+  }
+  const [file = "", run = ""] = text.split("\n").map(l => l.trim());
   if (!file) {
     return;
   }
 
   const line = {
     ts: new Date().toISOString(),
-    run: basename(file, ".jsonl"),
+    run: run || basename(file, ".jsonl"),
     session: p.session_id,
     agent: p.agent_id ?? null,
   };
@@ -133,6 +167,14 @@ function main() {
         gaps: gapLines(p.last_assistant_message),
       });
       break;
+    case "SessionEnd":
+      Object.assign(line, {
+        event: "session.end",
+        reason: p.reason == null ? "other" : String(p.reason),
+      });
+      appendFileSync(file, JSON.stringify(line) + "\n");
+      rmSync(marker, { force: true });
+      return;
     default:
       return;
   }

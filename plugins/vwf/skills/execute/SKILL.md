@@ -129,6 +129,33 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   for a plan-level gap or a stage not known. Closing one is two `set` calls,
   `gaps.G<n>.state` to `closed` and `gaps.G<n>.text` to its line ended with
   how.
+- **Every run fact goes to the action log too.** `index.json` keeps the facts
+  — it is committed, and resume and the final report read it — and the log
+  carries the same facts as events for the progress pane. After each `set` of
+  a unit's `status`, `commit`, `rounds` or `range`, or of a stage, run
+  `log.mjs event row` with the JSON on stdin; after each `append` to `gaps`
+  and each `set` of a gap's `state`, run `log.mjs event gap`. Both read a
+  quoted heredoc, so nothing in it is expanded:
+
+  ```sh
+  node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event row <<'EOF'
+  {"unit": "U3", "wave": 2, "status": "green", "commit": "1a2b3c4"}
+  EOF
+  node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event gap <<'EOF'
+  {"id": "G2", "unit": "U3", "stage": "", "text": "<the line>", "state": "open", "class": "GAP", "source": "unit"}
+  EOF
+  ```
+
+  A `row` carries exactly one of `unit` or `stage` (a `stages` key), and
+  always `status` — the status after the set; a unit row also carries `wave`.
+  Add the field that changed — `commit`, `rounds`, `range` (`{"from", "to"}`)
+  or `detail` — or none, for a status change. A `gap` carries `unit`,
+  `stage`, `text` and `state`, plus `class` and `source` as
+  [the action log](references/action-log.md) lists them; its `id` is the
+  `G<n>` of the `gaps` entry, and is left out for a recorded line that is not
+  an `index.json` gap — `log.mjs` gives it the next `L<n>`. Both are strict:
+  an unknown key or a wrong value exits non-zero and writes nothing, and a log
+  call never stops a run.
 
 ## Halt Conditions
 
@@ -303,11 +330,22 @@ to commit and push it by hand, then re-launch.
 **Start the action log.** Once the folder is read and no refusal above
 stopped the run, start this run's action log per
 [the action log](references/action-log.md) — `log.mjs start` in the main
-checkout — and from here log each phase, gate line, commit, review round,
-unit outcome, gap and stop at the point that reference names. The log lives
-under `/tmp/vwf/`, outside the repo, and is never committed; a log call never
-stops the run. Under `all`, each runner starts its own folder's log, and the
-loop logs nothing.
+checkout, `--folder` the copy of the folder it read, or, on a resume,
+`log.mjs start --mode resume --folder <the worktree copy of the folder>`,
+which appends to the same file — and from here log each phase, gate line,
+commit, review round, row, gap and stop at the point that reference names.
+`start` also writes one `plan.snapshot` event, the folder's `units` list. The
+log is one append-only file for each plan, the path the folder's `run.log`
+names once the claim below has written it —
+`~/Library/Caches/vwf/<repo>/<folder basename>.jsonl` — outside the repo, and
+is never committed; a log call never stops the run. Under `all`, each runner
+starts its own folder's log, and the loop logs nothing.
+
+**No active run.** When a `log.mjs event` or `run` call prints
+`log.mjs: no active run in session <id>` during a run — the session's marker
+is gone — run `log.mjs start --mode resume --folder <folder>`, which appends
+to the same file, then repeat the call. The call itself exited 0, and a gate
+it wrapped kept its own exit code.
 
 **Run doctor before the claim.** On every run — a fresh run, and a resume —
 run `/vwf:doctor` in the main checkout, scoped to the plan's projects — the
@@ -326,17 +364,23 @@ and a re-run need no unclaim. Keep the report: Setup step 2 reads it.
 
 **Claim the row.** Before the worktree is cut, and before the folder's own
 `status` is touched, invoke `plan-management claim <folder>` in the main
-checkout — it sets the row `RUNNING` and nothing else — then commit and push
-`docs: plan queue — <folder> running` on the integration branch, exactly as
-the contract's *Writing a row — the claim* spells out. This is the **one** edit
-the run makes in the main checkout, and it is made there on purpose: the pushed
-row is what another session's `next` reads, so a claim that lived only on the
-run branch would claim nothing; and the run branch must never carry
-`docs/plans/index.json`, or two plans landing in parallel would conflict on
-it. A rejected push is handled per that procedure — a clean rebase pushes
-again; a conflict on the same row means the plan was claimed first, and the
-run re-picks (`next`) or stops (a named folder). A resume whose row already
-reads `RUNNING` skips this step.
+checkout — it sets the row `RUNNING`, and sets the folder's `run` to
+`{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}`,
+the worktree this run will use and its log, the `~` literal — then commit and
+push `docs: plan queue — <folder> running` on the integration branch, exactly
+as the contract's *Writing a row — the claim* spells out. When the folder
+lives in a member repo, its `run` edit is a direct commit on that repo's
+integration branch, with the same message, and its `<repo>` and worktree are
+that repo's. These are the **two** edits the run makes in the main checkout —
+the row and the folder's `run` — and they are made there on purpose: the
+pushed row is what another session's `next` reads, so a claim that lived only
+on the run branch would claim nothing, and `run` is how a reader such as the
+progress pane finds the worktree and the log; and the run branch must never
+carry `docs/plans/index.json`, or two plans landing in parallel would
+conflict on it. A rejected push is handled per that procedure — a clean
+rebase pushes again; a conflict on the same row means the plan was claimed
+first, and the run re-picks (`next`) or stops (a named folder). A resume
+whose row already reads `RUNNING` skips this step.
 
 Once Setup step 1 has cut the worktree, invoke
 `plan-management status <folder> RUNNING "RUNNING since <ts> in <worktree>"`
@@ -345,11 +389,11 @@ pause, a block, the landing) is the same verb with a different state and
 detail. From there the folder is edited in the worktree only, through
 `plan.mjs`, and committed with each unit, so a session that dies still leaves
 a legible plan on the branch — never in the main checkout, which would dirty
-the integration branch — the one exception being the index row above, which
-is committed and pushed in the main checkout and never edited in the
-worktree. The row does not change on a pause or a block: the index carries
-`APPROVED`, `RUNNING` or `COMPLETE` only, and the folder's status line keeps
-the run detail.
+the integration branch — the one exception being the claim's two edits above,
+the index row and the folder's `run`, which are committed and pushed in the
+main checkout and never edited in the worktree. The row does not change on a
+pause or a block: the index carries `APPROVED`, `RUNNING` or `COMPLETE` only,
+and the folder's status line keeps the run detail.
 
 ## Format Check
 
@@ -528,13 +572,15 @@ otherwise.
   journal. For **every plan**, as each *node* returns for a `code` unit or a
   `review` row and as each *report* returns for an `edit` unit, not only at
   reconcile, `set` the unit's fields in `index.json` — `status`, `rounds`,
-  and `commit` once it has one — and write the node's whole fact (wave, unit,
-  model, round, outcome, detail, commit) to the **run journal** (room
-  `runs`, drawer `<plan folder>`), in the fixed shape `execute-stages.md`
-  defines. The unit fields, the `gaps` list, the `stages` and `git log` are
-  what a resumed run reads after a pause **and** what the final report
-  renders — so a field left unset under context pressure is work a resumed
-  run repeats and a result the report cannot vouch for. The execute subagents
+  and `commit` once it has one — each followed by its `log.mjs event row`
+  per [the plan files](#the-plan-files) — and write the node's whole fact
+  (wave, unit, model, round, outcome, detail, commit) to the **run journal**
+  (room `runs`, drawer `<plan folder>`), in the fixed shape
+  `execute-stages.md` defines. The unit fields, the `gaps` list, the
+  `stages` and `git log` are what a resumed run reads after a pause **and**
+  what the final report renders — so a field left unset under context
+  pressure is work a resumed run repeats and a result the report cannot
+  vouch for. The execute subagents
   file their own findings and gaps directly (rich detail bypasses your
   context) and recall them on fix loop-backs. Skip the journal silently if
   mempalace is down — the folder's `index.json` and the worktree commits are
@@ -643,7 +689,10 @@ branch is re-run, since the committed code is ground truth. Resume at the
 first non-`green` unit; never re-implement a finished one. The earlier
 attempt's fields stay; a unit run again continues its `rounds`. This is how
 a run paused at a resource cap (`/vwf:handoff`, then `/vwf:execute <folder>`
-in a fresh session) picks up where it left off.
+in a fresh session) picks up where it left off. The resumed run's action log
+is `log.mjs start --mode resume --folder <the worktree copy of the folder>`,
+which appends a new `run.start` and `plan.snapshot` to the same file the
+folder's `run.log` names; the log is never read to decide where to resume.
 
 Per-unit recall continues inside the `code` pipeline, for `code` units only.
 Skip every memory step silently if mempalace is unavailable.
@@ -947,8 +996,10 @@ the record is the account that survived all three intact. Read
   `.config/releases.yaml`, from and to; or the one line *old-shape folder — no
   release levels recorded* for a folder whose `release_levels` is `[]`
 - the worktree path
-- the action log's path, and its `log.mjs summary` — the phases, the agents
-  and the parallel factor, the gates by tier
+- the action log's path — the folder's `run.log` — and its
+  `log.mjs summary`, which reports each run of the plan (one `run.start` to
+  the next, the pause between them not counted) and the totals: the phases,
+  the agents and the parallel factor, the gates by tier
 - each after-landing step and its outcome, once After landing has run
 
 With `covers`, also:
@@ -1225,9 +1276,11 @@ report with its resume command. Everything else is recorded in the folder's
 - Runs an after-landing step on a landing that was not green, or merges past
   the integration branch
 - Edits `docs/plans/index.json` or a folder's `status` itself — every such
-  edit is a `plan-management` verb, the index one only in the main checkout,
-  and never a row but its own plan's and the sweep the landing's `complete`
-  applies
+  edit is a `plan-management` verb, the index one and the claim's `run` edit
+  only in the main checkout, and never a row but its own plan's and the sweep
+  the landing's `complete` applies
+- Edits or removes a line of the action log — it is append-only; a resume
+  appends a new `run.start`, which supersedes the earlier run
 - Rewrites a folder's `index.json` whole, or edits it with anything but one
   `plan.mjs set` or `append` per change
 - Takes a `RUNNING` row, however stale, or invokes `unclaim` — the person's

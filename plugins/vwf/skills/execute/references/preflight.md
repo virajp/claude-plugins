@@ -67,10 +67,12 @@ reads it and asks nothing:
 - **No key for the flagged language**, or no `consent.lsp` at all → treat it
   as `proceed without`, and append one `open` entry to the folder's `gaps`,
   `unit` `""` and `stage` `preflight`: the plan did not carry the LSP answer
-  for `<language>`, and the run proceeded without the server.
+  for `<language>`, and the run proceeded without the server. Then one
+  `log.mjs event gap` with the same `id`, `unit`, `stage`, `text` and `state`,
+  per *The plan files* in `SKILL.md`.
 - A language doctor reports as **unavailable** (no LSP ships in this
   marketplace) is not gated — there is nothing to install. Append it to
-  `gaps` and proceed.
+  `gaps`, then one `log.mjs event gap` of the same entry, and proceed.
 - A language doctor reports as **unknown** is not handled here at all: no
   installed plugin declares it, so it is a `blocking` finding and a hard halt in
   `SKILL.md`. It is not a missing LSP — it is a stack vwf has no template,

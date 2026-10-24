@@ -1,6 +1,6 @@
 #!/bin/sh
-# The action-log hook of /vwf:execute — PreToolUse, PostToolUse, SubagentStart
-# and SubagentStop.
+# The action-log hook of /vwf:execute — PreToolUse, PostToolUse, SubagentStart,
+# SubagentStop and SessionEnd.
 #
 # It fires on every tool call of every session, so it must cost almost nothing
 # when no run is logging: it exits at once unless some session holds a marker
@@ -15,7 +15,7 @@
 #
 # POSIX sh: this runs on macOS's /bin/sh.
 
-root=${VWF_LOG_ROOT:-/tmp/vwf}
+root=${VWF_LOG_ROOT:-$HOME/Library/Caches/vwf}
 set -- "$root"/active/*
 [ -e "$1" ] || exit 0
 

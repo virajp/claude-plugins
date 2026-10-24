@@ -33,14 +33,15 @@ is a map of which file owns which subject, not a summary of their contents.
 
   The plan-index contract is not an asset any more: since 2026-09-18 it is
   `skills/plan-management/references/plan-index.md`, beside the one skill that
-  writes the index, each folder's `status` and the archive move — a skill's
-  reference, not shared doctrine, because no other skill reads it directly.
+  writes the index, each folder's `status` and `run`, and the archive move — a
+  skill's reference, not shared doctrine, because no other skill reads it
+  directly.
 
 - `hooks/hooks.json` — the two mempalace auto-save hooks (`Stop` +
-  `PreCompact`), whose scripts sit beside it, the four `/vwf:execute` action-log
-  hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop` →
-  `action-log.sh`, then `action-log.mjs` while a run is logging), and under
-  `modules` the one hooks module, `hooks/monitor/register.tsx`, the
+  `PreCompact`), whose scripts sit beside it, the five `/vwf:execute` action-log
+  hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`,
+  `SessionEnd` → `action-log.sh`, then `action-log.mjs` while a run is logging),
+  and under `modules` the one hooks module, `hooks/monitor/register.tsx`, the
   `/vwf:execute` progress pane, whose state contract is `types/index.d.ts`,
   named by the manifest's `types` key. The npm→pnpm/bun normalizer is not here:
   it ships inside stackgen's `package-manager/pnpm` pack, copied into the target

@@ -335,7 +335,10 @@ rounds that led to it. It is read when the folder is unreachable, and for the
 one fact `index.json` does not hold, the `to` of a `review` row's late loops;
 without it, a finished late re-run runs again on a resume. The review commit
 map never reads it — it reads `git log` and `index.json` alone, per
-`references/review-unit.md`.
+`references/review-unit.md`. The action log carries each round's `row` too —
+the `status`, `rounds` and `range` set as each round returns, per
+`references/action-log.md` — for the progress pane; it is a record of the
+run, never read to resume it, so the journal stays what a resume consults.
 
 - **The journal opens with the unit sequence** written at Setup — every unit
   `pending` — and accumulates records beneath it. A `code` unit is done when

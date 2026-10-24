@@ -2,8 +2,9 @@
 // docs/plans/index.json. Each validator returns a list of findings,
 // { path, message }; an empty list is a valid file.
 //
-// An object allows only the keys its schema names. Two objects are open: `run`
-// (plan B fills it) and `consent.lsp` (its keys are language names). A
+// An object allows only the keys its schema names. One object is open:
+// `consent.lsp` (its keys are language names). `run` is `{}`, or exactly
+// `{ worktree, log }`, both non-empty strings, which claim writes. A
 // cycle-only key — `covers`, `exposure`, `acceptance`, `consent.lsp` — is
 // required on a vwf-plan (`exposure` optional) and a finding on a
 // vwf-change-plan.
@@ -30,8 +31,21 @@ const obj = (keys, o = {}) => ({ t: "object", keys, ...o });
 const strings = (o = {}) => list(str(), o);
 const id = () => str({ nonEmpty: true });
 
+/** The state of a stage, `stages.<name>.state`. */
+export const STAGE_STATE = ["pending", "green", "failed", "skipped"];
+
+/** The status of a unit, `units[].status`. */
+export const UNIT_STATUS = [
+  "pending",
+  "running",
+  "green",
+  "failed",
+  "unresolved",
+  "skipped",
+];
+
 const STAGE = obj({
-  state: str({ enum: ["pending", "green", "failed", "skipped"] }),
+  state: str({ enum: STAGE_STATE }),
   detail: str(),
 });
 
@@ -96,16 +110,7 @@ const FOLDER = obj({
       owns: strings(),
       depends_on: strings(),
       waits: str(),
-      status: str({
-        enum: [
-          "pending",
-          "running",
-          "green",
-          "failed",
-          "unresolved",
-          "skipped",
-        ],
-      }),
+      status: str({ enum: UNIT_STATUS }),
       commit: str(),
       rounds: int({ min: 0 }),
       range: obj({ from: str(), to: str() }, { optional: true }),
@@ -142,7 +147,10 @@ const FOLDER = obj({
     }),
   ),
   overrides: list(obj({ id: id(), text: str() })),
-  run: obj({}, { open: true }),
+  run: obj({
+    worktree: str({ nonEmpty: true, optional: true }),
+    log: str({ nonEmpty: true, optional: true }),
+  }),
 });
 
 const INDEX = obj({
@@ -414,6 +422,17 @@ function folderRules(doc, dir, out) {
           });
         }
       }
+    }
+  }
+
+  if (isObject(doc.run)) {
+    const keys = ["worktree", "log"].filter(k => Object.hasOwn(doc.run, k));
+    if (keys.length === 1) {
+      const missing = keys[0] === "worktree" ? "log" : "worktree";
+      out.push({
+        path: `run.${missing}`,
+        message: "is missing; run is {} or has both worktree and log",
+      });
     }
   }
 

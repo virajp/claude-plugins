@@ -1,0 +1,9 @@
+security-review engine — loop U4, round 4, range 62bd46b1..c3dd3650
+
+Vuln 1: secret in the log: plugins/vwf/hooks/action-log.mjs:59-63 — Medium, 9/10. Assignments are only checked for quotes and backslash; $(…) and backticks also span whitespace.
+TOKEN=$(echo ghp_s3cr3tValue | base64) curl x logs ghp_s3cr3tValue; AUTH=`echo s3cr3t-pw | base64` curl x logs s3cr3t-pw.
+Recommendation: require each assignment to match /^[A-Za-z_]\w*=[\w./:@+,%=-]*$/, else (command).
+
+Vuln 2: Unicode whitespace: action-log.mjs:58 — Low, 8/10. JS \s matches NBSP; bash does not split on it. A=s3cr3t<NBSP>tail cmd logs tail. Recommendation: split on /[ \t\n]+/ only.
+
+Safe: quoted and $'…' assignments, env, export, (A=x; cmd), { … }, A=s3cr3t;cmd, ${X:-a b}.

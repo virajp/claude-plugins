@@ -1,0 +1,7 @@
+security-review engine — loop U4, round 3, range c619c5c3..62bd46b1
+
+Vuln 1: Secret leak into log: plugins/vwf/hooks/action-log.mjs:51-56 — Medium, confidence 9/10.
+program() splits on whitespace without shell quoting; an assignment whose quoted value has a space is only partly skipped, and the rest is logged as the program name.
+Exploit: AUTH="Bearer sk-live-abc123" curl … logs sk-live-abc123"; PGPASSWORD='my secret' psql … logs secret'.
+Recommendation: log only a word matching ^[\w./-]+$, else a fixed placeholder; add tests for quoted assignments with spaces.
+Other areas clean: session_id and marker paths trusted; prune deletes only readdir names, rmSync removes links not targets; spawnSync with arg arrays; no eval; run line and --key fields are trusted CLI args.
