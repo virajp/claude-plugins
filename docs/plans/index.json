@@ -8,7 +8,7 @@
       "title": "One append-only action log per plan",
       "target_repo": null,
       "priority": 10,
-      "status": "APPROVED",
+      "status": "RUNNING",
       "gaps": null,
       "requires": [],
       "backlog": [],
