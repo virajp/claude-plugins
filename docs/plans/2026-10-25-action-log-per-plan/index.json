@@ -516,20 +516,20 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "ux": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": ""
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, no registry or harness change, nothing to persist"
     }
   },
   "gaps": [
