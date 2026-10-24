@@ -3,8 +3,9 @@ name: plan
 description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint (a flow or an entity). Reads desired (blueprint) vs actual (code),
   writes only the delta as a plan folder, docs/plans/<date>-<HHMM>-<slice>/ (an
-  index.md plus one file per unit), that /vwf:execute runs unattended in a fresh
-  context — a fresh session, or a runner that /vwf:execute all dispatches.
+  index.json, an index.md and one file per unit), that /vwf:execute runs
+  unattended in a fresh context — a fresh session, or a runner that
+  /vwf:execute all dispatches.
   Resolves the slice's transitive dependency chain and plans each
   unimplemented dependency as its own plan folder first, in order; routes any
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
@@ -49,9 +50,10 @@ it. When a planning decision is genuinely open, elicit it following the
 | Entity (slice) | `docs/blueprint/entities/<entity>/` (`index.md` + schema)                           |
 | API contract   | `docs/blueprint/apis/<project>.openapi.yaml`                                        |
 | Released APIs  | `docs/blueprint/apis/released/`                                                     |
-| Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.md` plus one `NN-<unit>.md` per unit |
-| Plan index     | `docs/plans/index.md` (base repo) — its one table, one row per plan folder of either kind, written only by `plan-management` (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`) |
-| Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`                             |
+| Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.json`, `index.md` and one `NN-<unit>.md` per unit |
+| Plan index     | `docs/plans/index.json` (base repo) — its `plans` list, one row per plan folder of either kind, written only by `plan-management` (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`) |
+| Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — the `index.json` keys, the `index.md` sections, the unit file shape |
+| Plan script    | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` — `get`, `set`, `append` and `validate` over both JSON files |
 | Interview      | `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`                                    |
 | Backlog        | a project on the base repo's forge, never a path — read at §2 via `/vwf:backlog list`; marked planned via `/vwf:backlog` |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
@@ -61,7 +63,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | Reference                                    | When to read                                                                                                                    |
 | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | [§3 conditional checks](references/delta-checks.md) | While working §3 — stamp-heal (empty delta), the released-contract check (a touched `apis/released/` snapshot), the harness preflight (always), the deferred-core-token check (a production-bound slice), and the visual-review advisory (a flow with platform files) |
-| [Writing the plan folder](references/plan-doc.md)   | At §7, once the shape is approved — the folder's frontmatter, the chain position in Slice, the acceptance-criteria transcription, and the one-unit-per-step rule |
+| [Writing the plan folder](references/plan-doc.md)   | At §7, once the shape is approved — the folder's `index.json` keys, the chain position in Slice, the acceptance-criteria transcription, and the one-unit-per-step rule |
 
 ---
 
@@ -105,10 +107,11 @@ the base's remote whichever member this slice will land in. When the verb
 reports the backlog unreadable — `gh` absent, unauthenticated or without the
 `project` scope, or no project yet — record that with its reason in the plan's
 facts and continue with nothing. A slice that is already a backlog item carries
-its id into §7's frontmatter, so the item is marked planned rather than planned
-twice — on `source:` always, and on `backlog:` when this element finishes the
-item, on `backlog_pieces:` when it lands one piece of it; interview item 2a
-settles which. A `Bnn` id in `$ARGUMENTS` is always such an id.
+its id into §7's `index.json`, so the item is marked planned rather than
+planned twice — on `source` always, and on `backlog` when this element
+finishes the item, on `backlog_pieces` when it lands one piece of it;
+interview item 2a settles which. A `Bnn` id in `$ARGUMENTS` is always such an
+id.
 
 Derive the slice's dependency graph from the blueprint's typed links:
 
@@ -131,7 +134,7 @@ slice, is the **chain**.
   requested slice last — one numbered line each:
   `1. entity/customer — implementation: none`, `2. flow/checkout — requested`.
   The user may **approve the chain**, **trim an element** (a conscious hole —
-  record it as an assumed-decisions row of every downstream plan in the chain),
+  record it as an assumed decision of every downstream plan in the chain),
   or **abort**. A chain of length 1 (no unbuilt dependencies) proceeds without
   ceremony.
 
@@ -176,11 +179,12 @@ Three things about its placement and scope, each deliberate:
 - **Blocking only.** Every other finding is noted, not acted on — planning
   compiles nothing. The one exception is the **LSP question**: for each
   language doctor reports without an LSP server, ask once (MCQ — *install now*
-  / *proceed without*) and hold the answer for the folder's Consent block as a
-  `LSP <language>: installed / proceed without` row (interview item 9a). An
-  absent toolchain is asked here, once, and recorded — `execute` reads the row
-  and never asks it again. A language doctor reports as *unavailable* (no LSP
-  ships in this marketplace) has nothing to install and is not asked; note it.
+  / *proceed without*) and hold the answer for the folder's `index.json` as
+  `consent.lsp.<language>`, `installed` or `proceed without` (interview item
+  9a). An absent toolchain is asked here, once, and recorded — `execute` reads
+  the key and never asks it again. A language doctor reports as
+  *unavailable* (no LSP ships in this marketplace) has nothing to install and
+  is not asked; note it.
 
 This is a delegation, never a second copy of the rule — the finding kinds and
 their remedies live in `doctor` alone, so closing the menu further never means
@@ -259,9 +263,10 @@ existing code, the stdlib, a native platform feature, or an installed dependency
 over new code or a new dependency (rungs 2–5). The plan carries no speculative
 units and no unrequested abstraction or configurability — never at the cost of a
 safety guardrail. Every **new third-party dependency** a unit introduces is
-named explicitly in that unit and in the folder's *New dependencies* section
-(package + what it's for): the plan's approval gate is where the user consents
-to new dependencies, and execute never installs one the plan doesn't name.
+named explicitly in that unit and in the `dependencies` list of the folder's
+`index.json` (package, what it's for, which unit): the plan's approval gate
+is where the user consents to new dependencies, and execute never installs
+one the plan doesn't name.
 
 **Then run the five checks** in
 [§3 conditional checks](references/delta-checks.md) — stamp-heal, the
@@ -290,16 +295,19 @@ have answered it.
 **contradicts** the blueprint (not merely lags it), never adjust the blueprint
 to match the code silently. Either the plan carries units that conform the code,
 or the user consciously amends the contract via `/vwf:blueprint` (which demotes
-the doc's `implementation:` stamp). Every contradiction is a row of the
-assumed-decisions table — the contradiction as the decision, the conforming unit
-(or the amendment decision) in the *Unit* column. If the blueprint implies a
+the doc's `implementation:` stamp). Every contradiction is an entry of the
+`decisions` list — the contradiction as the decision, the conforming unit (or
+the amendment decision) in its `units`. If the blueprint implies a
 surface the registry/code lacks (e.g. a background job with no worker project),
 surface that there too.
 
 **Consume execution-surfaced gaps.** If a prior plan for this slice exists —
 **the most recent un-archived plan folder** (folder names are timestamped; take
-the latest one still under `docs/plans/`, not `archived/`) — read the "Gaps
-surfaced during execution" section of its `index.md`, and per
+the latest one still under `docs/plans/`, not `archived/`) — read the `gaps`
+list of its `index.json`
+(`node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs get <folder>/index.json gaps`),
+or, in an old-format folder with an `index.md` and no `index.json`, the "Gaps
+surfaced during execution" section of its `index.md` — and per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
 this plan is a reconcile loop-back from `/vwf:execute`, closing those plan
 holes is the point of the pass — fold each into the units (against the
@@ -325,46 +333,49 @@ apply the **what-vs-how test**: a question about what the product should *do*
 (behaviour, contract, data shape, acceptance) is a blueprint gap — route it per
 §4, never settle it here. An approved plan carries no unresolved decisions.
 
-Every ruling lands in the assumed-decisions table with the alternative it
-rejected and the unit it binds; anything raised that belongs to a later plan
-goes to *Parked* before the next question — and what remains of an item this
-element lands one piece of goes there as a `- Bnn: <piece>` line, at least one
-per `backlog_pieces:` id, naming the chained folder where one already covers the
+Every ruling lands in the `decisions` list with the alternative it rejected and
+the units it binds; anything raised that belongs to a later plan goes to
+*Parked* before the next question — and what remains of an item this element
+lands one piece of goes there as a `- Bnn: <piece>` line, at least one per
+`backlog_pieces` id, naming the chained folder where one already covers the
 piece. The **priority** (item 12) is stated as a fact, never asked: no folder
 exists yet, so invoke `plan-management priority <requires…>` with the
-`requires:` entries item 12 settled — folder basenames, possibly none — and
-state what it returns: `10 + max` over the `Priority` column of every unarchived
-`requires:` row in the base repo's `docs/plans/index.md`, or `10` when the plan
-requires none of them — and which row it stands on. Item 10a places the `review`
-row(s) — one after the last code unit by default, an earlier one only on a
-ruling recorded in the decisions table. Items 16–17 produce the Consent block:
-the landing answer and the after-landing steps each carrying `run` — a step not
-confirmed `run` is dropped; a cycle plan carries no release step, as a release
-is always a hand step with `/release`; the LSP rows come from §2. Item 18 — the
-**release levels** — is stated as a fact, never asked, as the priority is: one
-row per project the units touch, `NONE` included, each level derived from the
+`requires` entries item 12 settled — folder basenames, possibly none — and
+state what it returns: `10 + max` over the `priority` of every unarchived
+`requires` row in the base repo's `docs/plans/index.json`, or `10` when the
+plan requires none of them — and which row it stands on. Item 10a places the
+`review` unit(s) — one after the last code unit by default, an earlier one
+only on a ruling recorded in the `decisions` list. Items 16–17 produce the
+consent: the landing answer and the `after_landing` steps each carrying `run`
+— a step not confirmed `run` is dropped; a cycle plan carries no release step,
+as a release is always a hand step with `/release`; the `consent.lsp` answers
+come from §2. Item 18 — the **release levels** — is stated as a fact, never
+asked, as the priority is: one `release_levels` entry per project the units
+touch, `NONE` included, each level derived from the
 change — breaks users → `MAJOR`, new behaviour → `MINOR`, a fix → `PATCH`, no
 user-visible change → `NONE` — with its reason. A slice lands blueprint
 behaviour, so its levels are normally `MINOR` or `MAJOR`, but that rule decides,
-not the habit; the user changes a level at the §6 gate. Item 18a writes the
-End an `all` run after landing row: asked only when the units' Owns include a
+not the habit; the user changes a level at the §6 gate. Item 18a writes
+`consent.end_all_run`, the End an `all` run after landing answer: asked only
+when the units' `owns` include a
 plugin the run itself loads — one installed in the session that runs
 `/vwf:execute all`, which keeps running the stale copy until it restarts; on
 yes, `/vwf:execute all` ends after this plan and reports "restart, then
-`/vwf:execute all`" — and written `no` unasked otherwise.
+`/vwf:execute all`" — and written `false` unasked otherwise.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
 **Nothing is written to disk before this gate.** Present the folder's sections
 per `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
 weight and confirmed one at a time: the goal and the Slice (chain position);
-the assumed-decisions table, every ruling with its rejected alternative and
-every drift row; the unit map — id, wave, owns, depends-on, the failing test
-each names; every new dependency (package, what for, which unit); the unit
-gate, the wave gate and the plan gate, the after-landing steps, the gates the orchestrator keeps, and the
-derived priority with its arithmetic; the consent block, LSP rows and the
-End an `all` run after landing row included; the release levels, each with its
-reason; the
+the assumed decisions, every ruling with its rejected alternative and every
+drift entry; the unit map — id, wave, owns, depends-on, the reason each unit
+in a later wave waits, the failing test each names; every new dependency
+(package, what for, which unit); the unit gate, the wave gate and the plan
+gate, the after-landing steps, the gates the orchestrator keeps, and the
+derived priority with its arithmetic; the consent, the LSP answers and the
+End an `all` run after landing answer included; the release levels, each with
+its reason; the
 acceptance criteria the units cover; the blind spots and the visual-review
 advisory, when any; the parked list. Then wait for explicit approval. Offer:
 
@@ -389,54 +400,66 @@ and skip silently if mempalace is unavailable.
 
 Write `docs/plans/<date>-<HHMM>-<slice>/` from
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
-[Writing the plan folder](references/plan-doc.md): `index.md` — the frontmatter
-(`type: vwf-plan`, `covers:`, `requires:`, `source:`, `backlog:`,
-`backlog_pieces:`, `gaps_of:`), the
-Status block at `DRAFT`, the Consent block, the `## Release levels` table
-(Project, Level, Reason), the cycle-only sections (Slice,
-Acceptance criteria (from blueprint), Gaps surfaced during execution), the
-assumed decisions, the units table — plus one `NN-<unit>.md` per unit. Every
-slice unit is `Kind: code`, on Model `opus` unless the interview recorded
-another tier, with its Wave from dependency order, its Owns the files it
-touches, its Depends-on, its **Test first** line, its ruling quoted from
-`index.md`, its Verification (the gate lines) and its Commit line. Harness
-bootstrap units and the expand / backfill / contract units of `delta-checks.md`
-are units like any other, ordered before what depends on them. Then **one
-`Kind: review` row** after the last code unit and before the docs unit — Owns
-`—`, Depends on naming every earlier unit, Model `opus`, its `NN-review.md` the
-header lines and a Scope section as the template's `NN-review.md` shape says. An
-earlier `review` row is written only on a ruling item 10a recorded in the
-decisions table, and its Scope names that reason. Every `review` row sits in a
-wave strictly later than every unit it covers — a row in the same wave runs
+[Writing the plan folder](references/plan-doc.md): `index.json` — every key
+of the template with `type` `vwf-plan`, the cycle-only keys `covers`,
+`acceptance` and `consent.lsp` included, and `exposure` when the slice ships
+dark; `status` at `DRAFT`; the `consent`; the `release_levels` list; the
+`decisions` list; the `units` list — then `index.md`, the prose sections with
+the cycle-only Slice section, plus one `NN-<unit>.md` per unit. Write
+`index.json` **once**, whole, with the Write tool, then run
+`node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json`
+— the Write and its validate are one step, the creation. A red validate
+means the creation is not finished: correct the content and Write the whole
+file again, then validate again, until it prints
+`<folder>/index.json: valid` — `set` refuses to write a file that does not
+validate, and no Edit touches `index.json`. From that first green validate
+on, every change to it, the self-review's fixes included, is one
+`plan.mjs set` or `plan.mjs append` call; never an Edit, never a whole-file
+rewrite. Each unit file starts with its H1, `# U<n> — <title>`, the same
+text as its `title`, and carries no header lines: wave, kind, model, owns and
+depends-on live in its `units` entry alone. Every slice unit is `kind`
+`code`, on `model` `opus` unless the interview recorded another tier, with
+its `wave` from dependency order, its `owns` the files it touches, its
+`depends_on`, its `waits` past wave 1, its **Test first** line, its ruling
+quoted from the `decisions` list, its Verification (the gate lines) and its
+Commit line. Harness bootstrap units and the expand / backfill / contract
+units of `delta-checks.md` are units like any other, ordered before what
+depends on them. Then **one `review` unit** after the last code unit and
+before the docs unit — `owns` `[]`, `depends_on` naming every earlier unit,
+`model` `opus`, a `range` of `{"from": "", "to": ""}`, its `NN-review.md` a
+Scope section as the template's `NN-review.md` shape says. An earlier
+`review` unit is written only on a ruling item 10a recorded in the
+`decisions` list, and its Scope names that reason. Every `review` unit sits in
+a wave strictly later than every unit it covers — one in the same wave runs
 before their commit and reviews nothing — and it covers, directly or
-transitively through Depends on, every unit in an earlier wave that no
-earlier `review` row already covers, of any Kind, so the commit range it
+transitively through `depends_on`, every unit in an earlier wave that no
+earlier `review` unit already covers, of any kind, so the commit range it
 reviews and the units it covers are one set. No code unit triggers a review
-by itself, and `/vwf:execute` refuses a plan whose code units no later `review` row covers, or
-whose rows break either placement rule. The two fixed final units — the docs
-unit and the gates unit, `NN-gates.md`, which runs the generators the plan names
-and passes the full wave gate and bumps nothing — are written as the template
-says.
+by itself, and `/vwf:execute` refuses a plan whose code units no later
+`review` unit covers, or whose review units break either placement rule. The
+two fixed final units — the docs unit and the gates unit, `NN-gates.md`,
+which runs the generators the plan names and passes the full wave gate and
+bumps nothing — are written as the template says.
 
-**`backlog:` and `backlog_pieces:`.** The frontmatter also carries two lists of
+**`backlog` and `backlog_pieces`.** `index.json` also carries two lists of
 the `Bnn` ids of the backlog project's items §2's recall matched to this
-element: `backlog:` names the items this element **finishes** — landing sets
-them `Done` — and `backlog_pieces:` the items it lands **one piece of** —
+element: `backlog` names the items this element **finishes** — landing sets
+them `Done` — and `backlog_pieces` the items it lands **one piece of** —
 landing sets them `Partially done`, and each needs at least one
-`- Bnn: <piece>` line under *Parked*. No id sits on both; the last plan of a
-chain moves the id to `backlog:`. A third list, `source:`, names every item
-§2 matched — the items this element was made for — and each of its ids also
-sits on `backlog:` or `backlog_pieces:`. Write all three empty when the slice
-came from nowhere in the backlog; an empty or absent list reads as empty, and
-when `backlog:` and `backlog_pieces:` both are, §8 calls nothing.
+`- Bnn: <piece>` line under *Parked* in `index.md`. No id sits on both; the
+last plan of a chain moves the id to `backlog`. A third list, `source`, names
+every item §2 matched — the items this element was made for — and each of
+its ids also sits on `backlog` or `backlog_pieces`. Write all three `[]` when
+the slice came from nowhere in the backlog, and when `backlog` and
+`backlog_pieces` both are, §8 calls nothing.
 
-**`gaps_of:`.** The landed plan folders whose gaps this element takes —
+**`gaps_of`.** The landed plan folders whose gaps this element takes —
 interview item 2b, for a slice re-derived to close the plan holes a run
-surfaced. At hand-off `plan-management add` sets each one's `Gaps` cell in the
-plan index to `0 — moved to <this folder>`. Empty otherwise; an absent list
-reads as empty.
+surfaced. At hand-off `plan-management add` sets each one's `gaps` in the
+plan index to `open` `0`, with this folder on its `moved_to`. `[]`
+otherwise.
 
-**Dark exposure.** A plan may declare `exposure: dark` for its slice — the
+**Dark exposure.** A plan may declare `"exposure": "dark"` for its slice — the
 slice ships behind a **release flag** in the runtime-settings document (per the
 runtime-settings foundation: same schema/cache/audit path, no new
 infrastructure). Declaring it injects the flag key into the plan — **name,
@@ -452,31 +475,35 @@ never split across repos. The folder is written **in place on the current
 branch** — this skill cuts no worktree; the fresh context that runs the plan —
 a fresh session, or a runner that `all` dispatches — cuts its own.
 
-**The dependency gate does not move.** `execute` halts until every `requires:`
-plan's `covers:` docs read `implementation: complete`, and those stamps live in
+**The dependency gate does not move.** `execute` halts until every `requires`
+plan's `covers` docs read `implementation: complete`, and those stamps live in
 the blueprint — in the base repo. So the chain resolves from the base alone even
 when the upstream plans sit in members that are not cloned here.
 
-**Self-review** before handing off, fixing inline: every assumed-decisions row
-is quoted in the unit file its *Unit* column names; every owned path appears in
-exactly one unit per wave; every acceptance criterion is covered by some unit's
-E2E test; every `code` unit is covered by a later `review` row, every `review`
-row's wave is strictly later than every unit it covers, it covers — directly or
-transitively — every earlier-wave unit no earlier row covers, of any Kind, and a
-`review` row placed
-before the last code unit names its reason; every unit's
-Verification names a gate line (a `review` row has none, by shape); every
-`requires:` entry resolves to a row or an archived folder — invoke
-`plan-management resolve <folder>` and treat an *unresolvable* entry as a
-finding; every `backlog_pieces:` id has a `- Bnn:` Parked line, no id sits on
-both `backlog:` and `backlog_pieces:`, and no `backlog:` id has a `- Bnn:`
-Parked line; every id §2 matched is on `source:`, and every `source:` id sits
-on `backlog:` or `backlog_pieces:`; no `gaps_of:` entry names a row of the
-plan index that is not `COMPLETE`, or whose `Gaps` cell reads `-` or `0`; the
-derived priority matches what
-`plan-management priority <folder>` returns; every Consent row carries an
-answer, and no After landing step carries a mode other than `run`; the launch
-line names this folder.
+**Self-review** before handing off, fixing inline. First run
+`node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json`;
+a red result is fixed before any other check — each finding names the path
+that broke. It already checks the shape: every required key and enum value,
+unique ids, each unit's `file` present, `depends_on` naming an earlier wave,
+`waits` where a later wave needs it, the `review` unit's shape, and the
+`backlog`, `backlog_pieces` and `source` rules against the `- Bnn:` Parked
+lines of `index.md`. Then: every `decisions` entry is quoted in the unit file
+of each id its `units` names; every owned path appears in exactly one unit's
+`owns` per wave; every unit past wave 1 — the fixed final units and a
+`review` unit aside — names a real reason in its `waits`; every `acceptance`
+entry is covered by some unit's E2E test; every `code` unit is covered by a
+later `review` unit, every `review` unit's wave is strictly later than every
+unit it covers, it covers — directly or transitively — every earlier-wave
+unit no earlier review covers, of any kind, and a `review` unit placed before
+the last code unit names its reason; every unit's Verification names a gate
+line (a `review` unit has none, by shape); every `requires` entry resolves to
+a row or an archived folder — invoke `plan-management resolve <folder>` and
+treat an *unresolvable* entry as a finding; every id §2 matched is on
+`source`; no `gaps_of` entry names a row of the plan index that is not
+`COMPLETE`, or whose `gaps` is `null` or has `open` `0`; the derived priority
+matches what `plan-management priority <folder>` returns; every `consent` key
+carries an answer, and no `after_landing` entry carries a `mode` other than
+`run`; the launch line names this folder.
 
 Then the **rulings review**, item 20 of
 `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`: a fresh
@@ -492,15 +519,20 @@ and the folder waits for it. These are the last questions the plan gets —
 In this order.
 
 1. **Hand the folder to `plan-management`.** Invoke
-   `plan-management add <folder>` — its `add` verb sets the Status block to
-   `APPROVED` with the date (until then it is `DRAFT` and `/vwf:execute`
-   refuses it) and appends the folder's row to the base repo's
-   `docs/plans/index.md`, `Kind` `cycle`, deriving the priority itself
+   `plan-management add <folder>` — its `add` verb sets the folder's `status`
+   to `APPROVED` with the date (until then it is `DRAFT` and `/vwf:execute`
+   refuses it) and appends the folder's row to the `plans` list of the base
+   repo's `docs/plans/index.json`, `kind` `cycle`, deriving the priority
+   itself
    (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` is
-   the shape). That skill edits the Status block and the index; this one never
-   does.
-2. **Mark the backlog items planned.** When the frontmatter's `backlog:` or
-   `backlog_pieces:` list names ids, invoke
+   the shape). That skill edits the `status` key and the index; this one never
+   does. `add` refuses while the base repo's `docs/plans/index.md` exists —
+   the old plan format — and prints the migration message. Then stop here:
+   the folder stays `DRAFT` and uncommitted, nothing below runs — mid-chain,
+   the rest of the chain is not planned — and the output is the refusal as
+   `add` printed it.
+2. **Mark the backlog items planned.** When the `backlog` or `backlog_pieces`
+   list of `index.json` names ids, invoke
    `/vwf:backlog planned <ids> <folder>` with the ids of both lists — that
    skill edits the project, not a file; this one never does either.
 3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
@@ -511,9 +543,9 @@ In this order.
      a folder still untracked at hand-off gets swept into some later wave's
      commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder** and `docs/plans/index.md`, and nothing
-     else — the `plan-management` edit rides this commit and that skill never
-     commits; step 2 changed nothing in the tree
+   - **stage exactly the plan folder** and `docs/plans/index.json`, and
+     nothing else — the `plan-management` edit rides this commit and that
+     skill never commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: plan — <slice> — approved, awaiting execution`
    - **push to the branch's upstream** after the commit, setting the upstream
@@ -529,7 +561,7 @@ In this order.
 4. **Check that nothing is left to plan.** A launch block is a
    recommendation to execute, and planning finishes first: every item at the
    priority is planned before anything runs. Compute the **check priority** —
-   the highest priority among this folder's `backlog:` and `backlog_pieces:`
+   the highest priority among this folder's `backlog` and `backlog_pieces`
    ids, or, with no id, the highest priority that has an open item (`Backlog`,
    `In progress` or `Partially done`). Invoke
    `/vwf:backlog unplanned <priority>`, which lists the **unplanned** items at
@@ -582,6 +614,6 @@ the one to run first.
   step
 - Pushes anywhere but the branch it stands on, and merges nothing
 - Edits the backlog itself — it calls `/vwf:backlog`, which owns the project
-- Edits `docs/plans/index.md` or a folder's Status block itself — `add` is the
-  one `plan-management` verb it calls on them; every later status is
+- Edits `docs/plans/index.json` or a folder's `status` key itself — `add` is
+  the one `plan-management` verb it calls on them; every later status is
   `/vwf:execute`'s to call, and the archive move is the same skill's
