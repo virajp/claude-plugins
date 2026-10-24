@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "BLOCKED",
-    "detail": "BLOCKED at wave 3 — U4 UNRESOLVED: security finding on plugins/vwf/hooks/action-log.mjs (secret values in the hook's Bash summary) did not converge in 2 rounds; ruling needed (G3); U5, U6 not run (depend on U4) — worktree .worktrees/action-log-per-plan"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-10-25T02:07 in .worktrees/action-log-per-plan (resumed)"
   },
   "consent": {
     "merge": true,
@@ -112,7 +112,7 @@
       "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
       "status": "green",
       "commit": "7a2c0f4a",
-      "rounds": 2
+      "rounds": 3
     },
     {
       "id": "U4",
@@ -128,12 +128,12 @@
         "U3"
       ],
       "waits": "",
-      "status": "unresolved",
+      "status": "running",
       "commit": "",
-      "rounds": 2,
+      "rounds": 3,
       "range": {
-        "from": "25a84889",
-        "to": "e6a01cb1"
+        "from": "c619c5c3",
+        "to": "62bd46b1"
       }
     },
     {

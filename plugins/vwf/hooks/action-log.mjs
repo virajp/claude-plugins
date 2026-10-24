@@ -17,8 +17,9 @@
 //   SessionEnd     session.end reason — the payload's, "other" when absent;
 //                              then the session's marker is deleted
 //
-// Every line carries ts, run (the run id from the marker), session, agent (the payload's agent_id: null for
-// the orchestrator, set for a subagent's own tool calls) and event. The
+// Every line carries ts, run (the run id from the marker), session, agent
+// (the payload's agent_id: null for the orchestrator, set for a subagent's own
+// tool calls) and event. The
 // summary is short and never a file's content: a Bash call's description or
 // its program name, a file tool's path, a search's pattern, a skill's
 // name, an Agent call's subagent type and description.
@@ -44,13 +45,26 @@ const clip = s => (typeof s === "string"
 
 // A Bash call with no description is logged by its program name alone — the
 // first word that is not a NAME=value assignment — so no argument, and no
-// inline secret, can reach the log (decision D30).
+// inline secret, can reach the log (decision D30). The split ignores shell
+// quoting, so a leading assignment holding a quote or a backslash, or a
+// program word that is not a plain path, logs the fixed `(command)`: a
+// quoted value with a space would otherwise leak its tail as the program.
+const PLACEHOLDER = "(command)";
+
 function program(s) {
   if (typeof s !== "string") {
     return s;
   }
-  return s.trim().split(/\s+/).find(w => !/^[A-Za-z_][A-Za-z0-9_]*=/.test(w))
-    ?? "";
+  for (const w of s.trim().split(/\s+/)) {
+    if (/^[A-Za-z_][A-Za-z0-9_]*=/.test(w)) {
+      if (/['"\\]/.test(w)) {
+        return PLACEHOLDER;
+      }
+      continue;
+    }
+    return /^[\w./+-]+$/.test(w) ? w : PLACEHOLDER;
+  }
+  return "";
 }
 
 function summary(tool, input = {}) {

@@ -524,7 +524,12 @@ describe("action-log hook Bash summary", () => {
 
   it.each([
     ["GITHUB_TOKEN=ghp_abc123 gh pr list", "gh"],
-    ["A=1 B='x' MY_API_KEY=k run --flag", "run"],
+    ["A=1 B='x' MY_API_KEY=k run --flag", "(command)"],
+    ["AUTH=\"Bearer sk-live-x\" curl x", "(command)"],
+    ["PGPASSWORD='my secret' psql", "(command)"],
+    ["PW=\"a b c\" run", "(command)"],
+    ["\"/usr/bin/env\" ls", "(command)"],
+    ["A=1 run", "run"],
     ["export db_password='s3 cr3t'", "export"],
     ["curl -u admin:hunter2 https://x", "curl"],
     ["curl -H 'X-Api-Key: sk_live_1' https://x", "curl"],
@@ -541,6 +546,19 @@ describe("action-log hook Bash summary", () => {
   it("logs no secret value of a command", () => {
     for (const secret of ["ghp_abc", "hunter2", "sk_live_1", "pa55"]) {
       expect(summaryOf(`curl -u u:${secret} ${secret}`)).not.toContain(secret);
+    }
+    for (
+      const command of [
+        "AUTH=\"Bearer sk-live-x\" curl x",
+        "PGPASSWORD='my secret' psql",
+        "PW=\"a b c\" run",
+        "T=a\\ secret run",
+      ]
+    ) {
+      const got = summaryOf(command);
+      for (const part of ["sk-live-x", "secret", "b", "Bearer"]) {
+        expect(got).not.toContain(part);
+      }
     }
   });
 
