@@ -17,12 +17,11 @@
 //   SessionEnd     session.end reason — the payload's, "other" when absent;
 //                              then the session's marker is deleted
 //
-// Every line carries ts, run (the run id from the marker), session, agent
-// (the payload's agent_id: null for the orchestrator, set for a subagent's own
-// tool calls) and event. The
-// summary is short and never a file's content: a Bash call's description or
-// its program name, a file tool's path, a search's pattern, a skill's
-// name, an Agent call's subagent type and description.
+// Every line carries ts, run (the run id from the marker), session, agent (the
+// payload's agent_id: null for the orchestrator, set for a subagent's own tool
+// calls) and event. The summary is short and never a file's content: a Bash
+// call's description or its program name, a file tool's path, a search's
+// pattern, a skill's name, an Agent call's subagent type and description.
 
 import {
   appendFileSync,

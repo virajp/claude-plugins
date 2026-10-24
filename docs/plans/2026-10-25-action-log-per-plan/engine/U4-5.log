@@ -1,0 +1,6 @@
+security-review engine — loop U4, round 5, range c3dd3650..1add34b9
+
+No high-confidence vulnerabilities found.
+
+Tried against a copy of program(): $(…), backticks, ${…}, quotes, backslash-newline, CR, VT, NBSP, é, ; & | > after a value, A=(x y), A+=x, A.b=x, A-b=x, ~ and # in a value — every one logged (command).
+The allowed value characters include no bash metacharacter or expansion character; the program pattern has no = and no metacharacter; \w without the u flag is ASCII only. env/export/sudo prefixes log only the prefix; T=s\np logs p, the next command program.
