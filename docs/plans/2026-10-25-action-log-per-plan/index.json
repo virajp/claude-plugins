@@ -110,9 +110,9 @@
         "U2"
       ],
       "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U4",
