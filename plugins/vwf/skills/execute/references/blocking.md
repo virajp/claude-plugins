@@ -3,12 +3,20 @@
 Read this when a unit returns `UNRESOLVED:`, fails its verification, dies, or
 when a run starts against a `BLOCKED` or `RUNNING` plan.
 
+Every mark below is one call that sets the unit's `status` in the folder's
+`index.json`, made in the worktree:
+
+    node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.U<n>.status <status>
+
+A unit entry has no detail field: a mark's detail rides the status line below
+and the run journal (mempalace room `runs`, drawer `<plan folder>`).
+
 ## Isolated versus all-blocking
 
 A unit blocks when it returns `UNRESOLVED:`, when its agent errors twice, or
 when its own Verification fails after the one mechanical re-dispatch below. A
-`GAP:` never blocks — it is a stated assumption, recorded in the run log and
-answered in the final report.
+`GAP:` never blocks — it is a stated assumption, appended to the `gaps` list
+of `index.json` and answered in the final report.
 
 - **Isolated block.** Mark the unit `unresolved` or `failed`, mark every unit
   that transitively depends on it `skipped` with `depends on U<n>` as detail,
@@ -50,11 +58,12 @@ detail being:
 agent died>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
 
-The Units table and the Run log carry the same facts per unit; the status line
-is the summary a reader sees first. The plan's row in the base repo's
-`docs/plans/index.md` is **not** updated on a block or a pause — it stays
-`RUNNING`, the claim this session holds, and carries none of this detail; the
-row is released only by `plan-management`'s `unclaim`, on the user's ask.
+Each unit's `status` and `commit` in `index.json` carry the facts per unit;
+the status line is the summary a reader sees first. The plan's row in the base
+repo's `docs/plans/index.json` is **not** updated on a block or a pause — it
+stays `RUNNING`, the claim this session holds, and carries none of this
+detail; the row is released only by `plan-management`'s `unclaim`, on the
+user's ask.
 
 ## Resume
 
@@ -66,36 +75,44 @@ A re-run against `BLOCKED` or `RUNNING`:
    `plan-management unclaim <folder>` — the verb in
    `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/SKILL.md`, which proves the
    worktree absent, never touches the run's branch, and resets the row and
-   the folder's Status block to `APPROVED` — then the fresh claim, a new
+   the folder's `status` to `APPROVED` — then the fresh claim, a new
    `/vwf:execute <folder>`. Execute never invokes `unclaim` itself; nothing
    takes a `RUNNING` row otherwise.
 2. The index row stays `RUNNING` through the resume and is not touched. A row
    found reading `APPROVED` was unclaimed, and the Resolve step claims it
    again before continuing.
 3. Confirm the ruling each `unresolved` unit asked for is now in its unit file
-   or the decisions table. If the status line's `UNRESOLVED:` text still
-   describes an unanswered question, stop and name it.
-4. **The worktree is authoritative.** For every unit marked `green`, check its
-   commit exists on the branch. A `green` unit whose commit is absent is reset
-   to `pending` and re-run — the plan's table can be ahead of what landed if a
-   session died between the report and the commit, and the committed tree is
-   ground truth. A `green` `review` row is exempt: its Commit cell is empty by
-   design, and it is skipped on the Run log alone, per
-   [review-unit.md](review-unit.md) — unless a `code` or `edit` Run log row
-   of a unit it covers carries a commit that is **not an ancestor of** the
-   `to` its last loop — main or late — recorded (`git merge-base
-   --is-ancestor <commit> <to>` fails): that is a **pending late re-run**,
-   run before continuing, per *Late loop-backs re-run the last row* there.
-   The test is by ancestry, never by recency, so a resume after a late re-run
-   that already reviewed the commit finds nothing pending; and each covered
-   unit is tested **once**, whether the row's Depends on names it directly or
-   reaches it transitively, so no unit counts twice.
-5. Reset `unresolved`, `failed` and `skipped` units to `pending`.
+   or the `decisions` list of `index.json`. If the status line's
+   `UNRESOLVED:` text still describes an unanswered question, stop and name
+   it.
+4. **The worktree is authoritative.** Read the units with the script above,
+   `plan.mjs get <folder>/index.json units`. For every unit whose `status` is
+   `green`, check its `commit` exists on the branch. A `green` unit whose
+   commit is absent is reset to `pending` and re-run — the unit fields can be
+   ahead of what landed if a session died between the report and the commit,
+   and the committed tree is ground truth. A `green` `review` row is exempt:
+   its `commit` is empty by design, and it is skipped on its `status` alone,
+   per [review-unit.md](review-unit.md) — unless a `code` or `edit` unit it
+   covers carries a `commit` that is **not an ancestor of** the `to` its
+   last loop recorded — the row's `range.to` for its main loop, or the `to`
+   the journal records for its last late loop, which `index.json` does not
+   hold (`git merge-base --is-ancestor <commit> <to>` fails): that is a
+   **pending late re-run**, run before continuing, per *Late loop-backs re-run
+   the last row* there. With the journal unreachable the test reads
+   `range.to` alone, so a late re-run already done runs once more — a repeat,
+   never a skip. The test is by ancestry, never by recency, so a resume after
+   a late re-run that already reviewed the commit finds nothing pending; and
+   each covered unit is tested **once**, whether the row's `depends_on` names
+   it directly or reaches it transitively, so no unit counts twice.
+5. Reset `unresolved`, `failed` and `skipped` units to `pending`, one
+   `plan.mjs set` of `units.U<n>.status` each.
 6. Re-run the preflight, then continue from the first wave with a pending unit;
-   `review` rows run in table order, each ranged from the previous row in
-   table order that reached `green`.
-   Run-log rows from the earlier attempt stay; new rows are appended with the
-   round numbering continued, so the final report shows the whole history.
+   `review` rows run in `units` order, each ranged from the previous row in
+   `units` order that reached `green`. A plan-level stage whose entry in
+   `stages` reads `green` or `skipped` already ran and is not run again.
+   The `gaps` list and the journal records from the earlier attempt stay; a
+   unit's `rounds` continues from the value recorded, so the final report
+   shows the whole history.
 
 The user edits the plan and re-runs `/vwf:execute <folder>`; nothing else
 is needed to resume.

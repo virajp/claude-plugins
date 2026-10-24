@@ -7,10 +7,10 @@ or branch cleanup touches it:
     /tmp/vwf/<repo>/<plan folder basename>/<YYYYMMDD-HHMMSS>-<session8>.jsonl
 
 macOS removes a file under `/tmp` that nothing read or changed for three days.
-The log answers four questions the folder's Run log cannot: how long each
-phase, gate and commit took; what ran in parallel and what ran in sequence;
-what the progress pane shows; and where a gap came from — the agent that
-raised it and the tool calls it made first.
+The log answers four questions the unit fields of the folder's `index.json`
+cannot: how long each phase, gate and commit took; what ran in parallel and
+what ran in sequence; what the progress pane shows; and where a gap came from
+— the agent that raised it and the tool calls it made first.
 
 Two writers append to it. The **hooks** in `hooks/hooks.json` write every tool
 call and subagent — start, end, duration, agent id — on the machine's clock,
@@ -22,8 +22,8 @@ through the script:
 Call it from the directory the step runs in — the main checkout before the
 worktree exists, the worktree after. A log call never stops a run and is never
 a reason to pause: a call that fails is skipped, and the run goes on. The log
-is a record of the run, never an input to it — the Run log and the worktree
-stay the record a resume reads.
+is a record of the run, never an input to it — the unit fields of
+`index.json` and the worktree stay the record a resume reads.
 
 ## The calls
 
@@ -45,11 +45,11 @@ brackets are filled from the run.
   oscillation: `event gap --class <class> --source <source> --unit <id> --text "<the line>"`,
   the class one of `GAP`, `UNRESOLVED`, `contested`, `oscillation`, the source
   one of `unit`, `wave-review`, `review-row`, `gate`, `acceptance`, `ux`.
-- **Each unit's outcome, as its Units cell is set:** `event unit --unit <id> --kind <kind> --wave <n> --status <status> --round <n>`.
+- **Each unit's outcome, as its `status` in `index.json` is set:** `event unit --unit <id> --kind <kind> --wave <n> --status <status> --round <n>`.
 - **A stop** — a pause, a block, a refusal after `start`: `event stop --reason "<why>" --resume "/vwf:execute <folder>"`,
   then `end --outcome paused` or `end --outcome blocked`.
 - **The landing, after the last after-landing step:** `end --outcome complete`,
-  or `end --outcome ready` when the consent row read `no`.
+  or `end --outcome ready` when `consent.merge` read `false`.
 
 The phases, in run order: `doctor`, `claim`, `worktree`, `preflight`, `wave`
 (with `--wave <n>`), `acceptance`, `ux`, `reconcile`, `final-waves`,

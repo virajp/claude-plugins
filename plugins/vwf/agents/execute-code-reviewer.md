@@ -39,9 +39,13 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    the first), the file list with its **unit map** — each file paired with
    the unit whose commit last touched it; the map covers **every file the
    branch touched**, not only the range — and the unit
-   files, with their Owns — each `NN-<unit>.md` in the plan folder under
-   `docs/plans/` — of every unit the row covers, several units, not one. Read
-   those unit files and the folder `index.md`'s rulings, and — **only when a
+   files — each `NN-<unit>.md` in the plan folder under `docs/plans/` — of
+   every unit the row covers, several units, not one. A unit file carries no
+   header lines: read each covered unit's `owns`, `kind` and `depends_on`
+   from its entry in the `units` list of the folder's `index.json`. Read those
+   unit files, the rulings — the `decisions` list of `index.json` — its
+   `shared_files` list and the folder `index.md`'s *Facts the survey
+   established*, and — **only when a
    unit the row covers is `code`**, in which case the dispatch carries them —
    the blueprint slice they implement (the flow/entity docs under
    `docs/blueprint/`) plus `conventions.md`, and the stack the orchestrator
@@ -146,7 +150,7 @@ or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
 **gap**, not a code finding. File it separately to room `gaps` — `source_file`
 set to the **plan folder path**, tagged `<loop-id>/gap/<round>`, its content
-**opening with the plan folder path and the `covers:` doc names** the dispatch
+**opening with the plan folder path and the `covers` doc names** the dispatch
 carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
 under-/mis-specified and where; and report it on its own contract line, not
 under FINDINGS.

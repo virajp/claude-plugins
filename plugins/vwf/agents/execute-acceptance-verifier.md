@@ -23,12 +23,13 @@ report.
 ## Inputs
 
 The orchestrator passes: the acceptance criteria to verify (each criterion with
-its source flow — from the "Acceptance criteria (from blueprint)" section of
-the plan folder's `index.md`, which quotes the flow docs; or every flow's
-Acceptance block from `docs/blueprint/flows/*/*/index.md` when `/vwf:verify`
-dispatches you), the registry (project paths and stacks), the project wing, the
-**slice** and **round number** for your recall tag, and the **plan folder
-path** and its **`covers:` doc names** for your drawers — when the dispatch
+its source flow — from the `acceptance` list of the plan folder's
+`index.json`, each entry's `text` quoting a flow doc and its `flow` naming it;
+or every flow's Acceptance block from `docs/blueprint/flows/*/*/index.md` when
+`/vwf:verify` dispatches you), the registry (project paths and stacks), the
+project wing, the **slice** and **round number** for your recall tag, and the
+**plan folder path** and the **doc names in the `covers` list** of the
+folder's `index.json` for your drawers — when the dispatch
 names no plan folder (`/vwf:verify`'s environment mode), the **flow doc path**
 the criteria came from stands in for both.
 
@@ -93,7 +94,7 @@ Skip silently if mempalace is unavailable.
 written (not observable, ambiguous, contradicted by another flow) is a **gap**
 in the blueprint, not a code finding — file it to room `gaps`, `source_file`
 set to the **plan folder path**, tagged `acceptance/gap/<round>`, its content
-**opening with the plan folder path and the `covers:` doc names** the dispatch
+**opening with the plan folder path and the `covers` doc names** the dispatch
 carries — or, when no plan folder was named, `source_file` the **flow doc
 path** and the content opening with it — and report it on the gaps contract
 line.
