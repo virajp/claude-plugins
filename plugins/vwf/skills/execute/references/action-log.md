@@ -132,8 +132,9 @@ file, then repeat the call.
   `log.mjs prune --repo <root> --days 30 --keep <folder basename>` deletes
   a log under `<log root>/<repo>/` only when its plan folder is archived —
   `<root>/docs/plans/archived/<basename>` or `<basename>-<n>` is a
-  directory — and the log has not changed for more than 30 days. It never deletes the log `--keep` names, so a live plan paused for
-  a month keeps its log. `plan-management archive` calls it as its last step,
+  directory — and the log has not changed for more than 30 days. It never
+  deletes the log `--keep` names, so a live plan paused for a month keeps
+  its log. `plan-management archive` calls it as its last step,
   after each move into `docs/plans/archived/`, with `--keep` the folder it
   archived and `--repo` the root of the checkout it ran in. `/vwf:execute`
   never calls it itself.
