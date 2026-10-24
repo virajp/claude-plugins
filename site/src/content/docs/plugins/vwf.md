@@ -114,7 +114,7 @@ needs installing for memory. The two mempalace skills are **vendored into
 `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its auto-save hooks are
 reimplemented here, so memory arrives with the plugin rather than depending on
 anything being reachable at install time. Beside those hooks, `vwf` ships the
-four [`/vwf:execute` action-log hooks](#the-action-log) and one hooks module,
+five [`/vwf:execute` action-log hooks](#the-action-log) and one hooks module,
 the [`/vwf:execute` progress pane](#the-progress-pane).
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
@@ -2733,8 +2733,10 @@ docs-sync surveyor at three — which is the default nesting limit.
 The first thing it does, named or picked, is run **`/vwf:doctor`** in the main
 checkout, scoped to the plan's projects: a `blocking` finding halts the run
 there, with no claim, no worktree and no status edit to undo. Then it **claims
-the row**: the folder's row is set `RUNNING` in one commit — `docs: plan queue — <folder> running` — pushed
-on the integration branch from the main checkout, before any worktree exists.
+the row**: the folder's row is set `RUNNING`, and the folder's `run` to the
+worktree and [action log](#the-action-log) paths the run will use, in one
+commit — `docs: plan queue — <folder> running` — pushed on the integration
+branch from the main checkout, before any worktree exists.
 That pushed row is what makes a second session safe beside this one; a rejected
 push means the plan was claimed first, so `next` re-picks and a named run stops.
 A folder that `plan.mjs validate` rejects, a `DRAFT` folder, a `COMPLETE` one,
@@ -3114,38 +3116,54 @@ it and cannot detect its absence.
 
 #### The action log
 
-Every run of `/vwf:execute` writes an **action log**: one JSONL file per run
-attempt, outside the repo, at
-`/tmp/vwf/<repo>/<plan folder>/<YYYYMMDD-HHMMSS>-<session8>.jsonl`. It is never
-committed, no worktree removal or branch cleanup touches it, and macOS removes
-it once nothing has read or changed it for three days. A resume starts a new
-file beside the last one.
+Every plan that `/vwf:execute` runs has an **action log**: one append-only
+JSONL file, outside the repo, at
+`~/Library/Caches/vwf/<repo>/<plan folder>.jsonl`. No step edits or removes a
+line of it: each run, fresh or resumed, appends a new `run.start`, and every
+line carries the id of the run that wrote it, so a plan paused at 12:30 and
+resumed at 14:45 holds both runs, the later superseding the earlier. It is
+never committed, no worktree removal or branch cleanup touches it, and macOS
+does not clear it. The claim writes its path, with a literal `~`, into the
+folder's `run.log`, and the worktree's path into `run.worktree`.
 
-Two writers fill it. Four command hooks — `PreToolUse`, `PostToolUse`,
-`SubagentStart` and `SubagentStop` — log every tool call and every subagent on
-the machine's clock: start, end, duration, which agent made the call, which
-`Agent` call spawned each subagent, and the `GAP:` and `UNRESOLVED:` lines each
-one returned. They cost nothing outside a run: the hook exits at once unless a
-run has marked its session as logging. The orchestrator logs what only it
-knows, through the execute skill's `log.mjs`: each phase from doctor to the
-after-landing steps, every gate line — run through the script, so its duration
-and exit code are measured rather than reported — every commit, each review
-round with its range and finding counts, each unit's outcome, each gap with its
-source, and each stop.
+Two writers fill it. Five command hooks — `PreToolUse`, `PostToolUse`,
+`SubagentStart`, `SubagentStop` and `SessionEnd` — log every tool call and every
+subagent on the machine's clock: start, end, duration, which agent made the
+call, which `Agent` call spawned each subagent, and the `GAP:` and
+`UNRESOLVED:` lines each one returned. A tool call is logged by a short summary,
+never a file's content: a Bash call by its description, or by its program name
+alone when it has none — `(command)` when that is unclear — never by its
+arguments. `SessionEnd` appends `session.end` and releases the session. They
+cost nothing outside a run: the hook exits at once unless a run has marked its
+session as logging. The orchestrator logs what only it knows, through the
+execute skill's `log.mjs`: a snapshot of the plan's units at each start, each
+phase from doctor to the after-landing steps, every gate line — run through the
+script, so its duration and exit code are measured rather than reported — every
+commit, each review round with its range and finding counts, each change to a
+unit's or a stage's status, commit, rounds or range, each gap with its source,
+and each stop.
+
+Old logs are cleaned up by the archive: once it moves a folder into
+`docs/plans/archived/`, it deletes the log of every archived plan that has not
+changed for more than 30 days — never the log of the folder it just moved, and
+never a live plan's. A session that ended without a `SessionEnd` — a crash — is
+released by the next run's start.
 
 So the log answers what the run state in the folder cannot: where the time went,
 what ran in parallel and what ran in sequence, and where a gap came from — the
-agent that raised it, and the files it read and the commands it ran first. Read
+agent that raised it, and the files it read and the programs it ran first. Read
 it with
 
 ```sh
 node <vwf>/skills/execute/scripts/log.mjs summary <file>
 ```
 
-which prints the phases with their durations, every agent with what spawned it,
-the total agent time against the wall time it covered and the parallel factor,
-the gates by tier, the commits, the tool time, every gap and every stop. The
-final report names the file. The log is a record and never an input: a resume
+which reports each run of the plan — one `run.start` to the next, the pause
+between them not counted — and the totals: the phases with their durations,
+every agent with what spawned it, the total agent time against the wall time it
+covered and the parallel factor, the gates by tier, the commits, the tool time,
+the units, every gap and every stop. The final report names the file, the
+folder's `run.log`. The log is a record and never an input: a resume
 reads the run state in the folder's `index.json` and the worktree.
 
 #### The progress pane
@@ -3216,11 +3234,14 @@ answer.
 `plan-management` is **not typed**: it is the skill the planners and the
 executor call for every write to the plan queue, and the one a session invokes
 when you ask, in prose, to unclaim a stale plan, archive a plan folder or to see
-the queue. It owns three things and nothing else — the rows of the base repo's
+the queue. It owns four things and nothing else — the rows of the base repo's
 `docs/plans/index.json`, the **status** (`status.state` and `status.detail`) in
-every plan folder's `index.json`, and the move that retires a folder into
-`docs/plans/archived/` — and it is the one implementation of the reads over
-them: the `next` pick, `requires` resolution, priority derivation, the listing.
+every plan folder's `index.json`, its **`run`** — the worktree and
+[action log](#the-action-log) paths a run uses, set at `claim` and reset at
+`unclaim` — and the move that retires a folder into `docs/plans/archived/`,
+with the prune of old action logs that follows it — and it is the one
+implementation of the reads over them: the `next` pick, `requires` resolution,
+priority derivation, the listing.
 The folder's content stays the planners'; the run fields — each unit's
 `status`, `commit`, `rounds` and `range`, the `gaps`, `stages` and `overrides`
 lists — stay `execute`'s; the backlog — a project on
@@ -3251,11 +3272,11 @@ is no old-format copy of this skill or of `execute`.
 | Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Called by                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
 | `add <folder>`                     | The hand-off: `plan.mjs validate` green, status `APPROVED`, the priority derived, the row appended to the `plans` list (`kind` from the folder's `type`, `gaps` `null`), and each `gaps_of` row's `gaps` set to `open` `0` with this folder added to `moved_to`                                                                                                                                                                                                                                                                                                                                                                   | `plan`, `change-plan`                                                                           |
-| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `execute`, before the worktree is cut                                                           |
-| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's status to `APPROVED` in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
+| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`, and the folder's `run` set to the worktree and action-log paths in the same commit; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `execute`, before the worktree is cut                                                           |
+| `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's status to `APPROVED`, and the folder's `run` to `{}`, in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's status alone — `status.state` `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED`, and `status.detail`; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                               | `execute`, at start, pause, block and landing                                                   |
 | `complete <folder>`                | After the merge: the row `COMPLETE` and its `gaps` count, its `folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                   | `execute`, in the main checkout                                                                 |
-| `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the status set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog` id still open and `/vwf:backlog partial` for every `backlog_pieces` id, the mempalace `runs` drawer marked archived | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
+| `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the status set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog` id still open and `/vwf:backlog partial` for every `backlog_pieces` id, the mempalace `runs` drawer marked archived, then, after a move, the action logs of archived plans older than 30 days deleted | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
 | `next`                             | The pick: every `APPROVED` row whose `requires` are all satisfied, lowest `priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                                                                                                                                                                                                                                      | `execute next`                                                                                  |
 | `resolve <folder>`                 | The `requires` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers` doc stamped `implementation: complete`; an archived folder with no `index.json` satisfies either kind; an entry matching nothing is named, never re-pointed                                                                                                                                                                                                                                                                                                                                                 | the planners at self-review; `execute` at preflight                                             |
 | `priority <folder \| requires…>`   | `10 + max` over the `priority` of every unarchived plan the `requires` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                                                                                                                                                                                                                          | the planners at their gate                                                                      |
@@ -3271,7 +3292,8 @@ plus any folder on disk with no row. The session invokes the verb in the main
 checkout, which moves the folder whole (`index.json`, `index.md` and unit files
 together, never changing repo, never overwriting an existing destination), gives
 its row the same `COMPLETE`-and-sweep edit a landing makes, marks the backlog
-items and reports the commit — `docs: archive plan <name>` — for
+items, prunes the [action logs](#the-action-log) of archived plans older than
+30 days, and reports the commit — `docs: archive plan <name>` — for
 [`/vwf:git-workflow`](#vwfgit-workflow). Finished is the usual case, not a
 requirement: an unrun plan is a warning you answer, not a refusal. The one
 refusal is a folder whose backlog lists contradict themselves — an id on both
@@ -3290,12 +3312,13 @@ and no line is ever re-pointed.
 absence — while it still exists it refuses and names
 `git worktree remove <path>`, which git itself refuses on a dirty tree, so
 nothing uncommitted is lost silently — shows what it found, asks once, resets
-the row and the folder to `APPROVED`, and reports the commit. The run's branch
-is reported with the `git branch -D` line, never deleted: a fresh `/vwf:execute`
-refuses to cut a worktree over it until it is gone, and whether its committed
-units are worth keeping is your call. [`/vwf:execute`](#vwfexecute)'s resume
-path names the same request in its report when it finds the worktree gone, and
-never invokes the verb.
+the row and the folder to `APPROVED`, empties the folder's `run` — the action
+log stays, and the next run appends to it — and reports the commit. The run's
+branch is reported with the `git branch -D` line, never deleted: a fresh
+`/vwf:execute` refuses to cut a worktree over it until it is gone, and whether
+its committed units are worth keeping is your call.
+[`/vwf:execute`](#vwfexecute)'s resume path names the same request in its report
+when it finds the worktree gone, and never invokes the verb.
 
 **It never commits.** Every verb writes and stops, and names the commit its edit
 rides: the planner's approval commit for `add`, `execute`'s two
