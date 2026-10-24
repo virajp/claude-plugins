@@ -39,7 +39,9 @@
     "../site/public/**/*.svg",
     "**/site/public/**/*.svg",
     "../brag-output/",
-    "**/brag-output/"
+    "**/brag-output/",
+    "../docs/plans/",
+    "**/docs/plans/"
   ],
   "exec": {
     "commands": [
