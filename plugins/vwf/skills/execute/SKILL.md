@@ -87,6 +87,7 @@ branches load on demand, each named where it applies — never upfront.
 | [The preflight reads](references/preflight.md)              | Resolve, for the release levels; Setup steps 2 and 3, when the Units table holds a `code` unit         |
 | [Acceptance & UX](references/acceptance-and-ux.md)          | when `covers:` is present and the acceptance or ux stage returns short of a pass                       |
 | [`all` and runner mode](references/all.md)                  | Resolve, when `$ARGUMENTS` is `all` — and when you are an `execute-runner` handed one folder           |
+| [The action log](references/action-log.md)                  | Resolve, once the folder is read and not refused — every call the run makes to `log.mjs`               |
 
 ## Halt Conditions
 
@@ -248,6 +249,15 @@ planner commits and pushes it at hand-off — so the worktree Setup step 1 cuts
 sees it from its first commit. A folder that is not on that branch is refused,
 not swept into a unit commit: stop and say to run the planner again on it, or
 to commit and push it by hand, then re-launch.
+
+**Start the action log.** Once the folder is read and no refusal above
+stopped the run, start this run's action log per
+[the action log](references/action-log.md) — `log.mjs start` in the main
+checkout — and from here log each phase, gate line, commit, review round,
+unit outcome, gap and stop at the point that reference names. The log lives
+under `/tmp/vwf/`, outside the repo, and is never committed; a log call never
+stops the run. Under `all`, each runner starts its own folder's log, and the
+loop logs nothing.
 
 **Run doctor before the claim.** On every run — a fresh run, and a resume —
 run `/vwf:doctor` in the main checkout, scoped to the plan's projects — the
@@ -423,7 +433,8 @@ otherwise.
   commit and each fix commit — and never while another unit is still editing,
   so in a wave of `edit` units it runs after every report is in; its **Wave
   gate** runs after each wave; its **Plan gate** runs once, over the finished
-  tree. Each line runs **once** at each of those points. A red Unit gate line
+  tree. Each line runs **once** at each of those points, through the action
+  log's `log.mjs run` wrapper, which times it and keeps its exit code. A red Unit gate line
   is that unit's failure, handled as the Waves section's step 5 handles a red
   gate line. A folder with no Unit gate section runs no unit gate, and a
   folder with no Plan gate section runs every Wave gate line once more in its
@@ -463,7 +474,9 @@ otherwise.
 
 These are the **only** stops before the final report. On any pause: ensure the
 worktree is committed, update the folder's gap section, state precisely what
-is needed, **emit the exact resume command**, and stop — do not guess past it.
+is needed, log the stop and end the action log per
+[the action log](references/action-log.md), **emit the exact resume command**,
+and stop — do not guess past it.
 The resume command is always `/vwf:execute <folder>`, run by a person in a
 fresh session — after a **resource-cap** pause too, where a bare `/vwf:handoff`
 wrote the reserved `next` handoff first and `/vwf:recall next` may point the
@@ -848,6 +861,8 @@ intact. Read the Run log table back and present:
   `.config/releases.yaml`, from and to; or the one line *old-shape folder — no
   release levels recorded* for a folder with no `## Release levels` section
 - the worktree path
+- the action log's path, and its `log.mjs summary` — the phases, the agents
+  and the parallel factor, the gates by tier
 - each after-landing step and its outcome, once After landing has run
 
 With `covers:`, also:
@@ -1075,6 +1090,9 @@ Each step is reported with its outcome:
   with its command. Never work around it. A step that refuses is usually a
   fact about the machine rather than a failure of the run, and the plan named
   that step, not a substitute for it.
+
+Then end the action log — `end --outcome complete`, or `ready` when the branch
+was left to land by hand — per [the action log](references/action-log.md).
 
 ## What does not stop the run
 

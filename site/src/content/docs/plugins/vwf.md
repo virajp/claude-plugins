@@ -113,8 +113,9 @@ Nothing beyond the `mempalace` tool, Qdrant and the repo's mise environment
 needs installing for memory. The two mempalace skills are **vendored into
 `vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its auto-save hooks are
 reimplemented here, so memory arrives with the plugin rather than depending on
-anything being reachable at install time. Beside those hooks, `vwf` ships one
-hooks module, the [`/vwf:execute` progress pane](#the-progress-pane).
+anything being reachable at install time. Beside those hooks, `vwf` ships the
+four [`/vwf:execute` action-log hooks](#the-action-log) and one hooks module,
+the [`/vwf:execute` progress pane](#the-progress-pane).
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -2953,7 +2954,8 @@ flowchart TD
 The final report presents everything: per-unit commits, every `GAP:` with the
 assumption it proceeded on (including every owned-path widening and the finding
 that caused it), the review findings that survived the cap, model downgrades,
-the gate results, the release levels recorded and the worktree path — and with
+the gate results, the release levels recorded, the worktree path and the
+[action log](#the-action-log)'s path with its summary — and with
 `covers:`, the coverage, the acceptance and ux results, `/vwf:mockups renders`
 when renders were kept, the implementation stamps written, and the consolidated
 gap list marked by cap or guard. It **reads this back out of the folder's Run
@@ -3051,6 +3053,42 @@ cannot be installed at all — size a long autonomous run accordingly.
 Install it before an autonomous run or that pause won't fire. The hook must read
 `.config/vwf.yaml` → `pipeline.execute_caps` **tighten-only**; vwf never invokes
 it and cannot detect its absence.
+
+#### The action log
+
+Every run of `/vwf:execute` writes an **action log**: one JSONL file per run
+attempt, outside the repo, at
+`/tmp/vwf/<repo>/<plan folder>/<YYYYMMDD-HHMMSS>-<session8>.jsonl`. It is never
+committed, no worktree removal or branch cleanup touches it, and macOS removes
+it once nothing has read or changed it for three days. A resume starts a new
+file beside the last one.
+
+Two writers fill it. Four command hooks — `PreToolUse`, `PostToolUse`,
+`SubagentStart` and `SubagentStop` — log every tool call and every subagent on
+the machine's clock: start, end, duration, which agent made the call, which
+`Agent` call spawned each subagent, and the `GAP:` and `UNRESOLVED:` lines each
+one returned. They cost nothing outside a run: the hook exits at once unless a
+run has marked its session as logging. The orchestrator logs what only it
+knows, through the execute skill's `log.mjs`: each phase from doctor to the
+after-landing steps, every gate line — run through the script, so its duration
+and exit code are measured rather than reported — every commit, each review
+round with its range and finding counts, each unit's outcome, each gap with its
+source, and each stop.
+
+So the log answers what the folder's Run log cannot: where the time went, what
+ran in parallel and what ran in sequence, and where a gap came from — the agent
+that raised it, and the files it read and the commands it ran first. Read it
+with
+
+```sh
+node <vwf>/skills/execute/scripts/log.mjs summary <file>
+```
+
+which prints the phases with their durations, every agent with what spawned it,
+the total agent time against the wall time it covered and the parallel factor,
+the gates by tier, the commits, the tool time, every gap and every stop. The
+final report names the file. The log is a record and never an input: a resume
+still reads the Run log and the worktree.
 
 #### The progress pane
 
