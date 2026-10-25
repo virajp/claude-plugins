@@ -3185,45 +3185,63 @@ contain a colon.
 segment per unit — pending dim, running plain, failed red, skipped gray,
 finished green, and finished with gaps yellow. Below that, one row per unit with
 its status, its times and its gaps, and under them one line per wave review —
-its status, start, end and time. The line under the plan title adds `waiting`
-while the main loop has stopped with no subagent live. Plan text is stripped of terminal
-control characters before it renders. Select a unit row or a wave-review line to
-open that subagent's transcript; the **Main transcript** button goes back.
+its status, start, end and time. The line under the plan title names the
+folder, the plan's state, whether the run is `live` or `ended`, and the run
+number once a resume has started a second run. Before a run has written its log,
+the pane shows the plan with every unit pending and the line `no run data yet`.
+Plan text and log text are stripped of terminal control characters before they
+render. Select a unit row or a wave-review line to open that subagent's
+transcript; the **Main transcript** button goes back.
 
-**What it follows.** Every unit of a run of either kind: a subagent named for a
-unit of the plan (`U<n>`) or for a wave review (`R<wave>`, `R<wave>-late`,
-`R-late`), whatever its type, and every `vwf:execute-*` subagent but the runner.
-A coder counts against the unit file in its prompt, and a review-row reviewer
-against the row id in its prompt, so a reviewer never counts against the units
-its row covers. In an `/vwf:execute all` run each plan is a run of its own, and
-the pane follows that plan's runner's subagents alone.
+**Where it reads.** Three files, and nothing else:
 
-**How it finds the plan.** With no folder named, the pane picks the plan whose
-row reads `RUNNING` in the old markdown plan index, `docs/plans/index.md` — the
-base repo's, in a multi-repo product. It does not read the JSON plan format
-yet (see *Its limits*). When several rows read `RUNNING`, it prefers the one
-whose folder is in this session's own linked worktree; otherwise it asks you to
-run `/vwf-monitor <folder>`. It looks for the folder in the session's checkout,
-the base repo, each member repo and their worktrees, so a cycle plan in a member
-repo is found. Until the run's worktree exists it reads the main checkout's copy
-of the plan; once the worktree holds one, that copy replaces it.
+- **The plan index**, `docs/plans/index.json` — the base repo's, in a
+  multi-repo product. The row that reads `RUNNING` is the plan it shows.
+- **The plan's `index.json`** — the plan's state: its status, and each unit's
+  title, wave, kind, status, commit, rounds and range, and the open gaps. It
+  reads the copy in the run's worktree, at the folder's `run.worktree` (or the
+  archived copy there while the plan lands), and the main checkout's copy, or
+  its archived copy, before the worktree exists and after it is gone. A cycle
+  plan in a member repo is found there. It never searches for worktrees.
+- **The plan's action log**, at the folder's `run.log` — what `index.json` does
+  not hold: each unit's start and end times, the subagent that ran it and
+  whether it is live, the resumes, and the end of the run. Every read replays
+  the whole log from its first line, so a pane opened in the middle of a run, or
+  opened again, shows the run from its start.
 
-**When the run ends.** When the plan's Status reads `COMPLETE` or `BLOCKED`, or
-the folder has moved to `docs/plans/archived/`, once no subagent is still live
-— or after 10 minutes with no change in the plan file or its subagents while
-the run is waiting.
+**What it follows.** Every unit of a run of either kind. The pane ties a
+subagent to a unit through the log: the Agent call that started it names a unit
+of the plan (`U<n>`, `U<n>-late<k>`) or a wave review (`R<wave>`,
+`R<wave>-late`, `R-late`), or is a `vwf:execute-*` reviewer of a review row.
+When a unit has had several subagents, its row shows the latest. In an
+`/vwf:execute all` run each plan has a log of its own, so the log is the scope.
+
+**Which plan it shows.** With no folder named, the plan whose row reads
+`RUNNING`. When several rows read `RUNNING`, the one whose log's last run start
+came from this session; otherwise it lists them and asks you to run
+`/vwf-monitor <folder>`. Opened by `/vwf:execute` before the plan is claimed, it
+shows `waiting for the claim`; once the plan lands, or between two plans of an
+`all` run, `waiting for the next plan`. Each wait lasts up to 10 minutes, and a
+new `RUNNING` row shows at once.
+
+**When the run ends.** At the log's `run.end` or `stop` after the last run
+start, or at the end of the session that started it. A later run start, from a
+resume, makes the run live again.
 
 **How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
 then `c`. When the run asks you a question, the pane steps aside until you
-answer.
+answer. With nothing to show — no `RUNNING` row once a wait ends, a folder it
+cannot find, or a repo still on the old markdown plan format — it shows one
+message for 10 seconds and closes.
 
 **Its limits.**
 
-- It reads only the old markdown plan format: the plan index
-  `docs/plans/index.md` and a folder's `index.md`. On the JSON format that
-  `/vwf:execute` now runs, the pane still opens on each `/vwf:execute`, but it
-  shows that no plan is running. A later vwf release teaches it to read
-  `docs/plans/index.json` and the folder's `index.json`.
+- It reads only the JSON plan format. On a repo with `docs/plans/index.md` it
+  shows that message and closes.
+- A log over 4 MiB is replayed from its last 4,000,000 bytes, and the footer
+  says the replay is partial: a unit whose first running row fell before that
+  tail shows its subagent's start when the tail holds it, and no start time when
+  the tail holds neither.
 - In the fullscreen layout the pane docks beside the transcript. It cannot cover
   the whole screen.
 - In the normal layout (`CLAUDE_CODE_NO_FLICKER=0`) it shows above the prompt at

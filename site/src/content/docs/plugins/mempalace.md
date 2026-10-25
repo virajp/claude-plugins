@@ -98,7 +98,7 @@ directly). Wrapping upstream's would mean owning a JSONL format nobody here
 controls in order to answer a question a counter already answers.
 
 The two shell hooks, declared in `plugins/vwf/hooks/hooks.json`, are all there
-is to memory. The same file also lists the four
+is to memory. The same file also lists the five
 [`/vwf:execute` action-log hooks](./vwf.md#the-action-log) and vwf's one hooks
 module, the [`/vwf:execute` progress pane](./vwf.md#the-progress-pane), under
 `modules`; neither writes memory.

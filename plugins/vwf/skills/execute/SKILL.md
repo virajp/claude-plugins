@@ -131,11 +131,13 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   how.
 - **Every run fact goes to the action log too.** `index.json` keeps the facts
   — it is committed, and resume and the final report read it — and the log
-  carries the same facts as events for the progress pane. After each `set` of
-  a unit's `status`, `commit`, `rounds` or `range`, or of a stage, run
-  `log.mjs event row` with the JSON on stdin; after each `append` to `gaps`
-  and each `set` of a gap's `state`, run `log.mjs event gap`. Both read a
-  quoted heredoc, so nothing in it is expanded:
+  carries the same facts as events, for `log.mjs summary` and a later reader;
+  the progress pane reads the times, the agents and the run end from the log,
+  and the state from `index.json`. After each `set` of a unit's `status`,
+  `commit`, `rounds` or `range`, or of a stage, run `log.mjs event row` with
+  the JSON on stdin; after each `append` to `gaps` and each `set` of a gap's
+  `state`, run `log.mjs event gap`. Both read a quoted heredoc, so nothing in
+  it is expanded:
 
   ```sh
   node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event row <<'EOF'

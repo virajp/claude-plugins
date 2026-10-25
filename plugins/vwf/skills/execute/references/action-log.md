@@ -22,8 +22,11 @@ it, under Clean-up below.
 
 The log answers four questions the unit fields of the folder's `index.json`
 cannot: how long each phase, gate and commit took; what ran in parallel and
-what ran in sequence; what the progress pane shows; and where a gap came from
-— the agent that raised it and the tool calls it made first.
+what ran in sequence; when each unit started and ended, which agent ran it and
+when the run ended — what the progress pane reads from it, taking the state
+from `index.json`; and where a gap came from — the agent that raised it and
+the tool calls it made first. The `row` and `gap` events stay, for
+`log.mjs summary` and a later reader.
 
 Two writers append to it. The **hooks** in `hooks/hooks.json` write every tool
 call and subagent — start, end, duration, agent id — on the machine's clock,

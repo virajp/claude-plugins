@@ -442,25 +442,33 @@ skill.
 The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
 `hooks/monitor/register.tsx`, a Claude Code mod that draws the `/vwf:execute`
 progress pane and registers `/vwf-monitor` (no colon: a registered command name
-refuses one). `plan.ts` beside it parses the plan folder and strips terminal
-control characters from plan text before it renders. It still parses the old
-markdown format — `docs/plans/index.md` and a folder's `index.md` — so on the
-JSON format it opens on each `/vwf:execute` and shows that no plan is running,
-until a later plan rewrites it to read the two `index.json` files;
+refuses one). It reads three sources and nothing else: the `RUNNING` row of the
+base repo's `docs/plans/index.json`; the folder's `index.json` for the state —
+the copy at `run.worktree` (or archived there during the landing), else the main
+checkout's or its archived copy; and the log at `run.log`, `~` expanded from
+`HOME`, replayed whole at each read (from its last 4,000,000 bytes, through
+`tail`, when it is over 4 MiB) for the times, each unit's agent and its
+liveness, the resumes and the run end. It never searches a worktree. With
+several `RUNNING` rows it takes the one whose log's last `run.start` carries
+this session's id. With no `RUNNING` row it waits up to 10 minutes, showing
+`waiting for the claim` when `/vwf:execute` opened it or
+`waiting for the next plan` once a plan has landed; when the wait ends empty, on
+the old markdown format, or with a folder it cannot find, it shows one message
+for 10 s and closes. `plan.ts` beside it holds the parsers and the replay, and
+strips terminal control characters from plan and log text before it renders;
 `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and `agents.test.tsx` are
 its tests. Its `$.state` keys (`monitorRun`, `monitorQuiet`, `monitorViewing`)
 sit under the plugin name `vwf` and are declared in `types/index.d.ts`, which
-the manifest's `types` key names. It follows a subagent named for a unit of the
-current plan (`U<n>`) or a wave review (`R<wave>`, `R<wave>-late`, `R-late`),
-whatever its type, and every `vwf:execute-*` subagent but the runner; a coder
-maps to its unit by the unit file in its prompt, a review-row reviewer by the
-row id in its prompt, read before any file name. In an `all` run it follows the
-current runner's subagents alone. `claude plugin test plugins/vwf` and
+the manifest's `types` key names. It ties an agent to a unit through the log:
+the Agent call's `tool.start` summary names a unit (`U<n>`, `U<n>-late<k>`) or a
+wave review (`R<wave>`, `R<wave>-late`, `R-late`), or a `vwf:execute-*`
+review-row reviewer, and `tool.end` gives the child id. The per-plan log is the
+scope of an `all` run. `claude plugin test plugins/vwf` and
 `claude plugin validate --strict plugins/vwf` are its gates, run locally — CI
 has no `claude`. Why it lives inside vwf rather than as its own plugin is
-`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it matches
-agents, finds the plan and ends the run is
-`docs/memory/decisions/2026-10-21-execute-monitor-gap-fixes.md`.
+`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it reads
+its sources, ties agents to units and ends the run is
+`docs/memory/decisions/2026-10-25-pane-replays-the-log.md`.
 
 ## Documentation
 
