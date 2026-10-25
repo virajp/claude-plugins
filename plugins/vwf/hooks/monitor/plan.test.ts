@@ -125,6 +125,18 @@ test("reads the RUNNING rows of docs/plans/index.json", async () => {
   expect(typeof bad.problem).toBe("string");
 });
 
+test("strips control characters from a malformed JSON's problem", async () => {
+  const bad = "{\"title\": \u001b]0;pwned\u0007\u001b[31m}";
+  // eslint-disable-next-line no-control-regex
+  const control = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/;
+  const plan = runningRows(bad).problem ?? "";
+  const folder = readFolder(bad).problem ?? "";
+  expect(plan).not.toBe("");
+  expect(folder).not.toBe("");
+  expect(control.test(plan)).toBe(false);
+  expect(control.test(folder)).toBe(false);
+});
+
 test("tells the old markdown format apart", async () => {
   expect(isOldFormat({ indexMd: true })).toBe(true);
   expect(isOldFormat({ indexMd: false, folderMd: true, folderJson: false }))

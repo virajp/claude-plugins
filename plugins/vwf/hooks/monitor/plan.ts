@@ -213,7 +213,10 @@ function parse(text: string): { value?: unknown; problem?: string; } {
     return { value: JSON.parse(text) };
   }
   catch (error) {
-    return { problem: error instanceof Error ? error.message : String(error) };
+    // The message may quote the bad input, control characters and all.
+    return {
+      problem: str(error instanceof Error ? error.message : String(error)),
+    };
   }
 }
 
