@@ -1,4 +1,20 @@
 {
   "format": 1,
-  "plans": []
+  "plans": [
+    {
+      "id": "2026-10-25-pane-replays-the-log",
+      "folder": "docs/plans/2026-10-25-pane-replays-the-log",
+      "kind": "change",
+      "title": "The progress pane replays the action log",
+      "target_repo": null,
+      "priority": 10,
+      "status": "APPROVED",
+      "gaps": null,
+      "requires": [
+        "2026-10-25-action-log-per-plan"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
+    }
+  ]
 }

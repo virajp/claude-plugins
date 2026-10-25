@@ -1,0 +1,508 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "The progress pane replays the action log",
+  "requires": [
+    "docs/plans/2026-10-25-action-log-per-plan"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-10-25 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit --all",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:plugins:check",
+      "claude plugin test plugins/vwf",
+      "claude plugin validate --strict plugins/vwf",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "The progress pane works again on the JSON plan format, from the action log, with unit titles, start times from the replay and a 10-second message in place of the empty pane."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The progress pane section of the manual changes; no new page."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The replay core",
+      "wave": 1,
+      "file": "01-replay-core.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/hooks/monitor/plan.ts",
+        "plugins/vwf/hooks/monitor/plan.test.ts",
+        "plugins/vwf/types/index.d.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "The pane on the new sources",
+      "wave": 2,
+      "file": "02-pane.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/hooks/monitor/register.tsx",
+        "plugins/vwf/hooks/monitor/agents.test.tsx",
+        "plugins/vwf/hooks/monitor/pane.test.tsx",
+        "plugins/vwf/hooks/monitor/refresh.test.tsx",
+        "plugins/vwf/hooks/monitor/plan.ts",
+        "plugins/vwf/hooks/monitor/plan.test.ts",
+        "plugins/vwf/types/index.d.ts"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "it calls the replay API that U1 writes in plan.ts and the types U1 writes in index.d.ts",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Review: the progress pane module",
+      "wave": 3,
+      "file": "03-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2"
+      ],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U4",
+      "title": "Docs",
+      "wave": 4,
+      "file": "04-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/assets.md",
+        ".claude/skills/plugin-authoring/SKILL.md",
+        "site/src/content/docs/plugins/vwf.md",
+        "docs/memory/decisions/2026-10-25-pane-replays-the-log.md",
+        "docs/plans/gaps/2026-10-21-execute-monitor-gap-fixes.md",
+        "site/src/content/docs/plugins/mempalace.md",
+        ".claude/docs/plugins.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/skills/execute/references/action-log.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Gates",
+      "wave": 5,
+      "file": "05-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated; regenerating mid-wave races",
+      "owner": "U5"
+    },
+    {
+      "id": "S2",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/**, site/src/content/docs/**)",
+      "why": "the pane change falsifies passages in several docs",
+      "owner": "U4"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Which sources does the pane read?",
+      "ruling": "The pane reads three sources only: the RUNNING row of the base repo's docs/plans/index.json, then the folder's index.json in the main checkout (title, status.state, units, run), then the log at run.log. The ~ of run.log is expanded with $.env.get(\"HOME\"); VWF_LOG_ROOT is not honoured, because the committed path does not carry it. The pane never searches a worktree.",
+      "rejected": "A search of the worktrees for a newer copy of index.json",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Full replay or an incremental read?",
+      "ruling": "Each read replays the whole log from its first line and rebuilds the past and the current state.",
+      "rejected": "An incremental read from the last offset (the mod API has no offset read)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "What does the pane show on the old format or with nothing to show?",
+      "ruling": "Only the new format. When the repo is in the old format (docs/plans/index.md exists, or the folder has index.md and no index.json), or when there is nothing to show (no RUNNING row, or the named folder is not found), the pane shows one message for 10 seconds, then closes ($.clock.after(10000, …) then $.ui.close). This replaces the persistent empty state.",
+      "rejected": "A persistent empty pane",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "What does a missing log mean?",
+      "ruling": "A missing log file is not an error: the pane shows the plan from index.json, every unit pending, and the line 'no run data yet'.",
+      "rejected": "An error line",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How does the pane tie an agent to a unit, and know it is live?",
+      "ruling": "Log plus $.agent.list() for liveness. A unit's agent is the child id of the Agent tool call whose tool.start summary (type :: name :: description) names the unit id U<n> or a wave-review name R<wave>; tool.end with the same tool_use_id carries the child. An agent is live from its agent.start to its agent.end. When the run is in this session and $.agent.list() shows the agent as done, or does not list it, the agent counts as ended. The transcript button opens the child id. The name matching on the agent list (isFollowed, mapUnit, unitFor, the REVIEWER regex, disowned) is removed. This reverses gap-fixes D1.",
+      "rejected": "The log only; today's name matching on $.agent.list()",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "When does the pane call a run ended?",
+      "ruling": "The run ends at a run.end or a stop after the last run.start, or at a session.end of the session of the last run.start. A later run.start makes the run live again. The 10-minute stale end (waitingSince, WAIT_MS) is removed. This reverses gap-fixes D3.",
+      "rejected": "Log events plus the stale timer; today's rule from the folder status",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "What replaces locate, roots and pick?",
+      "ruling": "resolveBase and memberPaths stay, for a cycle plan in a member repo. locate, roots, isClaimedIn and the worktree search are removed (this supersedes gap-fixes D12, as that plan planned). With several RUNNING rows, the pane takes the plan whose log's last run.start carries this session's id; else it shows the RUNNING folders and /vwf-monitor <folder> (gap-fixes D5 stays).",
+      "rejected": "Also read the worktree copy of index.json",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "How does the pane follow a live log?",
+      "ruling": "Keep the 3 s timer while a run is live and the pokes on tool.call, turn.complete and agent.spawn (gap-fixes D7 stays). Before each read, $.fs.stat the log; when size and mtimeMs are unchanged since the last read, skip the read and keep the state.",
+      "rejected": "The FileChanged settings hook; the timer only",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "What does the pane do with a log over 4 MiB?",
+      "ruling": "When $.fs.stat gives a size over 4 MiB (4194304 bytes), the pane runs tail -c 4000000 <log> through $.process.run and replays from the first full line of its output. When that tail has no plan.snapshot, the units come from the folder's index.json. The footer then says the replay is partial.",
+      "rejected": "A message with the path and the summary command only",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Which parked ideas come in?",
+      "ruling": "Each unit row shows its title from plan.snapshot, or from index.json when the replay has none. A unit's start time is the ts of its first row event with status running, else its agent's agent.start; its end time is the ts of its last row event with a final status (green, failed, unresolved, skipped). Both come from the replay, also for a unit that started before the pane opened.",
+      "rejected": "Also the earlier plans of an all run (Parked)",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "What do the types and the standing pane rules become?",
+      "ruling": "plugins/vwf/types/index.d.ts drops UnitRow, LogRow and PlanSnapshot; it carries the JSON unit shape (id, title, wave, file, kind, status, commit, rounds, range) and the replayed state, with no type named PlanSnapshot. These stay: the $.state keys monitorRun, monitorQuiet, monitorViewing; the command /vwf-monitor and the pane id vwf-monitor; the strip of control characters from plan text and log text. The module imports no node: module and does not import plan.mjs; it parses JSON with JSON.parse.",
+      "rejected": "Keep the markdown types",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "What happens to docs/plans/gaps/2026-10-21-execute-monitor-gap-fixes.md?",
+      "ruling": "The docs unit deletes docs/plans/gaps/2026-10-21-execute-monitor-gap-fixes.md with rm; its items are now in this plan (two taken, two Parked). The folder docs/plans/gaps/ is removed when it is empty.",
+      "rejected": "Keep it",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Is a review unit necessary?",
+      "ruling": "Yes: the plan lands a shipped hooks module, plan.ts and register.tsx, which run in every session that loads vwf. U3 covers U1 and U2. They are edit units, so U3 runs the security half only.",
+      "rejected": "The wave review only",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "How does the replay tie agents with other names to a unit? (rulings review round 1, gaps 1 and 2)",
+      "ruling": "Keep today's name rules, applied to the log. The replay splits an Agent tool.start summary on ' :: ' at its first two separators: three parts give type, name and description; two parts give type and description, with no name. Then today's unitFor rules (the U<n>-late<k>, R<wave>-late, R-late and -<n> suffixes, review-row reviewers by row id, the REVIEWER regex over vwf:execute-* types) map that name and type to a unit or a wave review; they move from the agent list to the replay. When a unit has several agents, its row shows the latest one, and the transcript button opens the latest. This amends D5: unitFor and REVIEWER stay, as rules over the log, and only isFollowed, mapUnit and disowned are removed.",
+      "rejected": "Exact U<n> and R<wave> names only",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "What happens to unitState, isFinished and gapsOf? (rulings review round 1, gap 5)",
+      "ruling": "They are removed with the markdown readers: replay gives each unit's status and the open gaps, and a final status is green, failed, unresolved or skipped (the schema.mjs unit enum).",
+      "rejected": "Keep them over the new types",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Can $.process.run carry the tail output, with no prompt? (rulings review round 1, gap 6)",
+      "ruling": "Yes. $.process.run runs an argument vector with no shell and returns the first 4194304 bytes of stdout (isStdoutTruncated says when cut), with a 30 s default timeout (the claude-code.d.ts of the built-in plugin-authoring skill, process.run). tail -c 4000000 stays under that cap. The call is [\"tail\", \"-c\", \"4000000\", <log path>]; when isStdoutTruncated is true or the exit code is not 0, the pane shows the problem line and the partial replay of what it has.",
+      "rejected": "A smaller tail with a margin",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "What does an open pane do when the plan lands? (rulings review round 1, gap 3)",
+      "ruling": "Superseded by D32.",
+      "rejected": "Show the D3 message and close as soon as no RUNNING row exists",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "What is the end time of a unit that a resume runs again? (rulings review round 1, gap 4)",
+      "ruling": "Empty until it ends again. A unit's end time is the ts of its last row with a final status only when no later row set it running. A re-run unit shows its first start time and no end time, then the new end time when it ends again; its time column counts from the first start. This amends D10's end time.",
+      "rejected": "Reset both times at the resume",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Who corrects the stale hook count in site/src/content/docs/plugins/mempalace.md? (rulings review round 1, gap 7)",
+      "ruling": "U4. site/src/content/docs/plugins/mempalace.md joins the docs unit's owns; U4 corrects ':101-102' from four action-log hooks to five (plan B added SessionEnd) and keeps its link to vwf.md#the-progress-pane.",
+      "rejected": "Out of scope, fixed by hand",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "What does a pane opened by /vwf:execute show before the claim? (rulings review round 2, gap 1)",
+      "ruling": "Wait for the claim. An open from /vwf:execute (typed, or the Skill vwf:execute) shows 'waiting for the claim' and keeps polling (the D8 timer and pokes) for up to 10 minutes; the first poke that finds a RUNNING row shows that plan. Only when the wait ends with no RUNNING row does the D3 message show for 10 seconds, and the pane closes. An open by /vwf-monitor with no RUNNING row shows the D3 message at once. This amends D3.",
+      "rejected": "Close at once and open again at the claim",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "In an all run, what does the pane do when the next plan is claimed? (rulings review round 2, gap 2)",
+      "ruling": "Superseded by D32.",
+      "rejected": "Stay on the landed plan until /vwf-monitor <folder>",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "How does the replay treat a tail with no run.start? (rulings review round 2, gap 3)",
+      "ruling": "With no run.start in the tail, the run is live unless the tail holds a run.end, a stop or a session.end of the last session seen (D6). The session for D7 is the session field of the tail's last line. A unit with no running row in the tail shows no start time, only its status. The footer's partial mark (D9) says why.",
+      "rejected": "Show the tail as ended and read-only",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "What does the pane show for a RUNNING row whose folder has an empty run or no run.log? (rulings review round 2, gap 4)",
+      "ruling": "No run data yet. A RUNNING row is always a plan to show: with run {} or no run.log, the pane shows the plan from index.json, every unit pending, and the line 'no run data yet' (D4), and keeps polling until the run key and then the log appear.",
+      "rejected": "The D3 message and close",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Where does the pane take the run state from? (the user's question at rulings review round 2, gap 6)",
+      "ruling": "A hybrid. The state (status.state, each unit's title, wave, kind, status, commit, rounds and range, and the open entries of gaps) comes from the folder's index.json in the run's worktree: <the folder's repo root>/<run.worktree>/<folder path>/index.json, read whole with JSON.parse at each refresh, with the D8 stat skip. When that file does not exist (before the worktree is cut, or after the landing removed it), the state comes from the folder's index.json in the main checkout, or the archived copy (D17). The log gives only what index.json does not hold: start and end times (D10, D18), the agent of each unit and its liveness (D5, D14), resumes and the run end (D6, D22), and the session for D7. The pane opens the one path in run.worktree; it never lists or searches worktrees. This amends D1, D4, D9 and D23: units and gaps never come from plan.snapshot or row events; a tail with no plan.snapshot needs no fallback. It reverses the interview answer to open point 1c, which rejected reading the worktree copy.",
+      "rejected": "The log as the only source of run state (D1 as approved)",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Does plugins/vwf/skills/execute/SKILL.md:378 need a change? (rulings review round 2, gap 6)",
+      "ruling": "No. Under D24 the pane reads both run.worktree and run.log, so the passage 'the progress pane finds the worktree and the log' stays true; no unit owns that file.",
+      "rejected": "U4 owns the file and rewrites the passage",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Which source gives a unit's title, and which start time does a unit show in a partial tail? (rulings review round 3, gaps 3 and 5)",
+      "ruling": "The title comes from the state file of D24 (the worktree, main or archived index.json), never from plan.snapshot; this amends D10. In a partial tail (D9, D22), D10's start fallback still applies: a unit's start is its first running row in the tail, else its agent's agent.start in the tail; it shows no start time only when the tail holds neither.",
+      "rejected": "Titles from plan.snapshot; no start time at all in a partial tail",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Who corrects .claude/docs/plugins.md:12? (rulings review round 3, gap 1)",
+      "ruling": "U4. .claude/docs/plugins.md joins the docs unit's owns; U4 rewrites the cell at ':12' that says the pane still reads docs/plans/index.md until a later plan rewrites it, to the sources of D24.",
+      "rejected": "Out of scope, fixed by hand",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Does a runner's log.mjs call carry the session id of the session that dispatched it? (rulings review round 3, gap 4)",
+      "ruling": "Yes, verified on 2026-10-25: a general-purpose subagent's Bash printed the same CLAUDE_CODE_SESSION_ID as its parent session (4ed5e911-…), and 2016 subagent hook lines of plan A's log carry the parent's session. So D7 and D21 hold for an all run's runners.",
+      "rejected": "Match the runner by its agent id",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "How do the waves stay green while register.tsx still imports the markdown readers? (rulings review round 3, gap 2)",
+      "ruling": "U2 removes the dead code. U1 only adds the new API, the types and their tests, and keeps the old readers, the old types and their tests unchanged. U2 also owns plan.ts and plan.test.ts in wave 2: once register.tsx no longer imports them, U2 removes the readers of D11 and D15 (parseIndex, runningFolders, isClaimedIn, isFollowed, section, table, bullets, unitState, isFinished, gapsOf), the old types UnitRow, LogRow and PlanSnapshot from index.d.ts, and their tests. So U2 also owns plugins/vwf/types/index.d.ts in wave 2.",
+      "rejected": "One unit for the whole module; a red wave-1 gate",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Who rewords the two passages that say the pane reads the row events? (rulings review round 4, gap 1)",
+      "ruling": "U4. plugins/vwf/assets/execute-stages.md and plugins/vwf/skills/execute/references/action-log.md join the docs unit's owns. U4 rewords execute-stages.md ':338-340' and action-log.md ':25': the pane reads the times, the agents and the run end from the log, and the state from index.json (D24); the row and gap events stay, for log.mjs summary and a later reader.",
+      "rejected": "Accept the two passages as they are",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Is runner scoping in an all run still needed? (rulings review round 4, gap 2)",
+      "ruling": "No. The per-plan log is the scope: every line in a plan's log comes from that plan's run, its runner and the runner's children. The pane filters no line by runner, and today's runner scoping (register.tsx:554-556) is removed.",
+      "rejected": "Keep a filter on the runner's agent id",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "How does the pane know the currently running plan, and what does it show when none runs? (rulings review round 4, gap 3, the user's model)",
+      "ruling": "The pane shows only the currently running plan, by three layers: docs/plans/index.json gives the plan's status at the start and the end (claim sets RUNNING, complete sets COMPLETE); the plan's index.json gives the state while the plan runs (the worktree copy at run.worktree, D24; during the landing, when the folder already moved inside the worktree, <worktree>/docs/plans/archived/<basename>/index.json; after the merge, the main copy); the log gives the event-by-event updates (times, agents, run end). An all run runs one plan at a time, so the pane follows whichever row reads RUNNING, and needs no re-find of a landed plan. When no row reads RUNNING (the plan's row went COMPLETE, or between two plans of an all run), the pane shows 'waiting for the next plan' and keeps polling for up to 10 minutes, as in D20; a new RUNNING row shows at once; when the wait ends with no RUNNING row, the D3 message shows for 10 seconds and the pane closes. This supersedes D17 and D21. /vwf:execute does not change.",
+      "rejected": "Keep a landed plan's final state (D17) and a move rule for all runs (D21); have /vwf:execute also write the main checkout's copy",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
