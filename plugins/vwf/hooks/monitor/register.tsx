@@ -124,7 +124,8 @@ const READ_MAX = 4194304;
 const TAIL_BYTES = "4000000";
 let refreshing: Promise<void> | undefined;
 let lastRefresh = -Infinity;
-// The refresh timer: it runs only while a run is live, or the pane waits.
+// The refresh timer: it runs only while a run is live, the pane waits, or it
+// shows the list of RUNNING plans.
 let timer: Timer | undefined;
 // The closing message's timer.
 let closer: Timer | undefined;
@@ -147,11 +148,12 @@ const logs = new Map<
   }
 >();
 
-/** True while the pane follows a live run, or waits for a plan. */
+/** True while the pane follows a live run, waits for a plan, or lists plans. */
 function isLive(r: Run | null): boolean {
   return r !== null
     && r.endedAt === undefined
     && (r.waiting !== undefined
+      || r.choices !== undefined
       || (r.plan !== undefined && r.plan.phase !== "ended"));
 }
 

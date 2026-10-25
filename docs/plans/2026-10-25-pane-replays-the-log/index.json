@@ -565,8 +565,8 @@
       "id": "G2",
       "unit": "U2",
       "stage": "edit",
-      "text": "D7 does not say whether the choice view of several RUNNING rows polls on the 3 s timer · the choice view refreshes on pokes only, not on the timer",
-      "state": "open"
+      "text": "D7 does not say whether the choice view of several RUNNING rows polls on the 3 s timer · the choice view refreshes on pokes only, not on the timer · closed 2026-10-25 by the user: the list polls on the 3 s timer too (isLive counts the list view)",
+      "state": "closed"
     },
     {
       "id": "G3",

@@ -10,7 +10,7 @@
       "priority": 10,
       "status": "COMPLETE",
       "gaps": {
-        "open": 1,
+        "open": 0,
         "moved_to": []
       },
       "requires": [

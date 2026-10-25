@@ -106,9 +106,12 @@ the worktree copy of `index.json`.
 ## Gaps taken during the run
 
 - **G1** D22's "last session seen" is the session of the tail's last line, the
-  same as D7's.
+  same as D7's. Closed 2026-10-25: superseded by T5–T8 — the run's end comes
+  from the JSON status, not from a log tail's `session.end`.
 - **G2** The D7 choice view of several `RUNNING` rows refreshes on pokes only,
-  not on the 3 s timer.
+  not on the 3 s timer. Closed 2026-10-25 by the user: the list polls on the 3 s
+  timer too, like a live plan view, so a plan that lands or a new claim shows
+  with no event in this session.
 - **Security review** `parse()` strips control characters from a JSON error
   before the pane shows it.
 

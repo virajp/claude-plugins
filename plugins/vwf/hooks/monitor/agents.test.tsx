@@ -539,6 +539,40 @@ test(
 );
 
 test(
+  "G2: the list of RUNNING plans refreshes on the timer, with no event",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
+          B,
+          "RUNNING",
+        ]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
+        [logOf(A)]: line("run.start", { mode: "fresh", session: "x" }),
+        [logOf(B)]: line("run.start", { mode: "fresh", session: "y" }),
+      },
+    });
+    await $.prompt.submit(execute("next"));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
+      .toBeDefined();
+    // Plan A lands in its own session; this session stays idle.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
+      B,
+      "RUNNING",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
+      .toBeUndefined();
+    expect(await ui.find({ type: "Text", text: new RegExp(B) }))
+      .toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
   "D8: an unchanged log and state file are read once over two refreshes",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
