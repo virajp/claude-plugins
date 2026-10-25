@@ -55,9 +55,13 @@ unclaims it:
   `APPROVED <date> — unclaimed at migration; was RUNNING in <worktree>`, where
   `<date>` is today's date (`YYYY-MM-DD`) and `<worktree>` is the old worktree
   path.
-- Every unit gets `"status": "pending"`, `"commit": ""` and `"rounds": 0`. A
-  review unit gets `"range": {"from": "", "to": ""}`.
-- Every stage in `stages` gets `{"state": "pending", "detail": ""}`.
+- Every unit gets `"status": "pending"`, `"commit": ""`, `"rounds": 0`,
+  `"started": ""` and `"ended": ""`. A review unit gets
+  `"range": {"from": "", "to": ""}`.
+- Every entry of `waves` gets `"status": "pending"`, `"started": ""` and
+  `"ended": ""`.
+- Every stage in `stages` gets
+  `{"state": "pending", "detail": "", "started": "", "ended": ""}`.
 - The `gaps` list stays as step 1 writes it.
 
 Find the old worktree:
@@ -101,6 +105,7 @@ fields.
 | Consent: After landing: `<step>`            | nothing — the After landing table carries the step                                                                                                                                                                                                                      |
 | Release levels table                        | `release_levels`: one `{id, level, reason}` per row; `id` is the Project cell                                                                                                                                                                                           |
 | Units table and the unit files              | `units`: one entry per row — see the unit fields below                                                                                                                                                                                                                  |
+| the Wave cells of the Units table           | `waves`: one `{id: "W<n>", status, started: "", ended: ""}` per wave, `W1` to the highest wave, in order; `status` is `green` when every unit of the wave is `green`, `failed` when one is `failed` or `unresolved`, else `pending`                                     |
 | Unit gate                                   | `gates.unit`: one string per command line                                                                                                                                                                                                                               |
 | Wave gate                                   | `gates.wave`: one string per command line; the prose ("plus the wave review …") is not a line                                                                                                                                                                         |
 | Plan gate                                   | `gates.plan`: one string per command line                                                                                                                                                                                                                               |
@@ -132,6 +137,8 @@ The unit fields:
 | `commit`     | the Commit cell; `""` when it is empty                                                                                                                       |
 | `rounds`     | the highest Round value in the Run log rows of this unit; `0` when it has none                                                                               |
 | `range`      | review units only: `{"from": "", "to": ""}`                                                                                                                  |
+| `started`    | always `""` — the old format kept no times                                                                                                                   |
+| `ended`      | always `""`                                                                                                                                                  |
 
 ### The old columns of `docs/plans/index.md` → the keys of `docs/plans/index.json`
 
@@ -149,6 +156,7 @@ row, in the order of the rows.
 | `Gaps`        | `gaps`: `-` → `null`; `<n>` → `{"open": <n>, "moved_to": []}`; `0 — moved to <a>, <b>` → `{"open": 0, "moved_to": ["<a>", "<b>"]}`                       |
 | `Requires`    | `requires`: the basenames in the cell; `—` → `[]`                                                                                                           |
 | `Backlog`     | `backlog`: each id without `(piece)`; `backlog_pieces`: each id written `Bnn (piece)`, without the suffix; `—` → `[]` for both                              |
+| —             | `started` and `ended`: always `""` — the old format kept no times                                                                                           |
 
 ## Steps
 
@@ -178,6 +186,7 @@ row, in the order of the rows.
      name shows: Outcome `pass` → `green`; `skipped` → `skipped`; `fail(<n>)`,
      `findings(<n>)` or `blocked` → `failed`. `detail` is the row's Detail
      cell. A stage with no Run log row is `{"state": "pending", "detail": ""}`.
+     Every stage also gets `"started": ""` and `"ended": ""`.
    - **Missing parts.** A part that an old folder does not have gets its empty
      value. Never stop for it:
      - no Release levels → `"release_levels": []`;
