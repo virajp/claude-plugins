@@ -8,6 +8,10 @@
 // cycle-only key — `covers`, `exposure`, `acceptance`, `consent.lsp` — is
 // required on a vwf-plan (`exposure` optional) and a finding on a
 // vwf-change-plan.
+//
+// Each unit, wave, stage and index row carries `started` and `ended`: "" or a
+// UTC time as `new Date().toISOString()` prints it. `waves` lists exactly
+// W1 … W<n>, in order, where <n> is the highest `wave` of any unit.
 
 import {
   existsSync,
@@ -30,9 +34,13 @@ const list = (of, o = {}) => ({ t: "list", of, ...o });
 const obj = (keys, o = {}) => ({ t: "object", keys, ...o });
 const strings = (o = {}) => list(str(), o);
 const id = () => str({ nonEmpty: true });
+const time = () => str({ time: true });
+
+/** A `started` or `ended` value: "" or what `toISOString()` prints. */
+export const TIME_RE = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
 
 /** The state of a stage, `stages.<name>.state`. */
-export const STAGE_STATE = ["pending", "green", "failed", "skipped"];
+export const STAGE_STATE = ["pending", "running", "green", "failed", "skipped"];
 
 /** The status of a unit, `units[].status`. */
 export const UNIT_STATUS = [
@@ -46,6 +54,8 @@ export const UNIT_STATUS = [
 
 const STAGE = obj({
   state: str({ enum: STAGE_STATE }),
+  started: time(),
+  ended: time(),
   detail: str(),
 });
 
@@ -111,9 +121,19 @@ const FOLDER = obj({
       depends_on: strings(),
       waits: str(),
       status: str({ enum: UNIT_STATUS }),
+      started: time(),
+      ended: time(),
       commit: str(),
       rounds: int({ min: 0 }),
       range: obj({ from: str(), to: str() }, { optional: true }),
+    }),
+  ),
+  waves: list(
+    obj({
+      id: id(),
+      status: str({ enum: UNIT_STATUS }),
+      started: time(),
+      ended: time(),
     }),
   ),
   shared_files: list(
@@ -164,6 +184,8 @@ const INDEX = obj({
       target_repo: str({ nullable: true }),
       priority: int(),
       status: str({ enum: ["APPROVED", "RUNNING", "COMPLETE"] }),
+      started: time(),
+      ended: time(),
       gaps: obj({ open: int({ min: 0 }), moved_to: strings() }, {
         nullable: true,
       }),
@@ -195,6 +217,9 @@ function check(value, spec, path, ctx, out) {
       }
       if (spec.nonEmpty && value === "") {
         at("must not be empty");
+      }
+      if (spec.time && value !== "" && !TIME_RE.test(value)) {
+        at("must be \"\" or a UTC time like 2026-10-25T06:39:15.253Z");
       }
       return;
     case "int":
@@ -376,6 +401,38 @@ function folderRules(doc, dir, out) {
       });
     }
   });
+
+  if (Array.isArray(doc.waves)) {
+    const top = Math.max(
+      0,
+      ...units.map(u => (isObject(u) && Number.isInteger(u.wave) ? u.wave : 0)),
+    );
+    const want = Array.from({ length: top }, (_, i) => `W${i + 1}`);
+    const have = doc.waves.map(w => (isObject(w) ? w.id : undefined));
+    for (const w of want) {
+      if (!have.includes(w)) {
+        out.push({ path: "waves", message: `${w} is missing` });
+      }
+    }
+    for (const w of have) {
+      if (typeof w === "string" && !want.includes(w)) {
+        out.push({
+          path: `waves.${w}`,
+          message: `is not a wave of this plan; its units reach W${top}`,
+        });
+      }
+    }
+    const listed = have.filter(w => want.includes(w));
+    if (
+      listed.length === want.length
+      && listed.some((w, i) => w !== want[i])
+    ) {
+      out.push({
+        path: "waves",
+        message: `must list ${want.join(", ")} in order`,
+      });
+    }
+  }
 
   const backlog = strs(doc.backlog);
   const pieces = strs(doc.backlog_pieces);

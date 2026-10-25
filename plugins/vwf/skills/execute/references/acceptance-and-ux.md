@@ -15,8 +15,9 @@ result, `append <folder>/index.json gaps --json <entry>` for a gap. Each
 plus its `detail`, and each `append` by one `log.mjs event gap` with its
 `source` `acceptance` or `ux`, per *The plan files* in `SKILL.md`.
 
-- **Each stage's result** goes to `stages.acceptance` and `stages.ux`:
-  `green` on a clean pass, or once the loop below leaves no residual;
+- **Each stage's result** goes to `stages.acceptance` and `stages.ux`, each
+  set `running` as it starts — `plan.mjs` stamps its times, per *The plan
+  files*: `green` on a clean pass, or once the loop below leaves no residual;
   `failed` with the residuals counted in `detail`; `skipped` with its reason
   in `detail` when its skip condition held. A resume skips a stage that
   already reads `green` or `skipped`.

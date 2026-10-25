@@ -52,7 +52,9 @@ For the row (skip it when its `status` in `index.json` already reads `green` —
 its last round clean, or ended at the cap or the guard with its residuals
 recorded `contested`):
 
-1. **scope** — compute the range the row reviews: the branch delta since the
+1. **scope** — set the row's `status` `running` (its times are `plan.mjs`'s,
+   per *The plan files*), then compute the range the row reviews: the branch
+   delta since the
    previous `review` row **in `units` order** that reached `green` — its
    `range.to`, the `to` the last round of its **main loop** recorded; a late
    re-run never advances

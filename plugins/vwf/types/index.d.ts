@@ -4,10 +4,15 @@
  */
 export type AgentRun = ReplayAgent;
 
+/** A run as the pane shows it (T8): live, paused or stopped, or ended. */
+export type RunPhase = "live" | "paused" | "ended";
+
 /** The plan the pane shows: the RUNNING row's folder, replayed with its log. */
 export type PlanRun = {
   /** The row's folder, relative to its repo root (`docs/plans/<name>`). */
   folder: string;
+  /** The row of docs/plans/index.json: the plan's status and times. */
+  row: PlanIndexRow;
   /** The checkout that holds the folder: the base repo, or a member's. */
   repo: string;
   /** The index.json the state came from: the worktree, main or archived copy. */
@@ -15,6 +20,8 @@ export type PlanRun = {
   /** The log, `~` expanded; absent until the claim writes `run.log`. */
   logPath?: string;
   replay: Replay;
+  /** Set at each refresh, from the statuses, the live agents and the log's last line. */
+  phase: RunPhase;
 };
 
 /** One opening of the pane, by /vwf:execute or /vwf-monitor. */
@@ -40,12 +47,18 @@ export type Run = {
   problem?: string;
 };
 
-/** A RUNNING row of docs/plans/index.json. */
+/**
+ * A RUNNING row of docs/plans/index.json. A time is an ISO-8601 UTC string,
+ * "" when not set (or absent from an older row).
+ */
 export type PlanIndexRow = {
   id: string;
   folder: string;
   kind: string;
   title: string;
+  status: string;
+  started: string;
+  ended: string;
   target_repo: string | null;
 };
 
@@ -60,6 +73,24 @@ export type PlanUnit = {
   commit: string;
   rounds: number;
   range?: { from: string; to: string; };
+  started: string;
+  ended: string;
+};
+
+/** One entry of a plan folder's `waves` (`W1` … `W<n>`). */
+export type PlanWave = {
+  id: string;
+  status: string;
+  started: string;
+  ended: string;
+};
+
+/** One entry of a plan folder's `stages`, by its key. */
+export type PlanStage = {
+  name: string;
+  state: string;
+  started: string;
+  ended: string;
 };
 
 /** One entry of a plan folder's `gaps`. */
@@ -75,7 +106,11 @@ export type PlanGap = {
 export type PlanFolder = {
   title: string;
   state: string;
+  /** The folder's `status.detail`. */
+  detail: string;
   units: PlanUnit[];
+  waves: PlanWave[];
+  stages: PlanStage[];
   gaps: PlanGap[];
   run: { worktree?: string; log?: string; };
 };
@@ -87,42 +122,35 @@ export type ReplayAgent = {
   type: string;
   name?: string;
   description: string;
+  /** Its agent.start: orders the agents, and settles the live check. */
   startedAt?: number;
-  endedAt?: number;
   /** An agent.start and no agent.end. */
   live: boolean;
 };
 
-/** A unit with what the log adds: its times and its latest agent. */
+/** A unit with what the log adds: its latest agent. */
 export type ReplayUnit = PlanUnit & {
-  startedAt?: number;
-  endedAt?: number;
   agent?: ReplayAgent;
-};
-
-/** One run of the plan: one run.start. */
-export type ReplayRun = {
-  id: string;
-  session: string;
-  mode: string;
-  startedAt?: number;
 };
 
 /** The state of a plan: its folder's index.json, replayed with its log. */
 export type Replay = {
   title: string;
   state: string;
+  detail: string;
   units: ReplayUnit[];
+  waves: PlanWave[];
+  stages: PlanStage[];
   /** The open entries of the folder's `gaps`. */
   gaps: PlanGap[];
-  runs: ReplayRun[];
   /** The last run.start's session, else the last line's. */
   session?: string;
   /** The wave-review agents, by name (`R2`, `R2-late`, `R-late`). */
   reviews: Record<string, ReplayAgent>;
   /** The ids of the agents with an agent.start and no agent.end. */
   live: string[];
-  ended: boolean;
+  /** The ts of the log's last line, for the freshness check. */
+  lastAt?: number;
   /** The log was read from a tail (over 4 MiB). */
   partial: boolean;
   /** No log line yet. */

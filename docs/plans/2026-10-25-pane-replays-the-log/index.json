@@ -66,7 +66,9 @@
       "waits": "",
       "status": "green",
       "commit": "a3b02078",
-      "rounds": 2
+      "rounds": 2,
+      "started": "2026-10-25T06:40:47.434Z",
+      "ended": "2026-10-25T06:47:09.883Z"
     },
     {
       "id": "U2",
@@ -90,7 +92,9 @@
       "waits": "it calls the replay API that U1 writes in plan.ts and the types U1 writes in index.d.ts",
       "status": "green",
       "commit": "acf635d1",
-      "rounds": 2
+      "rounds": 2,
+      "started": "2026-10-25T06:47:17.347Z",
+      "ended": "2026-10-25T07:07:51.801Z"
     },
     {
       "id": "U3",
@@ -111,7 +115,9 @@
       "range": {
         "from": "d34e6402",
         "to": "acf635d1"
-      }
+      },
+      "started": "2026-10-25T07:02:16.417Z",
+      "ended": "2026-10-25T07:09:07.849Z"
     },
     {
       "id": "U4",
@@ -143,7 +149,9 @@
       "waits": "",
       "status": "green",
       "commit": "70a561e8",
-      "rounds": 2
+      "rounds": 2,
+      "started": "2026-10-25T07:09:56.224Z",
+      "ended": "2026-10-25T07:16:18.112Z"
     },
     {
       "id": "U5",
@@ -161,7 +169,41 @@
       "waits": "",
       "status": "green",
       "commit": "",
-      "rounds": 1
+      "rounds": 1,
+      "started": "2026-10-25T07:16:25.300Z",
+      "ended": "2026-10-25T07:17:41.570Z"
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-10-25T06:40:47.371Z",
+      "ended": "2026-10-25T06:47:09.919Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-10-25T06:47:17.280Z",
+      "ended": "2026-10-25T07:02:00.115Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-10-25T07:02:16.353Z",
+      "ended": "2026-10-25T07:09:41.011Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-10-25T07:09:56.160Z",
+      "ended": "2026-10-25T07:16:18.143Z"
+    },
+    {
+      "id": "W5",
+      "status": "green",
+      "started": "2026-10-25T07:16:25.239Z",
+      "ended": "2026-10-25T07:17:48.732Z"
     }
   ],
   "shared_files": [
@@ -488,19 +530,27 @@
   "stages": {
     "renders": {
       "state": "skipped",
-      "detail": "no covers — a change plan has no blueprint slice to verify"
+      "detail": "no covers — a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-25T07:09:56.002Z"
     },
     "acceptance": {
       "state": "skipped",
-      "detail": "no covers — a change plan has no blueprint slice to verify"
+      "detail": "no covers — a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-25T07:09:55.804Z"
     },
     "ux": {
       "state": "skipped",
-      "detail": "no covers — a change plan has no blueprint slice to verify"
+      "detail": "no covers — a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-25T07:09:55.902Z"
     },
     "reconcile": {
       "state": "skipped",
-      "detail": "no covers and no code unit — nothing to stamp or persist; no Reconcile commit"
+      "detail": "no covers and no code unit — nothing to stamp or persist; no Reconcile commit",
+      "started": "",
+      "ended": "2026-10-25T07:09:56.098Z"
     }
   },
   "gaps": [
@@ -508,8 +558,8 @@
       "id": "G1",
       "unit": "U1",
       "stage": "edit",
-      "text": "D22 names a session.end of the last session seen but not which session that is · took it as the session of the tail last line, the one D7 uses",
-      "state": "open"
+      "text": "D22 names a session.end of the last session seen but not which session that is · took it as the session of the tail last line, the one D7 uses · closed 2026-10-25 by the user: superseded by T5–T8 — the run's end comes from the JSON status, not from a log tail's session.end",
+      "state": "closed"
     },
     {
       "id": "G2",

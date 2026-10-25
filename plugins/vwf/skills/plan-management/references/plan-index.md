@@ -35,6 +35,8 @@ script's layout — two-space indent, one trailing newline.
       "target_repo": null,
       "priority": 10,
       "status": "APPROVED",
+      "started": "",
+      "ended": "",
       "gaps": null,
       "requires": [],
       "backlog": [],
@@ -59,6 +61,8 @@ set, and `set` and `append` refuse to write a file it would report.
 | `target_repo`    | for a cycle plan, the member repo whose code it changes, resolved per `assets/membership.md`; `null` for a change plan, and for any plan in a `repo` or `monorepo` topology |
 | `priority`       | the derived integer — `10 + max(priority of every unarchived plan in its requires)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `status`         | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                                            |
+| `started`        | `""`, or the ISO-8601 UTC time with milliseconds (`new Date().toISOString()`) the row went `RUNNING`; `add` writes `""`        |
+| `ended`          | `""`, or the time the row went `COMPLETE`; `add` writes `""`                                                                  |
 | `gaps`           | `null` until the plan lands; then `{"open": <n>, "moved_to": []}`, `<n>` the count of entries of the folder's `gaps` list whose `state` is `open`; once a later plan's `gaps_of` takes them, `{"open": 0, "moved_to": [<basename>, …]}`, each later plan's basename added at the end |
 | `requires`       | the **basenames** of the folder's `requires` entries; `[]` when it has none                                                   |
 | `backlog`        | the ids of the folder's `backlog` list — the `Bnn` prefixes of the backlog project's items, the ones the plan finishes        |
@@ -66,6 +70,13 @@ set, and `set` and `append` refuse to write a file it would report.
 
 A path chooses a row by its `id`: `plans.<basename>.status`,
 `plans.<basename>.gaps`. A wrong id is an error, never a new row.
+
+No verb writes a time. `plan.mjs set` of `plans.<basename>.status` stamps
+them in the same validated write: to `RUNNING`, `started` is set when it is
+`""` and `ended` cleared; to `COMPLETE`, `ended` is set; to `APPROVED` (the
+unclaim), both are cleared. So `claim`, `complete` and `unclaim` each stay
+one `set` on the row's `status`. A direct `set … started <ts>` is for a hand
+fix alone.
 
 The three statuses:
 

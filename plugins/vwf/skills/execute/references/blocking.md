@@ -108,7 +108,10 @@ A re-run against `BLOCKED` or `RUNNING`:
    each covered unit is tested **once**, whether the row's `depends_on` names
    it directly or reaches it transitively, so no unit counts twice.
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`, one
-   `plan.mjs set` of `units.U<n>.status` each.
+   `plan.mjs set` of `units.U<n>.status` each. A reset stamps nothing; the
+   unit's next `running` clears its `ended` and keeps its first `started`,
+   and a `failed` wave goes `running` again the same way when it re-runs,
+   per *The plan files*.
 6. Re-run the preflight, then continue from the first wave with a pending unit;
    `review` rows run in `units` order, each ranged from the previous row in
    `units` order that reached `green`. A plan-level stage whose entry in

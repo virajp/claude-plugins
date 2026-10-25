@@ -55,6 +55,8 @@
       "depends_on": [],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -69,6 +71,8 @@
       "depends_on": ["U1"],
       "waits": "it imports the script U1 writes",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -83,6 +87,8 @@
       "depends_on": ["U1", "U2"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0,
       "range": {
@@ -101,6 +107,8 @@
       "depends_on": ["R3"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -115,8 +123,42 @@
       "depends_on": ["U4"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W5",
+      "status": "pending",
+      "started": "",
+      "ended": ""
     }
   ],
   "shared_files": [
@@ -139,18 +181,26 @@
   "stages": {
     "renders": {
       "state": "skipped",
+      "started": "",
+      "ended": "",
       "detail": "a change plan renders nothing"
     },
     "acceptance": {
       "state": "skipped",
+      "started": "",
+      "ended": "",
       "detail": "a change plan has no acceptance"
     },
     "ux": {
       "state": "skipped",
+      "started": "",
+      "ended": "",
       "detail": "no UI"
     },
     "reconcile": {
       "state": "pending",
+      "started": "",
+      "ended": "",
       "detail": ""
     }
   },

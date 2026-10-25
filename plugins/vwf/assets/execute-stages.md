@@ -305,9 +305,11 @@ schema. Every write is one `set` or `append` call, in the worktree, to
 | `units[].commit` | the short hash of the unit's last commit — its own or its latest fix commit; `""` for a `review` row           |
 | `units[].rounds` | the highest round the unit reached; for a `review` row, its main loop's                                        |
 | `units[].range`  | a `review` row only: `{from, to}` of its main loop's last round; the next row's `from` reads its `to`          |
+| `waves[].status` | the unit statuses: `running` as the wave starts, `green` as it closes, `failed` when a unit in it failed or was skipped |
 | `gaps`           | one entry per gap, `contested` residual or oscillation: `{id, unit, stage, text, state}`, written `open`       |
 | `overrides`      | one entry per `override:` line an `all` run hands the runner: `{id, text}`                                     |
-| `stages`         | `renders`, `acceptance`, `ux` and `reconcile`, each `{state, detail}`: `pending`, `green`, `failed`, `skipped` |
+| `stages`         | `renders`, `acceptance`, `ux` and `reconcile`, each `{state, detail}`: `pending`, `running`, `green`, `failed`, `skipped` |
+| `started`, `ended` | on every unit, wave and stage: never set by the run — `plan.mjs` stamps them on each `status` or `state` set     |
 
 The **journal** — mempalace room `runs`, drawer `<plan folder>` — mirrors each
 fact, and carries the detail the keys do not: for a `code` unit and a
@@ -337,9 +339,10 @@ without it, a finished late re-run runs again on a resume. The review commit
 map never reads it — it reads `git log` and `index.json` alone, per
 `references/review-unit.md`. The action log carries each round's `row` too —
 the `status`, `rounds` and `range` set as each round returns, per
-`references/action-log.md` — for `log.mjs summary` and a later reader; the
-progress pane reads the times, the agents and the run end from the log, and
-the state from `index.json`. The log is a record of the run, never read to
+`references/action-log.md` — for `log.mjs summary`, debugging and timing
+statistics; the progress pane reads the states and the times from
+`index.json`, which `plan.mjs` stamps on each status set, and from the log
+only each unit's agent and whether the run is still writing. The log is a record of the run, never read to
 resume it, so the journal stays what a resume consults.
 
 - **The journal opens with the unit sequence** written at Setup — every unit

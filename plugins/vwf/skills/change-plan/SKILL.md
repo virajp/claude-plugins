@@ -283,8 +283,10 @@ both planners write: `index.json`, `index.md` and one `NN-<unit>.md` per unit.
   whole-file rewrite. `/vwf:execute` reads and writes it with the same
   script. `status.state` is written `DRAFT`, with `status.detail`
   `DRAFT <date>`; `run` is `{}`; each unit's `status` is `pending`, with
-  `commit` `""` and `rounds` `0`; each of the four `stages` is `pending`; and
-  `gaps` and `overrides` are `[]`.
+  `started`, `ended` and `commit` `""` and `rounds` `0`; `waves` has one
+  `pending` entry per wave, `W1` up to the highest unit `wave`, its `started`
+  and `ended` `""`; each of the four `stages` is `pending` with empty times;
+  and `gaps` and `overrides` are `[]`.
 - **`index.md`** holds the prose only, in the template's sections: the goal
   and the reversals, the facts the survey established, Out of scope and
   Parked. It has no frontmatter, no table `/vwf:execute` reads, and no Run

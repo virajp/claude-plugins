@@ -404,7 +404,9 @@ Write `docs/plans/<date>-<HHMM>-<slice>/` from
 of the template with `type` `vwf-plan`, the cycle-only keys `covers`,
 `acceptance` and `consent.lsp` included, and `exposure` when the slice ships
 dark; `status` at `DRAFT`; the `consent`; the `release_levels` list; the
-`decisions` list; the `units` list — then `index.md`, the prose sections with
+`decisions` list; the `units` list; the `waves` list, one `pending` entry
+per wave with empty `started` and `ended`, as on every unit and stage — then
+`index.md`, the prose sections with
 the cycle-only Slice section, plus one `NN-<unit>.md` per unit. Write
 `index.json` **once**, whole, with the Write tool, then run
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json`

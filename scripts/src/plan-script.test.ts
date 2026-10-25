@@ -55,9 +55,13 @@ afterEach(() => {
   rmSync(root, { recursive: true, force: true });
 });
 
-function plan(args: string[], input?: string) {
+/** The time PLAN_NOW pins for every run of the script. */
+const NOW = "2026-10-25T06:39:15.253Z";
+
+function plan(args: string[], input?: string, now = NOW) {
   return spawnSync("node", [SCRIPT, ...args], {
     encoding: "utf8",
+    env: { ...process.env, PLAN_NOW: now },
     ...(input === undefined ? {} : { input }),
   });
 }
@@ -143,6 +147,7 @@ describe("set", () => {
     const r = plan(["set", change, "units.U1.status", "green"]);
     expect(r.status).toBe(0);
     before.units[0].status = "green";
+    before.units[0].ended = NOW;
     expect(read(change)).toBe(bytes(before));
   });
 
@@ -250,6 +255,131 @@ describe("set", () => {
     plan(["set", change, "units.U1.status", "bogus"]);
     expect(readdirSync(join(root, "change")).filter(f => f.endsWith(".tmp")))
       .toEqual([]);
+  });
+});
+
+describe("set stamps started and ended", () => {
+  const LATER = "2026-10-25T07:00:00.000Z";
+  const times = (o: Json) => ({ started: o.started, ended: o.ended });
+  const unitOf = (id: string) =>
+    parse(change).units.find((u: Json) => u.id === id);
+  const row = (id: string) => parse(index).plans.find((p: Json) => p.id === id);
+
+  it("stamps a unit running, then green", () => {
+    expect(plan(["set", change, "units.U1.status", "running"]).status).toBe(0);
+    expect(times(unitOf("U1"))).toEqual({ started: NOW, ended: "" });
+    expect(
+      plan(["set", change, "units.U1.status", "green"], undefined, LATER)
+        .status,
+    )
+      .toBe(0);
+    expect(times(unitOf("U1"))).toEqual({ started: NOW, ended: LATER });
+  });
+
+  it("keeps started and clears ended when a unit runs again", () => {
+    plan(["set", change, "units.U1.status", "running"]);
+    plan(["set", change, "units.U1.status", "failed"], undefined, LATER);
+    const r = plan(
+      ["set", change, "units.U1.status", "running"],
+      undefined,
+      "2026-10-25T08:00:00.000Z",
+    );
+    expect(r.status).toBe(0);
+    expect(times(unitOf("U1"))).toEqual({ started: NOW, ended: "" });
+  });
+
+  it.each(["unresolved", "skipped"])("sets ended on a unit %s", status => {
+    expect(plan(["set", change, "units.U1.status", status]).status).toBe(0);
+    expect(times(unitOf("U1"))).toEqual({ started: "", ended: NOW });
+  });
+
+  it("stamps a wave running, then green", () => {
+    plan(["set", change, "waves.W1.status", "running"]);
+    plan(["set", change, "waves.W1.status", "green"], undefined, LATER);
+    expect(parse(change).waves[0]).toEqual({
+      id: "W1",
+      status: "green",
+      started: NOW,
+      ended: LATER,
+    });
+  });
+
+  it("stamps a stage running, then skipped", () => {
+    expect(plan(["set", change, "stages.reconcile.state", "running"]).status)
+      .toBe(0);
+    expect(times(parse(change).stages.reconcile)).toEqual({
+      started: NOW,
+      ended: "",
+    });
+    plan(
+      ["set", change, "stages.reconcile.state", "skipped"],
+      undefined,
+      LATER,
+    );
+    expect(times(parse(change).stages.reconcile)).toEqual({
+      started: NOW,
+      ended: LATER,
+    });
+  });
+
+  it("stamps a row RUNNING, then COMPLETE", () => {
+    const id = "2026-10-24-plan-json-format";
+    expect(plan(["set", index, `plans.${id}.status`, "RUNNING"]).status).toBe(
+      0,
+    );
+    expect(times(row(id))).toEqual({ started: NOW, ended: "" });
+    plan(["set", index, `plans.${id}.status`, "COMPLETE"], undefined, LATER);
+    expect(times(row(id))).toEqual({ started: NOW, ended: LATER });
+  });
+
+  it("clears both times when a row goes back to APPROVED", () => {
+    const id = "2026-10-20-sign-in";
+    expect(plan(["set", index, `plans.${id}.status`, "APPROVED"]).status).toBe(
+      0,
+    );
+    expect(times(row(id))).toEqual({ started: "", ended: "" });
+  });
+
+  it("changes nothing on pending", () => {
+    const doc = parse(cycle);
+    doc.units[1].status = "pending";
+    writeFileSync(cycle, bytes(doc));
+    expect(plan(["set", cycle, "units.U1.status", "pending"]).status).toBe(0);
+    expect(plan(["set", cycle, "waves.W1.status", "pending"]).status).toBe(0);
+    expect(plan(["set", cycle, "stages.renders.state", "pending"]).status)
+      .toBe(0);
+    const after = parse(cycle);
+    expect(times(after.units[0])).toEqual(times(doc.units[0]));
+    expect(times(after.waves[0])).toEqual(times(doc.waves[0]));
+    expect(times(after.stages.renders)).toEqual(times(doc.stages.renders));
+  });
+
+  it("still takes a time set directly", () => {
+    const r = plan(["set", change, "units.U1.started", LATER]);
+    expect(r.status).toBe(0);
+    expect(unitOf("U1").started).toBe(LATER);
+  });
+
+  it("refuses a time that is not toISOString's", () => {
+    const before = read(change);
+    const r = plan(["set", change, "units.U1.ended", "2026-10-25 07:00"]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toContain("units.U1.ended: must be");
+    expect(read(change)).toBe(before);
+  });
+
+  it("writes nothing when the set fails", () => {
+    const before = read(change);
+    expect(plan(["set", change, "units.U1.status", "done"]).status).toBe(1);
+    expect(plan(["set", change, "stages.ux.state", "unresolved"]).status)
+      .toBe(1);
+    expect(read(change)).toBe(before);
+    const doc = parse(change);
+    doc.units[0].wave = "one";
+    writeFileSync(change, bytes(doc));
+    const broken = read(change);
+    expect(plan(["set", change, "units.U2.status", "running"]).status).toBe(1);
+    expect(read(change)).toBe(broken);
   });
 });
 
@@ -487,6 +617,27 @@ describe("validate", () => {
     ["a gap has no text", "cycle", d => {
       d.gaps[0].text = "";
     }, "gaps.G1.text: must not be empty"],
+    ["waves is missing", "change", d => {
+      delete d.waves;
+    }, "waves: is missing"],
+    ["a wave is missing", "change", d => {
+      d.waves.splice(2, 1);
+    }, "waves: W3 is missing"],
+    ["a wave is extra", "cycle", d => {
+      d.waves.push({ id: "W3", status: "pending", started: "", ended: "" });
+    }, "waves.W3: is not a wave of this plan"],
+    ["the waves are out of order", "cycle", d => {
+      d.waves.reverse();
+    }, "waves: must list W1, W2 in order"],
+    ["a wave status is not valid", "cycle", d => {
+      d.waves[0].status = "done";
+    }, "waves.W1.status:"],
+    ["a unit lacks ended", "change", d => {
+      delete unit(d, "U1").ended;
+    }, "units.U1.ended: is missing"],
+    ["a stage lacks started", "change", d => {
+      delete d.stages.ux.started;
+    }, "stages.ux.started: is missing"],
   ];
 
   it.each(folderCases)("is red when %s", (_, which, mutate, expected) => {
@@ -584,6 +735,12 @@ describe("validate", () => {
     ["a row has an unknown key", d => {
       d.plans[0].owner = "me";
     }, "owner: is not a key the schema names"],
+    ["a row lacks started", d => {
+      delete d.plans[0].started;
+    }, "plans.2026-10-24-plan-json-format.started: is missing"],
+    ["a row's ended is not a time", d => {
+      d.plans[1].ended = "yesterday";
+    }, "plans.2026-10-20-sign-in.ended: must be"],
   ];
 
   it.each(indexCases)(

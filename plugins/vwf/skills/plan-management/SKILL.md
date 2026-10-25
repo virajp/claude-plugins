@@ -187,9 +187,9 @@ the sweep removed it — gets no edit, and the report names it. Then:
    `vwf-change-plan` is `change` — `title`, `target_repo` per membership (the
    member whose code a cycle plan changes under `multi-repo`; `null` for a
    change plan, and for any plan in a `repo` or `monorepo` topology),
-   `priority`, `status` `APPROVED`, `gaps` `null`, `requires` the basenames
-   of the folder's `requires` entries, `backlog` and `backlog_pieces` as the
-   folder lists them;
+   `priority`, `status` `APPROVED`, `started` and `ended` `""`, `gaps`
+   `null`, `requires` the basenames of the folder's `requires` entries,
+   `backlog` and `backlog_pieces` as the folder lists them;
 5. for each `gaps_of` entry that has a row,
    `set docs/plans/index.json plans.<basename>.gaps --json <value>` —
    `<basename>` the entry's basename, never the raw path — with the value
@@ -203,7 +203,8 @@ The edit rides the planner's approval commit.
 The contract's *Writing a row — the claim*: in the main checkout, on the
 integration branch, pull, and set the folder's row from `APPROVED` to
 `RUNNING` — `set docs/plans/index.json plans.<basename>.status RUNNING`, the
-row's `status` alone; `kind` and `target_repo` are never edited. Report the
+row's `status` alone — `plan.mjs` stamps the row's `started` in the same
+write; `kind` and `target_repo` are never edited. Report the
 edit for the caller's `docs: plan queue — <folder> running` commit and push; a
 rejected push is the caller's to handle per that procedure — a clean rebase
 pushes again, a conflict means another session may have claimed first, and
@@ -275,7 +276,8 @@ reset `<folder>` to `APPROVED`? A no ends the verb with nothing edited.
 resume path names the `unclaim <folder>` request for the person to make.
 
 **The edits.** `set docs/plans/index.json plans.<basename>.status APPROVED`,
-nothing else in the row. The folder's status: when `status.state` already
+nothing else in the row — `plan.mjs` clears its `started` and `ended` in the
+same write. The folder's status: when `status.state` already
 reads `APPROVED`, leave it — at claim the status is set in the worktree, so
 on the integration branch it usually still does; otherwise set
 `status.state` to `APPROVED` and `status.detail` to
@@ -313,7 +315,8 @@ checkout, on the integration branch, after the merge has landed, count the
 entries of the folder's `gaps` list whose `state` is `open` —
 `plan.mjs get <folder>/index.json gaps` — and on the row:
 
-- `set docs/plans/index.json plans.<basename>.status COMPLETE`;
+- `set docs/plans/index.json plans.<basename>.status COMPLETE` — `plan.mjs`
+  stamps the row's `ended` in the same write;
 - `set docs/plans/index.json plans.<basename>.gaps --json <value>` with
   `{"open": <n>, "moved_to": []}`, `<n>` `0` when none is open;
 - `set docs/plans/index.json plans.<basename>.folder <path>` with

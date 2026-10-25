@@ -10,14 +10,16 @@
       "priority": 10,
       "status": "COMPLETE",
       "gaps": {
-        "open": 2,
+        "open": 1,
         "moved_to": []
       },
       "requires": [
         "2026-10-25-action-log-per-plan"
       ],
       "backlog": [],
-      "backlog_pieces": []
+      "backlog_pieces": [],
+      "started": "2026-10-25T06:39:50.000Z",
+      "ended": "2026-10-25T07:19:14.000Z"
     }
   ]
 }

@@ -34,7 +34,7 @@ with a `commit` set):
    `decisions` and `shared_files` lists of `index.json` and index.md's
    *Facts the survey established* section — never the whole folder — the
    resolved stack, wing, and recall hits. Set the unit's `status` to
-   `running`. A sub-100% coverage result against the configured target
+   `running` — `plan.mjs` stamps its times, per *The plan files*. A sub-100% coverage result against the configured target
    (`.config/vwf.yaml` `pipeline.coverage_target`, default 100) is documented
    as a gap — never a silent pass.
 3. **gaps** — the coder's gap pointer → one `plan.mjs append` to the `gaps`

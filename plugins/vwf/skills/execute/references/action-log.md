@@ -20,13 +20,16 @@ resumed at 14:45 holds both runs, the later superseding the earlier. macOS
 does not clear `~/Library/Caches`; the file goes only when `prune` removes
 it, under Clean-up below.
 
-The log answers four questions the unit fields of the folder's `index.json`
-cannot: how long each phase, gate and commit took; what ran in parallel and
-what ran in sequence; when each unit started and ended, which agent ran it and
-when the run ended — what the progress pane reads from it, taking the state
-from `index.json`; and where a gap came from — the agent that raised it and
-the tool calls it made first. The `row` and `gap` events stay, for
-`log.mjs summary` and a later reader.
+The log is the run's real-time feed, for debugging and timing statistics. It
+answers what the folder's `index.json` cannot: how long each phase, gate and
+commit took; what ran in parallel and what ran in sequence; which agent ran
+each unit; and where a gap came from — the agent that raised it and the tool
+calls it made first. The start and end of each unit, wave and stage, and of
+the plan, live in `index.json` and the plan's row, stamped by `plan.mjs` —
+*The plan files* in `SKILL.md`. The progress pane takes those from the JSON,
+and from the log only each unit's agent, whether it is live, and how recent
+the last line is. The `row` and `gap` events stay, for `log.mjs summary` and
+a later reader.
 
 Two writers append to it. The **hooks** in `hooks/hooks.json` write every tool
 call and subagent — start, end, duration, agent id — on the machine's clock,
@@ -67,7 +70,8 @@ brackets are filled from the run.
   gap's `state`: `event gap`, its JSON on stdin (below).
 - **Each run fact set in `index.json`** — a unit's `status`, `commit`,
   `rounds` or `range`, or a stage: `event row`, its JSON on stdin (below),
-  right after the `plan.mjs set`.
+  right after the `plan.mjs set`. A wave's `status` set has no event: the
+  wave's `phase.start` and `phase.end` carry it.
 - **A stop** — a pause, a block, a refusal after `start`: `event stop --reason "<why>" --resume "/vwf:execute <folder>"`,
   then `end --outcome paused` or `end --outcome blocked`.
 - **The landing, after the last after-landing step:** `end --outcome complete`,

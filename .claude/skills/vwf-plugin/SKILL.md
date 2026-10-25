@@ -443,14 +443,19 @@ The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
 `hooks/monitor/register.tsx`, a Claude Code mod that draws the `/vwf:execute`
 progress pane and registers `/vwf-monitor` (no colon: a registered command name
 refuses one). It reads three sources and nothing else: the `RUNNING` row of the
-base repo's `docs/plans/index.json`; the folder's `index.json` for the state —
-the copy at `run.worktree` (or archived there during the landing), else the main
-checkout's or its archived copy; and the log at `run.log`, `~` expanded from
-`HOME`, replayed whole at each read (from its last 4,000,000 bytes, through
-`tail`, when it is over 4 MiB) for the times, each unit's agent and its
-liveness, the resumes and the run end. It never searches a worktree. With
-several `RUNNING` rows it takes the one whose log's last `run.start` carries
-this session's id. With no `RUNNING` row it waits up to 10 minutes, showing
+base repo's `docs/plans/index.json`, with the plan's `started` and `ended`; the
+folder's `index.json` for the state and every unit, wave and stage time, which
+`plan.mjs` stamps on each status set — the copy at `run.worktree` (or archived
+there during the landing), else the main checkout's or its archived copy; and
+the log at `run.log`, `~` expanded from `HOME`, replayed whole at each read
+(from its last 4,000,000 bytes, through `tail`, when it is over 4 MiB) for each
+unit's agent and its liveness, the transcript and the session alone — it
+computes no time and no run end. A folder `BLOCKED` or `COMPLETE`, or the row
+`COMPLETE`, is an ended run; a `RUNNING` one is live while an agent is live or
+the log's last line is under 10 minutes old, and the header reads
+`paused or stopped` otherwise. It never searches a worktree. With several
+`RUNNING` rows it takes the one whose log's last `run.start` carries this
+session's id. With no `RUNNING` row it waits up to 10 minutes, showing
 `waiting for the claim` when `/vwf:execute` opened it or
 `waiting for the next plan` once a plan has landed; when the wait ends empty, on
 the old markdown format, or with a folder it cannot find, it shows one message
@@ -468,7 +473,8 @@ scope of an `all` run. `claude plugin test plugins/vwf` and
 has no `claude`. Why it lives inside vwf rather than as its own plugin is
 `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it reads
 its sources, ties agents to units and ends the run is
-`docs/memory/decisions/2026-10-25-pane-replays-the-log.md`.
+`docs/memory/decisions/2026-10-25-pane-replays-the-log.md`, amended there by its
+*times live in the JSON* section.
 
 ## Documentation
 

@@ -9,6 +9,8 @@
       "target_repo": null,
       "priority": 10,
       "status": "APPROVED",
+      "started": "",
+      "ended": "",
       "gaps": null,
       "requires": [],
       "backlog": [],
@@ -22,6 +24,8 @@
       "target_repo": "api",
       "priority": 20,
       "status": "COMPLETE",
+      "started": "2026-10-20T09:00:00.000Z",
+      "ended": "2026-10-20T12:00:00.000Z",
       "gaps": {
         "open": 1,
         "moved_to": []

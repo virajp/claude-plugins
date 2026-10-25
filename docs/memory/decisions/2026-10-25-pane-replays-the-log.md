@@ -117,3 +117,63 @@ the worktree copy of `index.json`.
 A worktree search for a newer `index.json`; an incremental read; a persistent
 empty pane; the log as the only source of run state; the `FileChanged` hook;
 runner scoping; keeping a landed plan on screen.
+
+## Amended 2026-10-25 — times live in the JSON
+
+Agreed with the user the same day, after the plan landed, and edited in place on
+`develop`. The user's model: `docs/plans/index.json` tells the plan's start and
+end time and its status; the folder's `index.json` tells each unit's, wave's and
+stage's start and end time, status and gaps; the action log is the real-time
+feed, for debugging and performance statistics, and the pane reads only the
+agents from it, plus one freshness check.
+
+### Reversals
+
+- **D10** (a unit's times from its `row` events or `agent.start`), **D18**
+  (re-run end times computed by the replay) and **D26** (the partial-tail start
+  fallback) are superseded by T1, T4 and T5: the times are stamped into the
+  JSON, and the replay computes none.
+- **D6** (the run end from `run.end`, `stop` or `session.end`) and **D22** (the
+  tail with no `run.start`) are superseded by T8: the run's end comes from the
+  JSON status.
+- **D24**, its times part, is superseded by T7: the log no longer gives times or
+  the run end. D24's file pick stands.
+- **T8 brings back a narrowed 10-minute stale check** that D6 removed. It
+  decides only the live or paused header, never a status.
+
+### The rulings
+
+1. **T1 The fields.** `started` and `ended`, each `""` when not set, else an
+   ISO-8601 UTC time with milliseconds, as `new Date().toISOString()` prints it.
+   On each row of `docs/plans/index.json`, each unit, each entry of the new
+   `waves` list and each stage. The folder's own `status` gets none.
+2. **T2 The waves list.** A folder's `index.json` gains a required `waves` list,
+   `{id, status, started, ended}` per wave, the ids exactly `W1` … `W<n>`, `<n>`
+   the highest unit `wave`; `status` takes the unit statuses. A missing or extra
+   entry is a validate finding.
+3. **T3 Stage state.** A stage's `state` gains `running`, so a stage has a
+   start.
+4. **T4 Re-runs.** `started` is written once, at the first `running`; `ended` is
+   cleared when the entry goes `running` again and set at each final status.
+   D18's rule, moved into the JSON.
+5. **T5 `plan.mjs` stamps the times.** On `set` of a unit's or wave's `status`
+   or a stage's `state`: `running` sets `started` when empty and clears `ended`;
+   a final status sets `ended`; `pending` changes nothing. On a row's `status`:
+   `RUNNING` as `running`, `COMPLETE` sets `ended`, `APPROVED` (the unclaim)
+   clears both. Same validated write; a direct `set` of a time still works for a
+   hand fix; `PLAN_NOW` replaces now in the tests.
+6. **T6 Required.** The schema requires every new key. The planners write them
+   empty, every wave `pending`; `plan-management add` writes a row with both
+   times `""`. Archived folders are never validated. The one live folder and its
+   row were filled by hand from its action log.
+7. **T7 What the pane reads.** The row: the plan, its status and times. The
+   folder's `index.json` (D24 and D32's pick unchanged): units, waves and stages
+   with status and times, the open gaps. The log: each unit's agent (D5, D14),
+   its liveness, the transcript id, the session for D7 — and T8's check. D8, D9
+   (for the agents) and D31 stay.
+8. **T8 Paused or stopped.** The folder `BLOCKED` or `COMPLETE`, or the row
+   `COMPLETE`, is an ended run. `RUNNING` is live while an agent is live or the
+   log's last line is under 10 minutes old; otherwise the header reads
+   `paused or stopped — <status.detail>`.
+9. **T9 G1.** Closed: superseded by T5–T8 — the run's end comes from the JSON
+   status, not from a log tail's `session.end`.

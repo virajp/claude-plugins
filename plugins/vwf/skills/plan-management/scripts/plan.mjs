@@ -21,6 +21,13 @@
 // entry must carry an `id` the list does not hold. `remove` deletes the one
 // list entry the path names by its `id`; it never removes a key of an object.
 //
+// `set` of `units.<id>.status`, `waves.<id>.status`, `stages.<name>.state` or
+// a plan index row's `status` stamps that entry's `started`/`ended` in the
+// same write: running/RUNNING sets `started` if it is "" and clears `ended`;
+// a final status (COMPLETE on a row) sets `ended`; APPROVED clears both;
+// pending changes nothing. The time is PLAN_NOW if set, else now, as
+// `new Date().toISOString()` prints it.
+//
 // A path is dot-separated keys. A segment that follows a list chooses the
 // entry whose `id` equals the segment — `units.U3.status`, `gaps.G2.state`,
 // `plans.2026-10-24-x.status`, `consent.lsp.dart`. A wrong id is an error,
@@ -51,12 +58,16 @@ import {
 import {
   append,
   get,
+  isObject,
   PathError,
   remove,
   set,
   split,
 } from "./lib/path.mjs";
-import { validate } from "./lib/schema.mjs";
+import {
+  isPlanIndex,
+  validate,
+} from "./lib/schema.mjs";
 
 const USAGE = `usage:
   plan.mjs get <file> [<path>] [--raw]
@@ -112,6 +123,43 @@ function write(file, doc) {
   catch (e) {
     rmSync(tmp, { force: true });
     fail(file, "", `cannot write the file (${e.code ?? e.message})`, 2);
+  }
+}
+
+const FINAL = ["green", "failed", "unresolved", "skipped"];
+
+// The `started`/`ended` stamp a `set` of a status path earns, in place on
+// the entry the path names; any other path is left alone.
+function stamp(file, doc, segments, value) {
+  if (segments.length !== 3 || typeof value !== "string") {
+    return;
+  }
+  const [list, , key] = segments;
+  const onIndex = isPlanIndex(file);
+  const known = onIndex
+    ? list === "plans" && key === "status"
+    : ((list === "units" || list === "waves") && key === "status")
+      || (list === "stages" && key === "state");
+  if (!known) {
+    return;
+  }
+  const entry = get(doc, segments.slice(0, 2));
+  if (!isObject(entry)) {
+    return;
+  }
+  const now = process.env.PLAN_NOW || new Date().toISOString();
+  if (value === "running" || value === "RUNNING") {
+    if (!entry.started) {
+      entry.started = now;
+    }
+    entry.ended = "";
+  }
+  else if (onIndex ? value === "COMPLETE" : FINAL.includes(value)) {
+    entry.ended = now;
+  }
+  else if (onIndex && value === "APPROVED") {
+    entry.started = "";
+    entry.ended = "";
   }
 }
 
@@ -223,7 +271,10 @@ switch (verb) {
     const [, path, raw] = args;
     const doc = load(file);
     const value = parseValue(file, path, raw, flags.has("--json"));
-    at(file, path, () => set(doc, split(path), value));
+    at(file, path, () => {
+      set(doc, split(path), value);
+      stamp(file, doc, split(path), value);
+    });
     write(file, doc);
     break;
   }

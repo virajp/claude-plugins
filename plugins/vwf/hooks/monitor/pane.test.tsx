@@ -17,6 +17,8 @@ const unit = (id: string, title: string, wave: number, status: string) => ({
   status,
   commit: "",
   rounds: 0,
+  started: status === "pending" ? "" : "2026-10-25T09:40:00.000Z",
+  ended: status === "pending" ? "" : "2026-10-25T09:50:00.000Z",
 });
 const FILES: Record<string, string> = {
   [`${MAIN}/docs/plans/index.json`]: JSON.stringify({
@@ -33,6 +35,8 @@ const FILES: Record<string, string> = {
       requires: [],
       backlog: [],
       backlog_pieces: [],
+      started: "2026-10-25T09:30:00.000Z",
+      ended: "",
     }],
   }),
   [`${MAIN}/docs/plans/${FOLDER}/index.json`]: JSON.stringify({
@@ -44,6 +48,18 @@ const FILES: Record<string, string> = {
       unit("U2", "The pane", 2, "pending"),
       unit("U3", "The docs", 2, "skipped"),
     ],
+    waves: [
+      {
+        id: "W1",
+        status: "green",
+        started: "2026-10-25T09:40:00.000Z",
+        ended: "2026-10-25T09:50:00.000Z",
+      },
+      { id: "W2", status: "pending", started: "", ended: "" },
+    ],
+    stages: {
+      renders: { state: "skipped", detail: "", started: "", ended: "" },
+    },
     gaps: [
       {
         id: "G1",
@@ -148,6 +164,14 @@ test(
       .toBeDefined();
     expect(await ui.find({ type: "Text", text: /settled/ })).toBe(undefined);
     expect(await ui.find({ type: "Text", text: /2\/3/ })).toBeDefined();
+    expect(
+      await ui.find({ type: "Text", text: /W1\s+wave\s+green\s+\d\d:\d\d/ }),
+    )
+      .toBeDefined();
+    expect(await ui.find({ type: "Text", text: /W2\s+wave\s+pending/ }))
+      .toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Started \d\d:\d\d/ }))
+      .toBeDefined();
     expect(await ui.find({ type: "Text", text: new RegExp(LOG) }))
       .toBeDefined();
     // One segment for each unit: U1 finished without gaps is green, U2 is pending.

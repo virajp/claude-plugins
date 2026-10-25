@@ -82,8 +82,8 @@ and one entry of the `units` list — `kind` `code`, `model` `opus` unless the
 interview recorded another tier, `wave` from dependency order, `owns` the
 files the step touches (disjoint per wave), `depends_on` the units it stands
 on, `waits` the named reason it waits when its wave is above 1, `title` the
-text of the unit file's H1, `status` `pending`, `commit` `""` and `rounds`
-`0`. The unit file has no header lines; it opens with its H1,
+text of the unit file's H1, `status` `pending`, `started`, `ended` and
+`commit` `""` and `rounds` `0`. The unit file has no header lines; it opens with its H1,
 `# U<n> — <title>`, and carries a **Test first** line naming the failing test
 that defines "done". The unit's Ruling quotes the `decisions` entries that
 bind it, verbatim; its Verification names the gate lines it must pass; its
@@ -106,5 +106,7 @@ plan, not something to defer. When the element maps to no flow, write
 
 **Run state** is written empty: `gaps` and `overrides` are `[]`, each of the
 four `stages` — `renders`, `acceptance`, `ux`, `reconcile` — is
-`{"state": "pending", "detail": ""}`, and `run` is `{}`. `execute` fills
-them.
+`{"state": "pending", "detail": "", "started": "", "ended": ""}`, `waves`
+holds one `{"id": "W<n>", "status": "pending", "started": "", "ended": ""}`
+per wave, `W1` up to the highest unit `wave`, and `run` is `{}`. `execute`
+fills them.

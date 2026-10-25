@@ -56,6 +56,8 @@
       "depends_on": [],
       "waits": "",
       "status": "green",
+      "started": "2026-10-24T10:01:00.000Z",
+      "ended": "2026-10-24T10:20:00.000Z",
       "commit": "0123abcd",
       "rounds": 1
     },
@@ -70,12 +72,28 @@
       "depends_on": ["U1"],
       "waits": "",
       "status": "running",
+      "started": "2026-10-24T10:21:00.000Z",
+      "ended": "",
       "commit": "",
       "rounds": 1,
       "range": {
         "from": "a5dcb9d3",
         "to": "0123abcd"
       }
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-10-24T10:01:00.000Z",
+      "ended": "2026-10-24T10:20:00.000Z"
+    },
+    {
+      "id": "W2",
+      "status": "running",
+      "started": "2026-10-24T10:21:00.000Z",
+      "ended": ""
     }
   ],
   "shared_files": [],
@@ -90,18 +108,26 @@
   "stages": {
     "renders": {
       "state": "green",
+      "started": "2026-10-24T10:00:10.000Z",
+      "ended": "2026-10-24T10:00:50.000Z",
       "detail": "3 screens"
     },
     "acceptance": {
       "state": "pending",
+      "started": "",
+      "ended": "",
       "detail": ""
     },
     "ux": {
       "state": "pending",
+      "started": "",
+      "ended": "",
       "detail": ""
     },
     "reconcile": {
       "state": "pending",
+      "started": "",
+      "ended": "",
       "detail": ""
     }
   },

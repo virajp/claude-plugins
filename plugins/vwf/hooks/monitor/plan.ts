@@ -2,11 +2,13 @@ import type {
   PlanFolder,
   PlanGap,
   PlanIndexRow,
+  PlanStage,
   PlanUnit,
+  PlanWave,
   Replay,
   ReplayAgent,
-  ReplayRun,
   ReplayUnit,
+  RunPhase,
 } from "../../types";
 
 const FOLDER = /\b(\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*)\b/;
@@ -184,9 +186,6 @@ export async function resolveBase(
 
 // The JSON plan format and the action log.
 
-/** A unit status that ends a unit (the schema.mjs unit enum). */
-const FINAL = ["green", "failed", "unresolved", "skipped"];
-
 type Json = Record<string, unknown>;
 
 function isObject(value: unknown): value is Json {
@@ -202,10 +201,45 @@ function num(value: unknown): number {
   return typeof value === "number" && Number.isFinite(value) ? value : 0;
 }
 
-function time(value: unknown): number | undefined {
-  const ms = typeof value === "string" ? Date.parse(value) : NaN;
+/** A time string as epoch ms; undefined when "" or not a time. */
+export function time(value: unknown): number | undefined {
+  const ms = typeof value === "string" && value !== ""
+    ? Date.parse(value)
+    : NaN;
 
   return Number.isNaN(ms) ? undefined : ms;
+}
+
+/** How long a RUNNING plan with no live agent stays live after its last log line. */
+export const FRESH_MS = 10 * 60 * 1000;
+
+/**
+ * Whether a plan's run is live, paused or ended (T8): the folder BLOCKED or
+ * COMPLETE, or the row COMPLETE, ends it; else it is live while an agent is
+ * live or the log's last line (none yet: the row's start) is under FRESH_MS
+ * old, and paused or stopped otherwise.
+ */
+export function phaseOf(facts: {
+  state: string;
+  rowStatus: string;
+  hasLiveAgent: boolean;
+  lastAt?: number;
+  rowStarted?: number;
+  now: number;
+}): RunPhase {
+  if (
+    facts.state === "BLOCKED"
+    || facts.state === "COMPLETE"
+    || facts.rowStatus === "COMPLETE"
+  ) {
+    return "ended";
+  }
+  const last = facts.lastAt ?? facts.rowStarted;
+
+  return facts.hasLiveAgent
+      || (last !== undefined && facts.now - last < FRESH_MS)
+    ? "live"
+    : "paused";
 }
 
 function parse(text: string): { value?: unknown; problem?: string; } {
@@ -266,6 +300,9 @@ export function runningRows(
       folder: str(row["folder"]),
       kind: str(row["kind"]),
       title: str(row["title"]),
+      status: str(row["status"]),
+      started: str(row["started"]),
+      ended: str(row["ended"]),
       target_repo: typeof row["target_repo"] === "string"
         ? str(row["target_repo"])
         : null,
@@ -310,6 +347,8 @@ export function readFolder(
           status: str(unit["status"]) || "pending",
           commit: str(unit["commit"]),
           rounds: num(unit["rounds"]),
+          started: str(unit["started"]),
+          ended: str(unit["ended"]),
         };
         const range = unit["range"];
         if (isObject(range)) {
@@ -327,10 +366,31 @@ export function readFolder(
       text: str(gap["text"]),
       state: str(gap["state"]),
     }));
+  const waves: PlanWave[] =
+    (Array.isArray(value["waves"]) ? value["waves"] : [])
+      .filter(isObject)
+      .map(wave => ({
+        id: str(wave["id"]),
+        status: str(wave["status"]) || "pending",
+        started: str(wave["started"]),
+        ended: str(wave["ended"]),
+      }));
+  const stages: PlanStage[] = Object
+    .entries(isObject(value["stages"]) ? value["stages"] : {})
+    .filter((entry): entry is [string, Json] => isObject(entry[1]))
+    .map(([name, stage]) => ({
+      name: str(name),
+      state: str(stage["state"]) || "pending",
+      started: str(stage["started"]),
+      ended: str(stage["ended"]),
+    }));
   const folder: PlanFolder = {
     title: str(value["title"]),
     state: str(status["state"]),
+    detail: str(status["detail"]),
     units,
+    waves,
+    stages,
     gaps,
     run: {},
   };
@@ -370,24 +430,21 @@ function splitSummary(
 
 /**
  * The plan's state: `folder` (the worktree copy of its index.json, else the
- * main or archived copy) gives the status, the units and the open gaps; the
- * log lines add the runs, each unit's times and agents, the wave-review
- * agents, the live agents and whether the run ended. `plan.snapshot`, `row`
- * status and `gap` events are no source of state.
+ * main or archived copy) gives the status, the units, waves and stages with
+ * their times, and the open gaps; the log lines add each unit's agents, the
+ * wave-review agents, the live agents, the session for the pick and the ts of
+ * the last line. `plan.snapshot`, `row` and `gap` events are no source of
+ * state.
  */
 export function replay(
   lines: string[],
   folder: PlanFolder,
   options: { partial?: boolean; } = {},
 ): Replay {
-  const runs: ReplayRun[] = [];
   let skipped = 0;
   let lastSession: string | undefined;
-  // Indexed by line number of the event that ends a run.
-  const ends: { at: number; event: string; session: string; }[] = [];
-  const firstRunning = new Map<string, number>();
-  const lastFinal = new Map<string, { at: number; ts?: number; }>();
-  const lastRunning = new Map<string, number>();
+  let runSession: string | undefined;
+  let lastAt: number | undefined;
   // The Agent calls, by tool_use_id; the agents, by id.
   const calls = new Map<
     string,
@@ -402,13 +459,7 @@ export function replay(
   const pending: string[] = [];
   const agents = new Map<
     string,
-    {
-      call?: string;
-      startedAt?: number;
-      endedAt?: number;
-      started: boolean;
-      ended: boolean;
-    }
+    { call?: string; startedAt?: number; started: boolean; ended: boolean; }
   >();
   const agentOf = (id: string) => {
     let agent = agents.get(id);
@@ -419,7 +470,6 @@ export function replay(
 
     return agent;
   };
-  let lastStart = -1;
   let count = 0;
 
   for (const raw of lines) {
@@ -438,45 +488,19 @@ export function replay(
       skipped++;
       continue;
     }
-    const at = count++;
+    count++;
     const ts = time(e["ts"]);
+    if (ts !== undefined) {
+      lastAt = ts;
+    }
     const session = str(e["session"]);
     if (session !== "") {
       lastSession = session;
     }
-    const event = str(e["event"]);
-    switch (event) {
+    switch (str(e["event"])) {
       case "run.start":
-        runs.push({
-          id: str(e["run"]),
-          session,
-          mode: str(e["mode"]),
-          startedAt: ts,
-        });
-        lastStart = at;
+        runSession = session;
         break;
-      case "run.end":
-      case "stop":
-      case "session.end":
-        ends.push({ at, event, session });
-        break;
-      case "row": {
-        const unit = str(e["unit"]);
-        const status = str(e["status"]);
-        if (unit === "") {
-          break;
-        }
-        if (status === "running") {
-          if (!firstRunning.has(unit) && ts !== undefined) {
-            firstRunning.set(unit, ts);
-          }
-          lastRunning.set(unit, at);
-        }
-        else if (FINAL.includes(status)) {
-          lastFinal.set(unit, { at, ts });
-        }
-        break;
-      }
       case "tool.start": {
         const tool = str(e["tool"]);
         const id = str(e["tool_use_id"]);
@@ -535,9 +559,7 @@ export function replay(
       case "agent.end": {
         const id = str(e["agent"]);
         if (id !== "") {
-          const agent = agentOf(id);
-          agent.ended = true;
-          agent.endedAt = ts;
+          agentOf(id).ended = true;
         }
         break;
       }
@@ -546,13 +568,7 @@ export function replay(
     }
   }
 
-  const session = lastStart >= 0
-    ? runs[runs.length - 1]?.session
-    : lastSession;
-  const ended = ends.some(end =>
-    end.at > lastStart
-    && (end.event !== "session.end" || end.session === session)
-  );
+  const session = runSession ?? lastSession;
 
   // Each agent with its call, oldest first.
   const tied: {
@@ -575,13 +591,8 @@ export function replay(
     if (call.name !== undefined) {
       one.name = call.name;
     }
-    // A start time is an agent.start only (D10, D26); the Agent call's
-    // tool.start orders the agents, never dates one.
     if (agent.startedAt !== undefined) {
       one.startedAt = agent.startedAt;
-    }
-    if (agent.endedAt !== undefined) {
-      one.endedAt = agent.endedAt;
     }
     const review = reviewName(call.name);
     tied.push({
@@ -605,17 +616,6 @@ export function replay(
   const units: ReplayUnit[] = folder.units.map(unit => {
     const mine = tied.filter(one => one.unit === unit.id).map(one => one.agent);
     const out: ReplayUnit = { ...unit };
-    const startedAt = firstRunning.get(unit.id)
-      ?? mine.find(agent => agent.startedAt !== undefined)?.startedAt;
-    if (startedAt !== undefined) {
-      out.startedAt = startedAt;
-    }
-    const final = lastFinal.get(unit.id);
-    if (
-      final?.ts !== undefined && (lastRunning.get(unit.id) ?? -1) < final.at
-    ) {
-      out.endedAt = final.ts;
-    }
     const latest = mine[mine.length - 1];
     if (latest !== undefined) {
       out.agent = latest;
@@ -627,20 +627,24 @@ export function replay(
   const state: Replay = {
     title: folder.title,
     state: folder.state,
+    detail: folder.detail,
     units,
+    waves: folder.waves,
+    stages: folder.stages,
     gaps: folder.gaps.filter(gap => gap.state === "open"),
-    runs,
     reviews,
     live: [...agents]
       .filter(([, agent]) => agent.started && !agent.ended)
       .map(([id]) => id),
-    ended,
     partial: options.partial === true,
     noData: count === 0,
     skipped,
   };
   if (session !== undefined) {
     state.session = session;
+  }
+  if (lastAt !== undefined) {
+    state.lastAt = lastAt;
   }
 
   return state;

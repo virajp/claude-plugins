@@ -33,7 +33,7 @@ checker a repo has.
    several trees back by hand is the collision the shared-file rule exists to
    avoid.
    Mark the unit `running` as it is dispatched — one `plan.mjs set` of
-   `units.U<n>.status`.
+   `units.U<n>.status`, which stamps its times, per *The plan files*.
 2. **Wait** for every report. As each returns, set the unit's `status` —
    `green` once its report is read, `unresolved` or `failed` per the rules —
    and its `rounds`, one `plan.mjs set` each; append each `GAP:` line to the

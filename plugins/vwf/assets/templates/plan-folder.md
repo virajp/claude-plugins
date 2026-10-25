@@ -102,6 +102,8 @@ A change plan:
       "depends_on": [],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -116,6 +118,8 @@ A change plan:
       "depends_on": ["U1"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -130,9 +134,16 @@ A change plan:
       "depends_on": ["U2"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     }
+  ],
+  "waves": [
+    { "id": "W1", "status": "pending", "started": "", "ended": "" },
+    { "id": "W2", "status": "pending", "started": "", "ended": "" },
+    { "id": "W3", "status": "pending", "started": "", "ended": "" }
   ],
   "shared_files": [
     { "id": "S1", "file": "<each generated file>", "why": "generated; regenerating mid-wave races", "owner": "U3" },
@@ -142,10 +153,10 @@ A change plan:
     { "id": "D1", "decision": "<question>", "ruling": "<answer>", "rejected": "<alternative>", "units": ["U1"] }
   ],
   "stages": {
-    "renders": { "state": "pending", "detail": "" },
-    "acceptance": { "state": "pending", "detail": "" },
-    "ux": { "state": "pending", "detail": "" },
-    "reconcile": { "state": "pending", "detail": "" }
+    "renders": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "acceptance": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "ux": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "reconcile": { "state": "pending", "detail": "", "started": "", "ended": "" }
   },
   "gaps": [],
   "overrides": [],
@@ -198,6 +209,8 @@ A cycle plan:
       "depends_on": [],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -212,6 +225,8 @@ A cycle plan:
       "depends_on": ["U1"],
       "waits": "<the named reason: it edits a path U1 creates>",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -226,6 +241,8 @@ A cycle plan:
       "depends_on": ["U1", "U2"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0,
       "range": { "from": "", "to": "" }
@@ -241,6 +258,8 @@ A cycle plan:
       "depends_on": ["U1", "U2", "U3"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     },
@@ -255,9 +274,18 @@ A cycle plan:
       "depends_on": ["U4"],
       "waits": "",
       "status": "pending",
+      "started": "",
+      "ended": "",
       "commit": "",
       "rounds": 0
     }
+  ],
+  "waves": [
+    { "id": "W1", "status": "pending", "started": "", "ended": "" },
+    { "id": "W2", "status": "pending", "started": "", "ended": "" },
+    { "id": "W3", "status": "pending", "started": "", "ended": "" },
+    { "id": "W4", "status": "pending", "started": "", "ended": "" },
+    { "id": "W5", "status": "pending", "started": "", "ended": "" }
   ],
   "shared_files": [
     { "id": "S1", "file": "<each generated file>", "why": "generated; regenerating mid-wave races", "owner": "U5" }
@@ -269,10 +297,10 @@ A cycle plan:
     { "id": "AC1", "text": "Given <...>, when <...>, then <...>", "flow": "docs/blueprint/flows/<project>/<NNN>-<flow>/index.md" }
   ],
   "stages": {
-    "renders": { "state": "pending", "detail": "" },
-    "acceptance": { "state": "pending", "detail": "" },
-    "ux": { "state": "pending", "detail": "" },
-    "reconcile": { "state": "pending", "detail": "" }
+    "renders": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "acceptance": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "ux": { "state": "pending", "detail": "", "started": "", "ended": "" },
+    "reconcile": { "state": "pending", "detail": "", "started": "", "ended": "" }
   },
   "gaps": [],
   "overrides": [],
@@ -296,8 +324,8 @@ The rules for each key — JSON has no comments, so they sit here:
   holds for a row's `id`, `folder` and `title`.
 - **`id`.** Every list of objects has an `id` key, unique in that list,
   matching `^[A-Za-z0-9_-]+$`: `U<n>` for units, `D<n>` decisions, `S<n>`
-  shared files, `A<n>` after-landing steps, `K<n>` kept gates, `N<n>`
-  dependencies, `AC<n>` acceptance, `G<n>` gaps, `O<n>` overrides, and the
+  shared files, `W<n>` waves, `A<n>` after-landing steps, `K<n>` kept gates,
+  `N<n>` dependencies, `AC<n>` acceptance, `G<n>` gaps, `O<n>` overrides, and the
   project name for a release level.
 - **`format`** is `1`. **`type`** is `vwf-plan` or `vwf-change-plan`.
 - **`requires`** — the earlier plan folders this one stands on, e.g.
@@ -379,8 +407,9 @@ The rules for each key — JSON has no comments, so they sit here:
     order.
   - `status` is `pending`, `running`, `green`, `failed`, `unresolved` or
     `skipped`. `commit` is the unit's last commit hash, or `""`. `rounds` is
-    the highest round the unit reached. The planner writes `pending`, `""` and
-    `0`; the executor sets each as the run goes, one `set` per field.
+    the highest round the unit reached. `started` and `ended` are the unit's
+    times (see *Times* below). The planner writes `pending`, `""`, `""`, `""`
+    and `0`; the executor sets each as the run goes, one `set` per field.
   - `kind` is `code`, `edit` or `review`. `/vwf:execute` runs a `code` unit
     through TDD, the coverage gate and its commit — the `code` units one at a
     time; an `edit` unit under the wave review — the `edit` units of a wave
@@ -416,6 +445,12 @@ The rules for each key — JSON has no comments, so they sit here:
     earlier than the last code unit is a planner decision — its reason is an
     entry in `decisions`. Execute infers no review: a plan with `code` units no
     later `review` unit covers is refused at preflight.
+- **`waves`** — one entry per wave, `{id, status, started, ended}`, the ids
+  exactly `W1` … `W<n>` in order, `<n>` the highest `wave` of any unit — none
+  missing, none extra, or `validate` finds it. `status` takes the unit
+  statuses. The planner writes every wave `pending` with empty times;
+  `/vwf:execute` sets a wave `running` as it starts, `green` as it closes, and
+  `failed` when a unit in it failed or was skipped.
 - **`shared_files`** — each file two units would touch: every generated file
   (owner: the gates unit), every human-facing doc (owner: the docs unit), and
   any other, with why it collides and the unit that owns it.
@@ -431,10 +466,11 @@ The rules for each key — JSON has no comments, so they sit here:
   the acceptance verifier maps and runs them). `[]` when the slice maps to no
   flow.
 - **`stages`** — the four plan-level stages `renders`, `acceptance`, `ux` and
-  `reconcile`, each `{state, detail}`; `state` is `pending`, `green`,
-  `failed` or `skipped`, and `detail` is the reason or the result in one line.
-  The planner writes each `pending`; `/vwf:execute` sets each as the stage
-  runs or is skipped — on a change plan every stage that does not apply is
+  `reconcile`, each `{state, detail, started, ended}`; `state` is `pending`,
+  `running`, `green`, `failed` or `skipped`, and `detail` is the reason or the
+  result in one line. The planner writes each `pending` with empty times;
+  `/vwf:execute` sets each `running` as the stage starts, then its final state
+  as it ends or is skipped — on a change plan every stage that does not apply is
   `skipped` — and a resume reads them to know whether a stage already passed.
 - **`gaps`** — both kinds; `[]` at approval. `execute` appends one entry per
   blueprint or plan hole as it surfaces: `unit` is the id of an existing unit,
@@ -459,15 +495,28 @@ The rules for each key — JSON has no comments, so they sit here:
   `~/Library/Caches/vwf/<repo>/<folder basename>.jsonl`, the `~` written
   literally so no home path is committed. `unclaim` resets it to `{}`; a
   later claim writes the same `log` path.
+- **Times.** `started` and `ended` sit on each unit, each wave and each stage
+  (and on each row of `docs/plans/index.json`; the folder's own `status` has
+  none). Each is `""` when not set, else an ISO-8601 UTC time with
+  milliseconds, as `new Date().toISOString()` prints it —
+  `2026-10-25T06:39:15.253Z`. Nobody writes them by hand: `plan.mjs set` of a
+  unit's or wave's `status`, or a stage's `state`, stamps them in the same
+  validated write — to `running`, `started` is set if it is `""` and `ended`
+  cleared; to a final status (`green`, `failed`, `unresolved`, `skipped`),
+  `ended` is set; to `pending`, nothing. So a re-run keeps its first start and
+  has no end until it ends again. A direct `set … started <ts>` is for a hand
+  fix alone.
 
 The run fields stay in `index.json`: the executor records each unit's
 `status`, `commit` and `rounds`, and a review unit's `range`, there as the run
-goes, sets `status` and the `stages`, appends to `gaps`, and mirrors each fact
+goes, sets `status`, each wave's `status` and the `stages`, appends to `gaps`, and mirrors each fact
 to the mempalace journal. A resume and the final report read those fields,
 the `gaps` list and `git log` — the file is committed and survives a lost
 machine. `/vwf:execute` also appends each of those facts, as an event, to the
-plan's action log at `run.log` — one append-only file per plan, which the
-progress pane reads.
+plan's action log at `run.log` — one append-only file per plan, the real-time
+feed for debugging and timing statistics. The progress pane takes the states
+and the times from `index.json`, and from the log only each unit's agent and
+whether the run is still writing.
 
 ## index.md
 

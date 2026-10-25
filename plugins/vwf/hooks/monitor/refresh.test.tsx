@@ -24,6 +24,8 @@ const index = JSON.stringify({
     requires: [],
     backlog: [],
     backlog_pieces: [],
+    started: "2026-10-25T09:30:00.000Z",
+    ended: "",
   }],
 });
 
@@ -41,7 +43,18 @@ const folder = (title: string, state: string, u1: string) =>
       status: u1,
       commit: "",
       rounds: 0,
+      started: u1 === "pending" ? "" : "2026-10-25T09:40:00.000Z",
+      ended: u1 === "green" ? "2026-10-25T09:50:00.000Z" : "",
     }],
+    waves: [{
+      id: "W1",
+      status: u1,
+      started: u1 === "pending" ? "" : "2026-10-25T09:40:00.000Z",
+      ended: u1 === "green" ? "2026-10-25T09:50:00.000Z" : "",
+    }],
+    stages: {
+      reconcile: { state: "pending", detail: "", started: "", ended: "" },
+    },
     gaps: [],
     run: {
       worktree: `.worktrees/${FOLDER}`,
@@ -104,6 +117,7 @@ test(
     on("command.register", () => ({ value: undefined as never }));
     on("session.start", () => ({ cwd: MAIN }));
     on("prompt.submit", (_, e) => e);
+    on("turn.complete", () => ({ text: "" }));
 
     await $.session.start({
       cwd: MAIN,
@@ -147,10 +161,19 @@ test(
       .toBeDefined();
     expect(await ui.find({ type: "Text", text: /COMPLETE/ })).toBeDefined();
 
-    // The merge: the worktree is gone; the main copy holds the state.
+    // The merge: the worktree is gone; the main copy holds the state. The
+    // folder reads COMPLETE, so the run has ended and the timer stopped: the
+    // next main turn reads it.
     delete files[archived];
     files[main] = folder("Merged copy", "COMPLETE", "green");
     await clock.advance(3500);
+    await $.turn.complete({
+      answer: "",
+      durationMs: 1,
+      isAborted: false,
+      turnId: "t1",
+      reason: "answer",
+    });
     expect(await ui.find({ type: "Text", text: /Merged copy/ })).toBeDefined();
     await ui.unmount();
   },

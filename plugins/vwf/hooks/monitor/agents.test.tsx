@@ -15,6 +15,20 @@ const HOME = "/home/me";
 const SESSION = "aaaaaaaa-1111";
 const NOW = Date.parse("2026-10-25T10:00:00Z");
 const PATIENCE_MS = 10 * 60 * 1000;
+const iso = (ms: number) => new Date(ms).toISOString();
+// The plan's claim, a unit's start and a unit's end, as the JSON holds them.
+const CLAIMED = iso(NOW - 30 * 60_000);
+const STARTED = iso(NOW - 20 * 60_000);
+const ENDED = iso(NOW - 10 * 60_000);
+const FINAL = ["green", "failed", "unresolved", "skipped"];
+/** The pane's HH:MM of an ISO time, in local time like the pane. */
+const hhmm = (time: string) => {
+  const d = new Date(time);
+
+  return `${String(d.getHours()).padStart(2, "0")}:${
+    String(d.getMinutes()).padStart(2, "0")
+  }`;
+};
 
 const plans = (...rows: [string, string, string?][]) =>
   JSON.stringify({
@@ -31,6 +45,8 @@ const plans = (...rows: [string, string, string?][]) =>
       requires: [],
       backlog: [],
       backlog_pieces: [],
+      started: status === "APPROVED" ? "" : CLAIMED,
+      ended: status === "COMPLETE" ? ENDED : "",
     })),
   });
 
@@ -44,24 +60,41 @@ const plan = (
     worktree: `.worktrees/${title}`,
     log: `~/Library/Caches/vwf/repo/${title}.jsonl`,
   },
-) =>
-  JSON.stringify({
+  status = { state: "RUNNING", detail: "" },
+) => {
+  // A unit past pending has started; a final one has ended. Wave n is unit n.
+  const times = (one: string) => ({
+    started: one === "pending" ? "" : STARTED,
+    ended: FINAL.includes(one) ? ENDED : "",
+  });
+
+  return JSON.stringify({
     format: 1,
     title,
-    status: { state: "RUNNING", detail: "" },
-    units: statuses.map((status, i) => ({
+    status,
+    units: statuses.map((one, i) => ({
       id: `U${i + 1}`,
       title: `Unit ${i + 1}`,
       wave: i + 1,
       file: `0${i + 1}-u.md`,
       kind: "edit",
-      status,
+      status: one,
       commit: "",
       rounds: 0,
+      ...times(one),
     })),
+    waves: statuses.map((one, i) => ({
+      id: `W${i + 1}`,
+      status: one,
+      ...times(one),
+    })),
+    stages: {
+      reconcile: { state: "pending", detail: "", started: "", ended: "" },
+    },
     gaps: [],
     run,
   });
+};
 
 let ts = NOW - 60_000;
 const line = (event: string, extra: Record<string, unknown> = {}) =>
@@ -296,26 +329,178 @@ test(
 );
 
 test(
-  "D6: run.end ends the run; a resume (a second run.start) makes it live again",
+  "T7: the plan's start and elapsed time, each unit's and each wave's times come from the JSON",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    world(on, {
+      files: running(line("run.start", { mode: "fresh" }), [
+        "green",
+        "running",
+        "pending",
+      ]),
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(
+      await ui.find({
+        type: "Text",
+        text: new RegExp(`Started ${hhmm(CLAIMED)} · Ended — · Elapsed 30m`),
+      }),
+    )
+      .toBeDefined();
+    expect(
+      await ui.find({
+        key: "unit-U1",
+        text: new RegExp(`green\\s+${hhmm(STARTED)}\\s+${hhmm(ENDED)}\\s+10m`),
+      }),
+    )
+      .toBeDefined();
+    // A re-run unit: its first start kept, no end, the time counts on.
+    expect(
+      await ui.find({
+        key: "unit-U2",
+        text: new RegExp(`running\\s+${hhmm(STARTED)}\\s+—\\s+20m`),
+      }),
+    )
+      .toBeDefined();
+    expect(
+      await ui.find({
+        type: "Text",
+        text: new RegExp(
+          `W1\\s+wave\\s+green\\s+${hhmm(STARTED)}\\s+${hhmm(ENDED)}\\s+10m`,
+        ),
+      }),
+    )
+      .toBeDefined();
+    expect(
+      await ui.find({ type: "Text", text: /W3\s+wave\s+pending\s+—\s+—\s+—/ }),
+    )
+      .toBeDefined();
+    expect(await ui.find({ type: "Text", text: /reconcile\s+stage\s+pending/ }))
+      .toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
+  "T7: a folder and a row lacking the time keys and the waves list still render",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: JSON.stringify({
+          plans: [{ folder: `docs/plans/${A}`, status: "RUNNING" }],
+        }),
+        [`${MAIN}/docs/plans/${A}/index.json`]: JSON.stringify({
+          title: "Old folder",
+          status: { state: "RUNNING" },
+          units: [{ id: "U1", title: "Old unit", wave: 1, status: "green" }],
+          gaps: [],
+          run: {},
+        }),
+      },
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /Old folder/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Started — · Ended —/ }))
+      .toBeDefined();
+    expect(await ui.find({ key: "unit-U1", text: /green\s+—\s+—\s+—/ }))
+      .toBeDefined();
+    expect(await ui.find({ type: "Text", text: /no run data yet/ }))
+      .toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
+  "T8: RUNNING is live while the last log line is under 10 minutes old, then paused or stopped with the detail; a new line makes it live again",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    ts = NOW - 60_000;
+    const w = world(on, {
+      files: running(line("run.start", { mode: "fresh" })),
+    });
+    w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(A, ["pending"], {
+      worktree: `.worktrees/${A}`,
+      log: `~/Library/Caches/vwf/repo/${A}.jsonl`,
+    }, { state: "RUNNING", detail: "wave 1 of 1" });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
+      .toBeDefined();
+    await clock.advance(PATIENCE_MS);
+    expect(
+      await ui.find({
+        type: "Text",
+        text: /RUNNING · paused or stopped — wave 1 of 1/,
+      }),
+    )
+      .toBeDefined();
+    // Paused is not ended: the timer still reads, and a new line shows.
+    ts = NOW + PATIENCE_MS;
+    w.files[logOf(A)] += line("phase.start", { phase: "wave 1" });
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
+      .toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test("T8: a live agent keeps a silent run live", async ($, on) => {
+  const clock = mock.clock(on, { now: NOW });
+  ts = NOW - 60_000;
+  world(on, {
+    files: running(
+      line("run.start", { mode: "fresh" })
+        + agent("a1", "general-purpose", "U1"),
+    ),
+    listed: [
+      {
+        id: "a1",
+        type: "general-purpose",
+        description: "x",
+        status: "running",
+      },
+    ],
+  });
+  await $.prompt.submit(execute(`docs/plans/${A}`));
+  const ui = await $.ui.mount(PANE);
+  await clock.advance(PATIENCE_MS + 60_000);
+  expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
+    .toBeDefined();
+  await ui.unmount();
+});
+
+test(
+  "T8: BLOCKED in the folder ends the run; RUNNING again makes it live",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: running(line("run.start", { mode: "fresh" })),
     });
+    const state = `${MAIN}/docs/plans/${A}/index.json`;
     await $.prompt.submit(execute(`docs/plans/${A}`));
     const ui = await $.ui.mount(PANE);
     expect(await ui.find({ key: "quiet" })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /live/ })).toBeDefined();
-    w.files[logOf(A)] += line("run.end", { outcome: "paused" });
+    expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
+      .toBeDefined();
+    w.files[state] = plan(A, ["failed", "pending"], undefined, {
+      state: "BLOCKED",
+      detail: "U1 failed",
+    });
     await clock.advance(3500);
     expect(await ui.find({ key: "quiet" })).toBe(undefined);
-    expect(await ui.find({ type: "Text", text: /ended/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /BLOCKED · ended/ }))
+      .toBeDefined();
     // The resume: the next main turn's poke reads it.
+    w.files[state] = plan(A, ["running", "pending"]);
     w.files[logOf(A)] += line("run.start", { mode: "resume" });
     await clock.advance(3500);
     await $.turn.complete(mainTurnEnds);
     expect(await ui.find({ key: "quiet" })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /run 2/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
+      .toBeDefined();
     await ui.unmount();
   },
 );
@@ -533,7 +718,12 @@ test("D8: the timer runs only while a run is live", async ($, on) => {
   await tick();
   expect(periods.length).toBe(1);
   // The run ends: the timer stops asking for periods.
-  w.files[logOf(A)] += line("run.end", { outcome: "complete" });
+  w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(
+    A,
+    ["green", "green"],
+    undefined,
+    { state: "COMPLETE", detail: "" },
+  );
   await tick();
   await tick();
   expect(periods.length).toBe(0);

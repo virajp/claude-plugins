@@ -6,15 +6,18 @@ import {
 import {
   expandHome,
   folderIn,
+  FRESH_MS,
   hostOf,
   isOldFormat,
   joinPath,
   memberPaths,
+  phaseOf,
   readFolder,
   replay,
   resolveBase,
   reviewName,
   runningRows,
+  time,
   unitForAgent,
 } from "./plan";
 
@@ -93,6 +96,10 @@ other:
 
 // The JSON plan format and the action log.
 
+const T0 = "2026-10-25T09:30:00.000Z";
+const T1 = "2026-10-25T09:40:00.000Z";
+const T2 = "2026-10-25T09:50:00.000Z";
+
 const PLANS = (statuses: string[]) =>
   JSON.stringify({
     format: 1,
@@ -108,6 +115,8 @@ const PLANS = (statuses: string[]) =>
       requires: [],
       backlog: [],
       backlog_pieces: [],
+      started: status === "RUNNING" ? T0 : "",
+      ended: "",
     })),
   });
 
@@ -118,8 +127,19 @@ test("reads the RUNNING rows of docs/plans/index.json", async () => {
     "docs/plans/2026-10-20-plan-0",
   ]);
   expect(one.rows[0]!.target_repo).toBe(null);
+  expect(one.rows[0]!.status).toBe("RUNNING");
+  expect(one.rows[0]!.started).toBe(T0);
+  expect(one.rows[0]!.ended).toBe("");
   expect(one.problem).toBe(undefined);
   expect(runningRows(PLANS(["RUNNING", "RUNNING"])).rows.length).toBe(2);
+  // A row from before the times: both read "".
+  const old = runningRows(
+    JSON.stringify({
+      plans: [{ folder: "docs/plans/x", status: "RUNNING", started: 5 }],
+    }),
+  );
+  expect(old.rows[0]!.started).toBe("");
+  expect(old.rows[0]!.ended).toBe("");
   const bad = runningRows("{ not json");
   expect(bad.rows).toEqual([]);
   expect(typeof bad.problem).toBe("string");
@@ -156,7 +176,7 @@ test("expands a leading ~/ only", async () => {
 const FOLDER_JSON = JSON.stringify({
   format: 1,
   title: "The \u001b[31mpane",
-  status: { state: "RUNNING", detail: "" },
+  status: { state: "RUNNING", detail: "wave \u001b[2" },
   units: [
     {
       id: "U1",
@@ -167,6 +187,8 @@ const FOLDER_JSON = JSON.stringify({
       status: "green",
       commit: "abc1234",
       rounds: 1,
+      started: T0,
+      ended: T1,
     },
     {
       id: "U2",
@@ -177,6 +199,9 @@ const FOLDER_JSON = JSON.stringify({
       status: "running",
       commit: "",
       rounds: 0,
+      // Re-run: the first start stays, the end is cleared (T4).
+      started: T0,
+      ended: "",
     },
     {
       id: "U3",
@@ -188,8 +213,19 @@ const FOLDER_JSON = JSON.stringify({
       commit: "",
       rounds: 0,
       range: { from: "", to: "" },
+      started: "",
+      ended: "",
     },
   ],
+  waves: [
+    { id: "W1", status: "green", started: T0, ended: T1 },
+    { id: "W2", status: "running", started: T1, ended: "" },
+    { id: "W3", status: "pending", started: "", ended: "" },
+  ],
+  stages: {
+    renders: { state: "skipped", detail: "no covers", started: "", ended: T2 },
+    acceptance: { state: "running", detail: "", started: T2, ended: "" },
+  },
   gaps: [
     { id: "G1", unit: "U2", stage: "", text: "open one", state: "open" },
     { id: "G2", unit: "U1", stage: "", text: "closed one", state: "closed" },
@@ -199,18 +235,84 @@ const FOLDER_JSON = JSON.stringify({
 
 const folder = () => readFolder(FOLDER_JSON).folder!;
 
-test("reads a folder's index.json", async () => {
+test("reads a folder's index.json, its units, waves and stages with their times", async () => {
   const read = readFolder(FOLDER_JSON);
   expect(read.problem).toBe(undefined);
-  expect(read.folder!.title).toBe("The [31mpane");
-  expect(read.folder!.state).toBe("RUNNING");
-  expect(read.folder!.units.map(u => `${u.id}:${u.title}:${u.status}`))
+  const f = read.folder!;
+  expect(f.title).toBe("The [31mpane");
+  expect(f.state).toBe("RUNNING");
+  expect(f.detail).toBe("wave [2");
+  expect(f.units.map(u => `${u.id}:${u.title}:${u.status}`))
     .toEqual(["U1:The core:green", "U2:The pane:running", "U3:Review:pending"]);
-  expect(read.folder!.units[2]!.range).toEqual({ from: "", to: "" });
-  expect(read.folder!.run.log).toBe("~/Library/Caches/vwf/r/p.jsonl");
+  expect(f.units.map(u => [u.started, u.ended])).toEqual([
+    [T0, T1],
+    [T0, ""],
+    ["", ""],
+  ]);
+  expect(f.units[2]!.range).toEqual({ from: "", to: "" });
+  expect(f.waves).toEqual([
+    { id: "W1", status: "green", started: T0, ended: T1 },
+    { id: "W2", status: "running", started: T1, ended: "" },
+    { id: "W3", status: "pending", started: "", ended: "" },
+  ]);
+  expect(f.stages).toEqual([
+    { name: "renders", state: "skipped", started: "", ended: T2 },
+    { name: "acceptance", state: "running", started: T2, ended: "" },
+  ]);
+  expect(f.run.log).toBe("~/Library/Caches/vwf/r/p.jsonl");
   expect(readFolder(JSON.stringify({ title: "x", run: {} })).folder!.run)
     .toEqual({});
   expect(typeof readFolder("nope").problem).toBe("string");
+});
+
+test("a folder lacking the time keys and the waves list still reads", async () => {
+  const old = readFolder(JSON.stringify({
+    title: "Old",
+    status: { state: "RUNNING" },
+    units: [{ id: "U1", title: "x", wave: 1, status: "green", started: 7 }],
+    stages: { ux: { state: "skipped" } },
+    gaps: [],
+    run: {},
+  }))
+    .folder!;
+  expect(old.detail).toBe("");
+  expect(old.units[0]!.started).toBe("");
+  expect(old.units[0]!.ended).toBe("");
+  expect(old.waves).toEqual([]);
+  expect(old.stages).toEqual([
+    { name: "ux", state: "skipped", started: "", ended: "" },
+  ]);
+});
+
+test("reads a time string; \"\" and junk read as none", async () => {
+  expect(time(T0)).toBe(Date.parse(T0));
+  expect(time("")).toBe(undefined);
+  expect(time("soon")).toBe(undefined);
+  expect(time(5)).toBe(undefined);
+});
+
+test("T8: live, paused or stopped, ended", async () => {
+  const now = Date.parse("2026-10-25T10:00:00Z");
+  const base = { state: "RUNNING", rowStatus: "RUNNING", now };
+  // A live agent keeps it live, however old the log.
+  expect(phaseOf({ ...base, hasLiveAgent: true, lastAt: now - FRESH_MS * 3 }))
+    .toBe("live");
+  // A last line under FRESH_MS old keeps it live.
+  expect(phaseOf({ ...base, hasLiveAgent: false, lastAt: now - FRESH_MS + 1 }))
+    .toBe("live");
+  expect(phaseOf({ ...base, hasLiveAgent: false, lastAt: now - FRESH_MS }))
+    .toBe("paused");
+  // No log line yet: the row's start stands in.
+  expect(phaseOf({ ...base, hasLiveAgent: false, rowStarted: now - 1000 }))
+    .toBe("live");
+  expect(phaseOf({ ...base, hasLiveAgent: false })).toBe("paused");
+  // BLOCKED or COMPLETE (folder), COMPLETE (row): ended, live agent or not.
+  expect(phaseOf({ ...base, state: "BLOCKED", hasLiveAgent: true }))
+    .toBe("ended");
+  expect(phaseOf({ ...base, state: "COMPLETE", hasLiveAgent: false }))
+    .toBe("ended");
+  expect(phaseOf({ ...base, rowStatus: "COMPLETE", hasLiveAgent: true }))
+    .toBe("ended");
 });
 
 const SESSION = "aaaaaaaa-1111";
@@ -229,7 +331,7 @@ const reset = () => {
   clock = Date.parse("2026-10-25T10:00:00Z");
 };
 
-test("replays one run: times, agents, the end", async () => {
+test("replays the agents, the session and the last line's ts; the times are the folder's", async () => {
   reset();
   const lines = [
     line("run.start", { mode: "fresh" }), // 1
@@ -244,66 +346,53 @@ test("replays one run: times, agents, the end", async () => {
     line("row", { unit: "U1", wave: 1, status: "running" }), // 6
     line("agent.end", { agent: "a1", agent_type: "general-purpose" }), // 7
     line("row", { unit: "U1", wave: 1, status: "green", commit: "abc" }), // 8
+    line("run.end", { outcome: "complete" }), // 9
   ];
-  const live = replay(lines, folder());
-  expect(live.ended).toBe(false);
-  expect(live.noData).toBe(false);
-  expect(live.runs.map(run => run.mode)).toEqual(["fresh"]);
-  expect(live.session).toBe(SESSION);
-  const u1 = live.units[0]!;
-  expect(u1.startedAt).toBe(at(6));
-  expect(u1.endedAt).toBe(at(8));
+  const state = replay(lines, folder());
+  expect(state.noData).toBe(false);
+  expect(state.session).toBe(SESSION);
+  expect(state.lastAt).toBe(at(9));
+  expect(state.live).toEqual([]);
+  const u1 = state.units[0]!;
+  expect([u1.started, u1.ended]).toEqual([T0, T1]);
   expect(u1.agent!.id).toBe("a1");
   expect(u1.agent!.name).toBe("U1");
   expect(u1.agent!.live).toBe(false);
-  expect(live.units[1]!.startedAt).toBe(undefined);
-  expect(live.title).toBe("The [31mpane");
-  const done = replay(
-    [...lines, line("run.end", { outcome: "complete" })],
-    folder(),
-  );
-  expect(done.ended).toBe(true);
+  expect(state.units[1]!.started).toBe(T0);
+  expect(state.units[1]!.ended).toBe("");
+  expect(state.waves.map(wave => wave.status)).toEqual([
+    "green",
+    "running",
+    "pending",
+  ]);
+  expect(state.stages.map(stage => stage.name)).toEqual([
+    "renders",
+    "acceptance",
+  ]);
+  expect(state.detail).toBe("wave [2");
+  expect(state.title).toBe("The [31mpane");
 });
 
-test("a resume makes the run live again; stop and session.end end it", async () => {
+test("the session is the last run.start's, else the last line's", async () => {
   reset();
-  const first = [
-    line("run.start", { mode: "fresh" }),
-    line("row", { unit: "U2", wave: 2, status: "running" }),
-    line("row", { unit: "U2", wave: 2, status: "failed" }),
-    line("stop", { reason: "blocked" }),
-  ];
-  expect(replay(first, folder()).ended).toBe(true);
-  expect(replay(first, folder()).units[1]!.endedAt).toBe(at(3));
   const resumed = [
-    ...first,
+    line("run.start", { mode: "fresh" }),
+    line("stop", { reason: "blocked" }),
     line("run.start", { mode: "resume", session: "bbbbbbbb-2222" }),
-    line("row", { unit: "U2", wave: 2, status: "running" }),
+    line("tool.start", { tool: "Bash", tool_use_id: "b1", summary: "ls" }),
   ];
-  const state = replay(resumed, folder());
-  expect(state.ended).toBe(false);
-  expect(state.runs.length).toBe(2);
-  expect(state.session).toBe("bbbbbbbb-2222");
-  // D18: the first start stays, the end empties until it ends again.
-  expect(state.units[1]!.startedAt).toBe(at(2));
-  expect(state.units[1]!.endedAt).toBe(undefined);
-  // A session.end of another session does not end the run; its own does.
-  expect(
-    replay([...resumed, line("session.end", { reason: "other" })], folder())
-      .ended,
-  )
-    .toBe(false);
-  expect(
-    replay(
-      [
-        ...resumed,
-        line("session.end", { session: "bbbbbbbb-2222", reason: "clear" }),
-      ],
-      folder(),
-    )
-      .ended,
-  )
-    .toBe(true);
+  expect(replay(resumed, folder()).session).toBe("bbbbbbbb-2222");
+  const tail = [
+    line("tool.start", {
+      tool: "Bash",
+      tool_use_id: "b1",
+      summary: "ls",
+      session: "cccccccc-3333",
+    }),
+  ];
+  const state = replay(tail, folder(), { partial: true });
+  expect(state.partial).toBe(true);
+  expect(state.session).toBe("cccccccc-3333");
 });
 
 test("takes status and gaps from the folder, never from row or gap events", async () => {
@@ -332,6 +421,7 @@ test("takes status and gaps from the folder, never from row or gap events", asyn
     "running",
     "pending",
   ]);
+  expect(state.units[2]!.started).toBe("");
   expect(state.gaps.map(gap => gap.id)).toEqual(["G1"]);
 });
 
@@ -372,8 +462,7 @@ test("ties a foreground agent before tool.end, and a reviewer by its row", async
   const state = replay(lines, folder());
   expect(state.units[1]!.agent!.id).toBe("a2");
   expect(state.units[1]!.agent!.live).toBe(true);
-  // No running row: the start is the agent's agent.start.
-  expect(state.units[1]!.startedAt).toBe(at(3));
+  expect(state.units[1]!.agent!.startedAt).toBe(at(3));
   expect(state.units[2]!.agent!.id).toBe("a3");
   expect(state.units[2]!.agent!.name).toBe(undefined);
   expect(state.reviews["R1"]!.id).toBe("a4");
@@ -408,7 +497,7 @@ test("a unit with several agents shows the latest", async () => {
   ];
   const u2 = replay(lines, folder()).units[1]!;
   expect(u2.agent!.id).toBe("new");
-  expect(u2.startedAt).toBe(at(4));
+  expect(u2.agent!.live).toBe(true);
 });
 
 test("skips a bad line, and says no run data with no lines", async () => {
@@ -421,24 +510,22 @@ test("skips a bad line, and says no run data with no lines", async () => {
   ], folder());
   expect(state.skipped).toBe(2);
   expect(state.noData).toBe(false);
+  expect(state.lastAt).toBe(at(1));
   const empty = replay([], folder());
   expect(empty.noData).toBe(true);
-  expect(empty.ended).toBe(false);
-  expect(empty.units.map(u => u.startedAt)).toEqual([
-    undefined,
-    undefined,
-    undefined,
+  expect(empty.lastAt).toBe(undefined);
+  expect(empty.session).toBe(undefined);
+  // D23: no log yet, the plan still shows from index.json, times included.
+  expect(empty.units.map(u => `${u.title}:${u.started}`)).toEqual([
+    `The core:${T0}`,
+    `The pane:${T0}`,
+    "Review:",
   ]);
-  expect(empty.units.map(u => u.title)).toEqual([
-    "The core",
-    "The pane",
-    "Review",
-  ]);
+  expect(empty.waves.length).toBe(3);
 });
 
-test("a unit with neither a running row nor an agent.start shows no start time", async () => {
+test("an agent whose agent.start is not in the tail has no start, and is not live", async () => {
   reset();
-  // The Agent call and its child are in the tail; its agent.start is not.
   const tail = [
     line("tool.start", {
       tool: "Agent",
@@ -450,37 +537,5 @@ test("a unit with neither a running row nor an agent.start shows no start time",
   const u3 = replay(tail, folder(), { partial: true }).units[2]!;
   expect(u3.agent!.id).toBe("a3");
   expect(u3.agent!.startedAt).toBe(undefined);
-  expect(u3.startedAt).toBe(undefined);
-});
-
-test("a tail with no run.start: live unless it ends, session from its last line", async () => {
-  reset();
-  const tail = [
-    line("row", { unit: "U2", wave: 2, status: "running" }),
-    line("tool.start", {
-      tool: "Bash",
-      tool_use_id: "b1",
-      summary: "ls",
-      session: "cccccccc-3333",
-    }),
-  ];
-  const state = replay(tail, folder(), { partial: true });
-  expect(state.partial).toBe(true);
-  expect(state.ended).toBe(false);
-  expect(state.runs).toEqual([]);
-  expect(state.session).toBe("cccccccc-3333");
-  expect(state.units[1]!.startedAt).toBe(at(1));
-  expect(state.units[0]!.startedAt).toBe(undefined);
-  expect(
-    replay(
-      [...tail, line("session.end", { session: "cccccccc-3333" })],
-      folder(),
-    )
-      .ended,
-  )
-    .toBe(true);
-  expect(
-    replay([...tail, line("run.end", { outcome: "paused" })], folder()).ended,
-  )
-    .toBe(true);
+  expect(u3.agent!.live).toBe(false);
 });

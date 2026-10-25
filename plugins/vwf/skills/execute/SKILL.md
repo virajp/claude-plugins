@@ -119,10 +119,19 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   `green`, `failed`, `unresolved` or `skipped`), its `commit` (the short hash
   of its last commit) and its `rounds` (the highest round it reached); a
   `review` row's `range`, per [review-unit.md](references/review-unit.md);
-  each entry of `gaps`; each of the four `stages`; and, under `all`, one
-  entry of `overrides`. The plan's own `status.state` and `status.detail` are
+  each wave's `status` — `set waves.W<n>.status running` as the wave starts,
+  `green` as it closes, `failed` when a unit in it failed or was skipped;
+  each entry of `gaps`; each of the four `stages` — its `state` `running` as
+  it starts, then `green`, `failed` or `skipped`; and, under `all`, one entry
+  of `overrides`. The plan's own `status.state` and `status.detail` are
   never set here: they are the `plan-management status` verb's, and the plan
   index is `plan-management`'s.
+- **The run writes no time.** Every unit, wave and stage carries `started`
+  and `ended`, and `plan.mjs` stamps them itself on each `set` of a unit's or
+  wave's `status` or a stage's `state`, in the same validated write — a first
+  `running` sets `started`, a later `running` clears `ended`, a final status
+  sets `ended`. The plan's row in `docs/plans/index.json` is stamped the same
+  way by `plan-management`'s `claim` and `complete`.
 - **A gap** is one
   `append <folder>/index.json gaps --json '{"id": "G<n>", "unit": "<id>", "stage": "<stage>", "text": "<what the plan left open> · <the assumption taken>", "state": "open"}'`,
   `G<n>` one past the highest `G` id in the list; `unit` and `stage` are `""`
@@ -131,12 +140,15 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   how.
 - **Every run fact goes to the action log too.** `index.json` keeps the facts
   — it is committed, and resume and the final report read it — and the log
-  carries the same facts as events, for `log.mjs summary` and a later reader;
-  the progress pane reads the times, the agents and the run end from the log,
-  and the state from `index.json`. After each `set` of a unit's `status`,
-  `commit`, `rounds` or `range`, or of a stage, run `log.mjs event row` with
-  the JSON on stdin; after each `append` to `gaps` and each `set` of a gap's
-  `state`, run `log.mjs event gap`. Both read a quoted heredoc, so nothing in
+  carries the same facts as events, the real-time feed for `log.mjs summary`,
+  debugging and timing statistics; the progress pane reads the states and the
+  times from `index.json` and the plan's row, and from the log only each
+  unit's agent and whether the run is still writing. After each `set` of a
+  unit's `status`, `commit`, `rounds` or `range`, or of a stage, run
+  `log.mjs event row` with the JSON on stdin; after each `append` to `gaps`
+  and each `set` of a gap's `state`, run `log.mjs event gap`. A wave's
+  `status` set is followed by no event: the wave's `phase.start` and
+  `phase.end` already carry it. Both read a quoted heredoc, so nothing in
   it is expanded:
 
   ```sh
@@ -788,7 +800,9 @@ Each `units` entry carries a `kind` — `code`, `edit` or `review`, per
 Each unit's dispatch prompt carries its `owns` list from `index.json`, which
 its file no longer repeats, and runs on its `model` — through
 `pipeline.models`, as the shared stage rules say.
-For each wave in `wave` order, skipping units already `green` on a resume:
+For each wave in `wave` order, skipping units already `green` on a resume —
+its `waves` entry set `running` as it starts and `green` or `failed` before
+step 6's closing folder commit, per *The plan files*:
 
 1. **Run the `review` rows first** — each `review` row in the wave, one at a
    time, before anything in the wave is dispatched, so the engines see a
@@ -890,8 +904,8 @@ delta before the stages re-verify — *Late loop-backs re-run the last row* in
 
 **Keep the renders.** After the ux stage's last round, before the landing, take
 the `RENDER: <project> <code> <platform> <state> <file>` lines that round's
-reviewer returned and run the script once per project the stage reviewed,
-piping each run, on stdin, only the lines whose first field is that project:
+reviewer returned, set `stages.renders` `running`, and run the script once
+per project the stage reviewed, piping each run, on stdin, only the lines whose first field is that project:
 
 ```sh
 node ${CLAUDE_PLUGIN_ROOT}/skills/mockups/scripts/renders.mjs --worktree <worktree> --main <main checkout> --project <project> --plan <folder>
@@ -919,7 +933,7 @@ journaled — a plan with no blueprint slice has no acceptance criteria and no
 Screens contract to verify against.
 
 Record both stages in `stages` with `plan.mjs set` — `stages.<stage>.state`
-`green` or `failed` as each execution returns, with its result as `detail`,
+`running` as each starts, then `green` or `failed` as each execution returns, with its result as `detail`,
 and `skipped` with its `why` when the condition didn't hold — and write each
 to the journal. A resumed run reads `stages` to know whether they already
 passed, and runs a stage that reads `green` or `skipped` no more; the report
@@ -947,7 +961,8 @@ docs-sync of its own.
    already persisted in the `code` pipeline — here, fill only what is missing.
    A plan of `edit` units alone has nothing to persist here: an `edit` unit's
    decisions are in its file and the run journal.
-3. **Set `stages.reconcile`** — `state` `green`, or `skipped` with its
+3. **Set `stages.reconcile`** — `running` as step 1 starts — then `state`
+   `green`, or `skipped` with its
    `why`, and a `detail` naming what ran and the Reconcile commit's hash,
    which is what lets a `review` row's commit map exclude it — and write the
    same to the run journal (room `runs`, drawer `<plan folder>`). It is set

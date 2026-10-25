@@ -3181,13 +3181,13 @@ the terminal. `/vwf-monitor` opens it by hand, also for a run already in progres
 `/vwf-monitor`, not `/vwf:monitor`, because a registered command name cannot
 contain a colon.
 
-**What it shows.** The plan, the run's start and end times, and one progress
+**What it shows.** The plan, its start and end times, and one progress
 segment per unit — pending dim, running plain, failed red, skipped gray,
 finished green, and finished with gaps yellow. Below that, one row per unit with
-its status, its times and its gaps, and under them one line per wave review —
-its status, start, end and time. The line under the plan title names the
-folder, the plan's state, whether the run is `live` or `ended`, and the run
-number once a resume has started a second run. Before a run has written its log,
+its status, its times and its gaps, one line per wave and per stage with its
+status and times, and one line per wave review with its status. The line under
+the plan title names the folder, the plan's state, and whether the run is
+`live`, `ended`, or `paused or stopped`. Before a run has written its log,
 the pane shows the plan with every unit pending and the line `no run data yet`.
 Plan text and log text are stripped of terminal control characters before they
 render. Select a unit row or a wave-review line to open that subagent's
@@ -3196,18 +3196,21 @@ transcript; the **Main transcript** button goes back.
 **Where it reads.** Three files, and nothing else:
 
 - **The plan index**, `docs/plans/index.json` — the base repo's, in a
-  multi-repo product. The row that reads `RUNNING` is the plan it shows.
-- **The plan's `index.json`** — the plan's state: its status, and each unit's
-  title, wave, kind, status, commit, rounds and range, and the open gaps. It
+  multi-repo product. The row that reads `RUNNING` is the plan it shows, and
+  the row's `started` and `ended` are the plan's times.
+- **The plan's `index.json`** — the plan's state and every time below it: its
+  status; each unit's title, wave, kind, status, commit, rounds, range and
+  `started` and `ended`; each wave's and each stage's status and times; and
+  the open gaps. It
   reads the copy in the run's worktree, at the folder's `run.worktree` (or the
   archived copy there while the plan lands), and the main checkout's copy, or
   its archived copy, before the worktree exists and after it is gone. A cycle
   plan in a member repo is found there. It never searches for worktrees.
-- **The plan's action log**, at the folder's `run.log` — what `index.json` does
-  not hold: each unit's start and end times, the subagent that ran it and
-  whether it is live, the resumes, and the end of the run. Every read replays
-  the whole log from its first line, so a pane opened in the middle of a run, or
-  opened again, shows the run from its start.
+- **The plan's action log**, at the folder's `run.log` — only what the JSON
+  does not hold: the subagent that ran each unit and whether it is live, its
+  transcript, the session that started the run, and how old the log's last
+  line is. Every read replays the log from its first line for those agents;
+  it computes no time and no run end.
 
 **What it follows.** Every unit of a run of either kind. The pane ties a
 subagent to a unit through the log: the Agent call that started it names a unit
@@ -3224,9 +3227,12 @@ shows `waiting for the claim`; once the plan lands, or between two plans of an
 `all` run, `waiting for the next plan`. Each wait lasts up to 10 minutes, and a
 new `RUNNING` row shows at once.
 
-**When the run ends.** At the log's `run.end` or `stop` after the last run
-start, or at the end of the session that started it. A later run start, from a
-resume, makes the run live again.
+**When the run ends.** The JSON decides it: the folder's status `BLOCKED` or
+`COMPLETE`, or the row `COMPLETE`, is an ended run. While both read `RUNNING`,
+the run is live while one of its subagents is live or the log's last line is
+under 10 minutes old; otherwise the header reads
+`paused or stopped — <the folder's status detail>`. That check decides only the
+header, never a status. A resume makes the run live again.
 
 **How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
 then `c`. When the run asks you a question, the pane steps aside until you
@@ -3239,9 +3245,8 @@ message for 10 seconds and closes.
 - It reads only the JSON plan format. On a repo with `docs/plans/index.md` it
   shows that message and closes.
 - A log over 4 MiB is replayed from its last 4,000,000 bytes, and the footer
-  says the replay is partial: a unit whose first running row fell before that
-  tail shows its subagent's start when the tail holds it, and no start time when
-  the tail holds neither.
+  says the replay is partial: a unit whose subagent started before that tail
+  shows no subagent. Its times still come from `index.json`.
 - In the fullscreen layout the pane docks beside the transcript. It cannot cover
   the whole screen.
 - In the normal layout (`CLAUDE_CODE_NO_FLICKER=0`) it shows above the prompt at
@@ -3261,8 +3266,8 @@ with the prune of old action logs that follows it — and it is the one
 implementation of the reads over them: the `next` pick, `requires` resolution,
 priority derivation, the listing.
 The folder's content stays the planners'; the run fields — each unit's
-`status`, `commit`, `rounds` and `range`, the `gaps`, `stages` and `overrides`
-lists — stay `execute`'s; the backlog — a project on
+`status`, `commit`, `rounds` and `range`, the `waves`, `gaps`, `stages` and
+`overrides` lists — stay `execute`'s; the backlog — a project on
 the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skill
 calls and never edits.
 
@@ -3278,6 +3283,18 @@ entry by its `id` — `plans.<basename>.status`, `units.U3.status`,
 `remove` validate the result first and write nothing on an error, so no caller
 ever rewrites a whole file. vwf needs neither `yq` nor `jq` for plans.
 
+**`plan.mjs` keeps the times.** Each row of `docs/plans/index.json`, and each
+unit, wave and stage of a folder's `index.json`, carries `started` and `ended`:
+`""` when not set, else an ISO-8601 UTC time with milliseconds. Nobody writes
+them; `set` stamps them in the same validated write as the status it sets. To
+`running` (a row's `RUNNING`), `started` is set when it is empty and `ended` is
+cleared; to a final status (a row's `COMPLETE`), `ended` is set; a row set back
+to `APPROVED` by `unclaim` has both cleared. So a re-run unit keeps its first
+start and has no end until it ends again, and `claim`, `complete` and `unclaim`
+each stay one `set`. The planners write every time empty and one `pending`
+entry per wave in the folder's `waves` list; `/vwf:execute` sets each wave
+`running`, then `green` or `failed`, and each stage `running` before its result.
+
 **Every verb tests the format first.** A base repo with a `docs/plans/index.md`,
 or a named folder with an `index.md` and no `index.json`, is the old markdown
 format: the verb stops before any change and prints the migration message,
@@ -3289,7 +3306,7 @@ is no old-format copy of this skill or of `execute`.
 
 | Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Called by                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
-| `add <folder>`                     | The hand-off: `plan.mjs validate` green, status `APPROVED`, the priority derived, the row appended to the `plans` list (`kind` from the folder's `type`, `gaps` `null`), and each `gaps_of` row's `gaps` set to `open` `0` with this folder added to `moved_to`                                                                                                                                                                                                                                                                                                                                                                   | `plan`, `change-plan`                                                                           |
+| `add <folder>`                     | The hand-off: `plan.mjs validate` green, status `APPROVED`, the priority derived, the row appended to the `plans` list (`kind` from the folder's `type`, `started` and `ended` empty, `gaps` `null`), and each `gaps_of` row's `gaps` set to `open` `0` with this folder added to `moved_to`                                                                                                                                                                                                                                                                                                                                                                   | `plan`, `change-plan`                                                                           |
 | `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`, and the folder's `run` set to the worktree and action-log paths in the same commit; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                                                                                 | `execute`, before the worktree is cut                                                           |
 | `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's status to `APPROVED`, and the folder's `run` to `{}`, in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's status alone — `status.state` `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED`, and `status.detail`; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                               | `execute`, at start, pause, block and landing                                                   |

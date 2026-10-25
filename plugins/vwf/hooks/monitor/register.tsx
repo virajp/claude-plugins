@@ -24,10 +24,12 @@ import {
   isOldFormat,
   joinPath,
   memberPaths,
+  phaseOf,
   readFolder,
   replay,
   resolveBase,
   runningRows,
+  time,
 } from "./plan";
 
 const PANE = "vwf-monitor";
@@ -150,7 +152,22 @@ function isLive(r: Run | null): boolean {
   return r !== null
     && r.endedAt === undefined
     && (r.waiting !== undefined
-      || (r.plan !== undefined && !r.plan.replay.ended));
+      || (r.plan !== undefined && r.plan.phase !== "ended"));
+}
+
+/** The plan's phase from its row, its folder, its live agents and its log (T8). */
+function phased(plan: PlanRun, now: number): PlanRun {
+  return {
+    ...plan,
+    phase: phaseOf({
+      state: plan.replay.state,
+      rowStatus: plan.row.status,
+      hasLiveAgent: plan.replay.live.length > 0,
+      lastAt: plan.replay.lastAt,
+      rowStarted: time(plan.row.started),
+      now,
+    }),
+  };
 }
 
 function stopTimer() {
@@ -401,12 +418,14 @@ async function loadPlan(
   const log = logPath === undefined
     ? { lines: [], partial: false }
     : await readLog($, logPath);
-  const plan: PlanRun = {
+  const plan: PlanRun = phased({
     folder: row.folder,
+    row,
     repo: main.repo,
     statePath,
     replay: replay(log.lines, folder, { partial: log.partial }),
-  };
+    phase: "live",
+  }, await $.clock.now());
   if (logPath !== undefined) {
     plan.logPath = logPath;
   }
@@ -619,10 +638,10 @@ async function refresh($: $) {
   }
   else {
     const session = await $.session.id().catch(() => undefined);
-    const plan: PlanRun = {
+    const plan = phased({
       ...found.plan,
       replay: settle(found.plan.replay, listed, now, session),
-    };
+    }, now);
     await update($, run, value => {
       if (!value) {
         return value;
@@ -873,8 +892,9 @@ export const register: Register = on => {
       );
     }
 
-    const now = Date.now();
+    const now = r.refreshedAt ?? Date.now();
     const state = p.replay;
+    const isEnded = p.phase === "ended";
     const units = state.units;
     const shown = units.map(unit =>
       unit.agent?.live && unit.status === "pending" ? "running" : unit.status
@@ -887,14 +907,24 @@ export const register: Register = on => {
     const segment = units.length === 0
       ? 0
       : Math.max(1, Math.floor((barWidth - (units.length - 1)) / units.length));
-    const startedAt = state.runs[0]?.startedAt
-      ?? units.find(unit => unit.startedAt !== undefined)?.startedAt;
-    const ends = units
-      .map(unit => unit.endedAt)
-      .filter((one): one is number => one !== undefined);
-    const endedAt = state.ended && ends.length > 0
-      ? Math.max(...ends)
-      : undefined;
+    const startedAt = time(p.row.started);
+    const endedAt = time(p.row.ended);
+    const phase = p.phase === "paused"
+      ? `paused or stopped${state.detail ? ` — ${state.detail}` : ""}`
+      : p.phase;
+    // A start and end, and the time between, or up to now while not ended.
+    const times = (started: string, ended: string) => {
+      const from = time(started);
+      const end = time(ended);
+
+      return fit(clock(from), 7) + fit(clock(end), 7) + fit(
+        span(
+          from,
+          end ?? (from !== undefined && !isEnded ? now : undefined),
+        ),
+        7,
+      );
+    };
     const reviews = Object.entries(state.reviews);
     const name = nameOf(p.folder);
 
@@ -918,17 +948,13 @@ export const register: Register = on => {
         <Text bold>{fit(state.title || name, width)}</Text>
         <Text dimColor>
           {fit(
-            `${name} · ${state.state || "…"} · ${
-              state.ended ? "ended" : "live"
-            } · ${r.mode}${
-              state.runs.length > 1 ? ` · run ${state.runs.length}` : ""
-            }`,
+            `${name} · ${state.state || "…"} · ${phase} · ${r.mode}`,
             width,
           )}
         </Text>
         <Text>
           Started {clock(startedAt)} · Ended {clock(endedAt)} · Elapsed{" "}
-          {span(startedAt, endedAt ?? (state.ended ? undefined : now))}
+          {span(startedAt, endedAt ?? (isEnded ? undefined : now))}
         </Text>
         <Text>
           {units.map((unit, i) => {
@@ -955,8 +981,6 @@ export const register: Register = on => {
         {units.map((unit, i) => {
           const one = shown[i] ?? "";
           const gaps = gapCounts[i] ?? 0;
-          const end = one === "running" ? undefined : unit.endedAt;
-          const from = unit.startedAt;
 
           return (
             <Button
@@ -969,43 +993,40 @@ export const register: Register = on => {
               {fit(String(unit.wave), 5)}
               {fit(unit.kind, 8)}
               <Text color={colorOf(one, gaps)}>{fit(one, 12)}</Text>
-              {fit(clock(from), 7)}
-              {fit(clock(end), 7)}
-              {fit(
-                span(from, end ?? (from !== undefined ? now : undefined)),
-                7,
-              )}
+              {times(unit.started, one === "running" ? "" : unit.ended)}
               <Text color={gaps > 0 ? "yellow" : undefined}>
                 {String(gaps)}
               </Text>
             </Button>
           );
         })}
-        {reviews.map(([key, agent]) => {
-          const one = agent.live ? "running" : "done";
-          const end = agent.live ? undefined : agent.endedAt;
-
-          return (
-            <Button
-              key={`review-${key}`}
-              plain
-              onPress={() => show(key, agent)}
-            >
-              {fit(key, 32)}
-              {fit("review", 8)}
-              <Text>{fit(one, 12)}</Text>
-              {fit(clock(agent.startedAt), 7)}
-              {fit(clock(end), 7)}
-              {fit(
-                span(
-                  agent.startedAt,
-                  end ?? (agent.startedAt !== undefined ? now : undefined),
-                ),
-                7,
-              )}
-            </Button>
-          );
-        })}
+        {state.waves.map(wave => (
+          <Text key={`wave-${wave.id}`}>
+            {fit(wave.id, 32)}
+            {fit("wave", 8)}
+            <Text color={colorOf(wave.status, 0)}>{fit(wave.status, 12)}</Text>
+            {times(wave.started, wave.ended)}
+          </Text>
+        ))}
+        {reviews.map(([key, agent]) => (
+          <Button
+            key={`review-${key}`}
+            plain
+            onPress={() => show(key, agent)}
+          >
+            {fit(key, 32)}
+            {fit("review", 8)}
+            <Text>{fit(agent.live ? "running" : "done", 12)}</Text>
+          </Button>
+        ))}
+        {state.stages.map(stage => (
+          <Text key={`stage-${stage.name}`}>
+            {fit(stage.name, 32)}
+            {fit("stage", 8)}
+            <Text color={colorOf(stage.state, 0)}>{fit(stage.state, 12)}</Text>
+            {times(stage.started, stage.ended)}
+          </Text>
+        ))}
         {state.gaps.length > 0 && <Text>{" "}</Text>}
         {state.gaps.length > 0 && <Text bold>Gaps</Text>}
         {state.gaps.map(gap => (
