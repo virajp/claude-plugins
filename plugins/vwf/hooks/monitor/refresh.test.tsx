@@ -4,56 +4,93 @@ import {
   test,
 } from "claude-code/testing";
 
-const FOLDER = "2026-10-21-a-plan";
+const FOLDER = "2026-10-25-a-plan";
 const MAIN = "/repo";
-const TREE = "/repo/.worktrees/2026-10-21-a-plan";
+const TREE = `/repo/.worktrees/${FOLDER}`;
+const HOME = "/home/me";
+const LOG = `${HOME}/Library/Caches/vwf/repo/${FOLDER}.jsonl`;
 
-const index = (status: string, u1: string) =>
-  `# Plan — A plan (2026-10-21)
+const index = JSON.stringify({
+  format: 1,
+  plans: [{
+    id: FOLDER,
+    folder: `docs/plans/${FOLDER}`,
+    kind: "change",
+    title: "A plan",
+    target_repo: null,
+    priority: 1,
+    status: "RUNNING",
+    gaps: null,
+    requires: [],
+    backlog: [],
+    backlog_pieces: [],
+  }],
+});
 
-## Status
+const folder = (title: string, state: string, u1: string) =>
+  JSON.stringify({
+    format: 1,
+    title,
+    status: { state, detail: "" },
+    units: [{
+      id: "U1",
+      title: "The unit",
+      wave: 1,
+      file: "01-a.md",
+      kind: "edit",
+      status: u1,
+      commit: "",
+      rounds: 0,
+    }],
+    gaps: [],
+    run: {
+      worktree: `.worktrees/${FOLDER}`,
+      log: `~/Library/Caches/vwf/repo/${FOLDER}.jsonl`,
+    },
+  });
 
-**${status}**
-
-## Units
-
-| Id | Wave | Unit file          | Kind | Status | Commit |
-| -- | ---- | ------------------ | ---- | ------ | ------ |
-| U1 | 1    | [01-a.md](01-a.md) | edit | ${u1}  |        |
-
-## Launch
-`;
+const LINE = JSON.stringify({
+  ts: "2026-10-25T09:59:00.000Z",
+  run: "20261025-095900-aaaaaaaa",
+  session: "aaaaaaaa-1111",
+  agent: null,
+  event: "run.start",
+  mode: "fresh",
+}) + "\n";
 
 test(
-  "the timer refreshes the pane, and the plan is found again after the worktree is gone",
+  "D24, D32: the state comes from the worktree copy, then its archived copy during the landing, then the main copy",
   async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    // The files: the worktree copy during the run, the main copy after landing.
-    let files: Record<string, string> = {
-      [`${TREE}/docs/plans/${FOLDER}/index.md`]: index("RUNNING", "pending"),
+    const clock = mock.clock(on, { now: Date.parse("2026-10-25T10:00:00Z") });
+    const live = `${TREE}/docs/plans/${FOLDER}/index.json`;
+    const archived = `${TREE}/docs/plans/archived/${FOLDER}/index.json`;
+    const main = `${MAIN}/docs/plans/${FOLDER}/index.json`;
+    const files: Record<string, string> = {
+      [`${MAIN}/docs/plans/index.json`]: index,
+      [main]: folder("Main copy", "RUNNING", "pending"),
+      [live]: folder("Tree copy", "RUNNING", "running"),
+      [LOG]: LINE,
     };
-    let cwd = TREE;
-    let worktrees = `worktree ${MAIN}\nworktree ${TREE}\n`;
-
-    on("session.cwd", () => ({ value: cwd }));
-    on("process.run", (_, e) => {
-      const exists = e.init?.cwd === MAIN
-        || (e.init?.cwd === TREE && worktrees.includes(TREE));
-      return {
-        value: {
-          exitCode: exists ? 0 : 128,
-          stdout: exists ? worktrees : "",
-          stderr: "",
-          isStdoutTruncated: false,
-          isStderrTruncated: false,
-        },
-      };
-    });
+    mock.env(on, { HOME });
+    on("session.cwd", () => ({ value: MAIN }));
+    on("session.id", () => ({ value: "aaaaaaaa-1111" }));
+    on("process.run", (_, e) => ({
+      value: {
+        exitCode: e.argv.includes("--show-toplevel") ? 0 : 128,
+        stdout: `${e.init?.cwd ?? ""}\n`,
+        stderr: "",
+        isStdoutTruncated: false,
+        isStderrTruncated: false,
+      },
+    }));
     on("fs.stat", (_, e) => {
-      if (!(e.path in files)) {
+      const text = files[e.path];
+      if (text === undefined) {
         throw new Error("ENOENT");
       }
-      return { value: { kind: "file", size: 1, mtimeMs: 1, isLink: false } };
+      return {
+        value: { kind: "file", size: text.length, mtimeMs: 1, isLink: false },
+      };
     });
     on("fs.read", (_, e) => {
       const text = files[e.path];
@@ -94,23 +131,27 @@ test(
         view: {},
       },
     });
-    expect(await ui.find({ type: "Text", text: /RUNNING/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
+    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBeDefined();
 
     // A unit finishes in the worktree: the timer alone shows it.
-    files = {
-      [`${TREE}/docs/plans/${FOLDER}/index.md`]: index("RUNNING", "green"),
-    };
+    files[live] = folder("Tree copy", "RUNNING", "green");
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: /1\/1/ })).toBeDefined();
 
-    // Landing: the worktree is deleted, the session is back in the main checkout.
-    files = {
-      [`${MAIN}/docs/plans/${FOLDER}/index.md`]: index("COMPLETE", "green"),
-    };
-    worktrees = `worktree ${MAIN}\n`;
-    cwd = MAIN;
+    // The landing archives the folder inside the worktree.
+    delete files[live];
+    files[archived] = folder("Archived copy", "COMPLETE", "green");
     await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /Archived copy/ }))
+      .toBeDefined();
     expect(await ui.find({ type: "Text", text: /COMPLETE/ })).toBeDefined();
+
+    // The merge: the worktree is gone; the main copy holds the state.
+    delete files[archived];
+    files[main] = folder("Merged copy", "COMPLETE", "green");
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /Merged copy/ })).toBeDefined();
     await ui.unmount();
   },
 );

@@ -1,65 +1,119 @@
 import {
   expect,
+  mock,
   test,
 } from "claude-code/testing";
 
-const FOLDER = "2026-10-18-a-plan";
-const INDEX = `# Plan — A plan (2026-10-18)
-
-## Status
-
-**RUNNING**
-
-## Units
-
-| Id | Wave | Unit file              | Kind | Status  | Commit |
-| -- | ---- | ---------------------- | ---- | ------- | ------ |
-| U1 | 1    | [01-a.md](01-a.md)     | edit | green   | abc    |
-| U2 | 2    | [02-b.md](02-b.md)     | code | pending |        |
-| U3 | 2    | [03-c.md](03-c.md)     | edit | skipped |        |
-
-## Run log
-
-| Wave | Unit | Model | Round | Outcome | Detail | Commit |
-| ---- | ---- | ----- | ----- | ------- | ------ | ------ |
-
-## Gaps surfaced during execution
-
-- U2 has no owner
-
-## Launch
-`;
+const FOLDER = "2026-10-25-a-plan";
+const MAIN = "/repo";
+const HOME = "/home/me";
+const LOG = `${HOME}/Library/Caches/vwf/repo/${FOLDER}.jsonl`;
+const unit = (id: string, title: string, wave: number, status: string) => ({
+  id,
+  title,
+  wave,
+  file: `0${wave}-x.md`,
+  kind: "edit",
+  status,
+  commit: "",
+  rounds: 0,
+});
+const FILES: Record<string, string> = {
+  [`${MAIN}/docs/plans/index.json`]: JSON.stringify({
+    format: 1,
+    plans: [{
+      id: FOLDER,
+      folder: `docs/plans/${FOLDER}`,
+      kind: "change",
+      title: "A plan",
+      target_repo: null,
+      priority: 1,
+      status: "RUNNING",
+      gaps: null,
+      requires: [],
+      backlog: [],
+      backlog_pieces: [],
+    }],
+  }),
+  [`${MAIN}/docs/plans/${FOLDER}/index.json`]: JSON.stringify({
+    format: 1,
+    title: "A plan",
+    status: { state: "RUNNING", detail: "" },
+    units: [
+      unit("U1", "The core", 1, "green"),
+      unit("U2", "The pane", 2, "pending"),
+      unit("U3", "The docs", 2, "skipped"),
+    ],
+    gaps: [
+      {
+        id: "G1",
+        unit: "U2",
+        stage: "",
+        text: "U2 has no owner",
+        state: "open",
+      },
+      { id: "G2", unit: "U1", stage: "", text: "settled", state: "closed" },
+    ],
+    run: {
+      worktree: `.worktrees/${FOLDER}`,
+      log: `~/Library/Caches/vwf/repo/${FOLDER}.jsonl`,
+    },
+  }),
+  [LOG]: JSON.stringify({
+    ts: "2026-10-25T09:59:00.000Z",
+    run: "20261025-095900-aaaaaaaa",
+    session: "aaaaaaaa-1111",
+    agent: null,
+    event: "run.start",
+    mode: "fresh",
+  }) + "\n",
+};
 
 test(
-  "a typed /vwf:execute opens the pane with the plan, its units and its gaps",
+  "a typed /vwf:execute opens the pane with the plan, its unit titles and its gaps",
   async ($, on) => {
     const opened: string[] = [];
-    on("clock.now", () => ({ value: 1000 }));
-    on("session.cwd", () => ({ value: "/repo" }));
-    on(
-      "process.run",
-      () => ({
+    const closed: string[] = [];
+    mock.clock(on, { now: Date.parse("2026-10-25T10:00:00Z") });
+    mock.env(on, { HOME });
+    on("session.cwd", () => ({ value: MAIN }));
+    on("session.id", () => ({ value: "aaaaaaaa-1111" }));
+    on("process.run", () => ({
+      value: {
+        exitCode: 128,
+        stdout: "",
+        stderr: "",
+        isStdoutTruncated: false,
+        isStderrTruncated: false,
+      },
+    }));
+    on("fs.stat", (_, e) => {
+      const text = FILES[e.path];
+      if (text === undefined) {
+        throw new Error("ENOENT");
+      }
+      return {
         value: {
-          exitCode: 0,
-          stdout: "worktree /repo\n",
-          stderr: "",
-          isStdoutTruncated: false,
-          isStderrTruncated: false,
+          kind: "file",
+          size: text.length,
+          mtimeMs: 1,
+          isLink: false,
         },
-      }),
-    );
-    on(
-      "fs.stat",
-      () => ({ value: { kind: "file", size: 1, mtimeMs: 1, isLink: false } }),
-    );
-    on("fs.read", () => ({ value: INDEX }));
+      };
+    });
+    on("fs.read", (_, e) => {
+      const text = FILES[e.path];
+      if (text === undefined) {
+        throw new Error("ENOENT");
+      }
+      return { value: text };
+    });
     on("agent.list", () => ({ value: [] }));
     on("ui.open", (_, e) => {
       opened.push(e.id);
       return { value: { isPlaced: true } };
     });
     on("prompt.submit", (_, e) => e);
-    const closed: string[] = [];
     on("ui.close", (_, e) => {
       closed.push(e.id);
       return { value: undefined as never };
@@ -88,10 +142,14 @@ test(
       },
     });
     expect(await ui.find({ type: "Text", text: /A plan/ })).toBeDefined();
-    expect(await ui.find({ key: "unit-U2" })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /U2 has no owner/ }))
+    expect(await ui.find({ key: "unit-U2", text: /The pane/ })).toBeDefined();
+    expect(await ui.find({ key: "unit-U2", text: /1$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /G1 · U2 · U2 has no owner/ }))
       .toBeDefined();
+    expect(await ui.find({ type: "Text", text: /settled/ })).toBe(undefined);
     expect(await ui.find({ type: "Text", text: /2\/3/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: new RegExp(LOG) }))
+      .toBeDefined();
     // One segment for each unit: U1 finished without gaps is green, U2 is pending.
     const drawn = JSON.stringify(await ui.drawn());
     expect(drawn).toContain("{\"color\":\"green\"},\"children\":[\"█");

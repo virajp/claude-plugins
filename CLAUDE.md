@@ -378,13 +378,15 @@ hooks, the five `/vwf:execute` action-log hooks (`PreToolUse`, `PostToolUse`,
 plus one hooks module, `hooks/monitor/register.tsx`, listed under `modules` in
 `hooks/hooks.json`, which draws the `/vwf:execute` progress pane against the
 state contract the manifest's `types` key names — and is the [`vwf-plugin`][vwf]
-skill's. The pane still reads the old `docs/plans/index.md`, so on the JSON plan
-format it opens on each `/vwf:execute` and shows no running plan until a later
-plan rewrites it. One more script ships as a **stackgen pack payload** copied
-into a target repo rather than discovered here, covered by the
-[`stackgen-plugin`][sg] skill. The three host rules that bite any command hook —
-BSD `sed`, never in `settings.json`, the per-event verdict shape — and the local
-gates of a hooks module are the [`plugin-authoring`][auth] skill's.
+skill's. The pane shows the plan whose row reads `RUNNING` in
+`docs/plans/index.json`, its state from that folder's `index.json` — the copy in
+the run's worktree, else the main checkout's — and its times, agents and run end
+from a whole replay of the plan's action log. One more script ships as a
+**stackgen pack payload** copied into a target repo rather than discovered here,
+covered by the [`stackgen-plugin`][sg] skill. The three host rules that bite any
+command hook — BSD `sed`, never in `settings.json`, the per-event verdict shape
+— and the local gates of a hooks module are the [`plugin-authoring`][auth]
+skill's.
 
 ## Adding a Plugin
 

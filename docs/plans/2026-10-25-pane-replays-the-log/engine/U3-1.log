@@ -1,0 +1,16 @@
+/security-review engine — loop U3, round 1, range 074b9aa1..d34e6402, filtered to plugins/
+
+No findings.
+
+Nothing found at confidence 8 or above.
+
+Checked and ruled out:
+- Command injection: none. $.process.run(["tail", "-c", TAIL_BYTES, path]) (register.tsx:290) passes an argv with no shell; it runs only when stat(path) succeeds and the file is over 4 MiB. A run.log value beginning with - could at most be read as a tail option; no code-execution path; output only parsed as JSON lines.
+- Path traversal (run.worktree, run.log, row folder): joinPath and expandHome let these escape the repo, absolute paths accepted. Only effect is a local read; reads parse JSON, keep known string/number fields, strip control characters. Nothing written, sent or executed; pane shown only to the local user.
+- Deserialization: only JSON.parse, no reviver, no prototype merge; fields copied one by one.
+- Escape injection through plan or log fields: every displayed field goes through str(), which strips C0 and C1 control characters except \n and \t.
+
+Below the bar (confidence 6, Medium, terminal escape injection):
+- plan.ts:211-218 and 293: readFolder puts the raw JSON.parse error text into problem, which reaches <Text color="red">{fit(r.problem, width)}</Text> (register.tsx:827); fit() does not strip control characters. On V8 the message quotes the bad input with raw bytes (ESC, BEL intact). A cloned repo's committed plan folder or docs/plans/index.json (via runningRows) could carry such a payload into the terminal.
+- Below the bar because the host may run mods on Bun (JavaScriptCore), whose JSON errors may not quote input, and the host's Ink renderer may strip escapes; neither confirmed.
+- Fix: wrap problem in str() / CONTROL stripping in parse(), or have fit() strip control characters.

@@ -8,39 +8,84 @@ import {
 // The environment has it; the types laid for a hooks module do not.
 declare const setTimeout: (fn: () => void, ms: number) => unknown;
 
-const A = "2026-10-21-a-plan";
-const B = "2026-10-21-b-plan";
+const A = "2026-10-25-a-plan";
+const B = "2026-10-25-b-plan";
 const MAIN = "/repo";
-const WAIT_MS = 10 * 60 * 1000;
+const HOME = "/home/me";
+const SESSION = "aaaaaaaa-1111";
+const NOW = Date.parse("2026-10-25T10:00:00Z");
+const PATIENCE_MS = 10 * 60 * 1000;
 
-const index = (title: string, status: string, u1 = "pending") =>
-  `# Plan — ${title} (2026-10-21)
+const plans = (...rows: [string, string, string?][]) =>
+  JSON.stringify({
+    format: 1,
+    plans: rows.map(([folder, status, target], i) => ({
+      id: folder,
+      folder: `docs/plans/${folder}`,
+      kind: target === undefined ? "change" : "cycle",
+      title: folder,
+      target_repo: target ?? null,
+      priority: i,
+      status,
+      gaps: null,
+      requires: [],
+      backlog: [],
+      backlog_pieces: [],
+    })),
+  });
 
-## Status
+const logOf = (folder: string) =>
+  `${HOME}/Library/Caches/vwf/repo/${folder}.jsonl`;
 
-**${status}**
+const plan = (
+  title: string,
+  statuses: string[],
+  run: Record<string, string> = {
+    worktree: `.worktrees/${title}`,
+    log: `~/Library/Caches/vwf/repo/${title}.jsonl`,
+  },
+) =>
+  JSON.stringify({
+    format: 1,
+    title,
+    status: { state: "RUNNING", detail: "" },
+    units: statuses.map((status, i) => ({
+      id: `U${i + 1}`,
+      title: `Unit ${i + 1}`,
+      wave: i + 1,
+      file: `0${i + 1}-u.md`,
+      kind: "edit",
+      status,
+      commit: "",
+      rounds: 0,
+    })),
+    gaps: [],
+    run,
+  });
 
-## Units
-
-| Id | Wave | Unit file            | Kind   | Status  | Commit |
-| -- | ---- | -------------------- | ------ | ------- | ------ |
-| U1 | 1    | [01-a.md](01-a.md)   | edit   | ${u1}   |        |
-| U2 | 2    | [02-rev.md](02-rev.md) | review | pending |        |
-
-## Launch
-`;
-
-const planIndex = (...running: string[]) =>
-  `## Plans
-
-| Folder | Kind | Status |
-| ------ | ---- | ------ |
-${running.map(f => `| docs/plans/${f} | change | RUNNING |`).join("\n")}
-`;
+let ts = NOW - 60_000;
+const line = (event: string, extra: Record<string, unknown> = {}) =>
+  JSON.stringify({
+    ts: new Date(ts += 1000).toISOString(),
+    run: "20261025-095900-aaaaaaaa",
+    session: SESSION,
+    agent: null,
+    event,
+    ...extra,
+  }) + "\n";
+const agent = (id: string, type: string, name: string, description = "x") =>
+  line("tool.start", {
+    tool: "Agent",
+    tool_use_id: `t-${id}`,
+    summary: `${type} :: ${name} :: ${description}`,
+  })
+  + line("tool.end", { tool: "Agent", tool_use_id: `t-${id}`, child: id })
+  + line("agent.start", { agent: id, agent_type: type });
 
 type World = {
   files: Record<string, string>;
-  worktrees: string[];
+  /** A size fs.stat gives in place of the text's length. */
+  sizes: Record<string, number>;
   cwd: string;
   listed: {
     id: string;
@@ -48,85 +93,85 @@ type World = {
     type: string;
     description: string;
     status: "running" | "completed";
-    parentId?: string;
   }[];
+  reads: string[];
+  tails: string[];
   viewed: (string | undefined)[];
   opened: string[];
-  /** Runs while agent.list is answering, after its answer was taken. */
-  onList?: () => Promise<void>;
+  closed: string[];
 };
 
-/** A repo on disk, git, the agent list and the pane, all from memory. */
+/** A repo on disk, git, the log, the agent list and the pane, all from memory. */
 function world(on: On, init: Partial<World> = {}): World {
   const w: World = {
     files: {},
-    worktrees: [MAIN],
+    sizes: {},
     cwd: MAIN,
     listed: [],
+    reads: [],
+    tails: [],
     viewed: [],
     opened: [],
+    closed: [],
     ...init,
   };
-  const ok = (stdout: string) => ({
+  const ok = (stdout: string, exitCode = 0) => ({
     value: {
-      exitCode: 0,
+      exitCode,
       stdout,
       stderr: "",
       isStdoutTruncated: false,
       isStderrTruncated: false,
     },
   });
+  mock.env(on, { HOME });
   on("session.cwd", () => ({ value: w.cwd }));
+  on("session.id", () => ({ value: SESSION }));
   on("process.run", (_, e) => {
-    const cwd = e.init?.cwd ?? "";
-    if (e.argv[1] === "worktree") {
-      return ok(w.worktrees.map(tree => `worktree ${tree}\n`).join(""));
+    if (e.argv[0] === "tail") {
+      const path = e.argv[3] ?? "";
+      w.tails.push(path);
+      return ok((w.files[path] ?? "").slice(-4000000));
     }
     if (e.argv.includes("--show-toplevel")) {
-      return ok(`${cwd}\n`);
+      return ok(`${e.init?.cwd ?? ""}\n`);
     }
     if (e.argv.includes("--git-common-dir")) {
       return ok(`${MAIN}/.git\n`);
     }
-    return { value: { ...ok("").value, exitCode: 128 } };
+    return ok("", 128);
   });
   on("fs.stat", (_, e) => {
-    if (!(e.path in w.files)) {
+    const text = w.files[e.path];
+    if (text === undefined) {
       throw new Error("ENOENT");
     }
-    return { value: { kind: "file", size: 1, mtimeMs: 1, isLink: false } };
+    return {
+      value: {
+        kind: "file",
+        size: w.sizes[e.path] ?? text.length,
+        mtimeMs: text.length,
+        isLink: false,
+      },
+    };
   });
   on("fs.read", (_, e) => {
     const text = w.files[e.path];
     if (text === undefined) {
       throw new Error("ENOENT");
     }
+    w.reads.push(e.path);
     return { value: text };
   });
-  on("agent.list", async () => {
-    const answer = [...w.listed];
-    await w.onList?.();
-    return { value: answer };
-  });
-  on("agent.spawn", (_, e) => {
-    const id = `a-${e.name ?? e.subagentType}`;
-    if (w.listed.some(one => one.id === id)) {
-      return { model: "opus", agentId: id };
-    }
-    w.listed.push({
-      id,
-      name: e.name,
-      type: e.subagentType,
-      description: e.description,
-      status: "running",
-    });
-    return { model: "opus", agentId: id };
-  });
+  on("agent.list", () => ({ value: [...w.listed] }));
   on("ui.open", (_, e) => {
     w.opened.push(e.id);
     return { value: { isPlaced: true } };
   });
-  on("ui.close", () => ({ value: undefined as never }));
+  on("ui.close", (_, e) => {
+    w.closed.push(e.id);
+    return { value: undefined as never };
+  });
   on("ui.view", (_, e) => {
     w.viewed.push(e.agentId);
     return { value: {} };
@@ -138,6 +183,13 @@ function world(on: On, init: Partial<World> = {}): World {
 
   return w;
 }
+
+/** Plan A RUNNING, its main copy, its log. */
+const running = (log: string, statuses = ["pending", "pending"]) => ({
+  [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"]),
+  [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, statuses),
+  [logOf(A)]: log,
+});
 
 const PANE = {
   plugin: "vwf",
@@ -161,22 +213,6 @@ const execute = (args: string) => ({
   origin: { kind: "composer" as const },
 });
 
-const spawn = (
-  name: string | undefined,
-  subagentType: string,
-  prompt = "",
-) => ({
-  tool_use_id: `t-${name ?? subagentType}`,
-  prompt,
-  description: "a task",
-  subagentType,
-  provider: { plugin: "engine", tier: "core" as const },
-  parentModel: "opus",
-  background: false,
-  fork: false,
-  ...(name === undefined ? {} : { name }),
-});
-
 const mainTurnEnds = {
   answer: "",
   durationMs: 1,
@@ -186,348 +222,277 @@ const mainTurnEnds = {
 };
 
 test(
-  "ruling 1: unit agents of any type are followed, a reviewer counts against its row, an earlier plan's agent is not adopted",
+  "D5, D14: a unit's agent comes from the log, its button opens the child, a wave review has its line",
   async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
+    mock.clock(on, { now: NOW });
     const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    const ui = await $.ui.mount(PANE);
-
-    // An edit unit, dispatched as general-purpose, named U1.
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBeDefined();
-    // A reviewer's prompt names its row, then the files of the units it covers.
-    await $.agent.spawn(
-      spawn(
-        undefined,
-        "vwf:execute-code-reviewer",
-        "loop U2, round 1: 01-a.md",
+      files: running(
+        line("run.start", { mode: "fresh" })
+          + agent("a1", "general-purpose", "U1")
+          + agent("a4", "general-purpose", "R1"),
       ),
-    );
-    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBeDefined();
-    await ui.unmount();
-
-    // An `all` run: an agent of plan A's runner, still listed, stays out of plan B.
-    w.listed = [];
-    await $.prompt.submit(execute("all"));
-    await $.agent.spawn(
-      spawn("run-1", "vwf:execute-runner", `docs/plans/${A}`),
-    );
-    await $.agent.spawn(
-      spawn("run-2", "vwf:execute-runner", `docs/plans/${B}`),
-    );
-    w.listed.push({
-      id: "old",
-      name: "U1",
-      type: "vwf:execute-coder",
-      description: "a task",
-      status: "running",
-      parentId: "a-run-1",
-    });
-    await clock.advance(3500);
-    const again = await $.ui.mount(PANE);
-    expect(await again.find({ type: "Text", text: /B plan/ })).toBeDefined();
-    expect(await again.find({ key: "unit-U1", text: /running/ })).toBe(
-      undefined,
-    );
-    await again.unmount();
-  },
-);
-
-test(
-  "ruling 2: a wave review has a line that opens its transcript",
-  async ($, on) => {
-    mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
+      listed: [
+        {
+          id: "a1",
+          type: "general-purpose",
+          description: "x",
+          status: "running",
+        },
+        {
+          id: "a4",
+          type: "general-purpose",
+          description: "x",
+          status: "running",
+        },
+      ],
     });
     await $.prompt.submit(execute(`docs/plans/${A}`));
-    await $.agent.spawn(spawn("R1", "general-purpose", "01-a.md"));
     const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ key: "unit-U1", text: /Unit 1.*running/ }))
+      .toBeDefined();
+    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBe(undefined);
     expect(await ui.find({ key: "review-R1", text: /running/ })).toBeDefined();
-    // The reviewer is not counted against the unit whose file it reads.
-    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBe(undefined);
+    await ui.press({ key: "unit-U1" });
     await ui.press({ key: "review-R1" });
-    expect(w.viewed).toEqual(["a-R1"]);
+    expect(w.viewed).toEqual(["a1", "a4"]);
     await ui.unmount();
   },
 );
 
 test(
-  "ruling 3: an idle main turn only waits; the run ends after the wait, or when the plan lands",
+  "D5: a live agent that $.agent.list() shows as done, or does not list, counts as ended",
   async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
+    const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
+      files: running(
+        line("run.start", { mode: "fresh" })
+          + agent("a1", "general-purpose", "U1")
+          + agent("a2", "general-purpose", "U2"),
+      ),
+      listed: [
+        {
+          id: "a1",
+          type: "general-purpose",
+          description: "x",
+          status: "completed",
+        },
+        {
+          id: "a2",
+          type: "general-purpose",
+          description: "x",
+          status: "running",
+        },
+      ],
     });
     await $.prompt.submit(execute(`docs/plans/${A}`));
     const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBe(undefined);
+    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBeDefined();
+    w.listed = [];
+    await clock.advance(3500);
+    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBe(undefined);
+    await ui.unmount();
+  },
+);
+
+test(
+  "D6: run.end ends the run; a resume (a second run.start) makes it live again",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: running(line("run.start", { mode: "fresh" })),
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ key: "quiet" })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /live/ })).toBeDefined();
+    w.files[logOf(A)] += line("run.end", { outcome: "paused" });
+    await clock.advance(3500);
+    expect(await ui.find({ key: "quiet" })).toBe(undefined);
+    expect(await ui.find({ type: "Text", text: /ended/ })).toBeDefined();
+    // The resume: the next main turn's poke reads it.
+    w.files[logOf(A)] += line("run.start", { mode: "resume" });
+    await clock.advance(3500);
     await $.turn.complete(mainTurnEnds);
     expect(await ui.find({ key: "quiet" })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /waiting/ })).toBeDefined();
-    await clock.advance(WAIT_MS + 5000);
-    expect(await ui.find({ key: "quiet" })).toBe(undefined);
-    await ui.unmount();
-
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    const again = await $.ui.mount(PANE);
-    expect(await again.find({ key: "quiet" })).toBeDefined();
-    w.files[`${MAIN}/docs/plans/${A}/index.md`] = index("A plan", "COMPLETE");
-    await clock.advance(3500);
-    expect(await again.find({ key: "quiet" })).toBe(undefined);
-    await again.unmount();
-  },
-);
-
-test(
-  "ruling 3: in an `all` run a COMPLETE plan ends the run; the next plan is a new run",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute("all"));
-    await $.agent.spawn(
-      spawn("run-1", "vwf:execute-runner", `docs/plans/${A}`),
-    );
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ key: "quiet" })).toBeDefined();
-    // The last plan lands: the run ends at once, not after the wait.
-    w.files[`${MAIN}/docs/plans/${A}/index.md`] = index("A plan", "COMPLETE");
-    await clock.advance(3500);
-    expect(await ui.find({ key: "quiet" })).toBe(undefined);
-    await ui.unmount();
-
-    // A following plan: a new run the pane picks up.
-    await $.agent.spawn(
-      spawn("run-2", "vwf:execute-runner", `docs/plans/${B}`),
-    );
-    await clock.advance(3500);
-    const again = await $.ui.mount(PANE);
-    expect(await again.find({ key: "quiet" })).toBeDefined();
-    expect(await again.find({ type: "Text", text: /B plan/ })).toBeDefined();
-    await again.unmount();
-  },
-);
-
-test(
-  "ruling 1: after an `all` run ends on COMPLETE, the next plan's run does not adopt the earlier plan's agent",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute("all"));
-    await $.agent.spawn(
-      spawn("run-1", "vwf:execute-runner", `docs/plans/${A}`),
-    );
-    w.files[`${MAIN}/docs/plans/${A}/index.md`] = index("A plan", "COMPLETE");
-    await clock.advance(3500);
-
-    // Plan A's unit, still listed, as the runner for plan B starts a new run.
-    w.listed.push({
-      id: "old",
-      name: "U1",
-      type: "vwf:execute-coder",
-      description: "a task",
-      status: "running",
-      parentId: "a-run-1",
-    });
-    await $.agent.spawn(
-      spawn("run-2", "vwf:execute-runner", `docs/plans/${B}`),
-    );
-    await clock.advance(3500);
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /B plan/ })).toBeDefined();
-    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBe(undefined);
-    await ui.unmount();
-  },
-);
-
-test("ruling 4: an agent gone from the list has ended", async ($, on) => {
-  const clock = mock.clock(on, { now: 1_000_000 });
-  const w = world(on, {
-    files: {
-      [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-    },
-  });
-  await $.prompt.submit(execute(`docs/plans/${A}`));
-  await $.agent.spawn(spawn(undefined, "vwf:execute-coder", "01-a.md"));
-  const ui = await $.ui.mount(PANE);
-  expect(await ui.find({ key: "unit-U1", text: /running/ })).toBeDefined();
-  w.listed = [];
-  await clock.advance(3500);
-  expect(await ui.find({ key: "unit-U1", text: /running/ })).toBe(undefined);
-  await ui.unmount();
-});
-
-test(
-  "ruling 4: a known index.md in the run's worktree is kept while it exists; searched only when gone",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const claimed = `${MAIN}/.worktrees/claimed`;
-    const tree = `${MAIN}/.worktrees/${A}`;
-    const w = world(on, {
-      files: {
-        // The run's worktree, named in the Status of the copy it holds.
-        [`${claimed}/docs/plans/${A}/index.md`]: index("Known copy", "RUNNING")
-          .replace("**RUNNING**", `**RUNNING** in \`${claimed}\``),
-      },
-      worktrees: [MAIN, claimed],
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /Known copy/ })).toBeDefined();
-    // A worktree named for the folder appears: the known path still exists.
-    w.worktrees = [MAIN, claimed, tree];
-    w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /Known copy/ })).toBeDefined();
-    // The known path is gone: search.
-    delete w.files[`${claimed}/docs/plans/${A}/index.md`];
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /run 2/ })).toBeDefined();
     await ui.unmount();
   },
 );
 
 test(
-  "ruling 12: a pane that first finds the main-checkout index.md reads the worktree copy once that worktree appears",
+  "D7: of two RUNNING rows, the one whose last run.start is this session's; else the choice",
   async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const tree = `${MAIN}/.worktrees/${A}`;
+    const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("Main copy", "RUNNING"),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
+          B,
+          "RUNNING",
+        ]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
+        [logOf(A)]: line("run.start", { mode: "fresh", session: "other" }),
+        [logOf(B)]: line("run.start", { mode: "fresh" }),
       },
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /Main copy/ })).toBeDefined();
-    // The run cuts its worktree; the main-checkout copy still exists.
-    w.worktrees = [MAIN, tree];
-    w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 12: a known index.md in another linked worktree gives way to the run's worktree copy once it appears",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const other = `${MAIN}/.worktrees/other`;
-    const tree = `${MAIN}/.worktrees/${A}`;
-    const w = world(on, {
-      files: {
-        [`${other}/docs/plans/${A}/index.md`]: index("Other copy", "RUNNING"),
-      },
-      worktrees: [MAIN, other],
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /Other copy/ })).toBeDefined();
-    // The run cuts its worktree; the other worktree's copy still exists.
-    w.worktrees = [MAIN, other, tree];
-    w.files[`${tree}/docs/plans/${A}/index.md`] = index("Tree copy", "RUNNING");
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 5: of several RUNNING rows, the one in this session's worktrees; else a problem",
-  async ($, on) => {
-    mock.clock(on, { now: 1_000_000 });
-    const tree = `${MAIN}/.worktrees/${B}`;
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/index.md`]: planIndex(A, B),
-        [`${tree}/docs/plans/index.md`]: planIndex(A, B),
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-        [`${tree}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-      worktrees: [MAIN, tree],
-      // This session works in plan B's worktree.
-      cwd: tree,
     });
     await $.prompt.submit(execute("next"));
     const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /B plan/ })).toBeDefined();
-    await ui.unmount();
-
-    // From the main checkout: another session's worktree is not this one's.
-    w.cwd = MAIN;
-    await $.prompt.submit(execute("next"));
-    const other = await $.ui.mount(PANE);
-    expect(await other.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
+    expect(await ui.find({ type: "Text", text: new RegExp(B) }))
       .toBeDefined();
-    await other.unmount();
-
-    w.worktrees = [MAIN];
-    delete w.files[`${tree}/docs/plans/${B}/index.md`];
-    await $.prompt.submit(execute("next"));
-    const again = await $.ui.mount(PANE);
-    expect(await again.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
-      .toBeDefined();
-    await again.unmount();
-  },
-);
-
-test(
-  "ruling 5: a guessed pick is re-resolved, even after an agent was followed",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const tree = `${MAIN}/.worktrees/${B}`;
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/index.md`]: planIndex(A),
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute("next"));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /A plan/ })).toBeDefined();
-    // A second RUNNING row, in the worktree this session moved into: the
-    // better pick.
-    w.worktrees = [MAIN, tree];
-    w.cwd = tree;
-    w.files[`${MAIN}/docs/plans/index.md`] = planIndex(A, B);
-    w.files[`${tree}/docs/plans/${B}/index.md`] = index("B plan", "RUNNING");
+    // Plan B resumed in another session: neither is this session's.
+    w.files[logOf(B)] += line("run.start", { mode: "resume", session: "x" });
     await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /B plan/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
+      .toBeDefined();
+    expect(
+      await ui.find({ type: "Text", text: new RegExp(`- docs/plans/${A}`) }),
+    )
+      .toBeDefined();
     await ui.unmount();
   },
 );
 
 test(
-  "ruling 6: a plan in a member repo is found from the base",
+  "D8: an unchanged log and state file are read once over two refreshes",
   async ($, on) => {
-    mock.clock(on, { now: 1_000_000 });
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: running(line("run.start", { mode: "fresh" })),
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    await clock.advance(3500);
+    await clock.advance(3500);
+    const count = (path: string) => w.reads.filter(one => one === path).length;
+    expect(count(logOf(A))).toBe(1);
+    expect(count(`${MAIN}/docs/plans/${A}/index.json`)).toBe(1);
+    w.files[logOf(A)] += line("phase.start", { phase: "wave 1" });
+    await clock.advance(3500);
+    expect(count(logOf(A))).toBe(2);
+  },
+);
+
+test(
+  "D9, D16: a log over 4 MiB is replayed from its tail, and the footer says so",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: running(
+        "{\"cut\":\"line\n"
+          + line("row", { unit: "U2", wave: 2, status: "running" }),
+        ["green", "running"],
+      ),
+      sizes: { [logOf(A)]: 5_000_000 },
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(w.tails).toEqual([logOf(A)]);
+    expect(w.reads).not.toContain(logOf(A));
+    expect(await ui.find({ type: "Text", text: /partial replay/ }))
+      .toBeDefined();
+    expect(await ui.find({ key: "unit-U2", text: /running\s+\d\d:\d\d/ }))
+      .toBeDefined();
+    await ui.unmount();
+  },
+);
+
+test(
+  "D20, D32: /vwf:execute waits for the claim; COMPLETE waits for the next plan, which shows at once; 10 minutes with none closes",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"], {}),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
+        [logOf(B)]: line("run.start", { mode: "fresh" }),
+      },
+    });
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /waiting for the claim/ }))
+      .toBeDefined();
+    // The claim: RUNNING, and no run key yet.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /no run data yet/ }))
+      .toBeDefined();
+    // Plan A lands; the next plan of an `all` run is claimed.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /waiting for the next plan/ }))
+      .toBeDefined();
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
+      B,
+      "RUNNING",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: new RegExp(B) })).toBeDefined();
+    // Plan B lands, and nothing follows.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
+      B,
+      "COMPLETE",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: /waiting for the next plan/ }))
+      .toBeDefined();
+    await clock.advance(PATIENCE_MS - 5000);
+    expect(w.closed).toEqual([]);
+    await clock.advance(6000);
+    expect(await ui.find({ type: "Text", text: /No plan reads RUNNING/ }))
+      .toBeDefined();
+    await clock.advance(10_500);
+    expect(w.closed).toEqual(["vwf-monitor"]);
+    await ui.unmount();
+  },
+);
+
+test(
+  "D3: the old format shows its message and closes after 10 s; so does /vwf-monitor with no RUNNING row",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: { [`${MAIN}/docs/plans/index.md`]: "## Plans\n" },
+    });
+    await $.prompt.submit(execute("next"));
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: /old plan format/ }))
+      .toBeDefined();
+    await clock.advance(9000);
+    expect(w.closed).toEqual([]);
+    await clock.advance(1500);
+    expect(w.closed).toEqual(["vwf-monitor"]);
+    await ui.unmount();
+
+    w.files = { [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"]) };
+    // The engine stamps the presentation; the kit does not.
+    await $.command.run(
+      {
+        command: "vwf-monitor",
+        args: "",
+        presentation: { isFullscreen: false, columns: 100 },
+      } as Parameters<typeof $.command.run>[0],
+    );
+    const again = await $.ui.mount(PANE);
+    expect(await again.find({ type: "Text", text: /No plan reads RUNNING/ }))
+      .toBeDefined();
+    await clock.advance(10_500);
+    expect(w.closed).toEqual(["vwf-monitor", "vwf-monitor"]);
+    await again.unmount();
+  },
+);
+
+test(
+  "D7: a cycle plan in a member repo is found from the base",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
     world(on, {
       files: {
         [`${MAIN}/.config/vwf.yaml`]:
           "topology: multi-repo\nmembers:\n  - name: api\n    path: ../api\n",
-        [`/api/docs/plans/${A}/index.md`]: index("Member plan", "RUNNING"),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING", "api"]),
+        [`/api/docs/plans/${A}/index.json`]: plan("Member plan", ["pending"]),
       },
     });
     await $.prompt.submit(execute(`docs/plans/${A}`));
@@ -537,9 +502,9 @@ test(
   },
 );
 
-test("ruling 7: the timer runs only while a run is live", async ($, on) => {
+test("D8: the timer runs only while a run is live", async ($, on) => {
   // Each period of a timer is one clock.every dispatch, held until released.
-  let now = 1_000_000;
+  let now = NOW;
   let periods: (() => void)[] = [];
   on("clock.now", () => ({ value: now }));
   on("clock.every", () =>
@@ -554,9 +519,7 @@ test("ruling 7: the timer runs only while a run is live", async ($, on) => {
     await new Promise<void>(resolve => setTimeout(resolve, 20));
   };
   const w = world(on, {
-    files: {
-      [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-    },
+    files: running(line("run.start", { mode: "fresh" })),
   });
   await $.session.start({
     cwd: MAIN,
@@ -569,166 +532,9 @@ test("ruling 7: the timer runs only while a run is live", async ($, on) => {
   expect(periods.length).toBe(1);
   await tick();
   expect(periods.length).toBe(1);
-  // The plan lands: the timer stops asking for periods.
-  w.files[`${MAIN}/docs/plans/${A}/index.md`] = index("A plan", "COMPLETE");
+  // The run ends: the timer stops asking for periods.
+  w.files[logOf(A)] += line("run.end", { outcome: "complete" });
   await tick();
   await tick();
   expect(periods.length).toBe(0);
 });
-
-test(
-  "ruling 4: an `all` run reads its plan in the shared worktree, not the main checkout",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const tree = `${MAIN}/.worktrees/all-2026-10-21-1200`;
-    world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("Main copy", "RUNNING"),
-        [`${tree}/docs/plans/${A}/index.md`]: index("Tree copy", "RUNNING"),
-      },
-      worktrees: [MAIN, tree],
-    });
-    await $.prompt.submit(execute("all"));
-    await $.agent.spawn(
-      spawn("run-1", "vwf:execute-runner", `docs/plans/${A}`),
-    );
-    await clock.advance(3500);
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /Tree copy/ })).toBeDefined();
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 4: a spawn merges by id with a refresh that ran first or read the list before it",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
-      // Listed before its spawn hook ran: the refresh adopts it first.
-      listed: [{
-        id: "a-U1",
-        name: "U1",
-        type: "general-purpose",
-        description: "a task",
-        status: "running",
-      }],
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    const ui = await $.ui.mount(PANE);
-    expect(
-      await ui.find({ key: "unit-U1", text: /running\s+\d\d:\d\d/ }),
-    )
-      .toBeDefined();
-
-    // A refresh holding a list read before U2 spawned does not end U2.
-    w.onList = async () => {
-      w.onList = undefined;
-      await $.agent.spawn(spawn("U2", "general-purpose"));
-    };
-    await clock.advance(3500);
-    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBeDefined();
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 5: a pick in this session's own worktree is no longer a guess",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const tree = `${MAIN}/.worktrees/${A}`;
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/index.md`]: planIndex(A),
-        [`${tree}/docs/plans/index.md`]: planIndex(A),
-        [`${tree}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-      worktrees: [MAIN, tree],
-      cwd: tree,
-    });
-    await $.prompt.submit(execute("next"));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    // Another session's plan is now the only RUNNING row.
-    w.files[`${MAIN}/docs/plans/index.md`] = planIndex(B);
-    w.files[`${tree}/docs/plans/index.md`] = planIndex(B);
-    await clock.advance(3500);
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /A plan/ })).toBeDefined();
-    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBeDefined();
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 5: a re-pick never carries agents to another plan",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/index.md`]: planIndex(A),
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-        [`${MAIN}/docs/plans/${B}/index.md`]: index("B plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute("next"));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    w.files[`${MAIN}/docs/plans/index.md`] = planIndex(B);
-    await clock.advance(3500);
-    const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /B plan/ })).toBeDefined();
-    expect(await ui.find({ key: "unit-U1", text: /running/ })).toBe(undefined);
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 3: an interrupted run, with no idle main turn, ends after the wait",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    const ui = await $.ui.mount(PANE);
-    // Interrupted: the unit is killed, and no main turn ends idle.
-    w.listed = [];
-    await clock.advance(3500);
-    expect(await ui.find({ key: "quiet" })).toBeDefined();
-    await clock.advance(WAIT_MS + 5000);
-    expect(await ui.find({ key: "quiet" })).toBe(undefined);
-    await ui.unmount();
-  },
-);
-
-test(
-  "ruling 3: a BLOCKED plan ends the run once its live agents end",
-  async ($, on) => {
-    const clock = mock.clock(on, { now: 1_000_000 });
-    const w = world(on, {
-      files: {
-        [`${MAIN}/docs/plans/${A}/index.md`]: index("A plan", "RUNNING"),
-      },
-    });
-    await $.prompt.submit(execute(`docs/plans/${A}`));
-    await $.agent.spawn(spawn("U1", "general-purpose"));
-    await $.agent.spawn(spawn("U2", "general-purpose"));
-    const ui = await $.ui.mount(PANE);
-    // U1 fails the plan while U2 still runs.
-    w.listed = w.listed.filter(one => one.id !== "a-U1");
-    w.files[`${MAIN}/docs/plans/${A}/index.md`] = index("A plan", "BLOCKED");
-    await clock.advance(3500);
-    expect(await ui.find({ key: "quiet" })).toBeDefined();
-    w.listed = [];
-    await clock.advance(3500);
-    expect(await ui.find({ key: "quiet" })).toBe(undefined);
-    expect(await ui.find({ key: "unit-U2", text: /running/ })).toBe(undefined);
-    await ui.unmount();
-  },
-);
