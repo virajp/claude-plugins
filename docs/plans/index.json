@@ -1,25 +1,4 @@
 {
   "format": 1,
-  "plans": [
-    {
-      "id": "2026-10-25-pane-replays-the-log",
-      "folder": "docs/plans/2026-10-25-pane-replays-the-log",
-      "kind": "change",
-      "title": "The progress pane replays the action log",
-      "target_repo": null,
-      "priority": 10,
-      "status": "COMPLETE",
-      "gaps": {
-        "open": 0,
-        "moved_to": []
-      },
-      "requires": [
-        "2026-10-25-action-log-per-plan"
-      ],
-      "backlog": [],
-      "backlog_pieces": [],
-      "started": "2026-10-25T06:39:50.000Z",
-      "ended": "2026-10-25T07:19:14.000Z"
-    }
-  ]
+  "plans": []
 }
