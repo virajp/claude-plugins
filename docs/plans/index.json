@@ -8,8 +8,11 @@
       "title": "The progress pane replays the action log",
       "target_repo": null,
       "priority": 10,
-      "status": "RUNNING",
-      "gaps": null,
+      "status": "COMPLETE",
+      "gaps": {
+        "open": 2,
+        "moved_to": []
+      },
       "requires": [
         "2026-10-25-action-log-per-plan"
       ],
