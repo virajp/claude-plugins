@@ -89,14 +89,23 @@ Each package references its workspace dependencies' `tsconfig.build.json`
 what changed. At the package boundary, code imports the dependency by its
 published name (`@scope/common/utils`) — `@/` never crosses a package edge.
 
-## Monorepo: turbo orchestration
+## Monorepo: build orchestration
 
 > Workspace-only — a single-package repo just runs its own `build` script.
 
-The root `package.json` fans builds out with `turbo run build` and
-`pnpm run --filter '<pkg>' <script>`. turbo caches per-package output and honors
-the reference graph, so a no-op rebuild is instant. Keep all cross-workspace
-fan-out in the root scripts; per-package scripts stay single-package.
+Keep all cross-workspace fan-out in the root scripts; per-package scripts stay
+single-package. The orchestrator is one of two:
+
+- **turbo**, when the repo uses it — the root fans builds out with
+  `turbo run build` and `pnpm run --filter '<pkg>' <script>`. turbo caches
+  per-package output and honors the reference graph, so a no-op rebuild is
+  instant.
+- **The package manager's filter**, when the repo has no turbo —
+  `pnpm --filter "<name>..." run build` (or `bun run --filter "<name>..." build`).
+  The trailing `...` selects `<name>` and its workspace dependencies, and builds
+  them in dependency order, so an upstream package is built first. An image
+  build runs the same `pnpm --filter "<name>..." run build`. Nothing caches, so
+  every run rebuilds.
 
 ## Checklist when builds break
 

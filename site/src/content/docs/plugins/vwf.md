@@ -1831,11 +1831,13 @@ before it — no reshape needed. An unchanged pack writes nothing and shows
 nothing; a changed one is a `write` row inside the pass's consent, and declining
 it keeps what the repo has. A pack dropped from a composition goes through
 `pack-remove --slug <slug>`, which drops its values and its subtasks from the
-`…:all` tasks, and then its recorded files are deleted. After the packs, setup
-re-derives the repo's `node` value — `true` when any pinned pack there is
-node-based — and its `external` value — `true` only when a pinned pack ships a
-`setup/external/*` task — and calls `/stackgen:tool-config all` with whichever
-changed.
+`…:all` tasks, and then its recorded files are deleted. A dropped generated
+component (a `@generated` ref, such as a Turborepo skill) has no pack to remove,
+so only its recorded `.claude/` files go, inside the same consent. After the
+packs, setup re-derives the repo's `node` value — `true` when any pinned pack
+there is node-based — and its `external` value — `true` only when a pinned pack
+ships a `setup/external/*` task — and calls `/stackgen:tool-config all` with
+whichever changed.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped
