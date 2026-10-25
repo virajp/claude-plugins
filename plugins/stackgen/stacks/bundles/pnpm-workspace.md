@@ -3,7 +3,7 @@ name: pnpm · workspace
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@1.0.0
+- package-manager/pnpm@1.1.0
 ---
 
 # Monorepo — pnpm · workspace
@@ -27,7 +27,9 @@ config file and a daemon that buy nothing back.
 - **No build orchestrator.** Members are built and checked by task-runner
   tasks, one per member or one that walks them. Nothing computes a task graph,
   so a member whose build depends on another's output states that ordering in
-  the task itself.
+  the task itself — `pnpm --filter "<name>..." run build` (or
+  `bun run --filter "<name>..." build`) builds `<name>` after its workspace
+  dependencies.
 - **TypeScript** from a shared `tsconfig.base.json`: strict, `ESNext`,
   `moduleResolution: bundler`, `verbatimModuleSyntax`,
   `noUncheckedIndexedAccess`. Per-project `tsconfig.json` with the `@/*` path

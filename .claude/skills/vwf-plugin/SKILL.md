@@ -265,7 +265,8 @@ an **absent** axis is written `unresolved` and a pinned slug is never rewritten.
 The same pass re-runs `pack` for every already-landed pack on each run,
 previewing each call and relaying the skill's rows inside its own consent, so a
 template a newer pack changed reaches the repo without a reshape; a dropped pack
-goes through `pack-remove` before its recorded files are deleted; and after the
+goes through `pack-remove` before its recorded files are deleted, and a dropped
+`@generated` component loses only its recorded `.claude/` files; and after the
 packs setup re-derives `node` (any pinned node-based pack) and `external` (a
 pinned pack shipping a `setup/external/*` task) and calls `all` with the ones
 that changed. On the spine it runs before the doctor gate, and a declined

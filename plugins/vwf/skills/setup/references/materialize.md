@@ -274,10 +274,14 @@ preview `pack-remove --slug <slug>`: it deletes the pack's
 `packs.<slug>` from the values file and re-renders the `…:all` tasks, so no
 gate calls a task that is gone. Show its rows beside the files the lockfile
 records for that component — its `config/` copies — as one consent per repo.
-On a yes, run the call with its answers, then delete those recorded files
-and their lockfile entries, and commit, one commit per slug. A decline
-leaves everything as it stands and is reported; `/vwf:setup` offers it
-again on the next run.
+A **generated** component of the dropped slug — a `<type>/<name>@generated`
+ref that no slug still pinned in that repo also composes — has no pack and
+no `pack-remove` call: its recorded files are the `.claude/` copies the
+lockfile names for that ref (its skill, its citations), and they join the
+same consent. On a yes, run the call with its answers, then delete those
+recorded files and their lockfile entries, and commit, one commit per slug.
+A decline leaves everything as it stands and is reported; `/vwf:setup`
+offers it again on the next run.
 
 ## Re-derive the repo's values
 

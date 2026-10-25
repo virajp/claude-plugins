@@ -346,7 +346,8 @@ to a repo, and every write it makes is consent-gated and committed once.
 - **A pack dropped from a composition takes its bootstrap tools with it**
   — only the ones this handoff added and no other component needs
   ([the bootstrap handoff](bootstrap-handoff.md#removal)). Its recorded
-  files are removed with its lockfile entries.
+  files are removed with its lockfile entries — and so are a dropped
+  generated component's, its `.claude/` skill and citations included.
 - **Four targets, and nothing else.** Inside `.claude/`, nothing lands
   outside the output vocabulary. Outside `.claude/` but inside the repo,
   there are exactly two: `.mcp.json`, and the repo config files a
