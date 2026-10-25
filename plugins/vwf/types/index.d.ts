@@ -1,62 +1,39 @@
-/** One row of a plan folder's Units table. */
-export type UnitRow = {
-  id: string;
-  wave: string;
-  kind: string;
-  file: string;
-  status: string;
-  commit: string;
-};
+/**
+ * One subagent of the plan as the pane shows it: the log's, its `live`
+ * checked against $.agent.list() when the run is in this session.
+ */
+export type AgentRun = ReplayAgent;
 
-/** One row of a plan folder's Run log table. */
-export type LogRow = {
-  wave: string;
-  unit: string;
-  model: string;
-  round: string;
-  outcome: string;
-  detail: string;
-  commit: string;
-};
-
-/** What the mod reads from a plan folder's index.md. */
-export type PlanSnapshot = {
-  title: string;
-  status: string;
-  units: UnitRow[];
-  log: LogRow[];
-  gaps: string[];
-};
-
-/** One vwf:execute-* subagent the run dispatched. */
-export type AgentRun = {
-  id: string;
-  type: string;
-  description: string;
-  unit?: string;
-  /** Absent for an agent that ran before the mod loaded. */
-  startedAt?: number;
-  endedAt?: number;
-  status: string;
-};
-
-/** One plan of the run: a named folder, or each plan of `all`. */
+/** The plan the pane shows: the RUNNING row's folder, replayed with its log. */
 export type PlanRun = {
+  /** The row's folder, relative to its repo root (`docs/plans/<name>`). */
   folder: string;
-  indexPath?: string;
-  startedAt: number;
-  endedAt?: number;
-  plan?: PlanSnapshot;
-  agents: AgentRun[];
+  /** The checkout that holds the folder: the base repo, or a member's. */
+  repo: string;
+  /** The index.json the state came from: the worktree, main or archived copy. */
+  statePath: string;
+  /** The log, `~` expanded; absent until the claim writes `run.log`. */
+  logPath?: string;
+  replay: Replay;
 };
 
-/** One /vwf:execute invocation. */
+/** One opening of the pane, by /vwf:execute or /vwf-monitor. */
 export type Run = {
   mode: string;
   cwd: string;
   startedAt: number;
+  /** Set when the pane stops following: the closing message shows. */
   endedAt?: number;
-  plans: PlanRun[];
+  /** The folder name the opening named, until that plan has shown and gone. */
+  named?: string;
+  /** What the pane waits for while no plan reads RUNNING. */
+  waiting?: "claim" | "next";
+  waitStartedAt?: number;
+  plan?: PlanRun;
+  /** The RUNNING folders, when none of several is this session's. */
+  choices?: string[];
+  /** The message shown for 10 s before the pane closes. */
+  message?: string;
   /** When the mod last read the plan files. */
   refreshedAt?: number;
   /** Why the last read failed, if it did. */

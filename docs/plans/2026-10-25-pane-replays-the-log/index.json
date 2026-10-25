@@ -88,9 +88,9 @@
         "U1"
       ],
       "waits": "it calls the replay API that U1 writes in plan.ts and the types U1 writes in index.d.ts",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -132,7 +132,8 @@
         "site/src/content/docs/plugins/mempalace.md",
         ".claude/docs/plugins.md",
         "plugins/vwf/assets/execute-stages.md",
-        "plugins/vwf/skills/execute/references/action-log.md"
+        "plugins/vwf/skills/execute/references/action-log.md",
+        "plugins/vwf/skills/execute/SKILL.md"
       ],
       "depends_on": [
         "U1",
@@ -509,6 +510,20 @@
       "stage": "edit",
       "text": "D22 names a session.end of the last session seen but not which session that is · took it as the session of the tail last line, the one D7 uses",
       "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D7 does not say whether the choice view of several RUNNING rows polls on the 3 s timer · the choice view refreshes on pokes only, not on the timer",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "R2 rule 5: plugins/vwf/skills/execute/SKILL.md:134 says the log carries the same facts as events for the progress pane, false under D24; the Facts line marking it no change predates D24 and D30 · U4 owns widened to that file, passage :134 only, reworded as D30 rewords action-log.md:25",
+      "state": "closed"
     }
   ],
   "overrides": [],
