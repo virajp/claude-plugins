@@ -1,7 +1,15 @@
 import type {
   AgentRun,
   LogRow,
+  PlanFolder,
+  PlanGap,
+  PlanIndexRow,
   PlanSnapshot,
+  PlanUnit,
+  Replay,
+  ReplayAgent,
+  ReplayRun,
+  ReplayUnit,
   UnitRow,
 } from "../../types";
 
@@ -163,6 +171,15 @@ const REVIEWER = /(?:^|:)execute-(?:code|security)-reviewer$/;
 export function unitFor(
   text: string,
   units: UnitRow[],
+  name?: string,
+  type?: string,
+): string | undefined {
+  return unitOf(text, units, name, type);
+}
+
+function unitOf(
+  text: string,
+  units: { id: string; file: string; }[],
   name?: string,
   type?: string,
 ): string | undefined {
@@ -350,4 +367,465 @@ export function gapsOf(unitId: string, plan: PlanSnapshot): string[] {
     .map(row => row.detail);
 
   return [...fromSection, ...fromLog];
+}
+
+// The JSON plan format and the action log.
+
+/** A unit status that ends a unit (the schema.mjs unit enum). */
+const FINAL = ["green", "failed", "unresolved", "skipped"];
+
+type Json = Record<string, unknown>;
+
+function isObject(value: unknown): value is Json {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+/** A string field, control characters stripped; "" when absent. */
+function str(value: unknown): string {
+  return typeof value === "string" ? value.replace(CONTROL, "") : "";
+}
+
+function num(value: unknown): number {
+  return typeof value === "number" && Number.isFinite(value) ? value : 0;
+}
+
+function time(value: unknown): number | undefined {
+  const ms = typeof value === "string" ? Date.parse(value) : NaN;
+
+  return Number.isNaN(ms) ? undefined : ms;
+}
+
+function parse(text: string): { value?: unknown; problem?: string; } {
+  try {
+    return { value: JSON.parse(text) };
+  }
+  catch (error) {
+    return { problem: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+/**
+ * The unit an agent is for, from the type and the name of its Agent
+ * `tool.start` summary: a unit name (`U<n>`, `U<n>-late<k>`, a `-<n>`
+ * suffix) first; then, for a `vwf:execute-*` agent other than the runner,
+ * today's rules over `text` (the summary's description) — a review-row
+ * reviewer by the row id, any other by a unit file's name.
+ */
+export function unitForAgent(
+  type: string,
+  name: string | undefined,
+  units: { id: string; file: string; }[],
+  text = "",
+): string | undefined {
+  const named = name?.match(UNIT_NAME)?.[1];
+  if (named && units.some(unit => unit.id === named)) {
+    return named;
+  }
+  if (!type.startsWith(PREFIX) || type === RUNNER) {
+    return undefined;
+  }
+
+  return unitOf(text, units, undefined, type);
+}
+
+/** The RUNNING rows of a docs/plans/index.json text. */
+export function runningRows(
+  text: string,
+): { rows: PlanIndexRow[]; problem?: string; } {
+  const { value, problem } = parse(text);
+  if (problem !== undefined) {
+    return { rows: [], problem: `docs/plans/index.json: ${problem}` };
+  }
+  const plans = isObject(value) && Array.isArray(value["plans"])
+    ? value["plans"]
+    : undefined;
+  if (plans === undefined) {
+    return { rows: [], problem: "docs/plans/index.json: no plans list" };
+  }
+  const rows = plans
+    .filter(isObject)
+    .filter(row => row["status"] === "RUNNING")
+    .map(row => ({
+      id: str(row["id"]),
+      folder: str(row["folder"]),
+      kind: str(row["kind"]),
+      title: str(row["title"]),
+      target_repo: typeof row["target_repo"] === "string"
+        ? str(row["target_repo"])
+        : null,
+    }))
+    .filter(row => row.folder !== "");
+
+  return { rows };
+}
+
+/** True for the old markdown plan format. */
+export function isOldFormat(facts: {
+  /** docs/plans/index.md exists. */
+  indexMd: boolean;
+  /** The folder has an index.md. */
+  folderMd?: boolean;
+  /** The folder has an index.json. */
+  folderJson?: boolean;
+}): boolean {
+  return facts.indexMd || (facts.folderMd === true && !facts.folderJson);
+}
+
+/** What the pane shows of a plan folder's index.json text. */
+export function readFolder(
+  text: string,
+): { folder?: PlanFolder; problem?: string; } {
+  const { value, problem } = parse(text);
+  if (problem !== undefined || !isObject(value)) {
+    return { problem: `index.json: ${problem ?? "not an object"}` };
+  }
+  const status = isObject(value["status"]) ? value["status"] : {};
+  const run = isObject(value["run"]) ? value["run"] : {};
+  const units: PlanUnit[] =
+    (Array.isArray(value["units"]) ? value["units"] : [])
+      .filter(isObject)
+      .map(unit => {
+        const out: PlanUnit = {
+          id: str(unit["id"]),
+          title: str(unit["title"]),
+          wave: num(unit["wave"]),
+          file: str(unit["file"]),
+          kind: str(unit["kind"]),
+          status: str(unit["status"]) || "pending",
+          commit: str(unit["commit"]),
+          rounds: num(unit["rounds"]),
+        };
+        const range = unit["range"];
+        if (isObject(range)) {
+          out.range = { from: str(range["from"]), to: str(range["to"]) };
+        }
+
+        return out;
+      });
+  const gaps: PlanGap[] = (Array.isArray(value["gaps"]) ? value["gaps"] : [])
+    .filter(isObject)
+    .map(gap => ({
+      id: str(gap["id"]),
+      unit: str(gap["unit"]),
+      stage: str(gap["stage"]),
+      text: str(gap["text"]),
+      state: str(gap["state"]),
+    }));
+  const folder: PlanFolder = {
+    title: str(value["title"]),
+    state: str(status["state"]),
+    units,
+    gaps,
+    run: {},
+  };
+  if (str(run["worktree"]) !== "") {
+    folder.run.worktree = str(run["worktree"]);
+  }
+  if (str(run["log"]) !== "") {
+    folder.run.log = str(run["log"]);
+  }
+
+  return { folder };
+}
+
+/** A leading `~/` becomes `home + "/"`. */
+export function expandHome(path: string, home: string): string {
+  return path.startsWith("~/") ? `${home}/${path.slice(2)}` : path;
+}
+
+/**
+ * An Agent `tool.start` summary split at its first two ` :: `: three parts
+ * give type, name and description, two give type and description.
+ */
+function splitSummary(
+  summary: string,
+): { type: string; name?: string; description: string; } {
+  const parts = summary.replace(/ \[bg\]$/, "").split(" :: ");
+  if (parts.length >= 3) {
+    return {
+      type: parts[0] ?? "",
+      name: parts[1],
+      description: parts.slice(2).join(" :: "),
+    };
+  }
+
+  return { type: parts[0] ?? "", description: parts[1] ?? "" };
+}
+
+/**
+ * The plan's state: `folder` (the worktree copy of its index.json, else the
+ * main or archived copy) gives the status, the units and the open gaps; the
+ * log lines add the runs, each unit's times and agents, the wave-review
+ * agents, the live agents and whether the run ended. `plan.snapshot`, `row`
+ * status and `gap` events are no source of state.
+ */
+export function replay(
+  lines: string[],
+  folder: PlanFolder,
+  options: { partial?: boolean; } = {},
+): Replay {
+  const runs: ReplayRun[] = [];
+  let skipped = 0;
+  let lastSession: string | undefined;
+  // Indexed by line number of the event that ends a run.
+  const ends: { at: number; event: string; session: string; }[] = [];
+  const firstRunning = new Map<string, number>();
+  const lastFinal = new Map<string, { at: number; ts?: number; }>();
+  const lastRunning = new Map<string, number>();
+  // The Agent calls, by tool_use_id; the agents, by id.
+  const calls = new Map<
+    string,
+    {
+      type: string;
+      name?: string;
+      description: string;
+      at?: number;
+      child?: string;
+    }
+  >();
+  const pending: string[] = [];
+  const agents = new Map<
+    string,
+    {
+      call?: string;
+      startedAt?: number;
+      endedAt?: number;
+      started: boolean;
+      ended: boolean;
+    }
+  >();
+  const agentOf = (id: string) => {
+    let agent = agents.get(id);
+    if (agent === undefined) {
+      agent = { started: false, ended: false };
+      agents.set(id, agent);
+    }
+
+    return agent;
+  };
+  let lastStart = -1;
+  let count = 0;
+
+  for (const raw of lines) {
+    if (raw.trim() === "") {
+      continue;
+    }
+    let e: unknown;
+    try {
+      e = JSON.parse(raw);
+    }
+    catch {
+      skipped++;
+      continue;
+    }
+    if (!isObject(e)) {
+      skipped++;
+      continue;
+    }
+    const at = count++;
+    const ts = time(e["ts"]);
+    const session = str(e["session"]);
+    if (session !== "") {
+      lastSession = session;
+    }
+    const event = str(e["event"]);
+    switch (event) {
+      case "run.start":
+        runs.push({
+          id: str(e["run"]),
+          session,
+          mode: str(e["mode"]),
+          startedAt: ts,
+        });
+        lastStart = at;
+        break;
+      case "run.end":
+      case "stop":
+      case "session.end":
+        ends.push({ at, event, session });
+        break;
+      case "row": {
+        const unit = str(e["unit"]);
+        const status = str(e["status"]);
+        if (unit === "") {
+          break;
+        }
+        if (status === "running") {
+          if (!firstRunning.has(unit) && ts !== undefined) {
+            firstRunning.set(unit, ts);
+          }
+          lastRunning.set(unit, at);
+        }
+        else if (FINAL.includes(status)) {
+          lastFinal.set(unit, { at, ts });
+        }
+        break;
+      }
+      case "tool.start": {
+        const tool = str(e["tool"]);
+        const id = str(e["tool_use_id"]);
+        if ((tool === "Agent" || tool === "Task") && id !== "") {
+          calls.set(id, { ...splitSummary(str(e["summary"])), at: ts });
+          pending.push(id);
+        }
+        break;
+      }
+      case "tool.end": {
+        const id = str(e["tool_use_id"]);
+        const child = str(e["child"]);
+        const call = calls.get(id);
+        if (call !== undefined && child !== "") {
+          // The child the hook recorded wins over a guess at agent.start.
+          for (const [other, agent] of agents) {
+            if (agent.call === id && other !== child) {
+              agent.call = undefined;
+            }
+          }
+          call.child = child;
+          agentOf(child).call = id;
+        }
+        const index = pending.indexOf(id);
+        if (index >= 0) {
+          pending.splice(index, 1);
+        }
+        break;
+      }
+      case "agent.start": {
+        const id = str(e["agent"]);
+        if (id === "") {
+          break;
+        }
+        const agent = agentOf(id);
+        agent.started = true;
+        agent.startedAt = ts;
+        // A foreground Agent call ends after its agent: tie the agent to the
+        // oldest open call of its type until tool.end names the child.
+        if (agent.call === undefined) {
+          const type = str(e["agent_type"]);
+          const index = pending.findIndex(call => {
+            const one = calls.get(call);
+
+            return one !== undefined
+              && one.child === undefined
+              && ![...agents.values()].some(a => a.call === call)
+              && (one.type === type || one.type === "");
+          });
+          if (index >= 0) {
+            agent.call = pending[index];
+          }
+        }
+        break;
+      }
+      case "agent.end": {
+        const id = str(e["agent"]);
+        if (id !== "") {
+          const agent = agentOf(id);
+          agent.ended = true;
+          agent.endedAt = ts;
+        }
+        break;
+      }
+      default:
+        break;
+    }
+  }
+
+  const session = lastStart >= 0
+    ? runs[runs.length - 1]?.session
+    : lastSession;
+  const ended = ends.some(end =>
+    end.at > lastStart
+    && (end.event !== "session.end" || end.session === session)
+  );
+
+  // Each agent with its call, oldest first.
+  const tied: {
+    agent: ReplayAgent;
+    unit?: string;
+    review?: string;
+    order: number;
+  }[] = [];
+  for (const [id, agent] of agents) {
+    const call = agent.call === undefined ? undefined : calls.get(agent.call);
+    if (call === undefined) {
+      continue;
+    }
+    const one: ReplayAgent = {
+      id,
+      type: call.type,
+      description: call.description,
+      live: agent.started && !agent.ended,
+    };
+    if (call.name !== undefined) {
+      one.name = call.name;
+    }
+    // A start time is an agent.start only (D10, D26); the Agent call's
+    // tool.start orders the agents, never dates one.
+    if (agent.startedAt !== undefined) {
+      one.startedAt = agent.startedAt;
+    }
+    if (agent.endedAt !== undefined) {
+      one.endedAt = agent.endedAt;
+    }
+    const review = reviewName(call.name);
+    tied.push({
+      agent: one,
+      review,
+      order: agent.startedAt ?? call.at ?? 0,
+      unit: review === undefined
+        ? unitForAgent(call.type, call.name, folder.units, call.description)
+        : undefined,
+    });
+  }
+  tied.sort((a, b) => a.order - b.order);
+
+  const reviews: Record<string, ReplayAgent> = {};
+  for (const one of tied) {
+    if (one.review !== undefined) {
+      reviews[one.review] = one.agent;
+    }
+  }
+
+  const units: ReplayUnit[] = folder.units.map(unit => {
+    const mine = tied.filter(one => one.unit === unit.id).map(one => one.agent);
+    const out: ReplayUnit = { ...unit };
+    const startedAt = firstRunning.get(unit.id)
+      ?? mine.find(agent => agent.startedAt !== undefined)?.startedAt;
+    if (startedAt !== undefined) {
+      out.startedAt = startedAt;
+    }
+    const final = lastFinal.get(unit.id);
+    if (
+      final?.ts !== undefined && (lastRunning.get(unit.id) ?? -1) < final.at
+    ) {
+      out.endedAt = final.ts;
+    }
+    const latest = mine[mine.length - 1];
+    if (latest !== undefined) {
+      out.agent = latest;
+    }
+
+    return out;
+  });
+
+  const state: Replay = {
+    title: folder.title,
+    state: folder.state,
+    units,
+    gaps: folder.gaps.filter(gap => gap.state === "open"),
+    runs,
+    reviews,
+    live: [...agents]
+      .filter(([, agent]) => agent.started && !agent.ended)
+      .map(([id]) => id),
+    ended,
+    partial: options.partial === true,
+    noData: count === 0,
+    skipped,
+  };
+  if (session !== undefined) {
+    state.session = session;
+  }
+
+  return state;
 }

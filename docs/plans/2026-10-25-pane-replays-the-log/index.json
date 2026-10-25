@@ -10,8 +10,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-10-25 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-10-25T12:10 in /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/pane-replays-the-log"
   },
   "consent": {
     "merge": true,
@@ -64,9 +64,9 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
+      "status": "green",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -502,7 +502,15 @@
       "detail": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D22 names a session.end of the last session seen but not which session that is · took it as the session of the tail last line, the one D7 uses",
+      "state": "open"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/pane-replays-the-log",
