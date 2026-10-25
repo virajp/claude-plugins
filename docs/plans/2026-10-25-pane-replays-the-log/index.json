@@ -89,7 +89,7 @@
       ],
       "waits": "it calls the replay API that U1 writes in plan.ts and the types U1 writes in index.d.ts",
       "status": "green",
-      "commit": "2f5f3425",
+      "commit": "acf635d1",
       "rounds": 2
     },
     {
@@ -105,12 +105,12 @@
         "U2"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "074b9aa1",
-        "to": "d34e6402"
+        "from": "d34e6402",
+        "to": "acf635d1"
       }
     },
     {

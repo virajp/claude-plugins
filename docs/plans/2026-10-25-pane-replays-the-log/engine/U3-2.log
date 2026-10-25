@@ -1,0 +1,12 @@
+/security-review engine — loop U3, round 2, range d34e6402..acf635d1, filtered to plugins/
+
+No findings.
+
+The fix holds. In plugins/vwf/hooks/monitor/plan.ts, parse() now passes every JSON.parse error message through str() (around line 218). str() removes the CONTROL set (line 17): all C0 control characters except tab and newline, plus DEL and C1. That covers ESC, BEL and the one-byte CSI. Both runningRows and readFolder get their problem text from parse(), so both are covered.
+
+Other text that can reach a displayed problem in register.tsx is clean:
+- The Cannot read ${path} messages are built from row.folder, run.worktree and run.log, all already passed through str() in plan.ts.
+- The tail failure message contains only constant text, an exit number and that same cleaned path.
+- The remaining messages are fixed strings.
+
+The fix adds no new risk: it only removes characters from a string and never touches the JSON input being parsed.
