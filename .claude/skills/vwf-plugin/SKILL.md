@@ -70,32 +70,33 @@ and every plan of either kind is one row of the base repo's
 archive move and the action-log prune after it are written by one skill-invoked
 skill, `plan-management` — its `references/plan-index.md` is the contract and
 the procedure, its `scripts/plan.mjs` (`get`, `set`, `append`, `remove`,
-`validate`, `node:` builtins only) the one reader and writer of both JSON files,
-and the planners and the executor call its verbs (`add`, `claim`, `status`,
-`complete`, `archive`, `next`, `resolve`, `priority <folder | requires…>`,
-`list`) rather than carrying it: `plan` and `change-plan` append the row at
-hand-off with a derived priority and push the folder; the **one executor**,
-`execute <folder>` — or `execute next`, which reads the index with no `kind`
-filter, or `execute all`, which repeats `next` and hands each pick to an
-`execute-runner` subagent, one at a time, until one stops — runs `/vwf:doctor`
-in the main checkout, then claims it `RUNNING` with a pushed commit before
-cutting a worktree — the same commit writing the folder's `run`, the worktree
-and action-log paths — runs each unit by its `kind` (a `code` unit through TDD
-and the coverage gate, a `review` row through the two engines plus the code and
-security reviewers over the branch delta since the last row — each later round
-over the last round's fix commits alone, the security half alone on a row
-covering `edit` units alone — the `edit` units of a wave concurrently under the
-wave review, the acceptance and UX pass and the blueprint reconcile only when
-the plan has `covers`), runs the folder's unit gate before each unit commit, its
-wave gate after each wave and its plan gate once at the end, and sets the row
-`COMPLETE` after the merge lands — moving the folder to `archived/` and
-re-pointing the row when no gap is open, leaving it live when one is, for the
-`archive` verb once the user asks in prose, raising the folder's
-`release_levels` in `.config/releases.yaml` in that same commit and bumping no
-version — and runs each after-landing step without a prompt on a green landing —
-every one is recorded `run` at the interview, none releases, and the
-`.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at run
-time, save the run-level questions `execute all` asks once, before its first
+`rewave`, `validate`, `node:` builtins only; a unit moving above wave 1 gets its
+`waits` from `set` before `rewave`) the one reader and writer of both JSON
+files, and the planners and the executor call its verbs (`add`, `claim`,
+`status`, `complete`, `archive`, `next`, `resolve`,
+`priority <folder | requires…>`, `list`) rather than carrying it: `plan` and
+`change-plan` append the row at hand-off with a derived priority and push the
+folder; the **one executor**, `execute <folder>` — or `execute next`, which
+reads the index with no `kind` filter, or `execute all`, which repeats `next`
+and hands each pick to an `execute-runner` subagent, one at a time, until one
+stops — runs `/vwf:doctor` in the main checkout, then claims it `RUNNING` with a
+pushed commit before cutting a worktree — the same commit writing the folder's
+`run`, the worktree and action-log paths — runs each unit by its `kind` (a
+`code` unit through TDD and the coverage gate, a `review` row through the two
+engines plus the code and security reviewers over the branch delta since the
+last row — each later round over the last round's fix commits alone, the
+security half alone on a row covering `edit` units alone — the `edit` units of a
+wave concurrently under the wave review, the acceptance and UX pass and the
+blueprint reconcile only when the plan has `covers`), runs the folder's unit
+gate before each unit commit, its wave gate after each wave and its plan gate
+once at the end, and sets the row `COMPLETE` after the merge lands — moving the
+folder to `archived/` and re-pointing the row when no gap is open, leaving it
+live when one is, for the `archive` verb once the user asks in prose, raising
+the folder's `release_levels` in `.config/releases.yaml` in that same commit and
+bumping no version — and runs each after-landing step without a prompt on a
+green landing — every one is recorded `run` at the interview, none releases, and
+the `.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at
+run time, save the run-level questions `execute all` asks once, before its first
 plan — one shared worktree, deduped after-landing steps, landing a plan recorded
 not to merge — each an override for that run only. On the old markdown plan
 format — a `docs/plans/index.md` in the base repo, or a live folder with

@@ -2482,7 +2482,8 @@ fact (the units, the rulings, the gates, the consent, the release levels), an
 `index.md` holding the prose, and one `NN-<unit>.md` per unit, the same shape
 [`/vwf:change-plan`](#vwfchange-plan) writes. The planner writes `index.json`
 once and checks it with `plan.mjs validate`; every later change to it is one
-field or one list entry, through the same script. Units are
+field or one list entry, through the same script, save a move of units between
+waves, which is one `plan.mjs rewave` call. Units are
 ordered for TDD: each names the failing test that defines "done", its owned
 paths, the ruling it carries and the gate lines it must pass.
 
@@ -2651,8 +2652,9 @@ takes those gaps lists the folder in its `gaps_of`, and its hand-off sets
 with the Write tool — a folder's `index.json` by its planner,
 `docs/plans/index.json` by [`plan-management`](#vwfplan-management)'s `add`
 when it is absent — and validated with `plan.mjs validate`; every later change
-goes through `plan.mjs set` or `append`, one field or one entry at a time, and
-reads through `plan.mjs get`. The planner adds the row at hand-off; this skill
+goes through `plan.mjs set`, `append`, `remove` or `rewave`, one field or one
+list entry for each write, except `rewave`, which moves units and rebuilds
+`waves` in one write, and reads through `plan.mjs get`. The planner adds the row at hand-off; this skill
 flips it; every edit is a direct commit on the integration branch from the main
 checkout, never a worktree's, so the run branch never carries the file and two
 plans landing in parallel cannot conflict on it.
@@ -2840,7 +2842,8 @@ What it does, by rule:
   placement refusal; it refuses a non-green `code` unit with no covering
   `review` row ahead of it, and, like a fresh run, a folder `plan.mjs validate`
   rejects — each with the fix: correct the folder in the worktree with
-  `plan.mjs set` or `append`, then re-launch.
+  `plan.mjs set`, `append` or `remove`, then re-launch. A run never renumbers
+  waves, and `rewave` refuses a plan that is not `DRAFT` or `APPROVED`.
 - **Lock files belong to the package manager.** No unit, coder or gate fix
   writes `pnpm-lock.yaml`, `Cargo.lock`, `uv.lock`, `Package.resolved` or any
   other lock file with an editor tool, `sed` or a script. A lock file changes
@@ -3274,16 +3277,31 @@ the base repo's forge — stays [`/vwf:backlog`](#vwfbacklog)'s, which this skil
 calls and never edits.
 
 **One script reads and writes both files.** `plan.mjs`, under the skill's
-`scripts/`, uses `node:` builtins only and has five verbs: `get <file> [<path>]`
+`scripts/`, uses `node:` builtins only and has six verbs: `get <file> [<path>]`
 prints a value as JSON, `set <file> <path> <value> [--json]` sets one field,
 `append <file> <path> --json <value>` adds one list entry,
-`remove <file> <path>` removes one list entry by its `id`, and
+`remove <file> <path>` removes one list entry by its `id`,
+`rewave <file> <unit>=<wave>...` moves units between waves, and
 `validate <file>` checks a file against its schema and fails loudly, one line
 per finding. A path is dot-separated keys, and a segment after a list picks the
 entry by its `id` — `plans.<basename>.status`, `units.U3.status`,
-`gaps.G2.state`; a wrong id is an error, never a new entry. `set`, `append` and
-`remove` validate the result first and write nothing on an error, so no caller
-ever rewrites a whole file. vwf needs neither `yq` nor `jq` for plans.
+`gaps.G2.state`; a wrong id is an error, never a new entry. `set`, `append`,
+`remove` and `rewave` validate the result first and write nothing on an error,
+so no caller ever rewrites a whole file. vwf needs neither `yq` nor `jq` for
+plans.
+
+**`rewave` renumbers a folder's waves in one write.** It sets each named unit's
+`wave` and rebuilds `waves` as `W1` … `W<n>`, `n` the highest wave of any unit:
+an existing entry keeps its status and times, a missing one is added `pending`
+with empty times, one above `n` is dropped. It refuses, exit 1 with nothing
+written, a moved unit or an old, new or dropped wave that is not `pending`, a
+wave from `W1` to `W<n>` that no unit sits in, and a plan whose `status.state`
+is not `DRAFT` or `APPROVED`. The plan index has no waves: `rewave` on it is a
+usage error, exit 2, with nothing written.
+It changes no `waits`, so a unit moving above wave 1 first gets its reason with
+`plan.mjs set <file> units.<id>.waits "<reason>"`, then the `rewave` call. It is
+a planner write — `/vwf:plan` and `/vwf:change-plan` use it after the first
+green validate — and never an executor one: a run never renumbers waves.
 
 **`plan.mjs` keeps the times.** Each row of `docs/plans/index.json`, and each
 unit, wave and stage of a folder's `index.json`, carries `started` and `ended`:
