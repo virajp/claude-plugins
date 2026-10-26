@@ -157,11 +157,11 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-10-26T18:03:47.919Z",
+      "ended": "2026-10-26T18:04:22.017Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -185,9 +185,9 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-10-26T18:03:47.887Z",
+      "ended": "2026-10-26T18:04:29.586Z"
     }
   ],
   "shared_files": [
