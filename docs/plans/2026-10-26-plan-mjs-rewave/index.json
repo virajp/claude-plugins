@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-10-26 in .worktrees/plan-mjs-rewave"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-26 — 4c693f1c 4d27f778 5cee8557; 1 open gap (G1), folder left live"
   },
   "consent": {
     "merge": true,
