@@ -1,0 +1,5 @@
+/security-review — loop U3, round 1, range c62fa39f..9bf20e9d
+
+FINDINGS: 0
+
+I read the new `rewave` code in plan.mjs (argument parsing and the handler) and checked the existing `load`/`write` (temp file then rename) and `isPlanIndex` it calls. Unit ids must match `^[A-Za-z0-9_-]+=[1-9][0-9]*$`, so no path or shell characters get through. Ids, including `__proto__`, are only compared with `===` inside `Array.find` and never used as object keys. Values read from the file, such as wave ids and statuses, only end up in error messages. No new file path, exec or eval was added. The only issue I saw is that a very large `wave` number in a planted file could make `Array.from` build a huge array, which is a resource-exhaustion problem and outside the scope you set.
