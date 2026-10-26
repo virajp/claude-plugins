@@ -8,10 +8,13 @@
       "title": "plan.mjs rewave: renumber waves in one validated write",
       "target_repo": null,
       "priority": 10,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-10-26T17:49:18.933Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-10-26T18:06:58.338Z",
+      "gaps": {
+        "open": 1,
+        "moved_to": []
+      },
       "requires": [],
       "backlog": [],
       "backlog_pieces": []
