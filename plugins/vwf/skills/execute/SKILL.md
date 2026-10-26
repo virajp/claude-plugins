@@ -112,7 +112,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   `plan.mjs set <folder>/index.json <path> <value>` — `--json` for any
   value not a string: a number, boolean, list, object or null — or one
   `plan.mjs append <folder>/index.json <list> --json <entry>`. The file is
-  never rewritten whole, and never edited with Write, Edit or `sed`. A write
+  never rewritten whole, and never edited with Write, Edit or `sed`. The run
+  never calls `plan.mjs rewave <file> <unit>=<wave>...` — that is a planner
+  write, run after a `set` of a moved unit's `waits` when the unit moves
+  above wave 1; a run never renumbers waves. A write
   that exits non-zero wrote nothing; it is a blocking-gap stop per the Pause
   Conditions, its stderr the detail.
 - **What the run writes**: each unit's `status` (`running` at dispatch, then
@@ -1300,6 +1303,8 @@ report with its resume command. Everything else is recorded in the folder's
   appends a new `run.start`, which supersedes the earlier run
 - Rewrites a folder's `index.json` whole, or edits it with anything but one
   `plan.mjs set` or `append` per change
+- Calls `plan.mjs rewave`, or renumbers a folder's waves any other way —
+  waves are the planner's
 - Takes a `RUNNING` row, however stale, or invokes `unclaim` — the person's
   own `plan-management unclaim <folder>` request, once its worktree is gone,
   is the only release

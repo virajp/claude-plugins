@@ -53,7 +53,7 @@ it. When a planning decision is genuinely open, elicit it following the
 | Plan           | `<target-repo>/docs/plans/<date>-<HHMM>-<slice>/` — **the repo whose code it changes**; `index.json`, `index.md` and one `NN-<unit>.md` per unit |
 | Plan index     | `docs/plans/index.json` (base repo) — its `plans` list, one row per plan folder of either kind, written only by `plan-management` (`${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`) |
 | Plan template  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md` — the `index.json` keys, the `index.md` sections, the unit file shape |
-| Plan script    | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` — `get`, `set`, `append`, `remove` and `validate` over both JSON files |
+| Plan script    | `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` — `get`, `set`, `append`, `remove`, `rewave` and `validate` over both JSON files |
 | Interview      | `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`                                    |
 | Backlog        | a project on the base repo's forge, never a path — read at §2 via `/vwf:backlog list`; marked planned via `/vwf:backlog` |
 | Membership     | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                                        |
@@ -416,8 +416,12 @@ file again, then validate again, until it prints
 `<folder>/index.json: valid` — `set` refuses to write a file that does not
 validate, and no Edit touches `index.json`. From that first green validate
 on, every change to it, the self-review's fixes included, is one
-`plan.mjs set` or `plan.mjs append` call; never an Edit, never a whole-file
-rewrite. Each unit file starts with its H1, `# U<n> — <title>`, the same
+`plan.mjs set`, `append`, `remove` or `rewave` call; never an Edit, never a
+whole-file rewrite. To move units between waves — a split or a merge of
+waves, from the self-review or the rulings review — use one
+`plan.mjs rewave <file> <unit>=<wave>...` call, which rebuilds `waves` with
+it; when a unit moves above wave 1, first `set` its `waits`, then `rewave`.
+Each unit file starts with its H1, `# U<n> — <title>`, the same
 text as its `title`, and carries no header lines: wave, kind, model, owns and
 depends-on live in its `units` entry alone. Every slice unit is `kind`
 `code`, on `model` `opus` unless the interview recorded another tier, with

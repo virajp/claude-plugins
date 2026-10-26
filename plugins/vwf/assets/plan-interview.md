@@ -213,7 +213,10 @@ breaks either, names one id on both lists, or names a `source` id on neither.
     question: a new or amended entry of `decisions`, quoted in the unit file
     it reaches, a unit's `owns` widened, or a Parked line. An answer that a
     case is accepted or out of scope is a ruling too, and goes into
-    `decisions`. Then dispatch a fresh reviewer again, over the changed
+    `decisions`. An answer that changes the wave of a unit is written with
+    one `plan.mjs rewave <file> <unit>=<wave>...` call — after a `set` of
+    its `waits` when the unit moves above wave 1 — never by a whole-file
+    rewrite. Then dispatch a fresh reviewer again, over the changed
     folder. Loop until it returns `NO GAPS`, **four rounds at most**. When
     round four still returns gaps, show the list and have the user rule on
     each one or accept it as an open gap, written into `decisions` — never

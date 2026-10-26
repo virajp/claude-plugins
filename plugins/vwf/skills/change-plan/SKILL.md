@@ -279,8 +279,12 @@ both planners write: `index.json`, `index.md` and one `NN-<unit>.md` per unit.
   `<folder>/index.json: valid` — `set` refuses to write a file that does not
   validate, and no Edit touches `index.json`. From that first green validate
   on, every change to it, the self-review's fixes included, is one
-  `plan.mjs set` or `plan.mjs append` call; never an Edit, never a
-  whole-file rewrite. `/vwf:execute` reads and writes it with the same
+  `plan.mjs set`, `append`, `remove` or `rewave` call; never an Edit, never a
+  whole-file rewrite. To move units between waves — a split or a merge of
+  waves, from the self-review or the rulings review — use one
+  `plan.mjs rewave <file> <unit>=<wave>...` call, which rebuilds `waves` with
+  it; when a unit moves above wave 1, first `set` its `waits`, then `rewave`.
+  `/vwf:execute` reads and writes it with the same
   script. `status.state` is written `DRAFT`, with `status.detail`
   `DRAFT <date>`; `run` is `{}`; each unit's `status` is `pending`, with
   `started`, `ended` and `commit` `""` and `rounds` `0`; `waves` has one
@@ -377,7 +381,9 @@ Rules the plan must obey, learned from the plans that came before:
 
 ### 7. Self-review
 
-Re-read the folder with fresh eyes before handing it off, and fix inline.
+Re-read the folder with fresh eyes before handing it off, and fix inline — a
+wave change is one `plan.mjs rewave` call, after a `set` of each moved
+unit's `waits` first when it moves above wave 1.
 First run
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json`;
 a red result is fixed before any other check — each finding names the path

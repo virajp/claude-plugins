@@ -31,21 +31,29 @@ through `plan.mjs`:
   path; an object entry carries an `id` the list does not hold.
 - `remove <file> <path>` removes the one list entry the path names by its
   `id`; it never removes a key of an object.
+- `plan.mjs rewave <file> <unit>=<wave>...` sets each named unit's `wave`
+  and rebuilds `waves` as `W1` … `W<n>` in one write; it refuses, exit 1, a
+  moved unit or an old, new or dropped wave that is not `pending`, a wave
+  left with no unit, or a `status.state` other than `DRAFT` or `APPROVED`,
+  and writes no time. It changes no `waits`: when a unit moves above wave 1,
+  the planner first runs `plan.mjs set <file> units.<id>.waits "<reason>"`,
+  then `rewave`.
 - `validate <file>` examines the file against its schema and prints
   `<file>: valid`, or one finding per line on stderr and exit 1.
 
 A path is dot-separated keys; a segment after a list chooses the entry whose
 `id` equals it — `units.U3.status`, `gaps.G2.state`, `consent.lsp.dart`. A
-wrong id is an error, never a new entry. `set`, `append` and `remove`
-validate the result before they write, and write nothing on any error.
+wrong id is an error, never a new entry. `set`, `append`, `remove` and
+`rewave` validate the result before they write, and write nothing on any
+error.
 
 The planner **creates** `index.json` in one step: a whole-file Write with the
 Write tool, then `plan.mjs validate` on it. A red validate means the creation
 is not finished — the planner corrects the content, Writes the whole file
 again and validates again, until it prints `<folder>/index.json: valid`. No
 Edit ever touches `index.json`. From the first green validate on, every change
-is one `set`, `append` or `remove` — never an Edit, never a whole-file
-rewrite.
+is one `set`, `append`, `remove` or `rewave` — never an Edit, never a
+whole-file rewrite.
 `index.md` is never parsed for data, save the `- Bnn:` lines under Parked,
 which `validate` matches against `backlog_pieces`.
 
@@ -447,8 +455,10 @@ The rules for each key — JSON has no comments, so they sit here:
     later `review` unit covers is refused at preflight.
 - **`waves`** — one entry per wave, `{id, status, started, ended}`, the ids
   exactly `W1` … `W<n>` in order, `<n>` the highest `wave` of any unit — none
-  missing, none extra, or `validate` finds it. `status` takes the unit
-  statuses. The planner writes every wave `pending` with empty times;
+  missing, none extra, or `validate` finds it. A planner changes a unit's
+  `wave` only with `rewave`, which keeps the list valid — after a `set` of
+  the unit's `waits` first, when it moves above wave 1. `status` takes the
+  unit statuses. The planner writes every wave `pending` with empty times;
   `/vwf:execute` sets a wave `running` as it starts, `green` as it closes, and
   `failed` when a unit in it failed or was skipped.
 - **`shared_files`** — each file two units would touch: every generated file
