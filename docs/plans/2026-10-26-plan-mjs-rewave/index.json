@@ -400,5 +400,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/plan-mjs-rewave",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-10-26-plan-mjs-rewave.jsonl"
+  }
 }
