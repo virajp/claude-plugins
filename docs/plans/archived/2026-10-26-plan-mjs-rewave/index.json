@@ -403,8 +403,8 @@
       "id": "G1",
       "unit": "U1",
       "stage": "edit",
-      "text": "D17 names only the D11 and D15 refusals for a call that moves nothing, but the unit file step order collects every refusal first · rewave also refuses a no-move call when a non-pending wave entry sits outside W1..W<n> (exit 1); such a file already fails validate",
-      "state": "open"
+      "text": "D17 names only the D11 and D15 refusals for a call that moves nothing, but the unit file step order collects every refusal first · rewave also refuses a no-move call when a non-pending wave entry sits outside W1..W<n> (exit 1); such a file already fails validate; closed: the user ruled that the assumption stands, so rewave keeps this refusal",
+      "state": "closed"
     },
     {
       "id": "G2",
