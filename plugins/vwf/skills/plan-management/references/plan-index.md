@@ -15,11 +15,13 @@ word — each making the one edit named under *Writers and their edits*.
 
 Every read and write goes through
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs`, written
-`plan.mjs` below — `get`, `set` and `append`, one field or one row at a time,
-and `validate`. No reader parses the file any other way, and no writer
-rewrites it whole: the one exception is the first write, when `add` finds the
-file absent and creates it, exactly `{"format": 1, "plans": []}` in the
-script's layout — two-space indent, one trailing newline.
+`plan.mjs` below — `get`, `set`, `append` and `remove`, one field or one row
+for each write, and `validate`. The sixth verb, `rewave`, which moves units and
+rebuilds `waves` in one write, is a plan folder's alone: this file has no
+waves, and `rewave` refuses it. No reader parses the file any other way, and
+no writer rewrites it whole: the one exception is the first write, when `add`
+finds the file absent and creates it, exactly `{"format": 1, "plans": []}` in
+the script's layout — two-space indent, one trailing newline.
 
 ## The shape
 

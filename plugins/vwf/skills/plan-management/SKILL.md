@@ -80,15 +80,25 @@ The verbs below point at its sections rather than restate them.
 - `plan.mjs set <file> <path> <value> [--json]` sets one field;
 - `plan.mjs append <file> <path> --json <value>` adds one list entry;
 - `plan.mjs remove <file> <path>` removes the one list entry the path names;
+- `plan.mjs rewave <file> <unit>=<wave>...` moves each named unit to its wave
+  and rebuilds `waves` as `W1 ... W<n>` in one validated write; it refuses a
+  move that touches a unit or a wave that is not `pending`, a plan whose
+  `status.state` is not `DRAFT` or `APPROVED`, and a wave between `W1` and
+  `W<n>` that no unit sits in. It changes only the `wave` fields and `waves`,
+  so a unit moving above wave 1 gets its `waits` reason first, through `set`.
+  It is a **planner** write — `/vwf:plan` and `/vwf:change-plan` use it after
+  the first green validate — never an executor write: a run never renumbers
+  waves. The plan index has no waves, and `rewave` refuses it;
 - `plan.mjs validate <file>` examines a file against its schema and prints
   `<file>: valid`.
 
 A path is dot-separated keys, and a segment after a list chooses the entry by
 its `id` — `plans.<basename>.status`, `units.U3.status`, `gaps.G2.state`. A
-wrong id is an error, never a new entry. `set`, `append` and `remove`
-validate before they write and write nothing on an error, so a red exit is a
-verb that stops, reporting the script's stderr line. **No verb rewrites a whole file** with the
-Write or Edit tool; the one exception is the empty plan index `add` creates.
+wrong id is an error, never a new entry. `set`, `append`, `remove` and
+`rewave` validate before they write and write nothing on an error, so a red
+exit is a verb that stops, reporting the script's stderr line. **No verb
+rewrites a whole file** with the Write or Edit tool; the one exception is the
+empty plan index `add` creates.
 
 A plan is a **folder** — `docs/plans/<date>-<name>/`, an `index.json` holding
 every structured fact, an `index.md` holding the prose, and one file per
@@ -585,9 +595,11 @@ carrying the procedure:
 - **Edit a unit file, a run field or any doc.** The folder's `status`, the
   index rows and the move — nothing else in the folder, and nothing outside
   it.
-- **Rewrite a whole file.** Every change is one `plan.mjs set`, `append` or
-  `remove` — the sweep removes each row with one `remove`; only the empty
-  index `add` creates is written whole.
+- **Rewrite a whole file.** Every change is one `plan.mjs set`, `append`,
+  `remove` or `rewave` — one field or one list entry for each write, except
+  `rewave`, which moves units and rebuilds `waves` in one write and is a
+  planner write, never an executor write; the sweep removes each row with one
+  `remove`; only the empty index `add` creates is written whole.
 - **Work on the old format.** *The format test* stops every verb first.
 - **Walk the members for plans.** The index is the view; a walk lists what
   happens to be cloned.

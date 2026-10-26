@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-10-26 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-10-26 in .worktrees/plan-mjs-rewave"
   },
   "consent": {
     "merge": true,
@@ -63,11 +63,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-10-26T17:50:17.186Z",
+      "ended": "2026-10-26T17:53:13.540Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -87,11 +87,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-10-26T17:50:17.255Z",
+      "ended": "2026-10-26T17:51:58.332Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -167,8 +167,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-10-26T17:50:17.151Z",
       "ended": ""
     },
     {
@@ -398,7 +398,22 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D17 names only the D11 and D15 refusals for a call that moves nothing, but the unit file step order collects every refusal first · rewave also refuses a no-move call when a non-pending wave entry sits outside W1..W<n> (exit 1); such a file already fails validate",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "code:format was red on plan.mjs while U1 still edited it · U2 left U1 file alone; closed: U1 formatted its file and the unit gate is green",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/plan-mjs-rewave",

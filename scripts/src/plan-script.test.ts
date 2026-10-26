@@ -6,6 +6,7 @@
 import { spawnSync } from "node:child_process";
 import {
   cpSync,
+  mkdirSync,
   mkdtempSync,
   readdirSync,
   readFileSync,
@@ -486,6 +487,284 @@ describe("remove", () => {
   it("refuses a missing path and extra arguments", () => {
     expect(plan(["remove", change]).status).toBe(2);
     expect(plan(["remove", change, "gaps.G1", "--json"]).status).toBe(2);
+  });
+});
+
+describe("rewave", () => {
+  type Spec = { wave: number; depends_on?: string[]; };
+
+  /**
+   * A change plan made in the temp folder from the change fixture, one unit
+   * U<i> per spec, all pending, waves W1 ... W<top> all pending, every unit
+   * above wave 1 with a waits reason. Returns its index.json path.
+   */
+  function made(specs: (number | Spec)[], waves?: number): string {
+    const dir = join(root, "rewave");
+    mkdirSync(dir, { recursive: true });
+    cpSync(join(root, "change", "index.md"), join(dir, "index.md"));
+    const doc = parse(change);
+    const base = doc.units[0];
+    doc.units = specs.map((s, i) => {
+      const { wave, depends_on = [] } = typeof s === "number"
+        ? { wave: s }
+        : s;
+      const file = `${String(i + 1).padStart(2, "0")}-unit.md`;
+      writeFileSync(join(dir, file), `# U${i + 1}\n`);
+      return {
+        ...base,
+        id: `U${i + 1}`,
+        title: `Unit ${i + 1}`,
+        wave,
+        file,
+        owns: [`f${i + 1}`],
+        depends_on,
+        waits: wave > 1 ? "it waits" : "",
+      };
+    });
+    const top = waves
+      ?? Math.max(...doc.units.map((u: Json) => u.wave as number));
+    doc.waves = Array.from({ length: top }, (_, i) => ({
+      id: `W${i + 1}`,
+      status: "pending",
+      started: "",
+      ended: "",
+    }));
+    const file = join(dir, "index.json");
+    writeFileSync(file, bytes(doc));
+    return file;
+  }
+
+  const waveOf = (file: string, id: string) =>
+    parse(file).units.find((u: Json) => u.id === id).wave;
+
+  /** Runs rewave, expecting a refusal that leaves the bytes as they were. */
+  function refused(file: string, pairs: string[], code = 1) {
+    const before = read(file);
+    const r = plan(["rewave", file, ...pairs]);
+    expect(r.status).toBe(code);
+    expect(r.stdout).toBe("");
+    expect(read(file)).toBe(before);
+    return r;
+  }
+
+  it("the made plan is valid", () => {
+    expect(plan(["validate", made([1, 2, 2])]).status).toBe(0);
+  });
+
+  it("moves a unit to a new top wave, adding it pending", () => {
+    const file = made([1, 2, 2]);
+    const r = plan(["rewave", file, "U3=3"]);
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    expect(r.stdout).toBe("");
+    const doc = parse(file);
+    expect(waveOf(file, "U3")).toBe(3);
+    expect(doc.waves.map((w: Json) => w.id)).toEqual(["W1", "W2", "W3"]);
+    expect(doc.waves[2]).toEqual({
+      id: "W3",
+      status: "pending",
+      started: "",
+      ended: "",
+    });
+    expect(read(file)).toBe(bytes(doc));
+  });
+
+  it("drops the pending top wave a move empties", () => {
+    const file = made([1, 2, 3]);
+    expect(plan(["rewave", file, "U3=2"]).status).toBe(0);
+    expect(parse(file).waves.map((w: Json) => w.id)).toEqual(["W1", "W2"]);
+  });
+
+  it("keeps an existing wave entry's status and times", () => {
+    const file = made([1, 2, 2, 3]);
+    expect(plan(["set", file, "waves.W1.status", "running"]).status).toBe(0);
+    expect(
+      plan(
+        ["set", file, "waves.W1.status", "green"],
+        undefined,
+        "2026-10-25T07:00:00.000Z",
+      )
+        .status,
+    )
+      .toBe(0);
+    const w1 = parse(file).waves[0];
+    expect(w1.started).toBe(NOW);
+    const r = plan(
+      ["rewave", file, "U3=3"],
+      undefined,
+      "2026-10-26T00:00:00.000Z",
+    );
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    const doc = parse(file);
+    expect(doc.waves[0]).toEqual(w1);
+    expect(
+      doc.waves.slice(1).every((w: Json) =>
+        w.status === "pending" && w.started === "" && w.ended === ""
+      ),
+    )
+      .toBe(true);
+  });
+
+  it("refuses to move a unit that is not pending", () => {
+    const file = made([1, 2, 2]);
+    plan(["set", file, "units.U3.status", "green"]);
+    const r = refused(file, ["U3=3"]);
+    expect(r.stderr).toBe(
+      `${file}: units.U3.status: is green; rewave moves only pending units\n`,
+    );
+  });
+
+  it("refuses to move a unit out of a wave that is not pending", () => {
+    const file = made([1, 2, 2]);
+    plan(["set", file, "waves.W2.status", "running"]);
+    const r = refused(file, ["U3=3"]);
+    expect(r.stderr).toBe(
+      `${file}: waves.W2.status: is running; rewave moves no unit out of a wave that is not pending\n`,
+    );
+  });
+
+  it("refuses to move a unit into a wave that is not pending", () => {
+    const file = made([1, 2, 2, 3]);
+    plan(["set", file, "waves.W3.status", "running"]);
+    const r = refused(file, ["U3=3"]);
+    expect(r.stderr).toBe(
+      `${file}: waves.W3.status: is running; rewave moves no unit into a wave that is not pending\n`,
+    );
+  });
+
+  it("refuses to drop a wave that is not pending, one line per cause", () => {
+    const file = made([1, 2, 3]);
+    plan(["set", file, "waves.W3.status", "green"]);
+    const r = refused(file, ["U3=2"]);
+    expect(r.stderr).toBe(
+      `${file}: waves.W3.status: is green; rewave moves no unit out of a wave that is not pending\n`
+        + `${file}: waves.W3.status: is green; rewave drops only a pending wave\n`,
+    );
+  });
+
+  it("prints one line for two moves out of one wave", () => {
+    const file = made([1, 2, 2, 2]);
+    plan(["set", file, "waves.W2.status", "green"]);
+    const r = refused(file, ["U3=3", "U4=3"]);
+    expect(r.stderr).toBe(
+      `${file}: waves.W2.status: is green; rewave moves no unit out of a wave that is not pending\n`,
+    );
+  });
+
+  it("refuses a move the validator rejects", () => {
+    const file = made([1, 2, { wave: 3, depends_on: ["U2"] }]);
+    const r = refused(file, ["U3=2"]);
+    expect(r.stderr).toContain("units.U3.depends_on: U2 is not in an earlier");
+  });
+
+  it("accepts a pair that moves nothing, writing nothing", () => {
+    const file = made([1, 2, 2]);
+    plan(["set", file, "units.U2.status", "green"]);
+    plan(["set", file, "waves.W2.status", "green"]);
+    writeFileSync(file, JSON.stringify(parse(file)));
+    const before = read(file);
+    const r = plan(["rewave", file, "U2=2", "U3=2"]);
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    expect(read(file)).toBe(before);
+  });
+
+  it.each([
+    [[]],
+    [["U1=0"]],
+    [["U1=x"]],
+    [["U1"]],
+    [["=1"]],
+    [["U1=1", "U1=2"]],
+  ])("exits 2 on the pairs %j", pairs => {
+    refused(made([1, 2, 2]), pairs, 2);
+  });
+
+  it.each([
+    ["after the file", (f: string) => [f, "--json", "U1=1"]],
+    ["after a pair", (f: string) => [f, "U1=1", "--json"]],
+    ["before the file", (f: string) => ["--json", f, "U1=1"]],
+  ])("refuses a flag %s as a usage error", (_, args) => {
+    const file = made([1, 2, 2]);
+    const before = read(file);
+    const r = plan(["rewave", ...args(file)]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/^plan\.mjs: rewave takes no --json\n/);
+    expect(read(file)).toBe(before);
+  });
+
+  it("refuses the plan index with exit 2", () => {
+    const r = refused(index, ["U1=1"], 2);
+    expect(r.stderr).toContain("the plan index has no waves");
+  });
+
+  it("refuses an unknown unit with exit 2", () => {
+    const file = made([1, 2, 2]);
+    const r = refused(file, ["U3=3", "U9=1"], 2);
+    expect(r.stderr).toBe(
+      `${file}: units.U9: is not a unit of this plan\n`,
+    );
+  });
+
+  it("refuses a move that empties a middle wave", () => {
+    const file = made([1, 2, 3]);
+    const r = refused(file, ["U2=3"]);
+    expect(r.stderr).toBe(`${file}: waves.W2: has no unit\n`);
+  });
+
+  it("refuses a file that already has an empty middle wave", () => {
+    const file = made([1, 3, 3]);
+    expect(plan(["validate", file]).status).toBe(0);
+    const r = refused(file, ["U2=3"]);
+    expect(r.stderr).toBe(`${file}: waves.W2: has no unit\n`);
+    expect(plan(["rewave", file, "U2=2"]).status).toBe(0);
+    expect(parse(file).waves.map((w: Json) => w.id)).toEqual([
+      "W1",
+      "W2",
+      "W3",
+    ]);
+  });
+
+  it("runs only on a DRAFT or APPROVED plan", () => {
+    const file = made([1, 2, 2]);
+    plan(["set", file, "status.state", "RUNNING"]);
+    const r = refused(file, ["U3=3"]);
+    expect(r.stderr).toBe(
+      `${file}: status.state: is RUNNING; rewave runs only on a DRAFT or APPROVED plan\n`,
+    );
+    plan(["set", file, "status.state", "APPROVED"]);
+    expect(plan(["rewave", file, "U3=3"]).status).toBe(0);
+    expect(waveOf(file, "U3")).toBe(3);
+  });
+
+  it("splits a wave of five into one wave each in one call", () => {
+    const file = made([1, 2, 3, 3, 3, 3, 3, 4, 5, 6, 7, 8]);
+    const r = plan([
+      "rewave",
+      file,
+      "U3=4",
+      "U4=5",
+      "U5=6",
+      "U6=7",
+      "U8=8",
+      "U9=9",
+      "U10=10",
+      "U11=11",
+    ]);
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    expect(plan(["validate", file]).stdout).toBe(`${file}: valid\n`);
+    const doc = parse(file);
+    expect(doc.waves.map((w: Json) => w.id)).toEqual(
+      Array.from({ length: 11 }, (_, i) => `W${i + 1}`),
+    );
+    expect(doc.waves.every((w: Json) => w.status === "pending")).toBe(true);
+    const waves = doc.units.map((u: Json) => u.wave);
+    expect(waves).toEqual([1, 2, 4, 5, 6, 7, 3, 8, 9, 10, 11, 8]);
+    for (let i = 1; i <= 11; i++) {
+      expect(waves).toContain(i);
+    }
   });
 });
 
