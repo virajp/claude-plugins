@@ -53,31 +53,33 @@ with no `kind` filter. Each JSON file is created once with the Write tool — a
 folder's `index.json` by its planner, `docs/plans/index.json` by
 `plan-management`'s `add` when it is absent — and validated with
 `skills/plan-management/scripts/plan.mjs validate`; every later change goes
-through `plan.mjs set` or `append`, one field or one entry at a time, and reads
-through `plan.mjs get`; on the old markdown format (a `docs/plans/index.md`)
-`/vwf:execute` and every `plan-management` verb stop and point to this repo's
-`docs/plans/migrate.md`, and archived folders are never migrated. Every row,
-every folder's `status` and `run` (the worktree and action-log paths, set at the
-claim and reset at an unclaim) and the archive move are written by one
-skill-invoked skill, `plan-management`, whose verbs the planners and
-`/vwf:execute` call: the landing moves the folder into `archived/` and re-points
-the row when no gap is open, and leaves it live with the row `COMPLETE` when one
-is; the `archive` verb, invoked when the user asks in prose, moves a folder of
-either kind whole, only its `status` rewritten, and re-points the row, after
-which the sweep drops a `COMPLETE` row nobody's `requires` names — its `backlog`
-and `backlog_pieces` lists carry the `Bnn` ids of the backlog project's items,
-since 2026-09-18 the backlog is **not in the tree**: it is a project on the base
-repo's forge, a GitHub Project named for the base repo under its account, one
-per product, which `/vwf:backlog` alone writes and `change-plan`, `plan`,
-`execute` and `plan-management`'s `archive` verb call with the ids their plan's
-`backlog` and `backlog_pieces` lists in `index.json` carry — the ids it finishes
-and the ids it lands a piece of), `docs/runbooks/` (per-project operational
-runbooks plus `postmortems.md`, seeded by the incident-response foundation and
-appended to by `/vwf:feedback incident`), and `docs/prompts/`
-(`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
-prompt type → registry project → flow, one brief per platform regenerated in
-place (the filename carries the platform, mirroring the flows tree exactly),
-plus the per-design-project canvas conventions files
+through `plan.mjs set`, `append`, `remove` or `rewave`, one field or one list
+entry for each write, except `rewave`, which moves units and rebuilds `waves` in
+one write and is a planner write only, run after `set` gives a unit moving above
+wave 1 its `waits`, and reads through `plan.mjs get`; on the old markdown format
+(a `docs/plans/index.md`) `/vwf:execute` and every `plan-management` verb stop
+and point to this repo's `docs/plans/migrate.md`, and archived folders are never
+migrated. Every row, every folder's `status` and `run` (the worktree and
+action-log paths, set at the claim and reset at an unclaim) and the archive move
+are written by one skill-invoked skill, `plan-management`, whose verbs the
+planners and `/vwf:execute` call: the landing moves the folder into `archived/`
+and re-points the row when no gap is open, and leaves it live with the row
+`COMPLETE` when one is; the `archive` verb, invoked when the user asks in prose,
+moves a folder of either kind whole, only its `status` rewritten, and re-points
+the row, after which the sweep drops a `COMPLETE` row nobody's `requires` names
+— its `backlog` and `backlog_pieces` lists carry the `Bnn` ids of the backlog
+project's items, since 2026-09-18 the backlog is **not in the tree**: it is a
+project on the base repo's forge, a GitHub Project named for the base repo under
+its account, one per product, which `/vwf:backlog` alone writes and
+`change-plan`, `plan`, `execute` and `plan-management`'s `archive` verb call
+with the ids their plan's `backlog` and `backlog_pieces` lists in `index.json`
+carry — the ids it finishes and the ids it lands a piece of), `docs/runbooks/`
+(per-project operational runbooks plus `postmortems.md`, seeded by the
+incident-response foundation and appended to by `/vwf:feedback incident`), and
+`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
+briefs grouped by prompt type → registry project → flow, one brief per platform
+regenerated in place (the filename carries the platform, mirroring the flows
+tree exactly), plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,

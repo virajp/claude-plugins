@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-10-26 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-26 — 4c693f1c 4d27f778 5cee8557; 1 open gap (G1), folder left live"
   },
   "consent": {
     "merge": true,
@@ -63,11 +63,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-10-26T17:50:17.186Z",
+      "ended": "2026-10-26T17:53:13.540Z",
+      "commit": "4c693f1c",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -87,11 +87,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-10-26T17:50:17.255Z",
+      "ended": "2026-10-26T17:51:58.332Z",
+      "commit": "4d27f778",
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -106,14 +106,14 @@
         "U2"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-10-26T17:57:42.937Z",
+      "ended": "2026-10-26T17:58:32.496Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "c62fa39f",
+        "to": "9bf20e9d"
       }
     },
     {
@@ -137,11 +137,11 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-10-26T17:58:53.719Z",
+      "ended": "2026-10-26T18:00:45.275Z",
+      "commit": "5cee8557",
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -157,37 +157,37 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-10-26T18:03:47.919Z",
+      "ended": "2026-10-26T18:04:22.017Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-10-26T17:50:17.151Z",
+      "ended": "2026-10-26T17:57:29.244Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-10-26T17:57:42.892Z",
+      "ended": "2026-10-26T17:58:39.677Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-10-26T17:58:53.685Z",
+      "ended": "2026-10-26T18:03:40.603Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-10-26T18:03:47.887Z",
+      "ended": "2026-10-26T18:04:29.586Z"
     }
   ],
   "shared_files": [
@@ -374,31 +374,46 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-10-26T17:58:53.337Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-10-26T17:58:53.141Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-10-26T17:58:53.240Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps to write and nothing to persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-10-26T17:58:53.479Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D17 names only the D11 and D15 refusals for a call that moves nothing, but the unit file step order collects every refusal first · rewave also refuses a no-move call when a non-pending wave entry sits outside W1..W<n> (exit 1); such a file already fails validate",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "code:format was red on plan.mjs while U1 still edited it · U2 left U1 file alone; closed: U1 formatted its file and the unit gate is green",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/plan-mjs-rewave",

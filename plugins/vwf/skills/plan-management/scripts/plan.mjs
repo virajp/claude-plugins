@@ -6,6 +6,7 @@
 //   node plan.mjs set <file> <path> <value> [--json]
 //   node plan.mjs append <file> <path> --json <value>
 //   node plan.mjs remove <file> <path>
+//   node plan.mjs rewave <file> <unit>=<wave>...
 //   node plan.mjs validate <file>
 //
 // `get` prints the value at the path as JSON; --raw prints a string without
@@ -21,6 +22,15 @@
 // entry must carry an `id` the list does not hold. `remove` deletes the one
 // list entry the path names by its `id`; it never removes a key of an object.
 //
+// `rewave` moves each named unit to its wave and rebuilds `waves` as
+// W1 ... W<n> in one validated write, n the highest wave of any unit: an
+// existing entry is kept as it is, a missing one is added pending with empty
+// times, one above n is dropped. It runs only on a DRAFT or APPROVED plan
+// folder, and refuses a move that touches a unit or a wave that is not
+// `pending`, a wave it would drop that is not `pending`, and a wave from W1 to
+// W<n> that no unit sits in, exit 1. It stamps no time; a call that moves no
+// unit writes nothing.
+//
 // `set` of `units.<id>.status`, `waves.<id>.status`, `stages.<name>.state` or
 // a plan index row's `status` stamps that entry's `started`/`ended` in the
 // same write: running/RUNNING sets `started` if it is "" and clears `ended`;
@@ -35,10 +45,10 @@
 //
 // `validate` examines the file against its schema: a path ending in
 // docs/plans/index.json is the plan index, any other is a plan folder's file.
-// `set`, `append` and `remove` validate the result before they write, then
-// write a temporary file in the same directory and rename it over the
-// original, so an error leaves the file as it was. A write is JSON.stringify(value,
-// null, 2) plus one newline, in the file's own key order.
+// `set`, `append`, `remove` and `rewave` validate the result before they
+// write, then write a temporary file in the same directory and rename it over
+// the original, so an error leaves the file as it was. A write is
+// JSON.stringify(value, null, 2) plus one newline, in the file's own key order.
 //
 // Exit 0 on success. Exit 1 on a validation error, one finding per line on
 // stderr as `<file>: <path>: <message>`. Exit 2 on a usage error, a path the
@@ -74,6 +84,7 @@ const USAGE = `usage:
   plan.mjs set <file> <path> <value> [--json]
   plan.mjs append <file> <path> --json <value>
   plan.mjs remove <file> <path>
+  plan.mjs rewave <file> <unit>=<wave>...
   plan.mjs validate <file>
 `;
 
@@ -228,6 +239,28 @@ function parseArgs(verb, rest) {
     case "remove":
       flagsIn(rest.slice(2), undefined);
       return { args: rest.slice(0, 2), flags };
+    case "rewave": {
+      const flag = rest.find(a => a.startsWith("--"));
+      if (flag !== undefined) {
+        usage(`rewave takes no ${flag}`);
+      }
+      const pairs = rest.slice(1);
+      if (pairs.length === 0) {
+        usage("rewave takes a file and one <unit>=<wave> pair or more");
+      }
+      const seen = new Set();
+      for (const p of pairs) {
+        if (!/^[A-Za-z0-9_-]+=[1-9][0-9]*$/.test(p)) {
+          usage(`rewave takes <unit>=<wave> pairs, not ${p}`);
+        }
+        const id = p.split("=")[0];
+        if (seen.has(id)) {
+          usage(`rewave names ${id} twice`);
+        }
+        seen.add(id);
+      }
+      return { args: rest, flags };
+    }
     case "validate":
       flagsIn(rest.slice(1), undefined);
       return { args: rest.slice(0, 1), flags };
@@ -296,6 +329,95 @@ switch (verb) {
     const [, path] = args;
     const doc = load(file);
     at(file, path, () => remove(doc, split(path)));
+    write(file, doc);
+    break;
+  }
+  case "rewave": {
+    if (isPlanIndex(file)) {
+      usage(
+        "rewave takes a plan folder's index.json; the plan index has no waves",
+      );
+    }
+    const doc = load(file);
+    const units = Array.isArray(doc.units) ? doc.units : [];
+    const waves = Array.isArray(doc.waves) ? doc.waves : [];
+    const entry = id => waves.find(w => isObject(w) && w.id === id);
+    const moves = [];
+    for (const p of args.slice(1)) {
+      const [id, wave] = p.split("=");
+      const unit = units.find(u => isObject(u) && u.id === id);
+      if (unit === undefined) {
+        fail(file, `units.${id}`, "is not a unit of this plan", 2);
+      }
+      if (unit.wave !== Number(wave)) {
+        moves.push({ unit, from: unit.wave, to: Number(wave) });
+      }
+    }
+    const refusals = [];
+    const refuse = (path, message) => {
+      if (!refusals.some(r => r.path === path && r.message === message)) {
+        refusals.push({ path, message });
+      }
+    };
+    const state = isObject(doc.status) ? doc.status.state : undefined;
+    if (state !== "DRAFT" && state !== "APPROVED") {
+      refuse(
+        "status.state",
+        `is ${state}; rewave runs only on a DRAFT or APPROVED plan`,
+      );
+    }
+    for (const { unit, from, to } of moves) {
+      if (unit.status !== "pending") {
+        refuse(
+          `units.${unit.id}.status`,
+          `is ${unit.status}; rewave moves only pending units`,
+        );
+      }
+      const old = entry(`W${from}`);
+      if (old !== undefined && old.status !== "pending") {
+        refuse(
+          `waves.W${from}.status`,
+          `is ${old.status}; rewave moves no unit out of a wave that is not pending`,
+        );
+      }
+      const next = entry(`W${to}`);
+      if (next !== undefined && next.status !== "pending") {
+        refuse(
+          `waves.W${to}.status`,
+          `is ${next.status}; rewave moves no unit into a wave that is not pending`,
+        );
+      }
+    }
+    for (const { unit, to } of moves) {
+      unit.wave = to;
+    }
+    const placed = units
+      .filter(u => isObject(u) && Number.isInteger(u.wave))
+      .map(u => u.wave);
+    const top = Math.max(0, ...placed);
+    const want = Array.from({ length: top }, (_, i) => `W${i + 1}`);
+    for (const w of waves) {
+      if (isObject(w) && !want.includes(w.id) && w.status !== "pending") {
+        refuse(
+          `waves.${w.id}.status`,
+          `is ${w.status}; rewave drops only a pending wave`,
+        );
+      }
+    }
+    for (let i = 1; i <= top; i++) {
+      if (!placed.includes(i)) {
+        refuse(`waves.W${i}`, "has no unit");
+      }
+    }
+    if (refusals.length > 0) {
+      report(file, refusals);
+    }
+    if (moves.length === 0) {
+      break;
+    }
+    doc.waves = want.map(id =>
+      entry(id) ?? { id, status: "pending", started: "", ended: "" }
+    );
     write(file, doc);
     break;
   }

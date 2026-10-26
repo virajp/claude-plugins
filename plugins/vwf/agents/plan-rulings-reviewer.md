@@ -36,7 +36,9 @@ precisely enough that the planner can turn it into one question.
   `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs` with
   its `get` and `validate` verbs, which read `index.json` and write nothing.
   Never write, stage, commit, install or run a gate, and never run the
-  script's `set` or `append`.
+  script's `set`, `append`, `remove` or
+  `plan.mjs rewave <file> <unit>=<wave>...` — the planner's, which runs it
+  after a `set` of a moved unit's `waits` when the unit moves above wave 1.
 
 ## Checklist
 

@@ -20,8 +20,12 @@ Write `index.json` **once**, whole, with the Write tool, then run
 means the creation is not finished: correct the content and Write the whole
 file again, then validate again, until it prints
 `<folder>/index.json: valid`; no Edit touches `index.json`. From that first
-green validate on, every change is one `plan.mjs set` or `plan.mjs append`
-call; never an Edit, never a whole-file rewrite.
+green validate on, every change is one `plan.mjs set`, `append`, `remove` or
+`rewave` call; never an Edit, never a whole-file rewrite. To move units
+between waves — a split or a merge of waves, from the self-review or the
+rulings review — use one `plan.mjs rewave <file> <unit>=<wave>...` call,
+which rebuilds `waves` with it; when a unit moves above wave 1, first `set`
+its `waits`, then `rewave`.
 
 **The three gates.** `gates.unit` runs once before each unit's commit,
 `gates.wave` once before wave 1 and after every wave, `gates.plan` once over
