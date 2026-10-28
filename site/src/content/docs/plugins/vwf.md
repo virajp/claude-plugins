@@ -867,10 +867,10 @@ record.
 | `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                                                                                                    |
 | `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                                                                                          |
 
-**Five are user-only** — `setup`, `verify`, `mockups`, `recall` and `execute`
-carry `disable-model-invocation: true`, so the model never fires them on its
-own; you decide when a migration, a post-deploy check, a re-render, a session
-resume or an unattended run happens. The executor is user-only for a reason of
+**Five are user-only** — `design-system`, `verify`, `mockups`, `recall` and
+`execute` carry `disable-model-invocation: true`, so the model never fires them
+on its own; you decide when a design-system import, a post-deploy check, a
+re-render, a session resume or an unattended run happens. The executor is user-only for a reason of
 its own: it must start in a session that has done nothing else, and only you can
 guarantee that — which is why `recall` prints the `/vwf:execute <folder>` launch
 line for a cap-paused run rather than launching it. Its partners `plan` and
@@ -878,8 +878,10 @@ line for a cap-paused run rather than launching it. Its partners `plan` and
 intake routes into one or the other by name. The rest stay model-invocable
 because the workflow **delegates to them by name** — `recall` resumes a paused
 pass *through* `blueprint`/`plan`, every skill commits *through* `git-workflow`,
-`setup` runs `doctor` inside its own spine, and `feedback` and `plan` route work
-into `product`/`architecture`/`design-system`/`blueprint`. Marking one of those
+`setup` runs `doctor` inside its own spine, `architecture` hands off to `setup`
+once its commit lands, `stackgen-sync` runs `setup reshape` on drift, and
+`feedback` and `plan` route work into `product`/`architecture`/`blueprint`.
+Marking one of those
 user-only would silently break the chain: the flag blocks programmatic
 invocation, not just auto-triggering.
 

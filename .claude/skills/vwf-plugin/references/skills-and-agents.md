@@ -9,10 +9,10 @@ here are an index, not a second copy.
   `skills/<name>/SKILL.md`), implementing the Product → Blueprint → Plan →
   Execute model. Most are slash- **and** model-invocable because **other skills
   delegate to them by name**; five are **user-only**
-  (`disable-model-invocation: true`) — `execute`, `mockups`, `recall`, `setup`
-  and `verify`; five — `init`, the three import adapters `import-design-system`,
-  `import-screens`, `import-conversations`, and `plan-management` — are
-  **skill-invoked**, `user-invocable: false` beside
+  (`disable-model-invocation: true`) — `design-system`, `execute`, `mockups`,
+  `recall` and `verify`; five — `init`, the three import adapters
+  `import-design-system`, `import-screens`, `import-conversations`, and
+  `plan-management` — are **skill-invoked**, `user-invocable: false` beside
   `disable-model-invocation: false` and no `paths:`, so each is hidden from the
   `/` menu and reached only by the skill that owns its seam (`/vwf:setup`,
   `/vwf:design-system`, `/vwf:screens import`, `/vwf:feedback canvas`, and the
