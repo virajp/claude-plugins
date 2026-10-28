@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15161A;--ink-2:#1B1D23;--ink-3:#22252D;--line:#2B2F39;--line-2:#3A3F4B;--paper:#F4F5F8;--mist:#B9BDC9;--muted:#7D8392;--blue:#1E3F8F;--blue-2:#2A52B8;--blue-3:#7AA0F2;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Schibsted Grotesk',system-ui,sans-serif}
+html{background:var(--ink)}body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:var(--blue-3);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}a:hover{color:var(--paper)}
+code,.mono{font-family:var(--mono)}
+h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.1}
+.sheet{width:1440px;margin:0 auto;padding:56px 64px 96px;display:flex;flex-direction:column;gap:64px;box-sizing:border-box}
+.head{display:flex;justify-content:space-between;align-items:baseline;border-bottom:1px solid var(--line);padding-bottom:16px}
+.label{font-family:var(--mono);font-size:12px;letter-spacing:.06em;color:var(--muted)}
+.sec{display:grid;grid-template-columns:280px 1fr;gap:40px}
+.sec h2{font-size:22px}.sec p{color:var(--mist);font-size:14px;margin:8px 0 0;max-width:34ch}
+.swatches{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+.sw{height:112px;display:flex;flex-direction:column;justify-content:flex-end;padding:10px;box-sizing:border-box;border:1px solid var(--line)}
+.sw b{font-family:var(--mono);font-weight:400;font-size:11px}.sw span{font-size:11px;color:inherit;opacity:.75}
+.type{display:flex;flex-direction:column;gap:20px}
+.trow{display:grid;grid-template-columns:200px 1fr;align-items:baseline;gap:24px;padding-bottom:16px;border-bottom:1px solid var(--line)}
+.btn{display:inline-flex;align-items:center;height:40px;padding:0 18px;font:500 14px var(--sans);text-decoration:none;color:var(--paper);background:var(--blue);border:1px solid var(--blue)}
+.btn.sec{background:transparent;border-color:var(--line-2);display:inline-flex}.btn.sm{height:32px;font-size:13px;padding:0 12px}
+.codeblock{background:var(--ink-3);border:1px solid var(--line);padding:16px 20px;font:13px/1.7 var(--mono);color:var(--paper);white-space:pre}
+.codeblock .c{color:var(--muted)}.codeblock .k{color:var(--blue-3)}
+.inline{font:13px var(--mono);background:var(--ink-3);border:1px solid var(--line);padding:1px 6px}
+table{border-collapse:collapse;width:100%;font-size:14px}th{text-align:left;font:500 12px var(--mono);letter-spacing:.04em;color:var(--muted);padding:8px 12px;border-bottom:1px solid var(--line-2)}td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--mist)}td:first-child{color:var(--paper)}
+.callout{border-left:2px solid var(--blue-3);padding:12px 16px;background:var(--ink-2);font-size:14px;color:var(--mist)}
+.dim{display:flex;align-items:center;gap:0;height:12px}.dim:before,.dim:after{content:"";width:1px;height:12px;background:var(--line-2)}.dim i{flex:1;height:1px;background:var(--line-2)}
+.grid-demo{height:160px;border:1px solid var(--line);background-image:radial-gradient(rgba(255,255,255,.12) 1px,transparent 1px);background-size:24px 24px}
+.navitem{display:block;padding:6px 12px;font-size:14px;color:var(--mist);text-decoration:none;border-left:1px solid var(--line)}.navitem.on{color:var(--paper);border-left:2px solid var(--blue-3);padding-left:11px}
+.rules{display:grid;grid-template-columns:1fr 1fr;gap:12px 40px;font-size:14px;color:var(--mist);margin:0;padding-left:18px}
+.rules li{padding:4px 0}
+</style>
+</helmet>
+
+<div data-screen-label="site design system" class="sheet">
+
+  <div class="head">
+    <div style="display:flex;align-items:center;gap:12px"><img src="assets/vwf-mark-small-white.svg" width="20" height="20" alt=""><b style="font:400 15px var(--mono)">vwf</b><span style="color:var(--muted)">site design system</span></div>
+    <div class="label">DARK ONLY · INK WITH BLUEPRINT ACCENT · RADIUS 0</div>
+  </div>
+
+  <div class="sec">
+    <div><h2>Color</h2><p>One accent. Blueprint blue fills surfaces; the lighter tint carries text and links on ink. Nothing is pure black or pure white.</p></div>
+    <div style="display:flex;flex-direction:column;gap:12px">
+      <div class="swatches">
+        <div class="sw" style="background:#15161A"><b>#15161A</b><span>ink · page</span></div>
+        <div class="sw" style="background:#1B1D23"><b>#1B1D23</b><span>ink-2 · raised</span></div>
+        <div class="sw" style="background:#22252D"><b>#22252D</b><span>ink-3 · code, inputs</span></div>
+        <div class="sw" style="background:#2B2F39"><b>#2B2F39</b><span>line · hairline</span></div>
+        <div class="sw" style="background:#3A3F4B"><b>#3A3F4B</b><span>line-2 · borders</span></div>
+        <div class="sw" style="background:#1E3F8F"><b>#1E3F8F</b><span>blueprint · fills</span></div>
+      </div>
+      <div class="swatches">
+        <div class="sw" style="background:#2A52B8"><b>#2A52B8</b><span>blueprint hover</span></div>
+        <div class="sw" style="background:#7AA0F2;color:#15161A"><b>#7AA0F2</b><span>blueprint text · 7.1:1 on ink</span></div>
+        <div class="sw" style="background:#F4F5F8;color:#15161A"><b>#F4F5F8</b><span>paper · primary text</span></div>
+        <div class="sw" style="background:#B9BDC9;color:#15161A"><b>#B9BDC9</b><span>mist · body · 9.4:1</span></div>
+        <div class="sw" style="background:#7D8392;color:#15161A"><b>#7D8392</b><span>muted · labels · 4.7:1</span></div>
+        <div class="sw" style="background:#1E3F8F;color:#F4F5F8"><b>paper on blueprint</b><span>8.9:1 · buttons, panels</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div><h2>Type</h2><p>Schibsted Grotesk for everything read. Geist Mono only where it carries meaning: the wordmark, commands, file paths, versions and table headers. Never as a decorative label.</p></div>
+    <div class="type">
+      <div class="trow"><span class="label">display · 56 / 1.05 · 700 · -0.02em</span><div style="font:700 56px/1.05 var(--sans);letter-spacing:-.02em">Draw the product before you build it.</div></div>
+      <div class="trow"><span class="label">h2 · 32 / 1.15 · 700 · -0.01em</span><div style="font:700 32px/1.15 var(--sans);letter-spacing:-.01em">Four phases, in order</div></div>
+      <div class="trow"><span class="label">h3 · 22 / 1.2 · 700</span><div style="font:700 22px/1.2 var(--sans)">Blueprint</div></div>
+      <div class="trow"><span class="label">body · 17 / 1.6 · 400 · mist</span><div style="font:400 17px/1.6 var(--sans);color:var(--mist);max-width:60ch">Keep an always-current blueprint of the whole product, organized by flow, closed by a whole-product coherence review.</div></div>
+      <div class="trow"><span class="label">small · 14 / 1.5 · 400 · mist</span><div style="font:400 14px/1.5 var(--sans);color:var(--mist)">Add <code class="inline">--scope project</code> to either command to keep it to one repo.</div></div>
+      <div class="trow"><span class="label">wordmark · Geist Mono 300 · +0.02em</span><div style="font:300 44px/1 var(--mono);letter-spacing:.02em">vwf</div></div>
+      <div class="trow" style="border:0"><span class="label">code · Geist Mono 13 / 1.7 · 400</span><div style="font:400 13px/1.7 var(--mono)">pnpx @virajp.dev/claude-plugins --all</div></div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div><h2>Blueprint devices</h2><p>Three drawing devices, each with a job. The dot grid is a surface texture. The dimension rule separates sections and measures real spans. The construction drawing of the mark is the only illustration.</p></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+      <div style="display:flex;flex-direction:column;gap:8px"><div class="grid-demo"></div><span class="label">dot grid · 24px · white at 12% on ink, 26% on blueprint</span></div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:160px;border:1px solid var(--line);display:flex;flex-direction:column;justify-content:center;gap:28px;padding:0 24px;box-sizing:border-box">
+          <div class="dim"><i></i></div>
+          <div style="display:flex;justify-content:space-between" class="label"><span>product</span><span>blueprint</span><span>plan</span><span>execute</span></div>
+          <div class="dim"><i></i></div>
+        </div>
+        <span class="label">dimension rule · 1px line, 12px end ticks · labels only when they name real content</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:200px;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;background:var(--blue);background-image:radial-gradient(rgba(255,255,255,.26) 1px,transparent 1px);background-size:24px 24px">
+          <svg width="150" height="150" viewBox="0 0 64 64" fill="none"><g stroke="#fff" stroke-width=".35" opacity=".45"><line x1="10" y1="0" x2="10" y2="64"/><line x1="32" y1="0" x2="32" y2="64"/><line x1="54" y1="0" x2="54" y2="64"/><line x1="0" y1="8" x2="64" y2="8"/><line x1="0" y1="18" x2="64" y2="18"/><line x1="0" y1="56" x2="64" y2="56"/></g><g stroke="#fff" stroke-width="2.2" stroke-linecap="round"><line x1="10" y1="8" x2="54" y2="8"/><line x1="10" y1="4.5" x2="10" y2="11.5"/><line x1="54" y1="4.5" x2="54" y2="11.5"/><line x1="10" y1="18" x2="32" y2="56"/><line x1="54" y1="18" x2="32" y2="56"/><circle cx="10" cy="18" r="3.4" fill="#1e3f8f"/><circle cx="54" cy="18" r="3.4" fill="#1e3f8f"/><circle cx="32" cy="56" r="3.4" fill="#fff"/></g></svg>
+        </div>
+        <span class="label">construction drawing · on a blueprint panel, white lines, construction guides at 45%</span>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <div style="height:200px;border:1px solid var(--line);display:grid;grid-template-columns:1fr 1fr;grid-template-rows:1fr 1fr">
+          <div style="border-right:1px solid var(--line);border-bottom:1px solid var(--line);padding:12px" class="label">project<br><span style="color:var(--paper);font-family:var(--sans);font-size:14px">vwf</span></div>
+          <div style="border-bottom:1px solid var(--line);padding:12px" class="label">host<br><span style="color:var(--paper);font-family:var(--sans);font-size:14px">claude-plugins.virajp.dev</span></div>
+          <div style="border-right:1px solid var(--line);padding:12px" class="label">license<br><span style="color:var(--paper);font-family:var(--sans);font-size:14px">MIT</span></div>
+          <div style="padding:12px" class="label">source<br><a style="font-family:var(--sans);font-size:14px" href="#">github.com/virajp/claude-plugins</a></div>
+        </div>
+        <span class="label">title block · the footer. Real fields only, no build numbers, no version strings.</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div><h2>Components</h2><p>Sharp corners everywhere. Buttons fill with blueprint or outline with line-2. Code blocks sit on ink-3. Navigation marks the current item with a 2px blueprint rule, never a dot.</p></div>
+    <div style="display:flex;flex-direction:column;gap:32px">
+      <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap">
+        <a class="btn" href="#">Get started</a><a class="btn sec" href="#">GitHub</a><a class="btn sm" href="#">Get started</a><a class="btn sec sm" href="#">Copy</a>
+        <span style="font-size:14px;color:var(--mist)">Inline <a href="#">link</a> and <code class="inline">/vwf:doctor</code></span>
+      </div>
+      <div class="codeblock"><span class="c"># Register this repo as a plugin marketplace, once</span>
+claude plugin marketplace add virajp/claude-plugins
+
+<span class="c"># Install the workflow</span>
+claude plugin install vwf@virajp-plugins</div>
+      <table><thead><tr><th>Tool</th><th>Required</th><th>Why</th><th>Install</th></tr></thead><tbody>
+        <tr><td>mise</td><td>required</td><td>task runner, resolves the toolchain</td><td><code class="inline">brew install mise</code></td></tr>
+        <tr><td>graphify</td><td>required</td><td>knowledge graph the commands rely on</td><td><code class="inline">mise use -g pipx:graphifyy@latest</code></td></tr>
+        <tr><td>rtk</td><td>recommended</td><td>the token-saving Bash hook</td><td><code class="inline">brew install --formulae rtk</code></td></tr>
+      </tbody></table>
+      <div style="display:grid;grid-template-columns:240px 1fr;gap:32px">
+        <div><a class="navitem" href="#">Install</a><a class="navitem on" href="#">Prerequisites</a><a class="navitem" href="#">Setup</a><a class="navitem" href="#">Product</a></div>
+        <div class="callout">Nothing checks these at install time. <code class="inline">claude plugin install vwf</code> succeeds regardless, so the first thing to run afterwards is <code class="inline">/vwf:doctor</code>.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sec">
+    <div><h2>Rules</h2><p>What keeps the three options one family.</p></div>
+    <ul class="rules">
+      <li>One theme. Every page is ink. Blueprint blue appears as panels and controls, never as a page background.</li>
+      <li>Radius 0 on every element. The app-icon tile is the one rounded shape, and it is a brand asset.</li>
+      <li>Mono is semantic: commands, paths, versions, table headers, the wordmark. Body and headings are grotesk.</li>
+      <li>At most one small uppercase label per three sections. Headlines stand alone.</li>
+      <li>No em-dashes anywhere on the site. Sentences split with a period or a colon.</li>
+      <li>Hairlines organize content or separate sections. None are drawn for atmosphere.</li>
+      <li>The construction drawing is the only illustration. No fake terminals, no div screenshots.</li>
+      <li>Spacing on a 4px base: 8, 12, 16, 24, 32, 48, 64, 96, 128. Section gap 96 on landing, 48 in docs.</li>
+      <li>Type scale: 56 / 40 / 32 / 22 / 17 / 14 / 13 (code) / 12 (labels).</li>
+      <li>Layout: 1440 max, 64px page gutters. Docs: 264 sidebar, 760 article, 200 outline.</li>
+    </ul>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>

@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15161A;--ink-2:#1B1D23;--ink-3:#22252D;--line:#2B2F39;--line-2:#3A3F4B;--paper:#F4F5F8;--mist:#B9BDC9;--muted:#7D8392;--blue:#1E3F8F;--blue-2:#2A52B8;--blue-3:#7AA0F2;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Schibsted Grotesk',system-ui,sans-serif}
+html{background:var(--ink)}body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:var(--blue-3);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}a:hover{color:var(--paper)}
+code{font-family:var(--mono)}h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.1}p{margin:0}
+.page{width:1440px;margin:0 auto;box-sizing:border-box;padding:0 160px}
+nav{height:64px;display:flex;align-items:center;justify-content:space-between}
+nav .brand{display:flex;align-items:center;gap:10px;font:400 16px var(--mono);color:var(--paper);text-decoration:none}
+nav .links{display:flex;gap:32px}nav .links a{font-size:15px;color:var(--mist);text-decoration:none}
+.btn{display:inline-flex;align-items:center;height:44px;padding:0 20px;font:500 15px var(--sans);text-decoration:none;color:var(--paper);background:var(--blue);border:1px solid var(--blue)}
+.btn.sec{background:transparent;border-color:var(--line-2)}
+.hero{padding:96px 0 0;display:flex;flex-direction:column;gap:28px;max-width:860px}
+.hero h1{font-size:68px;letter-spacing:-.025em;line-height:1.0}
+.hero p{font-size:21px;color:var(--mist);max-width:46ch;line-height:1.5}
+.hero .cta{display:flex;gap:12px;margin-top:8px}
+section{padding:128px 0 0}
+h2{font-size:40px;letter-spacing:-.02em}
+.lead{font-size:18px;color:var(--mist);max-width:62ch;line-height:1.6;margin-top:16px}
+.phases{margin-top:40px;border-top:1px solid var(--line-2)}
+.ph{display:grid;grid-template-columns:120px 260px 1fr;gap:32px;padding:40px 0;border-bottom:1px solid var(--line)}
+.ph .n{font:300 44px/1 var(--mono);color:var(--blue-3)}
+.ph h3{font-size:30px;letter-spacing:-.015em}.ph h3 code{display:block;font:400 13px var(--mono);color:var(--muted);margin-top:10px;letter-spacing:0}
+.ph p{font-size:17px;color:var(--mist);line-height:1.6;max-width:56ch;padding-top:6px}
+.codeblock{background:var(--ink-3);border:1px solid var(--line);padding:20px 24px;font:15px/1.7 var(--mono);color:var(--paper);white-space:pre;margin-top:28px;max-width:760px;box-sizing:border-box}
+.codeblock .c{color:var(--muted)}
+.spread{display:grid;grid-template-columns:1fr 1fr;gap:80px;margin-top:40px}
+.spread h3{font-size:30px;letter-spacing:-.015em}.spread h3 code{display:block;font:400 13px var(--mono);color:var(--muted);margin-top:8px;letter-spacing:0}
+.spread p{font-size:17px;color:var(--mist);line-height:1.6;margin-top:20px}
+.prose p{font-size:18px;color:var(--mist);line-height:1.65;max-width:64ch;margin-top:20px}.prose p b{color:var(--paper);font-weight:500}
+.toc{margin-top:40px;max-width:860px}
+.toc .g{display:grid;grid-template-columns:200px 1fr;gap:32px;padding:28px 0;border-top:1px solid var(--line-2)}
+.toc .g h3{font-size:17px;font-weight:500;color:var(--muted);padding-top:4px}
+.toc a{display:grid;grid-template-columns:1fr auto;gap:24px;align-items:baseline;text-decoration:none;color:var(--paper);font-size:17px;padding:8px 0}
+.toc a span{font-size:14px;color:var(--muted);text-align:right}
+footer{margin-top:128px;padding:32px 0 64px;border-top:1px solid var(--line-2);display:flex;justify-content:space-between;align-items:baseline;font-size:15px;color:var(--mist)}
+footer .w{font:300 22px var(--mono);letter-spacing:.02em;color:var(--paper)}
+footer .l{display:flex;gap:24px}footer .l a{text-decoration:none;color:var(--mist)}
+</style>
+</helmet>
+
+<div data-screen-label="B manual · landing" class="page">
+
+  <nav>
+    <a class="brand" href="#"><img src="assets/vwf-mark-small-white.svg" width="20" height="20" alt="">vwf</a>
+    <div class="links"><a href="#">Manual</a><a href="#">Guides</a><a href="#">Installer</a><a href="#">GitHub</a></div>
+  </nav>
+
+  <div class="hero">
+    <img src="assets/vwf-mark-white.svg" width="96" height="96" alt="vwf mark" style="display:block">
+    <h1>Four phases from a vague idea to a reviewed release.</h1>
+    <p>An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.</p>
+    <div class="cta"><a class="btn" href="#">Read the manual</a><a class="btn sec" href="#">GitHub</a></div>
+  </div>
+
+  <section>
+    <h2>The four phases</h2>
+    <p class="lead">Everything up to the blueprint is done in full before planning. Each phase is one slash command, and Claude never merges until you approve.</p>
+    <div class="phases">
+      <div class="ph"><div class="n">1</div><h3>Product<code>/vwf:product</code></h3><p>Pin the outcome contract: the problem, the users, measurable goals, and the order to build in. Everything downstream must trace to it.</p></div>
+      <div class="ph"><div class="n">2</div><h3>Blueprint<code>/vwf:blueprint</code></h3><p>Keep an always-current blueprint of the whole product, organized by flow, with entities as the data contracts under them, closed by a whole-product coherence review.</p></div>
+      <div class="ph"><div class="n">3</div><h3>Plan<code>/vwf:plan</code></h3><p>Diff the blueprint against the real code for one slice, planning its unbuilt dependencies as their own chained plans first, and write the delta to apply.</p></div>
+      <div class="ph"><div class="n">4</div><h3>Execute<code>/vwf:execute</code></h3><p>Implement the plan autonomously under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Install</h2>
+    <p class="lead">One command registers the marketplace and installs the workflow. stackgen, its one dependency, comes with it. Restart Claude Code afterwards and run <code style="color:var(--blue-3)">/vwf:doctor</code>.</p>
+    <div class="codeblock">pnpx @virajp.dev/claude-plugins --all
+
+<span class="c"># or Claude Code's own two commands, which the wrapper sequences</span>
+claude plugin marketplace add virajp/claude-plugins
+claude plugin install vwf@virajp-plugins</div>
+  </section>
+
+  <section>
+    <h2>Two plugins ship</h2>
+    <div class="spread">
+      <div>
+        <h3>vwf<code>vwf@virajp-plugins</code></h3>
+        <p>The workflow. Onboard a repo, pin the outcome contract, model the system, sweep the blueprint to complete coverage, plan one slice as a reviewable diff, execute it unattended behind one merge gate, verify the deploy, and route what production teaches you back to the document that fixes it.</p>
+        <p>It names no technology at all. No language, no framework, no cloud. That is what lets the second plugin exist.</p>
+      </div>
+      <div>
+        <h3>stackgen<code>stackgen@virajp-plugins</code></h3>
+        <p>The principles-driven stack materializer. A stack is a composition of components, and each one resolves on its own: a component a shipped pack covers is copied verbatim; an uncovered one is researched, generated against vwf's principles catalog, and gated by a reviewer agent and your explicit consent.</p>
+        <p>Most of the result is plain files your collaborators get with a git pull. A vwf dependency, so installing the workflow brings it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="prose">
+    <h2>Know this before you install</h2>
+    <p>vwf is deliberately heavyweight, and some of what it needs is a real adoption blocker rather than a preference.</p>
+    <p><b>It is built for the 1-million-token context window.</b> The orchestrator holds the blueprint, the plan, the registry and each subagent's output at once. On the standard window a real cycle will degrade or overflow.</p>
+    <p><b>It runs opus where judgment decides the outcome</b>, and where nobody is watching. An execute cycle runs several opus subagents per step with fix loop-backs, so expect a meaningful token cost per slice. This is not a cheap workflow.</p>
+    <p><b>It expects a testable, registry-described project</b>, and five binaries on your PATH: mise, graphify, uv, pnpm and rtk. Nothing checks this at install time. It is opinionated on purpose: one workflow, one set of conventions, sized for a solo developer or a small team.</p>
+  </section>
+
+  <section>
+    <h2>Guides</h2>
+    <p class="lead">Journey-shaped: each one narrates a whole product's walk through vwf, organized by the situation you are in rather than by the command you are about to type.</p>
+    <div class="toc">
+      <div class="g"><h3>Starting fresh</h3><div>
+        <a href="#">Start a product from an empty repo<span>Relay, a team task manager</span></a>
+        <a href="#">Design the screens in a design tool, then build them<span>Centwise, a Flutter expense tracker</span></a>
+        <a href="#">Build a headless service with no UI anywhere<span>Hookline, a payments-webhook relay</span></a>
+        <a href="#">Build a product whose only surface is a terminal<span>clockon, a CLI time tracker</span></a>
+        <a href="#">Start a product that spans several repos<span>Stallfront, e-commerce in four repos</span></a>
+      </div></div>
+      <div class="g"><h3>Adopting vwf</h3><div>
+        <a href="#">Adopt vwf in a codebase that already works<span>brownfield</span></a>
+        <a href="#">Migrate a repo from an older vwf<span>brownfield</span></a>
+      </div></div>
+      <div class="g" style="border-bottom:1px solid var(--line-2)"><h3>Operating</h3><div>
+        <a href="#">Choosing your stack<span>operate</span></a>
+        <a href="#">The production feedback loop<span>operate</span></a>
+        <a href="#">Sessions and handoff<span>operate</span></a>
+      </div></div>
+    </div>
+  </section>
+
+  <footer>
+    <span class="w">vwf</span>
+    <span>MIT licensed. Authored by Viraj Patel.</span>
+    <div class="l"><a href="#">GitHub</a><a href="#">npm</a><a href="#">Credits</a></div>
+  </footer>
+
+</div>
+</x-dc>
+</body>
+</html>
