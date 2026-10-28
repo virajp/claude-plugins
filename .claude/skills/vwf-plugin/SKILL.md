@@ -354,7 +354,12 @@ every resume is a person re-running `/vwf:execute <folder>`. `plan` and
 `/vwf:feedback`'s blueprint-gap routes and by `execute`'s gap reconciliation,
 and the seam `change-plan` reserved is live too — `/vwf:feedback`'s *not a
 blueprint gap* route calls it by name, which marking it user-only would have
-made a silent no-op.
+made a silent no-op. `setup` is **user and model** too: `/vwf:architecture`
+hands off to it in-session once its commit lands, and `/stackgen:stackgen-sync`
+invokes `/vwf:setup reshape` on drift. It was user-only from 2026-07-31, when
+nothing called it, until 2026-10-28 — both calls, added after that, were silent
+no-ops until the flag flipped. `design-system`, `mockups`, `recall` and `verify`
+stay user-only: nothing calls them, and the user owns their timing.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Seven skills are in it today —

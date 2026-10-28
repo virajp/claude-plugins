@@ -10,7 +10,7 @@ description: Bring a repo into vwf's format and keep it there. Step 0 resolves
 argument-hint: "[reshape]"
 model: sonnet
 
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # setup — Onboard & Keep a Repo in vwf Format
