@@ -41,7 +41,9 @@
     "../brag-output/",
     "**/brag-output/",
     "../docs/plans/",
-    "**/docs/plans/"
+    "**/docs/plans/",
+    "../docs/design/",
+    "**/docs/design/"
   ],
   "exec": {
     "commands": [

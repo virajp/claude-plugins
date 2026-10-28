@@ -131,9 +131,13 @@ the user before `p:site:release`**.
 The design was authored in the Claude Design project
 `bb1f0a69-4c72-4f0e-91fd-186a963b568b` ("claude-plugins (site)") as
 `Site Design System.dc.html`, `Site - Landing.dc.html` and
-`Site - Docs.dc.html`; the maintainer's machine keeps a gitignored working copy
-under `docs/scratchpad/site-design/`. The landing is the composite chosen there,
-copy verbatim; the docs page is its option C. Tokens are in
+`Site - Docs.dc.html`. The project archive, exported on 2026-10-28 before
+standalone Claude Design closes on 2026-12-14, is committed under
+`docs/design/site/` byte-for-byte — one folder per design version
+(`option-a-drafting-table/`, `option-b-manual/`, `option-c-schematic/`,
+`final/`, `logo/`), each with its own `assets/` and `support.js` so it renders
+alone; dprint and the linter exclude the tree. The landing is the composite
+chosen there, copy verbatim; the docs page is its option C. Tokens are in
 `src/styles/tokens.css`.
 
 ## Traps

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@300;400;500&family=Schibsted+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#15161A;--ink-2:#1B1D23;--ink-3:#22252D;--line:#2B2F39;--line-2:#3A3F4B;--paper:#F4F5F8;--mist:#B9BDC9;--muted:#7D8392;--blue:#1E3F8F;--blue-2:#2A52B8;--blue-3:#7AA0F2;--mono:'Geist Mono',ui-monospace,monospace;--sans:'Schibsted Grotesk',system-ui,sans-serif}
+html{background:var(--ink)}body{margin:0;background:var(--ink);color:var(--paper);font-family:var(--sans);-webkit-font-smoothing:antialiased;line-height:1.5}
+a{color:var(--blue-3);text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px}a:hover{color:var(--paper)}
+code{font-family:var(--mono)}h1,h2,h3{margin:0;font-weight:700;letter-spacing:-.01em;line-height:1.15}p{margin:0}
+.page{width:1440px;margin:0 auto;box-sizing:border-box}
+nav{height:64px;padding:0 64px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}
+nav .brand{display:flex;align-items:center;gap:10px;font:400 16px var(--mono);color:var(--paper);text-decoration:none}
+nav .links{display:flex;gap:28px;align-items:center}nav .links a{font-size:14px;color:var(--mist);text-decoration:none}nav .links a.on{color:var(--paper)}
+.search{display:flex;align-items:center;gap:10px;height:34px;padding:0 12px;border:1px solid var(--line-2);width:240px;box-sizing:border-box;color:var(--muted);font-size:13px}.search kbd{margin-left:auto;font:11px var(--mono);border:1px solid var(--line-2);padding:1px 5px;color:var(--muted)}
+.layout{display:grid;grid-template-columns:280px 1fr 220px}
+aside{background:var(--ink-2);border-right:1px solid var(--line);padding:32px 24px 96px 64px;min-height:900px}
+aside .grp{font-size:13px;font-weight:500;color:var(--paper);margin:28px 0 8px}aside .grp:first-child{margin-top:0}
+aside a{display:block;font-size:14px;color:var(--mist);text-decoration:none;padding:6px 0 6px 20px;position:relative}
+aside a:before{content:"";position:absolute;left:4px;top:0;bottom:0;width:1px;background:var(--line-2)}
+aside a.on{color:var(--paper)}aside a.on:after{content:"";position:absolute;left:0;top:50%;width:9px;height:9px;margin-top:-5px;border-radius:50%;background:var(--blue-3)}
+aside a.sub{padding-left:36px;font-size:13px;color:var(--muted)}aside a.sub:before{left:20px}aside a.sub.on{color:var(--paper)}aside a.sub.on:after{left:16px}
+main{padding:40px 64px 96px;max-width:800px;box-sizing:border-box}
+.crumb{font-size:13px;color:var(--muted)}.crumb span{margin:0 8px}
+main h1{font-size:44px;letter-spacing:-.02em;margin:10px 0 20px}
+main h2{font-size:28px;margin:52px 0 14px;padding-left:16px;border-left:2px solid var(--blue-3)}
+main p{font-size:16px;line-height:1.65;color:var(--mist);margin:0 0 16px}main p b{color:var(--paper);font-weight:500}
+.inline{font:13.5px var(--mono);background:var(--ink-3);border:1px solid var(--line);padding:1px 6px;color:var(--paper)}
+.codeblock{background:var(--ink-3);border:1px solid var(--line);font:13.5px/1.7 var(--mono);color:var(--paper);white-space:pre;margin:16px 0 24px;position:relative}
+.codeblock .bar{display:flex;justify-content:space-between;padding:6px 14px;border-bottom:1px solid var(--line);font-size:11px;color:var(--muted);letter-spacing:.04em}.codeblock .body{padding:14px 18px}.codeblock .c{color:var(--muted)}
+table{border-collapse:collapse;width:100%;font-size:14px;margin:16px 0 24px;border:1px solid var(--line)}th{text-align:left;font-size:12px;font-weight:500;color:var(--muted);padding:10px 12px;background:var(--ink-2);border-bottom:1px solid var(--line)}td{padding:10px 12px;border-bottom:1px solid var(--line);color:var(--mist);vertical-align:top}tr:last-child td{border-bottom:0}td:first-child{color:var(--paper)}td b{color:var(--paper);font-weight:500}
+.figure{border:1px solid var(--line-2);background-image:radial-gradient(rgba(255,255,255,.10) 1px,transparent 1px);background-size:24px 24px;padding:24px;margin:8px 0 24px;display:flex;flex-direction:column;gap:12px;align-items:center}
+.figure .cap{font-size:13px;color:var(--muted)}
+.callout{border:1px solid var(--line-2);border-left:2px solid var(--blue-3);padding:14px 18px;font-size:15px;color:var(--mist);margin:8px 0 24px;line-height:1.6}
+.outline{padding:40px 64px 0 24px;border-left:1px solid var(--line);position:sticky;top:0;align-self:start}
+.outline .t{font-size:13px;font-weight:500;color:var(--muted);margin-bottom:12px}
+.outline a{display:block;font-size:13px;color:var(--mist);text-decoration:none;padding:5px 0}.outline a.on{color:var(--blue-3)}.outline a.sub{padding-left:12px;color:var(--muted)}
+.pn{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:64px}
+.pn a{text-decoration:none;color:var(--paper);font-size:15px;border:1px solid var(--line-2);padding:16px 20px}.pn a span{display:block;font-size:12px;color:var(--muted);margin-bottom:4px}.pn a:last-child{text-align:right}
+</style>
+</helmet>
+
+<div data-screen-label="site · docs (final)" class="page">
+
+  <nav>
+    <a class="brand" href="#"><img src="assets/vwf-mark-small-white.svg" width="20" height="20" alt="">vwf</a>
+    <div class="links"><div class="search">Search <kbd>⌘K</kbd></div><a class="on" href="#">Docs</a><a href="#">Guides</a><a href="#">Installer</a><a href="#">GitHub</a></div>
+  </nav>
+
+  <div class="layout">
+    <aside>
+      <div class="grp">Plugins</div>
+      <a class="on" href="#">vwf</a>
+      <a class="sub" href="#">Install</a><a class="sub on" href="#">Prerequisites</a><a class="sub" href="#">Caveats</a><a class="sub" href="#">Commands</a><a class="sub" href="#">Configuration</a>
+      <a href="#">stackgen</a><a href="#">Memory</a><a href="#">Karpathy guidelines</a>
+      <div class="grp">Guides</div>
+      <a href="#">Which guide am I?</a><a href="#">Starting fresh</a><a href="#">Adopting vwf</a><a href="#">Operating</a>
+      <div class="grp">Installer</div>
+      <a href="#">Overview</a><a href="#">Usage</a><a href="#">Targets</a><a href="#">Internals</a>
+    </aside>
+
+    <main>
+      <div class="crumb">Docs<span>/</span>Plugins<span>/</span>vwf</div>
+      <h1>vwf plugin</h1>
+      <p>The flagship plugin of the marketplace. An opinionated workflow that turns a vague idea into a shipped, reviewed product through four disciplined phases: <b>Product, Blueprint, Plan, Execute</b>, with post-deploy verification and a production-feedback intake closing the loop.</p>
+      <div class="figure">
+        <svg width="560" height="120" viewBox="0 0 560 120" fill="none" font-family="Geist Mono, monospace" font-size="11">
+          <g stroke="#F4F5F8" stroke-width="1.5" stroke-linecap="round"><line x1="30" y1="50" x2="530" y2="50"/><line x1="30" y1="44" x2="30" y2="56"/><line x1="530" y1="44" x2="530" y2="56"/></g>
+          <g stroke="#F4F5F8" stroke-width="1.6" fill="#15161A"><circle cx="30" cy="50" r="5"/><circle cx="196" cy="50" r="5"/><circle cx="363" cy="50" r="5"/></g>
+          <circle cx="530" cy="50" r="6" fill="#F4F5F8"/>
+          <g fill="#B9BDC9"><text x="30" y="30" text-anchor="middle">product</text><text x="196" y="30" text-anchor="middle">blueprint</text><text x="363" y="30" text-anchor="middle">plan</text><text x="530" y="30" text-anchor="middle">execute</text></g>
+          <g stroke="#7AA0F2" stroke-width="1.2" stroke-dasharray="4 4"><line x1="530" y1="56" x2="530" y2="90"/><line x1="530" y1="90" x2="30" y2="90"/><line x1="30" y1="90" x2="30" y2="56"/></g>
+          <text x="280" y="108" fill="#7AA0F2" text-anchor="middle">verify, then production feedback</text>
+        </svg>
+        <span class="cap">The four phases, and the loop that closes them.</span>
+      </div>
+      <p>This page is the reference, command by command. If you would rather follow one product's whole walk through the workflow, the journey-shaped guides are in <a href="#">Guides</a>, organized by the situation you are in.</p>
+
+      <h2>Install</h2>
+      <div class="codeblock"><div class="bar"><span>sh</span><span>copy</span></div><div class="body"><span class="c"># Once</span>
+claude plugin marketplace add virajp/claude-plugins
+
+<span class="c"># Installs vwf and its one dependency, stackgen</span>
+claude plugin install vwf@virajp-plugins</div></div>
+      <p>Add <code class="inline">--scope project</code> to either command to keep it to one repo. Restart the agent afterwards, then run <code class="inline">/vwf:doctor</code>. Nothing is verified at install time, and doctor is what reports a missing required binary.</p>
+
+      <h2>Prerequisites</h2>
+      <p>vwf shells out to a few external tools. Install them first. Nothing checks them at install time, and the table gives the command for each.</p>
+      <table><thead><tr><th>Tool</th><th>Required</th><th>Why</th><th>Install</th></tr></thead><tbody>
+        <tr><td>mise</td><td><b>required</b></td><td>task runner, resolves the toolchain</td><td><code class="inline">brew install mise</code></td></tr>
+        <tr><td>graphify</td><td><b>required</b></td><td>knowledge graph the commands rely on</td><td><code class="inline">mise use -g pipx:graphifyy@latest</code></td></tr>
+        <tr><td>node + pnpm</td><td><b>required</b></td><td>runs the Context7 MCP server</td><td><code class="inline">mise use -g node@latest pnpm@latest</code></td></tr>
+        <tr><td>Claude Code CLI</td><td><b>required</b></td><td>hosts the commands</td><td><code class="inline">mise use -g claude-code@latest</code></td></tr>
+        <tr><td>uv</td><td><b>required</b></td><td>graphify's Python runtime</td><td><code class="inline">mise use -g uv@latest</code></td></tr>
+        <tr><td>rtk</td><td>recommended</td><td>the token-saving Bash hook</td><td><code class="inline">brew install --formulae rtk</code></td></tr>
+      </tbody></table>
+      <div class="callout"><b style="color:var(--paper)">Nothing checks these at install time.</b> <code class="inline">claude plugin install vwf</code> succeeds regardless, so the first thing to run afterwards is <code class="inline">/vwf:doctor</code>. It reports a missing required tool as a blocking finding, and both <code class="inline">/vwf:setup</code> and <code class="inline">/vwf:execute</code> halt on one.</div>
+
+      <h2>Caveats</h2>
+      <p>vwf is deliberately heavyweight. Know what you are signing up for before adopting it.</p>
+      <p><b>Built for a large context window.</b> The orchestrator holds a lot at once: the blueprint, the plan, the registry, and each subagent's output. Run Claude Code with the 1-million-token context; the standard window will degrade or overflow on a real cycle.</p>
+
+      <div class="pn"><a href="#"><span>Previous</span>Which guide am I?</a><a href="#"><span>Next</span>Commands</a></div>
+    </main>
+
+    <div class="outline">
+      <div class="t">On this page</div>
+      <a href="#">Install</a><a class="on" href="#">Prerequisites</a><a href="#">Caveats</a><a class="sub" href="#">Model and cost</a><a class="sub" href="#">Dependencies</a><a href="#">Commands</a><a class="sub" href="#">setup</a><a class="sub" href="#">product</a><a class="sub" href="#">blueprint</a><a class="sub" href="#">plan</a><a class="sub" href="#">execute</a><a href="#">Configuration</a>
+    </div>
+  </div>
+
+</div>
+</x-dc>
+</body>
+</html>
