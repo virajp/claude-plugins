@@ -22,8 +22,8 @@ the manager reads them from: `ignore-scripts=true`, so an install never
 executes a dependency's install-time code, and `fund=false`, so it never
 prints a banner over what it did. This pack does not ship the file; the repo
 sets them itself. A dependency that genuinely has to build is allowed by name
-in `pnpm-workspace.yaml` (`allowBuilds`, or `onlyBuiltDependencies` before
-pnpm 10.26) — the exception is a reviewable line, not a switch.
+in `pnpm-workspace.yaml` (`allowBuilds`; pnpm 11 ignores the older
+`onlyBuiltDependencies`) — the exception is a reviewable line, not a switch.
 
 **An agent's `npm`/`npx` command is rewritten before it runs.** This pack
 ships `hooks/npm-normalize.sh`, which lands at `.claude/hooks/npm-normalize.sh`
