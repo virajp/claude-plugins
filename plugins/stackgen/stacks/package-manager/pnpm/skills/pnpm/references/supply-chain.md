@@ -38,15 +38,19 @@ Postinstall/build scripts are blocked by default (`.npmrc` sets
 native code:
 
 ```yaml
-onlyBuiltDependencies:
-  - "@parcel/watcher"
-  - "@swc/core"
-  - esbuild
-  - protobufjs
+# https://pnpm.io/settings#allowbuilds
 allowBuilds:
+  "@parcel/watcher": true
   "@swc/core": true
   esbuild: true
+  protobufjs: true
 ```
+
+`allowBuilds` is the one allowlist. pnpm 11 removed `onlyBuiltDependencies`,
+`onlyBuiltDependenciesFile`, `neverBuiltDependencies` and
+`ignoredBuiltDependencies`, and ignores them silently — so a leftover key looks
+active and is not. Delete it rather than keep it beside `allowBuilds`; a
+package that must not build is `false` in the same map.
 
 ## overrides
 
@@ -94,5 +98,4 @@ ignore-scripts=true
 ```
 
 `ignore-scripts=true` neutralizes arbitrary install-time code; the
-`onlyBuiltDependencies`/`allowBuilds` allowlists above re-enable builds only
-where needed.
+`allowBuilds` allowlist above re-enables builds only where needed.

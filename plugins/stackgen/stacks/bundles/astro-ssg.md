@@ -5,7 +5,7 @@ kind: language-bundle
 default: true
 components:
 - language/typescript@0.5.0
-- package-manager/pnpm@1.1.0
+- package-manager/pnpm@1.1.1
 - toolchain-gate/tsconfig@0.2.2
 - toolchain-gate/eslint@0.3.5
 - framework/astro@0.5.1
