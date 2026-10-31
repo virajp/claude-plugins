@@ -3,7 +3,7 @@ name: pnpm · Turborepo
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@0.6.1
+- package-manager/pnpm@1.1.1
 - build-orchestrator/turbo@generated
 ---
 
@@ -33,15 +33,16 @@ Repo-level tooling for a pnpm workspace, shared across its `projects/*` and
 - **dprint** formats (one root config, symlinked into each member); **ESLint**
   lints; **gitleaks** and **grype** gate security — all wired through
   pre-commit: format → lint → tests.
-  The gates are `stackgen:tool-config`'s, whose dprint plugins and excludes
-  already cover every stack; this bundle's packs add their own subtasks.
+  The gates, their configs and the hooks are bootstrap's, and cover every
+  stack; `mise run code` runs them all.
 
 ## Tooling & config
 
 - **mise** manages tools with the three-file `MISE_ENV` split under `.config/`:
   base runtime (`node`, `pnpm`), `dev` (formatters, linters, security tools, the
-  local-dev env block), `ci` (production endpoints/overrides). File-based task
-  library with per-project prefixes plus `all:*`, `code:*`, `release:*`.
+  local-dev env block), `ci` (production endpoints/overrides). bootstrap owns
+  the tool pins and the generic tasks (`mise run setup`, `mise run code`); the
+  repo adds per-project prefixes plus `all:*` and `release:*`.
 - **Secrets** are injected by the manager the backing axis names — every
   dev/test script runs under its wrapper rather than reading a committed file.
   Config reaches code as env vars, parsed with Effect `Config` + `Schema`

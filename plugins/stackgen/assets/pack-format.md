@@ -10,11 +10,11 @@ floods no session with every stack's doctrine, because nothing under
 materializer copies it into a repo's `.claude/` tree.
 
 **Every pack in the tree is authored here.** The `toolchain-gate` type ships
-six packs under `stacks/toolchain-gate/` — `analysis-options`, `eslint`,
-`ruff`, `swift-format`, `swiftlint` and `tsconfig` — and no curated plugin
-stands behind any pack:
-the tree is each pack's only home. This file is the contract every pack is
-folded into, so an author targets a shape the materializer already reads.
+eight packs under `stacks/toolchain-gate/` — `analysis-options`, `detekt`,
+`eslint`, `ktlint`, `ruff`, `swift-format`, `swiftlint` and `tsconfig` — and
+no curated plugin stands behind any pack: the tree is each pack's only home.
+This file is the contract every pack is folded into, so an author targets a
+shape the materializer already reads.
 
 ## Layout
 
@@ -28,18 +28,16 @@ stacks/<type>/<slug>/
 ├── hooks/               # optional: hook scripts + their settings entries
 │   ├── <name>.sh        #   the script, copied into .claude/hooks/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
-├── config/              # optional: repo config files — tree mirrors the repo root
-│   ├── .config/…        #   e.g. .config/mise/tasks/code/lint/<slug> (consent-gated)
-│   └── _<name>/…        #   pack-private payload — NEVER copied
-└── templates/           # optional: files tool-config renders — tree mirrors the repo root
-    └── .config/mise/conf.d/<slug>/…   # the pack's own mise files, and nothing else
+└── config/              # optional: repo files — tree mirrors the repo root
+    ├── .config/…        #   e.g. .config/mise/tasks/test/<name> (consent-gated)
+    └── _<name>/…        #   pack-private payload — NEVER copied
 ```
 
 **Two sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
-  mirrors the repo root, so `config/.config/swiftlint.yml` lands at
-  `<repo>/.config/swiftlint.yml` and `config/wrangler.jsonc` at
+  mirrors the repo root, so `config/.config/mise/tasks/test/golden` lands at
+  `<repo>/.config/mise/tasks/test/golden` and `config/wrangler.jsonc` at
   `<repo>/wrangler.jsonc`.
   A path landing at the **root** must be on the fixed allowlist
   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); anything else belongs
@@ -56,11 +54,14 @@ stacks/<type>/<slug>/
   `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` defines, never the raw name — and
   the materializer's copy rules are where that behaviour is specified.
 
-A pack ships no fragment of a universal file — no pre-commit hook, no
-ignore line, no exclude, no editor setting: `stackgen:tool-config` ships
-those as universal supersets, every stack's entries whether or not the repo
-uses that stack. What a pack adds to the toolchain is its own mise folder,
-in `templates/`, and its own subtasks, in `config/` (both below).
+**A pack ships no toolchain.** No tool pin, no gate, no gate config, no
+generic task (`setup:deps`, `code:format`, `code:lint`, `code:check`), no
+pre-commit hook, no ignore line and no editor setting: all of them are
+bootstrap's. A pack names no bootstrap tool either. The materializer reads
+a fresh clone of bootstrap to choose the tools a composition needs, and asks
+for them through bootstrap's own entry point — the stack-template skill's
+bootstrap handoff. What a pack adds is what is specific to the repo, in
+`config/` (below).
 
 `<type>` is a component type from
 `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`. The slug is unique within the
@@ -75,15 +76,24 @@ curated and tested here; generation never emits an executable — a generated
 materializer's separate settings-consent line.
 
 **`config/` is a target, not a fifth artifact kind.** It mirrors the repo
-root rather than `.claude/`, so `config/.config/mise/tasks/code/format` lands
-at `<repo>/.config/mise/tasks/code/format`, behind its own consent line, and
+root rather than `.claude/`, so `config/.config/mise/tasks/test/golden` lands
+at `<repo>/.config/mise/tasks/test/golden`, behind its own consent line, and
 merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
-`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. A gate pack **does** ship the
-config file it governs; a provider's environment is a file in its
-`templates/`; what stays out is a language manifest, a CI workflow, editor
-settings and CLAUDE.md — the editor is the user's to configure. **Mode is
+`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. **The tier is an allowlist**,
+and `p:plugins:check` rule 11 refuses any other path:
+
+- `config/.config/mise/tasks/test/<name>` — a test task, which needs a
+  model decision and so stays with the pack;
+- `config/.config/mise/tasks/p/_project/<name>` — a task of the project the
+  stack is pinned for;
+- a root file on the allowlist of
+  `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`;
+- `config/_<name>/` — pack-private payload, never copied.
+
+A language manifest, a CI workflow, editor settings and CLAUDE.md stay out —
+the editor is the user's to configure. **Mode is
 preserved**: anything under `config/.config/mise/tasks/**` must be authored
 executable (755), which `p:plugins:check` asserts, because mise runs a task
 file directly and reports a non-executable one as an unknown task.
@@ -120,13 +130,6 @@ user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, 
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
-conditional: # optional — config/ paths that land only when an answer holds; see below
-  - path: <a landed path or glob, repo-root relative>
-    when: { <axis>: <value> } # one axis, one value
-values: # optional — the machine values the pack's templates read as @@NAME@@; see below
-  - name: <UPPER_SNAKE>
-    detect: <shell command printing the value; non-zero when unknown>
-    question: <asked when detect fails>
 ```
 
 **Servers are three sibling keys, never one key with a scope field.**
@@ -180,164 +183,29 @@ The second entry is why the key is a list: an app's lockfile sits inside
 the Xcode project Xcode writes it into, a library's at the root, and one
 pack serves both.
 
-### `templates/` — the pack's own mise files
+A package-manager pack also states, in its `conventions.md` or its
+skill, that the lockfile is never edited by hand, with an editor tool,
+`sed` or a script, and names the CLI commands that write it — `pnpm install`,
+`uv lock`, `swift package resolve`, a Gradle `--write-locks` run. The
+generator writes that passage into the `conventions.md` of every
+package-manager pack it generates, with how a merge conflict in the lockfile
+is resolved by that CLI rather than by merging its lines.
 
-A pack that needs a tool pin, an env value or an alias ships them as a mise
-file in `templates/.config/mise/conf.d/<slug>/` — `mise.toml` for every
-environment, `mise.<env>.toml` (`dev`, `ci`, `test`) for one — and nothing
-else lives in `templates/`. `stackgen:tool-config` renders the tree into
-the repo at the same relative paths with
-`pack --slug <slug> --dir <pack dir> [--set <key>=<value>]…`
-(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#packs`); the
-materializer never copies it. The checker holds the folder to the slug:
-`templates/.config/mise/conf.d/` carries exactly one entry, the folder named
-for the pack, since tool-config renders and removes that folder as the
-pack's.
+### `## Claude plugins` — a plugin the component needs
 
-```toml
-# templates/.config/mise/conf.d/swiftlint/mise.toml
-[tools."aqua:realm/SwiftLint"]
-version = "latest"
+A component that needs a Claude Code plugin names it in its
+`conventions.md`, under a `## Claude plugins` heading, one line for each
+plugin: `<name>@<marketplace>`, the source of its marketplace for
+`claude plugin marketplace add`, and the scope, `user` or `project`.
+
+```markdown
+## Claude plugins
+
+- `taste-skill@taste-skill` — marketplace `Leonxlnx/taste-skill`, user scope.
 ```
 
-**Pins follow tool-config's rule**
-(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#pins`): write `latest`
-and nothing else. In a file a CI environment loads — `mise.toml`,
-`mise.ci.toml`, `mise.test.toml` — the script resolves it to an exact
-version as it renders; a `mise.dev.toml` keeps `latest`. A tool is pinned in
-exactly one `conf.d/` folder: never re-pin one the universal `_base/` or
-`ai/` folder already pins.
-
-**A value only the machine can answer** — the Xcode a repo builds with, the
-simulator its goldens are recorded on — is a `@@NAME@@` tag in the pack's
-template, never a hardcoded default:
-
-```toml
-# templates/.config/mise/conf.d/swiftui/mise.toml
-[env]
-XCODE_VERSION = "@@XCODE_VERSION@@"
-```
-
-The value is stored under `packs.<slug>` in the repo's
-`.config/stackgen.yaml`, written by the script from `--set <key>=<value>`
-(the key lowercase — `--set xcode_version=26.1` fills `@@XCODE_VERSION@@`),
-and visible to that pack's templates alone. A render missing a value the
-template names is refused, naming it. The pack says how to find each value
-in its `values:` list (below); the caller runs it. The tag grammar is
-tool-config's
-(`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md#templates`), and
-`p:plugins:check` rule 11 refuses a tag it would not read.
-
-### `values:` — how each machine value is found
-
-Every `@@NAME@@` a pack's templates read, beyond tool-config's own global
-names, is declared in `pack.yaml` as one `values:` entry:
-
-| Field      | Is                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------- |
-| `name`     | the tag's name, upper snake case — `XCODE_VERSION` for `@@XCODE_VERSION@@`                    |
-| `detect`   | a shell command that prints the value on this machine, and exits non-zero when it cannot tell |
-| `question` | what to ask the person when `detect` fails                                                    |
-
-```yaml
-values:
-  - name: XCODE_VERSION
-    detect: >-
-      xcodebuild -version
-      | awk 'NR == 1 && $1 == "Xcode" { print $2; found = 1 } END { exit !found }'
-    question: >-
-      Which Xcode version does this repo build with? Every task that builds
-      refuses any other.
-```
-
-The caller — `/vwf:setup`, as it lands the pack — fills each entry in
-order: run `detect`; a zero exit with output is the value, anything else
-asks `question`. It passes every value to `pack` as `--set
-<name lowercased>=<value>`. `p:plugins:check` rule 11 holds the list to
-the templates both ways: every `values:` name is read as `@@<name>@@`
-somewhere in the pack's `templates/`, and every pack-own `@@` name there is
-declared in `values:`. An entry carries exactly `name`, `detect` and
-`question`, each a non-empty string, and a `name` may not take one of
-tool-config's global names.
-
-### Subtasks — what a pack adds to a gate
-
-The universal gates are `…:all` tasks that call one subtask each:
-`code:check:all`, `code:format:all`, `code:lint:all`, `setup:ai:all` and
-`setup:deps:<verb>:all` for `install`, `upgrade`, `outdated`, `audit` and
-`cleanup`. A pack adds to one by shipping a task file, executable, in its
-`config/` tier at
-`.config/mise/tasks/{code/{check,format,lint},setup/ai,setup/deps/<verb>}/<slug>`
-— the leaf **is** the pack's slug, so two packs never write one file:
-flutter's are `code/format/flutter` and `code/lint/flutter`, uv's lock check
-is `code/check/uv`. A subtask carries only its own tool's steps, and skips
-itself with a warning when its tool or config is absent. tool-config
-re-renders every `…:all` task on each `pack` and `pack-remove` call, so the
-new subtask joins the gate the hooks already call; a pack never ships a
-hook.
-
-**Three things a pack may not ship.** A slug from tool-config's reserved
-set — `all`, `ai`, `_base` — which name its own `…:all` leaf and its own
-`conf.d/` folders. A subtask whose leaf is one of tool-config's universal
-subtasks (`dprint`, `shell`, `house`, `workflows`, `base`): removing the
-pack would delete the universal file. And any file at a path
-tool-config's own trees ship — save one tool-config ships as a
-`#PLACEHOLDER` slot, which is a pack's to fill: the `capability-provider/fnox`
-pack's `setup/secrets` replaces the universal placeholder. `p:plugins:check`
-rule 11 refuses all three.
-
-**A dropped pack is removed with `pack-remove --slug <slug>`**: tool-config
-deletes `conf.d/<slug>/` and every subtask named `<slug>` — never a path its
-own trees ship — drops `packs.<slug>` from `.config/stackgen.yaml`, and
-re-renders the `…:all` tasks.
-
-### `conditional:` — files that land only when an answer holds
-
-A pack may declare that some of its `config/` files make sense only under
-an answer the caller already holds — the forge the repo pushes to, or the
-secrets provider picked.
-`conditional:` is an optional list; each entry names a **path or glob**
-(spelled as the pack's `config/` tree spells it, relative to `config/` —
-so `.github/CODEOWNERS`, not `config/.github/CODEOWNERS`) and a `when:` map of
-**exactly one axis to one value**, drawn from a fixed vocabulary:
-
-| Axis      | Values                     | Answered by                   |
-| --------- | -------------------------- | ----------------------------- |
-| `forge`   | `github`, `gitlab`         | the origin host               |
-| `secrets` | a capability-provider slug | the secrets-provider question |
-
-```yaml
-conditional:
-  - path: .github/CODEOWNERS
-    when: { forge: github }
-```
-
-That entry is illustrative: a file that only makes sense on one forge or
-beside one provider. **The key is reserved with no axis in use** — no
-shipped pack declares a `conditional:` entry today: a provider's ignore
-line is already in tool-config's universal `.gitignore`, not a conditional
-file.
-
-Rules:
-
-- **A path not named under `conditional:` is unconditional.** The key
-  narrows; absence is the default every existing pack already has.
-- **A glob may name a whole set** — `.config/<tool>/*.yml` is one
-  entry, not one per file. A `path` or glob is spelled as the pack's
-  own `config/` tree spells it — **before** the `p/_project/` rename — and
-  must match at least one file there; that pre-rename tree is what rule 11
-  resolves it against, and the materializer evaluates it on the same
-  pre-rename path and applies the rename after.
-- **One axis per entry, one value per axis.** A file that depends on two
-  answers is two entries on the same path, both of which must hold. A
-  value outside the vocabulary, or an axis not in the table, is a pack
-  authoring error, and `p:plugins:check` rule 11 refuses the tree naming
-  the pack and the entry.
-- **The materializer evaluates, records and skips; nothing else reads the
-  key.** A false entry's paths leave the landing set and are written to the
-  lockfile's `skipped:` list with their condition, so `/vwf:doctor` never
-  reports one as missing and a later run whose answer changed re-evaluates
-  it. The evaluation is the materializer's step, in its own reference.
+The materializer reads the section and asks bootstrap to install each
+plugin, through the same handoff as the tools. There is no `pack.yaml` key.
 
 The bundle-level lists the previous format carried per pack — `frameworks`,
 `dependencies`, `optional_languages`, `capabilities` — are **derived at
@@ -357,6 +225,8 @@ name: <display name>
 axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
+os: # optional, project axis only — the OS tokens each platform targets
+  <platform>: [ <os> ] # a key in platforms:; first token is the primary
 artifact: <token> # deploy axis only
 default: true # optional — what vwf preselects; one per axis per platform
 components:
@@ -369,11 +239,9 @@ a bundle answers "what is a TypeScript service" — and those are different
 questions, which is why a menu of components alone leaves nothing pickable.
 
 **Every bundle is a menu entry.** The repo baseline is no bundle: the
-toolchain manager, the gates and the hygiene configs are
-`stackgen:tool-config`'s tools, and the prose files are `/vwf:init`'s own
-assets. Nothing about it is recorded in `.config/vwf.yaml` — nothing was
-chosen. tool-config keeps the values it renders from in
-`.config/stackgen.yaml` and records nothing in `lock.yaml`.
+toolchain manager, the gates and the hygiene configs are bootstrap's, and the
+prose files are `/vwf:init`'s own assets. Nothing about it is recorded in
+`.config/vwf.yaml` — nothing was chosen.
 
 **`default: true` marks the menu entry vwf preselects on that axis.** It is
 optional and boolean, and it changes nothing about what the bundle is — only
@@ -390,6 +258,20 @@ nondeterminism, and the checker refuses the tree, naming both files and the
 platform they share. An axis whose flagged bundles all declare platforms
 may therefore carry one flagged bundle per platform, and a round filtered to
 one platform sees exactly one.
+
+**`os:` names the operating systems the bundle targets on each platform.**
+It is optional and belongs to the project axis alone: a map from a platform
+in the bundle's `platforms:` list to the OS tokens it targets there, in the
+order the design canvas shows them — the first token is the primary frame
+and the `device` tweak's default. Every key must be a platform the
+`platforms:` list names. The tokens are vwf's OS vocabulary, one set per
+platform: `mobile` `ios` `android`; `tablet` `ios` `android`;
+`desktop` `macos` `windows` `linux`; `auto` `carplay` `androidauto`;
+`watch` `watchos` `wearos`; `tv` `tvos` `androidtv`;
+`spatial` `visionos` `androidxr`. The bundle states only which OSes it
+ships on — vwf keeps the one table that maps a (platform, OS) pair to a
+frame, so no bundle carries a size or a chrome. A bundle with no `os:`, or a platform missing from it,
+gets vwf's generic frame for that platform.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
 copied and generated components freely: the covered ones land verbatim, the
@@ -442,8 +324,7 @@ which is the grain `stackgen-sync` acts at.
   the bundle is the recorded composition, and `stackgen-sync` diffs on
   that version.
 - **A landed file cites nothing by plugin path.** Everything under
-  `skills/`, `agents/`, `rules/`, `hooks/`, `config/` and `templates/`,
-  plus a pack's
+  `skills/`, `agents/`, `rules/`, `hooks/` and `config/`, plus a pack's
   `conventions.md` and a bundle's body, is copied verbatim into a repo
   that has **no plugin installed** — so the `${CLAUDE_PLUGIN_ROOT}` token,
   a bare `assets/…` path, a `../` climb out of the tree the file lands in,
@@ -455,7 +336,7 @@ which is the grain `stackgen-sync` acts at.
   rule 13 enforces it. This file is an asset rather than a landed tier, so
   its own citations may keep the token.
 - **A landed config or task file carries only the comments something
-  reads.** Under `config/`, `templates/` and `hooks/`, keep every comment a
+  reads.** Under `config/` and `hooks/`, keep every comment a
   tool or skill reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck`
   directives, `#PLACEHOLDER` markers, grype ignore-reason comments,
   commented-out templates a skill fills in, and any comment a reference
@@ -484,9 +365,9 @@ which is the grain `stackgen-sync` acts at.
   silently — blocking once the project's template is pinned, a degradation
   while its pin still reads `unresolved`. Where being on `PATH` does not
   prove the tool works, the entry carries a `probe` and doctor runs it.
-- **A generated pack may ship the `config/` tiers too.** Nothing about
+- **A generated pack may ship the `config/` tier too.** Nothing about
   `config/.config/…` is reserved to curated packs: a generated component
-  that genuinely owns a config file may declare one, and it lands through
+  that genuinely owns a test task may declare one, and it lands through
   the same consent line and the same lockfile record. Teaching the
   generator to **emit** them is a separate piece of work and is not done —
   so the honest statement today is that the format allows it and the

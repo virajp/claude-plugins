@@ -1,0 +1,51 @@
+#!/usr/bin/env bash
+
+#MISE description="Run the instrumented UI tests on a headless emulator, through Gradle Managed Devices"
+#MISE dir="{{ config_root }}"
+
+#USAGE flag "--device <device>" help="the managed device to run on, as named in testOptions.managedDevices (default: e2e)"
+#USAGE flag "--variant <variant>" default="debug" help="the build variant whose androidTest source set runs"
+#USAGE flag "--connected" help="run connected<Variant>AndroidTest on an already-running emulator or attached device instead; --device does not apply"
+
+set -euo pipefail
+# shellcheck source=/dev/null
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+if [[ ! -x ./gradlew ]]; then
+  print_error "test:e2e: no executable ./gradlew at the repo root."
+  print_yellow "Commit the Gradle wrapper (gradlew and gradle/wrapper/), then re-run."
+  exit 1
+fi
+if [ -z "${ANDROID_HOME:-}" ] || [ ! -d "${ANDROID_HOME}/platforms" ]; then
+  print_error "test:e2e: no Android SDK at ANDROID_HOME (${ANDROID_HOME:-unset})."
+  print_yellow "Run: mise run setup"
+  exit 1
+fi
+
+device="${usage_device:-e2e}"
+variant="${usage_variant:-debug}"
+first=$(printf '%s' "${variant:0:1}" | tr '[:lower:]' '[:upper:]')
+Variant="${first}${variant:1}"
+
+if [[ "${usage_connected:-false}" == "true" ]]; then
+  if [ -n "${usage_device:-}" ]; then
+    print_error "test:e2e: --device names a managed device; --connected runs on the device or emulator already attached."
+    print_yellow "Drop --device, or drop --connected."
+    exit 1
+  fi
+  task="connected${Variant}AndroidTest"
+  print_header "Running ${task} on the connected device ..."
+  ./gradlew "${task}"
+  exit 0
+fi
+
+task="${device}${Variant}AndroidTest"
+
+gradle_args=()
+# A runner has no GPU; the software renderer keeps the emulator deterministic there.
+if [ -n "${CI:-}" ]; then
+  gradle_args+=(-Pandroid.testoptions.manageddevices.emulator.gpu=swiftshader_indirect)
+fi
+
+print_header "Running ${task} on the managed device ${device} ..."
+./gradlew ${gradle_args[@]+"${gradle_args[@]}"} "${task}"

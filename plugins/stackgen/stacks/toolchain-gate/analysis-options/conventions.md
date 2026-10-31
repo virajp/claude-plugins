@@ -15,8 +15,8 @@ no longer has.
 No file. This pack's conventions and skill guide the agent when it writes
 `analysis_options.yaml`, which is the app's, written where the app is.
 
-**Dart is formatted by the SDK's own formatter, not dprint** — Dart is the
-language dprint does not format, and the analyzer assumes that formatter's
-output.
+**Dart is formatted by the SDK's own formatter, not the repo's general
+one** — the general formatter does not format Dart, and the analyzer assumes
+the SDK formatter's output.
 
 Full judgment: the `analysis-options` skill.

@@ -1,0 +1,9 @@
+/security-review over f6b2edab..fdebe615 -- plugins/ (run as a sub-task scoped to the row's range)
+
+No high-confidence vulnerabilities found.
+
+- eval "files+=(${usage_files:-})" in code/format/ktlint and code/lint/ktlint: this pattern was already in about 10 shipped tasks before this range (dprint, shell, ruff, flutter, pnpm), so it isn't new here. The task fills that value from its own command-line file list, not from repo content.
+- The init script written by mktemp in setup/deps/install/kotlin and setup/deps/upgrade/kotlin: mktemp creates the file exclusively and readable only by its owner, and an EXIT trap removes it. No other user can swap or change it before ./gradlew reads it, so there's no practical race.
+- File names from git fed to detekt and ktlint: every path comes from git ls-files -z and is read null-delimited into arrays. detekt paths get a ./ prefix, and both scripts keep only existing .kt/.kts files. Nothing reaches a shell, and no realistic file name gets read as a tool option.
+- The kotlin-lsp download over http: in mise.dev.toml: the checksum comes from the same host as the archive (download.jetbrains.com, over HTTPS). That's a hardening gap rather than an exploitable flaw, and the tool is only installed on developer machines, never in CI.
+- The new gitleaks allowlist entries (.gradle/, .kotlin/): both are per-project cache and build folders, not where Gradle credentials live. Those sit in the root gradle.properties or ~/.gradle, which the allowlist doesn't cover, so it doesn't hide tracked secrets.

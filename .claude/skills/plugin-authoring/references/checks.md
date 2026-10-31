@@ -51,7 +51,9 @@ much smaller than the one it replaced: whole families of assertion became
    what is left to check is that the name points at something.
 3. **Hook scripts exist and are executable.** A `hooks.json` naming a script
    that is missing or non-executable fails at hook time, in a context with
-   nowhere good to report it.
+   nowhere good to report it. The rule reads only the command hooks; a `modules`
+   entry is not checked here — `claude plugin validate --strict` and
+   `claude plugin test` cover a hooks module, locally.
 4. **Strict-YAML frontmatter.** Claude's parser is lenient and accepts what a
    strict parser rejects — and **a rejected skill is dropped silently**. This is
    the highest-value rule in the file. It reads every skill and agent a plugin
@@ -104,22 +106,18 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Seven
-    assertions, every one of them about a file whose failure mode in the
-    *target* repo is silence rather than an error. The landed-tree assertions
-    run over a pack's `templates/` tier exactly as over its `config/`, since
-    tool-config renders it to the same relative paths; over
+11. **A pack's `config/` payload tier is materializable as-is.** Six assertions,
+    every one of them about a file whose failure mode in the *target* repo is
+    silence rather than an error. The landed-tree assertions also run over
     `stackgen:tool-config`'s two trees, `skills/tool-config/assets/` (copied)
-    and `skills/tool-config/templates/` (rendered), since the skill lands each
-    whole at the repo root — each root also admitting the git and graphify
-    ignore files (`TOOL_CONFIG_ROOT_FILES`), `.vscode/`, and a `.claude/`
-    directory holding exactly the repo-local skills `TOOL_CONFIG_LANDED_SKILLS`
-    names (`.claude/skills/mise/SKILL.md`, and nothing else under `.claude/`);
+    and `skills/tool-config/templates/` (rendered), until that skill is retired
+    — each root also admitting the dprint shim, the git and graphify ignore
+    files (`TOOL_CONFIG_ROOT_FILES`), `.vscode/`, and a `.claude/` directory
+    holding exactly the repo-local skills `TOOL_CONFIG_LANDED_SKILLS` names —
     and over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`),
     whose root check is skipped since init picks one licence out of several
-    there — every file in one must instead sit on init's own allowlist
-    (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`),
-    since init writes the hygiene files and every tool config is tool-config's.
+    there; every file in one must instead sit on init's own allowlist
+    (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`).
     A task file that is a template may open with one `@@#if NAME@@` guard line;
     the shebang is read from the line after it:
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
@@ -138,92 +136,36 @@ much smaller than the one it replaced: whole families of assertion became
       `PACK_CONFIG_ROOT_FILES` and `PACK_CONFIG_ROOT_DIRS` in
       `scripts/src/check.ts` rather than from prose here — every prose copy of
       it has drifted at least once, and this one deliberately enumerates
-      nothing. What the list is *for*: everything a pack configures belongs
-      under `.config/`, so the root admits only what a tool or a host cannot be
-      pointed elsewhere for, plus the files humans read first. A pack landing
-      one more dotfile beside them is widening the root of every repo it
-      materializes into, and each entry joins on the same argument — a tool with
-      root-only discovery leaves a pack a choice between the root file and a
-      flag on every invocation any caller might type, and the flag is the worse
-      of the two. The ignore, attribute and graph-ignore files are not on the
-      pack list: tool-config ships them as universal supersets. The forge
-      directory is on the list for that same reason and the workflow is carved
-      back out of it: a pack states which task CI runs, and the workflow is the
-      repo's release model's;
-    - every **`conditional:` entry** in the pack's `pack.yaml` names a **path or
-      glob that matches at least one file** under its own `config/` tier, and a
-      `when:` map of **exactly one known axis** — `forge` (`github`, `gitlab`),
-      `secrets` (any provider slug — never `none`, the no-provider answer init
-      reads as "no match") — with a value that axis takes, and a path that is
-      relative and carries no `..` segment. The materializer evaluates the key
-      against the caller's answers, and an axis the caller did not answer reads
-      as true — the omitted key lands the file. So an axis outside the
-      vocabulary is one no caller ever answers: its condition can never skip
-      anything, and the file lands everywhere, silently. A value the axis never
-      takes is the mirror case — no answer ever satisfies it, so the file lands
-      nowhere; a path matching nothing is a condition guarding no file, which is
-      a rename that forgot the key — the glob is matched by the checker's own
-      walk, so `**` enters dot-directories like `.config/`, which `globSync`
-      would not; and an absolute path or a climb is rule 13's fault stated on a
-      glob — it reaches out of what the pack lands. The finding names the pack,
-      the entry's index and its path;
+      nothing. The root admits only what a tool or a host cannot be pointed
+      elsewhere for, plus the files humans read first; the forge directory is on
+      the list for that reason, and the workflow is carved back out of it: a
+      pack states which task CI runs, and the workflow is the repo's;
+    - **under `.config/`, the tier is an allowlist**: a pack ships only a test
+      task (`.config/mise/tasks/test/`) or a task of the pinned project
+      (`.config/mise/tasks/p/_project/`), read off
+      `PACK_CONFIG_DOTCONFIG_ALLOWLIST`. The toolchain — tool pins, gates, gate
+      configs, generic tasks, hook fragments — is bootstrap's, so any other
+      `.config/` path is a pack shipping a second copy of a bootstrap file. The
+      list names no bootstrap tool, so it does not drift when bootstrap changes.
+      A pack `templates/` tier is refused too: it was the tier `tool-config`
+      rendered, retired with the pack's `values:`;
     - the pack's **two doctor-read facts** take the shapes their readers trust:
       every `languages[].facts.binaries` entry is a bare name (the `PATH`
       lookup) or a map of exactly `name` and an optional non-empty `probe` (the
       command `/vwf:doctor` runs instead); and `lockfile` is a non-empty list of
       repo-relative paths or globs with no `..`. Each caller trusts the shape: a
       probe that is not a string is never run, and a glob that climbs out
-      matches something the repo does not own — both silently. A `tool-config:`
-      or `machine_env:` key is **refused** outright: nothing reads either any
-      more — a pack ships the lines it needs as files in its `templates/` tier
-      or as a subtask, and a machine value is a `values:` entry. The finding
-      names the pack and the entry;
-    - the pack's optional **`values:` list** — the machine values its templates
-      read — is a block list of maps, each exactly `name` (upper snake case,
-      unique in the list, and neither one of `TEMPLATE_GLOBAL_NAMES` nor
-      `FORMAT`, which tool-config holds), `detect` (a non-empty shell command
-      printing the value, exiting non-zero when it cannot) and `question` (a
-      non-empty prompt, asked when `detect` fails). A malformed or duplicate
-      entry is a finding naming the `pack.yaml` line it sits on. Every declared
-      name must be read in the pack's `templates/` as `@@NAME@@` (or an
-      `#if`/`#each` on it) — a value nothing reads is asked for and lands
-      nowhere;
-    - every **`@@` tag in a template tree** — tool-config's `templates/` and
-      each pack's `templates/` — is one the template engine reads: a name in
-      upper snake case as `@@NAME@@`, `@@#if NAME@@` or `@@#each NAME@@`, the
-      `@@#else@@`, `@@/if@@` and `@@/each@@` closers, or an `@@.@@`/`@@.key@@`
-      item read. Anything else lands in the rendered file verbatim. In
-      tool-config's own templates every name is one of `TEMPLATE_GLOBAL_NAMES` —
-      the stored and derived names of `.config/stackgen.yaml`, its `…:all` lists
-      read off the script's own `SUBTASK_DIRS` — since no pack keys are in scope
-      there; in a pack's, any other name must be one its `values:` declares, or
-      it renders as a missing value. The finding names the file, the line and
-      the tag.
-
-    A pack's `config/` tier holding any mise `conf.d/` fragment or any
-    `pre-commit.d/` file is a finding too: a pack's mise files live in its
-    `templates/`, and the hooks are tool-config's universal set, which call the
-    `…:all` tasks a pack's subtask joins. So is a subtask under either tier — a
-    task file directly in a folder the script's `SUBTASK_DIRS` names
-    (`code/{check,lint,format}/`, `setup/deps/<verb>/`, `setup/ai/`) — whose
-    leaf is not the pack's slug, so two packs never write one file, or whose
-    leaf is one of the universal subtasks tool-config's own `assets/` and
-    `templates/` ship (read off those trees, `all` aside), since removing the
-    pack would delete the universal file — a pack may keep such a slug, as
-    `cloud-service/workflows` does, so long as it ships no subtask under it. A
-    pack whose slug is one of the script's `RESERVED_SLUGS` (`all`, `ai`,
-    `_base`) is refused outright: those are tool-config's `…:all` leaf and its
-    own `conf.d/` folders. And a pack's `templates/.config/mise/conf.d/` holds
-    exactly one entry, a folder named for its slug — a `_base/`, an `ai/`,
-    another pack's folder or a loose file there is a finding, since tool-config
-    renders and removes that folder as the pack's. Finally a pack lands beside
-    tool-config, never over it: a `config/` or `templates/` file at a path
-    tool-config's `assets/` or `templates/` ships whole (`.config/dprint.json`,
-    `code/format/dprint`), where it ships a folder (a leftover
-    `.config/mise/tasks/code/lint` overlay file), or under one of its files is a
-    finding — bar a file tool-config ships as a `#PLACEHOLDER` slot (its
-    `setup/secrets`), which is a pack's to fill. The owned set is read off those
-    trees, and the placeholder marker off the script's `PLACEHOLDER`.
+      matches something the repo does not own — both silently. A `tool-config:`,
+      `machine_env:`, `values:` or `conditional:` key is **refused** outright:
+      nothing reads any of them — the toolchain is bootstrap's, a machine value
+      is found by bootstrap's task or set in `conf.d/zz-repo`, and no pack used
+      `conditional:`. The finding names the pack and the key;
+    - every **`@@` tag in `tool-config`'s `templates/`** is one the template
+      engine reads: a name in upper snake case as `@@NAME@@`, `@@#if NAME@@` or
+      `@@#each NAME@@`, the `@@#else@@`, `@@/if@@` and `@@/each@@` closers, or
+      an `@@.@@`/`@@.key@@` item read, and every name is one of
+      `TEMPLATE_GLOBAL_NAMES`. Anything else lands in the rendered file
+      verbatim. The finding names the file, the line and the tag.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -239,17 +181,16 @@ much smaller than the one it replaced: whole families of assertion became
     because they are the three that fire on a sentence rather than on a file.
     Below.
 13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
-    `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, `templates/`, its
-    `conventions.md` and a bundle's body — are copied (or, for `templates/`,
-    rendered) into a target repo **verbatim**, and that repo has no plugin
-    installed. So is every file under `skills/tool-config/assets/` and
-    `skills/tool-config/templates/`, which `stackgen:tool-config` lands whole at
-    the repo root, and under each `skills/init/assets/<name>/`; the rule reads
-    each as one landed tree. Inside the plugin every citation in them resolves,
-    which is exactly why rule 6 was silent about all of them; after landing not
-    one does, and nothing reports it — the reader is sent to a path that is not
-    there. Four forms, matched separately because they fail and are fixed
-    differently:
+    `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
+    and a bundle's body — are copied into a target repo **verbatim**, and that
+    repo has no plugin installed. So is every file under
+    `skills/tool-config/assets/` and `skills/tool-config/templates/`, which
+    `stackgen:tool-config` lands whole at the repo root, and under each
+    `skills/init/assets/<name>/`; the rule reads each as one landed tree. Inside
+    the plugin every citation in them resolves, which is exactly why rule 6 was
+    silent about all of them; after landing not one does, and nothing reports it
+    — the reader is sent to a path that is not there. Four forms, matched
+    separately because they fail and are fixed differently:
     - the **literal `${CLAUDE_PLUGIN_ROOT}`**, anywhere and even with no path
       after it, since outside a plugin the host expands it to nothing. This form
       is checked in every landed file, not only prose: a task script or a config

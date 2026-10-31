@@ -33,9 +33,10 @@ status: draft                                      # required — draft | review
 - **`status`** — `draft` before the reviewer gate passes, `reviewed` once it
   returns `NO GAPS`, `stable` when the concept has shipped and settled. This is
   the **contract-maturity** axis; it is orthogonal to `implementation:` (below).
-  A plan folder's `index.md` (`vwf-plan`, `vwf-change-plan`) is the one
-  exception: it carries no `status:` and no `description:` — its Status block
-  is its one status, per `assets/templates/plan-folder.md`.
+  A plan folder (`vwf-plan`, `vwf-change-plan`) is the one exception: it
+  carries no frontmatter at all. Its data — `type`, `title`, `status` and the
+  rest — is its `index.json`, per `assets/templates/plan-folder.md`, and its
+  `index.md` is prose only.
 - **`timestamp`** — optional. In-repo, git already tracks last-modified time
   authoritatively, so a hand-maintained field would just duplicate it (and can
   go stale). Record it only when the bundle travels **outside** git (tarball,
@@ -59,8 +60,8 @@ status: draft                                      # required — draft | review
 | `vwf-integration`   | `flows/index.md` (the flow catalog + contracts)                                                         |
 | `vwf-entity`        | an entity doc `entities/<entity>/index.md`                                                              |
 | `vwf-entities`      | `entities/index.md` (the entity catalog + ERD)                                                          |
-| `vwf-plan`          | a cycle plan folder's `docs/plans/<date>-<HHMM>-<slice>/index.md`, in the target repo                   |
-| `vwf-change-plan`   | an ad-hoc change plan `docs/plans/<date>-<name>/index.md`; the blueprint completeness bars do not apply |
+| `vwf-plan`          | a cycle plan folder's `docs/plans/<date>-<HHMM>-<slice>/index.json`, in the target repo                 |
+| `vwf-change-plan`   | an ad-hoc change plan `docs/plans/<date>-<name>/index.json`; no blueprint completeness bar applies      |
 
 Every flow is a **folder** (`docs/blueprint/flows/<project>/<NNN>-<flow>/` — one
 uniform depth for UI and non-UI projects alike) holding `index.md` (the
@@ -73,16 +74,26 @@ concept.
 
 ## The `platform:` key (which platform a flow file renders)
 
-A flow's **platform file** carries one more key beside `status:` and
+A flow's **platform file** carries two more keys beside `status:` and
 `implementation:`:
 
 ```yaml
 platform: mobile # mobile | tablet | desktop | auto | watch | tv | spatial | site | webapp
+features: [] # OS-specific features on this platform; [] when none. Each entry:
+#   - name: <the feature, in words>
+#     scope: ios # a value the platform doctrine names — on `mobile`: `ios`,
+#                # `android:samsung`, `android:oneplus` (vendor = label only)
+#     fallback: <what the other OS, or a device without the feature, shows> # required
 ```
 
+`features:` lists each OS-specific feature on this platform — `name`, `scope`
+and a **required** `fallback`; the reviewer returns a gap for a missing or
+empty `fallback` and for a `scope` the platform does not name. The rule is
+[flow-contract.md](flow-contract.md#os-specific-features).
+
 Since **format 15** the platform lives in the **filename** (`mobile.md`,
-`auto.md`, …); this key restates it so the file is self-describing, and the
-reviewer checks the two agree. The old `device:` key on `index.md` is
+`auto.md`, …); the `platform:` key restates it so the file is self-describing,
+and the reviewer checks the two agree. The old `device:` key on `index.md` is
 **retired** — a flow contract is platform-agnostic, and in-car journeys are no
 longer separate flows.
 
@@ -101,7 +112,9 @@ Rules the reviewer enforces:
 - `watch` covers **watchOS and Wear OS**, `tv` **tvOS and Android TV**, and
   `spatial` **visionOS, Android XR and Quest** — the same form-factor rule:
   a vendor difference is a deviation inside the one platform file, never a
-  separate file.
+  separate file. The one exception is an **OS-specific feature** — one OS
+  offers it, the other does not — which is a `features:` entry (above), not a
+  deviation.
 - Screen **codes** are shared across a flow's platform files — `100a` is one
   screen concept; a platform lacking it omits the row, and a platform-only
   screen takes the next letter free across the whole flow.

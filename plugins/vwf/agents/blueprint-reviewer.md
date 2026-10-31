@@ -64,6 +64,13 @@ orchestrator passes both. Verify the contract and every platform file:
       key matching its filename, and a resolving
       `Flow contract: [<name>](./index.md)` link. A missing link or a
       filename/key mismatch is a gap.
+- [ ] **OS-specific features** — every entry in a platform file's `features:`
+      frontmatter list has a `name`, a `scope` the platform's doctrine names,
+      and a non-empty `fallback`. A `scope` on `mobile` must be one of `ios`,
+      `android:samsung` or `android:oneplus`; any other value — another
+      `android:` string included — is a gap. A missing or empty `fallback` is
+      a gap. `features: []` is complete, and the `scope` value is never a
+      vendor-name gap.
 - [ ] The Purpose section carries a **Serves:** line with at least one markdown
       link to a `product.md` goal anchor, and every linked anchor is in the
       goal-anchor list the orchestrator passed (a link to a nonexistent goal is
@@ -113,7 +120,9 @@ orchestrator passes both. Verify the contract and every platform file:
       (empty data, entity-state variants), and form validation where it has a
       form, and defers visual language to `design-system.md` — no tokens, type,
       or component behavior re-decided here. A screen another flow already
-      defines is **linked**, not redefined (the home rule); a screen defined
+      defines is **linked**, not redefined (the home rule) — a row whose Code
+      cell is a markdown link to the home flow's row, e.g.
+      `[004a](../004-checkout/mobile.md#004a)`; a screen defined
       here that duplicates a row in the passed flow list's docs is a gap.
 - [ ] Every Screens row has a matching **Components block** (format 12) headed
       by its code, listing the elements the screen displays (text, info, error
@@ -166,8 +175,10 @@ orchestrator passes both. Verify the contract and every platform file:
       so a named database, cloud platform, SDK, store, or third-party service is
       a gap: replace it with the prose noun in
       `${CLAUDE_PLUGIN_ROOT}/assets/capability-vocabulary.md` ("the datastore",
-      "the payment provider"). The only carve-outs are `environment.md` issuers
-      and `conventions.md#integrations` — neither of which is a flow doc.
+      "the payment provider"). The only carve-outs are `environment.md` issuers,
+      `conventions.md#integrations`, and the `scope` value of a platform file's
+      `features:` entry, which names an OS or a device-family label the
+      platform doctrine lists.
 - [ ] Section-to-project mappings match the registry (by project **name** and
       `role`/`platforms` — the registry has no stack to match against).
 - [ ] **Density** — apply the bars in

@@ -15,11 +15,12 @@ paths:
 
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
 workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
-subagents they delegate to, the shared doctrine in `assets/`, the guarded `rtk`
-hook, the two mempalace auto-save hooks, and two MCP servers. It names **no**
-technology — no stack templates, no language list; what each axis offers comes
-from a stack plugin behind the stack-adapter contract, and `p:plugins:check`'s
-technology-free guard enforces it.
+subagents they delegate to, the shared doctrine in `assets/`, the two mempalace
+auto-save hooks, the five `/vwf:execute` action-log hooks, the `/vwf:execute`
+progress pane (one TypeScript hooks module), and two MCP servers. It names
+**no** technology — no stack templates, no language list; what each axis offers
+comes from a stack plugin behind the stack-adapter contract, and
+`p:plugins:check`'s technology-free guard enforces it.
 
 **Each SKILL.md, agent file and asset is authoritative for its own behavior.**
 The references below are an index of which file owns what, not a second copy of
@@ -61,37 +62,52 @@ back into `product`/`architecture`/`blueprint`/`plan`. The ad-hoc planner
 `change-plan` sits **beside** that workflow line and never joins it — it plans
 work with no blueprint slice behind it, reads neither the blueprint nor the
 registry, and names the commands its plan folder gates on. Both planners write
-the **same plan folder** — `index.md` plus one file per unit, shaped by
+the **same plan folder** — an `index.json` holding every structured fact, an
+`index.md` holding the prose, and one file per unit, shaped by
 `assets/templates/plan-folder.md`, interviewed from `assets/plan-interview.md` —
-and every plan of either kind queues in the **one table** of the base repo's
-`docs/plans/index.md`, whose rows, every folder's Status block and the archive
-move are written by one skill-invoked skill, `plan-management` — its
-`references/plan-index.md` is the contract and the procedure, and the planners
-and the executor call its verbs (`add`, `claim`, `status`, `complete`,
-`archive`, `next`, `resolve`, `priority <folder | requires…>`, `list`) rather
-than carrying it: `plan` and `change-plan` append the row at hand-off with a
-derived priority and push the folder; the **one executor**, `execute <folder>` —
-or `execute next`, which reads the table with no `Kind` filter, or
-`execute all`, which repeats `next` and hands each pick to an `execute-runner`
-subagent, one at a time, until one stops — claims it `RUNNING` with a pushed
-commit before cutting a worktree, runs each unit by its `Kind` (a `code` unit
-through TDD and the coverage gate, a `review` row through the two engines plus
-the code and security reviewers over the branch delta since the last row, the
-`edit` units of a wave concurrently under the wave review, the acceptance and UX
-pass and the blueprint reconcile only when the plan has `covers:`), and sets the
-row `COMPLETE` after the merge lands — moving the folder to `archived/` and
-re-pointing the row when no gap is open, leaving it live when one is, for the
-`archive` verb once the user asks in prose — and runs each after-landing step
-without a prompt on a green landing — every one is recorded `run` at the
-interview, and it asks nothing at run time, save the run-level questions
-`execute all` asks once, before its first plan — one shared worktree, deduped
-after-landing steps, one release at the end, landing a plan recorded not to
-merge — each an override for that run only. `init` is not a command on that
-line: since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0,
-or alone via `/vwf:setup reshape`. `init` shapes the **base repo and every
-member repo the product has** and `setup` sets up **vwf** in the base — two
-different things, and a repo can have either without the other. It resolves that
-set itself and takes no argument: the base per the membership asset (so a run
+and every plan of either kind is one row of the base repo's
+`docs/plans/index.json`, whose rows, every folder's `status` and `run`, the
+archive move and the action-log prune after it are written by one skill-invoked
+skill, `plan-management` — its `references/plan-index.md` is the contract and
+the procedure, its `scripts/plan.mjs` (`get`, `set`, `append`, `remove`,
+`rewave`, `validate`, `node:` builtins only; a unit moving above wave 1 gets its
+`waits` from `set` before `rewave`) the one reader and writer of both JSON
+files, and the planners and the executor call its verbs (`add`, `claim`,
+`status`, `complete`, `archive`, `next`, `resolve`,
+`priority <folder | requires…>`, `list`) rather than carrying it: `plan` and
+`change-plan` append the row at hand-off with a derived priority and push the
+folder; the **one executor**, `execute <folder>` — or `execute next`, which
+reads the index with no `kind` filter, or `execute all`, which repeats `next`
+and hands each pick to an `execute-runner` subagent, one at a time, until one
+stops — runs `/vwf:doctor` in the main checkout, then claims it `RUNNING` with a
+pushed commit before cutting a worktree — the same commit writing the folder's
+`run`, the worktree and action-log paths — runs each unit by its `kind` (a
+`code` unit through TDD and the coverage gate, a `review` row through the two
+engines plus the code and security reviewers over the branch delta since the
+last row — each later round over the last round's fix commits alone, the
+security half alone on a row covering `edit` units alone — the `edit` units of a
+wave concurrently under the wave review, the acceptance and UX pass and the
+blueprint reconcile only when the plan has `covers`), runs the folder's unit
+gate before each unit commit, its wave gate after each wave and its plan gate
+once at the end, and sets the row `COMPLETE` after the merge lands — moving the
+folder to `archived/` and re-pointing the row when no gap is open, leaving it
+live when one is, for the `archive` verb once the user asks in prose, raising
+the folder's `release_levels` in `.config/releases.yaml` in that same commit and
+bumping no version — and runs each after-landing step without a prompt on a
+green landing — every one is recorded `run` at the interview, none releases, and
+the `.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at
+run time, save the run-level questions `execute all` asks once, before its first
+plan — one shared worktree, deduped after-landing steps, landing a plan recorded
+not to merge — each an override for that run only. On the old markdown plan
+format — a `docs/plans/index.md` in the base repo, or a live folder with
+`index.md` and no `index.json` — `execute` and every `plan-management` verb stop
+before any change and point to `docs/plans/migrate.md` in this repo; no
+old-format copy of either skill exists. `init` is not a command on that line:
+since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0, or
+alone via `/vwf:setup reshape`. `init` shapes the **base repo and every member
+repo the product has** and `setup` sets up **vwf** in the base — two different
+things, and a repo can have either without the other. It resolves that set
+itself and takes no argument: the base per the membership asset (so a run
 started inside a member walks up and shapes the product), the members as the
 **union** of `.gitmodules` walked recursively and the config's `members:` list,
 deduped on realpath, with a path in only one of two present sources reported as
@@ -250,7 +266,8 @@ an **absent** axis is written `unresolved` and a pinned slug is never rewritten.
 The same pass re-runs `pack` for every already-landed pack on each run,
 previewing each call and relaying the skill's rows inside its own consent, so a
 template a newer pack changed reaches the repo without a reshape; a dropped pack
-goes through `pack-remove` before its recorded files are deleted; and after the
+goes through `pack-remove` before its recorded files are deleted, and a dropped
+`@generated` component loses only its recorded `.claude/` files; and after the
 packs setup re-derives `node` (any pinned node-based pack) and `external` (a
 pinned pack shipping a `setup/external/*` task) and calls `all` with the ones
 that changed. On the spine it runs before the doctor gate, and a declined
@@ -337,7 +354,15 @@ every resume is a person re-running `/vwf:execute <folder>`. `plan` and
 `/vwf:feedback`'s blueprint-gap routes and by `execute`'s gap reconciliation,
 and the seam `change-plan` reserved is live too — `/vwf:feedback`'s *not a
 blueprint gap* route calls it by name, which marking it user-only would have
-made a silent no-op.
+made a silent no-op. `setup` is **user and model** too: `/vwf:architecture`
+hands off to it in-session once its commit lands, and `/stackgen:stackgen-sync`
+invokes `/vwf:setup reshape` on drift. It was user-only from 2026-07-31, when
+nothing called it, until 2026-10-28 — both calls, added after that, were silent
+no-ops until the flag flipped. `mockups`, `recall` and `verify` stay user-only:
+nothing calls them, and the user owns their timing. `design-system` is the one
+exception to the rule: nothing calls it by name, but it is **user and model**,
+`disable-model-invocation: false` since 2026-08-17, and the user ruled on
+2026-10-31 to keep it so.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Seven skills are in it today —
@@ -346,17 +371,18 @@ vwf's three import adapters `import-design-system`, `import-screens` and
 `import-conversations`, called by `/vwf:design-system`, `/vwf:screens import`
 and `/vwf:feedback canvas` respectively, each its skill's only caller; vwf's
 `plan-management`, called by `plan`, `change-plan` and `execute` at every write
-to the plan index or a Status block, and by a session when the user asks in
-prose to archive a folder or list the queue — the typed archive command it
-replaced was retired on 2026-09-18; and stackgen's `stackgen-stack-menu` and
-`stackgen-stack-template`, called by vwf through the adapter contract. Both keys
-are load-bearing together: `user-invocable: false` alone would be the model-only
-row minus its `paths:`, and `disable-model-invocation: true` would silently
-break the call. Checker rule 9 asserts the pair on the two stack-adapter skills;
-rule 8 asserts only `disable-model-invocation: false` on the pack-landed
-`design-import-*` skills, so `init`, `plan-management` and the three
-`vwf:import-*` carry `user-invocable: false` as their own choice, not a
-contract, and rule 4 plus `claude plugin validate` are all that check it.
+to the plan index or a folder's `status` or `run`, and by a session when the
+user asks in prose to archive a folder or list the queue — the typed archive
+command it replaced was retired on 2026-09-18; and stackgen's
+`stackgen-stack-menu` and `stackgen-stack-template`, called by vwf through the
+adapter contract. Both keys are load-bearing together: `user-invocable: false`
+alone would be the model-only row minus its `paths:`, and
+`disable-model-invocation: true` would silently break the call. Checker rule 9
+asserts the pair on the two stack-adapter skills; rule 8 asserts only
+`disable-model-invocation: false` on the pack-landed `design-import-*` skills,
+so `init`, `plan-management` and the three `vwf:import-*` carry
+`user-invocable: false` as their own choice, not a contract, and rule 4 plus
+`claude plugin validate` are all that check it.
 
 **The frontmatter does not tell this state apart from doctrine.** Ten vwf skills
 carry `user-invocable: false`: the five above, the four **path-scoped** doctrine
@@ -383,9 +409,11 @@ not correctness, and `prefixSkillNames` is gone.
 ## Hooks
 
 `hooks/hooks.json` is authored directly in Claude's own format, with the scripts
-beside it: the guarded `rtk` Bash hook, and the two mempalace auto-save hooks
-(`Stop` and `PreCompact`). Plugin hooks are auto-discovered from that file and
-**never written to `settings.json`**, so verify them with `/hooks`.
+beside it: the two mempalace auto-save hooks (`Stop` and `PreCompact`), the five
+action-log hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`,
+`SessionEnd`), plus one hooks module under `modules`, described below. Plugin
+hooks are auto-discovered from that file and **never written to
+`settings.json`**, so verify them with `/hooks`.
 
 The verdict trap that shipped here: **a script's verdict shape is decided by its
 event**. `hookSpecificOutput.permissionDecision` is `PreToolUse`-only — `Stop`
@@ -396,10 +424,72 @@ a rejected verdict reads exactly like a hook that decided to stay quiet. Its
 shell-script test lives at `installer/src/mempalace-checkpoint-script.test.ts`,
 because `vitest.config.mts` collects only `{installer,scripts}/src/**`.
 
+The **action-log hooks** fire on every tool call of every session, so
+`hooks/action-log.sh` exits at once unless some session holds a run marker under
+`~/Library/Caches/vwf/active/`; only then does it run `hooks/action-log.mjs`,
+which appends the event to that session's log and prints nothing, ever — it
+gives no verdict and never blocks a tool. A Bash call is logged by its
+description, else by its program name alone — `(command)` when that is unclear —
+never by its arguments. On `SessionEnd` it appends `session.end` and deletes the
+session's marker. The marker and the file are written by the execute skill's
+`scripts/log.mjs`, which the orchestrator calls for what only it knows (phases,
+gates, commits, review rounds, unit and stage `row` events, gaps, stops), per
+`skills/execute/references/action-log.md`. The log is one append-only JSONL file
+per plan at `~/Library/Caches/vwf/<repo>/<plan folder basename>.jsonl` — each
+`start`, fresh or resume, appends a `run.start`, and every line carries its run
+id `<YYYYMMDD-HHMMSS>-<session8>` — never committed, and never cleared by macOS;
+`plan-management archive` runs `log.mjs prune`, which deletes the log of an
+archived plan once it is more than 30 days old, and `start` sweeps dead markers.
+The claim writes the log path, with a literal `~`, and the worktree path into
+the folder's `run`. `$VWF_LOG_ROOT` moves the root, for the tests. Both scripts
+are tested for real in `scripts/src/execute-log.test.ts`.
+
 Why the mempalace hooks are reimplemented rather than vendored, and the host
 rules a hook must satisfy (BSD `sed`, the per-event verdict shapes), are
 `plugins/stackgen/assets/artifact-doctrine.md` §4 and the `plugin-authoring`
 skill.
+
+The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
+`hooks/monitor/register.tsx`, a Claude Code mod that draws the `/vwf:execute`
+progress pane and registers `/vwf-monitor` (no colon: a registered command name
+refuses one). It reads three sources and nothing else: the `RUNNING` row of the
+base repo's `docs/plans/index.json`, with the plan's `started` and `ended`; the
+folder's `index.json` for the state and every unit, wave and stage time, which
+`plan.mjs` stamps on each status set — the copy at `run.worktree` (or archived
+there during the landing), else the main checkout's or its archived copy; and
+the log at `run.log`, `~` expanded from `HOME`, replayed whole at each read
+(from its last 4,000,000 bytes, through `tail`, when it is over 4 MiB) for each
+unit's agent and its liveness, the transcript and the session alone — it
+computes no time and no run end. A folder `BLOCKED` or `COMPLETE`, or the row
+`COMPLETE`, is an ended run; a `RUNNING` one is live while an agent is live or
+the log's last line is under 10 minutes old, and the header reads
+`paused or stopped` otherwise. It never searches a worktree. With several
+`RUNNING` rows it takes the one whose log's last `run.start` carries this
+session's id. With no `RUNNING` row it waits up to 10 minutes, showing
+`waiting for the claim` when `/vwf:execute` opened it or
+`waiting for the next plan` once a plan has landed; when the wait ends empty, on
+the old markdown format, or with a folder it cannot find, it shows one message
+for 10 s and closes. The pane hook branches on `e.surface`: the terminal keeps
+its cell-padded `fit()` columns, block-character bar and key hints; every other
+surface draws an `Svg` bar (`progressSvg`), rows of percent-width `Box` cells
+with the unit id as the `Button`, and a `role: "dismiss"` Close, and
+`pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers and the
+replay, and strips terminal control characters from plan and log text before it
+renders; `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and
+`agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,
+`monitorQuiet`, `monitorViewing`) sit under the plugin name `vwf` and are
+declared in `types/index.d.ts`, which the manifest's `types` key names. It ties
+an agent to a unit through the log: the Agent call's `tool.start` summary names
+a unit (`U<n>`, `U<n>-late<k>`) or a wave review (`R<wave>`, `R<wave>-late`,
+`R-late`), or a `vwf:execute-*` review-row reviewer, and `tool.end` gives the
+child id. The per-plan log is the scope of an `all` run.
+`claude plugin test plugins/vwf` and
+`claude plugin validate --strict plugins/vwf` are its gates, run locally — CI
+has no `claude`. Why it lives inside vwf rather than as its own plugin is
+`docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it reads
+its sources, ties agents to units and ends the run is
+`docs/memory/decisions/2026-10-25-pane-replays-the-log.md`, amended there by its
+*times live in the JSON* section.
 
 ## Documentation
 

@@ -3,10 +3,10 @@ name: Swift · SwiftUI
 axis: project
 kind: app-framework
 components:
-- app-framework/swiftui@0.5.1
-- package-manager/swiftpm@0.3.1
-- toolchain-gate/swift-format@0.1.3
-- toolchain-gate/swiftlint@0.2.1
+- app-framework/swiftui@1.0.0
+- package-manager/swiftpm@0.3.2
+- toolchain-gate/swift-format@1.0.0
+- toolchain-gate/swiftlint@1.0.0
 platforms:
 - mobile
 - tablet
@@ -15,6 +15,21 @@ platforms:
 - watch
 - tv
 - spatial
+os:
+  mobile:
+  - ios
+  tablet:
+  - ios
+  desktop:
+  - macos
+  auto:
+  - carplay
+  watch:
+  - watchos
+  tv:
+  - tvos
+  spatial:
+  - visionos
 ---
 
 # mobile · tablet · desktop · auto · watch · tv · spatial — Swift · SwiftUI
@@ -53,7 +68,8 @@ cover — or when it needs each new Apple API on the day it ships and the
 system's own look and behaviour without a bridge. Pick **Dart · Flutter** when
 the same app must also ship on Android: one codebase for both stores is worth
 more than native reach there, and Flutter reaches CarPlay through its own
-native edge.
+native edge. A product that ships a native app on each side pairs this bundle
+with **Kotlin · Compose** for the Android app.
 
 ## Stack
 
@@ -63,23 +79,21 @@ native edge.
   **sourcekit-lsp** ships with it and is the language server.
 - **A committed Xcode project** owns the app's targets. It is created once, by
   a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
-  tasks call `xcodebuild` and `swift` alone. The Xcode version is pinned by
-  `XCODE_VERSION`, beside the golden simulator's pin, each rendered from the
-  pack's template into `.config/mise/conf.d/swiftui/mise.toml`;
-  `/vwf:setup` asks for each value as it lands the pack, offering what this
-  machine answers. Every task that builds
-  checks `xcodebuild -version` against the pin and fails fast on the wrong
-  one.
+  tasks call `xcodebuild` and `swift` alone. The repo's `_scripts/xcode`
+  library finds the selected Xcode as `XCODE_VERSION`, and the golden
+  simulator as the newest iOS runtime's highest-numbered plain iPhone. A
+  repo overrides each in the `[env]` of
+  `.config/mise/conf.d/zz-repo/mise.<env>.toml`. Every task that builds
+  checks `xcodebuild -version` against a set `XCODE_VERSION` and fails fast
+  on the wrong one.
 - **Packages are added through Xcode**, into the project, and locked in the
   `Package.resolved` it keeps inside the `.xcodeproj`, which is committed. The
   app's own dependencies live there. The **SwiftPM** component governs only a
   local package the app splits out — a `Package.swift` of its own — never the
   app's dependencies.
 - **swift-format** formats and **SwiftLint** lints, both reading their
-  configuration from `.config/`. Each pack ships its own subtasks —
-  `code:format:swift-format` and `code:lint:swift-format`, and
-  `code:lint:swiftlint` — which the repo's `code:format:all` and
-  `code:lint:all` run.
+  configuration from `.config/`. Both are bootstrap's, and `mise run code`
+  runs them.
 - **Goldens** through
   [swift-snapshot-testing](https://github.com/pointfreeco/swift-snapshot-testing),
   added through Xcode to a `SnapshotTests` unit-test target, under a
@@ -91,7 +105,8 @@ native edge.
 
 ## What it does not carry
 
-- **No Android** — an app that must also ship there is the Flutter bundle's.
+- **No Android** — a native Android app is the Kotlin · Compose bundle's, and
+  one codebase for both stores is the Flutter bundle's.
 - **No UIKit- or AppKit-first doctrine** — both are reached from SwiftUI as
   interop, never as the app's primary framework.
 

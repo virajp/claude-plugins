@@ -2,8 +2,9 @@
 
 Read this when a wave holds a `review` row. A review row is the only place the
 two review engines and the two reviewers run: no `code` unit triggers a review
-by itself, and the orchestrator infers no row — it runs what the Units table
-writes, and preflight has already refused a plan whose `code` units no row
+by itself, and the orchestrator infers no row — it runs what the `units` list
+of the folder's `index.json` holds, a row being a unit whose `kind` is
+`review`, and preflight has already refused a plan whose `code` units no row
 covers. A row runs **first in its wave**, before any `edit` or `code` unit of
 that wave is dispatched, so the engines see a committed tree and nothing in
 flight — every unit it covers is in an earlier wave, which preflight
@@ -12,11 +13,22 @@ table, the dispatch contracts and the shared stage rules are
 `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`; this file is the loop that
 runs them over the row.
 
-The row's unit file, `NN-review.md`, carries only the header lines and a
-**Scope** section naming what it reviews. Its Owns is `—`: the row edits
-nothing, commits nothing and stages nothing. The fix commits a round produces
-belong to the units fixed. The **row id** is its Id cell, `U<n>` like every
-other unit — `U7`, say; the **loop id** is the row id for the row's main loop
+**A row that covers `edit` units alone is security only.** When no unit the
+row covers is `code`, the row runs one engine, `/security-review`, and one
+reviewer, `execute-security-reviewer`: the wave review has already judged
+those units against their files, and running `/code-review` and the code
+reviewer over the same lines is the second review of one change. Every step
+below then reads its `/code-review` and `execute-code-reviewer` parts as
+absent — the row mirrors no `review` record to the journal and no `REVIEW:`
+block is expected — and its loop is the security loop alone: cap-exempt,
+under the convergence guard. A row that covers one `code` unit or more runs
+both halves.
+
+The row's unit file, `NN-review.md`, carries only its H1 and a **Scope**
+section naming what it reviews. Its `owns` is `[]`: the row edits nothing,
+commits nothing and stages nothing. The fix commits a round produces belong to
+the units fixed. The **row id** is its `id`, `U<n>` like every other unit —
+`U7`, say; the **loop id** is the row id for the row's main loop
 and `<row-id>-late<n>` for each late re-run (below), n counting from 1 in the
 order the row's late loops ran — `U7-late1`, `U7-late2` — each with its rounds
 restarting at 1. Everything keyed per round — the
@@ -24,13 +36,28 @@ engine output files, the recall tags and the reviewers' gap tags
 (`<loop-id>/gap/<round>`) — keys on the loop id, never the row
 id alone, so the two loops never overwrite each other's record.
 
-For the row (skip it when the folder's Run log already shows it `green` — its
-last round clean, or ended at the cap or the guard with its residuals recorded
-`contested`):
+Every write below is one call in the worktree to the plan script,
 
-1. **scope** — compute the range the row reviews: the branch delta since the
-   previous `review` row **in table order** that reached `green` — the `to`
-   the last round of its **main loop** recorded; a late re-run never advances
+    node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.<row-id>.<field> <value>
+
+`plan.mjs set` for short, with `--json` for a number, and every read one
+`plan.mjs get` of the same path. Each `set` below of the row's `status`,
+`rounds` or `range`, or of a re-dispatched unit's `commit`, is followed by
+one `log.mjs event row` — a `range` row carries
+`{"from": "<sha>", "to": "<sha>"}` — and each `append` to `gaps`, and each
+`contested` line, by one `log.mjs event gap` with its `source` `review-row`,
+per *The plan files* in `SKILL.md`.
+
+For the row (skip it when its `status` in `index.json` already reads `green` —
+its last round clean, or ended at the cap or the guard with its residuals
+recorded `contested`):
+
+1. **scope** — set the row's `status` `running` (its times are `plan.mjs`'s,
+   per *The plan files*), then compute the range the row reviews: the branch
+   delta since the
+   previous `review` row **in `units` order** that reached `green` — its
+   `range.to`, the `to` the last round of its **main loop** recorded; a late
+   re-run never advances
    a row's recorded `to`, so nothing landed between that loop and a re-run is
    skipped — else the branch base, the integration branch's tip the worktree
    was cut from — to `HEAD`. Rows never run out of order: a skipped row skips
@@ -39,38 +66,54 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    mapped to **the unit whose commit last touched it inside the range**. The
    commit → unit map is built **once, over the whole branch** (`<base>..HEAD`)
    and used everywhere — the range bounds which files the row scopes, never
-   the map: every commit on the branch from the Units table's Commit cells
-   **and** every Run log row's Commit cell — every commit the orchestrator
-   makes on a unit's behalf, a code fix, an `edit` unit's fix, an
-   orchestrator-applied edit, records its hash in that unit's Run log row, so
-   a late re-run's map is as full as the main loop's. Two kinds of commit
-   are excluded rather than mapped: the orchestrator's own `docs:` folder
-   commits, which touch `docs/plans/` alone, and the Reconcile commit — the
-   stamps, the registry, `.config/vwf.yaml` — whose hash the `reconcile` Run
-   log row records. A commit recorded **nowhere** is **refused at map time**,
-   its hash named, since a commit no unit answers for cannot be reviewed. The
-   map is unambiguous and never read from Owns, and the reviewers receive it.
+   the map. It reads `git log` and `index.json` alone, **never the journal**,
+   so a run with mempalace down maps every commit a run with it up maps. Each
+   commit `git log <base>..HEAD` lists is, in this order:
+   - **excluded**, not mapped, when it is one of the orchestrator's own
+     `docs:` commits that touch the plan folder and nothing else — the
+     approval, the claim, each `docs: plan state` wave commit — or the
+     Reconcile commit, whose hash `stages.reconcile.detail` holds;
+   - else **placed** on the unit whose `commit` in `index.json` is its hash;
+   - else placed on the **one** unit whose `owns` in `index.json` covers
+     every file the commit touched outside the plan folder — the staging
+     discipline keeps every commit the orchestrator makes on a unit's behalf
+     (its own, a code fix, an `edit` unit's fix, an orchestrator-applied
+     edit) to that unit's Owns, a widened Owns once its `set` has run, and
+     the shared-file rule gives each file one owner — so a fix commit a later
+     `commit` value no longer names is still placed, and a late re-run's map
+     is as full as the main loop's.
+
+   A commit that no unit's `owns` covers whole, or that two units' `owns`
+   split, is **refused at map time**, its hash and files named, since a
+   commit no one unit answers for cannot be reviewed. The journal mirrors the
+   map and never feeds it; the reviewers receive it.
    **The one rule for a finding on a file whose unit the row does not cover**
-   — a change plan's row covers only the units landing runnable code: a
-   **security** or **`[breaking-api]`** finding is never dropped or deferred —
-   it routes to that unit all the same, and the round's Run log row records
-   the coverage widened to it; any other finding is dropped with the
-   dropped-count clause. Record the range (`<from>..<to>`), the file list and
-   its unit map in the row's Run log row — **every round records its own
-   `from..to`**, since `to` grows as fixes land, and the next row's `from`
-   reads the main loop's last `to`. The file list and its map are what
+   — the planners write every row to cover every earlier unit no earlier row
+   covers, so this fires only on a folder written before that rule: **every**
+   finding — security, `[breaking-api]` and review alike — is never dropped or
+   deferred. It routes to that unit all the same, and the round's journal
+   record carries the coverage widened to it, "n findings routed to uncovered
+   units". A review finding routed so counts under the row's round cap like
+   any other. Each round of the main loop sets the row's `range.from`,
+   `range.to` and `rounds` — **every round records its own `from..to`**:
+   round 1 reviews the row's range as above, and each later round reviews
+   only the fix commits of the round before it, per step 4 — and mirrors the
+   range, the file list and its unit map to the journal under the row and
+   round. The next row's `from` reads this row's `range.to`, the main loop's
+   last `to`. The file list and its map are what
    the reviewers receive as their scope, never a unit. A file in the list that
    the row's Scope section does not name is still in scope: the list is the
    contract, the section its description. Preflight guarantees the range and
    the coverage agree: the row sits in a later wave than every unit it covers
-   — directly or transitively via Depends on — so each is committed before the
-   row runs, and it covers every `code` unit in an earlier wave that no
+   — directly or transitively via `depends_on` — so each is committed before
+   the row runs, and it covers every `code` unit in an earlier wave that no
    earlier row covers, so no covered commit is reviewed by a row that does not
    cover its unit.
 2. **engines** — in **one message**, invoke `/code-review` at high effort and
-   `/security-review` through the `Skill` tool. The engines are
-   **branch-scoped**, not range-scoped: `/code-review` takes the branch,
-   `/security-review` takes no target, and each reads the whole branch delta.
+   `/security-review` through the `Skill` tool — `/security-review` alone on a
+   security-only row. `/code-review` takes the round's range as its target,
+   `<from>..<to>`; `/security-review` takes no target and reads the whole
+   branch delta, so its output is filtered to the round's file list below.
    Each may run as a background task; note the task each reports. Wait on each
    with `TaskOutput`, blocking, up to 30 minutes from invocation. An engine
    that errors or times out is stopped with `TaskStop` and counted
@@ -87,9 +130,10 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    range** is kept too —
    an in-range change can break a caller the range does not touch — **unless
    the same finding (path, line, text) appeared in the saved engine output
-   of a previous row or this row's earlier loop** — read from those files,
+   of a previous row, this row's earlier loop or this loop's earlier rounds**
+   — read from those files,
    never from the journal alone — in which case it is that
-   loop's and is dropped, said in one clause of the row's Run log row,
+   loop's and is dropped, said in one clause of the round's journal record,
    "n engine findings already reported by <row> dropped". A kept out-of-range
    finding maps through the one branch-wide map: to the unit whose commit
    last touched that file on the branch, covered or not; when no branch
@@ -107,8 +151,9 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    `execute-security-reviewer` so both run at once, per the two dispatch
    contracts in `execute-stages.md`: the loop id, the round number, the plan
    folder path, the range and the file list as the scope, the unit files —
-   with their Owns — of every unit the row **covers**, which is every unit its
-   Depends on names directly or transitively through the units they name, the
+   each with its unit's `owns` from `index.json`, since a unit file carries no
+   header lines — of every unit the row **covers**, which is every unit its
+   `depends_on` names directly or transitively through the units they name, the
    same set preflight counted — the rulings the code is reviewed against — the
    file list's unit map, which is what lets a reviewer label each finding with
    the unit whose commit last touched its file — the wing, and, when a unit
@@ -117,7 +162,8 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    the registry (`docs/blueprint/registry.yaml`, for the security reviewer's
    capabilities and threat notes); a row covering `edit` units alone passes
    none of these, and the reviewers review against the unit files and rulings
-   alone. Each dispatch prompt ends with a
+   alone — and a security-only row dispatches `execute-security-reviewer`
+   alone, per the rule above this list. Each dispatch prompt ends with a
    section headed
    `## Engine` holding either that engine's output verbatim or the single line
    `ENGINE: unavailable — <reason>`. They are independent read-only passes over
@@ -136,59 +182,68 @@ last round clean, or ended at the cap or the guard with its residuals recorded
    touched that file in the range, read off the unit map the reviewers were
    handed; the orchestrator checks the label against the same map, then
    applies the one rule of step 1 to every finding whose unit the row does not
-   cover — security routed to that unit with the widening recorded,
-   non-security dropped with the dropped-count clause, "n findings on
-   uncovered units dropped", on the round's Run log row. For each unit
-   remaining, re-dispatch it **by its Kind**, one dispatch per unit, the units
+   cover — routed to that unit, whatever its stage, with the widening recorded,
+   "n findings routed to uncovered units", on the round's journal record. For
+   each unit
+   remaining, re-dispatch it **by its `kind`**, one dispatch per unit, the units
    serially in wave order, each re-committed per the staging discipline: a
    `code` unit's coder in fix-first mode, per the `code` contract in
    `execute-stages.md`, with the two recall **tags** and its own unit id — the
    coder recalls the drawers and fixes only the findings labelled with its id;
    an `edit` unit — a change plan may place a row over `edit` units — per
    [edit-unit.md](edit-unit.md)'s loop-back, the same prompt plus the finding
-   lines labelled with its id, no tag and no stack. Then repeat the row
-   **in full, engines first** — steps 1 to 3, the range's `from` unchanged and
-   its `to` extended to the new `HEAD`, recorded on the round's own row.
-   Merging the two
+   lines labelled with its id, no tag and no stack. Then run the next round,
+   **engines first** — steps 1 to 3 over the **fix delta alone**: the round's
+   `from` is the previous round's `to`, its `to` the new `HEAD`, set in the
+   row's `range` as step 1 states, and its file list and the reviewers' unit
+   files are the files the fix commits touched and the units fixed. A later
+   round proves the fixes and what they broke; round 1 already reviewed the
+   rest. Merging the two
    reviewers' findings into one fix pass is
    what keeps the two stages from rewriting each other's lines. Gating is
    per-stage and unchanged: every security finding and every `[breaking-api]`
    finding **must** be fixed (cap-exempt); other review findings loop under
-   `pipeline.review_round_cap` (residuals after the cap → documented as gaps,
+   `pipeline.review_round_cap` (residuals after the cap → the **closing pass**
+   in `execute-stages.md`, and what it leaves open → documented as gaps,
    marked `contested`). A round counts once, even though it ran two reviewers
    and may have re-dispatched several units. Before each new round, apply the
-   **convergence guard** in `execute-stages.md` — the `contested` exit and the
-   cap-exempt pause apply to the row exactly as they applied to a unit. The
+   **convergence guard** in `execute-stages.md` — the closing pass, the
+   `contested` exit and the cap-exempt pause apply to the row exactly as they
+   applied to a unit. The closing pass's check dispatches both reviewers with
+   the open findings and the closing fix delta alone, and runs no engine. The
    guard ignores a kept out-of-range finding a previous row or this row's
    earlier loop marked `contested`: it is that loop's residual, not this
    loop's oscillation.
-5. **gaps** — any reviewer's gap pointer → mirror into the "Gaps surfaced
-   during execution" section of the folder's `index.md` and file to mempalace
-   room `gaps`. Decide blocking vs non-blocking and act per the rules.
-6. **journal** — fill the row's Units table cell: Status `green` when the last
-   round is clean, **or** when the loop ended at the cap or the convergence
-   guard with its residuals recorded `contested` — contested findings never
-   block, per the Autonomous Rules, so the row is done, the next row's range
-   starts after it, and a resume skips it; `blocked` / `failed` per the rules.
-   The Commit cell stays empty — the row has no commit of its own, and the
-   folder's edits ride the commit that closes the wave. The **Run log rows**
-   are written **as each node
-   returns**, not batched here: one `review` row and one `security` row per
-   round, each carrying the row id in the unit cell and the row's wave in the
-   wave cell (`Wave | Unit | Model | Round | Outcome | Detail | Commit`), plus
-   one `code` row per coder re-dispatched with its fix commit, appended to the
-   folder's `index.md` and mirrored to the journal before the next dispatch, so
-   the round count is **per loop**: the main loop's highest `Round` value, and
+5. **gaps** — any reviewer's gap pointer → one `plan.mjs append` to the
+   `gaps` list of `index.json` (`{id, unit, stage, text, state: "open"}`, the
+   next `G<n>`, `unit` the row id, `stage` `review` or `security`) and file
+   to mempalace room `gaps`. Decide blocking vs non-blocking and act per the
+   rules.
+6. **journal** — set the row's `status`: `green` when the last round is
+   clean, **or** when the loop ended at the cap or the convergence guard and
+   its closing pass recorded what stayed open `contested` — or closed it all
+   — contested findings never block, per the Autonomous Rules, so the row is
+   done, the next row's range starts after it, and a resume skips it;
+   `failed` or `unresolved` per the rules. Its `commit` stays `""` — the row
+   has no commit of its own, and the folder's edits ride the commit that
+   closes the wave. The **journal records** are written **as each node
+   returns**, not batched here: one `review` record and one `security`
+   record per round — the `security` record alone on a security-only row —
+   each carrying the row id, the row's wave, the model, the round, the
+   outcome and the detail, plus one `code` record per coder re-dispatched
+   with its fix commit, which also sets that unit's `commit`; the row's
+   `range` and `rounds` are set before the next dispatch, so the round count
+   is **per loop**: the main loop's highest round, which `rounds` holds, and
    each late re-run's own highest, reported beside it as `re-run n: m rounds`
-   — never the row count, since one round writes several — and the
-   convergence guard compares rows within one loop only. A skip carries its
-   `why`.
+   from the journal — never the record count, since one round writes several
+   — and the convergence guard compares rounds within one loop only. A skip
+   carries its `why`.
    Recall tags
    are `<loop-id>/review/<round>` and `<loop-id>/security/<round>` — the
    loop id, so a late re-run's round 1 never shadows the main loop's — and the
    drawer's `source_file` is the plan folder path in one pinned form — the
    repo-relative `docs/plans/<folder>`, no trailing slash, exactly as the plan
-   index's Folder cell names it, the same string filed and filtered on, the
+   index row's `folder` names it, the same string filed and filtered on, the
    form `memory.md` states — loop ids repeat across
    plans filed to one wing, so every recall of a tag filters on it.
 
@@ -197,26 +252,37 @@ last round clean, or ended at the cap or the guard with its residuals recorded
 A fix that lands **after the last `review` row covering its unit** — the wave
 review of the row's own wave, or the acceptance or UX pass after all units, or
 a fix-first loop-back at the final report, looping back to an earlier-wave
-unit that row covers, of either Kind — is code no engine or reviewer has
+unit that row covers, of either `kind` — is code no engine or reviewer has
 seen. Before the run proceeds past it, that row is **re-run in full over the
 fix delta** — the loop-back's own fix commits and nothing later. A re-run the
 wave review triggered waits until the wave's green `edit` units are committed
 (the Waves section's step 6) and runs at its step 7, the gate lines run again
 after it, so the engines see a committed tree — the same guarantee as the
 row's first run. The re-run's
-range is its own: `from` is the parent of its first fix commit, `to` the
-newest fix commit of its latest round, and a round after the first extends
-`to` only; the file list and unit map come from that range as in step 1. Then
-engines first, both reviewers, steps 2-6. The re-run is a **new loop** over
+range is its own: round 1's `from` is the parent of the loop-back's first fix
+commit and its `to` the loop-back's newest fix commit, and a round after the
+first reviews the fix delta of the round before it, as step 4 states; the
+file list and unit map come from each round's range as in step 1. Then
+engines first, both reviewers — the security half alone on a security-only
+row — steps 2-6. The re-run is a **new loop** over
 its own range, not a further round of the finished one: its loop id is
 `<row-id>-late<n>`, n the same counter as its `re-run n` — the engine files
 and the recall tags key on it, so round 1 of one late loop never overwrites
 round 1 of the main loop or of an earlier late loop — its rounds restart
-at 1 — the Run log rows say `re-run n` in Detail — the convergence guard's
-baseline is the re-run's own round 1, and `pipeline.review_round_cap` applies
-to it afresh. The re-run is a Run log row per node like any round, and its
-rows record their own `from..to` without advancing the row's recorded `to` —
-the next row's `from` is the `to` of this row's main loop. After the re-run,
+at 1 — its journal records say `re-run n` in their detail — the convergence
+guard's baseline is the re-run's own round 1, and
+`pipeline.review_round_cap` applies to it afresh. The re-run is a journal
+record per node like any round, and its records carry their own `from..to`.
+It reads the row's `range` and the covered units' `commit` from
+`index.json` and sets neither the row's `range` nor its `rounds` — the next
+row's `from` is the row's `range.to`, the `to` of its main loop; a fix
+commit a re-run makes still sets its unit's `commit`. No field holds a late
+loop's range, and `git log` cannot tell a late loop that finished from one
+still pending: on a resume, the range is rebuilt from `git log` and the map
+alone — `from` the parent of the oldest commit after the row's `range.to`
+that the map places on a unit the row covers, `to` the newest — and, unless
+the journal can be read, a late re-run already done **repeats**, never
+skips, per [blocking.md](blocking.md)'s resume. After the re-run,
 one **contract review** runs over the re-run's fix commits with the fixed
 units' files, per [edit-unit.md](edit-unit.md)'s reviewer section — named
 `R<wave>-late` when the trigger was the wave review, `R-late` when it was the

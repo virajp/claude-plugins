@@ -1,0 +1,15 @@
+/security-review — loop R1-late1, round 2 — range 26bfccee..020cf0f1 (branch 2026-10-08-execute-renders-served-at-a-url)
+
+I found no new vulnerabilities in 26bfccee..020cf0f1 (`plugins/vwf/skills/mockups/scripts/`) that reach confidence 8.
+
+- **`renderFile` / `renderName` and untrusted state:**
+  - In `renders.mjs`, `item.state` is checked against `STATE_RE` (line 257) before `renderName` is called. The source path is still checked with `inRoot` and must be a `.png`. The target goes through `ensureDir`.
+  - In `serve.mjs`, the `?state` value from the URL is checked against `STATE_RE` (line 925) before `renderName(state)` builds a path.
+  - The new `renders()` filter calls `renderFile(screen.path, entry.state)` on unchecked `renders.json` state, but only to compare strings. No file system path is built from it.
+- **Served PNG path:** it is still confined by `inRoot`/realpath, must not be the root or under `__renders/`, and must be a `.png` file. The added check that an entry names the file only adds a condition, so serving became stricter.
+- **Removed code:** dropping `removeImage` (`rmSync`) takes away a delete path that was driven by old entries. That shrinks the write surface.
+- **XSS:** the change adds no new HTML output. The state switcher still filters states through `STATE_RE` (line 530).
+- **Injection:** none in this change.
+
+# Report
+No vulnerabilities at confidence >= 8.

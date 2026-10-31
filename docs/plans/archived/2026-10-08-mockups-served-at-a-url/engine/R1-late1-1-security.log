@@ -1,0 +1,13 @@
+/security-review — loop R1, round late1-1 — range 7bb533f8..29b02376 (branch 2026-10-08-mockups-served-at-a-url)
+
+No vulnerabilities at confidence >= 8.
+
+The new literal-`&` handling in `links.mjs` (lines 114-137) is safe. I worked through it against the HTML spec's rules for character references. I didn't run any test HTML through the checker or a browser.
+
+- **No-semicolon names:** the legacy names a browser decodes without `;` are mostly Latin-1 characters (`amp`, `lt`, `gt`, `quot`, `nbsp`, `copy` and similar). None decodes to `/`, `\`, `:`, tab, CR or LF. `&sol`, `&bsol`, `&colon`, `&Tab` and `&NewLine` without `;` stay literal in a browser, which matches the checker. Inside an attribute, a legacy name followed by a letter, digit or `=` is not decoded either, so `&ampsol` stays literal too.
+- **Names the checker leaves alone:** if one of those undecoded names sits first in the href, the check fails closed as "not root-absolute". `&nbsp` (U+00A0) is not stripped by the URL parser.
+- **Numeric references:** both sides decode them with or without `;`, so `&#13`, `&#9` and `&#x5c` reach the check for tab, CR, LF and `\` (line 164).
+- **Longest-match tricks:** something like `&solx;` is an unknown name ending in `;`, so it still fails closed.
+- **`serve.mjs`:** removing the `path` field only takes data out of the comment record.
+
+Dropped: legacy no-semicolon reference smuggling (2), `&amp`-without-`;` mismatch (1), `HREF_RE` matching more than it should (1), comment `path` removal (1).

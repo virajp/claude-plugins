@@ -29,7 +29,7 @@ if [[ "${usage_dry_run:-false}" != "true" ]]; then
     print_warn "wrangler reads CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID from the"
     print_warn "environment. This repo's secrets provider supplies them from"
     print_warn "GLB_CLOUDFLARE_API_TOKEN and GLB_CLOUDFLARE_ACCOUNT_ID — run through"
-    print_warn "\`mise run setup:secrets\` first, or export them for a one-off deploy."
+    print_warn "\`mise run setup\` first, or export them for a one-off deploy."
     print_warn "\`wrangler login\` is the interactive alternative and is a laptop-only"
     print_warn "convenience: CI has no browser and must use the token."
     exit 1

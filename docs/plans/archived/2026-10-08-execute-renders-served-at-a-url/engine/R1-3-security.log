@@ -1,0 +1,23 @@
+/security-review — loop R1, round 3 — range 554a7d40..2364fb5d (branch 2026-10-08-execute-renders-served-at-a-url)
+
+Round 3 found no vulnerabilities at confidence 8 or above. I reviewed `554a7d40..2364fb5d` (excluding `docs/plans`) without editing anything. I read the five scripts in full; for `routes.mjs` I checked the diff and the code that writes files.
+
+Dropped candidates:
+- **`removeImage` and old `renders.json` entries** (renders.mjs:367): a tampered `renders.json` can only delete a PNG. The path is realpath'd and must sit under the platform render root, outside `__renders/`. That limits the damage to the review tree. (2/10)
+- **`copyFresh` and `writeJson` race** (renders.mjs:141, 346): someone could swap the target between the remove and the exclusive create. But the exclusive create refuses anything that reappears, and the folders above were already checked level by level, so a link is never followed. (2/10)
+- **`--url-file` written through a symlink at its basename** (serve.mjs:1013): the path comes from a trusted CLI flag, which is excluded. Removal only happens when the file holds this server's own URL, and it unlinks the link rather than its target. (2/10)
+- **`routes.mjs` creates folders and writes with symlink following**: these come from trusted flags and mostly existed before this change; the edit only moved the parse into `lib/screens.mjs`. (2/10)
+- **Peer link built from the request path** (serve.mjs:276): the origin comes from the peer file, and only loopback `http:` with no credentials is accepted. A path like `//x` stays on the peer's host, so this is not an open redirect. (1/10)
+
+Checked clean:
+- **Path traversal:** route paths reject `.`, `..`, NUL and the reserved `__mockups`/`__renders` first segments. Request paths are decoded before they are split. PNG serving, the `__mockups` frame (through `servable`) and RENDER sources are all realpath'd and checked to sit under their root.
+- **Folder creation:** `ensureDir` checks each level with a realpath before making the next, so a symlinked folder is refused.
+- **XSS:** every page value is escaped. The `iframe` source carries the fixed `/__mockups` prefix. The overlay config is JSON with `<` escaped, and its links are set through the DOM, never as HTML.
+- **YAML injection:** every comment field, the new `plan` field included, goes through `yamlString`.
+- **DNS rebinding and CSRF:** the Host header must be `127.0.0.1` or `localhost` on the bound port. A POST must be JSON and, when it carries an Origin, come from one of those two.
+- **Frame click:** a protocol-relative `//host` or `/\host` link is skipped, and only a same-origin link moves the page.
+- **Command injection:** none; no child process is spawned.
+- **Content types:** PNGs are served as `image/png`, and nothing under `__renders/` is served except the list page.
+
+# Report
+No vulnerabilities at confidence >= 8.

@@ -65,25 +65,23 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Six binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`,
-  `pnpm` and `rtk`. `pnpm` is only the **default** Context7 runner;
-  `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs no pnpm — see
+- **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`
+  and `pnpm`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
+  overrides it, so a bun or npm user needs no pnpm — see
   [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover all six: it
+  checks this at install time**, and `/vwf:doctor` does not cover all five: it
   blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
   pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
-  language server as an ordinary finding, reports a missing `rtk` as a
-  **degradation** — its hook is guarded, so the run is correct and merely costs
-  more — and says nothing at all about the Context7 runner, while `uv` and
-  `python` matter as graphify's runtime rather than on their own. Run
-  `/vwf:doctor` first regardless, but install all six rather than relying on it
-  to tell you. A seventh, `gh`, logged in, is needed by `/vwf:backlog`, which
-  keeps the backlog in a GitHub Project and wants the `project` scope, by
-  `init`'s **forge pass** (the default branch and protection on `develop` and
-  `main` on the `repo` scope, the backlog project on `project` — on a GitLab
-  remote, `glab`), and by the doctor predicate that reads that forge state back;
-  doctor reports its absence as a **degradation** with the remedy, and init
-  prints the by-hand list and carries on.
+  language server as an ordinary finding, and says nothing at all about the
+  Context7 runner, while `uv` and `python` matter as graphify's runtime rather
+  than on their own. Run `/vwf:doctor` first regardless, but install all five
+  rather than relying on it to tell you. A sixth, `gh`, logged in, is needed by
+  `/vwf:backlog`, which keeps the backlog in a GitHub Project and wants the
+  `project` scope, by `init`'s **forge pass** (the default branch and protection
+  on `develop` and `main` on the `repo` scope, the backlog project on `project`
+  — on a GitLab remote, `glab`), and by the doctor predicate that reads that
+  forge state back; doctor reports its absence as a **degradation** with the
+  remedy, and init prints the by-hand list and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -196,8 +194,9 @@ Paste one of these, adjusting the plugin name:
 > `.claude-plugin/plugin.json` first — it declares the MCP servers and
 > dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md` with
 > YAML frontmatter; hooks are declared in `hooks/hooks.json` with their scripts
-> beside them. Port each of those to this tool's equivalent mechanism, and tell
-> me plainly what has no equivalent rather than dropping it silently.
+> beside them, plus one Claude Code hooks module (the `/vwf:execute` progress
+> pane) under `modules`. Port each of those to this tool's equivalent mechanism,
+> and tell me plainly what has no equivalent rather than dropping it silently.
 
 **The whole marketplace, to pick from:**
 
@@ -213,11 +212,8 @@ Paste one of these, adjusting the plugin name:
   produces from that prompt. It is your agent's best effort, and the honest
   expectation is that skills port well, hooks and MCP wiring port unevenly, and
   subagents port worst.
-- **Hook and MCP wiring vary most.** vwf's hooks include a command *rewrite*
-  (`rtk`) — a tool that can only allow or deny a command cannot express it, and
-  the usual adaptation is a refuse-with-correction. MCP transport support
-  differs per tool; vwf's memory server is HTTP, which is the more portable of
-  the two it declares.
+- **MCP wiring varies most.** MCP transport support differs per tool; vwf's
+  memory server is HTTP, which is the more portable of the two it declares.
 - **Model-invocation restrictions may be approximated.** Some skills are marked
   so the model cannot invoke them itself and you own the timing
   (`disable-model-invocation: true`). If your tool has no equivalent, that
@@ -247,25 +243,30 @@ knowledge-graph layer, session handoff and recall, the
 and the Markdown and Context7 docs surfaces it absorbed. Both planners write the
 same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
 ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
-CI, docs, a refactor) — an `index.md` plus one file per unit, which each commits
-and pushes at hand-off with a row in `docs/plans/index.md`'s one plan table, so
-the fresh session can see it. One executor runs both: `/vwf:execute <folder>`
-runs a folder of either kind unattended in a fresh context — a `code` unit
-through TDD and coverage, the code and security review at the plan's `review`
-rows, an `edit` unit through the wave review — and `/vwf:execute next` picks the
-runnable plan with the lowest `Priority` value from that table, of either kind,
-and runs it, running each after-landing step the plan recorded `run` and asking
-nothing at run time. `/vwf:execute all` runs every runnable plan in turn,
-highest priority first, each in its own `execute-runner` subagent, and stops at
-the first plan that stops — keeping one line per plan in the session, and asking
-its run-level questions (one shared worktree, deduped after-landing steps, one
-release at the end, landing a plan recorded not to merge) once, before the first
-plan. Beside both sits `/vwf:backlog`, the sole writer of the backlog project on
-the repo's forge — a GitHub Project named for the base repo, the prioritised
-list of work that cannot be picked up now, which every planning and landing
-command calls to move an item. It names **no** technology — no language, no
-framework, no cloud — which is what lets the rest of this list exist.
-`vwf@virajp-plugins`
+CI, docs, a refactor) — an `index.json` holding every structured fact, an
+`index.md` holding the prose, and one file per unit — which each commits and
+pushes at hand-off with a row in `docs/plans/index.json`, the one plan index, so
+the fresh session can see it. One node script, `plan.mjs`, reads, validates and
+writes both JSON files; a repo still on the old markdown format is pointed to
+the migration guide, `docs/plans/migrate.md`, and nothing runs until it is
+migrated. One executor runs both: `/vwf:execute <folder>` runs a folder of
+either kind unattended in a fresh context — a `code` unit through TDD and
+coverage, the code and security review at the plan's `review` rows, an `edit`
+unit through the wave review — and `/vwf:execute next` picks the runnable plan
+with the lowest `priority` value from that index, of either kind, and runs it,
+running each after-landing step the plan recorded `run` and asking nothing at
+run time. No plan releases anything: each records a release level per project it
+changes, which the landing raises in `.config/releases.yaml`, and a release is
+always a hand step. `/vwf:execute all` runs every runnable plan in turn, highest
+priority first, each in its own `execute-runner` subagent, and stops at the
+first plan that stops — keeping one line per plan in the session, and asking its
+run-level questions (one shared worktree, deduped after-landing steps, landing a
+plan recorded not to merge) once, before the first plan. Beside both sits
+`/vwf:backlog`, the sole writer of the backlog project on the repo's forge — a
+GitHub Project named for the base repo, the prioritised list of work that cannot
+be picked up now, which every planning and landing command calls to move an
+item. It names **no** technology — no language, no framework, no cloud — which
+is what lets the rest of this list exist. `vwf@virajp-plugins`
 
 ### Tooling, design and delivery
 
@@ -277,11 +278,12 @@ verbatim; an uncovered one is **generated** — researched via Context7 topic by
 topic, instantiated against vwf's principles catalog, gated by a reviewer agent
 and your explicit consent, so a covered language never regenerates because its
 framework is new. Every concrete third-party name a generated component emits —
-a package, a runner-invoked tool, a GitHub Action, a container image — is vetted
-first by `stackgen-reputation` against public registry, advisory and scorecard
-data, one verdict per name (`pass`, `warn`, `block`); a `block` halts that
-component until you name a replacement, and the same skill is yours to run on
-any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
+a package, a runner-invoked tool, a GitHub Action, a container image, a SwiftPM
+package, a Maven artifact or Gradle plugin, a mise tool on any backend — is
+vetted first by `stackgen-reputation` against public registry, advisory and
+scorecard data, one verdict per name (`pass`, `warn`, `block`); a `block` halts
+that component until you name a replacement, and the same skill is yours to run
+on any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
 land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
 rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
 fixes what the output must cover and how deep, recorded in a lockfile per
@@ -300,16 +302,16 @@ extension map, so it never starts in a repo with no matching files. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
-also declare **repo config files** it owns — a language gate's own config, a
-deploy target's own root config and the deploy task beside it, a project task a
-framework pack owns — the Astro pack's favicon rasterizer is the first — on the
-same merges-never-owns terms, behind their own consent line, and capped by a
-fixed allowlist of what may sit at a repo's root. The mise config, the
-file-based task library everything else runs through, the dprint, taplo,
-pre-commit, gitleaks, grype and house-linter configs, the ignore, attribute and
-graph-ignore files, the editor settings and the statusline config belong to no
-pack: they are written by `/stackgen:tool-config`, a skill you can also run
-yourself (`/stackgen:tool-config preview all`). A shipped node script copies its
+also declare **repo config files** it owns — a test task, a deploy target's own
+root config and the deploy task beside it, a project task a framework pack owns
+— the Astro pack's favicon rasterizer is the first — on the same
+merges-never-owns terms, behind their own consent line, and capped by a fixed
+allowlist of what may sit at a repo's root. The mise config, the file-based task
+library everything else runs through, the dprint, taplo, pre-commit, gitleaks,
+grype and house-linter configs, the ignore, attribute and graph-ignore files,
+the editor settings and the statusline config belong to no pack: they are
+written by `/stackgen:tool-config`, a skill you can also run yourself
+(`/stackgen:tool-config preview all`). A shipped node script copies its
 `assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
 — the repo's values, which the script alone writes — in four calls: `all`,
 `pack`, `pack-remove` and `upgrade`. Each list a pack once appended to — the
@@ -326,36 +328,36 @@ every file, then runs `MISE_ENV=dev mise run setup:all`. Trusting the repo's
 mise config is yours to do first — typically its path in `trusted_config_paths`
 in your global mise config; the script checks it and never grants it. It also
 lands a repo-local mise skill, and a tool is never added with a bare `mise use`.
-A pack asks it for nothing: it ships `config/` payload — its subtasks among it,
-which the rendered `code:lint:all`, `code:format:all`, `code:check:all`,
-`setup:ai:all` and `setup:deps:<verb>:all` tasks call — and a `templates/`
-folder, its own `conf.d/<slug>/` mise files and any file needing a value, which
-the script renders — each value the machine must answer declared in the pack's
-`values:` list with a `detect` command and a `question`, which `/vwf:setup` runs
-or asks as it lands the pack. Language manifests and CI workflow files stay
-outside that fence: they declare what the project *is*, and no pack decides
-either. The packs, bundles and kinds that ship are inventoried in
-[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
-the tree itself; the newest kind is `stylesheet`, the one that answers vwf's
-seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
-`stylex` and `plain-css` filling it and the design system's tokens staying the
-contract each of them realizes. The newest **category** is `workspace`, filled
-by `notion` — the place a team's docs, specs and tickets already live, wired for
-the agent to reach through one hosted MCP server the person authorises once, and
-nothing more: no part of the product runs against it. The newest **design tool**
-is the terminal itself — the `claude-code` pack, which vwf's architecture menu
-preselects on the design axis: the design system, the logo and a flow's screens
-are authored in session, through the `taste-skill` plugin a product pinning it
-declares, into a committed `docs/design/<project>/` that vwf imports like any
-hosted canvas, and reviewed in a browser served from the repo on loopback — you
-click, comment, press Done, and the session applies the comments. stackgen is
-now the only stack plugin: its packs are the covered path, its generator the
-uncovered tail. A `vwf` dependency, because vwf's stack menu is the union of
-what the installed stack plugins offer — with none present it comes back empty,
-and the axes carry no free-text escape. You can defer an axis and keep defining
-the product, but `/vwf:plan` and `/vwf:execute` halt until it is answered.
-Having it installed commits you to nothing; it acts only once an axis is pinned.
-`stackgen@virajp-plugins`
+A pack ships no toolchain at all: its tool pins, its gates and their configs,
+and its generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s.
+The materializer reads a fresh clone of bootstrap to choose the tools a stack
+needs, and asks for them through bootstrap's own entry point, behind its own
+consent line; it never edits `.config/bootstrap.toml` itself. A value only the
+machine can answer — the Xcode a repo builds with — is found by bootstrap's
+task, or set by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests
+and CI workflow files stay outside that fence: they declare what the project
+*is*, and no pack decides either. The packs, bundles and kinds that ship are
+inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
+generated from the tree itself; the newest kind is `stylesheet`, the one that
+answers vwf's seventh axis — how a web frontend's styles are authored, with
+`tailwindcss`, `stylex` and `plain-css` filling it and the design system's
+tokens staying the contract each of them realizes. The newest **category** is
+`workspace`, filled by `notion` — the place a team's docs, specs and tickets
+already live, wired for the agent to reach through one hosted MCP server the
+person authorises once, and nothing more: no part of the product runs against
+it. The newest **design tool** is the terminal itself — the `claude-code` pack,
+which vwf's architecture menu preselects on the design axis: the design system,
+the logo and a flow's screens are authored in session, through the `taste-skill`
+plugin a product pinning it declares, into a committed `docs/design/<project>/`
+that vwf imports like any hosted canvas, and reviewed in a browser served from
+the repo on loopback — you click, comment, press Done, and the session applies
+the comments. stackgen is now the only stack plugin: its packs are the covered
+path, its generator the uncovered tail. A `vwf` dependency, because vwf's stack
+menu is the union of what the installed stack plugins offer — with none present
+it comes back empty, and the axes carry no free-text escape. You can defer an
+axis and keep defining the product, but `/vwf:plan` and `/vwf:execute` halt
+until it is answered. Having it installed commits you to nothing; it acts only
+once an axis is pinned. `stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
@@ -482,9 +484,6 @@ maintainers. 🙏
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and
   **[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp)** — the engines
   behind the language servers `stackgen`'s packs declare.
-- **[rtk](https://github.com/rtk-ai/rtk) (Rust Token Killer)** — the
-  token-saving proxy `vwf`'s Bash hook shells out to (installed via
-  `brew install --formulae rtk`).
 - **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
   tool `vwf` integrates with.
 - **[tsup](https://tsup.egoist.dev/)** — bundles the installer CLI for

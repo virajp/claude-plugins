@@ -192,9 +192,39 @@ iOS/Android and `desktop` hides Windows/macOS/Linux, so `auto` hides CarPlay and
 Android Auto the same way. Their template differences (list / grid / map /
 now-playing and the driver-distraction rules) are recorded as deviations inside
 `auto.md`. Likewise `watch` hides watchOS and Wear OS, `tv` hides tvOS and
-Android TV, and `spatial` hides visionOS, Android XR and Quest; each vendor's
-differences are deviations inside that platform's file. Unlike `auto`, which
-rides the `mobile` binary, each of the three may be declared alone.
+Android TV, and `spatial` hides visionOS, Android XR and Quest. Unlike
+`auto`, which rides the `mobile` binary, each of the three may be declared
+alone. An
+**OS-specific feature** inside one form-factor platform — one OS offers it, the
+other does not — is declared in that platform file's `features:` list, with a
+`scope` naming the OS and a `fallback` naming what the other OS shows; every
+other vendor difference stays a deviation inside that platform's file.
+
+**The OS vocabulary.** Inside each device form factor, one closed list of OS
+tokens names the operating systems that form factor runs on:
+
+| Platform  | OS tokens                   |
+| --------- | --------------------------- |
+| `mobile`  | `ios` `android`             |
+| `tablet`  | `ios` `android`             |
+| `desktop` | `macos` `windows` `linux`   |
+| `auto`    | `carplay` `androidauto`     |
+| `watch`   | `watchos` `wearos`          |
+| `tv`      | `tvos` `androidtv`          |
+| `spatial` | `visionos` `androidxr`      |
+
+An OS token names an **operating system inside a form factor, never a vendor**
+and never a platform, so the form-factors-not-vendors rule above still holds:
+the platform stays `mobile`, and `ios` only says which OS a frame or a feature
+belongs to. Tablet uses `ios`, not a separate iPadOS token. Quest has no token,
+so a Quest target gets the generic spatial frame. This one list serves two
+readers. A `features:` entry's `scope` has an OS part — the text before any
+`:` — that is one of these tokens for the file's platform; a vendor label
+(`android:samsung`) stays a label after the `:`, never a token of its own. And
+`projects.<name>.stack.os` in `.config/vwf.yaml`, with the list form of
+`design.viewports`, names these tokens to pick a platform's canvas frames —
+the (platform, OS) frame table itself lives in the canvas conventions
+template's Layout block, and no list here names a technology.
 
 A project's implemented platforms are declared in the registry
 (`projects[].platforms`) and **only** there — since format 19 the key is gone

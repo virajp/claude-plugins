@@ -1,0 +1,422 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "plan.mjs rewave: renumber waves in one validated write",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-26 — 4c693f1c 4d27f778 5cee8557; 1 open gap (G1), folder left live"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit --all",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "plan.mjs gains the rewave verb, and the planner skills name it; no existing verb or rule changes behaviour."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual's passages on plan.mjs verbs and on index.json edits change; no page is added."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The rewave verb and its tests",
+      "wave": 1,
+      "file": "01-rewave-verb.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/plan-management/scripts/plan.mjs",
+        "scripts/src/plan-script.test.ts",
+        "plugins/vwf/skills/plan-management/SKILL.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-10-26T17:50:17.186Z",
+      "ended": "2026-10-26T17:53:13.540Z",
+      "commit": "4c693f1c",
+      "rounds": 2
+    },
+    {
+      "id": "U2",
+      "title": "The planners, the template and the executor name rewave",
+      "wave": 1,
+      "file": "02-planner-rules.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan/SKILL.md",
+        "plugins/vwf/skills/plan/SKILL.md",
+        "plugins/vwf/skills/plan/references/plan-doc.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/agents/plan-rulings-reviewer.md",
+        "plugins/vwf/skills/execute/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-10-26T17:50:17.255Z",
+      "ended": "2026-10-26T17:51:58.332Z",
+      "commit": "4d27f778",
+      "rounds": 2
+    },
+    {
+      "id": "U3",
+      "title": "Review: the rewave verb and the rules that name it",
+      "wave": 2,
+      "file": "03-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-10-26T17:57:42.937Z",
+      "ended": "2026-10-26T17:58:32.496Z",
+      "commit": "",
+      "rounds": 1,
+      "range": {
+        "from": "c62fa39f",
+        "to": "9bf20e9d"
+      }
+    },
+    {
+      "id": "U4",
+      "title": "Docs",
+      "wave": 3,
+      "file": "04-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/docs-tree.md",
+        ".claude/skills/vwf-plugin/references/skills-and-agents.md",
+        "site/src/content/docs/plugins/vwf.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-10-26T17:58:53.719Z",
+      "ended": "2026-10-26T18:00:45.275Z",
+      "commit": "5cee8557",
+      "rounds": 2
+    },
+    {
+      "id": "U5",
+      "title": "Gates",
+      "wave": 4,
+      "file": "05-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-10-26T18:03:47.919Z",
+      "ended": "2026-10-26T18:04:22.017Z",
+      "commit": "",
+      "rounds": 1
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-10-26T17:50:17.151Z",
+      "ended": "2026-10-26T17:57:29.244Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-10-26T17:57:42.892Z",
+      "ended": "2026-10-26T17:58:39.677Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-10-26T17:58:53.685Z",
+      "ended": "2026-10-26T18:03:40.603Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-10-26T18:03:47.887Z",
+      "ended": "2026-10-26T18:04:29.586Z"
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated; regenerating mid-wave races",
+      "owner": "U5"
+    },
+    {
+      "id": "S2",
+      "file": "CLAUDE.md, readme.md, .claude/skills/vwf-plugin/**, site/src/content/docs/**",
+      "why": "human-facing docs; only the docs unit edits them",
+      "owner": "U4"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How does plan.mjs change units[].wave and waves together in one validated write?",
+      "ruling": "A dedicated verb, rewave (the user's choice).",
+      "rejected": "A general batch verb that applies a list of set operations and validates once.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "The syntax of rewave.",
+      "ruling": "plan.mjs rewave <file> <unit>=<wave>... with one pair or more. Each unit id must name a unit of the file; each wave must be an integer of 1 or more. A plan index file (docs/plans/index.json), a malformed pair, a repeated unit id, or no pair is a usage error, exit 2. rewave takes no --json and no other flag.",
+      "rejected": "The moves as --json input.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "When must rewave refuse? A wave record holds no unit list, so a green wave stays green if its units move away.",
+      "ruling": "Refuse when any of these is true: a moved unit (its wave changes) is not pending; the old or the new wave entry of a moved unit exists and is not pending; a wave entry that must be dropped is not pending. A refusal prints one line per cause on stderr, as file: path: message, exits 1 and writes nothing. A pair that does not change the unit's wave is permitted and is not a move (the user's choice).",
+      "rejected": "Refuse only when a dropped wave is not pending; refuse only on the moved unit's status.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How is the waves list rebuilt?",
+      "ruling": "After the moves, waves becomes W1 ... W<n> in order, n the highest wave of any unit. An existing entry keeps its status, started and ended unchanged. A missing entry is added as {id, status: pending, started: \"\", ended: \"\"}. An entry above n is dropped (D3 refuses when it is not pending). stamp() is not called, and rewave writes no time.",
+      "rejected": "An explicit n argument.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How does rewave make sure it never writes a file that does not validate?",
+      "ruling": "It changes the document in memory, then calls the existing write(), which validates the whole document and writes nothing on any finding. So a depends_on that no longer names a strictly earlier wave, or a missing waits above wave 1, is a validation finding, exit 1, and the file stays byte for byte as it was.",
+      "rejected": "A separate validation path for rewave.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "How does a unit that moves above wave 1 get its waits reason?",
+      "ruling": "rewave changes only wave fields and the waves list. The planner first runs plan.mjs set <file> units.<id>.waits \"<reason>\" (a non-empty waits validates in wave 1), then runs rewave. The docs that name rewave state this order (the user's choice).",
+      "rejected": "rewave also sets waits, with a per-unit reason in its arguments.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "May /vwf:execute or the plan-rulings-reviewer call rewave?",
+      "ruling": "No. A run never renumbers waves, and the reviewer is read-only. execute/SKILL.md names rewave in what it never does, and plan-rulings-reviewer.md names it among the verbs it never runs. rewave is a planner write: the planners use it after the first green validate, the self-review and the rulings review included.",
+      "rejected": "Let a run renumber waves.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Where does the rewave logic live?",
+      "ruling": "In plan.mjs, beside set, append and remove, with no new module. plan.mjs stays dependency-free: node: built-ins and its relative lib/ imports only.",
+      "rejected": "A new module, scripts/lib/rewave.mjs.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Which tests prove rewave?",
+      "ruling": "A describe(\"rewave\") block in scripts/src/plan-script.test.ts with at least: a move to a new top wave (waves gains pending entries with empty times); a move that empties the top wave (the pending entry is dropped); each D3 refusal cause (a moved unit not pending; an old wave not pending; a new wave not pending; a dropped wave not pending), each exit 1 with the file bytes unchanged; the D11 refusal (a move that leaves a middle wave with no unit), exit 1 with the file bytes unchanged; a validation failure (a depends_on that becomes same-wave) with exit 1 and the file bytes unchanged; existing wave entries keep their status and times; the usage errors of D2, exit 2; and the 95octane case: a 12-unit change plan made in the test temp folder, all pending, at waves U1 1, U2 2, U3 3, U4 3, U5 3, U6 3, U7 3, U8 4, U9 5, U10 6, U11 7, U12 8 (waves W1-W8, every unit above wave 1 with a waits reason), moved by one call, rewave <file> U3=4 U4=5 U5=6 U6=7 U8=8 U9=9 U10=10 U11=11, after which the call exits 0, validate prints valid, waves lists W1-W11, all pending, and no wave is empty (U7 stays in W3, U12 stays in W8 beside U8).",
+      "rejected": "A stated manual check.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Does this change plan carry a review unit?",
+      "ruling": "Yes, U3 in wave 2, covering U1 and U2: plan.mjs is a shipped script that executes, so the change lands runnable code.",
+      "rejected": "The wave review alone.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "What does rewave do when the result leaves a wave between W1 and W<n> with no unit?",
+      "ruling": "Refuse it: a wave from W1 to W<n> in the result that no unit sits in is a refusal, waves.W<i>: has no unit, exit 1, nothing written — whether the call made it empty or the file already had it; the planner fixes an old empty wave in the same call (the user's choice). It is collected with the D3 refusals, after the moves.",
+      "rejected": "Permit it, as validate does; or renumber the higher waves down to close the gap.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Passages say plan.mjs writes one field or one list entry at a time; one rewave call writes several fields.",
+      "ruling": "Reword each such passage: one field or one list entry for each write, except rewave, which moves units and rebuilds waves in one write. U1 adds rewave to the plan.mjs header sentence near line 38 (set, append and remove validate the result before they write) and rewords plan-index.md near line 18; U4 rewords skills-and-agents.md (near line 39), docs-tree.md (near line 56) and site vwf.md (near line 2654) (the user's choice).",
+      "rejected": "Add only the verb names and leave the claim.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Which path does each rewave refusal line print?",
+      "ruling": "The field at fault: a moved unit that is not pending prints units.<id>.status; an old, new or dropped wave that is not pending prints waves.W<i>.status; an empty wave prints waves.W<i>. The message names the cause, for example: is green; rewave moves only pending units (the user's choice). An unknown unit id is a usage error, exit 2, per D2, printed as units.<id>: is not a unit of this plan.",
+      "rejected": "Always print units.<id>, with the wave in the message.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Does the plan gate line mise x -- mise run code:precommit --all need a -- separator?",
+      "ruling": "No. The code:precommit task declares --all as a usage flag (#USAGE flag \"--all\" in .config/mise/tasks/code/precommit), so mise passes it to the task; the template proposes this exact line, and the 2026-10-24-plan-json-format run passed it. The line stays as written.",
+      "rejected": "mise run code:precommit -- --all.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Does rewave examine the folder status.state?",
+      "ruling": "Yes. rewave runs only when status.state is DRAFT or APPROVED; any other state (RUNNING, BLOCKED, COMPLETE, ARCHIVED) is a refusal at the path status.state, exit 1, nothing written, collected with the D3 refusals. The per-unit and per-wave pending checks still apply (the user's choice).",
+      "rejected": "DRAFT only; no state check.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "How are the refusal lines printed, and what does the dropped-wave test expect?",
+      "ruling": "One line per distinct cause: each distinct path and message pair is printed once, so two moves out of one green wave print one line, and a wave that is both an old wave and a dropped wave prints two lines with different messages. The dropped-wave test moves the only unit out of a green top wave and expects both lines at waves.W<i>.status, the old-wave cause and the dropped-wave cause; the dropped-wave check stays in the code (the user's choice).",
+      "rejected": "One line per path with the causes joined; removing the dropped-wave check.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "When no pair moves a unit, does rewave write the file?",
+      "ruling": "No. rewave still collects the D11 and D15 refusals and exits 1 on any; with none it exits 0 and writes nothing, so the file bytes do not change (the user's choice).",
+      "rejected": "Call write() as usual, which may change the bytes of a file not in plan.mjs format.",
+      "units": [
+        "U1"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-26T17:58:53.337Z"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-26T17:58:53.141Z"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify",
+      "started": "",
+      "ended": "2026-10-26T17:58:53.240Z"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps to write and nothing to persist; no Reconcile commit",
+      "started": "",
+      "ended": "2026-10-26T17:58:53.479Z"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D17 names only the D11 and D15 refusals for a call that moves nothing, but the unit file step order collects every refusal first · rewave also refuses a no-move call when a non-pending wave entry sits outside W1..W<n> (exit 1); such a file already fails validate; closed: the user ruled that the assumption stands, so rewave keeps this refusal",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "code:format was red on plan.mjs while U1 still edited it · U2 left U1 file alone; closed: U1 formatted its file and the unit gate is green",
+      "state": "closed"
+    }
+  ],
+  "overrides": [],
+  "run": {
+    "worktree": ".worktrees/plan-mjs-rewave",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-10-26-plan-mjs-rewave.jsonl"
+  }
+}

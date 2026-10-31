@@ -5,7 +5,7 @@ npm.package_manager = "pnpm"
 
 # Tools every environment needs; tools.<env>.toml adds one environment's own.
 [tools.node]
-version = "latest"
+version = "lts"
 
 [tools.pnpm]
 depends = [ "node" ]

@@ -1,0 +1,219 @@
+---
+type: vwf-change-plan
+title: Android device features
+requires: [
+  docs/plans/2026-10-09-os-feature-declarations,
+  docs/plans/2026-10-09-android-form-factors,
+]
+backlog: []
+backlog_pieces: [ B58 ]
+---
+
+# Plan — Android device features (2026-10-09)
+
+## Status
+
+**COMPLETE**
+
+COMPLETE 2026-10-10 — 0f35293e, 5666801d, 092be00c, 3a111579
+
+## Consent
+
+| Action                                            | Granted |
+| ------------------------------------------------- | ------- |
+| Merge to the integration branch and push on green | yes     |
+| After landing: `mise run p:plugins:local`         | run     |
+| End an `all` run after landing                    | yes     |
+
+## Release levels
+
+| Project  | Level | Reason                                                                                           |
+| -------- | ----- | ------------------------------------------------------------------------------------------------ |
+| vwf      | MINOR | the flow-platform scope list gains two Android values, and the blueprint reviewer checks them    |
+| stackgen | MINOR | the Compose pack gains a device-feature rule behind a capability check, with a declared fallback |
+| site     | PATCH | the manual pages describe the new scope values; the site gets no new feature                     |
+
+## Goal
+
+After this plan lands, an Android flow can declare a device-family feature
+inside `mobile`. The scope is `android:samsung` or `android:oneplus`. The
+Compose pack builds the feature behind a capability check, and the declared
+`fallback` applies on any device without the feature. The vendor name is a label
+only; the capability decides.
+
+This plan is folder 2 of 2 for backlog item B58. It stands on folder 1
+(`2026-10-09-os-feature-declarations`), which defines the `features:` entry and
+the `ios` scope, and on `2026-10-09-android-form-factors`, which lands the
+Compose pack this plan edits. It lands a piece of B58 and does not finish it:
+the vendor worked cases and the canvas frame-size piece remain.
+
+No reversal of a standing decision. Folder 1 parked the Android device families
+for this plan, and this plan adds them as the rule only.
+
+## Facts the survey established
+
+- Folder 1 defines the `features:` entry (`name`, `scope`, `fallback`) and the
+  iOS scope `ios`. The scope list is defined in the flow-platform template and
+  in the flow contract, both edited by folder 1.
+- Folder 1's decision 1 reserves the Android scope form `android:<vendor>`. This
+  plan names its two values: `android:samsung` and `android:oneplus`.
+- The mobile form factor covers iOS and Android
+  (`plugins/vwf/assets/standard-flows.md:153-167`).
+- The Compose pack and the Kotlin bundles land in the form-factors plan. Their
+  paths are `plugins/stackgen/stacks/app-framework/compose/**` and
+  `plugins/stackgen/stacks/bundles/kotlin-compose.md`.
+- Vendor research, run at plan time:
+  - Samsung: the Galaxy Edge SDK page (`https://developer.samsung.com/GlxyEdge`)
+    is old. It names widgets and service components, not a current detection
+    method. No current Edge Panel SDK capability check was confirmed.
+  - OnePlus: no public developer API was found. OnePlus dropped the Alert Slider
+    in March 2025
+    (`https://www.laopinion.com/2025/03/11/oneplus-confirma-la-eliminacion-del-iconico-alert-slider-en-favor-de-un-nuevo-boton-inteligente`).
+- The capability check the rule names is the platform's own feature test. For
+  Android that is `PackageManager.hasSystemFeature` where a vendor publishes a
+  feature flag; the rule does not claim that any vendor publishes one.
+- The commit convention allows `ops`, `docs`, `merge`, `feat`, `fix` and
+  `refactor`, with no scopes (`.config/git-conventional-commits.yaml`).
+
+## Assumed decisions — confirm or override at review
+
+| # | Decision              | Ruling                                                                                                                                                           | Rejected                                           | Unit   |
+| - | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------- | ------ |
+| 1 | Named scope values    | `android:samsung` and `android:oneplus`, defined in the mobile doctrine. Confirmed by the user.                                                                  | Any vendor string                                  | U1     |
+| 2 | Detection             | A capability check. The vendor name is a label only. Confirmed by the user.                                                                                      | A manufacturer check (`Build.MANUFACTURER`)        | U2     |
+| 3 | Worked cases          | None. No stable public API was verified for either vendor. The user's rule applied: the pack ships the rule only, and a case waits for verifiable documentation. | A Samsung case from the unverified Galaxy Edge SDK | U2     |
+| 4 | Fallback              | Required on every entry. Inherited from folder 1.                                                                                                                | An optional fallback                               | U1, U2 |
+| 5 | Blueprint scope check | The reviewer accepts only the values the platform doctrine names for the platform.                                                                               | Accept any `android:` string                       | U1     |
+| 6 | Review row            | None. The change is Markdown and doctrine only, with no runnable code.                                                                                           | A `Kind: review` row                               | —      |
+| 7 | Pack bump             | The Compose pack bumps MINOR, with its pins and the generated inventory updated.                                                                                 | PATCH                                              | U4     |
+| 8 | Decision record       | The docs unit writes `docs/memory/decisions/2026-10-09-android-device-features.md`.                                                                              | No record                                          | U3     |
+
+## New dependencies
+
+None. No unit adds a package.
+
+## Units
+
+| Id | Wave | Unit file                                      | Kind | Owns                                                                                                                                                                                                                                                                          | Depends on | Status | Commit   |
+| -- | ---- | ---------------------------------------------- | ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------- | ------ | -------- |
+| U1 | 1    | [01-blueprint-scope.md](01-blueprint-scope.md) | edit | `plugins/vwf/assets/templates/flow-platform.md`, `plugins/vwf/skills/blueprint-authoring/references/flow-contract.md`, `plugins/vwf/agents/blueprint-reviewer.md`                                                                                                             | —          | green  | 0f35293e |
+| U2 | 1    | [02-compose-rule.md](02-compose-rule.md)       | edit | `plugins/stackgen/stacks/app-framework/compose/**`                                                                                                                                                                                                                            | —          | green  | 5666801d |
+| U3 | 2    | [03-docs.md](03-docs.md)                       | edit | `site/src/content/docs/plugins/vwf.md`, `site/src/content/docs/plugins/stackgen.md`, `docs/memory/decisions/2026-10-09-android-device-features.md`, `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md` (the feature `scope` passage, widened at R1) | U1, U2     | green  | 092be00c |
+| U4 | 3    | [04-gates.md](04-gates.md)                     | edit | `plugins/stackgen/stacks/app-framework/compose/pack.yaml`, `plugins/stackgen/stacks/bundles/kotlin-compose.md`, `plugins/stackgen/stacks/inventory.md`, `.claude-plugin/marketplace.json`                                                                                     | U2, U3     | green  | 3a111579 |
+
+Status is one of `pending`, `running`, `green`, `failed`, `unresolved`,
+`skipped`. Kind is `edit` on every unit.
+
+## Shared-file rule
+
+| File                                                            | Why it collides                                            | Owner           |
+| --------------------------------------------------------------- | ---------------------------------------------------------- | --------------- |
+| `plugins/stackgen/stacks/inventory.md`                          | generated; regenerating mid-wave races                     | gates unit only |
+| `.claude-plugin/marketplace.json`                               | generated                                                  | gates unit only |
+| `plugins/stackgen/stacks/app-framework/compose/pack.yaml`       | version bump                                               | gates unit only |
+| `plugins/stackgen/stacks/bundles/kotlin-compose.md`             | pin bump                                                   | gates unit only |
+| `site/src/content/docs/plugins/vwf.md`, `…/plugins/stackgen.md` | human-facing docs; several units could describe the change | docs unit only  |
+| `docs/memory/decisions/2026-10-09-android-device-features.md`   | decision record                                            | docs unit only  |
+
+## Waves
+
+- Wave 1: U1 and U2. Their owned paths are disjoint. U1 edits the vwf plugin and
+  U2 the stack pack.
+- Wave 2: U3 (docs). It runs after the rule and the scope values exist.
+- Wave 3: U4 (gates). It bumps the pack, regenerates the inventory and runs the
+  full gate.
+
+## Wave gate
+
+- `mise run p:plugins:check`
+- `mise run p:plugins:marketplace -- --check`
+- `mise run p:site:check`
+
+The inventory check runs only in U4, because it fails until the pack bump lands.
+
+## After landing
+
+| Step                       | Mode | Notes                                                                                                                  |
+| -------------------------- | ---- | ---------------------------------------------------------------------------------------------------------------------- |
+| `mise run p:plugins:local` | run  | stages the changed plugins into the dev marketplace and updates this machine's install; a restarted session loads them |
+
+## Gates the orchestrator keeps
+
+None beyond the wave gate. A staged plugin loads only in a restarted session,
+and no run can check that.
+
+## Unit contract
+
+Every unit prompt carries its ruling quoted from this file, its owned paths and
+"touch nothing outside this list", the facts section, the shared-file rule and
+the return block. A unit never bumps a plugin version, never runs a generator,
+never edits a doc outside its own Owns, never adds a dependency, and never
+commits. A unit deletes with plain `rm`, never `git rm`.
+
+## Out of scope
+
+- The vendor worked cases (Samsung, OnePlus) — parked until documentation can be
+  verified.
+- Canvas frame sizes per platform — parked; no folder yet.
+- Android XR (`spatial`) — out of scope for B57 and therefore for this item.
+- Any vendor token.
+- Any manufacturer check in the generated code.
+
+## Parked
+
+- B58: vendor worked cases (Samsung, OnePlus) — no stable public API verified at
+  plan time; a case is added when documentation can be verified.
+- B58: canvas frame sizes per platform — no folder yet.
+
+## Gaps surfaced during execution
+
+- GAP (R1, rule 5, non-blocking):
+  `plugins/vwf/skills/blueprint-authoring/references/frontmatter-and-links.md:83`
+  still reads "`ios` in this release" for the feature `scope`, falsified by U1.
+  No unit owned it; handed to the docs unit U3 as a `DOCS FALSIFIED:` line and
+  U3's Owns widened to that passage, as the plan's Goal authorises. Resolved in
+  wave 2 by U3, passed by R2.
+
+## Run log
+
+| Wave | Unit       | Model | Round | Outcome     | Detail                                                                                                                                                                                                                                                                                                                                   | Commit   |
+| ---- | ---------- | ----- | ----- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
+| 0    | preflight  | —     | 1     | green       | doctor: no blocking finding (5 non-blocking: no format stamp, graphify post-merge hook missing, graph stale, .graphifyignore excludes, no registry so no LSP check); format check skipped (no covers:); stack conventions skipped (edit units only); wave gate p:plugins:check, p:plugins:marketplace -- --check, p:site:check all green | —        |
+| 0    | order      | —     | —     | recorded    | wave 1: U1, U2 (edit) → R1; wave 2: U3 (edit) → R2; wave 3: U4 (edit) → R3; no review row (decision 6)                                                                                                                                                                                                                                   | —        |
+| 1    | U2         | opus  | 1     | green       | compose phone-and-tablet.md gains "Device features inside mobile": capability check (PackageManager.hasSystemFeature where a vendor documents a flag), vendor a label only, declared fallback, no worked case; p:plugins:check green                                                                                                     | 5666801d |
+| 1    | U1         | opus  | 1     | green       | flow-platform.md scope comment, flow-contract.md and blueprint-reviewer.md name `ios`, `android:samsung`, `android:oneplus` on mobile, other android: values a gap; DECIDED: reviewer carve-out reworded to "an OS or a device-family label the platform doctrine lists"; p:plugins:check green                                          |          |
+| 1    | R1         | opus  | 1     | findings(3) | U1 flow-contract.md:156 fold width 85 cols → loop U1; U1 blueprint-reviewer.md:178 carve-out reword not named by an edit → accepted as consequence of decisions 1 and 5, loop U1 to confirm fold; frontmatter-and-links.md:83 falsified, no owner → GAP, DOCS FALSIFIED to U3, U3 Owns widened; CONTRACT clean; RULINGS clean            |          |
+| 1    | U1         | opus  | 2     | green       | flow-contract.md:156 refolded to ≤80 cols, no words changed; reviewer reword kept, fold confirmed; p:plugins:check green                                                                                                                                                                                                                 | 0f35293e |
+| 1    | R1         | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
+| 1    | gate       | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
+| 2    | U3         | opus  | 1     | green       | decision record written (D1–D5, vendor research, rule-only outcome); vwf.md features scope lists ios, android:samsung, android:oneplus; stackgen.md Compose passage adds the device-feature rule; frontmatter-and-links.md:83 corrected (R1 gap); docs-sync grep: none stale; p:site:check green                                         |          |
+| 2    | R2         | opus  | 1     | findings(2) | U3 vwf.md:2097 paragraph not dprint-wrapped; U3 decision record lines 3-4, 17-19 not dprint-wrapped → loop U3; CONTRACT clean; RULINGS clean                                                                                                                                                                                             |          |
+| 2    | U3         | opus  | 2     | green       | vwf.md 2094-2110 and decision record rewrapped by dprint on those two files, whitespace only; dprint check and p:site:check green                                                                                                                                                                                                        | 092be00c |
+| 2    | R2         | opus  | 2     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
+| 2    | gate       | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
+| 3    | U4         | opus  | 1     | green       | compose pack.yaml 0.2.0 → 0.3.0 (MINOR); kotlin-compose.md pin .3.0; inventory.md regenerated (2 rows); marketplace.json regenerated, unchanged; inventory, marketplace, plugins and site checks green                                                                                                                                   | 3a111579 |
+| 3    | R3         | opus  | 1     | pass        | FINDINGS 0; CONTRACT clean; RULINGS clean                                                                                                                                                                                                                                                                                                |          |
+| 3    | gate       | —     | —     | green       | p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no UNRESOLVED                                                                                                                                                                                                                                                     |          |
+| —    | acceptance | —     | —     | skipped     | no covers: — change plan, no acceptance criteria                                                                                                                                                                                                                                                                                         |          |
+| —    | ux         | —     | —     | skipped     | no covers: — no Screens contract                                                                                                                                                                                                                                                                                                         |          |
+| —    | renders    | —     | —     | skipped     | no covers: — no ux stage                                                                                                                                                                                                                                                                                                                 |          |
+| —    | reconcile  | —     | —     | skipped     | no covers: — no stamps, registry or harness to reconcile; persist skipped (edit units only)                                                                                                                                                                                                                                              |          |
+| —    | reconcile  | —     | —     | green       | final wave gate over the finished tree: p:plugins:check, p:plugins:marketplace -- --check, p:site:check green; no orchestrator gates named                                                                                                                                                                                               |          |
+
+## Launch
+
+This folder is already committed and pushed on the branch it was planned on, so
+the run's worktree — cut from the integration branch — can see it.
+
+Run in a fresh context — a fresh session, or a runner that `all` dispatches —
+whichever kind the plan is:
+
+/vwf:execute docs/plans/2026-10-09-android-device-features
+
+or let the queue pick it, by priority:
+
+/vwf:execute next
+
+or run every runnable plan, highest priority first:
+
+/vwf:execute all

@@ -30,6 +30,12 @@ is overhead rather than leverage.
 own widgets. A product whose value is being indistinguishable from a system app
 is fighting the rendering model.
 
+**When the app is Android-only, or reaches a surface this template does not.**
+One codebase pays off only across both stores. An app that is Android-only or
+Android-first, or that reaches Wear OS or Android TV, is the native
+**Kotlin · Compose** stack's; one that ships on Apple platforms alone is
+**Swift · SwiftUI**'s.
+
 **When the artifact size ceiling is tight.** The engine ships with the app.
 There is a floor below which a Flutter binary does not go — see
 [performance & size](performance.md) — and for markets where install size is

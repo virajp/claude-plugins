@@ -1,0 +1,8 @@
+/security-review over f6b2edab..c1c119db -- plugins/ (run as a sub-task scoped to the row's range)
+
+No high-confidence vulnerabilities found.
+
+Dismissed candidates:
+- detekt argfile injection (code/lint/detekt:97-117): every path is prefixed with ./, so none can start with @ or -. Paths containing whitespace, including newlines, are skipped. All paths are joined into one --input value on a single line. A quote or trailing backslash could at most break argfile parsing or drop --config; the person who can name those files already controls the linted source, so not exploitable.
+- mktemp argfile and the tee log in outdated/kotlin: random names, mode 0600, trap removes them. No predictable-name or symlink attack.
+- distributionSha256Sum regex (setup/deps/install/kotlin:26): anchored, still exactly 64 hex characters; accepts the other properties-file forms of the same key and value; repo-controlled file, no new download path.

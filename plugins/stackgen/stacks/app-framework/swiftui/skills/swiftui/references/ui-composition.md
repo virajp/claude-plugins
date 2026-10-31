@@ -67,6 +67,24 @@ grid, spatial's windows and volumes, CarPlay's templates — are a sentence
 each here: each platform's idiom wins over a shared layout, and the model
 underneath stays shared.
 
+## Localization
+
+- **String Catalogs hold every user-facing string.** A string literal passed
+  to `Text` and the other localizable initializers is a localization key, and
+  Xcode collects it into the catalog; a `String` variable is shown verbatim,
+  which is right for user content and wrong for copy.
+- **Plurals and device variants live in the catalog**, not in code: vary a
+  string with an interpolated count by plural, and vary copy whose
+  interaction differs — tap on iPhone, click on Mac — by device.
+- **Formatting is locale-aware through format styles.** Dates, numbers and
+  currency are rendered with Foundation's format styles, never assembled by
+  hand, so the user's locale decides separators, order and calendar.
+- **Previews per locale.** A screen with copy gets a preview with the locale
+  set in the environment, and one in a right-to-left layout direction.
+- **Right-to-left is free when layout uses leading and trailing.** SwiftUI
+  flips horizontal layout for a right-to-left locale; a hard-coded left or
+  right edge, or an image that implies direction, breaks it.
+
 ## Animation
 
 - Animate **state changes**, not views: a `withAnimation` around the model

@@ -39,9 +39,13 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    the first), the file list with its **unit map** — each file paired with
    the unit whose commit last touched it; the map covers **every file the
    branch touched**, not only the range — and the unit
-   files, with their Owns — each `NN-<unit>.md` in the plan folder under
-   `docs/plans/` — of every unit the row covers, several units, not one. Read
-   those unit files and the folder `index.md`'s rulings, and — **only when a
+   files — each `NN-<unit>.md` in the plan folder under `docs/plans/` — of
+   every unit the row covers, several units, not one. A unit file carries no
+   header lines: read each covered unit's `owns`, `kind` and `depends_on`
+   from its entry in the `units` list of the folder's `index.json`. Read those
+   unit files, the rulings — the `decisions` list of `index.json` — its
+   `shared_files` list and the folder `index.md`'s *Facts the survey
+   established*, and — **only when a
    unit the row covers is `code`**, in which case the dispatch carries them —
    the blueprint slice they implement (the flow/entity docs under
    `docs/blueprint/`) plus `conventions.md`, and the stack the orchestrator
@@ -115,8 +119,8 @@ Merge both into one findings list. Every finding names the file and is
 labelled with the unit the dispatch's **unit map** gives for it — the unit
 whose commit last touched the file inside the range, covered by the row or
 not. Report **every** finding on a file in the dispatch's file list; the
-orchestrator, not you, re-dispatches each unit by its Kind and drops a
-non-security finding on an uncovered unit, recording the count. A file outside
+orchestrator, not you, re-dispatches each unit by its Kind, an uncovered
+unit's included, and records the coverage widened to it. A file outside
 the file list is outside the scope **unless its cause is inside the range** —
 a caller broken by an in-range change is a finding on that caller, labelled
 with the unit the branch-wide map gives for its file; the orchestrator decides
@@ -146,10 +150,30 @@ or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
 **gap**, not a code finding. File it separately to room `gaps` — `source_file`
 set to the **plan folder path**, tagged `<loop-id>/gap/<round>`, its content
-**opening with the plan folder path and the `covers:` doc names** the dispatch
+**opening with the plan folder path and the `covers` doc names** the dispatch
 carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
 under-/mis-specified and where; and report it on its own contract line, not
 under FINDINGS.
+
+## Closing check
+
+A dispatch headed `## Closing check` is the **closing pass** of a loop that
+ended at the cap or the convergence guard
+(`${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`). It hands you the open
+review findings, as the loop last reported them, and the closing fix delta — the
+commits that aimed at them alone — and no engine output. Do not review the
+range again and raise nothing new: for each listed finding, read the tree at the
+delta's `to` and answer whether it is fixed; then read the delta alone for a
+defect it introduced. Skip mempalace. Output **only** this block, in place of
+the one under Return contract:
+
+```text
+CLOSING:   # one line per listed finding, in the order given
+- RESOLVED file:line (<unit>) — <the finding, as given>
+- OPEN file:line (<unit>) — <why it still holds>
+REGRESSIONS:   # defects the closing fix delta itself introduced, or the single line "none"
+- [severity] file:line (<unit>) — what the fix broke
+```
 
 ## Return contract
 
@@ -180,4 +204,5 @@ Any finding rated `[high]` or worse forces
 `VERDICT: changes-required`; a `[breaking-api]` finding likewise forces it, and
 the orchestrator — treating it like a security finding — always fixes it, exempt
 from the review round cap. If `changes-required`, the orchestrator re-dispatches
-each unit a finding names, by its Kind, then re-runs the review row in full.
+each unit a finding names, by its Kind, then runs the review row's next round
+over those fix commits alone.

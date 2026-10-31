@@ -64,6 +64,9 @@ jobs:
       - name: npm-normalize hook tests
         run: mise run p:plugins:npm-normalize-test
 
+      - name: Release-level function tests
+        run: mise run p:releases:test
+
       - name: Type-check every package
         run: |
           pnpm exec tsc --noEmit -p installer

@@ -1,0 +1,10 @@
+/security-review (run over 0a90f308..HEAD in the worktree)
+
+No high-confidence vulnerabilities found.
+
+- eval "${step}" in .config/mise/tasks/p/release:211: rejected. Each step is assembled from fixed strings, the branch variables and the task names. The one variable piece of text, the commit message, is escaped with printf '%q'. The versions in it come from the repo's own manifests. Nothing outside the repo reaches it.
+- Workflow injection in .github/workflows/deps-update.yml: rejected. The workflow only runs on a schedule or a manual dispatch, so it takes no event input such as PR titles or branch names. The new shell lines use only constants and package.json.
+- git branch -f main origin/main in deps-update.yml: rejected. It only resets the local main to the remote main, and the push still goes through code:merge:main, which only merges and refuses a dirty tree or unpushed commits. Nothing new lets an attacker choose which ref gets tagged. A dependency planted by pnpm update could run code here, but that was already true before this change and the step that writes the token permissions did not change.
+- awk -v k="${key}" and the mktemp + mv in .config/mise/tasks/_scripts/local (releases_raise / releases_level): rejected. The keys are constants or plugin names from the repo. The temp file is created next to .config/releases.yaml by mktemp, so there is no path traversal and no untrusted input.
+- grep -E "^${name}-v..." in .config/mise/tasks/p/plugins/release:163: rejected. name comes from the repo's own plugin manifest. At worst a bad name breaks the regex; it cannot inject a command.
+- Token permissions (contents: write, actions: write): rejected. These lines did not change in this diff.

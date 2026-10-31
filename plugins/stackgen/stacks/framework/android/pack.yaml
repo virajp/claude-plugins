@@ -1,0 +1,21 @@
+name: Android
+summary: The Android build framework — the Android Gradle plugin owning the
+  app or AAR module, the SDK levels its build files state, Android Lint as a
+  gate, R8, and the emulator driven headless by Gradle Managed Devices for the
+  E2E run.
+version: 1.0.0
+type: framework
+# No framework category names a build SDK; meta-framework is the nearest — like
+# one, AGP owns the build and the module layout inside the language's project.
+category: meta-framework
+kind: language-bundle
+axis: project
+# No platforms: list — the surfaces are the bundles' (kotlin-compose,
+# android-library).
+harness:
+  e2e_local:
+    task: test:e2e
+    mechanism: >-
+      instrumented UI tests on a Gradle Managed Device — an emulator AGP
+      creates, boots headless, tests on and tears down — run through
+      ./gradlew <device><Variant>AndroidTest

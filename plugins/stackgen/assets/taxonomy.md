@@ -41,17 +41,14 @@ The closed list. A component is exactly one of:
   language is what the SDK brought.
 - **`toolchain-gate`** — a gate meaningful for one toolchain: its linter,
   its formatter, its compiler config. The repo-wide gates — the formatter,
-  the two scanners and the hook runner — are no type since 2026-09-26:
-  `stackgen:tool-config` writes them as universal supersets, and a pack
-  adds a gate as a subtask the universal `…:all` task calls.
+  the two scanners and the hook runner — are no type since 2026-09-26, and
+  are bootstrap's. A `toolchain-gate` pack carries the doctrine of its gate;
+  the gate's pin, config and task are bootstrap's too.
 - **The toolchain manager is no type** since 2026-09-26: the repo's mise
-  config and task library are written by `stackgen:tool-config`
-  (`${CLAUDE_PLUGIN_ROOT}/skills/tool-config/SKILL.md`), and a pack ships
-  its own tool pins, environment values and aliases as a mise folder in its
-  `templates/`, which the skill renders.
+  config, its tool pins and its task library are bootstrap's, and a pack
+  ships none of them.
 - **Repo hygiene is no type** since 2026-09-27: the ignore, attribute and
-  graphify-ignore files are `stackgen:tool-config`'s universal supersets,
-  carrying every stack's lines, and the licence, security contact,
+  graphify-ignore files are bootstrap's, and the licence, security contact,
   contributing guide and issue forms are `/vwf:init`'s own assets; a pack
   adds no line to any of them.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
@@ -89,11 +86,6 @@ The closed list. A component is exactly one of:
   pack must not decide it for them. Pinned per project, and asked only of
   a project declaring a `site` or `webapp` platform. Composes into a
   Stylesheet-Bundle.
-
-Any type may name a value only the developer's machine can answer — the
-Xcode it builds with — as a `@@NAME@@` tag in its `templates/`, stored
-under `packs.<slug>` in the repo's `.config/stackgen.yaml`
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`).
 
 ## Categories
 
@@ -224,7 +216,7 @@ which is how a CI-system pack shipped that nothing could ever materialize.
   and locks the repo's members plus a `build-orchestrator` component where
   the repo has one — the one composition on the **`repo`** axis:
   `repo.stack.template` is what selects it, while the repo baseline is
-  `stackgen:tool-config` plus `/vwf:init`'s own assets. A single-package
+  bootstrap plus `/vwf:init`'s own assets. A single-package
   repo pins none, which is the edge rather than a gap. The
   `package-manager` component appears in two kinds' compositions the way
   `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and

@@ -82,6 +82,8 @@ components: # the bundle's composition — the per-component dispatch record
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated
 platforms: [ <platform> ] # project axis only
+os: # project axis only — the bundle's os: map, passed through; omitted when the bundle declares none
+  <platform>: [ <os> ]
 languages: [ <token> ]
 language_facts: # per language — what /vwf:doctor verifies
   <token>: { lsp: <how provided | n/a>, mise_tool: <name | n/a>, manifest: <file | n/a>, binaries: [ <name> | { name: <name>, probe: <command> } ] } # binaries passed through from pack.yaml in either form; omitted when the pack declares none
@@ -104,13 +106,10 @@ these emitted facts — doctor verifies against them instead of against a
 language plugin. Emitting them honestly (`n/a` included) is what keeps that
 check real.
 
-A value only the machine can answer — swiftui's `XCODE_VERSION` — is not a
-payload field. It is a `@@NAME@@` tag in the pack's `templates/`, stored
-under `packs.<slug>` in the repo's `.config/stackgen.yaml` and filled by
-tool-config's `pack --set <key>=<value>`
-(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The pack declares how to
-find it in its `values:` list — a `detect` command, else a `question`; the
-caller gathers each and passes them as the invocation's `values:` map.
+`os` is the bundle's own `os:` map, copied as it stands — the payload adds
+no token and orders none. A generated bundle may emit it under the same
+rule; when it does not, the key is omitted and vwf draws its generic frame.
+
 A `binaries` probe runs in `/vwf:doctor` only while the committed entry
 matches the hash its lockfile records, and is reported not run on
 drift. It adds no consent tier.
@@ -147,24 +146,24 @@ drift. It adds no consent tier.
   would overwrite the framework pack's.
 - **A landing is not confined to `.claude/`.** A component may also declare
   repo config files in a `config/` tree that mirrors the **repo root** —
-  `config/.config/mise/tasks/code/lint/swiftlint` lands at
-  `<repo>/.config/mise/tasks/code/lint/swiftlint`. It is a **target, not a fifth
+  `config/.config/mise/tasks/test/golden` lands at
+  `<repo>/.config/mise/tasks/test/golden`. It is a **target, not a fifth
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier covers a toolchain gate's own config file; what it still may not
+  tier holds what is specific to the repo — `test:*` tasks, `p/_project/`
+  tasks, the allowlisted root files; what it may not
   write — a language manifest, a CI workflow, editor settings, CLAUDE.md —
   and the allowlist of what may land at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the
   materializer.
-- **The universal tools are not slugs.** No `mise` or gates bundle exists;
-  the toolchain manager's and the gates' files are `stackgen:tool-config`'s
-  universal supersets. A pack's own mise folder sits in its `templates/`,
-  which the materializer never copies: it has tool-config render them with
-  `pack --slug <slug> --dir <pack dir>`, previewed inside its one consent
-  and then run with those answers, and that call also re-renders the
-  `…:all` tasks the pack's subtasks join. No pre-commit hook fragment is
-  landed or merged.
+- **The toolchain is not a slug, and not a pack's.** No `mise` or gates
+  bundle exists, and no pack names a toolchain tool: the tool pins, the
+  gates, their configs and the generic tasks are bootstrap's. The
+  materializer reads a fresh clone of bootstrap to find the tools a
+  composition needs, and asks for them through bootstrap's
+  `docs/sync/vwf.md` ([the bootstrap handoff](references/bootstrap-handoff.md)). No pre-commit
+  hook fragment is landed or merged.
 - **A `config/_<name>/` directory is pack-private and is never copied**
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It is payload a reader
   picks from — the licence texts are the case — so landing the directory
@@ -179,28 +178,8 @@ drift. It adds no consent tier.
   makes, and the lockfile it keeps
   (`<repo>/.claude/stackgen/lock.yaml`) resolve under that path; absent
   means the current repo. Each repo gets its own independent copies and
-  its own lockfile — never one repo's copies pasted around.
-- **A caller may pass answers the same way**: an optional `answers:` map
-  beside the `repo:` line, at most one value per axis of the
-  `conditional:` vocabulary — `forge`, `secrets`
-  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). The materializer
-  evaluates every pack's `conditional:` entries against it in its step 1
-  and skips the paths whose answer differs, recording them in the
-  lockfile's `skipped:` list. **Three callers pass the map now** —
-  `/vwf:init`, which passes them to tool-config's `all --forge` and
-  `all --secrets`, so they live in each repo's `.config/stackgen.yaml`;
-  `/vwf:setup`'s materialize pass, which lands a pinned template long
-  after init ran; and `/stackgen:stackgen-sync`, which re-derives a
-  pack's landing set. Each reads that repo's `stackgen.yaml` `forge` and
-  `secrets`, re-reads `forge` from the repo's `origin` host live and
-  passes that, and passes the full map per repo; a caller that finds no
-  `stackgen.yaml` infers the values from the tree, passes those and
-  writes nothing. An axis the map leaves out, or
-  a map not passed at all, reads as **true** and lands the path — the
-  **fallback** for a caller that passes none, which keeps a caller this
-  contract does not know about landing what it always landed, and not
-  the path the three above take. These two lines are the whole of the
-  optional input beside the catalog paths.
+  its own lockfile — never one repo's copies pasted around. This
+  line is the whole of the optional input beside the catalog paths.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs

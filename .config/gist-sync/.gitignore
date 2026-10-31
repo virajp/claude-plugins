@@ -1,0 +1,6 @@
+# Repository-specific ignore lines.
+# The sync appends this file after the universal ignore set to make
+# .gitignore. A line here can negate a universal pattern with "!".
+
+# The local plugin marketplace.
+.dev-marketplace/

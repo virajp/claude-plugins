@@ -131,8 +131,25 @@ file paths.
 
 **Home rule.** Every screen is defined in exactly **one** flow — its home
 journey. Another flow that touches the same screen **links the home flow's row**
-rather than redefining it, so a screen has one authoritative contract. The
-coherence reviewer flags a screen defined twice.
+rather than redefining it, so a screen has one authoritative contract. That
+reference row's **Code cell is a markdown link to the home flow's row** — the
+code as the link text, the home flow's platform file plus the code as the
+anchor, e.g. `[004a](../004-checkout/mobile.md#004a)`; any other form of the
+cell reads as a second definition. The coherence reviewer flags a screen
+defined twice.
+
+**Overlays.** A modal, dialog or sheet that opens over another screen has no
+route of its own: its Route cell names its parent's code instead — `modal of
+<code>`, `dialog of <code>` or `sheet of <code>` (e.g. `sheet of 004b`), where
+the parent is a screen of the same platform, in any flow, that is not itself
+an overlay. The marker is the **whole cell**, optionally after one route word,
+which must be the parent's route (`/orders/:id sheet of 004b`); a cell holding
+any other text is a plain Route cell, so `/confirm (shown as a modal)` is a
+route, not a marker. The overlay's code and its parent's are letters, digits
+and `_` only — the code names the overlay's page. It keeps its own code, row,
+states and Components block. Two screens on one route are a contract error
+unless all but one of them carry this marker. The mockup review serves an
+overlay at `<parent route>?overlay=<code>`.
 
 Visual and interaction *language* — tokens, typography, spacing, motion,
 component behavior — comes from `docs/blueprint/design-system.md`; reference it
@@ -140,6 +157,23 @@ and record only deviations, never re-decide it per screen (see the
 [UI/UX contract](./ui-ux-contract.md)). An optional screen-navigation mermaid
 `flowchart` is allowed only when a flow has **3+ screens with branching
 navigation** — a judgement, not a bar.
+
+## OS-specific features
+
+A feature one OS offers inside a form-factor platform and the other does not is
+declared in that platform file's `features:` frontmatter list, never as a
+Platform deviation. Any form-factor platform may carry entries. Each entry has
+three keys: `name` — the feature, in words; `scope` — one value the platform
+doctrine names; and `fallback` — what the other OS, or a device without the
+feature, shows. On `mobile` the accepted `scope` values are `ios`, and the two
+Android device families `android:samsung` and `android:oneplus`. A vendor value
+is a label only: the stack detects the feature by a capability check, never by
+the device's maker. **`fallback` is required** on every entry; the
+blueprint-reviewer returns a gap for a missing or empty one, and a `scope`
+value outside the platform's list is a gap. A feature every OS of the platform
+offers is not a feature entry — it is ordinary Screens content. The entry shape
+is owned by `${CLAUDE_PLUGIN_ROOT}/assets/templates/flow-platform.md`, and a
+file with none carries `features: []`.
 
 ## Background Jobs live on the flow
 

@@ -1,0 +1,7 @@
+security-review engine — loop U4, round 1, range c619c5c3..25a84889
+
+No high-confidence vulnerabilities found.
+
+Checked: prune and the marker sweep delete only names listed from <root>/<repo>/ (*.jsonl) or <root>/active/; rmSync removes a symlink, not its target; --keep/--repo/--folder are trusted flags, used via basename.
+No command injection: spawnSync with argument arrays and no shell (git rev-parse in log.mjs:132; the run verb). No eval; JSON.parse reads plain data.
+Hook session_id comes from Claude Code (trusted); the log gets short summaries plus the SessionEnd reason; no new secrets written.

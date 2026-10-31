@@ -13,41 +13,61 @@ checker a repo has.
 
 1. **Dispatch** every `edit` unit in the wave in **one message with multiple
    `Agent` calls**, `subagent_type: "general-purpose"` unless the unit file
-   names another, `name: "U<n>"`, on the model the unit file's `Model:` line
-   names (`opus` by default; `inherit` means the session's). The prompt is the
-   unit contract from index.md: *"Read `<folder>/index.md` — Facts, New
-   dependencies, Shared-file rule, Unit contract — then read
-   `<folder>/NN-<unit>.md` in full. Execute its Edits in order inside
-   `<worktree>`, run its Verification, and return the block the contract asks
-   for and nothing else. Touch nothing outside your Owns list. Do not bump a
-   version, run a generator, edit a doc, add a dependency the plan does not
-   list, or commit. Delete with plain `rm`, never `git rm` — stage nothing."*
+   names another, `name: "U<n>"`, on the model the unit's `model` in the
+   folder's `index.json` names (`opus` by default; `inherit` means the
+   session's). The unit file carries no header lines, so the orchestrator
+   reads the unit's `owns` with
+   `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs get`
+   (`plan.mjs get <folder>/index.json units.U<n>.owns`) and puts it into the
+   prompt. The prompt is the unit contract from index.md: *"Read
+   `<folder>/index.md` — Facts, Unit contract — and the `dependencies` and
+   `shared_files` lists of `<folder>/index.json`, then read
+   `<folder>/NN-<unit>.md` in full. Execute its Edits in
+   order inside `<worktree>`, run its Verification, and return the block the
+   contract asks for and nothing else. Your Owns list is: `<owns>`. Touch
+   nothing outside it. Do not bump a version, run a generator, edit a doc,
+   add a dependency the plan does not list, or commit. Delete with plain
+   `rm`, never `git rm` — stage nothing."*
    Pass paths, never conversation context. **No unit gets
    `isolation: "worktree"`** — units in a wave own disjoint paths, and merging
    several trees back by hand is the collision the shared-file rule exists to
    avoid.
-2. **Wait** for every report. As each returns, mark the unit in the Units table
-   and append a run-log row — unit, model, round 1, outcome, the `DECIDED:` and
-   `GAP:` lines condensed into *Detail*. A unit whose agent **errored** rather
-   than returned is re-dispatched once with the same prompt; a second error
-   marks it `failed` with `agent died` as detail. Write the row **when the
-   report arrives**, not at the end of the wave — a row written late is a unit a
-   resumed run repeats.
+   Mark the unit `running` as it is dispatched — one `plan.mjs set` of
+   `units.U<n>.status`, which stamps its times, per *The plan files*.
+2. **Wait** for every report. As each returns, set the unit's `status` —
+   `green` once its report is read, `unresolved` or `failed` per the rules —
+   and its `rounds`, one `plan.mjs set` each; append each `GAP:` line to the
+   `gaps` list, one `plan.mjs append <folder>/index.json gaps --json` of
+   `{id, unit, stage: "edit", text, state: "open"}` with the next `G<n>`; and
+   mirror a record to the run journal — unit, model, round 1, outcome, the
+   `DECIDED:` and `GAP:` lines condensed into its detail. A unit whose agent
+   **errored** rather than returned is re-dispatched once with the same
+   prompt; a second error marks it `failed` with `agent died` as detail.
+   Write the fields **when the report arrives**, not at the end of the wave —
+   a field written late is a unit a resumed run repeats. The unit's `commit`
+   is set when the orchestrator commits it, per the staging discipline.
+   Each of those `set` calls of a unit's `status`, `rounds` or `commit` is
+   followed by one `log.mjs event row`, and each `append` to `gaps` in this
+   file — here, in the loop and in the closing pass — by one
+   `log.mjs event gap` with its `source` `unit` or `wave-review`, per *The
+   plan files* in `SKILL.md`.
 
 ## The reviewer
 
 One `general-purpose` subagent per wave, `name: "R<wave>"`, read-only —
 instructed to edit nothing. Its prompt carries the wave's unit files — plus,
 when a `review` row in the wave re-dispatched units, those units' files too,
-since the row's Owns is `—` and its fix commits are attributed to the
-re-dispatched units' Owns — the diff of the wave
+since the row's `owns` is `[]` and its fix commits are attributed to the
+re-dispatched units' `owns` — each unit file with its unit's `owns` from
+`index.json`, the diff of the wave
 (`git diff <last green commit>..HEAD` inside the worktree — the reviewer runs
-it, the orchestrator does not read it), and index.md's Assumed decisions and
-Shared-file rule. The prompt also says that findings on a `code`
-unit's code quality or security belong to the `review` row that covers the
-code units — the review and security stages run there, never here — and are
-not raised: the wave review is scoped to the contract — rulings honoured, Owns
-respected, cross-unit drift, docs falsified. It returns exactly:
+it, the orchestrator does not read it), and the `decisions` and
+`shared_files` lists of `index.json`. The prompt also says that findings on
+a `code` unit's code quality or security belong to the `review` row that
+covers the code units — the review and security stages run there, never
+here — and are not raised: the wave review is scoped to the contract —
+rulings honoured, Owns respected, cross-unit drift, docs falsified. It
+returns exactly:
 
     FINDINGS: <n>
     <path>:<line> [<unit>] <rule> — <one line>     (one per finding)
@@ -56,7 +76,7 @@ respected, cross-unit drift, docs falsified. It returns exactly:
 
 The rules it reviews against, in order:
 
-1. **Scope** — every changed path is in exactly one unit's Owns list.
+1. **Scope** — every changed path is in exactly one unit's `owns` list.
 2. **Rulings** — each unit's edit matches its quoted ruling, not a paraphrase of
    it.
 3. **Completeness** — every numbered edit in the unit file landed; nothing the
@@ -90,9 +110,12 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   re-run over the fix delta per *Late loop-backs re-run the last row* in
   [review-unit.md](review-unit.md).
 - A **rule-5 finding in a file no unit owns** does not loop. It becomes a
-  `DOCS FALSIFIED:` line handed to the docs unit, whose Owns the orchestrator
-  widens to that passage; the widening is written into the Units table's Owns
-  cell and into the run log as a `GAP:`, and the final report lists it. The
+  `DOCS FALSIFIED:` line handed to the docs unit, whose `owns` the
+  orchestrator widens to that passage — one `plan.mjs set` of
+  `units.<docs-unit-id>.owns --json '<the whole widened list>'`, a JSON
+  list — and records as a `GAP:`, one `plan.mjs append` to `gaps` with
+  `"state": "closed"`, naming the finding that caused it; the final report
+  lists it. The
   plan's Goal is what authorises the widening — a passage the plan's own stated
   outcome falsifies is in scope even when no unit file named it. Only rule 5: a
   finding under rules 1–4 in a nobody-owned path is still `CONTRACT:` or
@@ -106,10 +129,16 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   loop fixes the cap at two rounds because it reviews the contract — scope,
   rulings, completeness, docs — not the code, whose quality and security the
   covering `review` row loops on under the configured cap.
-- Findings still open when the loop ends are recorded as `contested` in the run
-  log with the rounds tried, and the wave proceeds to its gate. They are listed
+- Findings still open when the loop ends go through the **closing pass** in
+  `execute-stages.md` first: the owning units fix exactly those findings, and
+  a fresh wave reviewer, handed the open findings and the closing fix delta
+  alone, answers `RESOLVED` or `OPEN` for each and reports only a regression
+  the fix caused. What stays open is recorded as `contested`, with the
+  rounds tried — one `plan.mjs append` to `gaps` per finding, mirrored to the
+  journal — and the wave proceeds to its gate. They are listed
   in the final report; they do not block, because the plan and its rulings are
   the contract and a reviewer's residual is an opinion about it.
 
-Every round is a run-log row: `R<wave>`, the model, the round, `findings(n)` or
-`pass`, and the finding lines condensed into Detail.
+Every round is a journal record: `R<wave>`, the model, the round,
+`findings(n)` or `pass`, and the finding lines condensed into its detail. The
+wave reviewer is no unit of `index.json`, so its rounds have no field there.

@@ -1,0 +1,67 @@
+/code-review high — loop R1-late1, round 2 — range 26bfccee..020cf0f1 (branch 2026-10-08-execute-renders-served-at-a-url)
+
+I found 9 issues in `26bfccee..020cf0f1`, with `docs/plans/` left out. These are unverified, as the recall-mode recipe says: nothing was run, and every finding comes from reading the code.
+
+The three most important:
+- **Case-insensitive file match (most severe):** on macOS, two names that differ only in case land on the same image file. The render copy compares file paths as exact strings, so it keeps the old entry. The server then shows the new image under the old state.
+- **`?state=default`:** this URL used to 404 and now shows the default image as its own state. The mockup side doesn't do the same, so the frame and the other window come up empty, and comments split between `state: default` and `state: ""`.
+- **No more pruning:** renders of screens that left the route map now stay on disk and in `renders.json` for good. If one of those codes later comes back at the same route, the server shows the old image again.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 375,
+    "summary": "The new rule that drops an old entry when its file was overwritten compares `file` as an exact string. On a case-insensitive filesystem (default macOS APFS), two names that differ only in case are one physical file, so the overwritten entry is kept and the server shows the wrong image under it.",
+    "failure_scenario": "Run 1 copies `RENDER: 200b mobile empty a.png` and writes `orders/[id]/index--empty.png`. Run 2 copies `RENDER: 200b mobile Empty b.png`: copyFresh's lstat finds the existing file case-insensitively, removes it and writes b.png. The old {200b, empty, .../index--empty.png} entry is kept because neither code+state nor the file string matches. serve.mjs's filter (line 232) accepts it, because the file string equals renderFile(path, 'empty'), so `?state=empty` serves b.png labelled with run 1's plan and date. This is the same mislabel the change set out to prevent. Routes that differ only in case (`/Orders` vs `/orders`) collide the same way across screens."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 973,
+    "summary": "serve.mjs used to have its own renderName(state) that gave `index--default.png` for `?state=default`, so that URL returned 404. It now imports the shared renderName, which maps 'default' to index.png, so the URL renders the default image as a separate state page. The mockup side (matchPath) still reads 'default' as `index--default.html`, so the two sides disagree.",
+    "failure_scenario": "GET `/orders/7?state=default` on mobile now returns 200 with the default render. The mockup frame does not appear, because matchPath finds no `index--default.html`; on web the peer link opens a 404 in the other window. A comment left there is stored with `state: default`, while the same image reached at `/orders/7` stores `state: \"\"`. The /vwf:feedback items for one image then name two different states."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 375,
+    "summary": "This branch removed the old pruning (currentFile/removeImage). Entries and images of codes that left the route map, or moved, now stay in renders.json and on disk forever. If a removed code comes back at the same route, the server's code+route+file filter shows the old image again.",
+    "failure_scenario": "Screen 200c at /checkout is rendered, then deleted from the blueprint; later a different screen is added and gets code 200c at /checkout again. The old entry was never dropped and still matches code, route and file, so /checkout shows the deleted screen's image as the new screen's render before the new screen has been rendered. The renders tree in the main checkout and renders.json also grow without limit."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 114,
+    "summary": "The new text says that on every platform a missing or invalid `__mockups/routes.json` means no window link and a stderr warning. In serve.mjs the render server's peer link (line 993) depends only on `--peer-file`, not on mockRoot, and the server warns only when the `--mockups` directory exists.",
+    "failure_scenario": "On web, `__mockups/routes.json` is invalid. A mockups `server.url` left by a server that died is still there; step 5 of the same SKILL admits this case. peerOrigin reads that file and the overlay shows \"Open the mockup\" to a dead or reused port. Separately, when `mockups/<platform>/` is absent, mockRoot stays null with no stderr line, contradicting \"the server warns on stderr\"."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 232,
+    "summary": "renders() requires the entry's route string to equal the current route string, but the image's location depends only on the path. An edit that changes only the route syntax hides valid renders.",
+    "failure_scenario": "A blueprint edit changes `/orders/:id` to `/orders/{id}`; both give path `orders/[id]`. After the next render run rewrites routes.json, every 200b entry whose state that run did not render still has route \"/orders/:id\". It is filtered out, so its state shows \"No render yet\" and returns 404 although the right image is still at `orders/[id]/index--<state>.png`. Comparing entry.file to renderFile(screen.path, state), which already encodes the folder, would be enough."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 952,
+    "summary": "Every PNG request now re-reads and re-parses renders.json, then runs the O(entries x screens) `routes.screens.find` filter, just to check membership. Before this change, a PNG request read no JSON.",
+    "failure_scenario": "One render page load reads and parses renders.json twice and re-runs the filter for each request. A long-lived renders.json (it no longer prunes, see above) makes this grow. A code-to-screen Map, or caching the filtered list by renders.json and routes.json mtime, would avoid the repeated I/O and quadratic scan."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 216,
+    "summary": "Altitude: the hazard exists because images are keyed by route folder, so a moved screen's image sits where another screen's goes. The fix adds two linked special cases: a read-time validity filter in serve.mjs and a drop-on-overwrite rule in renders.mjs.",
+    "failure_scenario": "Correctness depends on the two scripts staying in sync on the predicate and on string equality of paths; the case-insensitive collision above already breaks it. Keying stored images by code (for example `__renders/<code>/index--<state>.png`, served at the route), or applying one shared 'entry holds under map' predicate at write time, would remove the collision at its source."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 973,
+    "summary": "Simplification: the image path is rebuilt from screen.path + renderName(state), but the filtered entry's `file` is by construction that exact path. renders.mjs similarly computes `name = renderName(item.state)` (line 285) and then renderFile(screen.path, item.state) recomputes it.",
+    "failure_scenario": "Two derivations of the same path in each script must stay in step. Using `join(root, ...entry.file.split('/'))` in serve.mjs, and building `file` from the already-computed `name` in renders.mjs, removes the redundancy."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 33,
+    "summary": "Conventions: plugin behavior changed with no change under site/src/content/docs/. The render copy no longer prunes, the server shows only matching entries, and the servers remove their own server.url. The manual's /vwf:mockups section does not cover renders mode at all.",
+    "failure_scenario": "Repo CLAUDE.md (/Users/virajpatel/Projects/github.com/virajp/claude-plugins/CLAUDE.md): \"Any change to plugin behavior must reconcile `readme.md`, this file, and the manual under `site/src/content/docs/` in the same commit\". The commits cc3f4ceb, 4abd6b4e, d3ed8616 and 020cf0f1 touch only plugin files, so a user reading site/src/content/docs/plugins/vwf.md has no account of renders mode or its retention behavior. This is borderline: the manual never described renders mode, so nothing in it was made wrong."
+  }
+]
+```

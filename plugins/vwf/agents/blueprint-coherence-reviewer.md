@@ -69,7 +69,10 @@ each other lives in `bundle`, so no cross-flow gap is lost to sharding.
 - [ ] Every `operationId` a step or screen `Reads` names exists in the named
       `apis/<project>.openapi.yaml`.
 - [ ] Screens defer visual language to `design-system.md`; a screen defined in
-      more than one flow (the home rule) is a gap.
+      more than one flow (the home rule) is a gap. A reference row — its Code
+      cell a markdown link to the home flow's row, e.g.
+      `[004a](../004-checkout/mobile.md#004a)` — is not a definition; a row
+      repeating the code in any other form is.
 - [ ] Across the flow's **platform files**: a screen code means one concept in
       all of them, no two screens share a code, every file is listed in
       `index.md`'s Platforms table (and vice versa), and every listed platform

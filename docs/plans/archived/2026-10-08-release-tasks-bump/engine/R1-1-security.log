@@ -1,0 +1,11 @@
+/security-review (run over 0a90f308..HEAD in the worktree; the in-session skill read develop vs main and was re-run on the branch range)
+
+No high-confidence vulnerabilities found.
+
+Candidates I rejected:
+- .config/mise/tasks/p/release:107, eval "${step}". The commit message goes through printf '%q', so it is quoted. Branch names and task names are fixed constants. The project names and targets come from the repo's own manifests via --dry-run output, and the maintainer runs this locally. No untrusted input reaches it.
+- .github/workflows/deps-update.yml, contents: write and actions: write. It only runs on schedule and workflow_dispatch. It reads no PR title, branch name or issue text. The version it tags comes from package.json on develop, which only someone with write access can change. No attacker-controlled path.
+- deps-update.yml, git branch -f main origin/main then p:i:release -- --ci. It resets the local ref to the remote, so nothing attacker-controlled gets in. Merging into main still goes through code:merge:main with no force push, so publishing is no less safe than before.
+- _scripts/local, the awk read/raise/clear functions. Key and level are passed to awk with -v and matched with index(), not used as a regex or a program. The level is checked by level_rank before anything is written. The temp file is made with mktemp in the same folder, then moved into place. No injection or path traversal, and the arguments are trusted.
+- p/plugins/release:192, version substitution in a JS string replace. The version is computed from semver parts that go through bash 10# arithmetic, so it is numeric. No injection.
+- plugins.yml, the added p:releases:test step. It runs a test script inside the existing CI context. It adds no permissions and reads no untrusted input.

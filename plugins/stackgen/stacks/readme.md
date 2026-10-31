@@ -60,16 +60,33 @@ since the toolchain is the host's), `package-manager/swiftpm` (doctrine only,
 no `config/` tier, and a `lockfile` fact naming `Package.resolved` at the root
 or inside an `.xcodeproj`), `toolchain-gate/swift-format` and
 `toolchain-gate/swiftlint` — two more gates meaningful for one toolchain.
-swift-format ships with the toolchain; SwiftLint is pinned through mise by its
-pack's template, rendered into `.config/mise/conf.d/swiftlint/`. Each gate pack
-owns its subtasks — `code:format:swift-format`, `code:lint:swift-format`,
-`code:lint:swiftlint` — and `language/swift` the `setup:deps:<verb>:swift`
-ones. The gate subtasks take their file list from git, NUL-separated and
-`./`-prefixed — swift-format the hook's staged list when one is passed — stop
-with an error when `git ls-files` fails, walk the tree with `find` when there
-is neither a `.git` entry nor `GIT_DIR`, or no git, and skip SwiftLint when no
-Swift source is in scope. No pack lands `Package.swift`: `swift package init`
-creates it.
+Since 2026-10-23 none of the four ships a task, a pin or a gate config: those
+are bootstrap's, which the materializer asks for them, and the packs carry
+the doctrine. No pack lands `Package.swift`: `swift package init` creates it.
+
+**The Kotlin library stack made Kotlin the fifth language root on
+2026-10-09.** `kotlin-library`, `platforms: [packages]`, a Kotlin/JVM library
+published as a JAR, pins four packs: `language/kotlin` (the root; the
+Temurin JDK on an LTS line and `kotlin-lsp` come from bootstrap),
+`package-manager/gradle` (doctrine only, no `config/` tier — Gradle is the
+committed wrapper's, the compiler the Kotlin Gradle plugin's — and a
+`lockfile` fact naming every `gradle.lockfile` and `settings-gradle.lockfile`),
+`toolchain-gate/ktlint` and `toolchain-gate/detekt` — two more gates
+meaningful for one toolchain. Since 2026-10-23 their pins, their tasks and the
+dependency tasks that run `./gradlew` are bootstrap's; the packs carry the
+doctrine. No Android and no Kotlin Multiplatform.
+
+**The Android stack followed the same day on those four packs.**
+`framework/android` (AGP, the Android SDK, Android Lint and the emulator;
+`meta-framework`, the nearest category) keeps the SDK levels in the build
+files alone. The cmdline-tools pin, `ANDROID_HOME`, the SDK install and
+Android Lint are bootstrap's, which finds `COMPILE_SDK` and `EMULATOR_IMAGE`
+in the build files. It owns `test:e2e`, which runs the instrumented tests on
+the Gradle Managed Device `e2e`, or `connected<Variant>AndroidTest` under
+`-- --connected`. Two bundles pin it:
+`android-library`, an AAR on `packages`, and `kotlin-compose`, the app on
+`mobile`, `tablet`, `watch`, `tv` and `auto`, which adds
+`app-framework/compose`.
 
 **Wave C — `app-framework/flutter`**, kind `app-framework`, with
 `package-manager/pub` and `toolchain-gate/analysis-options`. The first
@@ -89,20 +106,43 @@ permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 build from a committed Xcode project a person creates once — no pack lands it
 and no generator writes it — so the pack declares `swift` as a bare binary and
 `xcodebuild` with the probe `xcodebuild -version`, which doctor runs because a
-Command Line Tools stub is on `PATH` too. Its tasks check `xcodebuild -version`
-against the `XCODE_VERSION` mise exports, rendered from its pack's template
-into `.config/mise/conf.d/swiftui/mise.toml`, and refuse an unset or empty
-pin. That pin and the three `SIMULATOR_*` pins beside it are the pack's own
-template values, stored under `packs.swiftui` in `.config/stackgen.yaml` and
-filled by `/vwf:setup`, which reads this machine's answer and offers it as the
-default. Its
-`ux-gate` runs the swift-snapshot-testing goldens on the simulator the repo
-pins. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
+Command Line Tools stub is on `PATH` too. Its `test:golden` checks
+`xcodebuild -version` against the `XCODE_VERSION` mise exports. Bootstrap's
+tasks find that value and the three `SIMULATOR_*` values on the machine; a
+repo that must hold them still sets them in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml`. Its `ux-gate` runs the
+swift-snapshot-testing goldens on that simulator. Its doctrine landed on 2026-09-25 with one reference per Apple platform —
 iOS and iPadOS, macOS, CarPlay, watchOS, tvOS, visionOS, each keyed by the vwf
 token it realises — and topic 12's wiring for Apple's core integrations: widgets
 and complications, App Intents, push notifications, StoreKit and Sign in with
-Apple. Like Flutter's, they are wiring only; third-party integrations are not
-covered yet.
+Apple. On 2026-10-10 eleven third-party references joined them — the six
+Firebase products (Authentication with Google Sign-In), RevenueCat, Nuke with
+TOCropViewController, WebRTC with LiveKit, MapKit with Core Location, and
+WebKit — sixteen in all. Like Flutter's, they are wiring only.
+
+**`app-framework/compose` made the third on 2026-10-09**, the second in
+`native-ui`, rooting the `kotlin-compose` bundle — first on `mobile` and
+`tablet`.
+Jetpack Compose with Material 3 is the only toolkit; the app doctrine is a
+ViewModel with StateFlow, Hilt, Navigation Compose and Room, with twenty
+integration references, wiring only — the seven Jetpack ones and, since
+2026-10-10, the six Firebase products, RevenueCat, Coil 3 with CanHub
+Android-Image-Cropper, WebRTC with LiveKit, Maps Compose with the fused
+location provider, WebView, Credential Manager and Play In-App Updates. Its
+goldens are Roborazzi captures on Robolectric under `test:golden`, and its
+`ux-gate` returns them as `renders:`.
+The four-part ownership test does not hold — Gradle and AGP own the manifest
+and the build — so the type is kept for the doctrine, with the reason in the
+pack's `conventions.md`.
+
+**The Android form factors followed the same day**, taking `compose` and
+`android` to `0.2.0` and the bundle to `watch` (Wear OS), `tv` (Android TV and
+Google TV) and `auto` (Android Auto and Automotive OS, declared alongside
+`mobile`). The compose pack gained a platform reference each and a Jetpack
+Glance one; its `ux-gate` renders `watch` and `tv` and reports `auto` — Car
+App Library templates Roborazzi cannot render — as `n/a`. The android pack
+gained form-factor manifests, Baseline Profiles, Play Feature Delivery and a
+note that instant apps are retired. Android XR (`spatial`) is not covered.
 
 **The UX gate is materialized, not delegated.** The two retired curated
 `-ux-gate` skills moved into their packs as an unprefixed `ux-gate`, landed
@@ -261,11 +301,12 @@ curated option survives the merge — the eight TypeScript ones, the Flutter
 app, the provider-neutral container deploy and the Claude Code plugin
 template, the four Wave D added on what were then the two tool axes, the three
 the stylesheet axis added to them, the `secrets-manager` pair above, the
-five Wave E added for the two clouds, and the two Swift ones of 2026-09-23,
-`swift-package` and the `swift-swiftui` app. Each names its components as refs,
-mixing shipped packs (copied verbatim) with `@generated` ones (researched on
-first fetch) — which is the dispatch rule working at bundle scale rather than
-a gap.
+five Wave E added for the two clouds, the two Swift ones of 2026-09-23,
+`swift-package` and the `swift-swiftui` app, and the three Kotlin ones of
+2026-10-09, `kotlin-library`, `android-library` and the `kotlin-compose` app.
+Each names its components as refs, mixing shipped packs (copied verbatim) with
+`@generated` ones (researched on first fetch) — which is the dispatch rule
+working at bundle scale rather than a gap.
 
 A component answers *what is TypeScript*; a bundle answers *what is a
 TypeScript service*. The menu lists bundles only — offering bare components

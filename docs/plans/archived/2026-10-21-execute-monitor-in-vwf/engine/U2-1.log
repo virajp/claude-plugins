@@ -1,0 +1,18 @@
+## /code-review high — loop U2, round 1, range 52100f5a..481816ee
+
+1. plugins/vwf/hooks/monitor/register.tsx:517 — The formatter changed the copied JSX: the prototype's five `<Text> </Text>` spacers became `<Text></Text>` (lines 517, 526, 569, 604, 609), and the `  Esc closes` hint lost its two leading spaces (line 535). Decision 6 says behaviour must stay exactly as tested. Failure: an empty `<Text></Text>` draws nothing, so the blank lines between the progress bar and the unit table, before the Gaps section and before the footer disappear, and the buttons and the hint run together on one line. Tests do not check spacing. Fix: `<Text>{" "}</Text>` and `{"  Esc closes · …"}` survive dprint.
+2. plugins/vwf/hooks/monitor/register.tsx:205 — With no folder named, the pane follows the first RUNNING row in docs/plans/index.md, even another session's plan, and never looks again once a folder is set.
+3. plugins/vwf/hooks/monitor/register.tsx:280 — `refresh` reads the run state once, awaits git/file/agent-list calls, then writes back the stale plan list (`[...plans.slice(0,-1), next]`), overwriting what `agent.spawn` added meanwhile; `turn.complete` calls `refresh` outside poke's one-at-a-time guard.
+4. plugins/vwf/hooks/monitor/register.tsx:252 — A subagent's status updates only while it is in `agent.list()`, which drops finished agents; one that drops out before a refresh sees it end stays `running` forever (run never ends, tool rows stay hidden, timer runs indefinitely).
+5. plugins/vwf/hooks/monitor/register.tsx:153 — `locate` picks the most recently modified copy of the plan's index.md across every worktree; a new worktree for another plan writes a fresh stale copy, and the pane flips to it.
+6. plugins/vwf/hooks/monitor/register.tsx:238 — `refresh` adopts every `vwf:execute-*` agent in `agent.list()` the plan does not know, including agents of earlier plans of an `all` run.
+7. plugins/vwf/hooks/monitor/register.tsx:424 — The run is marked over whenever a main-loop turn ends with no subagent running; a background gate wait or a stop-and-continue ends tracking.
+8. plugins/vwf/hooks/monitor/register.tsx:341 — The tool.call hook awaits `poke($)` before returning the tool's result; when throttled, poke still waits for any in-flight refresh. `void poke($)` would not block.
+9. plugins/vwf/hooks/monitor/plan.ts:32 — `table()` splits each row on every `|`, so an escaped pipe `\|` in a cell shifts every later column.
+10. CLAUDE.md:366 — Docs ship with the change: c570b395 adds a vwf hooks module and changes no docs (U3 owns the docs, later in this plan).
+
+Engine note: findings 2–9 are carried over from the prototype unchanged; finding 1 is introduced by the formatter at commit.
+
+## /security-review — loop U2, round 1, range 52100f5a..481816ee
+
+No high-confidence vulnerabilities found. Examined register.tsx, plan.ts, the manifest and hooks.json diffs. Folder names match `\d{4}-\d{2}-\d{2}-[a-z0-9][a-z0-9-]*` (no slash, no dot), so reads stay under `<root>/docs/plans/`; the one process call is a fixed argument list with no shell; no eval, dynamic import or deserialization. Set aside at confidence 3: terminal escape sequences from a hostile cloned plan file reaching the pane through `<Text>`.

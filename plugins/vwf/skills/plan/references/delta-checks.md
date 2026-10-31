@@ -69,8 +69,9 @@ listed under `design.flows_rendered` in `.config/vwf.yaml` as
 `<project>/<NNN>-<flow>/<platform>` (or the block is absent — a legacy
 `flows_pushed` key, or an entry without a platform leaf, read as drift), note it
 for the §6 gate naming the unrendered platforms: those screens have no current
-visual render — recommend the user run `/vwf:mockups <flow>` (a local scratchpad
-render), or `/vwf:screens import <flow>` when a
+visual render — recommend the user run `/vwf:mockups <flow>` (a connected site
+on the production routes, reviewed at the local URL it prints), or
+`/vwf:screens import <flow>` when a
 `docs/prompts/screens/<project>/<NNN>-<flow>/` brief has a design session
 pending, before approving. Advisory only: planning and approval proceed
 regardless (neither is ever a gate here).

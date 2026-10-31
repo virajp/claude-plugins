@@ -1,0 +1,66 @@
+/code-review high — loop R1, round 3 — range 554a7d40..2364fb5d (branch 2026-10-08-execute-renders-served-at-a-url)
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 405,
+    "summary": "An old renders.json entry is dropped without deleting its image when this run re-rendered the same code and state at a different route. Only entries pushed to `dropped` get removeImage, so the old image stays on disk.",
+    "failure_scenario": "Code A renders at /a and a later plan moves A to /b and renders it again. The `kept` filter returns false for the old {A, default} entry without adding it to `dropped`, so a/index.png stays. When code C later takes /a (or does already), GET /a in render mode finds a/index.png and shows A's old image as C's render. This is the stale-image case the file's own comment says it prevents. It is noted as G4 in the run log and is still present at 2364fb5d."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 954,
+    "summary": "Altitude: the render page decides an image exists by checking whether <route>/index[--state].png is on disk, not by looking up the renders.json entry for the code and state. Any orphan image is therefore served as the current owner's render.",
+    "failure_scenario": "Orphans appear in several ways: an unreadable renders.json (readRenders in renders.mjs returns [], so every old entry is lost while its image stays), a replaced entry whose route moved (see the first finding), or a hand-copied PNG. In each case the page shows that image for whichever screen now owns the route, with no plan or date. The general fix is to serve only `renderEntry(...).file` when its route matches the screen. That would also make the pruning in renders.mjs unnecessary as a correctness guard."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 431,
+    "summary": "If writing renders.json or routes.json fails, renders.mjs prints one stderr line and still exits 0 with `COPIED: n`, so /vwf:execute records the copy as a success.",
+    "failure_scenario": "Suppose __renders exists as a file, or the first-run write is refused. The images are copied but no renders.json or routes.json is written. execute's 'Keep the renders' step only treats a non-zero exit as a gap, so the Run log says COPIED: 3 and the final report says to review them with /vwf:mockups renders. That mode then finds no renders.json (step 2 says 'no renders on disk'), or serve.mjs --renders refuses to start, or it serves a stale routes.json that maps the new images under old routes."
+  },
+  {
+    "file": "plugins/vwf/skills/execute/SKILL.md",
+    "line": 708,
+    "summary": "RENDER lines have no project field, but the orchestrator is told to pipe them into one renders.mjs run per project. It has no way to split the lines, so each run gets every project's lines.",
+    "failure_scenario": "A UX stage that reviews webapp and admin pipes all RENDER lines into both runs. Each run logs SKIPPED for the other project's codes (noise in the Run log). Worse, a code present in both projects' Screens tables, such as a shared 'S01', has its image filed under both projects' render trees, so the admin review shows the webapp render (G1)."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 1013,
+    "summary": "--url-file is written with a plain writeFileSync, which follows a symlink at that name. Only its parent directory is realpath-checked against the scratchpad. The commit right before this one hardened renders.json writes against exactly this.",
+    "failure_scenario": "If docs/scratchpad/<p>/renders/<platform>/__renders/server.url is a symlink to a file outside the scratchpad (for example a planted link in a shared checkout, or a leftover), starting the server truncates that target and writes 'http://127.0.0.1:<port>/' into it. removeUrlFile later deletes only the link."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 301,
+    "summary": "In render mode routes.json is re-read on every request, but the --mockups route map (mockRoutes) is read once at startup. The frame and the image can therefore use different route maps.",
+    "failure_scenario": "During a render review the user re-runs /vwf:mockups for a flow whose route changed. The render page re-reads its own map, but the frame still resolves /__mockups/<route> through the startup map. It shows no mockup, or the mockup of the screen that held that route before, next to the current render."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 158,
+    "summary": "readStdin catches every read error and returns an empty string, so a stdin failure looks exactly like an empty RENDER list (COPIED: 0, exit 0).",
+    "failure_scenario": "If the orchestrator's pipe is closed or errors (EAGAIN on a non-blocking stdin, or EPIPE), nothing is copied and the script exits 0 with COPIED: 0. execute writes a 'renders' row with count 0 instead of a gap, and that run's renders are lost without any warning."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 231,
+    "summary": "When the --peer-file directory does not exist, scratchFile falls back to the unresolved dirname and compares it with the realpath'd scratchReal. If docs/scratchpad is itself a symlink, the server fails at startup.",
+    "failure_scenario": "Take a repo where docs/scratchpad is a symlink (common for keeping scratch output off-volume) and that has no mockups yet. The SKILL's two-window command always passes --peer-file .../mockups/<platform>/__mockups/server.url. The unresolved path starts with <cwd>/docs/scratchpad, not with the symlink target, so the render server exits 2 with 'must resolve under' instead of running alone as the SKILL promises."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 279,
+    "summary": "Duplication: the state-to-file-name rule is written three times (renders.mjs main loop, currentFile, and serve.mjs renderName), and so are the 'PNG under root, not under __renders' guard (removeImage vs serve.mjs:938) and the __renders reserved check (lib/routes.mjs pathError, serve getRender, removeImage), where isReserved could take the reserved name.",
+    "failure_scenario": "If one copy changes (for example, the naming of the default state, or the case-folding of the reserved name), the copier and the server stop agreeing on where an image lives and silently miss each other's files. The main loop in renders.mjs could call currentFile, and both scripts could import one shared helper from lib/routes.mjs."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 172,
+    "summary": "Efficiency: in render mode refreshRoutes reads, parses and validates routes.json on every request, including each PNG, each iframe mockup and each POST. Route pages and the list page also re-parse renders.json each time.",
+    "failure_scenario": "One render page load makes at least three requests (page, image, frame), each re-reading and validating the whole route map, and more with the frame's assets. A cheaper version would re-read only when the file's mtime changes, or only for HTML page requests."
+  }
+]
+```

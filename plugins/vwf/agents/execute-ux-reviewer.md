@@ -26,7 +26,8 @@ paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
 registry entry for the project (role, platforms and stack), the project wing, the
 **slice** and **round number** for your recall tag, and the **plan folder
-path** and its **`covers:` doc names** for your gap drawers.
+path** and the **doc names in the `covers` list** of the folder's
+`index.json` for your gap drawers.
 
 ## What to do
 
@@ -45,10 +46,15 @@ path** and its **`covers:` doc names** for your gap drawers.
    rendered: ok | n/a
    reason: <one line>            # required when n/a
    findings: [ { severity, screen, what, where } ]
+   renders: [ { code, platform, state, file } ]   # optional
    ```
 
    **Read whatever artifacts it reports** and judge them yourself — the gate
-   renders, you decide. If the repo has no `ux-gate` skill, or it returns
+   renders, you decide. Keep the `renders:` list of your **last** gate call:
+   you relay it, item for item, as `RENDER:` lines in your return block, each
+   led by the project the item's screen belongs to, and the orchestrator
+   copies those images out of the worktree before it lands. You copy nothing
+   yourself. If the repo has no `ux-gate` skill, or it returns
    `rendered: n/a`, fall back to the code-level pass below and carry the reason
    forward verbatim. Never substitute a tool of your own choosing.
 2. **Judge against the contracts.** For each screen and state:
@@ -87,10 +93,17 @@ accessibility gate, and
 every one gets them the same way: from the repo's own `ux-gate` skill, which
 the pack owning that project's stack materialized. Whether that pack drives a
 browser, runs a snapshot suite or boots a simulator is its decision and none of
-your business. A device screen is judged at its **resolved viewport** —
-`design.viewports.<project>.<platform>` in `.config/vwf.yaml` when set, else
-the platform's default in
-`${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`.
+your business. A device screen is judged at the **resolved frame of the OS the
+repo's `ux-gate` renders** — that OS's entry in the
+`design.viewports.<project>.<platform>` list in `.config/vwf.yaml` when one is
+set, else its row in the frame table (the OS read from
+`projects.<project>.stack.os.<platform>`), else the generic frame at its
+default — per the resolution rule in the Layout block of
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/canvas-claude.md`. A scalar
+`design.viewports.<project>.<platform>: <W>x<H>` resizes the generic frame
+when the OS list is empty, and the primary OS frame only when it is not. A
+`features:` entry is judged as that OS shows it: the feature when the entry's
+scope names that OS, else its fallback.
 
 Two rules survive that delegation, and they are vwf's:
 
@@ -102,7 +115,7 @@ Two rules survive that delegation, and they are vwf's:
   vocabulary (`RENDERED: n/a — screenshots missing: no capability`).
 
 Rendered artifacts are working files: whatever the gate writes belongs under the
-worktree's scratch/tmp area and is never committed.
+worktree's gitignored `docs/scratchpad/` and is never committed.
 
 ## Memory (mempalace)
 
@@ -120,8 +133,9 @@ stays terse. Skip silently if mempalace is unavailable.
 neither the design system nor the flow's Screens section pins down (the docs are
 silent, not the code wrong), that is a **gap** — file it to room `gaps`,
 `source_file` set to the **plan folder path**, tagged `ux/gap/<round>`, its
-content **opening with the plan folder path and the `covers:` doc names** the
-dispatch carries, and report it on the gaps contract line.
+content **opening with the plan folder path and the doc names in the
+`covers` list** of the folder's `index.json`, as the dispatch carries them,
+and report it on the gaps contract line.
 
 ## Return contract
 
@@ -134,6 +148,7 @@ block below:
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] <screen>/<state> — <what deviates and from which contract>   # (or "none")
 RENDERED: ok   # or "n/a — <why>"; the gate reported which
+RENDER: <project> <code> <platform> <state> <file>   # one per renders: item; omit when none
 A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"

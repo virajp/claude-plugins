@@ -4,7 +4,7 @@ axis: design
 kind: design-tool
 default: true
 components:
-- design-tool/claude-code@0.4.0
+- design-tool/claude-code@1.0.0
 ---
 
 # Design — Claude Code
@@ -20,8 +20,8 @@ tool lands here — the architecture menu preselects it — and one with an
 opinion picks another.
 
 **It requires one plugin.** Authoring runs through `taste-skill`, so a product
-pinning this tool gets the pack's `setup:ai:claude-code` subtask, and the
-repo's `setup:ai:all` runs it, installing it at user scope when absent. Every
+pinning this tool lists it in the component's `## Claude plugins` section,
+and `mise run setup` installs it at user scope when absent. Every
 skill that needs it halts plainly when it is absent.
 
 **The pack now designs and reviews screens.** `/design-session screens <flow>`

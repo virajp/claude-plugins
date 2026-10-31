@@ -1,0 +1,3 @@
+# vwf operating config — hand-edited keys only in this repo.
+after_landing:
+  - mise run p:plugins:local

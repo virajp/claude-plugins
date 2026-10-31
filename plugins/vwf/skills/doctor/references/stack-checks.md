@@ -272,11 +272,27 @@ device screen platform's default canvas viewport per project, at
 is `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`'s). For every entry, check that
 `<project>` names a registry project, that `<platform>` is one that project
 declares, that it is a **device** screen platform (`desktop`, `mobile`,
-`tablet`, `auto`, `watch`, `tv`, `spatial`), and that the value is `<W>x<H>`
-with two positive integers. Each miss is a **finding** naming the key — never
-blocking: a stale override costs one canvas drawn at the default size, and the
-screens skill falls back to the default on any entry it cannot use. An absent
+`tablet`, `auto`, `watch`, `tv`, `spatial`), and that the value is either the
+scalar `<W>x<H>` with two positive integers or the **list** form,
+`[ { os: <os>, size: <W>x<H> } ]`. For a list, check each entry: that `os` is a
+token named for that platform by the OS vocabulary in
+`${CLAUDE_PLUGIN_ROOT}/assets/standard-flows.md`, and that `size`, when
+present, is `<W>x<H>` with two positive integers. Each miss is a **finding**
+naming the key, or the list entry, and saying it is ignored — never blocking: a
+stale override costs one canvas drawn at the default size, and the screens
+skill skips any entry it cannot use, reading the rest of the list. An absent
 `design.viewports` block is correct, not drift.
+
+**A recorded OS map must name something real.** `/vwf:setup` copies a
+project-axis template's `os:` map into `projects.<name>.stack.os` (the key is
+the same vwf-config asset's). For every project carrying one, check that each
+key is a platform that project declares in the registry and is a device screen
+platform, and that each value is a list of tokens the OS vocabulary names for
+that platform. Each miss is a non-blocking **finding** naming the project, the
+platform and the token, and saying it is ignored: the canvas reads that
+platform's OS list without it, or as empty — the generic frame. An absent
+`stack.os`, or an absent platform in it, is correct, not drift — it reads as
+no OS known.
 
 **mise is mandatory once there is anything to run** — it is both vwf's task
 runner (every worktree init, pre-commit and merge goes through it) and the
@@ -329,16 +345,6 @@ Where **no** pinned payload carries a `lockfile:` list, `repo.stack` keeps
 today's reading — the package manager's conventional lockfile at the repo
 root, judged from the token — and that is the only case read that way.
 
-**`rtk` is recommended, never required.** vwf ships a `PreToolUse` Bash hook
-that pipes each command through `rtk hook claude` to cut token cost, and the
-hook entry is guarded (`command -v rtk … || true`), so a machine without it
-runs correctly and simply pays full price. Missing from `PATH` → a
-**degradation**, never blocking: name what it buys and give the remedy
-(`brew install --formulae rtk`, or the releases at
-<https://github.com/rtk-ai/rtk>). This is the one place vwf tells a user the
-tool exists at all — without it the hook is silent in both directions, which is
-why the finding is worth reporting on every run rather than once.
-
 **The forge CLI is recommended, never required.** `/vwf:backlog` keeps the
 product's backlog on the base repo's forge and needs that forge's CLI to read
 it. Resolve the forge the way the `backlog` skill does — the rule is in
@@ -355,9 +361,9 @@ write verbs alone — and give the remedy (`brew install gh`, or the releases at
 <https://github.com/cli/cli>; `gh auth login`; `gh auth refresh -s project`).
 On a GitLab remote run the same three for `glab` and note that the backlog is
 not yet supported there, so the row reports the CLI state as information
-rather than a cost. An unsupported host reports `n/a — no forge CLI`. Like
-`rtk`, this is reported on every run: a machine without the CLI runs correctly
-and simply has no backlog to read, and nothing else says so until a verb fails.
+rather than a cost. An unsupported host reports `n/a — no forge CLI`. This is
+reported on every run: a machine without the CLI runs correctly and simply has
+no backlog to read, and nothing else says so until a verb fails.
 The same three answers decide whether predicate **(g)** below runs at all —
 it reuses them rather than probing a second time, and a miss here is what it
 reports as its skip reason.

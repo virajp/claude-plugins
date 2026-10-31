@@ -40,7 +40,7 @@ still the better one when you can have it:
 my-product/           # base repo — vwf lives here
 ├── .gitmodules
 ├── docs/blueprint/   # the vwf bundle (one per product)
-├── docs/plans/index.md
+├── docs/plans/index.json
 ├── .config/          # mise config, vwf.yaml
 ├── backend/          # submodule — a monorepo
 │   ├── .config/vwf-membership.yaml
@@ -75,7 +75,7 @@ together in git at all:
 ~/Projects/acme/
 ├── acme-product/           # base repo — docs only
 │   ├── docs/blueprint/
-│   ├── docs/plans/index.md
+│   ├── docs/plans/index.json
 │   ├── .config/vwf.yaml    # members: [...]
 │   └── mempalace.yaml
 ├── acme-api/               # plain repo
@@ -140,7 +140,7 @@ on the **monorepo** shape becomes multi-repo by that fact alone.
 | `.config/vwf.yaml` | the base repo, always |
 | `.config/vwf-membership.yaml` | every member, never the base |
 | A cycle plan folder (`docs/plans/<date>-<HHMM>-<slice>/`) | **the repo whose code it changes** |
-| `docs/plans/index.md` | the base repo — a thin index: one table, its row per plan folder naming the target repo, per `skills/plan-management/references/plan-index.md` |
+| `docs/plans/index.json` | the base repo — a thin index: its `plans` list, one row per plan folder naming the target repo, per `skills/plan-management/references/plan-index.md` |
 | `implementation:` stamps | the blueprint, so the base repo |
 | `mempalace.yaml` | under `siblings`, one per repo, all naming the same wing; under `submodule`, one at the base and none in members |
 | `graphify-out/` | one per checkout |

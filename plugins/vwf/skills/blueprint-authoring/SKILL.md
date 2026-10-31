@@ -14,6 +14,7 @@ allowed-tools: Read Grep Glob Edit Write
 paths:
   - "docs/blueprint/**/*.md"
   - "docs/plans/**/*.md"
+  - "docs/plans/**/index.json"
 ---
 
 # Blueprint Authoring
@@ -58,8 +59,9 @@ versioning), use the **rest-api-design** skill — do not restate it here.
 **Scope.** This skill's `docs/blueprint/**` glob also matches
 `design-system.md`, but that doc is governed by the **design-system-authoring**
 skill — the entity completeness bars here do not apply to it. Plan folders
-under `docs/plans/**` — an `index.md` of type `vwf-plan` or `vwf-change-plan`
-plus its unit files — are in scope for **only** the
+under `docs/plans/**` — an `index.json` whose `type` is `vwf-plan` or
+`vwf-change-plan`, not an `index.md` with frontmatter, plus its prose
+`index.md` and unit files — are in scope for **only** the
 [Frontmatter & links](references/frontmatter-and-links.md)
-reference (valid frontmatter + resolving typed links) — none of the entity
+reference (the `type` vocabulary + resolving typed links) — none of the entity
 doctrine applies to them.

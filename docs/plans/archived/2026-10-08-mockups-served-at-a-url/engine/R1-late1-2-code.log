@@ -1,0 +1,54 @@
+/code-review high — loop R1, round late1-2 — range 7bb533f8..4e4f7884 (branch 2026-10-08-mockups-served-at-a-url)
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 349,
+    "summary": "With the `path` field gone, a comment on a served HTML page that has no routes.json screen is saved with `code: null`, `route: null` and nothing else to say where it was made. The server still has `body.path` and uses it only in the stderr log line (line 365).",
+    "failure_scenario": "matchPath returns `{kind:'file', screen:null}` for a page reached through the `[param]` walk that is not in routes.json, and for a direct file URL such as `/signin/index.html`. findScreen(body.path) then returns null. The reviewer's comment is saved as `code: null, route: null, state: null`. The §6a review and the step-10 report (`<code> <route>?state=<state>`) show `null null?state=null`, so the comment cannot be tied to any screen or turned into a Screens-contract change. Before this change, `path` kept that location."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 345,
+    "summary": "postComment works out the screen only from `location.pathname`. A literal file URL whose segment count matches a `[param]` route is filed under the wrong screen and the wrong state, and with `path` dropped the record keeps nothing that would reveal it.",
+    "failure_scenario": "The reviewer opens `/orders/index--error.html` directly. It is served as a literal file, and findScreen(['orders','index--error.html']) matches `orders/[id]`. The comment is saved as `code: 200b` (Order details), `route: /orders/:id`, `state: null`, when it is really about the error state of 200a (Orders). The §6a review then proposes a change to the wrong screen's contract."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 81,
+    "summary": "For an unquoted href, HREF_RE stops the value at the first `=`, but a browser keeps reading to whitespace or `>`. So the new check that a legacy reference is not followed by `=` never sees the `=`, and query strings are cut short.",
+    "failure_scenario": "`<a href=/signin?state=error>` is read as `/signin?state`. The state is the empty string, so the link is reported `BROKEN … malformed state ` even though the server would serve it. `<a href=/x?a&lt=1>` is read as `/x?a&lt` and decoded to `/x?a<`, while a browser keeps `&lt=1` as literal text."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 165,
+    "summary": "decode() claims to read a URL the way the HTML parser does, but numeric references from 0x80 to 0x9F are not mapped to their Windows-1252 code points, as browsers map them.",
+    "failure_scenario": "`href=\"/caf&#x80;\"` decodes here to `/caf\\u0080`, while a browser reads `/caf€`. matchPath is therefore checking a different path from the one the review server will be asked for. The result can be a false OK or a false BROKEN for a route that has a non-ASCII segment."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 158,
+    "summary": "A reference that ends in `;` and that browsers read as literal text is refused, which goes against the comment at line 147 ('Any other & is literal text, as in HTML'). Valid HTML5 references outside the two tables are refused too.",
+    "failure_scenario": "`/x?q=a&ampfoo;` is literal in a browser (it matches `amp`, then an alphanumeric follows inside an attribute). `/x&notin;` is decoded by a browser to ∉. Both return null here and are reported `BROKEN … an unknown character reference`. That uses up one of the two generator re-render rounds on a link that works."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 129,
+    "summary": "The listed non-zero-exit reasons of routes.mjs are incomplete, in both SKILL.md and screen-review.md:35. The collision key also folds parameter names, not only case, and usage errors exit 2. The skill would describe either one as 'an error in the Screens tables'.",
+    "failure_scenario": "`/orders/:id` in one flow and `/orders/:orderId` in another collide, because routes.mjs:160 maps every `[..]` to `[]`. The documentation tells the agent the only folding is case, so it looks for a case difference and finds none. A `--project` that is not a plain name exits 2 with a usage message, and the agent would route that through the Screens-table fix path."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 85,
+    "summary": "NAMED repeats nine entries that LEGACY already has (amp, AMP, lt, LT, gt, GT, quot, QUOT, nbsp). Line 158 then picks between the two tables, where one merged table would do.",
+    "failure_scenario": "Two tables have to stay in step. `const KNOWN = { ...LEGACY, ...NAMED }`, looked up once, does the same job. A later edit to only one of them (for example adding `apos` to LEGACY) would silently change which table wins."
+  },
+  {
+    "file": "plugins/vwf/skills/blueprint/references/screen-review.md",
+    "line": 79,
+    "summary": "The new text says every item carries `code`, `route` and `state` and that each `open` item is a proposed Screens-contract change. It never says these can be `null` (an unmatched page, or the default state), so the review has no rule for a comment it cannot place.",
+    "failure_scenario": "A comment on a page with no screen arrives with `code: null`, and a default-state comment arrives with `state: null`. The §6a pass shows it as a proposed change to 'null' and may edit the wrong Screens table, or produce `<route>?state=null` in its report."
+  }
+]
+```

@@ -67,9 +67,12 @@ the run's result bundle, which the task always writes to
   loading, loaded, error, and each variant the contract pins — rendered with
   preview dependencies so the image is deterministic.
 - **Render at the resolved viewport.** A golden's size is the platform's
-  viewport as the product resolves it: the per-product override
-  `design.viewports.<project>.<platform>` in `.config/vwf.yaml` when set, else
-  the platform default. Use the library's device layout where one matches that
+  viewport as the product resolves it for the platform's Apple OS frame:
+  `design.viewports.<project>.<platform>` in `.config/vwf.yaml` — the `size` of
+  the list entry whose `os` is that Apple token (`ios`, `macos`, `carplay`,
+  `watchos`, `tvos` or `visionos`), else the scalar when it is one — else the
+  OS frame's default, `mobile` 393×852 among them. Use the library's device
+  layout where one matches that
   size, a fixed layout of that size where none does. A golden at a size the
   design never specified checks nothing the design cares about.
 - **Cover the axes that change rendering**: light and dark, the default and the
@@ -84,14 +87,15 @@ the run's result bundle, which the task always writes to
 - **One simulator, one OS.** A golden is pixels from one simulator: another
   device or OS version renders differently, and every comparison against it
   fails. The Xcode pin fixes the toolchain but neither the device nor the
-  runtime. So goldens are recorded and compared on one named simulator, pinned
-  once in mise's environment as `SIMULATOR_DEVICE`,
-  `SIMULATOR_OS` and `SIMULATOR_PLATFORM` — filled by `/vwf:setup` from this
-  machine and committed — from which `test:golden` builds its destination —
-  so recording, comparing, the UX gate and CI render on the same simulator. A
-  run with no pin and not all three overrides is refused, never left to pick a
-  simulator. A Mac-only app pins `macOS` as its platform, which needs no device
-  or OS.
+  runtime. So goldens are recorded and compared on one named simulator:
+  `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in mise's
+  environment, from which `test:golden` builds its destination — so
+  recording, comparing, the UX gate and CI render on the same simulator.
+  Without a value, the repo's `_scripts/xcode` library picks the newest iOS
+  runtime and its highest-numbered plain iPhone, and that choice moves with
+  the machine. So pin all three in the `[env]` of
+  `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commit them. A Mac-only
+  app pins `macOS` as its platform, which needs no device or OS.
 - **The goldens are the pinned platform's.** A simulator renders one platform,
   and the pin names one, so the recorded goldens belong to it. `--platform`,
   `--device` and `--os` override one run, for a look at another simulator;

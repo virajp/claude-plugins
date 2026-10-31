@@ -1,0 +1,72 @@
+/code-review high — loop R1, round 4 — range 7bb533f8..9024a1bd (branch 2026-10-08-mockups-served-at-a-url)
+
+The review found 10 issues. The two most serious mean the link check can say "links OK" when links are actually broken.
+
+- **How I checked:** I reviewed the 8 commits on the worktree branch (31f47d73..9024a1bd) plus the uncommitted plan `index.md`, and ran the three mockups test suites (36/36 pass).
+- **Confirmed by running the scripts on a temp tree:** findings 1 and 3. With an orphaned `old-checkout/index.html`, a link to `/old-checkout` passed the check. With only `checkout/` on disk, links to `/Checkout` and `/CHECKOUT/` gave `LINKS OK`.
+- **Docs (finding 10):** the stale site manual is already assigned to U5, which is still pending in wave 3. I list it only because the repo rule asks for docs in the same commit as the behaviour change.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 325,
+    "summary": "When a URL matches no screen in routes.json, matchPath falls back to walking the disk and accepts any folder holding an index.html. Flow-scoped runs and §6a only delete files at a screen's current path, so pages left at an old route stay on disk. Those pages are served and count as valid link targets.",
+    "failure_scenario": "Flow 110 changes /checkout to /pay and §6a re-renders only flow 110. checkout/index.html stays on disk because only a full sweep prunes it. A page in flow 100 that was not re-rendered still links to /checkout, and links.mjs passes it (reproduced: a link to an orphan /old-checkout gave no BROKEN line). The reviewer sees a 'connected' site that does not match the contract. A broken link inside the orphan page is worse: it is owned by no screen in routes.json, so no generator can be sent to fix it, and the review stops after 2 rounds."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 81,
+    "summary": "The link check only reads href attributes, but the mockup-generator agent is told to navigate with an <a href> or a form action. A form action is never checked.",
+    "failure_scenario": "The generator writes <form action=\"/orders/new\" method=\"post\"> or uses a route that does not exist. links.mjs prints LINKS OK and the URL is handed to the reviewer. Submitting goes to a 404, or to a 415 for a POST, since the server only accepts JSON POSTs to /comment and /done. The promise that every link is checked before review breaks."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/lib/routes.mjs",
+    "line": 304,
+    "summary": "On a case-insensitive disk (macOS APFS), the literal-file check and walk() accept a link whose capitalisation differs from the real route. findScreen compares case-sensitively, so such a page is served with no screen code.",
+    "failure_scenario": "A generated page links to /Checkout or /CHECKOUT/ while the route is /checkout. links.mjs prints LINKS OK (reproduced), and a case-sensitive production router would 404. The page is also served with screen: null, so comments made on it are saved with code: null and route: null and cannot be tied to a Screens row."
+  },
+  {
+    "file": "plugins/vwf/skills/blueprint/references/screen-review.md",
+    "line": 56,
+    "summary": "When links are still broken after 2 repair rounds, §6a says to stop the review, but it does not say to record screens/<project>/<NNN>-<flow>/<platform> in blueprint.remaining. The missing-node path and the skip path both record it.",
+    "failure_scenario": "Links stay broken and the review stops with no URL. Nothing tells the orchestrator to record the hole, so it can carry on to §7 and §9 and stamp coverage complete although the gating visual review never happened. /vwf:plan's coverage check then passes for a flow whose screens nobody saw."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 285,
+    "summary": "yamlString writes comment text with JSON.stringify as a YAML double-quoted scalar. JSON leaves DEL (0x7F), C1 control characters and U+FFFE/FFFF unescaped, and YAML forbids these.",
+    "failure_scenario": "A reviewer pastes text containing \\u007f or \\u0085 (JSON.stringify output confirmed raw). That one append makes all of __mockups/comments.yaml unparseable, so step 3 of §6a and the report in step 10 of /vwf:mockups lose every comment of the round."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 664,
+    "summary": "The overlay's done() treats any HTTP response as success, unlike the comment send, which checks r.ok.",
+    "failure_scenario": "POST /done gets a 403, 415 or 500 (for example a Host or Origin mismatch, or the 500 handler). The page still shows 'Review sent — you can close this tab', but the server never exits. The skill waits forever for a process that will not stop."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 523,
+    "summary": "The overlay's comment count starts at 0 on every page load, and CFG does not carry the server's running total, so the toolbar shows comments sent from this page view only.",
+    "failure_scenario": "A reviewer leaves 3 comments on /signin, follows a link to /orders, and the toolbar shows '0 comments'. They may think the comments were lost and send them again, which creates duplicate items in comments.yaml."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 500,
+    "summary": "server.listen has no 'error' handler, so a --port that is already in use crashes the process with an uncaught EADDRINUSE stack trace instead of a clean fail() on stderr with exit 2.",
+    "failure_scenario": "Two platform servers are started with the same pinned --port, or the port is held by another process. One dies with an unhandled 'error' event, prints no URL line, and the skill's 'wait for every process to exit' sees an unexplained crash."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 96,
+    "summary": "The URL-origin comparison can never fail and is dead code. Earlier checks already guarantee the href starts with a single '/' and has no backslash, tab, CR or LF, so new URL(href, base) always keeps the base origin.",
+    "failure_scenario": "It is extra code that looks like a security guard, so it suggests protection the earlier string checks already give. A maintainer may weaken those checks thinking this one backs them up. The simpler form is new URL(href, 'http://x') used only for pathname and searchParams."
+  },
+  {
+    "file": "site/src/content/docs/plugins/vwf.md",
+    "line": 2131,
+    "summary": "Repo CLAUDE.md: 'Docs ship with the change. Any change to plugin behavior must reconcile readme.md, this file, and the manual under site/src/content/docs/ in the same commit'. Commits 8a49ee5b, 534f6f5d and 4ebb9002 change mockup behaviour, but the site manual (lines 2131 and 2192) and plugins/vwf/assets/vwf-config.md:145 still describe the old docs/scratchpad/<project>/<NNN>-<flow>/<platform>/<screen>.html tree.",
+    "failure_scenario": "Until U5 (still pending) lands, the published manual and the vwf-config stamp description tell users to open per-flow file paths that no longer exist. This breaks the same-commit docs rule in the repo CLAUDE.md."
+  }
+]
+```

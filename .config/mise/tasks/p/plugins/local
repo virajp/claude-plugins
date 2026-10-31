@@ -21,6 +21,24 @@ if ! claude plugin marketplace list | grep -q '\.dev-marketplace'; then
   exit 1
 fi
 
+# 1b. 'marketplace add' writes this machine's absolute path into settings.json;
+# Claude expands ${HOME} in it and keeps it through update and install.
+SETTINGS="${HOME}/.claude/settings.json"
+if [[ -f "${SETTINGS}" ]]; then
+  node -e '
+    const fs = require("fs");
+    const [file, abs, home] = process.argv.slice(1);
+    if (!abs.startsWith(home + "/")) process.exit(0);
+    const before = fs.readFileSync(file, "utf8");
+    const after = before.split(JSON.stringify(abs))
+      .join(JSON.stringify("${HOME}" + abs.slice(home.length)));
+    if (after !== before) {
+      fs.writeFileSync(file, after);
+      console.log("settings.json: the dev marketplace path now reads ${HOME}/…");
+    }
+  ' "${SETTINGS}" "$(pwd -P)/.dev-marketplace" "${HOME}"
+fi
+
 # The installed version of one plugin at user scope, or nothing.
 installed_version() {
   node -p "

@@ -19,13 +19,18 @@ exclude: |-
   # >>> tool-config
   (^|/)\.build/
   |(^|/)\.claude/
+  |(^|/)\.cxx/
+  |(^|/)\.externalNativeBuild/
   |(^|/)\.git/
+  |(^|/)\.gradle/
+  |(^|/)\.kotlin/
   |(^|/)\.swiftpm/
   |(^|/)\.turbo/
   |(^|/)\.venv/
   |(^|/)Derived/
   |(^|/)DerivedData/
   |(^|/)build/
+  |(^|/)captures/
   |(^|/)dist/
   |(^|/)graphify-out/
   |(^|/)node_modules/

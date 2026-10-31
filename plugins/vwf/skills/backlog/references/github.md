@@ -8,6 +8,14 @@ bootstrap, and the procedure for a project that does not exist yet. Every
 command runs in the **base** repo; nothing is cached between runs. The skill
 never runs `gh project create` — a project made that way carries no template.
 
+## Parsing
+
+`gh`'s own `--jq` flag, or `jq` over a file or a pipe, is the one parser. Never
+pipe `gh` output into another interpreter — `python3`, `node`, `ruby` — and
+never write a parser of your own: each step below gives the filter it needs.
+Prefer `--jq` on the `gh` call itself, so the command needs no shell variable
+and runs the same under bash, zsh or fish.
+
 ## Precondition
 
 Run before every verb, in this order; the first failure stops the verb with
@@ -20,8 +28,8 @@ its remedy.
    `gh auth login --hostname <host>`".
 3. The same command's output lists the token's scopes on a line beginning
    `- Token scopes:`. `project` must appear — with the one tolerance the skill
-   states, `read:project` alone for `list` and `next`. Missing → stop: "the
-   `gh` token has no `project` scope; run
+   states, `read:project` alone for `list`, `next` and `unplanned`. Missing →
+   stop: "the `gh` token has no `project` scope; run
    `gh auth refresh --hostname <host> -s project`".
 
 A caller's recall that hits any of the three reports
@@ -85,6 +93,16 @@ also carries `options[]` with `id` and `name`. Read:
   field;
 - `Priority` — its `id`, and the option ids of `P0`, `P1`, `P2`;
 - `Group` — its `id`, once added.
+
+One call reads them all, one line per field and option — field name, field id,
+option name, option id, the last two empty for a text field:
+
+    gh project field-list <number> --owner <owner> --format json --limit 50 \
+      --jq '.fields[]
+            | select(.name == "Status" or .name == "Priority" or .name == "Group")
+            | if .options then .options[] as $o | [.name, .id, $o.name, $o.id]
+              else [.name, .id, "", ""] end
+            | @tsv'
 
 **Bootstrap** — idempotent; each step runs only when `field-list` shows the
 thing missing. The Team planning template ships `Status` with the options
@@ -250,25 +268,39 @@ The **next id** is one past the highest number over two sources, zero-padded
 to two digits:
 
 - every item title in the project, whatever its status — done and closed
-  included;
-- every id in the `backlog:` and `backlog_pieces:` frontmatter lists of every
-  plan folder directly under `docs/plans/` and `docs/plans/archived/` in the
-  base repo — the `^backlog:` and `^backlog_pieces:` lines of each
-  `index.md`, each `[ … ]` list split on commas, each entry matched with
-  `^B([0-9]{2,})$`. Frontmatter lists only, never prose — an id cited only as
-  a piece is spent as surely as a finished one:
+  included:
 
-      grep -hE '^backlog(_pieces)?:' \
-          docs/plans/*/index.md docs/plans/archived/*/index.md \
-        | sed 's/^backlog[a-z_]*:[[:space:]]*\[\(.*\)\].*/\1/' | tr ',' '\n' \
-        | sed 's/^[[:space:]]*//;s/[[:space:]]*$//' | grep -E '^B[0-9]{2,}$' \
+      gh project item-list <number> --owner <owner> --format json --limit 500 \
+        --jq '[.items[].title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber]
+              | max // 0'
+
+- every id in the `backlog` and `backlog_pieces` lists of every row of the
+  base repo's plan index, `docs/plans/index.json` — every row it still holds;
+  a row the sweep removed spent its ids in its backlog items' titles, which
+  the first source reads. No plan folder is read. An absent
+  `docs/plans/index.json` reads as no rows. Each list entry is matched with
+  `^B([0-9]{2,})$` — an id cited only as a piece is spent as surely as a
+  finished one:
+
+      test -f docs/plans/index.json && \
+        node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs \
+          get docs/plans/index.json plans \
+        | grep -oE '"B[0-9]{2,}"' | tr -d '"' \
         | sed 's/^B//' | sort -n | tail -1
 
 A project starts at `B01` only when both sources are empty — so an id spent by
 a retired file store, or by a project since deleted, is never reissued.
 
 `Bnn` on the command line matches the title prefix; an id no item carries is a
-stop naming it.
+stop naming it. The match gives the item id, the draft issue id and the
+Status, one line per item:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '.items[] | select(.title | startswith("Bnn — "))
+            | [.id, .content.id, (.status // "")] | @tsv'
+
+More than one line is a stop too: print each title and ask the user which
+item the id means — the skill never picks one.
 
 ## Per verb
 
@@ -297,7 +329,12 @@ and, when a group was named:
 **`planned`, `partial`, `done`, `close`** — the `Status` edit above with
 `In progress`, `Partially done`, `Done` or `Closed`, then the body's closing
 lines. The body is replaced whole: read `content.body` from `item-list`,
-rewrite its closing lines, and write it back with the draft issue's own id:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '.items[] | select(.title | startswith("Bnn — ")) | .content.body'
+
+rewrite its closing lines, and write it back with the draft issue's own id —
+the second field of the id lookup under *Items*:
 
     gh project item-edit --id <draft-issue-id> --title "<title, unchanged>" \
       --body "<body with the closing lines rewritten>"
@@ -312,25 +349,94 @@ each `Landed:` line sits above it:
 - `partial` and `done` — remove `<folder>` from `Planned in:`, dropping the
   line when the list empties, and add `Landed: <plan title> in <folder>`
   after the last existing `Landed:` line, or, with none, above `Planned in:`
-  or at the end after a blank line. `<plan title>` is the `title:` value of
-  `<folder>/index.md`'s frontmatter, folded onto one line. A `done` with no
-  folder rewrites no line.
+  or at the end after a blank line. `<plan title>` is the `title` of
+  `<folder>/index.json`, folded onto one line:
+
+      node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs \
+        get <folder>/index.json title --raw
+
+  A `done` with no folder rewrites no line.
 - `close` — append the reason after a blank line. `close` runs the `Status`
   bootstrap first when `Closed` is absent.
 
-**`list`, `next`** — `item-list` alone; nothing is written. `list` reads each
-`Partially done` item's `content.body` and counts its lines beginning
-`Landed: ` for the Status cell, and ends with the project's `url` from the
-resolution. `next` filters to the candidates, then sorts by priority then id:
+**`list`, `next`, `unplanned`** — `item-list` alone; nothing is written.
+`list` and `next` sort by priority, then by the id's number; an item with no
+`Priority` sorts after `P2`, and an unnumbered item after every numbered one.
+
+`list` prints one tab-separated row per item that is not `Done` or `Closed` —
+id, title, group, priority, status — with each `Partially done` item's Status
+cell carrying the count of its body's lines beginning `Landed: `:
 
     gh project item-list <number> --owner <owner> --format json --limit 500 \
-      --jq '.items[] | select(.status == "Backlog"
+      --jq '[.items[] | select(.status != "Done" and .status != "Closed")
+             | {id: ((.title | capture("^(?<id>B[0-9]{2,}) — ").id)
+                     // "unnumbered"),
+                n: ((.title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber)
+                    // 1e9),
+                title, group: (.group // ""), priority: (.priority // "P9"),
+                status: (.status // ""),
+                landed: ([(.content.body // "") | scan("(?m)^Landed: ")]
+                         | length)}]
+            | sort_by(.priority, .n) | .[]
+            | [.id, .title,
+               .group, (if .priority == "P9" then "" else .priority end),
+               (if .status == "Partially done"
+                then "Partially done (\(.landed) landed)" else .status end)]
+            | @tsv'
+
+then the folded count, and ends with the project's `url` from the
+resolution:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Done" or .status == "Closed")]
+            | group_by(.status) | map("\(.[0].status): \(length)")
+            | join(", ")'
+
+`next` filters to the candidates and takes the first by the same order:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Backlog"
               or (.status == "Partially done"
                   and ((.content.body // "") | test("(?m)^Planned in: ")
-                       | not)))'
+                       | not)))]
+            | sort_by((.priority // "P9"),
+                      ((.title | capture("^B(?<n>[0-9]{2,}) — ").n
+                        | tonumber) // 1e9))
+            | first // empty
+            | [.title, .status, (.group // "")] | @tsv'
 
-and, when the top candidate is `Partially done`, prints its `Landed:` lines
-with the body.
+then reads its body with the `content.body` command under *Per verb*, and,
+when the item is `Partially done`, prints its `Landed:` lines with it. No
+output is the empty backlog.
+
+`unplanned` takes two calls when no priority is given, one when it is. The top
+open priority is the lowest `priority` value over the open items — `Backlog`,
+`In progress` and `Partially done` — skipping an item with no `Priority`:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.status == "Backlog" or .status == "In progress"
+              or .status == "Partially done") | .priority // empty]
+            | min // empty'
+
+No output is "no open item". Then the unplanned items at that priority, or at
+the one the caller gave — `Backlog`, or `Partially done` with no `Planned in:`
+line, the `next` candidates — one tab-separated id and title per line, ordered
+by the id's number, an unnumbered item last:
+
+    gh project item-list <number> --owner <owner> --format json --limit 500 \
+      --jq '[.items[] | select(.priority == "<P>"
+              and (.status == "Backlog"
+                   or (.status == "Partially done"
+                       and ((.content.body // "") | test("(?m)^Planned in:")
+                            | not))))
+             | {n: ((.title | capture("^B(?<n>[0-9]{2,}) — ").n | tonumber)
+                    // 1e9),
+                id: ((.title | capture("^(?<id>B[0-9]{2,}) — ").id)
+                     // "unnumbered"),
+                title}]
+            | sort_by(.n) | .[] | [.id, .title] | @tsv'
+
+then the line naming `<P>`. No output is "no unplanned item at `<P>`".
 
 ## Errors
 

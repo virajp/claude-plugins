@@ -1,0 +1,3 @@
+/security-review over 9bbf1e0d..67f4eec8 (sub-task over the late re-run's range)
+
+No high-confidence vulnerabilities found. The range only changes prose in a reference doc, with no code, config, secrets or anything that runs.

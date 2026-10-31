@@ -1,0 +1,16 @@
+/security-review — loop R1, round 1 — range 554a7d40..6ef2794c (branch 2026-10-08-execute-renders-served-at-a-url)
+
+Note: the skill's inline context named the main checkout's develop diff;
+the engine was run over the worktree branch delta instead, scope as above.
+
+Dropped candidates (confidence < 8):
+1. renders.mjs:254-264 — mkdirSync before the realpath check; copyFileSync follows an existing index.png symlink in the main checkout's render tree. Needs an attacker already controlling <main>/docs/scratchpad/. Confidence 2.
+2. serve.mjs:953 — --url-file writeFileSync follows a symlink; path is a trusted CLI flag confined to the scratchpad. Confidence 2.
+3. /__mockups/ frame — same-origin mockup HTML could POST /comment or /done; mockup mode already allowed it. Confidence 2.
+4. Unicode/case variants of __renders in a .png request — __renders/ holds only JSON/YAML, .png suffix required, realpath confinement. Confidence 1.
+
+Checked clean: stdin <file> realpath'd under --worktree (absolute, .., symlinks), .png regular files only; project/platform/state tokens regex-checked and output paths realpath-checked; renders.json/routes.json via JSON.stringify; image serving (inRoot, __renders refused case-insensitively, .png only); /__mockups/ frame via matchPath/servable under realpath'd --mockups, reserved dir refused; /__renders/ serves only the list; generated HTML escaped (escapeHtml), hrefs from sampleRoute always start with a single /; overlay config via scriptJson with < escaped, textContent writes; peer link origin loopback http only, no userinfo, from a scratchpad-confined file, request path appended only; comments YAML via yamlString; POSTs: Host allowlist, application/json forces preflight, Origin checked; no command execution.
+
+# Report
+
+No vulnerabilities at confidence >= 8.

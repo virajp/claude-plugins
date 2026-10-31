@@ -41,7 +41,10 @@ the file.
 ### Branch name
 
 `$BRANCH_NAME` is the name the caller declared, when it declares one —
-`/vwf:execute` names the branch after its plan folder. Otherwise derive a short
+`/vwf:execute` names the branch with the plan's name: the `<name>` of a change
+plan folder `docs/plans/<date>-<name>/`, or the `<slice>` of a cycle plan
+folder `docs/plans/<date>-<HHMM>-<slice>/`. The worktree takes the same name.
+Otherwise derive a short
 kebab-case slug from the task, show it to the user and confirm it before the
 worktree is cut:
 

@@ -3,14 +3,28 @@ name: Dart · Flutter
 axis: project
 kind: app-framework
 components:
-- app-framework/flutter@0.7.1
+- app-framework/flutter@1.0.0
 - package-manager/pub@0.3.1
-- toolchain-gate/analysis-options@0.2.2
+- toolchain-gate/analysis-options@0.2.3
 platforms:
 - mobile
 - tablet
 - desktop
 - auto
+os:
+  mobile:
+  - ios
+  - android
+  tablet:
+  - ios
+  - android
+  desktop:
+  - macos
+  - windows
+  - linux
+  auto:
+  - carplay
+  - androidauto
 ---
 
 # mobile · tablet · desktop · auto — Dart · Flutter
@@ -33,6 +47,14 @@ pack already declares — CarPlay templates are Swift under `ios/Runner/`,
 Android Auto is Kotlin driven over a MethodChannel. Nothing new is provisioned
 for it. So `auto` is only ever declared **alongside** `mobile`, never alone,
 and never as its own project.
+
+## When to pick it over the native stacks
+
+Pick **Dart · Flutter** when the same app must ship on Android and iOS from one
+codebase. Pick **Kotlin · Compose** instead when the app is Android-only or
+Android-first — or reaches Wear OS or Android TV, which Flutter's template
+does not cover — and **Swift · SwiftUI** when it ships on Apple platforms
+alone.
 
 ## Stack
 

@@ -14,14 +14,24 @@ stitch), the revise-in-place rule, the interactive-journey mandate (wired
 navigation, the happy path clickable end to end and stitched into its index —
 never a static page), the **standing tweak set** on every coded frame:
 `darkMode` (default **on**), `frame` (default **on**, the device frame matched
-to the platform and drawn at its **resolved viewport** — the mobile and tablet
-frames include the camera notch/cutout for a true visual, desktop a
-browser-chrome frame, the in-car platforms the OS display frame with its
-template constraints, `watch` a watch-face frame, `tv` a TV frame with its
-title-safe inset, `spatial` a floating window), one tweak per pinned **sad
+to the platform and its OS and drawn at its **resolved size** — each device
+frame's size and chrome follow the conventions template's frame table: the
+mobile and tablet frames carry the OS's camera chrome (the Dynamic Island on
+`ios`, the punch-hole camera on `android`, the generic notch/cutout when no OS
+is known) for a true visual, desktop a native app window frame (a title bar
+with the OS's window controls, no address bar and no tabs), `site` and
+`webapp` a desktop browser-chrome frame at a fixed
+1440×900 whose `width` tweak (`1440` | `390`, default `1440`) switches the same
+coded frame to 390×844 in a mobile browser frame with a status bar and an
+address bar, the in-car platforms the OS display frame with its template
+constraints, `watch` a watch-face frame (round on `wearos`), `tv` a TV frame
+with its safe area, `spatial` a floating window), `device` (on a device
+platform whose resolved OS list has two or more entries: values the OS tokens
+in list order, default the primary — the same coded frame redrawn at each OS's
+size and chrome, never a frame per device), one tweak per pinned **sad
 state**, and one tweak per pinned **conditional product state** (empty data,
-entity-state variants — product states, not sad paths) — plus stub treatment for
-out-of-flow screens, the product one-liner, and the goal vocabulary from
+entity-state variants — product states, not sad paths) — plus stub treatment
+for out-of-flow screens, the product one-liner, and the goal vocabulary from
 `product.md`. Generated sections are **regenerated in place**; the **Project
 conventions (canvas-owned)** section — conventions discovered while designing —
 is preserved verbatim, with `import` folding canvas-side additions into it. The
@@ -43,7 +53,9 @@ Components blocks, never left for the canvas to decide.
    deviations — the `Serves:` goal, and for an in-car flow the `Subset of:`
    parent), `product.md` (the served goal for the brief's Goal line, and every
    goal for the conventions file's goal vocabulary), and the registry entry for
-   the flow's UI project (type, platforms). **The flow's platform files** decide
+   the flow's UI project (type, platforms), each platform file's
+   `features:` list, and from `.config/vwf.yaml` the project's `stack.os` map and
+   `design.viewports` entries. **The flow's platform files** decide
    which briefs it gets: one brief per `<platform>.md` in the flow folder,
    listed in `index.md`'s Platforms table. A UI flow with no platform file is
    format drift: say so and nudge `/vwf:setup`, then elicit the platform set for
@@ -65,8 +77,15 @@ Components blocks, never left for the canvas to decide.
    with when it is visible/enabled, what activating it does, and its
    contract-pinned content — and the pinned sad + conditional states its tweaks
    must cover; entry points come from the flow's Trigger & Actors, the Goal line
-   from the flow's `Serves:` link. A flow doc without Components blocks yet
-   (pre-format-12) gets them derived provisionally from its steps, states, and
+   from the flow's `Serves:` link. On a device platform the brief's Devices
+   section names the resolved OS list (the `design.viewports` list when set,
+   else `projects.<project>.stack.os.<platform>`, else none known) and its
+   primary, and carries each `features:` entry of the platform file: the
+   feature shows on every `device` value equal to the OS part of the entry's
+   scope (the text before any `:`, so `android:samsung` matches `android`), and
+   the entry's fallback shows on every other value. A flow doc without
+   Components blocks yet (pre-format-12) gets them derived provisionally from
+   its steps, states, and
    actions — flagged in the brief's Out of scope and nudging a
    `/vwf:blueprint <flow>` pass to pin them. **A brief is the full flow
    blueprint every time**: on a revision, regenerate the whole file in place
@@ -83,10 +102,13 @@ Components blocks, never left for the canvas to decide.
 3. **Maintain the canvas conventions file** — one per platform brief written:
    regenerate `docs/prompts/screens/<project>/CLAUDE--<platform>.md` from the
    adapter's conventions template (the product one-liner and goal vocabulary
-   from `product.md`, this platform's Layout block — its size the resolved
-   viewport, `design.viewports.<project>.<platform>` from `.config/vwf.yaml`
-   when set, else the template's default — the naming contract,
-   behavior conventions, and standing tweak set), **preserving the "Project
+   from `product.md`, this platform's Layout block — its frames resolved from
+   `projects.<project>.stack.os.<platform>` and
+   `design.viewports.<project>.<platform>` in `.config/vwf.yaml` per the
+   template's resolution rule, with the frame-table rows of the resolved OS
+   list kept — the naming contract, behavior conventions, and standing tweak
+   set, the `device` tweak included when the list has two or more entries),
+   **preserving the "Project
    conventions (canvas-owned)" section verbatim** (seeded empty in a new file).
 4. **Deliver the files — nothing else.** The brief files are the deliverable:
    say where they are and that the user pastes each into the canvas chat — and,

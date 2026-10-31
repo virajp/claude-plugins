@@ -39,6 +39,16 @@
     "../**/DerivedData/",
     "**/*.xcassets/",
     "../**/*.xcassets/",
+    "**/.gradle/",
+    "../**/.gradle/",
+    "**/.kotlin/",
+    "../**/.kotlin/",
+    "**/.cxx/",
+    "../**/.cxx/",
+    "**/.externalNativeBuild/",
+    "../**/.externalNativeBuild/",
+    "**/captures/",
+    "../**/captures/",
     // <<< tool-config
   ],
   "exec": {

@@ -38,51 +38,69 @@ and `apis/released/entities/<entity>@<date>.schema.yaml`, frozen at the same
 moment for every entity regardless of project shape; the blueprint root holds
 only the system docs), `docs/plans/` (one folder per plan, of either kind —
 `/vwf:plan`'s cycle plans as `<date>-<HHMM>-<slice>/`, `/vwf:change-plan`'s
-ad-hoc change plans as `<date>-<name>/` — each an `index.md` plus one
-`NN-<unit>.md` per unit, shaped by `assets/templates/plan-folder.md`; a cycle
-folder lives in the target repo under `multi-repo`, a change folder in the base.
-Both are discovered through the base repo's `docs/plans/index.md`, which holds
-**one table** per `skills/plan-management/references/plan-index.md` — columns
-`Folder`, `Kind`, `Plan`, `Target repo`, `Priority`, `Status`, `Requires`,
-`Backlog`, statuses `APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct
-commit on the integration branch — the queue `/vwf:execute next` and
-`/vwf:execute all` read with no `Kind` filter. Every row, every folder's Status
-block and the archive move are written by one skill-invoked skill,
-`plan-management`, whose verbs the planners and `/vwf:execute` call: the landing
-moves the folder into `archived/` and re-points the row when no gap is open, and
-leaves it live with the row `COMPLETE` when one is; the `archive` verb, invoked
-when the user asks in prose, moves a folder of either kind whole, only its
-Status line rewritten, and re-points the row, after which the sweep drops a
-`COMPLETE` row nobody's `Requires` names — its `Backlog` column carries the
-`Bnn` ids of the backlog project's items, a piece id written `Bnn (piece)`,
-since 2026-09-18 the backlog is **not in the tree**: it is a project on the base
-repo's forge, a GitHub Project named for the base repo under its account, one
-per product, which `/vwf:backlog` alone writes and `change-plan`, `plan`,
-`execute` and `plan-management`'s `archive` verb call with the ids their plan's
-`backlog:` and `backlog_pieces:` frontmatter lists carry — the ids it finishes
-and the ids it lands a piece of), `docs/runbooks/` (per-project operational
-runbooks plus `postmortems.md`, seeded by the incident-response foundation and
-appended to by `/vwf:feedback incident`), and `docs/prompts/`
-(`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design briefs grouped by
-prompt type → registry project → flow, one brief per platform regenerated in
-place (the filename carries the platform, mirroring the flows tree exactly),
-plus the per-design-project canvas conventions files
+ad-hoc change plans as `<date>-<name>/` — each an `index.json` holding every
+structured fact, an `index.md` holding the prose, and one `NN-<unit>.md` per
+unit, shaped by `assets/templates/plan-folder.md`; a cycle folder lives in the
+target repo under `multi-repo`, a change folder in the base. Both are discovered
+through the base repo's `docs/plans/index.json` (`"format": 1`), a `plans` list
+of rows per `skills/plan-management/references/plan-index.md` — keys `id`,
+`folder`, `kind`, `title`, `target_repo`, `priority`, `status`, `gaps` (`null`
+until landing, then `{open, moved_to}`, `moved_to` naming the later plan whose
+`gaps_of` takes them), `requires`, `backlog`, `backlog_pieces`, statuses
+`APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct commit on the
+integration branch — the queue `/vwf:execute next` and `/vwf:execute all` read
+with no `kind` filter. Each JSON file is created once with the Write tool — a
+folder's `index.json` by its planner, `docs/plans/index.json` by
+`plan-management`'s `add` when it is absent — and validated with
+`skills/plan-management/scripts/plan.mjs validate`; every later change goes
+through `plan.mjs set`, `append`, `remove` or `rewave`, one field or one list
+entry for each write, except `rewave`, which moves units and rebuilds `waves` in
+one write and is a planner write only, run after `set` gives a unit moving above
+wave 1 its `waits`, and reads through `plan.mjs get`; on the old markdown format
+(a `docs/plans/index.md`) `/vwf:execute` and every `plan-management` verb stop
+and point to this repo's `docs/plans/migrate.md`, and archived folders are never
+migrated. Every row, every folder's `status` and `run` (the worktree and
+action-log paths, set at the claim and reset at an unclaim) and the archive move
+are written by one skill-invoked skill, `plan-management`, whose verbs the
+planners and `/vwf:execute` call: the landing moves the folder into `archived/`
+and re-points the row when no gap is open, and leaves it live with the row
+`COMPLETE` when one is; the `archive` verb, invoked when the user asks in prose,
+moves a folder of either kind whole, only its `status` rewritten, and re-points
+the row, after which the sweep drops a `COMPLETE` row nobody's `requires` names
+— its `backlog` and `backlog_pieces` lists carry the `Bnn` ids of the backlog
+project's items, since 2026-09-18 the backlog is **not in the tree**: it is a
+project on the base repo's forge, a GitHub Project named for the base repo under
+its account, one per product, which `/vwf:backlog` alone writes and
+`change-plan`, `plan`, `execute` and `plan-management`'s `archive` verb call
+with the ids their plan's `backlog` and `backlog_pieces` lists in `index.json`
+carry — the ids it finishes and the ids it lands a piece of), `docs/runbooks/`
+(per-project operational runbooks plus `postmortems.md`, seeded by the
+incident-response foundation and appended to by `/vwf:feedback incident`), and
+`docs/prompts/` (`<type>/<project>/<NNN>-<flow>/<platform>.md` — canvas design
+briefs grouped by prompt type → registry project → flow, one brief per platform
+regenerated in place (the filename carries the platform, mirroring the flows
+tree exactly), plus the per-design-project canvas conventions files
 `screens/<project>/CLAUDE--<platform>.md`; written by `/vwf:screens prompt`;
 committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 (**gitignored, never committed** — the mockup render tree,
-`<project>/<NNN>-<flow>/<platform>/<screen-slug>[--<state>].html`, written by
-`/vwf:mockups` and blueprint §6a, overwritten in place per flow; vwf auto-adds
-the `.gitignore` line when missing). Superseded commands/agents/templates are
-archived under `archived/vwf-<date>/` (`vwf-2026-06-19/` from the prior model;
-`vwf-2026-07-04/` holds the retired `autopilot` command, whose behavior merged
-into `execute`; `vwf-2026-07-07/` the format-8 `integration.md` template,
-dissolved into the flow templates). The single-file cycle plan `/vwf:plan` wrote
-until 2026-09-16 was retired with nothing archived and no compatibility reader:
-a plan in that shape still in flight is finished on the vwf release that wrote
-it, or its slice is re-run through `/vwf:plan`, whose stamp-heal drops what
-already conforms. The change plan's own executor was retired the same day,
-2026-09-16, absorbed into `/vwf:execute` — the one executor, switching on each
-unit's `Kind` — with nothing archived, no alias and no redirect; the record is
+`<project>/mockups/<platform>/<route>/index[--<state>].html` plus the reserved
+`__mockups/` (`routes.json`, `comments.yaml`), written by `/vwf:mockups` and
+blueprint §6a, overwritten in place per screen and served at one local URL per
+platform; and the render tree execute keeps,
+`<project>/renders/<platform>/<route>/index[--<state>].png` plus `__renders/`
+(`renders.json`, `comments.yaml`), served by `/vwf:mockups renders`; vwf
+auto-adds the `.gitignore` line when missing). Superseded
+commands/agents/templates are archived under `archived/vwf-<date>/`
+(`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
+`autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
+format-8 `integration.md` template, dissolved into the flow templates). The
+single-file cycle plan `/vwf:plan` wrote until 2026-09-16 was retired with
+nothing archived and no compatibility reader: a plan in that shape still in
+flight is finished on the vwf release that wrote it, or its slice is re-run
+through `/vwf:plan`, whose stamp-heal drops what already conforms. The change
+plan's own executor was retired the same day, 2026-09-16, absorbed into
+`/vwf:execute` — the one executor, switching on each unit's `kind` — with
+nothing archived, no alias and no redirect; the record is
 `docs/memory/decisions/2026-09-16-one-executor.md`.
 
 The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
@@ -90,10 +108,10 @@ The `docs/blueprint/` tree is an **OKF bundle** — vwf is an opinionated
 concept: mandatory YAML frontmatter (`type` from a fixed vocabulary —
 `vwf-product`/`vwf-architecture`/`vwf-conventions`/`vwf-design-system`/
 `vwf-environment`/`vwf-flow`/`vwf-flow-platform`/`vwf-integration` (the flow
-catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-change-plan` (a plan
-folder's `index.md` — cycle or ad-hoc change plan; the blueprint completeness
-bars do not apply to it, and it carries no `status:` or `description:`, its
-Status block being its one status) — plus `title`, `description`, `status`;
+catalog)/`vwf-entity`/`vwf-entities`/`vwf-plan`/`vwf-change-plan` (the `type` of
+a plan folder's `index.json` — cycle or ad-hoc change plan; the blueprint
+completeness bars do not apply to it, and the folder carries no frontmatter at
+all, its `index.md` being prose only) — plus `title`, `description`, `status`;
 optional `timestamp`/`owner`/`resource`/`tags`; flow/entity docs additionally
 carry the pipeline-owned `implementation:` build stamp), and cross-doc
 relationships are typed markdown links (the OKF edge) rather than prose. YAML

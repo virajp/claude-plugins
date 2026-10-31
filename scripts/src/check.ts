@@ -33,17 +33,10 @@ import {
   resolve,
   sep,
 } from "node:path";
-import {
-  isSeq,
-  LineCounter,
-  parse as parseYaml,
-  parseDocument,
-} from "yaml";
+import { parse as parseYaml } from "yaml";
 // Plain zero-dependency `.mjs` modules with no declaration file beside them,
 // so the exports used here are typed by hand below — the checker reads the
 // script's own vocabulary rather than a copy of it.
-// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
-import * as toolConfigCli from "../../plugins/stackgen/skills/tool-config/scripts/lib/cli.mjs";
 // @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
 import * as toolConfigRender from "../../plugins/stackgen/skills/tool-config/scripts/lib/render.mjs";
 import {
@@ -245,8 +238,8 @@ function checkHookScripts(plugin: Plugin): Finding[] {
 
   for (const [event, command] of hookCommands(doc.hooks ?? {})) {
     // Matched rather than assumed: a hook may be an inline shell command with no
-    // script at all (vwf's guarded `rtk` hook is one), and only the ones naming
-    // a bundled file have anything to exist.
+    // script at all, and only the ones naming a bundled file have anything to
+    // exist.
     for (const path of captures(command, ROOT_REF_RE)) {
       const file = byPath.get(path);
       if (file === undefined) {
@@ -335,8 +328,6 @@ function* hookCommands(
 
 /** Where a landed tree puts the file-based mise task library. */
 const PACK_MISE_TASKS = join(".config", "mise", "tasks");
-/** Where retired pre-commit hook fragments sat; a pack asks the skill now. */
-const PACK_HOOK_FRAGMENTS = join(".config", "pre-commit.d");
 /** Where `stackgen:tool-config` keeps the files it copies, as the repo root. */
 const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
 /** Where `stackgen:tool-config` keeps the files it renders, flat as assets. */
@@ -355,33 +346,12 @@ const INIT_ROOT_ALLOWLIST = [
   ".github/ISSUE_TEMPLATE/",
 ];
 /** What the tool-config script exports and this checker reads. */
-const { RESERVED_SLUGS } = toolConfigCli as {
-  RESERVED_SLUGS: readonly string[];
-};
-const { PLACEHOLDER, SUBTASK_DIRS } = toolConfigRender as {
-  PLACEHOLDER: RegExp;
+const { SUBTASK_DIRS } = toolConfigRender as {
   SUBTASK_DIRS: Readonly<Record<string, string>>;
 };
-/**
- * A pack-owned subtask under the task library: a task file directly in one of
- * the folders an `…:all` task calls (`code/{check,lint,format}/`,
- * `setup/deps/<verb>/`, `setup/ai/`), read off the script. The leaf is
- * captured — it must be the pack's own slug, so two packs never write one
- * subtask file.
- */
-const PACK_SUBTASK = new RegExp(
-  `^(?:${Object.values(SUBTASK_DIRS).join("|")})/([^/]+)$`,
-);
-/**
- * The slugs no pack may take, the script's own list: `all` is every `…:all`
- * task's leaf, and `_base` and `ai` are tool-config's own `conf.d/` folders
- * — a pack named for one would write, and on removal delete, what tool-config
- * owns.
- */
-const RESERVED_PACK_SLUGS = new Set(RESERVED_SLUGS);
 /** The skill file that marks a plugin as the owner of those trees. */
 const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
-/** Where a pack keeps the files tool-config renders into the repo. */
+/** The retired pack tier of the files tool-config rendered; now refused. */
 const PACK_TEMPLATES = "templates";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
@@ -433,13 +403,7 @@ const PACK_HOOK_SHEBANGS = new Set([
  * pack may land them.
  */
 const PACK_CONFIG_ROOT_FILES = new Set([
-  // npm and pnpm read `.npmrc` from the root of the project they install in.
-  ".npmrc",
-  // dprint's config discovery is root-only and `--config` is the CLI's only
-  // override, so tool-config's dprint tree ships a root shim extending it.
-  "dprint.json",
   "eslint.config.mjs",
-  "fnox.toml",
   "readme.md",
   // wrangler discovers its config only at the repo root, so a `static-hosting`
   // pack shipping a deploy target has nowhere else to put it.
@@ -452,6 +416,9 @@ const PACK_CONFIG_ROOT_FILES = new Set([
  * read them from the root only.
  */
 const TOOL_CONFIG_ROOT_FILES = [
+  // dprint's config discovery is root-only and `--config` is the CLI's only
+  // override, so tool-config's dprint tree ships a root shim extending it.
+  "dprint.json",
   ".gitattributes",
   ".gitignore",
   ".graphifyignore",
@@ -486,7 +453,7 @@ const TOOL_CONFIG_LANDED_SKILLS = new Set([
  * template reads these and its own `packs.<slug>` keys, which the script
  * refuses when one takes a global name.
  */
-export const TEMPLATE_GLOBAL_NAMES: ReadonlySet<string> = new Set([
+const TEMPLATE_GLOBAL_NAMES: ReadonlySet<string> = new Set([
   "REPO_NAME",
   "FORGE",
   "SECRETS",
@@ -529,6 +496,18 @@ const PACK_CONFIG_ROOT_DIRS = new Set([
 ]);
 
 /**
+ * The only folders under `.config/` a pack's `config/` tier may ship into,
+ * `/`-terminated: a test task and a task of the pinned project. The toolchain
+ * — tool pins, gates, gate configs, generic tasks, hooks — is bootstrap's, so
+ * any other `.config/` path is a pack shipping what bootstrap owns. The list
+ * names no bootstrap tool, so it does not drift when bootstrap changes.
+ */
+const PACK_CONFIG_DOTCONFIG_ALLOWLIST = [
+  ".config/mise/tasks/test/",
+  ".config/mise/tasks/p/_project/",
+];
+
+/**
  * The one path inside an allowlisted root directory a pack may not ship.
  *
  * `.github/workflows/` is the forge's CI surface, and the charter fence is that
@@ -560,24 +539,19 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   it — and inside the one forge directory the list admits, a **workflow file
  *   is refused**: a pack states which task CI runs and never writes the
  *   workflow;
- * - every **`conditional:` entry** in the pack's `pack.yaml` names a path or
- *   glob that matches a file under its `config/` tier, and a `when:` of
- *   exactly one known axis with a value that axis takes — an axis no caller
- *   answers is never evaluated, so the file lands everywhere, silently;
+ * - under `.config/`, the tier is an **allowlist** — a test task or a task of
+ *   the pinned project ({@link PACK_CONFIG_DOTCONFIG_ALLOWLIST}); the
+ *   toolchain is bootstrap's, so any other path is a second copy of a
+ *   bootstrap file, and a pack `templates/` tier is refused outright;
  * - the pack's **`binaries` and `lockfile` facts** take the shapes
- *   `/vwf:doctor` reads, and the retired `tool-config:` and `machine_env:` keys
- *   are refused (`packFactFaults`).
+ *   `/vwf:doctor` reads, and the retired `tool-config:`, `machine_env:`,
+ *   `values:` and `conditional:` keys are refused (`packFactFaults`).
  *
- * A pack's `config/` tier holding a mise `conf.d` fragment or a `pre-commit.d`
- * file is a finding too, as is a subtask under either tier whose leaf is not
- * the pack's slug. A pack's `templates/` tier is walked as a landed tree like
- * `config/`, and so are `stackgen:tool-config`'s `assets/` and `templates/`,
- * as is each `/vwf:init` asset tree — which lands only its hygiene allowlist.
- * Every template tree's `@@` tags are held to the engine's grammar and its
- * names to {@link TEMPLATE_GLOBAL_NAMES} (`templateNameFaults`) — a pack's to
- * those and the names its `values:` list declares, each entry `name`,
- * `detect` and `question`, and each declared name read in its templates
- * (`packValues`).
+ * `stackgen:tool-config`'s `assets/` and `templates/` are walked as landed
+ * trees too, as is each `/vwf:init` asset tree — which lands only its hygiene
+ * allowlist — and every `@@` tag in tool-config's templates is held to the
+ * engine's grammar and its names to {@link TEMPLATE_GLOBAL_NAMES}
+ * (`templateNameFaults`).
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -675,37 +649,6 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
   }
 
-  // The subtask leaves tool-config's own trees ship, read off the trees.
-  const universalLeaves = new Set(
-    toolConfigTrees(plugin).flatMap(tree => {
-      const tasks = join(plugin.root, tree, PACK_MISE_TASKS);
-      return [...filesUnder(tasks)]
-        .map(absolute =>
-          relative(tasks, absolute)
-            .split(sep)
-            .join("/")
-            .match(PACK_SUBTASK)
-            ?.[1]
-        )
-        .filter((leaf): leaf is string => leaf !== undefined && leaf !== "all");
-    }),
-  );
-  // Every path tool-config lands, repo-relative: each file — and whether it
-  // is a `#PLACEHOLDER` slot a pack may fill — and each folder above one.
-  const owned = new Map<string, boolean>();
-  const ownedDirs = new Set<string>();
-  for (const tree of toolConfigTrees(plugin)) {
-    const root = join(plugin.root, tree);
-    for (const absolute of filesUnder(root)) {
-      const rel = relative(root, absolute).split(sep).join("/");
-      owned.set(rel, PLACEHOLDER.test(readText(absolute)));
-      const parts = rel.split("/");
-      for (let depth = 1; depth < parts.length; depth++) {
-        ownedDirs.add(parts.slice(0, depth).join("/"));
-      }
-    }
-  }
-
   const packs = globSync("stacks/*/*", { cwd: plugin.root });
   for (const pack of packs) {
     for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
@@ -726,154 +669,49 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
 
     const config = join(plugin.root, pack, "config");
     landedTree(config, "pack config/ tier", PACK_CONFIG_ROOT_FILES);
-    // `templates/` renders to the same relative paths `config/` copies to, so
-    // it is held to the same landed-tree rules — bar the conf.d refusal below:
-    // a pack's mise files live in its templates.
-    const templates = join(plugin.root, pack, PACK_TEMPLATES);
-    landedTree(templates, "pack templates/ tier", PACK_CONFIG_ROOT_FILES);
-
-    // A pack's templates read the global names and the ones its `values:`
-    // declares, and every declared name is read somewhere in them.
-    const packYaml = join(plugin.root, pack, "pack.yaml");
-    const source = existsSync(packYaml) ? readText(packYaml) : null;
-    let document: unknown;
-    let values: PackValues = { declared: new Map(), faults: [] };
-    let yamlFault: string | null = null;
-    if (source !== null) {
-      try {
-        document = parseYaml(source);
-        values = packValues(source);
-      }
-      catch (error) {
-        yamlFault = firstLine(error);
-      }
-    }
-    const read = new Set<string>();
-    const declared = new Set(values.declared.keys());
-    for (const fault of templateNameFaults(templates, declared, read)) {
-      at(`${path(fault.absolute)}:${fault.line}: ${fault.message}`);
-    }
-
-    const slug = basename(pack);
-    if (!pack.startsWith("stacks/bundles/") && RESERVED_PACK_SLUGS.has(slug)) {
-      at(
-        `pack slug \`${slug}\` is reserved — tool-config owns the \`…:all\` `
-          + `tasks and the conf.d/_base/ and conf.d/ai/ folders: ${pack}`,
-      );
-    }
-    // A pack lands beside tool-config, never over it: a file at a path
-    // tool-config ships whole, or where it ships a folder, or under one of its
-    // files, is a second writer — bar a `#PLACEHOLDER` slot, which a pack
-    // fills.
-    for (const tier of [config, templates]) {
-      for (const absolute of filesUnder(tier)) {
-        const rel = relative(tier, absolute).split(sep).join("/");
-        const parts = rel.split("/");
-        const under = parts.slice(1).some((_, depth) =>
-          owned.has(parts.slice(0, depth + 1).join("/"))
-        );
-        if (ownedDirs.has(rel) || under) {
-          at(
-            `pack file sits where tool-config ships a folder or a file above `
-              + `it — a pack adds files beside tool-config's, never over its `
-              + `tree: ${path(absolute)}`,
-          );
-        }
-        else if (owned.get(rel) === false) {
-          at(
-            `pack file overwrites ${rel}, which tool-config ships whole — only `
-              + `a #PLACEHOLDER slot is a pack's to fill: ${path(absolute)}`,
-          );
-        }
-      }
-    }
-
-    for (const tier of [config, templates]) {
-      const tasks = join(tier, PACK_MISE_TASKS);
-      for (const absolute of filesUnder(tasks)) {
-        const leaf = relative(tasks, absolute)
-          .split(sep)
-          .join("/")
-          .match(PACK_SUBTASK)
-          ?.[1];
-        if (leaf !== undefined && leaf !== slug) {
-          at(
-            `pack subtask is not named for its pack — a subtask's leaf is the `
-              + `pack slug \`${slug}\`: ${path(absolute)}`,
-          );
-        }
-        else if (leaf !== undefined && universalLeaves.has(leaf)) {
-          at(
-            `pack subtask takes the leaf \`${leaf}\` of a universal subtask `
-              + `tool-config ships — removing the pack would delete it: `
-              + `${path(absolute)}`,
-          );
-        }
-      }
-    }
-
-    // A pack's mise files sit in one conf.d folder named for it, so it never
-    // writes into tool-config's `_base/` or `ai/`, or another pack's.
-    const confD = join(templates, PACK_CONF_D);
-    if (existsSync(confD)) {
-      for (const entry of readdirSync(confD, { withFileTypes: true })) {
-        if (!entry.isDirectory() || entry.name !== slug) {
-          at(
-            `pack templates/ tier writes conf.d/${entry.name} — a pack's mise `
-              + `files sit in conf.d/${slug}/ alone: `
-              + `${path(join(confD, entry.name))}`,
-          );
-        }
-      }
-    }
-
-    for (const absolute of filesUnder(join(config, PACK_CONF_D))) {
-      at(
-        `pack config/ tier ships a mise conf.d fragment — a pack's mise files `
-          + `live in its templates/ tier, which tool-config renders: ${
-            path(absolute)
-          }`,
-      );
-    }
-
-    for (const absolute of filesUnder(join(config, PACK_HOOK_FRAGMENTS))) {
-      at(
-        `pack config/ tier ships a pre-commit.d file — the hooks are `
-          + `tool-config's universal set, and a pack adds a subtask the `
-          + `\`…:all\` tasks call: ${path(absolute)}`,
-      );
-    }
-
-    if (yamlFault !== null) {
-      at(`${path(packYaml)}: pack.yaml is not valid YAML — ${yamlFault}`);
-    }
-    else if (source !== null) {
-      for (
-        const message of [
-          ...conditionalFaults(document, config),
-          ...packFactFaults(document),
-        ]
+    // Under `.config/`, a pack ships a test task or a project task and
+    // nothing else: the toolchain is bootstrap's.
+    for (const absolute of filesUnder(join(config, ".config"))) {
+      const rel = relative(config, absolute).split(sep).join("/");
+      if (
+        !PACK_CONFIG_DOTCONFIG_ALLOWLIST.some(entry => rel.startsWith(entry))
       ) {
-        at(`${path(packYaml)}: ${message}`);
+        at(
+          `pack config/ tier ships ${rel} — under .config/ a pack ships only `
+            + `${PACK_CONFIG_DOTCONFIG_ALLOWLIST.join(", ")}; the toolchain `
+            + `is bootstrap's: ${path(absolute)}`,
+        );
       }
-      for (const fault of values.faults) {
-        at(`${path(packYaml)}:${fault.line}: ${fault.message}`);
-      }
-      for (const [name, line] of values.declared) {
-        if (!read.has(name)) {
-          at(
-            `${path(packYaml)}:${line}: \`values:\` declares ${name}, which no `
-              + `file in the pack's templates/ reads as @@${name}@@`,
-          );
-        }
-      }
+    }
+    // The tier tool-config rendered is retired with the key that fed it.
+    const templates = join(plugin.root, pack, PACK_TEMPLATES);
+    if (existsSync(templates)) {
+      at(
+        `pack ships a templates/ tier — retired: a pack's tool pins and `
+          + `environment values are bootstrap's: ${path(templates)}`,
+      );
+    }
+
+    const packYaml = join(plugin.root, pack, "pack.yaml");
+    if (!existsSync(packYaml)) {
+      continue;
+    }
+    let document: unknown;
+    try {
+      document = parseYaml(readText(packYaml));
+    }
+    catch (error) {
+      at(
+        `${path(packYaml)}: pack.yaml is not valid YAML — ${firstLine(error)}`,
+      );
+      continue;
+    }
+    for (const message of packFactFaults(document)) {
+      at(`${path(packYaml)}: ${message}`);
     }
   }
   return findings;
 }
-
-/** Where a pack's `conf.d` fragments sit inside its `config/` tier. */
-const PACK_CONF_D = join(".config", "mise", "conf.d");
 
 /**
  * What a pack's two doctor-read facts are held to, and the two keys it may no
@@ -972,127 +810,17 @@ function packFactFaults(document: unknown): string[] {
 
 /** The pack.yaml keys nothing reads any more, and what replaced each. */
 const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
-  [
-    "tool-config",
-    "a pack ships the lines it needs as files in its templates/ tier, which "
-    + "tool-config renders, or as a subtask under .config/mise/tasks/",
-  ],
+  ["tool-config", "a pack's toolchain is bootstrap's, chosen from a clone"],
   [
     "machine_env",
-    "a machine value is a `values:` entry — name, detect and question — read "
-    + "as `@@NAME@@` in the pack's templates/",
+    "a machine value is found by bootstrap's task, or set in conf.d/zz-repo",
   ],
+  [
+    "values",
+    "a machine value is found by bootstrap's task, or set in conf.d/zz-repo",
+  ],
+  ["conditional", "no pack used it; every config/ path lands"],
 ]);
-
-/** A `values:` entry's fault, by its pack.yaml line. */
-interface ValueFault {
-  readonly line: number;
-  readonly message: string;
-}
-
-/** A pack's `values:` names, each with its pack.yaml line, and its faults. */
-interface PackValues {
-  readonly declared: ReadonlyMap<string, number>;
-  readonly faults: readonly ValueFault[];
-}
-
-/** The keys a `values:` entry carries, each a non-empty string. */
-const PACK_VALUE_KEYS = ["name", "detect", "question"];
-
-/** A `values:` name: upper snake case, as the template grammar reads it. */
-const PACK_VALUE_NAME = /^[A-Z][A-Z0-9_]*$/;
-
-/**
- * The names a pack's `values:` may not take: every template name, and `FORMAT`
- * — `.config/stackgen.yaml`'s `format` key, which the script holds global
- * though no template reads it.
- */
-const PACK_VALUE_REFUSED: ReadonlySet<string> = new Set([
-  ...TEMPLATE_GLOBAL_NAMES,
-  "FORMAT",
-]);
-
-/**
- * A pack's `values:` list — the machine values its templates read, each
- * `name`, `detect` (a command printing the value, non-zero when unknown) and
- * `question` (asked when `detect` fails).
- *
- * A name that is not upper snake case is never read by the engine, one in
- * {@link PACK_VALUE_REFUSED} is refused by the script, and a second entry of
- * one name would silently replace the first — so each is a finding here, with
- * the line the entry sits on.
- */
-function packValues(source: string): PackValues {
-  const lines = new LineCounter();
-  const document = parseDocument(source, { lineCounter: lines });
-  const node = document.get("values", true);
-  const declared = new Map<string, number>();
-  const faults: ValueFault[] = [];
-  if (node === undefined) {
-    return { declared, faults };
-  }
-  const lineOf = (item: unknown) =>
-    lines
-      .linePos(
-        (item as { range?: [number, number, number]; } | null)?.range?.[0] ?? 0,
-      )
-      .line;
-  if (!isSeq(node)) {
-    faults.push({
-      line: lineOf(node),
-      message: "`values:` is not a list of { name, detect, question } maps",
-    });
-    return { declared, faults };
-  }
-  const entries = asArray(
-    (document.toJS() as Record<string, unknown>).values,
-  );
-  node.items.forEach((item, index) => {
-    const line = lineOf(item);
-    const at = (message: string) =>
-      faults.push({ line, message: `\`values[${index}]\` ${message}` });
-    const entry = entries[index];
-    if (!isPlainObject(entry)) {
-      at("is not a { name, detect, question } map");
-      return;
-    }
-    const extra = Object.keys(entry).filter(k => !PACK_VALUE_KEYS.includes(k));
-    if (extra.length > 0) {
-      at(
-        `carries ${extra.map(k => `\`${k}\``).join(", ")} — only \`name\`, `
-          + `\`detect\` and \`question\``,
-      );
-    }
-    for (const key of PACK_VALUE_KEYS) {
-      if (typeof entry[key] !== "string" || entry[key] === "") {
-        at(`\`${key}\` is not a non-empty string`);
-      }
-    }
-    const name = entry.name;
-    if (typeof name !== "string" || name === "") {
-      return;
-    }
-    if (!PACK_VALUE_NAME.test(name)) {
-      at(`\`name\` (${name}) is not upper snake case`);
-    }
-    else if (PACK_VALUE_REFUSED.has(name)) {
-      at(
-        `\`name\` (${name}) is a global template name — tool-config fills it, `
-          + `not the pack`,
-      );
-    }
-    else if (declared.has(name)) {
-      at(
-        `\`name\` (${name}) is declared already, at line `
-          + `${declared.get(name)}`,
-      );
-    }
-    else {
-      declared.set(name, line);
-    }
-  });
-  return { declared, faults };
-}
 
 /** A template file's tag fault, by where it sits. */
 interface TemplateFault {
@@ -1170,104 +898,6 @@ function assetTrees(plugin: Plugin, assets: string): string[] {
     .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
 }
 
-/**
- * The two axes a `conditional:` entry may name, and the values each admits.
- * `null` is "any slug": the secrets axis is answered by whichever
- * capability-provider pack the product picked, and the vocabulary there is
- * the stacks tree rather than a list here.
- */
-const PACK_CONDITION_AXES: ReadonlyMap<string, ReadonlySet<string> | null> =
-  new Map([
-    ["forge", new Set(["github", "gitlab"])],
-    ["secrets", null],
-  ]);
-
-/**
- * What a pack's `conditional:` list is held to.
- *
- * The materializer evaluates the key against the caller's answers, and an
- * axis the caller did not answer reads as true — the omitted key lands the
- * file. So an axis outside the vocabulary is one no caller ever answers: its
- * condition can never skip anything, and the file lands everywhere, silently.
- * A value the axis never takes is the mirror case — a condition no answer ever
- * satisfies, so the file lands nowhere. A path or glob that matches nothing
- * under the pack's own `config/` tier is a condition guarding a file that does
- * not exist, which is a rename that forgot the key; and the path is matched
- * inside that tier only — an absolute path or a `..` segment reaches out of
- * what the pack lands, which is rule 13's fault stated on a glob.
- */
-function conditionalFaults(document: unknown, config: string): string[] {
-  const conditional = (document as { conditional?: unknown; } | null)
-    ?.conditional;
-  if (conditional === undefined) {
-    return [];
-  }
-  if (!Array.isArray(conditional)) {
-    return ["`conditional` is not a list"];
-  }
-
-  const axes = [...PACK_CONDITION_AXES.keys()].join(", ");
-  const faults: string[] = [];
-  conditional.forEach((entry: unknown, index) => {
-    const label = `\`conditional[${index}]\``;
-    if (!isPlainObject(entry) || typeof entry.path !== "string") {
-      faults.push(`${label} declares no \`path\``);
-      return;
-    }
-    const at = `${label} (${entry.path})`;
-    if (isAbsolute(entry.path) || entry.path.split("/").includes("..")) {
-      faults.push(
-        `${at} climbs out of what the pack lands — a conditional path is `
-          + `relative to the config/ tier and stays inside it`,
-      );
-      return;
-    }
-    // Walked and matched by hand rather than `globSync`: neither it nor
-    // `path.matchesGlob` lets `**` enter a dot-directory, and every landed
-    // path here runs through `.config/`.
-    const matcher = landedGlob(entry.path);
-    const matches = [...filesUnder(config)]
-      .filter(absolute => matcher.test(relative(config, absolute)))
-      .length;
-    if (matches === 0) {
-      faults.push(`${at} matches no file under the pack's config/ tier`);
-    }
-    if (!isPlainObject(entry.when)) {
-      faults.push(`${at} declares no \`when\` map`);
-      return;
-    }
-    const keys = Object.keys(entry.when);
-    if (keys.length !== 1) {
-      faults.push(
-        `${at} \`when\` names ${keys.length} axes — exactly one of ${axes}`,
-      );
-      return;
-    }
-    const [axis] = keys as [string];
-    const value = entry.when[axis];
-    const allowed = PACK_CONDITION_AXES.get(axis);
-    if (allowed === undefined) {
-      faults.push(`${at} \`when\` names axis \`${axis}\`, not one of ${axes}`);
-    }
-    else if (typeof value !== "string" || value === "") {
-      faults.push(`${at} \`when.${axis}\` is not a string`);
-    }
-    else if (allowed !== null && !allowed.has(value)) {
-      faults.push(
-        `${at} \`when.${axis}\` is ${JSON.stringify(value)}, not one of ${
-          [...allowed].join(", ")
-        }`,
-      );
-    }
-    // `none` is the secrets question's no-provider answer, which init reads as
-    // "no match" — a file conditioned on it could never land.
-    else if (allowed === null && value === "none") {
-      faults.push(`${at} \`when.${axis}\` is "none", which names no provider`);
-    }
-  });
-  return faults;
-}
-
 /** A list whose every item is a string. */
 function isStringList(value: unknown): boolean {
   return Array.isArray(value) && value.every(item => typeof item === "string");
@@ -1276,31 +906,6 @@ function isStringList(value: unknown): boolean {
 /** A JSON object — not an array, not `null`. */
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-/**
- * A landed path or glob as a matcher over `config/`-relative paths. `**`
- * matches any run of segments, dot-directories included; `*` and `?` stay
- * inside one segment. Nothing else is a metacharacter.
- */
-function landedGlob(pattern: string): RegExp {
-  const segments = pattern.split("/");
-  const source = segments
-    .map((segment, index) => {
-      if (segment === "**") {
-        // A trailing `**` names every file below, at any depth.
-        return index === segments.length - 1
-          ? "(?:[^/]+/)*[^/]+"
-          : "(?:[^/]+/)*";
-      }
-      return segment
-        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-        .replace(/\*/g, "[^/]*")
-        .replace(/\?/g, "[^/]") + "/";
-    })
-    .join("")
-    .replace(/\/$/, "");
-  return new RegExp(`^${source}$`);
 }
 
 /** Every regular file under a directory, recursively; none when it is absent. */
@@ -1476,7 +1081,6 @@ const LANDED_TIERS = [
   "rules",
   "hooks",
   "config",
-  PACK_TEMPLATES,
 ];
 
 /** The literal token, matched for its own sake rather than for its path. */

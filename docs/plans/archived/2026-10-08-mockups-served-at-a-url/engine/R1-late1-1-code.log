@@ -1,0 +1,48 @@
+/code-review high — loop R1, round late1-1 — range 7bb533f8..29b02376 (branch 2026-10-08-mockups-served-at-a-url)
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 350,
+    "summary": "With the `path` line removed, a comment whose path matches no routes.json screen is still accepted (204), but it is written with `code: null` and `route: null`. Nothing in the file says which page it came from.",
+    "failure_scenario": "matchPath serves pages with `screen: null`: a literal file such as `GET /signin/index--error.html`, a `[param]` folder that routes.json does not name, or a stale page (G4). These pages still get the overlay, and the bar falls back to `location.pathname`. A reviewer comments there, `findScreen(routes, body.path)` returns null, and the record has no code, no route and no path. The only trace of the location is the stderr line (`screen?.code ?? body.path`), and that is never kept. §6a cannot turn the comment into a Screens change, and the /vwf:mockups report prints `null null?state=null`. D15 says the server finds the code and route; when it can't, it should return 400 (or keep the path), not store a comment that points nowhere."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 136,
+    "summary": "Removing the leftover-`&` guard means a legacy named reference with no semicolon (`&lt`, `&gt`, `&quot`, `&amp`, `&not`, `&copy`, `&para`, …) is now read as literal text. Browsers decode these in attribute values when the next character is not alphanumeric or `=`, so the check no longer reads the href the way the HTML parser does.",
+    "failure_scenario": "Reproduced: `<a href=\"/signin?state=error&lt\">` with `signin/index--error.html` present prints `LINKS OK`, exit 0. A browser decodes `&lt` to `<` and requests `?state=error<`. STATE_RE rejects that and the server returns 404. So the D11 gate passes a link that the server will not serve. The old guard failed closed on this. Either fail closed on any `&` followed by a legacy entity name, or decode those names the way the parser does."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 216,
+    "summary": "The report line `<code> <route>?state=<state>` does not cover what serve.mjs now writes: `yamlOrNull(body.state)` stores the default state `\"\"` as `null`, and an unresolved path stores `code`/`route` as null. With `path` gone there is nothing to fall back on.",
+    "failure_scenario": "Every comment on a default-state page is reported as `/orders/:id?state=null`, a URL that does not exist and suggests a state called `null`. A comment from an unresolved page is reported as `null null?state=null`. The reviewer cannot tell which screen either one is about."
+  },
+  {
+    "file": "scripts/src/mockups-serve.test.ts",
+    "line": 365,
+    "summary": "The changed test only checks that `path:` is absent. No test covers a comment whose path resolves to no screen, which is the case this change makes lossy.",
+    "failure_scenario": "A POST of `/comment` with `path: \"/signin/index--error.html\"` or `\"/nowhere\"` returns 204 and writes `code: null` / `route: null` with no location. The suite stays green, so the data loss in finding 1 has no test that would catch it."
+  },
+  {
+    "file": "scripts/src/mockups-links.test.ts",
+    "line": 204,
+    "summary": "The rewritten test dropped the `/signin&amp` case (a legacy reference with no semicolon) instead of pinning its new behaviour. The new `reads any other & as a literal &` test uses no legacy-reference input.",
+    "failure_scenario": "The difference from the browser on `&amp`/`&lt`/`&quot` at the end of a value or before a `/`, `?` or `#` (finding 2) has no test. Any later change to how `decode` treats semicolon-less references goes unnoticed."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 83,
+    "summary": "This comment is now wrong. \"The named references a URL could hide in; any other is refused, never guessed\" no longer holds: only `&name;` with a semicolon is refused, and a semicolon-less `&name` is read as literal text.",
+    "failure_scenario": "A maintainer who trusts the comment will assume every unknown named reference fails closed. They will miss that the legacy semicolon-less forms now pass, as in finding 2."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/links.mjs",
+    "line": 132,
+    "summary": "The new docstring says `decode` decodes \"as the HTML parser does\", but numeric references 0x80–0x9F are not remapped through the HTML windows-1252 table, and noncharacters and controls are not handled the way the spec handles them.",
+    "failure_scenario": "`&#x85;` decodes here to U+0085 (NEL), but a browser produces U+2026 (…), so the path the check validates differs from the one the browser requests. It is not an escape vector today, but it is a second place where the check and the browser disagree on the same href."
+  }
+]
+```

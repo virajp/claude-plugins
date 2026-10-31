@@ -5,6 +5,13 @@ description: <one-line — this platform's take on the journey>
 status: draft # draft | reviewed | stable
 platform: mobile # mobile | tablet | desktop | site | webapp | auto | watch | tv | spatial — MUST match the filename
 implementation: none # none | partial | complete — written by the pipeline only
+features: [] # OS-specific features on this platform; [] when none. Each entry:
+#   - name: <the feature, in words>
+#     scope: ios # one value the platform doctrine names: on `mobile`, `ios` for
+#                # the iOS side, or `android:samsung` / `android:oneplus` for an
+#                # Android device family. A vendor value is a label only — the
+#                # stack detects the feature itself by a capability check.
+#     fallback: <what the other OS, or a device without the feature, shows> # required
 # optional, standardized: timestamp: <ISO 8601>  owner: [<project from registry>]  resource: <url|path>  tags: [<...>]
 ---
 
@@ -54,7 +61,19 @@ Flow contract: [<Flow name>](./index.md)
 
      HOME RULE: every screen is defined in exactly one flow (its home journey);
      another flow that touches it links the home flow's row instead of
-     redefining it.
+     redefining it — a reference row whose Code cell is a markdown link to
+     that row, e.g. [004a](../004-checkout/mobile.md#004a). Any other form of
+     the cell reads as a second definition.
+
+     OVERLAYS: a modal, dialog or sheet that opens over another screen puts
+     its parent's code in the Route cell instead of a route — `modal of 004b`,
+     `dialog of 004b` or `sheet of 004b` — and shares the parent's route. The
+     marker is the whole cell, optionally after one route word, which must be
+     the parent's (`/orders/:id sheet of 004b`); any other text makes it a
+     plain Route cell. Both codes are letters, digits and _ only. The parent
+     is a screen of this platform, in any flow, and not itself an overlay.
+     Two screens on one route are an error unless all but one carry the
+     marker.
 
      Error and empty are MANDATORY pins per screen (or an explicit
      "n/a — <why>") — sad paths are contract; so are the CONDITIONAL product
@@ -122,6 +141,11 @@ Flow contract: [<Flow name>](./index.md)
 
 ## Platform deviations
 
+<!-- An OS-specific feature — one OS offers it, the other does not — is not a
+     deviation: it is the frontmatter `features:` list, the structured record,
+     each entry naming the feature, its `scope` and its required `fallback`.
+     Prose deviations below stay for every other difference. -->
+
 <!-- Only what genuinely differs on this platform: navigation/input idiom,
      density, omitted screens or actions and why, and (for `auto`) the OS
      template each screen maps to (list / grid / map / now-playing) plus the
@@ -131,7 +155,8 @@ Flow contract: [<Flow name>](./index.md)
      (for `tv`) the focus order and focus state under a remote, the 10-foot
      type and safe-area margins, no touch and no hover; (for `spatial`) gaze
      and pinch, the window / volume / immersive-space surface each screen
-     uses, depth and placement, ornaments — each noting any vendor difference.
+     uses, depth and placement, ornaments — each noting every other vendor
+     difference (an OS-specific feature goes in `features:`, above).
      Omit the section when nothing deviates. -->
 
 - <deviation> — <why>

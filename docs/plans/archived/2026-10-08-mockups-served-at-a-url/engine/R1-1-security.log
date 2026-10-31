@@ -1,0 +1,20 @@
+/security-review — loop R1, round 1 — range 7bb533f8..5d1f6caf (branch 2026-10-08-mockups-served-at-a-url)
+
+Note: the skill's inline context named the main checkout's develop diff (plan docs only);
+the engine was run over the worktree branch delta instead, scope as above.
+
+Candidates from the finding pass, each sent to a false-positive filter:
+1. Reserved-prefix bypass, case-insensitive FS: plugins/vwf/skills/mockups/scripts/lib/routes.mjs:251 (and :161) —
+   `segments[0] === RESERVED` is case-sensitive; on APFS GET /__MOCKUPS/comments.yaml is served. Filter confidence 2
+   (needs DNS rebinding; data low-sensitivity and already reachable via the list page). Dropped (<8).
+2. CSRF / DNS rebinding on POST /comment, /done: plugins/vwf/skills/mockups/scripts/serve.mjs:401-408 (readJson :281) —
+   no Origin/Host/Content-Type check. Filter confidence 2 (attacker text into an AI proposal the user confirms is
+   excluded; /done is DoS, excluded; inherited from the stackgen original). Dropped (<8).
+
+Checked clean: traversal (.., %2e%2e, NUL, symlinks via realpath + root prefix); ?state= limited to [A-Za-z0-9_-]+;
+XSS in list/placeholder/overlay (escapeHtml, scriptJson, textContent); YAML injection (JSON.stringify scalars,
+status hard-coded); no exec/spawn.
+
+# Report
+
+No vulnerabilities at confidence >= 8.

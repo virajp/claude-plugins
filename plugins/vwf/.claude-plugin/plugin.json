@@ -53,5 +53,6 @@
   },
   "name": "vwf",
   "repository": "https://github.com/virajp/claude-plugins",
-  "version": "21.0.0"
+  "types": "./types/index.d.ts",
+  "version": "22.0.0"
 }

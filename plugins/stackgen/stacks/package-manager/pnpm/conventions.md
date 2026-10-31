@@ -5,7 +5,11 @@ graphs and resolves differently depending on who ran what.
 
 **The lockfile is committed and authoritative.** CI installs frozen and fails on
 drift rather than resolving something new — an install that can resolve
-differently in CI than locally is not a gate.
+differently in CI than locally is not a gate. `pnpm-lock.yaml` is never edited
+by hand, with an editor tool, `sed` or a script: it changes only as the output
+of `pnpm install`, `pnpm add`, `pnpm remove` or `pnpm update`, and a merge
+conflict in it is resolved by taking either side and running `pnpm install`,
+never by merging its lines.
 
 **A publish cooldown guards the supply chain**, so neither a routine install nor
 an automated update adopts a release published minutes ago.
@@ -13,17 +17,13 @@ an automated update adopts a release published minutes ago.
 **In a workspace, internal dependencies are linked, not versioned**, and shared
 versions live in a catalog so one bump moves every package.
 
-**Two settings ship as `.npmrc` at the repo root**, which is the one path the
-manager reads them from: `ignore-scripts=true`, so an install never executes a
-dependency's install-time code, and `fund=false`, so it never prints a banner
-over what it did. A dependency that genuinely has to build is allowed by name
-in `pnpm-workspace.yaml` (`allowBuilds`, or `onlyBuiltDependencies` before
-pnpm 10.26) — the exception is a reviewable line, not a switch.
-Beside it, the pack's template
-`templates/.config/mise/conf.d/pnpm/mise.dev.toml`, rendered into the repo by
-`stackgen:tool-config`, aliases `npx` to `pnpm dlx` in dev, so a one-off
-package runs through this manager's store, resolver and registry settings
-rather than another tool's.
+**Two settings belong in `.npmrc` at the repo root**, which is the one path
+the manager reads them from: `ignore-scripts=true`, so an install never
+executes a dependency's install-time code, and `fund=false`, so it never
+prints a banner over what it did. This pack does not ship the file; the repo
+sets them itself. A dependency that genuinely has to build is allowed by name
+in `pnpm-workspace.yaml` (`allowBuilds`; pnpm 11 ignores the older
+`onlyBuiltDependencies`) — the exception is a reviewable line, not a switch.
 
 **An agent's `npm`/`npx` command is rewritten before it runs.** This pack
 ships `hooks/npm-normalize.sh`, which lands at `.claude/hooks/npm-normalize.sh`
@@ -41,58 +41,20 @@ and nothing else tells them apart — then `package_manager: bun` in
 because the hook fires in every repo, including ones that never heard of vwf.
 Its `sed` stays BSD-compatible: no `\s`, no `\b`.
 
-## The task library this pack owns
+## The tasks are bootstrap's
 
-This pack ships a `config/.config/mise/tasks/` tree — the `code/format/pnpm`
-subtask and the five `setup/deps/<verb>/pnpm` subtasks — landing at the
-repo's own `.config/mise/tasks/` behind the materializer's config consent
-line. Every file is named for the pack, so no other component writes the same
-path: the repo's `code:format:all` and `setup:deps:<verb>:all`, which
-tool-config renders, call each subtask by name.
+This pack ships no task. The repo's toolchain — the manager's pin, its
+install and upgrade tasks, the formatter, the house linter and the
+pre-commit hooks — comes from bootstrap. `mise run setup` installs from the
+lockfile and never moves it; `mise run setup --upgrade` moves the lockfile
+forward, so a new resolution is always something someone asked for, and the
+diff is the review surface. `mise run code:format` and `mise run code:lint`
+run the gates.
 
-**`code:format:pnpm` sorts every `package.json`, and only that.** dprint runs
-beside it as the universal `code:format:dprint` subtask, so this file carries
-no formatter step of its own. The sorter, `npm:sort-package-json`, is a mise
-pin in the dev environment only, in the same `mise.dev.toml` template —
-resolved by its mise path, and the step is skipped where it is not installed,
-as in CI.
-
-**The subtask takes an optional file list, and the empty case is the whole
-tree.** That is the whole pre-commit story for this pack: it ships **no
-fragment**, because the gate config's `format` and `lint` hooks call
-`code:format:all` and `code:lint:all` with the staged files. The sorter
-narrows to the `package.json` files it is given. Linting is the house linter's,
-through the universal `code:lint:house`, which runs the whole tree either way —
-its rules are cross-file — and every exclusion it needs lives in
-`.config/linter.yaml`, which `stackgen:tool-config` lands.
-
-**The `setup/deps/*` verbs are `install`, `outdated`, `audit`, `upgrade` and
-`cleanup` — all five slots.** `install` is `pnpm install --recursive`, because a
-workspace install that stops at the root leaves the repo half resolved.
-`cleanup` deletes `dist`, `node_modules` and `*.tsbuildinfo`, then prunes the
-store — a store left behind makes the next install look clean when it is
-replaying — and deliberately leaves the lockfile alone: the lockfile is an input
-a human reviews, and moving it forward is `upgrade`'s job. The optional verbs
-are **probed by name**, so a missing file is itself the answer: a manager that
-ships no `upgrade` has no such verb, not a choice still pending.
-
-`install --frozen` is the contract's name for "the lockfile is the input, not
-the output" — what a fresh worktree and CI want, turning a stale lockfile into
-a failure rather than a silent rewrite. `audit` is advisory and never a gate:
-`pnpm audit` reads a registry feed that moves without any lockfile change, and
-the blocking supply-chain check is `code:sec`, which runs pinned tools.
-`outdated` swallows its exit status, since `pnpm outdated` fails whenever it
-finds anything — a healthy repo's normal state. `upgrade` updates pnpm itself
-first, because a resolver a major version behind writes a lockfile the current
-one then rewrites, and passes `--latest` on purpose: the ranges say what still
-works, and this task is where a person decides something newer should — the
-diff is the review surface. `cleanup` prunes the store's `.pnpm` link farm
-rather than deleting it, which would re-download every unchanged package. The
-verbs print no header of their own; `setup:deps:all` frames each.
-
-`code:format:pnpm`'s sorter pair is the inverse of dprint's — sorting is its
-default, `--check` its read-only mode — and the sorter, like the house linter,
-runs by its mise path so a package in `node_modules/.bin` cannot shadow the
-pin.
+**A dependency audit is advisory, never a gate.** `pnpm audit` reads a
+registry feed that moves without any lockfile change; the blocking
+supply-chain check is `code:sec`, which runs pinned tools. `pnpm outdated`
+fails whenever it finds anything — a healthy repo's normal state — so it is
+never a gate either.
 
 Full judgment: the `pnpm` skill's references.

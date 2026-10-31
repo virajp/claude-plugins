@@ -27,9 +27,7 @@ Two independent gates, split by concern — **both must pass before a commit**:
 - **Lint** — `@askviraj/linter`, a self-contained ESLint CLI that bundles ESLint
   and every plugin (TS, JSON/JSONC, CSS, HTML, Markdown, YAML, TOML, Astro). It
   owns **correctness**.
-- **Format** — `dprint` (config in `.config/dprint.json`), plus
-  `sort-package-json` for `package.json` key order — a dev-only mise pin, so
-  that step is skipped where it is not installed, as in CI. It owns
+- **Format** — `dprint` (config in `.config/dprint.json`). It owns
   **whitespace and layout**.
 
 Keep them apart: dprint reformats, the linter finds real problems. There are no
@@ -51,21 +49,16 @@ edit.
 
 ## Running it
 
-In a mise repo, run through the task library — the tasks add the wrappers, and
-take an optional file list whose empty case is the whole tree. That is also how
-the pre-commit `lint` hook reaches the linter: it calls `code:lint:all` with
-the staged files, which runs the `code:lint:house` subtask, so there is no
-second place the linter is configured. The linter itself reads the whole tree
-either way — its rules are cross-file — so the list only narrows the other
-subtasks, the shell and workflow gates.
+In a mise repo, run through the task library. The tasks, the gate configs and
+the pre-commit hooks come from bootstrap, so there is no second place the
+linter is configured. The pre-commit `format` and `lint` hooks run the same
+tasks on the staged files. The linter itself reads the whole tree either way —
+its rules are cross-file.
 
 ```sh
-mise run code:format:all          # dprint check (verify) + sort-package-json --check
-mise run code:format:all --fix    # dprint fmt (apply) + sort-package-json (dev)
-mise run code:lint:house          # the linter alone (mise-pinned), whole tree
-mise run code:lint:all            # every lint subtask
-mise run code:lint:all --fix      # apply the linter's auto-fixes
-mise run code:all                 # aggregate: check → format → lint → sec
+mise run code:format          # every formatter
+mise run code:lint            # every linter, the house linter among them
+mise run code                 # every gate: format, lint, sec
 ```
 
 Direct invocation (what those tasks wrap):
@@ -81,8 +74,8 @@ linter="$(mise which linter --tool npm:@askviraj/linter)"
 "$linter" --cache                        # only changed files
 
 # Format
-dprint check --config .config/dprint.json   # verify (CI / pre-commit)
-dprint fmt   --config .config/dprint.json   # apply
+mise run code:format          # verify (CI / pre-commit)
+mise run code:format --fix    # apply
 ```
 
 The linter is **zero-config** — it ships an opinionated flat config, so no
@@ -93,11 +86,9 @@ The linter is **zero-config** — it ships an opinionated flat config, so no
 Only reach for config when a default genuinely misfires — never to make a real
 finding disappear.
 
-- **Linter:** edit `.config/linter.yaml` — `stackgen:tool-config` lands it,
-  empty of overrides and with an `ignores:` list of every stack's generated
-  trees between its `# >>> tool-config` markers, so the file to change already
-  exists. Add your own lines outside the markers — a later tool-config run
-  rewrites only the lines between them. Scope changes narrowly: extra
+- **Linter:** edit `.config/linter.yaml` — bootstrap ships it with the other
+  gate configs, so the file to change already exists. Scope changes narrowly:
+  extra
   `ignores`, per-preset `overrides`
   (preset names: `javascript`, `typescript`, `astro`, `json`, `jsonc`,
   `markdown`, `markdown-typescript`, `yaml`, `toml`, `html`, `css`), or a
@@ -105,9 +96,8 @@ finding disappear.
   override to a global one.
 - **Plain ESLint** — a trailing config object with `files` narrowed to the
   affected glob. Flat config is last-wins, so ordering is the mechanism.
-- **Formatter:** edit `.config/dprint.json` (`excludes` below its
-  `// >>> tool-config` block, per-language `lineWidth`, the `exec` block for
-  external formatters like `taplo`).
+- **Formatter:** edit `.config/dprint.json` (`excludes`, per-language
+  `lineWidth`, the `exec` block for external formatters like `taplo`).
 
 A `files`-scoped override states *where* the rule is wrong; a global one states
 that nobody wanted to look.
@@ -118,11 +108,8 @@ it silently covers every rule for every future edit to that file.
 
 ## Failure remedies
 
-- **Format check fails** → run `mise run code:format:all --fix`.
+- **Format check fails** → run `mise run code:format --fix`.
   It's mechanical; never hand-fix whitespace to satisfy it.
-- **`package.json` order fails** → `mise run code:format:all --fix` runs
-  `sort-package-json`, under the dev toolchain (`MISE_ENV=dev`) where it is
-  pinned.
 - **Lint fails** → `--fix` clears the mechanical ones; the rest are real. Fix
   the code, don't loosen the rule. If a rule is genuinely wrong for a file,
   scope an override in `.config/linter.yaml` to that `files` glob — never

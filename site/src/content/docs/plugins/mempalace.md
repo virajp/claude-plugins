@@ -98,7 +98,10 @@ directly). Wrapping upstream's would mean owning a JSONL format nobody here
 controls in order to answer a question a counter already answers.
 
 The two shell hooks, declared in `plugins/vwf/hooks/hooks.json`, are all there
-is:
+is to memory. The same file also lists the five
+[`/vwf:execute` action-log hooks](./vwf.md#the-action-log) and vwf's one hooks
+module, the [`/vwf:execute` progress pane](./vwf.md#the-progress-pane), under
+`modules`; neither writes memory.
 
 - **`hooks/mempalace-checkpoint.sh`** — POSIX sh, on the `Stop` event. It counts
   stops in a state file under `$XDG_STATE_HOME/ai-plugins/mempalace`. Every 15th
@@ -345,7 +348,7 @@ rooms:
 | `problems`  | review, security, acceptance, and UX findings, and how they were resolved                                                                  |
 | `planning`  | plan rationale and deferred options (written by `/vwf:plan`)                                                                               |
 | `gaps`      | blueprint/plan holes — surfaced during execution, routed in by `/vwf:verify`/`/vwf:feedback`, or parked as out-of-scope during elicitation |
-| `runs`      | the mirror of a plan folder's Run log, written by `/vwf:execute` per unit and read only when the folder cannot be                          |
+| `runs`      | the mirror of the run facts in a plan folder's `index.json`, written by `/vwf:execute` per unit and read only when the folder cannot be    |
 | `doctor`    | `/vwf:doctor` findings per run, so a still-present one reports as *known* instead of being rediscovered                                    |
 | `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                                                                                      |
 

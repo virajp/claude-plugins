@@ -1,0 +1,560 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "One append-only action log per plan",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-10-25 — c6b24dc5 0a6e981f e2b1ed82 e6a01cb1 7a2c0f4a d9658113 c3dd3650 1add34b9 0abffbe7 269a49a3"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit --all",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "New log verbs (prune, stdin events), a new SessionEnd hook, a new log location and claim writes run paths; an old folder with run {} still validates."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual pages that describe the action log, claim, unclaim and archive change; no new page."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U2",
+      "title": "plan-management: run paths, unclaim and prune",
+      "wave": 1,
+      "file": "02-plan-management.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/plan-management/SKILL.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md",
+        "plugins/vwf/skills/plan-management/scripts/lib/schema.mjs",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "scripts/src/plan-script.test.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "commit": "c6b24dc5",
+      "rounds": 1
+    },
+    {
+      "id": "U3",
+      "title": "execute: the new log calls",
+      "wave": 1,
+      "file": "03-execute.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/SKILL.md",
+        "plugins/vwf/skills/execute/references/action-log.md",
+        "plugins/vwf/skills/execute/references/edit-unit.md",
+        "plugins/vwf/skills/execute/references/code-unit.md",
+        "plugins/vwf/skills/execute/references/review-unit.md",
+        "plugins/vwf/skills/execute/references/blocking.md",
+        "plugins/vwf/skills/execute/references/acceptance-and-ux.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/skills/execute/references/preflight.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "commit": "d9658113",
+      "rounds": 2
+    },
+    {
+      "id": "U1",
+      "title": "The log script and the hooks",
+      "wave": 2,
+      "file": "01-log-and-hooks.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/scripts/log.mjs",
+        "plugins/vwf/hooks/action-log.sh",
+        "plugins/vwf/hooks/action-log.mjs",
+        "plugins/vwf/hooks/hooks.json",
+        "scripts/src/execute-log.test.ts"
+      ],
+      "depends_on": [
+        "U2"
+      ],
+      "waits": "it imports the named status-enum exports that U2 adds to schema.mjs",
+      "status": "green",
+      "commit": "0abffbe7",
+      "rounds": 5
+    },
+    {
+      "id": "U4",
+      "title": "Review: the log script, the hooks and the schema",
+      "wave": 3,
+      "file": "04-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "",
+      "status": "green",
+      "commit": "",
+      "rounds": 5,
+      "range": {
+        "from": "c3dd3650",
+        "to": "1add34b9"
+      }
+    },
+    {
+      "id": "U5",
+      "title": "Docs",
+      "wave": 4,
+      "file": "05-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/docs-tree.md",
+        ".claude/skills/vwf-plugin/references/assets.md",
+        ".claude/skills/vwf-plugin/references/skills-and-agents.md",
+        ".claude/docs/repo-shape.md",
+        "site/src/content/docs/plugins/vwf.md",
+        "site/src/content/docs/how-to/operate/ad-hoc-change.md",
+        "site/src/content/docs/how-to/greenfield/single-repo.md",
+        "docs/memory/decisions/2026-10-25-action-log-per-plan.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ],
+      "waits": "",
+      "status": "green",
+      "commit": "269a49a3",
+      "rounds": 2
+    },
+    {
+      "id": "U6",
+      "title": "Gates",
+      "wave": 5,
+      "file": "06-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "",
+      "status": "green",
+      "commit": "",
+      "rounds": 1
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated; regenerating mid-wave races",
+      "owner": "U6"
+    },
+    {
+      "id": "S2",
+      "file": "every human-facing doc (CLAUDE.md, .claude/**, site/src/content/docs/**)",
+      "why": "the units change behaviour that several docs describe",
+      "owner": "U5"
+    },
+    {
+      "id": "S3",
+      "file": "plugins/vwf/skills/plan-management/scripts/lib/schema.mjs",
+      "why": "U1 imports its status enums; U2 edits the run schema",
+      "owner": "U2"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where does the log live?",
+      "ruling": "The root is $VWF_LOG_ROOT, else $HOME/Library/Caches/vwf (macOS only). The file is <root>/<repo>/<plan folder basename>.jsonl. VWF_LOG_ROOT stays the override that the tests use. Old files in /tmp/vwf/ are left alone; nothing migrates them.",
+      "rejected": "/tmp/vwf/ (macOS clears /tmp after 3 days)",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "One file for each run or for each plan?",
+      "ruling": "One append-only file for each plan. No step edits or removes a line of a log. Each start (fresh or resume) appends a new run.start. Each line carries a run id <YYYYMMDD-HHMMSS>-<session8> (local time, the existing stamp()) in its run field, in log.mjs and in action-log.mjs. The marker holds the log path and the run id.",
+      "rejected": "One file for each run, with the file name as the run id (today)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "How does a reader find the worktree and the log of a running plan?",
+      "ruling": "plan-management claim sets run to {\"worktree\": \".worktrees/<name>\", \"log\": \"~/Library/Caches/vwf/<repo>/<folder basename>.jsonl\"} in the folder's index.json, in the claim commit, with one plan.mjs set --json. <name> is the plan's name (the branch and worktree name /vwf:execute uses); <repo> is the repo name log.mjs derives. The ~ is literal: no home path is committed, and VWF_LOG_ROOT does not change the committed value. This reverses the rule 'the index row is the one edit the run makes in the main checkout' (approved 2026-10-24).",
+      "rejected": "No paths in the folder; readers search git worktree list and the log root",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "What does summary report?",
+      "ruling": "summary reports each run and the totals. A run is the part of the file from one run.start to the next. The pause, from a run's last line to the next run.start, is not counted.",
+      "rejected": "One span from the first line to the last line (today)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How are old logs cleaned up?",
+      "ruling": "A new verb log.mjs prune --repo <root> --days 30 --keep <folder basename>. It deletes a log only when its plan folder is under <root>/docs/plans/archived/ and the log's mtime is more than 30 days old. It never deletes the log named by --keep. Every plan-management archive calls it after the move, with --keep set to the folder it archives. A live plan paused for 30 days keeps its log. prune touches only <log root>/<repo>/*.jsonl.",
+      "rejected": "No clean-up; or no --keep (it can delete the log of a plan that landed more than 30 days before its archive)",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "How are dead session markers cleaned up?",
+      "ruling": "(1) A SessionEnd hook appends session.end {reason} to the session's log, then deletes the session's own marker. (2) log.mjs start sweeps the markers of other sessions whose log has not changed for 24 hours, and always the nosession marker; it never touches a log. (3) log.mjs and action-log.mjs treat a marker that disappears during the read as 'no run', so a gate's exit code is never lost (no exists-then-read: read and catch ENOENT).",
+      "rejected": "No sweep; a dead marker in ~/Library/Caches makes every session start node on every tool call",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "What does the orchestrator do when log.mjs reports no active run during a run?",
+      "ruling": "event and run keep exit 0 and print one fixed stderr line, 'log.mjs: no active run in session <id>'. When the orchestrator sees that line during a run, it runs log.mjs start --mode resume --folder <folder>, which appends to the same file, then repeats the call. --mode accepts fresh or resume only; another value exits 2 and writes nothing.",
+      "rejected": "A non-zero exit on no active run (it can stop a gate)",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Who writes the units snapshot?",
+      "ruling": "log.mjs start reads <folder>/index.json from the --folder path it gets and appends one plan.snapshot event {folder, units} right after run.start, units being the units list of that file. On resume the orchestrator passes the worktree copy of the folder, on a fresh run the copy it reads.",
+      "rejected": "The orchestrator pipes plan.mjs get <folder>/index.json units into a separate event call",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "The schema of the new event types",
+      "ruling": "Strict for the four new types: a missing required key, a wrong type, a wrong enum value or an unknown key exits non-zero and writes nothing. plan.snapshot {folder: string, units: list}. row {exactly one of unit: \"U<n>\" or stage: a stages key; wave: int >= 1, with unit; status: the unit or stage status enum of schema.mjs; rounds: int >= 0, optional; commit: string, optional; range: {from, to}, optional; detail: string, optional}. gap {id: \"G<n>\", unit: string, stage: string, text: non-empty string, state: open|closed}, all required. session.end {reason: string, required; clear, resume, logout, prompt_input_exit, other; an unknown value is kept}. row and gap are passed on stdin as JSON in a quoted heredoc (<<'EOF'): log.mjs event row and log.mjs event gap read stdin. The old event types keep their free --key value fields.",
+      "rejected": "Mirror the whole index.json entry; loose schemas that accept unknown keys",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Where does log.mjs get the status enums?",
+      "ruling": "log.mjs imports them from plugins/vwf/skills/plan-management/scripts/lib/schema.mjs with a relative path (rule 16 permits it). U2 exports the two enums as named exports if they are not exported yet, and does not change their values.",
+      "rejected": "A copy in log.mjs with a vitest equality test",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Do the run fields stay in index.json?",
+      "ruling": "Keep both. index.json keeps units[].status, commit, rounds, range, gaps and overrides; it is committed and survives a lost machine, and resume and the final report keep reading it. The log gets the same facts as events and is the pane's source.",
+      "rejected": "Log only; or status and commit only",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "How does a row event get into the log?",
+      "ruling": "The orchestrator, after each plan.mjs set of a unit's status, commit, rounds or range, or of a stage, runs log.mjs event row with the JSON on stdin. After each plan.mjs append to gaps and each set of a gap's state, it runs log.mjs event gap. plan.mjs does not change.",
+      "rejected": "plan.mjs writes the row when a marker is active; a wrapper verb in log.mjs",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "What does unclaim do with run?",
+      "ruling": "plan-management unclaim sets run to {} in its own commit. The log file stays; a later claim writes the same log path.",
+      "rejected": "Leave run as it is until the next claim",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "What does validate accept in run?",
+      "ruling": "run is {} or exactly {worktree: string, log: string}, both non-empty. It is no longer an open object; the template's key rules and the schema header comment say so.",
+      "rejected": "Keep run open",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Which script handles SessionEnd?",
+      "ruling": "hooks.json registers SessionEnd to the same action-log.sh, with timeout 10 (the runtime gives a plugin hook 1.5 s). action-log.sh keeps its fast exit when active/ is empty. action-log.mjs handles SessionEnd: it reads the session's marker, appends session.end {reason}, then deletes the marker. The payload has session_id and reason.",
+      "rejected": "A separate SessionEnd script",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Is a review unit necessary?",
+      "ruling": "Yes: the plan lands runnable code, the shipped log.mjs, the action-log hook scripts and the plan schema. U4 covers U1, U2 and U3. They are edit units, so U4 runs the security half only.",
+      "rejected": "The wave review only",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Is U1 in wave 1 with U2? (rulings review gap 1)",
+      "ruling": "No. U1 waits for U2: U1 sits in wave 2 and depends on U2, because it imports the named status-enum exports that U2 adds to schema.mjs. The review is wave 3, docs wave 4, gates wave 5.",
+      "rejected": "U1 owns the export edit and U2 waits; copy the enums (reverses D10)",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Does the plan gate line mise x -- mise run code:precommit --all need a -- separator? (rulings review gap 2)",
+      "ruling": "No. code:precommit declares --all as a usage flag; mise run -n code:precommit --all shows that the flag reaches the task. The plan A gap ruling of 2026-10-25 chose this form.",
+      "rejected": "mise run code:precommit -- --all",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Which archived folder names does prune match? (rulings review gap 3)",
+      "ruling": "prune treats a log <basename>.jsonl as archived when <root>/docs/plans/archived/<basename> or <root>/docs/plans/archived/<basename>-<n> (n a decimal number, the archive name-clash suffix) is a directory. The other D5 conditions stay.",
+      "rejected": "Keep the log of a suffixed archive for good",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Where do the run paths go when the folder lives in a member repo? (rulings review gap 4)",
+      "ruling": "In the folder's own repo. Under a multi-repo topology the run edit is a direct commit on the integration branch of the repo that holds the folder, beside the base repo's claim commit (same message). worktree is relative to that repo, <repo> is that repo's name, and archive passes that repo's root to prune as --repo. log.mjs derives <repo> from the git common dir of the repo that contains the --folder path (start) or the --repo root (prune), not from the current directory.",
+      "rejected": "No run paths for member folders (run stays {})",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "What does run.worktree hold when git-workflow picks worktrees/ or an all override shares one worktree? (rulings review gap 5)",
+      "ruling": "The real path. claim writes the repo-relative path of the worktree that this run will use: <dir>/<branch>, where <dir> is the directory git-workflow's own rule picks (.worktrees wins over worktrees, the default is .worktrees). Under an all override that makes several plans share one worktree, it is the path of the shared worktree. D3's .worktrees/<name> is the common case of this rule.",
+      "rejected": "Always .worktrees/<name>",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Which keys must a row carry when only one field is set? (rulings review gap 6)",
+      "ruling": "Every row carries status, required: the unit's or the stage's status after the set. A unit row also carries wave, required. The changed field (commit, rounds, range or detail) is added. A row with no changed field beyond status is valid (a status change).",
+      "rejected": "Only the changed field; status and wave optional",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "How do the new gap and row events relate to the old event gap --class --source and event unit --status? (rulings review round 2, gap 1)",
+      "ruling": "Replace them. The strict stdin gap event replaces the old event gap --key form; it gains two optional keys, class (GAP, UNRESOLVED, contested, oscillation) and source (unit, wave-review, review-row, gate, acceptance, ux), and is written for each recorded gap line as the old one was. Its id is G<n> for an entry of index.json's gaps, or L<n> (a separate sequence, one past the highest L id in the log) for a recorded line that is not an index.json gap. This amends D9's id rule. row replaces event unit; a unit's kind comes from plan.snapshot. summary's GAPS and unit sections read the new events.",
+      "rejected": "Keep the old events and name the new one gap.entry",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Who gives an L<n> gap id, and what is its state? (rulings review round 3, gap 2)",
+      "ruling": "log.mjs gives it. When a gap event comes with no id, log.mjs reads the log, takes one past the highest L id in it (L1 when none), and writes that id. Such a line has state open. A G<n> gap always comes with its id from index.json. The orchestrator never reads the log for an id. This amends D9: id is optional on the stdin gap event, and required on the written line.",
+      "rejected": "The orchestrator keeps a counter and passes the id",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "How are the site links that point at the edited pages protected? (rulings review round 3, gap 3)",
+      "ruling": "Add mise x -- mise run p:site:check to the plan gate (astro check, the build and the link checker). U5 keeps the heading 'The action log' of site/src/content/docs/plugins/vwf.md, so the anchor #the-action-log that plugins/mempalace.md:102 links to stays.",
+      "rejected": "Keep the heading only, with no gate line",
+      "units": [
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "How is the hook's session.end kept to the strict schema? (rulings review round 3, gap 4)",
+      "ruling": "A fixed shape in the hook. action-log.mjs writes exactly {reason} beside the fields append adds, with reason the payload's reason as a string, or other when it is absent. The hook imports no schema and stays fast. A vitest case asserts the written line against log.mjs's session.end schema.",
+      "rejected": "The hook imports log.mjs's schema check",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "When is prune called? (rulings review round 3, gap 5)",
+      "ruling": "Only after a move. prune runs as the last step of each plan-management archive that moves a folder into docs/plans/archived/, the later archive of a folder kept live included. A landing that keeps the folder live calls no prune, and /vwf:execute never calls prune itself.",
+      "rejected": "Also call prune at each landing",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Who adds the event gap calls at the gap appends of preflight.md? (rulings review round 4, gap 1)",
+      "ruling": "U3. plugins/vwf/skills/execute/references/preflight.md joins U3's owns; at both gaps appends (:68-73, a missing LSP answer and an unavailable LSP) U3 adds the event gap call, or a one-line pointer to the contract in SKILL.md, as in the other references.",
+      "rejected": "D12's contract in SKILL.md alone",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Which root does archive pass to prune --repo? (rulings review round 4, gap 3)",
+      "ruling": "The root of the checkout where archive runs: the run's worktree at landing, the main checkout for a later archive by hand. Both give the same <repo> name, because log.mjs derives it from the git common dir (D20), and both hold docs/plans/archived/ as of that moment; the folder that this archive moved is --keep anyway.",
+      "rejected": "Always the main checkout",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "How does the action-log hook summarise a Bash call with no description? (gap G3, review row U4)",
+      "ruling": "Log only the program name: the first word of the command that is not a NAME=value assignment. No argument is logged, so no inline secret can reach the log. A description, when given, is logged as before. Ruled by the user on 2026-10-25.",
+      "rejected": "A denylist that redacts secret-looking values (round 1 fix; it missed curl -u, secret headers, here-strings and mysql -p); program name plus the redacted rest",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "What does the row event of a review row log for a late re-run? (gap G1)",
+      "ruling": "Only the main loop range, as index.json holds it. A late re-run is logged by its review.round events, which carry their own --loop, --from and --to. No change to U3s edit. Ruled by the user on 2026-10-25.",
+      "rejected": "A row event with the late loop range (it would disagree with index.json)",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "The convergence guard tripped at U4 round 4 (security findings 1 → 2: $(…)/backtick and Unicode-space bypasses of program()). Pause, or continue? (asked in session)",
+      "ruling": "Continue. Each leading NAME=value word must match /^[A-Za-z_]\\w*=[\\w./:@+,%=-]*$/ and the command is split on [ \\t\\n] only; anything else logs (command). Round 5 reviews it; any leak found there pauses the run. Ruled by the user on 2026-10-25.",
+      "rejected": "Pause the run per the guard; always log (command) for a Bash call with no description",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, no registry or harness change, nothing to persist"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The row JSON for a review row late-loop to is not specified · range is logged only for the main loop set, as index.json holds it · closed: ruled D31 by the user, U3's choice stands",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "contested (R1, 2 rounds + closing pass): plugins/vwf/skills/execute/references/action-log.md:135 prose line past 80 columns (133) · closed: rewrapped in place on 2026-10-25 at the user's request",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "security",
+      "text": "oscillation (cap-exempt security, U4 rounds 1-2): plugins/vwf/hooks/action-log.mjs secret values in the hook Bash summary; the denylist redaction did not converge · closed: ruled D30 by the user — the hook logs only the program name; fixed in place in U1's Owns; review row U4 re-runs over it on resume",
+      "state": "closed"
+    }
+  ],
+  "overrides": [],
+  "run": {}
+}

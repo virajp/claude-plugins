@@ -46,12 +46,30 @@ and platform** (`mobile` / `tablet` / `desktop` / `auto` / `watch` / `tv` /
 project per platform, since each platform canvas carries its own conventions
 CLAUDE.md (device frame, layout — written by `/vwf:screens`); **two platforms
 never share a canvas project**. A flow's `device:` frontmatter key names the
-platform (`mobile` → `mobile`, `web` → `desktop`, an in-car device → its in-car
-platform). On a **device** platform (`mobile`, `tablet`, `desktop`, `auto`,
-`watch`, `tv`, `spatial`) every card is generated and pushed at the platform's
-**resolved viewport**: `design.viewports.<registry-project>.<platform>` from
-`.config/vwf.yaml` when set (`<W>x<H>`, in points), else the default size the
-platform canvas's conventions CLAUDE.md states in its Layout block. (The design
+platform (`mobile` → `mobile`, `web` → `site` or `webapp`, whichever the flow's
+registry project lists — when it lists both, stop and name the two, since the
+flow must say which — an in-car device → its in-car platform). On `site` and
+`webapp` every card is pushed at a fixed 1440×900 in a desktop browser-chrome
+frame, one frame per code, the narrow 390 layout a `width` tweak, never a second
+frame; `design.viewports` does not apply to them. On a **device** platform (`mobile`, `tablet`, `desktop`, `auto`,
+`watch`, `tv`, `spatial`) every card is generated and pushed in the platform's
+**resolved OS list, with sizes**. The list, from `.config/vwf.yaml`, is the list
+form of `design.viewports.<registry-project>.<platform>`, which is
+`[ { os: <os>, size: <W>x<H> } ]`, when one is set, else
+`projects.<registry-project>.stack.os.<platform>`, else empty. An empty list
+pushes the one generic frame at the default size the platform canvas's
+conventions CLAUDE.md states in its Layout block, or at the scalar override
+`design.viewports.<registry-project>.<platform>: <W>x<H>` (in points). A
+non-empty list pushes **one frame per code with a `device` tweak**: the tweak's
+values are the list's OS tokens in order, and the first is the primary and the
+tweak's default. Each OS takes its size from its list entry, else from the OS
+frame's default in the Layout block; a scalar override resizes the primary OS
+frame only, and the chrome always follows the OS. The flow's `device:` mapping
+above names the platform, so it names the **primary OS frame**; the other OS
+frames are the `device` tweak's values on that same frame — never more frames,
+never another page. A `features:` entry shows its feature on the `device` value
+whose OS equals the OS part of its `scope` (the text before any `:`) and its
+`fallback` on every other value; import diffs the primary frame only. (The design
 system itself lives in the `design.design_system_id` project
 — `/vwf:design-system` imports *from* it; nothing in vwf pushes to it.)
 

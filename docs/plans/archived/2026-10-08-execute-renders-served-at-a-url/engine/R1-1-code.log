@@ -1,0 +1,72 @@
+/code-review high — loop R1, round 1 — range 554a7d40..6ef2794c (branch 2026-10-08-execute-renders-served-at-a-url)
+
+I found 10 issues in the branch delta 554a7d40..6ef2794c (`docs/plans/` excluded). As the high-effort recipe specifies, none was re-verified after dedup.
+
+- **Most serious:** renders are filed by route folder, so after a route change an old image can show up as a different screen's render (first finding). The `RENDER:` line also carries no project, so the per-project copy can file images under the wrong project.
+- **Contract gap:** `stack-adapter.md` accepts any image file, but `renders.mjs` only copies PNGs.
+- **Docs:** `site/` and `readme.md` don't mention renders mode or the kept renders yet. I left that out because the plan gives it to unit U5 in wave 3.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 254,
+    "summary": "Images are stored by route folder and only the screens a run rendered are overwritten, so after a route change an old image stays in a folder that now belongs to a different screen and is served as that screen's render.",
+    "failure_scenario": "Run 1 copies S1 (route /orders) to renders/web/orders/index.png. The blueprint then moves S1 to /orders-list and adds S2 at /orders. Run 2 renders only S1, so the new routes.json maps /orders to S2. serve.mjs getRender (line 918) finds orders/index.png and shows S1's old image labelled as S2. The old renders.json entry for S1 still points at orders/index.png, so the list page and state switcher link to a mismatched image."
+  },
+  {
+    "file": "plugins/vwf/skills/execute/SKILL.md",
+    "line": 708,
+    "summary": "Execute says to pipe the RENDER: lines into one renders.mjs run per project, but the RENDER: line (and the E3 renders: item) carries no project, so the orchestrator cannot split the lines by project.",
+    "failure_scenario": "A UX stage covers two projects, api-web and admin-web, both on platform webapp. Every RENDER: line goes to both runs. Codes that exist only in the other project produce noise SKIPPED lines. A code present in both projects (e.g. S01) has its image copied into both projects' render trees, putting one project's screenshot under the other."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 227,
+    "summary": "renders.mjs skips every file that is not a .png, but the ux-gate contract in stack-adapter.md only says `file` is the image's path and never requires PNG.",
+    "failure_scenario": "A stackgen ux-gate payload that follows the published contract returns `renders: [{code: S01, platform: mobile, state: default, file: out/S01.jpg}]` (or .webp). Every item is SKIPPED as 'not a PNG', COPIED: 0, and the run keeps no renders without the contract saying why. The PNG requirement is missing from stack-adapter.md line 450."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 264,
+    "summary": "mkdirSync and copyFileSync in the per-item loop are not guarded; any throw ends the script after some images are copied but before renders.json and routes.json are written (line 304).",
+    "failure_scenario": "A stale file sits where a route folder should be (mkdir ENOTDIR), or the disk is full (ENOSPC) on item 3 of 5. Node exits non-zero with a stack trace. Items 1-2 are on disk but missing from renders.json, so the list page omits them and the state switcher misses them. No SKIPPED or COPIED line is printed, so execute's Run log row cannot report what was kept."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 159,
+    "summary": "In renders mode routes.json is read once at startup, while renders.json is re-read on every request so that 'a copy made while the server runs is seen'. A copy that adds a screen or changes routes is not seen until restart.",
+    "failure_scenario": "The render server is running and an execute run copies a render for a new screen S9 and rewrites __renders/routes.json. renders.json now lists S9, but findScreen(routes, ...) uses the startup map, so S9's route returns 404 and renderListPage omits it. A moved route serves the old folder. This contradicts the header comment at lines 165-166."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 953,
+    "summary": "The server writes its --url-file on listen but never removes it on Done or a crash. The peer reads that file on every request, so a leftover server.url from an interrupted session turns into a live 'Open the render/mockup' link to a dead or unrelated port.",
+    "failure_scenario": "A renders review is interrupted (session killed before SKILL step 5 deletes the server.url files). Next session the render server starts before the mockup server, or the mockup server is never started. peerOrigin() reads the old http://127.0.0.1:54321/, and the overlay links to a closed port or to another local process now on that port."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 283,
+    "summary": "When the --mockups tree's __mockups/routes.json is missing or malformed, the code silently uses the render tree's route map to match mockup files, with no warning.",
+    "failure_scenario": "The mockup tree was rendered from an older blueprint, or its routes.json is corrupt, while the render routes come from the newer worktree. matchPath resolves the frame using the render map, so a route whose folder moved shows a mockup of the wrong screen beside the render (or none). Nothing on stderr explains the mismatch."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 254,
+    "summary": "The route folder is created (mkdirSync recursive) before the escape check at line 257, so a folder outside the render tree is created before the script detects the escape and skips the item.",
+    "failure_scenario": "A symlinked folder sits under docs/scratchpad/<project>/renders/<platform>/ (e.g. orders -> /tmp/x). mkdirSync creates /tmp/x/[id]/ before the realpath check rejects it. Separately, copyFileSync onto an existing index.png symlink follows the link and overwrites its target, which nothing checks."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 257,
+    "summary": "renders.mjs duplicates helpers lib/routes.mjs already has: the hand-rolled realpath containment check repeats inRoot, and isDir/isFile (line 103) copy the private helpers in lib/routes.mjs.",
+    "failure_scenario": "Two copies of the containment logic can drift (e.g. one gains a case-folding or reserved-dir rule). The fix is to call inRoot(realRoot, dir), already imported, and export isDir/isFile from lib/routes.mjs instead of redefining them."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 374,
+    "summary": "serveFile's frame branch repeats the insert-before-</body> splice that withOverlay already does, and serveFile, renderPage and the SKILL prose each hard-code their own variants (SIDE_BY_SIDE set, splice).",
+    "failure_scenario": "Any fix to the splice (e.g. handling uppercase </BODY>, or several </body> in inline scripts) has to be made twice. A single injectBeforeBodyClose(html, snippet) used by withOverlay and the frame path does the same job."
+  }
+]
+```

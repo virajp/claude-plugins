@@ -1,0 +1,56 @@
+/code-review high — loop R1-late1, round 1 — range 26bfccee..d3ed8616 (branch 2026-10-08-execute-renders-served-at-a-url)
+
+Eight findings in the branch delta 26bfccee..d3ed8616 (docs/plans/ ignored). The most serious is a regression: renders.mjs now keeps out-of-date render entries forever, so an old entry can become valid again and show the wrong image. Nothing was run; this comes from reading the code only.
+
+```json
+[
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 372,
+    "summary": "renders.json now keeps stale entries forever, so one can become valid again and point at an image another screen's render has since overwritten. The new header comment (lines 33-37) promises this never happens.",
+    "failure_scenario": "200a is rendered at /orders (entry 200a -> orders/index.png). The blueprint moves 200a to /history and gives /orders to 200d. A later run renders 200d, overwriting orders/index.png; the 200a entry is kept because only copied {code,state} pairs are replaced. Later 200a moves back to /orders and a run copies any screen on that platform, rewriting routes.json. serve.mjs's renders() filter now accepts the old 200a entry (route and file match again), so /orders shows 200d's image labelled as 200a, with 200a's old plan and date. The removed currentFile/dropped logic would have deleted the 200a entry when 200d rendered."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 374,
+    "summary": "An entry whose code left the route map is never dropped, so if that code is later reused for a new screen at the same route, the old screen's image is served as the new screen's render.",
+    "failure_scenario": "Screen 300a at /settings is rendered. It is deleted from the Screens table, and later a new screen is added that reuses code 300a at /settings. Any copy on that platform rewrites routes.json. The leftover {300a, default, settings/index.png} entry passes serve.mjs's filter, so /settings and the /__renders/ list show the deleted screen's image as the new screen's render before the new screen has ever been rendered."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/renders.mjs",
+    "line": 370,
+    "summary": "Image removal (removeImage) and entry pruning were deleted with no replacement, so the render tree and renders.json grow without bound. This contradicts the documented 'latest set only' rule.",
+    "failure_scenario": "Each route move or screen removal leaves an orphan index.png / index--<state>.png on disk and a dead entry in renders.json. mockups/SKILL.md:45 still says the render tree is 'latest set only', but after many plans it holds every screen's old images. renders.json keeps growing, and serve.mjs re-reads and filters it on every request."
+  },
+  {
+    "file": "scripts/src/mockups-renders.test.ts",
+    "line": 221,
+    "summary": "The rewritten test dropped the assertion that __renders/routes.json is rewritten with the moved route (/order/:id), but serve.mjs now relies entirely on routes.json being current to hide stale entries.",
+    "failure_scenario": "If a later change stops renders.mjs rewriting routes.json (for example, it writes only renders.json, or writes the stale map), serve.mjs's renders() filter compares stale entries against a stale map and shows a moved screen's old image. No test in mockups-renders.test.ts would fail, because the routes.json check that used to be here was removed."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 228,
+    "summary": "Altitude: stale entries are hidden at read time by a filter in the server, instead of being pruned at write time in renders.mjs. That leaves bad data on disk and opens the resurrection bugs above.",
+    "failure_scenario": "The fix guards the read path instead of fixing the writer. renders.mjs could keep the old rule of dropping any entry whose route or file no longer matches the map, even without deleting images. That would make renders.json correct on its own and stop stale entries coming back. As it stands, every other reader of renders.json (the execute run log, future tools) must re-implement this filter or show wrong data."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 233,
+    "summary": "Reuse: renders() re-derives a screen's render file name (path joined with index.png or index--<state>.png). renders.mjs already does this at lines 281-283/320, and so did the deleted currentFile(), but no shared helper exists.",
+    "failure_scenario": "The state-to-filename rule now lives in two scripts: renders.mjs's name/file expression and serve.mjs's renderName+join. If one changes (for example, the default-state name or how paths are joined) and the other does not, every entry fails the filter and every route shows 'No render yet'. A shared helper in lib/routes.mjs, which both scripts already import, would keep the rule in one place."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/SKILL.md",
+    "line": 114,
+    "summary": "The new doc says a missing __mockups/routes.json always means no mockup, no window link, and a stderr warning. serve.mjs warns only when the --mockups directory exists, and the window link depends on the peer server.url file, not on routes.json.",
+    "failure_scenario": "Case 1: mockups/<platform>/ does not exist. serve.mjs line 311 skips the branch silently, so the documented warning never appears. Case 2, on a two-window platform: a stale __mockups/server.url is left by a server that died, which step 5 now admits can happen. The render server's peerLink() still reads it and shows a window link to a dead or unrelated port, even though routes.json is missing."
+  },
+  {
+    "file": "plugins/vwf/skills/mockups/scripts/serve.mjs",
+    "line": 955,
+    "summary": "Efficiency: every request, including every PNG request, now reads and JSON-parses renders.json and runs an O(entries x screens) filter. One page view costs at least two full reads (page plus image), and the list page costs another.",
+    "failure_scenario": "Since stale entries are never pruned (see above), renders.json keeps growing. Each image GET reads the file synchronously and scans it against every screen on the server's only thread, slowing down as plans pile up. Filtering once per request and indexing entries by file (a Map), or caching on the file's mtime, would avoid the repeated work."
+  }
+]
+```

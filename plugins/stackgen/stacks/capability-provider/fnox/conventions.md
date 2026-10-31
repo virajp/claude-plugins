@@ -34,36 +34,18 @@ and states no profile of its own.
 
 ## What this pack writes
 
-| Lands at                           | Is                                          |
-| ---------------------------------- | ------------------------------------------- |
-| `fnox.toml`                        | the providers and the declared secret names |
-| `.config/mise/tasks/setup/secrets` | the fill for the toolchain manager's slot   |
+Nothing into the repo. The fnox pin, the fnox config and the secrets check
+are bootstrap's. The config is a seed: it lands once, and the repo owns it
+from then on. `mise run setup` runs the check, which confirms the CLI and
+the config are in place and runs `fnox check`. It never runs a command whose
+normal output is a secret — `get` is that command, and a scrollback is more
+widely readable than the repo.
 
-The CLI pin is the pack's template, not a copied file:
-`templates/.config/mise/conf.d/fnox/mise.toml`, which `stackgen:tool-config`
-renders into the repo, pinning `fnox` exactly.
-
-**`fnox.toml` at the repository root is an accepted exception**, and the only
-one this pack takes. fnox searches upward from the working directory; a copy
-under `.config/` is reachable only by passing `--config` on every call, and
-`--config` also bypasses the directory recursion and the local override — so
-moving the file would take `fnox.local.toml` out of the scheme with it. The
-pin, which has no such constraint, does live under `.config/`.
-
-**The task fills a slot and never prints a value.** `setup:secrets` replaces
-the universal `#PLACEHOLDER` task at that path — the one file a pack may ship
-where tool-config ships its own — and checks
-that the CLI and the config are both present and reports the keychain service
-and prefix. It never runs a command whose normal output is a secret — `get` is
-that command, and a scrollback is more widely readable than the repo.
-
-**The shipped config declares one provider, the OS keychain**, with
-`if_missing = "warn"` so a contributor whose keychain is not yet populated can
-still run the repo's tasks. Every secret is declared in `[secrets]` even
-before its keychain entry exists — the name is the contract, and
-`docs/blueprint/environment.md` catalogs the same names. A secret better held
-in a cloud store gets a second provider entry and a reference; the keychain
-stays the default.
+**The seed declares one provider, the OS keychain, as the default.** Every
+secret is declared in `[secrets]` even before its keychain entry exists —
+the name is the contract, and `docs/blueprint/environment.md` catalogs the
+same names. A secret better held in a cloud store gets a second provider
+entry and a reference; the keychain stays the default.
 
 ## Naming — one set per repo
 
@@ -72,10 +54,10 @@ stays the default.
 | `<REPO>_<KEY>` | this repository's own value | `SITE_DATABASE_URL` |
 | `GLB_<KEY>`    | shared across repositories  | `GLB_GITHUB_TOKEN`  |
 
-Names are `[A-Z0-9_]`, the same set every injector can export. The keychain
-provider's `prefix = "global/"` is the shared namespace inside the `fnox`
-service; a repository with its own material declares a second provider with
-its own prefix rather than widening that one. Machine-local additions go in
+Names are `[A-Z0-9_]`, the same set every injector can export. The seed's
+keychain provider keeps this repository's entries under its own service and
+prefix; a value shared across repositories gets a second provider for the
+shared namespace rather than widening that one. Machine-local additions go in
 `fnox.local.toml`, which is gitignored.
 
 ## Moving from the encrypted mode
@@ -84,7 +66,7 @@ An earlier version of this pack offered committed ciphertext; it is retired.
 A repo that materialized that version keeps an inert
 `.claude/hooks/fnox-ciphertext-guard.sh` — delete it by hand, and
 `/stackgen:stackgen-sync` then drops its lock record. A hand-added
-`fnox-ciphertext` pre-commit entry, a gitleaks allowlist line naming
+`fnox-ciphertext` pre-commit entry, a secret-scanner allowlist line naming
 `fnox.toml` and the `.gitignore` age lines are removed by hand too. Any value
 once committed, even as ciphertext, is rotated at its source.
 

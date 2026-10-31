@@ -36,6 +36,14 @@ ignores:
   - "plugins/stackgen/skills/tool-config/assets/.config/dprint.json"
   # The gitignored dev-marketplace staging copies of plugins/ — linted at source.
   - ".dev-marketplace/**"
+  # Plan folders: `/vwf:execute` and `yq` write them field by field, and a
+  # formatter or a linter rewrite of a plan file fights those writes.
+  - "docs/plans/**"
+  # Design exports kept byte-for-byte — each folder is one design version.
+  - "docs/design/**"
+  # The release levels: the release tasks clear each key, so after a release
+  # the file holds only its comments, which the YAML rules call an empty document.
+  - ".config/releases.yaml"
 
 overrides:
   markdown:

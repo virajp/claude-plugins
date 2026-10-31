@@ -1,0 +1,14 @@
+/security-review — loop R1, round 4 — range 7bb533f8..9024a1bd (branch 2026-10-08-mockups-served-at-a-url)
+
+No vulnerabilities at confidence >= 8.
+
+The fix in commit 9024a1bd holds. In `plugins/vwf/skills/mockups/scripts/links.mjs`, `verdict()` marks an href BROKEN in each of these cases:
+- It is not root-absolute, or it starts with `//`.
+- It contains a backslash, tab, CR or LF.
+- It resolves against the `http://127.0.0.1` base to a different origin.
+
+The check also runs on the trimmed attribute value. That commit touched only `links.mjs` and its test, so nothing new reached `serve.mjs` or `lib/routes.mjs`.
+
+Dropped candidates:
+- **Entity-encoded href (score 3):** an href like `/&#x2F;evil.com` or `/&#92;evil.com` can pass the check when the root has a `[param]` folder. The checker reads the raw text, sees the path `/&`, and the param folder matches it, but a browser decodes the entity and goes to another host. Dropped because the link checker is a quality gate over generated local mockups, not a security boundary, and the impact is a low-value navigation away from the page. If you want it closed anyway, decode HTML entities before `verdict()` or reject any `&` in an href.
+- **Checker and browser parsing differ for odd hrefs (score 2):** dropped as low impact.

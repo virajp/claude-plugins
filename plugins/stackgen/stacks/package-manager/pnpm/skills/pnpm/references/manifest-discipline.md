@@ -17,9 +17,28 @@ monorepo the workspace globs live in the root `pnpm-workspace.yaml` (see the
 
 ## Versions
 
-- Use `"latest"` for every dependency version — pinning is the lockfile's job
-  (`pnpm-lock.yaml`).
+- Give every dependency a **version range**, never `"latest"`. The lockfile
+  (`pnpm-lock.yaml`) pins the exact versions; the range is the limit an update
+  can move them inside. `"latest"` lets an update take a new major version
+  that another dependency does not accept.
+- A stable package gets its **major** range: `">=4.0.0 <5.0.0"`. A package that
+  can break in a minor release gets its **minor** range: `">=4.0.0 <4.1.0"`.
+- Choose from the package's own stability docs — read them with Context7, not
+  from memory. Use the minor range for:
+  - every `0.x` package;
+  - a package or an API its docs mark unstable or experimental (for example,
+    the Effect 4 packages other than `effect`, the OpenTelemetry `0.2xx`
+    packages, `@opentelemetry/semantic-conventions/incubating`);
+  - a family that must share one version, or that has no stability guarantee
+    across releases (for example, `@temporalio/*`);
+  - a package without semver, or one that a tool patches at one exact version
+    (for example, `typescript` when `@effect/tsgo` patches it).
+- Run `pnpm update` **without** `--latest` — `--latest` writes a version
+  outside the range. To move a range, edit it in `package.json` on purpose,
+  after you read the release notes.
 - After any `package.json` change, run `pnpm install` from the repo root.
+- Never edit `pnpm-lock.yaml` by hand, with an editor tool, `sed` or a script —
+  only `pnpm install`, `pnpm add`, `pnpm remove` and `pnpm update` write it.
 - Commit `pnpm-lock.yaml` changes separately: `ops: update pnpm lockfile`.
 - **Monorepo:** local workspace packages link via the workspace protocol:
   `"workspace:*"`.
@@ -77,9 +96,12 @@ workspace in a monorepo — exposes the same script vocabulary (so in a monorepo
 
 - `build` always runs `clean → check → build:ts → build:alias` in order — type
   check before emit, rewrite `@/` aliases after (see the **build** reference).
-- **Monorepo:** the root `package.json` orchestrates workspaces via
-  `turbo run build` and `pnpm run --filter '<pkg>' <script>`; keep
-  cross-workspace fan-out there, per-package scripts stay single-package.
+- **Monorepo:** the root `package.json` orchestrates workspaces — via
+  `turbo run build` when the repo uses turbo, else via
+  `pnpm --filter "<name>..." run build` (or `bun run --filter "<name>..." build`),
+  which builds the workspace dependencies of `<name>` first, in dependency
+  order. Keep cross-workspace fan-out there, per-package scripts stay
+  single-package.
 - Dev runs use `tsx`; never commit a script that runs `vitest run` directly when
   it needs emulators or secrets — wrap it in the relevant runner.
 
@@ -89,8 +111,8 @@ alias itself is declared in `tsconfig.json` — see the **tsconfig** skill):
 ```jsonc
 {
   "devDependencies": {
-    "tsc-alias": "latest", // build:alias — rewrites @/ → relative paths in dist
-    "vite-tsconfig-paths": "latest", // resolves @/ in Vitest (see the vitest reference)
+    "tsc-alias": ">=1.0.0 <2.0.0", // build:alias — rewrites @/ → relative paths in dist
+    "vite-tsconfig-paths": ">=6.0.0 <7.0.0", // resolves @/ in Vitest (see the vitest reference)
   },
 }
 ```

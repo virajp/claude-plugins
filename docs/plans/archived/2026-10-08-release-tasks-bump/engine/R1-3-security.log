@@ -1,0 +1,11 @@
+/security-review (run over 0a90f308..HEAD in the worktree, round 3)
+
+No high-confidence vulnerabilities found.
+
+Candidates looked at and rejected:
+- eval "${step}" in p/release: every step string is built from constants, task names from a fixed list, and branch literals. The one variable part is the commit message, made from plugin names and versions read from committed manifests, and it passes through printf '%q' before the eval. No untrusted input reaches it.
+- RELEASE_GATES_DONE=1 skipping the gates in --tag-only: it is an env var, which counts as trusted here. It only skips gates that p:release already ran in its step 0 on the same run. Missing hardening, not a vulnerability.
+- deps-update.yml sourcing the repo's helpers and local scripts and running releases_raise: the workflow only triggers on schedule and workflow_dispatch. It reads no PR, issue or event text, so there is no Actions injection path. The contents: write token, the push to main and the tag push were all there before this change.
+- releases_level and releases_raise (awk over .config/releases.yaml): the file and its keys come from committed repo files or fixed arguments. The level is checked against the allowed list (level_rank) before anything is written, and the mktemp + mv is in the repo's own directory.
+- Plugin name used in the git tag -l / grep -E pattern and in require('./${file}'): the values come from committed manifests in a repo the maintainer controls.
+- The new p:releases:test step in plugins.yml: a test-only file run in CI, excluded from scope.

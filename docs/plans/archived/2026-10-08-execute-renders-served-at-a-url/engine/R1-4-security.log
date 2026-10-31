@@ -1,0 +1,22 @@
+/security-review — loop R1, round 4 — range 554a7d40..26bfccee (branch 2026-10-08-execute-renders-served-at-a-url)
+
+I found no vulnerabilities at confidence 8 or above. I read `renders.mjs`, `serve.mjs`, `lib/routes.mjs` and `lib/screens.mjs` in full at 26bfccee and ran nothing.
+
+Dropped candidates:
+- **Race between unlink and recreate** (`copyFresh`, `writeJson`, `--url-file` at `serve.mjs:1015`): exploiting it needs a local attacker writing into the user's own scratchpad. With `COPYFILE_EXCL` and `flag: "wx"`, a link that reappears makes the write fail, not follow. Confidence 2.
+- **`removeImage` deleting what a forged `renders.json` names**: that file sits in the main checkout and isn't attacker-reachable. Deletion is also limited to existing `.png` files under the platform root, outside `__renders/`. Confidence 2.
+- **Mockup HTML in the frame is same-origin and could POST `/comment` or `/done`**: this was already true in mockup mode, the mockups are generated locally and trusted, and nothing new is reachable. Confidence 3.
+
+Checked clean:
+- **Paths in `renders.mjs`:** sources are realpath'd and must sit under the worktree and end in `.png`. Platform, project and state names are checked against strict patterns. Route segments must pass `pathError` (no `.`, `..`, NUL or reserved first segment). `ensureDir` checks each level with a realpath under the base, so a symlinked folder makes it stop rather than escape. Every existing target is unlinked before an exclusive copy.
+- **PNG serving in `serve.mjs`:** paths go through `splitPath` (rejects `..`), then `inRoot`, and `__renders/` is excluded regardless of case. Under `/__mockups/` the `servable` check excludes the reserved folder, so `comments.yaml` is never served.
+- **XSS:** every interpolated value goes through `escapeHtml`, the overlay config through `scriptJson` (escapes `<`), and the overlay sets text with `textContent`. The iframe and image `src` values always start with `/`.
+- **Peer link:** it comes from the peer file only (realpath'd, http on 127.0.0.1 or localhost, no credentials). Request data supplies only the path after the origin.
+- **Frame click:** single-slash paths only (`//host` and `/\host` are excluded), plus an origin comparison, then navigates with the path, query and hash.
+- **CSRF and DNS rebinding:** the server checks the Host header on every request. Every POST must be `application/json` and, when it sends an Origin header, come from the server's own origin.
+- **Comments YAML:** `yamlString` escapes the comment text, the plan and other fields, so a comment can't break the file.
+- **JSON written by `renders.mjs`:** built with `JSON.stringify`, so no injection.
+- **Command injection:** none of the code spawns a process.
+
+# Report
+No vulnerabilities at confidence >= 8.

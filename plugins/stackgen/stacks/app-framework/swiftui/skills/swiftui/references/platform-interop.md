@@ -57,7 +57,9 @@ project's deployment targets, and every API newer than that minimum is guarded.
 - **Guard at the smallest scope.** An `#available` check around the one call
   or modifier that needs it, with the fallback beside it, so the fallback gets
   read and tested. An `@available` attribute on a whole type is for a type that
-  genuinely cannot exist on the older OS.
+  genuinely cannot exist on the older OS. A flow's declared OS-specific
+  feature follows the same guard, with the flow's own fallback, per
+  [iOS & iPadOS](platforms/ios-ipados.md#device-features-inside-mobile).
 - **A fallback is a real behaviour**, not an empty branch. If a feature cannot
   exist on the older OS, the screen that offers it says so or does not offer
   it.
@@ -73,3 +75,29 @@ implementation. A file that is mostly `#if` branches wants to be one file per
 platform, selected by the target's sources. Which platforms share a target is
 [pick & trade](pick-and-trade.md)'s; per-platform depth is the platform
 references'.
+
+## System surfaces
+
+Short rules for the system features an app reaches for most, each a direct
+call rather than a wrapper:
+
+- **Share sheet: `ShareLink`.** Share a `Transferable` value — a URL, a model
+  type that declares its transfer representation — with a preview where the
+  system cannot draw one. No hosted activity controller for the common case.
+- **Launch screen: the plist launch screen.** Configure it through the
+  `UILaunchScreen` key, which new SwiftUI projects generate; a storyboard only
+  when the layout needs one. App Store Connect rejects an upload built with
+  the iOS 27 SDK or later that has neither. No custom splash view held on a
+  timer after launch — the first screen loads its own state.
+- **Keep the screen on: the idle timer, scoped.** Disable the application's
+  idle timer only on the screen that shows content with little interaction —
+  navigation, a call, a timer — and reset it when that screen goes away. It is
+  never set app-wide, and audio playback does not need it.
+- **Photo picking: `PhotosPicker`.** The user grants access only to the items
+  they choose, so the picker needs no photo library authorization. Ask for
+  library access only when the feature truly browses the whole library.
+- **Usage strings before the first request.** Every protected resource —
+  camera, microphone, location, contacts, tracking and the rest — needs its
+  usage-description key in the target's Info.plist before the app requests
+  access. A missing string terminates the app at the request, so the key ships
+  with the feature that asks, worded as the reason the user sees.

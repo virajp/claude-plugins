@@ -147,6 +147,32 @@ adapter's. The adapter copies each component's `config/` payload and runs the
 component's `pack` call with the `values:` above as `--set`, so the pack's
 templates render on the landing that copies its subtasks.
 
+## Record the payload's OS map
+
+A project-axis template payload may carry an `os:` map — which OS the template
+targets on each platform (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, the
+template payload). Setup copies it into the base's `.config/vwf.yaml` as
+`projects.<name>.stack.os`, for **every** project pinned to that slug, the way
+the stack block's other keys record what the template is:
+
+- **filtered to the platforms the project declares** in the registry — a
+  platform the template serves but this project does not ship is dropped, and
+  the order of each list is kept, its first entry being the primary frame;
+- **absent in the payload means the key is not written** — no OS known, the
+  generic canvas frame — and an empty map after the filter is not written
+  either;
+- **an existing `stack.os` is replaced** with what the payload says, since it
+  is the template's fact, not a choice anyone made — a person who wants other
+  frames sets the list form of `design.viewports` instead, which outranks it.
+
+It runs for each entry this pass lands, from the payload the landing returns,
+and on **every** run for a project-axis pin already materialized whose
+`stack.os` is absent, from the payload the adapter's template skill reads back
+from the materialized entry — a fetch that lands nothing and asks no
+consent — so a repo materialized before the key existed gains its frames on its
+next `/vwf:setup`. The write is part of the pass's config write; the key is
+additive and moves no `config_format`.
+
 ## Gather the pack values
 
 Some values a stack needs are facts about the **machine** that builds it, not
@@ -248,10 +274,14 @@ preview `pack-remove --slug <slug>`: it deletes the pack's
 `packs.<slug>` from the values file and re-renders the `…:all` tasks, so no
 gate calls a task that is gone. Show its rows beside the files the lockfile
 records for that component — its `config/` copies — as one consent per repo.
-On a yes, run the call with its answers, then delete those recorded files
-and their lockfile entries, and commit, one commit per slug. A decline
-leaves everything as it stands and is reported; `/vwf:setup` offers it
-again on the next run.
+A **generated** component of the dropped slug — a `<type>/<name>@generated`
+ref that no slug still pinned in that repo also composes — has no pack and
+no `pack-remove` call: its recorded files are the `.claude/` copies the
+lockfile names for that ref (its skill, its citations), and they join the
+same consent. On a yes, run the call with its answers, then delete those
+recorded files and their lockfile entries, and commit, one commit per slug.
+A decline leaves everything as it stands and is reported; `/vwf:setup`
+offers it again on the next run.
 
 ## Re-derive the repo's values
 

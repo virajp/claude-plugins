@@ -11,17 +11,10 @@ import {
   expect,
   it,
 } from "vitest";
-// Plain zero-dependency `.mjs` modules with no declaration file beside them,
-// so the exports used here are typed by hand below.
-// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
-import * as toolConfigCli from "../../plugins/stackgen/skills/tool-config/scripts/lib/cli.mjs";
-// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
-import * as toolConfigRender from "../../plugins/stackgen/skills/tool-config/scripts/lib/render.mjs";
 import {
   check,
   prescribes,
   resolveRootRef,
-  TEMPLATE_GLOBAL_NAMES,
 } from "./check.ts";
 import type { Finding } from "./check.ts";
 
@@ -96,14 +89,6 @@ function skill(name: string, extra = "", body = "prose"): string {
 }
 
 const messages = (findings: readonly Finding[]) => findings.map(f => f.message);
-
-const { RESERVED_SLUGS } = toolConfigCli as {
-  RESERVED_SLUGS: readonly string[];
-};
-const { SUBTASK_DIRS, valueNames } = toolConfigRender as {
-  SUBTASK_DIRS: Readonly<Record<string, string>>;
-  valueNames: (values: Record<string, unknown>) => Record<string, unknown>;
-};
 
 describe("the manifest", () => {
   it("flags a name that disagrees with the directory", () => {
@@ -241,8 +226,8 @@ describe("hook scripts", () => {
     });
 
   it("accepts an executable script and an inline command", () => {
-    // vwf's guarded `rtk` hook is inline and names no bundled file, so a rule
-    // that demanded a script would flag it on every run.
+    // An inline command names no bundled file, so a rule that demanded a
+    // script would flag it on every run.
     const root = tree({
       alpha: {
         files: {
@@ -253,7 +238,7 @@ describe("hook scripts", () => {
       },
       beta: {
         files: {
-          "hooks/hooks.json": hooks("command -v rtk && rtk hook || true"),
+          "hooks/hooks.json": hooks("command -v jq && jq --version || true"),
         },
       },
     });
@@ -294,9 +279,10 @@ describe("hook scripts", () => {
 
 describe("the pack config tier", () => {
   const pack = "stacks/toolchain-manager/mise/config";
-  const task = `${pack}/.config/mise/tasks/code/format`;
+  const task = `${pack}/.config/mise/tasks/test/golden`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
+    const deploy = `${pack}/.config/mise/tasks/p/_project/deploy`;
     // The `config/` tier mirrors the repo root, so a pack ships plenty there
     // that is not a task and has no reason to be executable.
     const root = tree({
@@ -305,14 +291,11 @@ describe("the pack config tier", () => {
           [task]: "#!/usr/bin/env bash\n",
           [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
-          [`${pack}/.config/dprint.json`]: "{}\n",
-          // The three root entries a tool discovers only from the repo root:
-          // the dprint shim, the package-manager file, and the forge directory.
-          [`${pack}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
-          [`${pack}/.npmrc`]: "fund=false\n",
+          [deploy]: "#!/usr/bin/env bash\n",
+          // The forge directory, which a tool discovers only from the root.
           [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
-        executable: [task],
+        executable: [task, deploy],
       },
     });
     expect(messages(check(root))).toEqual([]);
@@ -479,130 +462,46 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("flags a pre-commit.d file in a pack's config/ tier", () => {
-    // The hooks are tool-config's universal set; a fragment is merged by
-    // nothing.
-    const fragment = `${pack}/.config/pre-commit.d/mise.yaml`;
+  it("flags a toolchain file under .config/ in a pack's config/ tier", () => {
+    // The toolchain is bootstrap's: a gate config, a generic task or a hook
+    // fragment shipped by a pack is a second writer of bootstrap's file.
+    const files = [
+      ".config/pre-commit.d/mise.yaml",
+      ".config/swiftlint.yml",
+      ".config/mise/tasks/code/lint/swiftlint",
+      ".config/mise/tasks/setup/deps/swift",
+    ];
     const root = tree({
-      alpha: { files: { [fragment]: "repos:\n  - repo: local\n" } },
+      alpha: {
+        files: Object.fromEntries(
+          files.map(f => [`${pack}/${f}`, "#!/usr/bin/env bash\n"]),
+        ),
+        executable: files.filter(f => f.includes("tasks")).map(f =>
+          `${pack}/${f}`
+        ),
+      },
+    });
+    expect(messages(check(root)).sort()).toEqual(
+      files
+        .map(f =>
+          `pack config/ tier ships ${f} — under .config/ a pack ships only `
+          + ".config/mise/tasks/test/, .config/mise/tasks/p/_project/; the toolchain "
+          + `is bootstrap's: ${pack}/${f}`
+        )
+        .sort(),
+    );
+  });
+
+  it("flags a pack templates/ tier, retired with the key that fed it", () => {
+    const dir = "stacks/app-framework/swiftui/templates";
+    const root = tree({
+      alpha: {
+        files: { [`${dir}/.config/mise/conf.d/swiftui/mise.toml`]: "[env]\n" },
+      },
     });
     expect(messages(check(root))).toEqual([
-      `pack config/ tier ships a pre-commit.d file — the hooks are `
-      + "tool-config's universal set, and a pack adds a subtask the `…:all` "
-      + `tasks call: ${fragment}`,
-    ]);
-  });
-
-  // The materializer evaluates `conditional:` against the caller's answers and
-  // skips what does not hold — an axis or value it does not recognise is a
-  // condition that never holds, and a path matching nothing is a condition
-  // guarding no file. Neither reports anything downstream.
-  const conditional = (
-    entries: string,
-    files: Record<string, string> = {},
-  ) => ({
-    alpha: {
-      files: {
-        "stacks/toolchain-manager/mise/pack.yaml":
-          `name: mise\nconditional:\n${entries}`,
-        [`${pack}/.config/wrangler.d/staging.jsonc`]: "{}\n",
-        [`${pack}/wrangler.jsonc`]: "{}\n",
-        ...files,
-      },
-    },
-  });
-
-  it("accepts a conditional list naming known axes and landed paths", () => {
-    const root = tree(conditional(
-      "  - path: .config/wrangler.d/*.jsonc\n    when: { forge: github }\n"
-        + "  - path: wrangler.jsonc\n    when: { secrets: fnox }\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("enters dot-directories when resolving a conditional glob", () => {
-    // Every landed path runs through `.config/`, and a `**` that stopped at a
-    // dot segment would refuse a fragment set that is there. (A leading `**`
-    // is quoted because bare it is a YAML alias.)
-    const root = tree(conditional(
-      "  - path: .config/wrangler.d/*.jsonc\n    when: { forge: github }\n"
-        + "  - path: \"**/wrangler.d/*.jsonc\"\n    when: { forge: github }\n"
-        + "  - path: \"**/*.jsonc\"\n    when: { forge: github }\n"
-        + "  - path: .config/wrangler.d/**\n    when: { forge: github }\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a secrets condition on none, which names no provider", () => {
-    const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { secrets: none }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "`when.secrets` is \"none\", which names no provider",
-      ),
-    ]);
-  });
-
-  it("flags a conditional entry on an axis outside the vocabulary", () => {
-    const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { ci: github }\n"
-        + "  - path: wrangler.jsonc\n    when: { update_bot: renovate }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "`conditional[0]` (wrangler.jsonc) `when` names axis `ci`, not one of "
-          + "forge, secrets",
-      ),
-      expect.stringContaining("`when` names axis `update_bot`, not one of"),
-    ]);
-  });
-
-  it("flags a conditional entry whose value the axis never takes", () => {
-    const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { forge: bitbucket }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "`when.forge` is \"bitbucket\", not one of github, gitlab",
-      ),
-    ]);
-  });
-
-  it("flags a conditional entry whose path matches nothing", () => {
-    const root = tree(conditional(
-      "  - path: .github/ISSUE_TEMPLATE/*\n    when: { forge: github }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "`conditional[0]` (.github/ISSUE_TEMPLATE/*) matches no file under "
-          + "the pack's config/ tier",
-      ),
-    ]);
-  });
-
-  it("flags a conditional path that climbs out of the config tier", () => {
-    // The glob is matched inside the pack's own tier; a `..` segment or an
-    // absolute path reaches files the pack does not land.
-    const root = tree(conditional(
-      "  - path: ../../../wrangler.jsonc\n    when: { forge: github }\n"
-        + "  - path: /etc/wrangler.jsonc\n    when: { forge: github }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        "(../../../wrangler.jsonc) climbs out of what the pack lands",
-      ),
-      expect.stringContaining("(/etc/wrangler.jsonc) climbs out of"),
-    ]);
-  });
-
-  it("flags a conditional entry naming two axes at once", () => {
-    // Two answers is two entries on the same path, never one map.
-    const root = tree(conditional(
-      "  - path: wrangler.jsonc\n    when: { forge: github, secrets: fnox }\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`when` names 2 axes — exactly one of"),
+      "pack ships a templates/ tier — retired: a pack's tool pins and "
+      + `environment values are bootstrap's: ${dir}`,
     ]);
   });
 
@@ -668,33 +567,37 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  it("refuses a retired tool-config or machine_env key", () => {
-    // Nothing reads either list any more: a pack ships templates and subtasks,
-    // and a machine value is a template name filled from `packs.<slug>`.
+  it("refuses a retired tool-config, machine_env, values or conditional key", () => {
+    // Nothing reads any of them: the toolchain is bootstrap's, a machine value
+    // is found by bootstrap's task, and no pack used `conditional:`.
     const root = tree(facts(
       "tool-config:\n  - git add ignore .venv\n"
-        + "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n",
+        + "machine_env:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "values:\n  - { name: X, detect: \"echo 1\", question: X? }\n"
+        + "conditional:\n  - { path: wrangler.jsonc, when: { forge: github } }\n",
     ));
+    const at = "stacks/app-framework/swiftui/pack.yaml";
+    const machine = "a machine value is found by bootstrap's task, or set in "
+      + "conf.d/zz-repo";
     expect(messages(check(root))).toEqual([
-      "stacks/app-framework/swiftui/pack.yaml: `tool-config:` is retired — a "
-      + "pack ships the lines it needs as files in its templates/ tier, which "
-      + "tool-config renders, or as a subtask under .config/mise/tasks/",
-      "stacks/app-framework/swiftui/pack.yaml: `machine_env:` is retired — a "
-      + "machine value is a `values:` entry — name, detect and question — read "
-      + "as `@@NAME@@` in the pack's templates/",
+      `${at}: \`tool-config:\` is retired — a pack's toolchain is `
+      + "bootstrap's, chosen from a clone",
+      `${at}: \`machine_env:\` is retired — ${machine}`,
+      `${at}: \`values:\` is retired — ${machine}`,
+      `${at}: \`conditional:\` is retired — no pack used it; every config/ `
+      + "path lands",
     ]);
   });
 
   it("flags a mise conf.d fragment in a pack's config/ tier", () => {
-    // A pack's mise files live in its templates/ tier, which tool-config
-    // renders; a copied fragment is a second writer of the same path.
+    // A tool pin is bootstrap's; a copied fragment is a second writer.
     const root = tree(facts("", {
       [`${confD}/swiftui.toml`]: "[env]\nX = \"1\"\n",
     }));
     expect(messages(check(root))).toEqual([
-      `pack config/ tier ships a mise conf.d fragment — a pack's mise files `
-      + `live in its templates/ tier, which tool-config renders: `
-      + `${confD}/swiftui.toml`,
+      `pack config/ tier ships .config/mise/conf.d/swiftui.toml — under .config/ a pack ships only `
+      + ".config/mise/tasks/test/, .config/mise/tasks/p/_project/; the toolchain "
+      + `is bootstrap's: ${confD}/swiftui.toml`,
     ]);
   });
 
@@ -832,219 +735,6 @@ describe("the pack config tier", () => {
       .sort());
   });
 
-  it("accepts a pack templates/ tier and a pack with no tool-config list", () => {
-    // tool-config renders `templates/` to the same paths `config/` copies to;
-    // a pack's mise files live there, so a conf.d fragment is not a finding.
-    const dir = "stacks/linter/eslint";
-    const task = `${dir}/templates/.config/mise/tasks/code/lint/eslint`;
-    const root = tree({
-      stackgen: {
-        files: {
-          [`${dir}/pack.yaml`]: "slug: eslint\nversion: 0.1.0\n",
-          [task]: "#!/usr/bin/env bash\neslint @@REPO_NAME@@\n",
-          [`${dir}/templates/.config/mise/conf.d/eslint/mise.toml`]:
-            "[tools]\n",
-        },
-        executable: [task],
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("holds a pack templates/ tier to the landed-tree rules", () => {
-    const dir = "stacks/linter/eslint/templates";
-    const task = `${dir}/.config/mise/tasks/code/lint/eslint`;
-    const root = tree({
-      stackgen: {
-        files: {
-          [task]: "#!/usr/bin/env bash\n",
-          [`${dir}/.prettierrc`]: "{}\n",
-          [`${dir}/.config/x.toml`]: "# ${CLAUDE_PLUGIN_ROOT}/x.md\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual(
-      expect.arrayContaining([
-        `mise task file is not executable: ${task}`,
-        expect.stringContaining("unallowlisted root entry"),
-        expect.stringContaining("expands to nothing"),
-      ]),
-    );
-  });
-
-  it.each([
-    "config/.config/mise/tasks/code/check/uv",
-    "config/.config/mise/tasks/code/format/ruff",
-    "templates/.config/mise/tasks/setup/deps/install/pnpm",
-    "templates/.config/mise/tasks/setup/ai/claude-code",
-  ])("flags a subtask not named for its pack: %s", subtask => {
-    // A subtask's leaf is its pack's slug, so two packs never write one file.
-    const dir = "stacks/linter/eslint";
-    const task = `${dir}/${subtask}`;
-    const root = tree({
-      stackgen: {
-        files: { [task]: "#!/usr/bin/env bash\n" },
-        executable: [task],
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      `pack subtask is not named for its pack — a subtask's leaf is the pack `
-      + `slug \`eslint\`: ${task}`,
-    ]);
-  });
-
-  it.each(["all", "ai", "_base"])("refuses the reserved pack slug %s", slug => {
-    // tool-config owns the `…:all` tasks and the conf.d/_base/ and ai/ folders.
-    const root = tree({
-      stackgen: { files: { [`stacks/linter/${slug}/pack.yaml`]: "name: x\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      `pack slug \`${slug}\` is reserved — tool-config owns the \`…:all\` `
-      + `tasks and the conf.d/_base/ and conf.d/ai/ folders: `
-      + `stacks/linter/${slug}`,
-    ]);
-  });
-
-  it("refuses a pack subtask taking a universal subtask's leaf", () => {
-    // The set is read off tool-config's own trees: a pack named `workflows`
-    // keeps its slug, but may not ship `code/lint/workflows` beside it.
-    const universal = "skills/tool-config/assets/.config/mise/tasks/code/lint/"
-      + "workflows";
-    const clean = tree({
-      stackgen: {
-        files: {
-          [universal]: "#!/usr/bin/env bash\n",
-          "stacks/cloud-service/workflows/pack.yaml": "name: Workflows\n",
-        },
-        executable: [universal],
-      },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const task = "stacks/cloud-service/workflows/templates/.config/mise/tasks/"
-      + "code/check/workflows";
-    const root = tree({
-      stackgen: {
-        files: {
-          [universal]: "#!/usr/bin/env bash\n",
-          [task]: "#!/usr/bin/env bash\n",
-        },
-        executable: [universal, task],
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      "pack subtask takes the leaf `workflows` of a universal subtask "
-      + `tool-config ships — removing the pack would delete it: ${task}`,
-    ]);
-  });
-
-  it("refuses a pack file over a path tool-config ships, bar a slot", () => {
-    // The owned set is read off tool-config's trees: a whole file is
-    // tool-config's, a folder there is never a pack's file, and a
-    // `#PLACEHOLDER` slot is the one path a pack fills.
-    const tc = "skills/tool-config/assets/.config";
-    const house = `${tc}/mise/tasks/code/lint/house`;
-    const slot = `${tc}/mise/tasks/setup/secrets`;
-    const pack = "stacks/capability-provider/fnox/config/.config";
-    const overlay = `${pack}/mise/tasks/setup/secrets`;
-    const files = {
-      [house]: "#!/usr/bin/env bash\n",
-      [slot]: "#!/usr/bin/env bash\n#PLACEHOLDER\n",
-      [`${tc}/dprint.json`]: "{ \"excludes\": [] }\n",
-      [overlay]: "#!/usr/bin/env bash\nfnox\n",
-    };
-    const executable = [house, slot, overlay];
-    expect(messages(check(tree({ stackgen: { files, executable } }))))
-      .toEqual([]);
-    const lint = `${pack}/mise/tasks/code/lint`;
-    const dprint = `${pack}/dprint.json`;
-    const root = tree({
-      stackgen: {
-        files: {
-          ...files,
-          [lint]: "#!/usr/bin/env bash\n",
-          [dprint]: "{}\n",
-        },
-        executable: [...executable, lint],
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      `pack file overwrites .config/dprint.json, which tool-config ships `
-      + `whole — only a #PLACEHOLDER slot is a pack's to fill: ${dprint}`,
-      `pack file sits where tool-config ships a folder or a file above it — a `
-      + `pack adds files beside tool-config's, never over its tree: ${lint}`,
-    ]);
-  });
-
-  it("reads the template names and reserved slugs off the script", () => {
-    // The checker's name set is the script's: every name `valueNames`
-    // derives, each `…:all` list `SUBTASK_DIRS` names, and `TASKS`.
-    const names = new Set([
-      ...Object.keys(
-        valueNames({
-          REPO_NAME: "r",
-          FORGE: "github",
-          SECRETS: "fnox",
-          REPO_URL: "https://example.com/r",
-        }),
-      ),
-      ...Object.keys(SUBTASK_DIRS),
-      "TASKS",
-    ]);
-    expect([...TEMPLATE_GLOBAL_NAMES].sort()).toEqual([...names].sort());
-    const root = tree({
-      stackgen: {
-        files: Object.fromEntries(
-          RESERVED_SLUGS.map(slug => [
-            `stacks/linter/${slug}/pack.yaml`,
-            "name: x\n",
-          ]),
-        ),
-      },
-    });
-    expect(messages(check(root))).toHaveLength(RESERVED_SLUGS.length);
-  });
-
-  it("refuses a pack conf.d folder not named for its pack", () => {
-    const confD = "stacks/package-manager/pnpm/templates/.config/mise/conf.d";
-    const clean = tree({
-      stackgen: { files: { [`${confD}/pnpm/mise.dev.toml`]: "[tools]\n" } },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: {
-          [`${confD}/_base/mise.toml`]: "[tools]\n",
-          [`${confD}/ai/mise.dev.toml`]: "[tools]\n",
-          [`${confD}/pnpm.toml`]: "[tools]\n",
-        },
-      },
-    });
-    expect(messages(check(root)).sort()).toEqual(
-      ["_base", "ai", "pnpm.toml"].map(name =>
-        `pack templates/ tier writes conf.d/${name} — a pack's mise files sit `
-        + `in conf.d/pnpm/ alone: ${confD}/${name}`
-      ),
-    );
-  });
-
-  it("accepts a subtask named for its pack, and a whole-file overlay", () => {
-    const dir = "stacks/linter/eslint/config/.config/mise/tasks";
-    const tasks = [
-      `${dir}/code/lint/eslint`,
-      `${dir}/setup/deps/audit/eslint`,
-      `${dir}/code/format`,
-    ];
-    const root = tree({
-      stackgen: {
-        files: Object.fromEntries(
-          tasks.map(task => [task, "#!/usr/bin/env bash\n"]),
-        ),
-        executable: tasks,
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
-  });
-
   it("walks a tool-config asset tree as a landed tree", () => {
     const task = `${assets}/.config/mise/tasks/code/graph`;
     const clean = tree({
@@ -1169,122 +859,6 @@ describe("the pack config tier", () => {
       + "template name — tool-config's templates read the stored and derived "
       + "names alone",
     ]);
-  });
-
-  it("reads a pack template's own names, and refuses a malformed tag", () => {
-    // A pack's own name is upper snake case; anything the engine cannot read
-    // lands verbatim in the rendered file.
-    const file = "stacks/app-framework/swiftui/templates/.config/mise/conf.d/"
-      + "swiftui/mise.toml";
-    const clean = tree({
-      stackgen: {
-        files: {
-          "stacks/app-framework/swiftui/pack.yaml": "values:\n"
-            + "  - { name: XCODE_VERSION, detect: \"xcodebuild -version\", "
-            + "question: Which Xcode? }\n",
-          [file]: "[env]\nXCODE_VERSION = \"@@XCODE_VERSION@@\"\n"
-            + "REPO = \"@@REPO_NAME@@\"\n",
-        },
-      },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: {
-          [file]: "[env]\nXCODE_VERSION = \"@@xcode_version@@\"\n"
-            + "@@#unless NODE@@\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      `${file}:2: \`@@xcode_version@@\` is not a template tag — a name is `
-      + "upper snake case, read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@",
-      `${file}:3: \`@@#unless NODE@@\` is not a template tag — a name is `
-      + "upper snake case, read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@",
-    ]);
-  });
-
-  describe("a pack's values list", () => {
-    const yaml = "stacks/app-framework/swiftui/pack.yaml";
-    const file = "stacks/app-framework/swiftui/templates/.config/mise/conf.d/"
-      + "swiftui/mise.toml";
-    const pack = (values: string, template: string) =>
-      tree({
-        stackgen: {
-          files: { [yaml]: `slug: swiftui\n${values}`, [file]: template },
-        },
-      });
-
-    it("accepts each declared name read in the templates", () => {
-      const root = pack(
-        "values:\n"
-          + "  - name: XCODE_VERSION\n"
-          + "    detect: xcodebuild -version | head -1\n"
-          + "    question: Which Xcode version?\n"
-          + "  - name: SIMULATOR_OS\n"
-          + "    detect: xcrun simctl list runtimes\n"
-          + "    question: Which simulator OS?\n",
-        "[env]\nX = \"@@XCODE_VERSION@@\"\n"
-          + "@@#if SIMULATOR_OS@@\nY = \"@@SIMULATOR_OS@@\"\n@@/if@@\n",
-      );
-      expect(messages(check(root))).toEqual([]);
-    });
-
-    it("flags each malformed entry by its line", () => {
-      const root = pack(
-        "values:\n"
-          + "  - XCODE_VERSION\n"
-          + "  - { name: xcode, detect: x, question: y }\n"
-          + "  - { name: REPO_NAME, detect: x, question: y }\n"
-          + "  - { name: A, detect: \"\", question: y, default: z }\n"
-          + "  - { detect: x }\n"
-          + "  - { name: FORMAT, detect: x, question: y }\n"
-          + "  - { name: A, detect: x, question: y }\n",
-        "@@A@@\n",
-      );
-      expect(messages(check(root))).toEqual([
-        `${yaml}:3: \`values[0]\` is not a { name, detect, question } map`,
-        `${yaml}:4: \`values[1]\` \`name\` (xcode) is not upper snake case`,
-        `${yaml}:5: \`values[2]\` \`name\` (REPO_NAME) is a global template `
-        + "name — tool-config fills it, not the pack",
-        `${yaml}:6: \`values[3]\` carries \`default\` — only \`name\`, `
-        + "`detect` and `question`",
-        `${yaml}:6: \`values[3]\` \`detect\` is not a non-empty string`,
-        `${yaml}:7: \`values[4]\` \`name\` is not a non-empty string`,
-        `${yaml}:7: \`values[4]\` \`question\` is not a non-empty string`,
-        `${yaml}:8: \`values[5]\` \`name\` (FORMAT) is a global template `
-        + "name — tool-config fills it, not the pack",
-        `${yaml}:9: \`values[6]\` \`name\` (A) is declared already, at line 6`,
-      ]);
-    });
-
-    it("flags a values key that is not a list", () => {
-      const root = pack("values: XCODE_VERSION\n", "[env]\n");
-      expect(messages(check(root))).toEqual([
-        `${yaml}:2: \`values:\` is not a list of { name, detect, question } `
-        + "maps",
-      ]);
-    });
-
-    it("flags a declared name no template reads", () => {
-      const root = pack(
-        "values:\n  - { name: SIMULATOR_OS, detect: x, question: y }\n",
-        "[env]\n",
-      );
-      expect(messages(check(root))).toEqual([
-        `${yaml}:3: \`values:\` declares SIMULATOR_OS, which no file in the `
-        + "pack's templates/ reads as @@SIMULATOR_OS@@",
-      ]);
-    });
-
-    it("flags a template name the pack does not declare", () => {
-      const root = pack("", "[env]\nX = \"@@XCODE_VERSION@@\"\n");
-      expect(messages(check(root))).toEqual([
-        `${file}:2: \`@@XCODE_VERSION@@\` names XCODE_VERSION, which is `
-        + "neither a global template name nor declared in the pack's "
-        + "`values:`",
-      ]);
-    });
   });
 });
 
@@ -1561,7 +1135,7 @@ describe("landed citations", () => {
     // Form (a) holds for every landed file, not just prose: a shell task under
     // `config/` can spell the token as readily as a skill can, and the dot
     // segments on its way there are why this walks rather than filters.
-    const task = "stacks/language/x/config/.config/mise/tasks/x";
+    const task = "stacks/language/x/config/.config/mise/tasks/test/x";
     const root = tree(packs(
       {
         "stacks/language/x/skills/x/SKILL.md": skill(
