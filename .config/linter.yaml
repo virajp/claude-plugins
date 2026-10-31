@@ -41,6 +41,9 @@ ignores:
   - "docs/plans/**"
   # Design exports kept byte-for-byte — each folder is one design version.
   - "docs/design/**"
+  # The release levels: the release tasks clear each key, so after a release
+  # the file holds only its comments, which the YAML rules call an empty document.
+  - ".config/releases.yaml"
 
 overrides:
   markdown:
