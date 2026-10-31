@@ -466,16 +466,21 @@ session's id. With no `RUNNING` row it waits up to 10 minutes, showing
 `waiting for the claim` when `/vwf:execute` opened it or
 `waiting for the next plan` once a plan has landed; when the wait ends empty, on
 the old markdown format, or with a folder it cannot find, it shows one message
-for 10 s and closes. `plan.ts` beside it holds the parsers and the replay, and
-strips terminal control characters from plan and log text before it renders;
-`plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and `agents.test.tsx` are
-its tests. Its `$.state` keys (`monitorRun`, `monitorQuiet`, `monitorViewing`)
-sit under the plugin name `vwf` and are declared in `types/index.d.ts`, which
-the manifest's `types` key names. It ties an agent to a unit through the log:
-the Agent call's `tool.start` summary names a unit (`U<n>`, `U<n>-late<k>`) or a
-wave review (`R<wave>`, `R<wave>-late`, `R-late`), or a `vwf:execute-*`
-review-row reviewer, and `tool.end` gives the child id. The per-plan log is the
-scope of an `all` run. `claude plugin test plugins/vwf` and
+for 10 s and closes. The pane hook branches on `e.surface`: the terminal keeps
+its cell-padded `fit()` columns, block-character bar and key hints; every other
+surface draws an `Svg` bar (`progressSvg`), rows of percent-width `Box` cells
+with the unit id as the `Button`, and a `role: "dismiss"` Close, and
+`pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers and the
+replay, and strips terminal control characters from plan and log text before it
+renders; `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and
+`agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,
+`monitorQuiet`, `monitorViewing`) sit under the plugin name `vwf` and are
+declared in `types/index.d.ts`, which the manifest's `types` key names. It ties
+an agent to a unit through the log: the Agent call's `tool.start` summary names
+a unit (`U<n>`, `U<n>-late<k>`) or a wave review (`R<wave>`, `R<wave>-late`,
+`R-late`), or a `vwf:execute-*` review-row reviewer, and `tool.end` gives the
+child id. The per-plan log is the scope of an `all` run.
+`claude plugin test plugins/vwf` and
 `claude plugin validate --strict plugins/vwf` are its gates, run locally — CI
 has no `claude`. Why it lives inside vwf rather than as its own plugin is
 `docs/memory/decisions/2026-10-21-execute-monitor-inside-vwf.md`; how it reads

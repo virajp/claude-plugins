@@ -7,6 +7,7 @@ import type {
   AgentInfo,
   EngineInterface,
   Register,
+  RenderChildren,
   Timer,
 } from "claude-code";
 
@@ -113,6 +114,34 @@ function colorOf(state: string, gaps: number): string | undefined {
   }
 
   return undefined;
+}
+
+// The progress bar a graphical surface draws: one segment for each unit, in the
+// colors colorOf names, a pending unit light and a running one blue.
+const HEX: Record<string, string> = {
+  red: "#d9534f",
+  gray: "#8a8f98",
+  green: "#3fa66a",
+  yellow: "#d9a520",
+};
+
+function progressSvg(shown: string[], gapCounts: number[]): string {
+  const step = 24;
+  const segment = 20;
+  const rects = shown.map((one, i) => {
+    const fill = one === "pending"
+      ? "#d0d4da"
+      : HEX[colorOf(one, gapCounts[i] ?? 0) ?? ""] ?? "#4a90d9";
+
+    return `<rect x="${
+      i * step
+    }" y="0" width="${segment}" height="12" rx="2" fill="${fill}"/>`;
+  });
+  const total = Math.max(step, shown.length * step - (step - segment));
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="12" viewBox="0 0 ${total} 12">${
+    rects.join("")
+  }</svg>`;
 }
 
 // How long the pane waits for a RUNNING row, and shows its closing message.
@@ -810,6 +839,11 @@ export const register: Register = on => {
     const p = r?.plan;
     const isMainView = e.props.view.agentId === undefined;
     const live = isLive(r);
+    // The terminal lays columns out in cells; a graphical surface draws a proportional
+    // font, so its text is never padded and its tables are rows of sized boxes.
+    const isTerminal = e.surface === "terminal";
+    const cut = (text: string, size: number) =>
+      isTerminal ? fit(text, size) : text;
 
     const back = async () => {
       await $.ui.view({});
@@ -821,6 +855,7 @@ export const register: Register = on => {
           key="close"
           label="Close"
           hotkey="c"
+          {...(isTerminal ? {} : { role: "dismiss" as const })}
           onPress={() => close($)}
         />
         {!isMainView && <Text>{" "}</Text>}
@@ -841,11 +876,13 @@ export const register: Register = on => {
             onPress={() => update($, isQuiet, value => !value)}
           />
         )}
-        <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>
+        {isTerminal && (
+          <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>
+        )}
       </Box>
     );
     const problem = r?.problem !== undefined && (
-      <Text color="red">{fit(r.problem, width)}</Text>
+      <Text color="red">{cut(r.problem, width)}</Text>
     );
 
     if (!r) {
@@ -873,7 +910,7 @@ export const register: Register = on => {
             {`${r.choices.length} plans read RUNNING; none ran in this session:`}
           </Text>
           {r.choices.map(folder => (
-            <Text key={`choice-${folder}`}>{fit(`- ${folder}`, width)}</Text>
+            <Text key={`choice-${folder}`}>{cut(`- ${folder}`, width)}</Text>
           ))}
           <Text dimColor>Run /vwf-monitor &lt;folder&gt; to show one.</Text>
           {problem}
@@ -943,6 +980,190 @@ export const register: Register = on => {
         await update($, viewing, () => agent.id);
       }
     };
+
+    const footer = `Read ${
+      r.refreshedAt === undefined
+        ? "—"
+        : new Date(r.refreshedAt).toTimeString().slice(0, 8)
+    } · ${e.props.placement} · ${
+      e.viewport?.isFullscreen === undefined
+        ? "layout unknown"
+        : e.viewport.isFullscreen
+        ? "fullscreen"
+        : "normal layout"
+    } · ${p.logPath ?? "no run.log yet"}`;
+
+    if (e.surface !== "terminal") {
+      const { Svg } = $.ui.resolve(e);
+      // One row of sized cells: the share of the pane's width each column takes.
+      const COLUMNS = ["8%", "26%", "7%", "10%", "13%", "9%", "9%", "9%", "9%"];
+      const NAME = "41%";
+      const cell = (size: string, child: RenderChildren) => (
+        <Box width={size} flexShrink={0}>{child}</Box>
+      );
+      const timeCells = (started: string, ended: string) => {
+        const from = time(started);
+        const end = time(ended);
+
+        return [
+          cell(COLUMNS[5]!, <Text>{clock(from)}</Text>),
+          cell(COLUMNS[6]!, <Text>{clock(end)}</Text>),
+          cell(
+            COLUMNS[7]!,
+            <Text>
+              {span(
+                from,
+                end ?? (from !== undefined && !isEnded ? now : undefined),
+              )}
+            </Text>,
+          ),
+        ];
+      };
+      const sideRow = (
+        key: string,
+        label: RenderChildren,
+        kind: string,
+        status: string,
+        color: string | undefined,
+        times: RenderChildren[],
+      ) => (
+        <Box key={key} flexDirection="row">
+          {cell(NAME, label)}
+          {cell(COLUMNS[3]!, <Text dimColor>{kind}</Text>)}
+          {cell(COLUMNS[4]!, <Text color={color}>{status}</Text>)}
+          {times}
+        </Box>
+      );
+
+      return (
+        <Box flexDirection="column" gap="sm">
+          {buttons}
+          <Box flexDirection="column">
+            <Text bold>{state.title || name}</Text>
+            <Text dimColor>
+              {`${name} · ${state.state || "…"} · ${phase} · ${r.mode}`}
+            </Text>
+            <Text>
+              Started {clock(startedAt)} · Ended {clock(endedAt)} · Elapsed{" "}
+              {span(startedAt, endedAt ?? (isEnded ? undefined : now))}
+            </Text>
+          </Box>
+          <Box flexDirection="row" alignItems="center" gap="sm">
+            <Svg
+              source={progressSvg(shown, gapCounts)}
+              alt={`${done} of ${units.length} units finished`}
+              height={12}
+            />
+            <Text>{`${done}/${units.length}`}</Text>
+          </Box>
+          {state.noData && <Text dimColor>no run data yet</Text>}
+          <Box flexDirection="column">
+            <Box flexDirection="row">
+              {[
+                "Unit",
+                "Title",
+                "Wave",
+                "Kind",
+                "Status",
+                "Start",
+                "End",
+                "Time",
+                "Gaps",
+              ]
+                .map((head, i) =>
+                  cell(COLUMNS[i]!, <Text dimColor>{head}</Text>)
+                )}
+            </Box>
+            {units.map((unit, i) => {
+              const one = shown[i] ?? "";
+              const gaps = gapCounts[i] ?? 0;
+
+              return (
+                <Box key={`row-${unit.id}`} flexDirection="row">
+                  {cell(
+                    COLUMNS[0]!,
+                    <Button
+                      key={`unit-${unit.id}`}
+                      plain
+                      label={unit.id}
+                      onPress={() => show(unit.id, unit.agent)}
+                    />,
+                  )}
+                  {cell(COLUMNS[1]!, <Text>{unit.title}</Text>)}
+                  {cell(COLUMNS[2]!, <Text>{String(unit.wave)}</Text>)}
+                  {cell(COLUMNS[3]!, <Text dimColor>{unit.kind}</Text>)}
+                  {cell(
+                    COLUMNS[4]!,
+                    <Text color={colorOf(one, gaps)}>{one}</Text>,
+                  )}
+                  {timeCells(unit.started, one === "running" ? "" : unit.ended)}
+                  {cell(
+                    COLUMNS[8]!,
+                    <Text color={gaps > 0 ? "yellow" : undefined}>
+                      {String(gaps)}
+                    </Text>,
+                  )}
+                </Box>
+              );
+            })}
+            {state.waves.map(wave =>
+              sideRow(
+                `wave-${wave.id}`,
+                <Text>{wave.id}</Text>,
+                "wave",
+                wave.status,
+                colorOf(wave.status, 0),
+                timeCells(wave.started, wave.ended),
+              )
+            )}
+            {reviews.map(([key, agent]) =>
+              sideRow(
+                `review-row-${key}`,
+                <Button
+                  key={`review-${key}`}
+                  plain
+                  label={key}
+                  onPress={() => show(key, agent)}
+                />,
+                "review",
+                agent.live ? "running" : "done",
+                undefined,
+                [],
+              )
+            )}
+            {state.stages.map(stage =>
+              sideRow(
+                `stage-${stage.name}`,
+                <Text>{stage.name}</Text>,
+                "stage",
+                stage.state,
+                colorOf(stage.state, 0),
+                timeCells(stage.started, stage.ended),
+              )
+            )}
+          </Box>
+          {state.gaps.length > 0 && (
+            <Box flexDirection="column">
+              <Text bold>Gaps</Text>
+              {state.gaps.map(gap => (
+                <Text key={`gap-${gap.id}`} color="yellow">
+                  {`- ${gap.id} · ${gap.unit || gap.stage} · ${gap.text}`}
+                </Text>
+              ))}
+            </Box>
+          )}
+          <Box flexDirection="column">
+            <Text dimColor>{footer}</Text>
+            {state.partial && (
+              <Text dimColor>
+                {`partial replay: the log is over 4 MiB, its last ${TAIL_BYTES} bytes read`}
+              </Text>
+            )}
+            {problem}
+          </Box>
+        </Box>
+      );
+    }
 
     return (
       <Box flexDirection="column">
@@ -1037,22 +1258,7 @@ export const register: Register = on => {
           </Text>
         ))}
         <Text>{" "}</Text>
-        <Text dimColor>
-          {fit(
-            `Read ${
-              r.refreshedAt === undefined
-                ? "—"
-                : new Date(r.refreshedAt).toTimeString().slice(0, 8)
-            } · ${e.props.placement} · ${
-              e.viewport?.isFullscreen === undefined
-                ? "layout unknown"
-                : e.viewport.isFullscreen
-                ? "fullscreen"
-                : "normal layout"
-            } · ${p.logPath ?? "no run.log yet"}`,
-            width,
-          )}
-        </Text>
+        <Text dimColor>{fit(footer, width)}</Text>
         {state.partial && (
           <Text dimColor>
             {fit(

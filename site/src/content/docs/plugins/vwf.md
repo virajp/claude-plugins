@@ -3200,6 +3200,14 @@ Plan text and log text are stripped of terminal control characters before they
 render. Select a unit row or a wave-review line to open that subagent's
 transcript; the **Main transcript** button goes back.
 
+**Terminal or desktop.** The pane reads the surface that draws it each time it
+draws. In the terminal, the bar is a row of block characters and the tables are
+columns of fixed-width text. In the Claude desktop app, the VS Code extension
+and the mobile app, the bar is one image with a colored segment for each unit,
+the tables are rows of sized cells, and the unit id or the review name is the
+button that opens the transcript. Close is the surface's own close control
+there, and the pane shows no key hints.
+
 **Where it reads.** Three files, and nothing else:
 
 - **The plan index**, `docs/plans/index.json` — the base repo's, in a
@@ -3242,7 +3250,7 @@ under 10 minutes old; otherwise the header reads
 header, never a status. A resume makes the run live again.
 
 **How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
-then `c`. When the run asks you a question, the pane steps aside until you
+then `c` in the terminal; the **Close** button on any surface. When the run asks you a question, the pane steps aside until you
 answer. With nothing to show — no `RUNNING` row once a wait ends, a folder it
 cannot find, or a repo still on the old markdown plan format — it shows one
 message for 10 seconds and closes.
