@@ -867,10 +867,11 @@ record.
 | `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                                                                                                    |
 | `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                                                                                          |
 
-**Five are user-only** — `design-system`, `verify`, `mockups`, `recall` and
-`execute` carry `disable-model-invocation: true`, so the model never fires them
-on its own; you decide when a design-system import, a post-deploy check, a
-re-render, a session resume or an unattended run happens. The executor is user-only for a reason of
+**Four are user-only** — `verify`, `mockups`, `recall` and `execute` carry
+`disable-model-invocation: true`, so the model never fires them on its own; you
+decide when a post-deploy check, a re-render, a session resume or an unattended
+run happens. `design-system` is not among them: no skill calls it by name, but
+the model can start a design-system import when your request asks for one. The executor is user-only for a reason of
 its own: it must start in a session that has done nothing else, and only you can
 guarantee that — which is why `recall` prints the `/vwf:execute <folder>` launch
 line for a cap-paused run rather than launching it. Its partners `plan` and

@@ -358,8 +358,11 @@ made a silent no-op. `setup` is **user and model** too: `/vwf:architecture`
 hands off to it in-session once its commit lands, and `/stackgen:stackgen-sync`
 invokes `/vwf:setup reshape` on drift. It was user-only from 2026-07-31, when
 nothing called it, until 2026-10-28 — both calls, added after that, were silent
-no-ops until the flag flipped. `design-system`, `mockups`, `recall` and `verify`
-stay user-only: nothing calls them, and the user owns their timing.
+no-ops until the flag flipped. `mockups`, `recall` and `verify` stay user-only:
+nothing calls them, and the user owns their timing. `design-system` is the one
+exception to the rule: nothing calls it by name, but it is **user and model**,
+`disable-model-invocation: false` since 2026-08-17, and the user ruled on
+2026-10-31 to keep it so.
 
 **Skill-invoked** is the fourth state and the newest: hidden from the `/` menu,
 still reachable by the skill that owns its seam. Seven skills are in it today —
