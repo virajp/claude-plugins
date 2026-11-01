@@ -1,0 +1,12 @@
+# Security review — U8-late1 round 1, delta b77e650b..30bc045d (docs/plans/** excluded)
+
+No HIGH or MEDIUM confidence vulnerabilities found.
+
+Scope reviewed:
+- plugins/stackgen/skills/tool-config/assets/.gitignore: a comment rewrapped
+  onto two lines. The ignore entries themselves are unchanged. No security impact.
+- plugins/vwf/assets/memory.md: a documentation sentence noting that
+  tool-config also ignores docs/memory/doctor/ and docs/memory/runs/. This is
+  markdown (insecure-documentation exclusion), and it changes no behavior.
+
+No candidate findings came up, so no false-positive filter sub-tasks were needed.
