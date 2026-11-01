@@ -170,8 +170,8 @@ sequenceDiagram
 ## Open Questions
 
 <!-- ONLY what blocks THIS flow's contract. Anything else — a future feature, a
-     neighbouring flow's behaviour, a scope change — goes to mempalace room
-     `gaps` per the parked-scope rule in assets/elicitation.md, never here.
+     neighbouring flow's behaviour, a scope change — goes to a docs/memory/gaps/
+     file per the parked-scope rule in assets/elicitation.md, never here.
      Omit the section entirely when empty. -->
 
 - [ ] item + date

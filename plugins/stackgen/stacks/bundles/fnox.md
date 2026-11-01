@@ -34,7 +34,7 @@ config and the secrets check are bootstrap's: the config is a seed the repo
 owns once it lands, and `mise run setup` checks that the tool is reachable
 and the secrets are configured. The local override file, `fnox.local.toml`,
 is gitignored by the repo's `.gitignore`. It ships no hook and asks for no
-scanner, gitignore or mining edit. The
+scanner or gitignore edit. The
 profile shape — a development and a `ci` profile under `FNOX_PROFILE` — is
 the repo's setup tool's to render, not this pack's.
 

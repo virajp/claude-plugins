@@ -392,7 +392,6 @@ describe("the pack config tier", () => {
   it.each([
     ".gitignore",
     ".gitattributes",
-    ".graphifyignore",
     ".editorconfig",
     "renovate.json",
     "CONTRIBUTING.md",
@@ -412,17 +411,6 @@ describe("the pack config tier", () => {
     // does not, so a pack shipping one is refused.
     const root = tree({
       alpha: { files: { [`${pack}/CLAUDE.md`]: "# Repo\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("unallowlisted root entry"),
-    ]);
-  });
-
-  it("flags a root file vwf owns — mempalace.yaml", () => {
-    // Same tier, same reasoning: the mine reads it at the root and nowhere
-    // else, and `/vwf:setup` is what writes it.
-    const root = tree({
-      alpha: { files: { [`${pack}/mempalace.yaml`]: "wing: alpha\n" } },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
@@ -650,14 +638,13 @@ describe("the pack config tier", () => {
   const assets = "skills/tool-config/assets";
   const templates = "skills/tool-config/templates";
 
-  it("accepts the git and graphify files at the assets/ root", () => {
+  it("accepts the git files at the assets/ root", () => {
     // tool-config writes these at the root, where only a pack is refused them.
     const root = tree({
       stackgen: {
         files: {
           [`${assets}/.gitignore`]: ".DS_Store\n",
           [`${assets}/.gitattributes`]: "* text=auto\n",
-          [`${assets}/.graphifyignore`]: "dist/\n",
         },
       },
     });
@@ -782,11 +769,11 @@ describe("the pack config tier", () => {
   });
 
   it("walks a flat tool-config assets/ and templates/ tree as the repo root", () => {
-    // assets/ and templates/ are one landed tree each, allowed the git and
-    // graphify root files plus `.claude/` and `.vscode/`.
+    // assets/ and templates/ are one landed tree each, allowed the git root
+    // files plus `.claude/` and `.vscode/`.
     const flat = "skills/tool-config/assets";
     const templates = "skills/tool-config/templates";
-    const task = `${flat}/.config/mise/tasks/code/graph`;
+    const task = `${flat}/.config/mise/tasks/code/count`;
     const guarded = `${templates}/.config/mise/tasks/setup/external/pull`;
     const clean = tree({
       stackgen: {
@@ -794,7 +781,6 @@ describe("the pack config tier", () => {
           [task]: "#!/usr/bin/env bash\n",
           [guarded]: "@@#if EXTERNAL@@\n#!/usr/bin/env bash\n@@/if@@\n",
           [`${flat}/.gitignore`]: "node_modules/\n",
-          [`${flat}/.graphifyignore`]: "dist/\n",
           [`${flat}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
           [`${flat}/.vscode/settings.json`]: "{}\n",
           [`${templates}/.claude/skills/mise/SKILL.md`]: skill("mise"),
@@ -1871,7 +1857,7 @@ describe("the technology-free vwf guard", () => {
           version: "1.0.0",
           description: "the vwf plugin",
           mcpServers: {
-            mempalace: { type: "http", url: "http://127.0.0.1:8765/mcp" },
+            remote: { type: "http", url: "http://127.0.0.1:8765/mcp" },
           },
         },
       },

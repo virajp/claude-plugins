@@ -250,4 +250,4 @@ Then tell the user:
   archived folder with no `index.json` still satisfies a `requires` entry.
 - **Run log rows.** Only the highest Round of each unit (to `rounds`), the
   `GAP:` rows (to `gaps`) and the stage rows (to `stages`) are read. The other
-  rows are dropped. The mempalace `runs` journal keeps its copy.
+  rows are dropped; `index.json` and the action log are the run record.

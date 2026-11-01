@@ -490,10 +490,9 @@ The rules for each key — JSON has no comments, so they sit here:
   `open` or `closed`. The next id is `G<n>`, one past the highest. Only `open`
   entries count in the `gaps` of the plan's row in `docs/plans/index.json`
   and keep the folder live; a person who rules on one sets its `state` to
-  `closed` and adds the ruling to its `text`. The durable,
-  mempalace-independent copy; full detail lives in the mempalace `gaps` room.
-  Reconciled into the blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at
-  cycle end.
+  `closed` and adds the ruling to its `text`. The durable copy, and the only
+  one: a run files no `docs/memory/gaps/` record. Reconciled into the
+  blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at cycle end.
 - **`overrides`** — `[]` at approval; an `all` run's `override:` block, one
   entry each, its lines joined by `; `. It never changes `consent`.
 - **`run`** — `{}` or exactly `{"worktree": …, "log": …}`, both non-empty
@@ -519,8 +518,8 @@ The rules for each key — JSON has no comments, so they sit here:
 
 The run fields stay in `index.json`: the executor records each unit's
 `status`, `commit` and `rounds`, and a review unit's `range`, there as the run
-goes, sets `status`, each wave's `status` and the `stages`, appends to `gaps`, and mirrors each fact
-to the mempalace journal. A resume and the final report read those fields,
+goes, sets `status`, each wave's `status` and the `stages`, and appends to
+`gaps`. A resume and the final report read those fields,
 the `gaps` list and `git log` — the file is committed and survives a lost
 machine. `/vwf:execute` also appends each of those facts, as an event, to the
 plan's action log at `run.log` — one append-only file per plan, the real-time

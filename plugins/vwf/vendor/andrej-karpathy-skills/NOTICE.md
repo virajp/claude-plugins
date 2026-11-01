@@ -43,8 +43,5 @@ of something it is not. An honest note that records the declaration and its
 absence of accompanying text is the accurate thing to ship, and it is what a
 reader needs in order to decide anything for themselves.
 
-This differs from the sibling [mempalace](../mempalace/README.md) vendoring,
-where upstream publishes a real `LICENSE` and it travels with the code.
-
 If upstream later adds a licence file, take it at the next resync and replace
 this section with it — see [README.md](README.md).

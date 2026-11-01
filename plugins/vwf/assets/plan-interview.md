@@ -43,7 +43,7 @@ sets that row's `gaps` to an `open` of `0`, with this folder in `moved_to`.
 3. **Non-goals.** What the user is explicitly not asking for, especially the
    adjacent thing the survey found. Goes to *Out of scope* with the reason.
 4. **Reversals.** Does any part contradict a standing decision — a memory, a
-   `docs/memory/decisions/` doc, a CLAUDE.md rule, a recalled drawer? Name it as
+   `docs/memory/decisions/` doc, a CLAUDE.md rule, a recalled record? Name it as
    a reversal and get it confirmed; a confirmed reversal becomes a decisions doc
    the docs unit writes.
    *Cycle plans:* every `CONTRADICTIONS:` line the surveyor returned is a

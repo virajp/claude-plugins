@@ -120,7 +120,8 @@ Authoritative schema: [schema.yaml](./schema.yaml)
 
 ## Open Questions
 
-<!-- ONLY what blocks THIS entity's contract. Anything else goes to mempalace
-     room `gaps` per assets/elicitation.md. Omit the section when empty. -->
+<!-- ONLY what blocks THIS entity's contract. Anything else goes to a
+     docs/memory/gaps/ file per assets/elicitation.md. Omit the section when
+     empty. -->
 
 - [ ] item + date

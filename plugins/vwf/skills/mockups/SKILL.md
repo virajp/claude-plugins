@@ -242,11 +242,12 @@ route, a Screens table without Code,
 Screen and Route columns, and no flows directory or no `<platform>.md` in it;
 a bad argument exits 2.
 
-### 5. Recall (mempalace)
+### 5. Recall
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `decisions` (design
-rationale beyond the docs) and `gaps` (tag `parked` — parked UX points a mockup
-must not over-promise). Skip silently if mempalace is unavailable.
+Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read `docs/memory/decisions/`
+(design rationale beyond the docs) and the `docs/memory/gaps/` records whose
+slug ends in `-parked` (parked UX points a mockup must not over-promise). Skip
+silently if a folder is absent.
 
 ### 6. Generate (delegated, per flow platform)
 
@@ -359,9 +360,8 @@ rendered; a flow-scoped run adds its flow's platforms. This is the
 render-currency state `/vwf:plan`'s soft advisory reads (and `/vwf:blueprint`
 drops when a flow's Screens change unrendered).
 
-**Persist.** Store the run outcome to mempalace room `decisions` per
-`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. Skip silently if mempalace is
-unavailable.
+**Persist.** Write the run outcome as one `docs/memory/decisions/` file per
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 
 **Git.** This command writes no repo docs — docs-sync does not fire, and the
 scratchpad tree is gitignored. The single exception is a changed

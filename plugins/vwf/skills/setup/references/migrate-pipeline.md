@@ -21,10 +21,8 @@ Four sources define it, and none of them is a history:
 
 1. **Diff the tree against those four.** Every file that is missing, misplaced,
    misnamed, or carrying a section the current format does not have is one
-   entry. Judge the tree as it stands; do not ask how it got there. The root
-   `.graphifyignore` is **not** an entry: it is `/stackgen:tool-config`'s,
-   vwf's excludes among its rendered lines, and an absent or stale one is
-   the repo shape Step 0 already checked. A config whose `enforcement:` block
+   entry. Judge the tree as it stands; do not ask how it got there. A
+   config whose `enforcement:` block
    lacks `kept_files:` is one entry: it gains `kept_files: {}` and the
    stamp is rewritten with the rest, with no content to migrate, since
    nothing wrote that key before `config_format` 18.
@@ -40,9 +38,25 @@ Four sources define it, and none of them is a history:
    each key, with nothing to convert, since both only decided whether an
    editor fragment landed; and every `.config/vscode.d/*.jsonc` in the base or
    a member is offered for delete, **one row each, defaulting to delete** —
-   the one delete this pass offers, because nothing reads those files any
-   more. This pass **never touches** `.vscode/` — its `settings.json` is
+   one of the two kinds of delete this pass offers, because nothing reads
+   those files any more; the other is the `23 → 24` removals below. This
+   pass **never touches** `.vscode/` — its `settings.json` is
    `/stackgen:tool-config`'s, and nothing else there is vwf's.
+   **`config_format` 23 → 24** retires the palace. Offer one numbered removal
+   row for each of these that exists: the `memory:` block (`memory.wing`) in
+   `.config/vwf.yaml`; each `mempalace.yaml`, in the base or a member, at any
+   depth; and each of `docs/memory/planning/`, `docs/memory/runs/` and
+   `docs/memory/doctor/`. Each row is applied on consent and declinable on
+   its own. The rows are offered **by state, at any stamp**: every migrate
+   pass offers them while one of those items is present, whatever the stamp
+   reads. The stamp still moves one step at a time — a config held at 22 by
+   its `answers:` block stays at 22 — and once it reads 23 it moves to **24**
+   whatever the answers, and also when nothing is found. A declined item
+   stays where it is: the rows are offered by state on each migrate pass,
+   which runs only while a stamp is behind current, so once the stamp reads
+   24 setup is current, does not re-enter this step and does not ask again,
+   and `/vwf:doctor` reports the item as drift with its remedy. The step reads,
+   rewrites and deletes no palace data outside the repo.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

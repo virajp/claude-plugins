@@ -55,7 +55,7 @@ them:
 
 The secrets section ignores `.env`, `.env.*` (re-including `.env.example`),
 `fnox.local.toml` and private-key files; the AI tooling section ignores one
-developer's agent state and `graphify-out/` ([graphify's](graphify.md)).
+developer's agent state.
 
 **The attribute set** is every stack's too: `* text=auto eol=lf`, the
 lockfiles marked `linguist-generated` — `*.lock`, `pnpm-lock.yaml`,

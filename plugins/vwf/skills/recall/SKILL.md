@@ -1,11 +1,10 @@
 ---
 name: recall
-description: Retrieve a handoff document from mempalace (wing=<project>,
-  room=handoff,
-  drawer=<name>) to resume work in a fresh session, and optionally run its
-  next prompt. With no argument — or `next` — it resumes the reserved `next`
-  handoff and runs its continuation without asking. Use to continue after a
-  session that exceeded ~60% context.
+description: Read a handoff document from docs/memory/handoff/<name>.md at the
+  main checkout of the base repo to resume work in a fresh session, and
+  optionally run its next prompt. With no argument — or `next` — it resumes the
+  reserved `next` handoff and runs its continuation without asking. Use to
+  continue after a session that exceeded ~60% context.
 argument-hint: "[<name> | next]"
 model: haiku
 
@@ -14,7 +13,7 @@ disable-model-invocation: true
 
 # recall — Resume Work from a Handoff
 
-Retrieve a handoff written by `/vwf:handoff` and reconstruct enough context to
+Read a handoff written by `/vwf:handoff` and reconstruct enough context to
 continue the work in **this fresh session**.
 
 **When to use:** at the start of a new session when the previous one grew
@@ -22,69 +21,46 @@ continue the work in **this fresh session**.
 
 ## Inputs
 
-| Input       | Source                                                  |
-| ----------- | ------------------------------------------------------- |
-| `<name>`    | `$ARGUMENTS` — the handoff drawer name. Empty → `next`. |
-| `<project>` | the **wing**, resolved from the repo (see step 1)       |
+| Input    | Source                                                |
+| -------- | ----------------------------------------------------- |
+| `<name>` | `$ARGUMENTS` — the handoff file name. Empty → `next`. |
+| Root     | the main checkout of the base repo (see step 1)       |
 
 ## The `next` handoff
 
 `next` is the reserved "resume where I left off" handoff `/vwf:handoff` writes
-by default. Recalling it differs from a named recall in two ways:
+by default, `docs/memory/handoff/next.md`. Recalling it differs from a named
+recall in one way:
 
-- **It lives on both surfaces** — the mempalace drawer and
-  `docs/memory/handoff/next.md` at the **main checkout**. Read whichever
-  resolves; if both do and they disagree, the **more recent `Date`** wins.
 - **Its continuation runs without a gate** — step 4 executes the Next prompt
   instead of asking. That is the whole point of `next`: one command resumes the
   work. It is **left in place** afterwards; the following `/vwf:handoff` (or
-  `/vwf:handoff next`) overwrites it.
+  `/vwf:handoff next`) replaces it.
 
 ---
 
 ## Pipeline
 
-### 1. Resolve the project (wing)
+### 1. Resolve the root
 
-Resolve `<project>` from the repo identity **exactly as `/vwf:handoff` does**
-(so they agree): prefer the `origin` remote repo name
-(`git remote get-url origin`, stripped of host/owner/`.git`), else the repo root
-basename (`git rev-parse --show-toplevel`); reconcile against existing wings
-with `mempalace_status` / `mempalace_list_wings` and reuse the exact existing
-name.
-
-**Verify the wing matches this repo** before searching: the resolved wing must
-correspond to the repo you are in. If it doesn't (e.g. the reconciled wing
-belongs to a different project), **fail loudly** — say so and stop, rather than
-recalling a handoff from the wrong project.
+Resolve the root **exactly as `/vwf:handoff` does** (so they agree): the
+**base repo**, in its **main checkout**, found from wherever the session stands
+with the walk in `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` (*Resolving the
+base repo*), whose linked-worktree step lands on the main checkout — the parent
+directory of `git rev-parse --git-common-dir`. If the walk ends at *not a vwf
+repo*, the root is this repo's main checkout.
 
 ### 2. Find the handoff
 
-If `$ARGUMENTS` named no `<name>`, resolve to **`next`** and look for it as
-below. Only if no `next` exists on either surface, list what's available:
-`mempalace_list_drawers(wing=<project>, room="handoff")` → show the names (from
-each `# Handoff: <name>` header) and ask which to recall.
+If `$ARGUMENTS` named no `<name>`, the name is **`next`**. Read
+`docs/memory/handoff/<name>.md` under the root — that file is the handoff, and
+the only place recall looks for one.
 
-With a `<name>`, retrieve it:
-
-1. `mempalace_list_drawers(wing=<project>, room="handoff", limit=100)` and match
-   the drawer whose content opens with `# Handoff: <name>`. If several match,
-   take the **most recent** by the handoff doc's own **`Date`** field (the
-   metadata bullet the template sets) — not drawer insertion order.
-2. Fetch the full content with `mempalace_get_drawer(drawer_id)`.
-   (`mempalace_search(query="<name>", wing=<project>, room="handoff")`,
-   optionally with `source_file="handoff/<name>.md"`, is an equivalent path.)
-
-**If mempalace is unavailable or has no match**, read
-`docs/memory/handoff/<name>.md` from disk (the `/vwf:handoff` fallback) —
-under the **main checkout** root, the parent directory of
-`git rev-parse --git-common-dir`, which is where `/vwf:handoff` writes it
-whatever worktree it ran from. If neither yields anything, say so and stop —
-don't guess the prior state.
-
-For **`next`**, the disk copy is a first-class surface, not a fallback: read
-the main checkout's `docs/memory/handoff/next.md` even when the drawer
-resolved, and take the copy with the more recent `Date` if they differ.
+If it does not exist, list the files in `docs/memory/handoff/` under the root,
+say that none matched `<name>`, show the names found (from each file's
+`# Handoff: <name>` header, else its file name), and stop — don't guess the
+prior state. With no folder or no files, say there is no handoff to recall and
+stop.
 
 ### Format check
 
@@ -95,7 +71,7 @@ do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 
 ### Shape check
 
-Beside the format check, and before the palace rooms are read in step 3, invoke
+Beside the format check, and before `docs/memory/` is read in step 3, invoke
 `/vwf:doctor baseline` — the local baseline predicates (a)–(f) of the
 repo-shape check, evaluated per repo, file reads only; it never reads the forge
 and never runs doctor whole. When it reports drift, print **one line**: the
@@ -110,9 +86,18 @@ session builds on it.
 ### 3. Rebuild context
 
 Read the handoff, then **read the files and docs it points to** (relevant files,
-`docs/blueprint/…`, referenced mempalace rooms) so the work is grounded in the
-current code, not just the handoff's snapshot. Summarize back to the user in a
-few lines: the goal, current state, and the open next steps.
+`docs/blueprint/…`) so the work is grounded in the current code, not just the
+handoff's snapshot.
+
+Then read the recorded decisions and gaps under the root:
+`docs/memory/decisions/` and `docs/memory/gaps/` (each file
+`<date>-<slug>.md`). List each folder's file names; read in full only the files
+whose slug or title matches the handoff's topic, newest first, at most ten per
+folder, and read no file in full that does not match. A missing folder is
+nothing to read, not an error.
+
+Summarize back to the user in a few lines: the goal, current state, the
+decisions and gaps that bear on it, and the open next steps.
 
 **Re-enter the workspace.** Read the handoff's **Workspace** section (worktree
 path + branch). If the path still exists, continue there. If it is **gone**,
@@ -149,9 +134,8 @@ the user whether to run it now**:
 
 **For `next`, do not ask** — show the summary, then execute the Next prompt
 straight away (routing through the matching `/vwf:` command the same way). The
-handoff **stays in place**: leave the drawer and `docs/memory/handoff/next.md`
-alone, so a re-run resumes the same point until the next `/vwf:handoff`
-overwrites it.
+handoff **stays in place**: leave `docs/memory/handoff/next.md` alone, so a
+re-run resumes the same point until the next `/vwf:handoff` replaces it.
 
 If there is no next prompt, end with the summary and the open items, and wait
 for direction. For `next` this means the previous session recorded no

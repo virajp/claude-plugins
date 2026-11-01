@@ -6,11 +6,7 @@ description: Acceptance-stage verifier for the /vwf:execute command. Invoked
   tasks. Independently maps each blueprint acceptance criterion to an E2E test,
   runs the suite against the local stack, and returns per-criterion
   pass/fail/not-covered. Never writes tests or code.
-tools: Read, Bash, Grep, Glob,
-  mcp__plugin_vwf_mempalace__mempalace_search,
-  mcp__plugin_mempalace_mempalace__mempalace_search,
-  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
-  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
+tools: Read, Bash, Grep, Glob
 model: sonnet
 
 ---
@@ -26,12 +22,8 @@ The orchestrator passes: the acceptance criteria to verify (each criterion with
 its source flow — from the `acceptance` list of the plan folder's
 `index.json`, each entry's `text` quoting a flow doc and its `flow` naming it;
 or every flow's Acceptance block from `docs/blueprint/flows/*/*/index.md` when
-`/vwf:verify` dispatches you), the registry (project paths and stacks), the
-project wing, the **slice** and **round number** for your recall tag, and the
-**plan folder path** and the **doc names in the `covers` list** of the
-folder's `index.json` for your drawers — when the dispatch
-names no plan folder (`/vwf:verify`'s environment mode), the **flow doc path**
-the criteria came from stands in for both.
+`/vwf:verify` dispatches you), the registry (project paths and stacks), and
+the **slice** and **round number**.
 
 **Environment mode** (`/vwf:verify`): the orchestrator additionally names a
 target environment (base URLs) and the repo's staging/external-mode E2E
@@ -43,11 +35,9 @@ staging-capable test).
 
 1. **Map criteria → tests.** For each criterion, find the E2E/integration
    test(s) that exercise it — search the repo's e2e/test trees yourself (`e2e/`,
-   `*.e2e.test.*`, integration suites); when a knowledge graph is reachable (per
-   `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`), `graphify query` for the tests
-   touching the flow's trigger and outcome to seed the search, falling back
-   silently when none exists. Judge by what the test actually asserts, not by
-   its name (and never by the graph's word): the test must drive the flow's
+   `*.e2e.test.*`, integration suites), seeding the search with Grep for the
+   flow's trigger and outcome. Judge by what the test actually asserts, not by
+   its name: the test must drive the flow's
    trigger and assert the criterion's **observable outcome**. A test that mocks
    away the project boundary the flow crosses does not count as covering a
    cross-project criterion.
@@ -77,42 +67,26 @@ staging-capable test).
    exposes no metrics, report `COUNTERS: n/a — metrics not exposed` instead —
    never a failure.
 
-## Memory (mempalace)
-
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full detail — the
-criterion→test map, per-test output for failures, and what a NOT-COVERED test
-must assert — with `mempalace_add_drawer` (the wing the orchestrator gave you,
-room `problems`, `source_file` set to the **plan folder path** —
-repo-relative, `docs/plans/<folder>`, no trailing slash, exactly the string
-the dispatch passes — or the flow doc path when no plan folder was named),
-tagged `<slice>/acceptance/<round>` —
-use the slice, round and path the orchestrator gave you, never invent them: a
-coder's recall filters on that path. Your inline reply stays terse.
-Skip silently if mempalace is unavailable.
-
 **Blueprint/plan gaps are not findings.** A criterion that is untestable as
 written (not observable, ambiguous, contradicted by another flow) is a **gap**
-in the blueprint, not a code finding — file it to room `gaps`, `source_file`
-set to the **plan folder path**, tagged `acceptance/gap/<round>`, its content
-**opening with the plan folder path and the `covers` doc names** the dispatch
-carries — or, when no plan folder was named, `source_file` the **flow doc
-path** and the content opening with it — and report it on the gaps contract
-line.
+in the blueprint, not a code finding — report it on the `SPEC/PLAN GAPS:`
+contract line, naming the flow doc; the command that dispatched you records
+it.
 
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window. Do
-not paste test output, diffs, or code — the detail lives in mempalace under the
-recall tag. Output **only** the block below:
+not paste test output, diffs, or code. Each FAIL and NOT-COVERED line carries
+what the fix round needs — the observable that did not hold, or what the
+missing test must assert — since the orchestrator hands the lines themselves
+to the coder. Output **only** the block below:
 
 ```text
 ACCEPTANCE:   # one line per criterion, or the single line "n/a — <what's missing>"
-- [PASS|FAIL|NOT-COVERED] <flow> — <criterion, terse> (test: <file> or "none")
+- [PASS|FAIL|NOT-COVERED] <flow> — <criterion, terse> (test: <file> or "none") — <for FAIL: the observable that did not hold; for NOT-COVERED: what the test must assert>
 COUNTERS: ok   # or "n/a — metrics not exposed", "n/a — none declared", or one "- <counter> — did not increment" line each
 SPEC/PLAN GAPS: none   # untestable/ambiguous criteria: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
-RECALL: <slice>/acceptance/<round>   # mempalace tag for the detail (omit if not filed)
-GAPS: acceptance/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
 Any FAIL or NOT-COVERED forces `VERDICT: changes-required`; a declared counter

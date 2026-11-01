@@ -65,23 +65,22 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Five binaries must be on your `PATH`** — `mise`, `graphify`, `uv`, `python`
-  and `pnpm`. `pnpm` is only the **default** Context7 runner; `CONTEXT7_RUNNER`
-  overrides it, so a bun or npm user needs no pnpm — see
+- **Two binaries must be on your `PATH`** — `mise` and `pnpm`. `pnpm` is only
+  the **default** Context7 runner; `CONTEXT7_RUNNER` overrides it, so a bun or
+  npm user needs no pnpm — see
   [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover all five: it
-  blocks on a missing `graphify`, and on a missing `mise` once any stack axis is
-  pinned (and `/vwf:setup` and `/vwf:execute` halt on either), reports a missing
-  language server as an ordinary finding, and says nothing at all about the
-  Context7 runner, while `uv` and `python` matter as graphify's runtime rather
-  than on their own. Run `/vwf:doctor` first regardless, but install all five
-  rather than relying on it to tell you. A sixth, `gh`, logged in, is needed by
-  `/vwf:backlog`, which keeps the backlog in a GitHub Project and wants the
-  `project` scope, by `init`'s **forge pass** (the default branch and protection
-  on `develop` and `main` on the `repo` scope, the backlog project on `project`
-  — on a GitLab remote, `glab`), and by the doctor predicate that reads that
-  forge state back; doctor reports its absence as a **degradation** with the
-  remedy, and init prints the by-hand list and carries on.
+  checks this at install time**, and `/vwf:doctor` does not cover both: it
+  blocks on a missing `mise` once any stack axis is pinned (and `/vwf:setup` and
+  `/vwf:execute` halt on it), reports a missing language server as an ordinary
+  finding, and says nothing at all about the Context7 runner. Run `/vwf:doctor`
+  first regardless, but install both rather than relying on it to tell you. A
+  third, `gh`, logged in, is needed by `/vwf:backlog`, which keeps the backlog
+  in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
+  (the default branch and protection on `develop` and `main` on the `repo`
+  scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
+  the doctor predicate that reads that forge state back; doctor reports its
+  absence as a **degradation** with the remedy, and init prints the by-hand list
+  and carries on.
 - **It is opinionated on purpose.** One workflow, one set of conventions, sized
   for a solo developer or a small team — not a configurable framework for a
   large org.
@@ -212,8 +211,8 @@ Paste one of these, adjusting the plugin name:
   produces from that prompt. It is your agent's best effort, and the honest
   expectation is that skills port well, hooks and MCP wiring port unevenly, and
   subagents port worst.
-- **MCP wiring varies most.** MCP transport support differs per tool; vwf's
-  memory server is HTTP, which is the more portable of the two it declares.
+- **MCP wiring varies most.** MCP transport support differs per tool; vwf
+  declares one server, Context7, over stdio.
 - **Model-invocation restrictions may be approximated.** Some skills are marked
   so the model cannot invoke them itself and you own the timing
   (`disable-model-invocation: true`). If your tool has no equivalent, that
@@ -237,8 +236,8 @@ outcome contract, model the system, sweep a whole-product blueprint to complete
 coverage, plan one slice as a reviewable diff, execute it unattended and land it
 per the consent the plan recorded, verify the deploy, and route what production
 teaches you back to the document that fixes it. It carries
-[cross-session memory](https://claude-plugins.virajp.dev/plugins/mempalace/), a
-knowledge-graph layer, session handoff and recall, the
+[cross-session memory](https://claude-plugins.virajp.dev/plugins/vwf/#memory) as
+plain files under `docs/memory/`, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
 and the Markdown and Context7 docs surfaces it absorbed. Both planners write the
 same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
@@ -308,9 +307,9 @@ root config and the deploy task beside it, a project task a framework pack owns
 merges-never-owns terms, behind their own consent line, and capped by a fixed
 allowlist of what may sit at a repo's root. The mise config, the file-based task
 library everything else runs through, the dprint, taplo, pre-commit, gitleaks,
-grype and house-linter configs, the ignore, attribute and graph-ignore files,
-the editor settings and the statusline config belong to no pack: they are
-written by `/stackgen:tool-config`, a skill you can also run yourself
+grype and house-linter configs, the ignore and attribute files, the editor
+settings and the statusline config belong to no pack: they are written by
+`/stackgen:tool-config`, a skill you can also run yourself
 (`/stackgen:tool-config preview all`). A shipped node script copies its
 `assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
 — the repo's values, which the script alone writes — in four calls: `all`,
@@ -409,7 +408,7 @@ restored from their receipts.
 is a small CLI with two jobs: install **plugins** (`--all`, `--user`,
 `--project` — a thin wrapper driving Claude's own commands, shown under
 [Install](#install) above), and **remove** what this toolkit put on your
-machine. graphify is not its job — the plugins' own skills set it up.
+machine.
 
 It used to be published as `@askviraj/ai-plugins`. That package is sunset: it
 stays on npm, deprecated, and running it only prints a pointer to the new name
@@ -454,8 +453,8 @@ the one place the flag surface is described.
   — the discontinued OpenCode and Oh-My-Pi surfaces — is restored from its
   receipt rather than deleted, so what you had before comes back. graphify's
   hooks, graph, `.graphifyignore` and Claude wiring an earlier version left are
-  no longer listed — they are yours or your repo's to remove. `--dry-run` is the
-  scriptable way to just look.
+  not listed — the toolkit no longer uses graphify, and they are yours or your
+  repo's to remove. `--dry-run` is the scriptable way to just look.
 
 ## Credits & acknowledgements
 
@@ -466,9 +465,6 @@ maintainers. 🙏
 - **[Claude Code](https://claude.ai/code)** by
   [Anthropic](https://anthropic.com) — the host these plugins and hooks plug
   into.
-- **[MemPalace](https://github.com/MemPalace/mempalace)** — the AI memory system
-  that powers `vwf`'s cross-session recall. Its two skills are vendored into
-  `vwf` under MIT; see `plugins/vwf/vendor/mempalace/`.
 - **[andrej-karpathy-skills](https://github.com/multica-ai/andrej-karpathy-skills)**
   by `forrestchang` — behavioral coding guidelines derived from Andrej
   Karpathy's observations. Its `karpathy-guidelines` skill is vendored into
@@ -484,8 +480,6 @@ maintainers. 🙏
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and
   **[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp)** — the engines
   behind the language servers `stackgen`'s packs declare.
-- **[graphify](https://github.com/safishamsi/graphify)** — the knowledge-graph
-  tool `vwf` integrates with.
 - **[tsup](https://tsup.egoist.dev/)** — bundles the installer CLI for
   publication. Argument parsing is Node's own `util.parseArgs`; the CLI carries
   no parser dependency.

@@ -158,16 +158,13 @@ these entries and only these — and it has four tiers:
 - **What `/vwf:init` writes from its own assets**: `CONTRIBUTING.md`,
   `SECURITY.md`, `LICENSE` and `.github/ISSUE_TEMPLATE/`.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
-  them**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
-  `p:plugins:check` refusing a pack that ships one at the root; and
-  `mempalace.yaml`, which the mine looks for in the directory it is pointed
-  at and nowhere else, so anywhere but the root is silently inert (vwf's own
-  `memory.md`, "Repo config — `mempalace.yaml`").
+  it**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
+  `p:plugins:check` refusing a pack that ships one at the root.
 
 The last tier is on the list because `/vwf:init`'s pass 1 reports any
 root file the list does not name, and a rule beats a judgment: without
-these two entries, every shaped repo's own `CLAUDE.md` and `mempalace.yaml`
-read as findings that a person has to know to wave through.
+this entry, every shaped repo's own `CLAUDE.md` reads as a finding that a
+person has to know to wave through.
 
 A language's manifests and lockfiles are **not** on it: a manifest is
 fenced out below, as it always was, and a lockfile is the manifest's

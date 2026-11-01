@@ -6,7 +6,7 @@ order: 1
 
 `@virajp.dev/claude-plugins` installs **plugins** (by driving Claude Code's own
 commands), and **removes** what this toolkit put on your machine. It does
-nothing else — graphify is set up by the plugins' own skills.
+nothing else.
 
 ```sh
 # Install the default plugin set (vwf; stackgen arrives as its dependency)
@@ -117,11 +117,11 @@ So after installing, run:
 /vwf:doctor
 ```
 
-Doctor blocks on a missing **`graphify`**, and on a missing **`mise`** once any
-stack axis is pinned; both `/vwf:setup` and `/vwf:execute` halt on either. It is
-not a complete substitute for the retired gate: a missing language server is an
-ordinary finding, and `pnpm` is not checked at all, surfacing only as the
-context7 MCP server failing to start. Install all four.
+Doctor blocks on a missing **`mise`** once any stack axis is pinned; both
+`/vwf:setup` and `/vwf:execute` halt on it. It is not a complete substitute for
+the retired gate: a missing language server is an ordinary finding, and `pnpm`
+is not checked at all, surfacing only as the context7 MCP server failing to
+start. Install every prerequisite.
 
 ## The statusline has moved
 
@@ -177,9 +177,9 @@ record of what was there.
 **graphify is not on the list.** Versions up to 1.0.2 wired graphify, and an
 uninstall used to offer its raw git hooks, its graph (`graphify-out/`) and
 `.graphifyignore`. This version lists none of them, nor the user-level
-`graphify install --platform claude` wiring: they belong to your repo, or to
-you, to remove — `mise run setup:precommit` in a shaped repo already strips a
-raw graphify hook.
+`graphify install --platform claude` wiring: the toolkit no longer uses graphify
+at all, and what an old install left belongs to your repo, or to you, to remove
+— `/vwf:doctor` names each leftover in a shaped repo with its remedy.
 
 With no terminal to ask on, it **fails** rather than guessing — unless there is
 nothing to remove, in which case it says so and exits 0, because a run with

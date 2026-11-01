@@ -41,16 +41,17 @@ and the dependency-bot key retired with the bot config it chose. Format 22
 also retired the editor axis and the editor-key record format 20 added: vwf
 ships, asks about and composes no editor configuration. Since
 **blueprint-format 6** this file replaces the old stamp at
-`docs/blueprint/.vwf.yml`.
+`docs/blueprint/.vwf.yml`. **Format 24** retired the `memory:` block: vwf's
+memory is the file store under `docs/memory/`.
 
-## Schema (config_format 23)
+## Schema (config_format 24)
 
 ```yaml
-config_format: 23 # this file's own schema version — setup migrates it
+config_format: 24 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
-  name: <product-name> # display name; the default mempalace wing
+  name: <product-name> # display name
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
@@ -147,9 +148,6 @@ design: # CANVAS STATE only — ids and flow names, never content. The design TO
       # <platform>: [ { os: <os>, size: <W>x<H> } ] — the LIST form: REPLACES the OS list projects.<name>.stack.os gives this platform, its order setting the primary (the first entry) and the `device` tweak's values. `os` is a token the OS vocabulary (assets/standard-flows.md) names for this platform; `size` is optional and falls back to that OS frame's default size. The chrome always follows the OS — there is no chrome field
   flows_rendered: [] # flow PLATFORMS whose Screens have a current user-reviewed visual — entries are <project>/<NNN>-<flow>/<platform> (format 15: platform granularity, so a flow rendered for mobile but not auto is visibly partial); recorded by blueprint's §6a local render, by mockups (docs/scratchpad renders), and by screens import (canvas pages current), dropped by blueprint when a flow's Screens change unrendered; read by plan's soft visual-review advisory. Mockup renders live in the gitignored docs/scratchpad/<project>/mockups/<platform>/<route>/index.html tree (one served site per platform), NEVER on the canvas; the stamp entry stays one per flow platform
 
-memory:
-  wing: <wing-name> # explicit mempalace wing; defaults to product.name
-
 docs_sync:
   include: [] # extra human docs in the docs-sync scope (README/CLAUDE.md are always in)
 
@@ -226,7 +224,7 @@ at answering the question, never at installing something.
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
 | `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) |
-| `product` / `memory` | `setup` (confirmed with the user)                                                                                                         | every command's wing resolution                                                                                 |
+| `product`            | `setup` (confirmed with the user)                                                                                                         | every command that names the product                                                                            |
 | `stacks`             | `setup` (confirmed with the user) — never `init`, which reads it or discovers                                                            | `init` (the adapter plugin), `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
@@ -726,6 +724,29 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   seventh config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20`, `21` and `22`.
+
+- **`23 → 24` migration** (performed by `/vwf:setup`, its migrate pipeline):
+  **the palace leaves, and nothing else in this file moves.** Remove the
+  `memory:` block (`memory.wing`) and every per-tree `mempalace.yaml`, and the
+  `docs/memory/planning/`, `docs/memory/runs/` and `docs/memory/doctor/`
+  folders that exist — one numbered row each, deleted on consent. vwf's memory
+  is `docs/memory/` alone, four folders: `decisions/`, `gaps/`, `problems/` and
+  `handoff/`. The rows are offered by state, at any stamp, whenever one of
+  those items is present; the stamp moves to 24 from 23 whatever the answers,
+  and when nothing is found. A declined row stays: the rows are offered by
+  state on each migrate pass, which runs only while a stamp is behind
+  current, so once the stamp reads 24 setup is current, does not re-enter the
+  step and does not ask again, and `/vwf:doctor` reports the item as drift
+  with its remedy.
+
+  A config still reading **23** is not broken for a reader: the block is
+  ignored wherever it would have been read, and `/vwf:doctor`'s stamp check
+  reports 23 against 24 until the next `/vwf:setup` performs this pass.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  eighth config bump to ship without a paired blueprint bump, after `14`,
+  `16`, `18`, `20`, `21`, `22` and `23`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

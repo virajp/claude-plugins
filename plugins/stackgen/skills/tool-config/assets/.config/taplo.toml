@@ -21,7 +21,6 @@ exclude = [
   "**/build/**",
   "**/captures/**",
   "**/dist/**",
-  "**/graphify-out/**",
   "**/node_modules/**",
 ]
 include = [ "**/*.toml" ]

@@ -1,9 +1,7 @@
-# Harness, Health & Memory Config (§§6–7)
+# Harness, Health & Memory (§§6–7)
 
-Read this before running §6. §6 produces no **blocking** finding — only drift,
-recorded gaps, and degradations. §7 does: the four placement-and-secrets checks
-below are blocking, because each one silently disables the memory layer or
-publishes a credential into it.
+Read this before running §6. Neither section produces a **blocking** finding —
+only drift, recorded gaps, and degradations.
 
 ## 6. Harness and health
 
@@ -18,107 +16,13 @@ defaulting to `/health`) is actually registered in that project's routing. Do
 this by reading the routing surface, not by making a request — doctor never
 starts a server or calls a deployed environment; that is `/vwf:verify`'s job.
 
-## 7. Memory config (mempalace)
+## 7. Memory
 
-The room vocabulary is a **closed set of seven** and mempalace creates a room
-implicitly on first write — so a mistyped room name never errors, it just makes
-every later recall come back empty. Nothing else in vwf catches that; this
-section is where it gets caught. Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`,
-check:
-
-- **One `mempalace.yaml` per mined tree, at its root.** How many trees there
-  are follows the topology, per the memory asset's table: one for `repo` and
-  `monorepo`; one at the base for `multi-repo` under `linkage: submodule`
-  (members get none); and **one per repo — base and every member — under
-  `linkage: siblings`**, because a sibling member sits outside the base's tree
-  and a single config would silently mine the base alone.
-
-  Walk each expected tree — its root, its `.config/`, and every submodule root
-  under it — and count. Three **blocking** outcomes:
-  - **More than one in a single tree.** Two configs mean two answers to which
-    rooms exist, and only the root one is ever read.
-  - **One, but not at a tree root.** Mining reads the config only from the
-    directory it is pointed at — there is no parent search, no `.config/`
-    convention, and no flag to name one — so a config elsewhere is **silently
-    inert**: the mine runs, falls back to auto-detected defaults, and files
-    everything into `general`. Say that in the finding text; a config that looks
-    tidy in `.config/` is indistinguishable from one that works.
-  - **None at all** in a tree that should have one. Nothing there is mined; the
-    palace holds only what vwf wrote into it by hand. Under `siblings`, check
-    this per **locally-present** member only — an absent member is a recorded
-    blind spot, not a missing config.
-- **The secret excludes are configured** — `exclude_patterns` carries the
-  denylist from the memory asset's *Secrets* section. **Blocking**: the failure
-  is a credential indexed into a store agents read back into context, deleting
-  the source file does not remove the drawer, and it is unobservable from
-  outside. Check only that the **patterns are present** — doctor never scans
-  file contents for credentials; that belongs to a dedicated secret scanner,
-  whose config `/stackgen:tool-config all` lands in the repo's own `.config/`
-  — present in the checkout itself rather than conditional on a plugin being
-  installed.
-- **The wing matches `memory.wing`** in `.config/vwf.yaml` (or `product.name`
-  when the key is absent) — in **every** config, when there is more than one. A
-  file naming a different wing is the highest-value drift finding here: writes
-  and recalls silently address different palaces, and nothing else would ever
-  surface it. Under `siblings` this is the one thing that can go wrong which no
-  single-config product could have: a member config naming the member's own repo
-  name rather than the product's wing. Report it as **blocking**, not drift —
-  everything mined from that repo lands where nothing will look for it.
-- **All seven protocol rooms present** — `decisions`, `problems`, `planning`,
-  `gaps`, `runs`, `doctor`, `handoff`. Report a missing one as drift; report a
-  room whose name is a **near-miss** of a protocol room (`decision`, `run`,
-  `handoffs`, `plans` for `planning`) as its own finding, since that is the typo
-  case the closed set exists to catch — mempalace creates the mistyped room on
-  first write, so it fills up while every recall against the real name returns
-  empty.
-- **No shadowing keyword** — routing walks path parts outermost-first and
-  returns on the first match, so a room keyed on a directory that contains
-  another room's path swallows it (`documentation` keyed on `docs` captures
-  `docs/memory/handoff/` before `handoff` is tested). Flag every such pair.
-- **No submodule path in `exclude_patterns`.** One config mines the whole
-  product tree, and each submodule's own `.gitignore` is honoured on the way in,
-  so an inherited exclude now drops that project from the palace entirely.
-  Report as drift with the line to delete.
-- **Room-name collisions across projects** where the same name means different
-  things (a backend `configuration` of `deploy/` versus a frontend
-  `configuration` of `config/`). One config, one wing, so those are one room
-  holding two subjects. Report as drift to reconcile — not an error; merging
-  `documentation` across the product is usually right.
-
-**The markdown mirror.** Check `docs/memory/` exists with the seven room
-directories, and that `.gitignore` covers `docs/memory/handoff/`,
-`docs/memory/doctor/` and `docs/memory/runs/` — the developer-specific rooms,
-whose lines tool-config's universal `.gitignore` carries (remedy
-`/vwf:setup reshape`). A
-missing directory is fine (nothing written there yet); a **committed** handoff,
-doctor or runs file is drift to report, since it puts one developer's session
-state in everyone's diff.
-
-**The server can start.** vwf's mempalace server is a stdio process Claude
-Code starts for each session as `mise x -- mempalace-mcp`, in the project
-directory, so it sees the repo's mise environment — the `MEMPALACE_*` values
-and the repo's own `MEMPALACE_PALACE_PATH` in `.config/mise/conf.d/ai/mise.dev.toml`,
-which mise loads only under `MISE_ENV=dev`. Probe it the same way, from the
-repo root:
-
-```bash
-mise x -- mempalace status
-```
-
-- **Exit 0** — the tool resolves and the palace opens — is not a finding.
-- **A non-zero exit**, or `mempalace` not resolvable through mise, is a
-  **degradation**: the session has no mempalace tools, and every memory read
-  and write falls back to the markdown tree. The remedy names what failed:
-  `pipx:mempalace` in `ai/mise.dev.toml` and `mise install`; Qdrant running
-  when `MEMPALACE_BACKEND` is `qdrant`; `MISE_ENV=dev` exported in the shell
-  that starts Claude Code — then restart the session.
-
-**The palace path is the repo's.** `mise env` run from the repo root must name
-`MEMPALACE_PALACE_PATH`. Absent is a **degradation**: the server falls back to
-a palace shared with every other repo on the machine. The remedy is the
-`ai/mise.dev.toml` line `stackgen:tool-config` renders —
-`MEMPALACE_PALACE_PATH = "~/.local/share/mempalace/<repo>"` — through
-`/vwf:setup reshape`, and `MISE_ENV=dev` exported as above.
-
-An unreachable server does not stop the rest of §7: still check the **files**
-(they are on disk).
+Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, `docs/memory/` holds four
+folders — `decisions/`, `gaps/`, `problems/` and `handoff/` — where the memory
+asset's location rule puts them (the base repo, in a multi-repo product). A
+missing folder is fine (nothing written there yet). Check one thing: that
+`.gitignore` covers `docs/memory/handoff/`, a line tool-config's universal
+`.gitignore` carries (remedy `/vwf:setup reshape`), and that no handoff file is
+**committed** — drift to report, since it puts one developer's session state in
+everyone's diff. A folder or file the current format no longer has is §8's.

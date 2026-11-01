@@ -42,12 +42,9 @@ run at all. Scopes and upgrades:
 
 **Then run `/vwf:doctor`.** Nothing is checked at install time, so doctor is
 what tells you whether the binaries vwf shells out to are actually on your
-`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). For memory,
-export `MISE_ENV=dev` in the shell that starts Claude Code: Claude Code starts
-the mempalace server itself, under the repo's mise environment, and every repo
-needs its own `MEMPALACE_PALACE_PATH`, which `/vwf:setup` lands in
-`.config/mise/conf.d/ai/mise.dev.toml` with the other `MEMPALACE_*` variables —
-[mempalace](../../plugins/mempalace.md#running-the-server).
+`PATH` — see [Prerequisites](../../plugins/vwf.md#prerequisites). Memory needs
+nothing installed: it is the markdown tree under `docs/memory/` that setup
+writes — [Memory](../../plugins/vwf.md#memory).
 
 Restart Claude Code, then `cd` into the empty Relay repo.
 
@@ -124,16 +121,15 @@ no `docs/blueprint/` is *blank*, and setup treats it as such: it asks nothing
 about architecture, because nothing is there to interrogate and those decisions
 belong to the two commands that will have the product contract to derive them
 from. What it does instead is make the repo ready for that conversation — the
-empty doc trees, the memory tree, a `.graphifyignore` carrying the standard
-excludes, a vwf section in `CLAUDE.md` — and stop there. The repo's own tooling
-is `/vwf:init`'s, and setup's first act is to check it is there.
+empty doc trees, the memory tree, a vwf section in `CLAUDE.md` — and stop there.
+The repo's own tooling is `/vwf:init`'s, and setup's first act is to check it is
+there.
 
-It asks exactly two questions, both proposed from the directory name. Relay
-answers `relay` to both — the product name, and the memory wing.
+It asks exactly one question, proposed from the directory name: the product
+name. Relay answers `relay`.
 
 Everything is shown for approval before it is written, and nothing is written
-until you approve. Accept the graph build when it is offered — setup is the only
-command that builds one. What the run stamps describes a repo that has been
+until you approve. What the run stamps describes a repo that has been
 bootstrapped and nothing more: the absence of a topology or project block is the
 honest *structure-pending* state, not drift, and the commands that follow are
 what fill it in. Details: [`/vwf:setup`](../../plugins/vwf.md#vwfsetup).
@@ -486,8 +482,8 @@ acceptance and UX results, whether the stages that were skipped were skipped for
 reasons you accept. The run asks nothing: a fix goes into the folder — a ruling
 into the unit file or the decisions table — and you re-run
 `/vwf:execute <folder>` to resume; leaving it unmerged is the rejection. If the
-folder could not be read and the report came from the memory mirror, it says it
-is reconstructed; that changes how much weight it carries.
+folder could not be read and the report came from `git log` and the action log,
+it says it is reconstructed; that changes how much weight it carries.
 
 Non-blocking gaps do not stop the landing and should not be treated as blockers.
 Let it land, then close each one at its source with the command the report names

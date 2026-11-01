@@ -29,7 +29,7 @@ visual language is judged. This skill does one job: resolve the design system,
 
 The repo doc still matters — it is the **offline contract**: the design-system
 reviewer bar, the execute ux gate, and the coder consume it without network or
-claude.ai auth, and it is git-versioned and graphify-ingestable. The doc records
+claude.ai auth, and it is git-versioned and greppable. The doc records
 the *decisions* — semantic token values, type and spacing scales, motion
 principles, the accessibility standard, global component behaviors — never the
 component library, CSS framework, or design-file mechanics (that is `plan`).
@@ -77,11 +77,12 @@ project declaring `cli` makes the doc's **Terminal UX** section required
 (design-system-authoring's terminal-ux reference) — always elicited in text
 (§5); the canvas neither designs nor imports it.
 
-### 2. Recall (mempalace)
+### 2. Recall
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior design decisions and
-rationale (room `decisions`), plus parked visual/UX points (room `gaps`, tag
-`parked`). Skip silently if mempalace is unavailable.
+Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior design decisions and
+rationale (`docs/memory/decisions/`), plus parked visual/UX points
+(`docs/memory/gaps/` records whose slug ends in `-parked`). Skip silently if a
+folder is absent.
 
 ### 3. Preflight the design adapter — or halt
 
@@ -205,8 +206,9 @@ do.
 **Architecture reconcile.** A product-shape change surfaced here (e.g. a new UI
 project) routes through `/vwf:architecture` — never a by-hand registry edit.
 
-**Persist.** Store durable decisions and rationale to mempalace room `decisions`
-(skip what the doc captures verbatim; skip silently if down).
+**Persist.** Write each durable decision and its rationale as one
+`docs/memory/decisions/` file per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` (skip
+what the doc captures verbatim).
 
 ### 9. Approval gate, pin & commit
 

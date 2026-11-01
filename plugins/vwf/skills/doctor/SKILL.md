@@ -3,9 +3,8 @@ name: doctor
 description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
-  its manifest, the harness task names, health endpoints, the mempalace wing and
-  room set, the graphify CLI/graph/staleness/ignore file, and format-stamp
-  drift.
+  its manifest, the harness task names, health endpoints, the docs/memory/
+  store, leftovers of retired tools, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
 argument-hint: "[project ... | baseline]"
@@ -22,8 +21,8 @@ edits without consent.
 
 Scope to the projects named in `$ARGUMENTS`; with no argument, check every
 project in the registry. **That scope narrows §§3–5 only.** The harness, the
-memory config and the code-intelligence graph belong to the repo rather than to
-any one project, so **§§6–8 run in full on every invocation**, scoped or not —
+memory store and the leftovers check belong to the repo rather than to any one
+project, so **§§6–8 run in full on every invocation**, scoped or not —
 and their references are read every run, not just when no argument was given.
 Narrowing them is how a scoped run comes back clean while a blocking finding
 sits unread, and `/vwf:setup` / `/vwf:execute`
@@ -38,11 +37,10 @@ invocation that runs the repo-shape check alone, described below.
 repo-shape check — **(a) through (f)** in the stack-checks reference, the file
 reads against the lockfile, the config and the tree — **per repo**, the base
 and every locally-present member, and returns that result and **nothing else**.
-No stack, manifest, health, memory, graphify or format-stamp check runs, §§1–4
+No stack, manifest, health, memory, leftovers or format-stamp check runs, §§1–4
 and §§6–8 are skipped entirely, and predicate **(g)** — the forge state — is
 never read: it needs the forge CLI, and this invocation is meant to be cheap
-enough to run at every session start. It writes nothing: no report is filed to
-room `doctor`, no recall of prior findings is made, and no remedy is offered —
+enough to run at every session start. It writes nothing and offers no remedy —
 the caller decides what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the letters of
@@ -69,10 +67,8 @@ scopes nothing, since the repo-shape check is per repo, not per project.
 | Stack templates   | from the installed stack plugins, never from vwf                |
 | Harness contract  | `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`                      |
 | Memory protocol   | `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`                       |
-| mempalace config  | `mempalace.yaml` (per mined tree — see the memory protocol)     |
-| Graphify protocol | `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`                     |
+| Memory store      | `docs/memory/` (the base repo — see the memory protocol)       |
 | Membership        | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
-| Knowledge graph   | `graphify-out/graph.json` (each checkout root)                 |
 | Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`                |
 | Adapter lockfile  | `.claude/stackgen/lock.yaml`                                   |
 | Commit scopes     | `.config/git-conventional-commits.yaml`                        |
@@ -86,8 +82,7 @@ in this table, are only ever read.
   each is its own consent — never a batch "fix all".
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule and keeps doctor safe
-  to run anywhere — and it is why §8 never triggers a graph build, which is a
-  long LLM-driven job reserved for `/vwf:setup`.
+  to run anywhere.
 - **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
   LSP shipped in this marketplace is reported as *unavailable* with no
   suggested command; only a language that *has* a plugin and isn't installed
@@ -154,13 +149,6 @@ A project the registry declares with **no `stack` block** is a finding in itself
 (`config_format` 10 drift — the block is mandatory since 11); report it, nudge
 `/vwf:setup`, and check what you can from its platforms' templates meanwhile.
 
-**Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall room `doctor`
-for this repo's prior findings. Anything still present that a previous run
-already reported is marked **known** in §9 rather than presented as new — the
-same treatment `/vwf:verify` gives a criterion it already knows is failing. Skip
-silently if mempalace is unavailable; §7 then reports the outage itself, as the
-server degradation its `mempalace status` probe decides.
-
 ### 2. Stamps
 
 Compare `config_format` and `blueprint_format` in the config to what this vwf
@@ -178,8 +166,8 @@ optional, and no reference restates a rule that lives above.
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
 | **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the seven stack axes, a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups and the commit scopes, whether the repo is shaped (`.config/stackgen.yaml` at `format: 1`) or still on the old layout, the base's `stackgen.yaml` members against `.config/vwf.yaml`'s, the two branches, `repo_name` against the repo's folder, the `tool-config` skill's `preview all` and per-pack `preview pack` rows as drift, every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` and `members` values beside it, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
-| **6–7** — harness & health, memory config                  | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `mempalace.yaml` placement, wing/room contract and secret excludes, the markdown mirror, the mempalace server's `status` probe and the repo's palace path. **Blocking findings live here** |
-| **8** — code intelligence                                  | [Code intelligence](references/code-intelligence.md)      | The graphify CLI, a graph per locally-present checkout, staleness, the pre-commit refresh hook (a raw graphify hook is drift), the `.graphifyignore`. **Blocking findings live here** |
+| **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `docs/memory/` store's handoff ignore line |
+| **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
 
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
 run the ecosystem's own audit command against each project's lockfile — the
@@ -194,11 +182,38 @@ with no lockfile, or whose package manager offers no audit command, reports
 remediation command; it never updates a dependency — `pipeline/dependency-audit`
 is what gates the release itself.
 
-### 9. Report & persist
+### 8. Leftovers
+
+vwf no longer uses mempalace or graphify, and this rule is the one place doctor
+names them. Report each of these, where it is found in the base or a
+locally-present member, as **drift** — never blocking, since nothing reads it —
+each with its remedy:
+
+| Leftover | Remedy |
+| --- | --- |
+| a `memory:` block (`memory.wing`) in `.config/vwf.yaml` | plain `/vwf:setup` — its migrate pipeline's `23 → 24` step |
+| a `mempalace.yaml`, at any depth | the same `/vwf:setup` step |
+| a `docs/memory/planning/`, `docs/memory/runs/` or `docs/memory/doctor/` folder | the same `/vwf:setup` step |
+| a `.graphifyignore` | bootstrap's migration M24, or its `remove tools` instruction |
+| a `code:graph` task | the same bootstrap remedy |
+| a `graphify-refresh` hook in the pre-commit config | the same bootstrap remedy |
+| a `post-commit` or `post-merge` entry in `default_install_hook_types` that no remaining hook in that config uses | the same bootstrap remedy |
+| a `pipx:graphifyy` or `pipx:mempalace` pin | the same bootstrap remedy |
+| a `graphify-out/` exclude in any config | the same bootstrap remedy |
+| a `graphify-out/` directory at a checkout root | delete the directory (it is a generated graph; nothing reads it now) |
+| a `MEMPALACE_*` variable in any mise file | the same bootstrap remedy |
+
+A row the user declined at the `23 → 24` step is still reported, every run:
+that step offers its rows by state on each migrate pass, which runs only while
+a stamp is behind current, so once the stamp reads 24 setup is current and
+does not re-enter it, and this row is how the declined item stays visible.
+Palace data outside the repo is never a row: doctor reads nothing there.
+
+### 9. Report
 
 One table, findings first, grouped by kind — **blocking** (something *mandatory*
-is absent or misplaced, or the stack is one no installed plugin defines: the
-graphify CLI, a graph missing from a locally-present checkout, an `iac` project
+is absent or misplaced, or the stack is one no installed plugin defines: an
+`iac` project
 inside another repo whose extraction the user has **not** declined on the
 record, `mise`, an **unknown** language and a `binaries` name missing from
 `PATH` or failing its declared probe — the last three **conditionally**, once a
@@ -206,8 +221,7 @@ stack axis is pinned (§5, §3) — a project whose pinned template its adapter
 never **materialized** in that project's target repo (§3) — the pin is an answer
 and the payload absent, a `custom` template pin, a project whose template does
 not cover every platform it declares, a broken membership link (§1), an unwaived
-**critical** dependency advisory (the audit check), a misplaced / duplicated /
-missing `mempalace.yaml` or one carrying no secret excludes; callers must halt),
+**critical** dependency advisory (the audit check); callers must halt),
 **drift** (config and repo disagree — **including the whole repo-shape check
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id with no task
@@ -241,23 +255,21 @@ its materialize pass, never `/vwf:architecture` — and the row is one per proje
 rather than one per token, reached only after a declined landing or on a repo
 setup has not re-run on, and blocking while the pin stands), **degraded**
 (something optional is absent and a fallback is carrying the work, or the run
-simply costs more — the mempalace server unable to start or with no repo
-palace path (§7), a forge CLI that is absent, unauthenticated or without the
+simply costs more — a forge CLI that is absent, unauthenticated or without the
 `project` scope, which leaves `/vwf:backlog` unreadable and predicate (g) of
 the repo-shape check unread (§5)
 — **or** a decision the user has not yet made or has declined on the record: an
 axis reading `unresolved`, whose dependent checks report
 `not checked — no stack resolved` (§§3–5), a `binaries` name missing from `PATH`
-or failing its probe while its project's `template` reads `unresolved` (§3), a
-declined graph build, and an `iac` extraction declined under `enforcement:`,
-each reported every run and never escalating back to blocking). Mark anything
-the §1 recall already carried as **known**, so a repeat run reads as a diff
-rather than a re-accusation. State the count of checks that passed rather than
+or failing its probe while its project's `template` reads `unresolved` (§3),
+and an `iac` extraction declined under `enforcement:`, each reported every run
+and never escalating back to blocking). §8's leftovers are **drift**, listed
+under their own heading. State the count of checks that passed rather than
 listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
-ones that are pure config edits (a stale `stack` entry, a harness task rename, a
-missing room in a `mempalace.yaml`). Anything that installs, or that changes
+ones that are pure config edits (a stale `stack` entry, a harness task rename).
+Anything that installs, or that changes
 code, is reported and left to the user — as is anything needing a **choice**: a
 `custom` pin and an unknown language both look like one-line config edits and
 are not, since resolving either means picking off a menu or installing a plugin.
@@ -276,10 +288,8 @@ what the config declares, `reshape` reconciles the shape. It is not a remedy
 doctor applies: `reshape` is the door, and the consent to re-shape a repo is
 `/vwf:init`'s to take behind it.
 
-**Persist.** File this run's findings to room `doctor` — one compressed line per
-finding per the memory asset's AAAK style, plus what was fixed if the user
-accepted a remedy. That is what lets the next run say **known**. Skip silently
-if mempalace is unavailable — §7's reachability probe has already reported it.
+**Persist nothing.** Doctor files no record of its findings: each run reports
+the repo as it stands, and the next run checks it again.
 
 **Callers.** `/vwf:setup`'s shared spine runs this over the whole repo, right
 after it writes the config, and records what it finds. `/vwf:plan` runs it

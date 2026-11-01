@@ -5,11 +5,7 @@ description: Plan runner for the /vwf:execute all loop. Invoked only by
   general tasks. Reads the execute skill file it is handed and runs it as the
   orchestrator for that one folder, in runner mode, asking the user nothing.
   Returns five lines.
-tools: Agent, Skill, Bash, Read, Write, Edit, Grep, Glob, TaskOutput, TaskStop,
-  mcp__plugin_vwf_mempalace__mempalace_search,
-  mcp__plugin_mempalace_mempalace__mempalace_search,
-  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
-  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
+tools: Agent, Skill, Bash, Read, Write, Edit, Grep, Glob, TaskOutput, TaskStop
 model: opus
 
 ---

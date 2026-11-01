@@ -102,8 +102,8 @@ as the recommendation with its quote as the rationale, and fill the remaining
 options from the same closed list, plus Other. Walk the rounds in the pass
 order above, so each confirmation narrows what the next one offers.
 
-**Recall and the graph still apply, and usually return nothing.** Run Step 3's
-recall and graph-first grounding as written; a product-first repo has no code
+**Recall and code grounding still apply, and usually return nothing.** Run
+Step 3's recall and code grounding as written; a product-first repo has no code
 to ground against, so both skip silently and the product contract is the
 grounding.
 

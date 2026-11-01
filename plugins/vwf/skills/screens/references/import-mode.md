@@ -115,8 +115,8 @@ it.
 8. **Report & persist.** Per flow: pages matched, deltas
    accepted/rejected/adapted, index-stitch state per platform, conventions
    folded (step 5), blueprint passes run or queued, new flows scaffolded,
-   unmatched pages and their resolution. Persist durable routing decisions to
-   mempalace room `decisions` (skip silently if down). Any `design:` pin or
+   unmatched pages and their resolution. Persist durable routing decisions as
+   `docs/memory/decisions/` files, one per decision. Any `design:` pin or
    stamp change rides the blueprint pass's commit; this skill's only own
    artifacts are the prompt + conventions files (`prompt` mode and the step-5
    fold).

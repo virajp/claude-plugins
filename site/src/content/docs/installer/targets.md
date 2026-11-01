@@ -66,13 +66,10 @@ copy on `main`, `marketplace update` is the whole of it.
 
 ## graphify
 
-**Not this CLI's job any more.** Versions up to 1.0.2 ran
-`graphify install --platform claude` after every install; this one does not. The
-plugins' own skills own graphify: a shaped repo's pre-commit `post-commit` and
-`post-merge` hooks refresh the graph, and `/vwf:doctor` reports a missing
-`graphify` as blocking. Nothing in the toolkit runs
-`graphify install --platform claude` any more — not this CLI and not
-`setup:ai:all` — so wiring it for the agent is yours to do.
+**Not used any more.** Versions up to 1.0.2 ran
+`graphify install --platform claude` after every install; this one does not, and
+no plugin uses graphify since vwf dropped it. `/vwf:doctor` reports what an
+earlier install left in a shaped repo as drift, with its remedy.
 
 ## Receipts
 

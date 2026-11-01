@@ -245,12 +245,12 @@ theme colour into the design system's Brand assets — never repeated per screen
 
 ### 3. Interactive elicitation (orchestrator)
 
-**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-decisions, drift, and unreconciled gaps for this flow/entity (rooms `decisions`,
-`problems`, `gaps`) before eliciting — build on them and don't re-ask resolved
-questions. When execution surfaced a blueprint gap (room `gaps`), treat closing
-it as a first-class goal of this pass. Skip silently if mempalace is
-unavailable.
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior
+decisions, drift, and unreconciled gaps for this flow/entity
+(`docs/memory/decisions/`, `docs/memory/problems/`, `docs/memory/gaps/`) before
+eliciting — build on them and don't re-ask resolved questions. When a gap file
+names a blueprint hole in this unit, treat closing it as a first-class goal of
+this pass. Skip silently if a folder is absent.
 
 Adopt the authoring persona and elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` (explore → scope-check → one
@@ -470,9 +470,10 @@ Normally §6a's re-render re-lists it within this same pass; when §6a was
 explicitly skipped, the drop stands and a later `/vwf:mockups <flow>` re-renders
 it. (Like the build stamp: a state-only edit, riding the same commit.)
 
-**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store this pass's
-durable decisions and their rationale, plus any drift flagged, to mempalace
-(rooms `decisions`, `problems`) — skip what the docs already capture verbatim.
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write this pass's
+durable decisions and their rationale as `docs/memory/decisions/` files, and
+any drift flagged as `docs/memory/problems/` files, one record per file — skip
+what the docs already capture verbatim.
 
 ### 6a. Render & review the screens (gates the pass — flows with Screens)
 

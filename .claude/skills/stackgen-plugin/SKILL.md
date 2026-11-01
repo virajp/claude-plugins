@@ -32,8 +32,8 @@ touches beyond Context7. Since `devtools` dissolved into it, stackgen also
 carries the repo's own gate doctrine as packs. `skills/tool-config` is invocable
 both ways too: `/stackgen:tool-config` owns every universal file a repo runs —
 the mise config and task library, dprint, taplo, pre-commit, gitleaks, grype,
-the house linter, git, graphify, `.vscode/settings.json` and
-`.config/claude-status.json` — rendered by a shipped node script,
+the house linter, git, `.vscode/settings.json` and `.config/claude-status.json`
+— rendered by a shipped node script,
 `skills/tool-config/scripts/tool-config.mjs` plus `scripts/lib/`
 (`template.mjs`, the `@@NAME@@`, `@@#if NAME@@` and `@@#each NAME@@` engine;
 `yaml.mjs`, the reader for the constrained `.config/stackgen.yaml` grammar;
@@ -124,8 +124,8 @@ doctrine.
 
 No bundle is fetched for a repo's baseline any more. The hygiene kind, its pack,
 its bundle and the `unconditional:` bundle key retired on 2026-09-27: the
-hygiene **config files** — `.gitignore`, `.gitattributes`, `.graphifyignore` —
-are `stackgen:tool-config`'s universal files, and the **prose files** —
+hygiene **config files** — `.gitignore` and `.gitattributes` — are
+`stackgen:tool-config`'s universal files, and the **prose files** —
 `CONTRIBUTING.md`, `SECURITY.md`, the licence texts, the issue forms — are
 `/vwf:init`'s own assets. `init` runs `/stackgen:tool-config all` **per repo** —
 the base and every member repo it resolved — so a member is shaped on its own
@@ -242,14 +242,14 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   do not all reach the checker: the **landable** tier is
   `PACK_CONFIG_ROOT_FILES` in `scripts/src/check.ts`, enforced by
   `p:plugins:check` rule 11, and beside it sits a tier of root files **vwf**
-  writes — `CLAUDE.md` and `mempalace.yaml` — which may sit at a shaped root and
-  which no pack may land. `readme.md` is on the landable tier only because a
-  shaped repo has one — **no pack may ship it**. The files bootstrap's sync
-  writes are bootstrap's, and a pack ships none of their lines. The lockfile has
-  no `rendered:` entries and no `skipped:` list. Its per-file `hash:` — on every
-  copied entry — is the landing hash **re-recorded by `/vwf:init`** after its
-  replace-or-keep offer, so a differing hash is drift only when no such writer
-  ran — `assets/output-tree.md` and the materializer reference both say so.
+  writes — `CLAUDE.md` — which may sit at a shaped root and which no pack may
+  land. `readme.md` is on the landable tier only because a shaped repo has one —
+  **no pack may ship it**. The files bootstrap's sync writes are bootstrap's,
+  and a pack ships none of their lines. The lockfile has no `rendered:` entries
+  and no `skipped:` list. Its per-file `hash:` — on every copied entry — is the
+  landing hash **re-recorded by `/vwf:init`** after its replace-or-keep offer,
+  so a differing hash is drift only when no such writer ran —
+  `assets/output-tree.md` and the materializer reference both say so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
 `settings.json`, `.mcp.json`, a pack's `config/` tree and the bootstrap
@@ -282,28 +282,27 @@ recommends `/vwf:setup`.
   the exec bit and a known shebang on every task file (mise reports a 644 task
   as an *unknown* one rather than a permission error) and on every `hooks/*.sh`;
   the **landable** tier of the root allowlist over the tier's top level — the
-  vwf-owned tier never reaches the checker, so a pack shipping `CLAUDE.md` or
-  `mempalace.yaml` there is refused like any unallowlisted path — with a CI
-  workflow refused inside `.github/`; under `.config/`, only `test/` and
-  `p/_project/` tasks (`PACK_CONFIG_DOTCONFIG_ALLOWLIST`), which names no
-  bootstrap tool; no pack `templates/` tier; that the pack's `binaries` and
-  `lockfile` facts take the shapes doctor reads — a binary a bare name or
-  `{ name, probe }`, a lockfile a list of relative paths or globs with no `..`;
-  that a `tool-config:`, `machine_env:`, `values:` or `conditional:` key is
-  refused outright; and that every `@@` tag in tool-config's `templates/` is one
-  the engine reads, limited to the global names. The rule in full is the
-  `plugin-authoring` skill's `references/checks.md`. Rule 15 holds the skill's
-  exclusion lists to one invariant: `assets/.config/`'s `dprint.json` (JSONC, a
-  `../X` entry and its `**/X` twin one entry) and `taplo.toml` and the global
-  `exclude` in `pre-commit-config.yaml` (a `(?x)` block of anchored
-  alternatives) state **one set** after normalisation, and the gitleaks
-  `[allowlist] paths` — every entry anchored `(^|/)`, `.turbo/` among them since
-  2026-09-21 — is a **subset** of it, never the reverse: the scanner extends
-  upstream's default allowlist and must still walk `.claude/`, which the
-  formatters skip because in a shaped repo it is machine-owned. A list missing
-  from the skill's assets is a finding. A pack widens no list: each is a
-  universal superset, edited in tool-config's own assets. The house linter's
-  `linter.yaml` is not compared.
+  vwf-owned tier never reaches the checker, so a pack shipping `CLAUDE.md` there
+  is refused like any unallowlisted path — with a CI workflow refused inside
+  `.github/`; under `.config/`, only `test/` and `p/_project/` tasks
+  (`PACK_CONFIG_DOTCONFIG_ALLOWLIST`), which names no bootstrap tool; no pack
+  `templates/` tier; that the pack's `binaries` and `lockfile` facts take the
+  shapes doctor reads — a binary a bare name or `{ name, probe }`, a lockfile a
+  list of relative paths or globs with no `..`; that a `tool-config:`,
+  `machine_env:`, `values:` or `conditional:` key is refused outright; and that
+  every `@@` tag in tool-config's `templates/` is one the engine reads, limited
+  to the global names. The rule in full is the `plugin-authoring` skill's
+  `references/checks.md`. Rule 15 holds the skill's exclusion lists to one
+  invariant: `assets/.config/`'s `dprint.json` (JSONC, a `../X` entry and its
+  `**/X` twin one entry) and `taplo.toml` and the global `exclude` in
+  `pre-commit-config.yaml` (a `(?x)` block of anchored alternatives) state **one
+  set** after normalisation, and the gitleaks `[allowlist] paths` — every entry
+  anchored `(^|/)`, `.turbo/` among them since 2026-09-21 — is a **subset** of
+  it, never the reverse: the scanner extends upstream's default allowlist and
+  must still walk `.claude/`, which the formatters skip because in a shaped repo
+  it is machine-owned. A list missing from the skill's assets is a finding. A
+  pack widens no list: each is a universal superset, edited in tool-config's own
+  assets. The house linter's `linter.yaml` is not compared.
 - **The tool-config script ships with nothing beside it.** Rule 16 holds
   `skills/tool-config/scripts/` to a `#!/usr/bin/env node` executable entry and
   `node:` built-ins or relative modules only — no `require(`, no package; the

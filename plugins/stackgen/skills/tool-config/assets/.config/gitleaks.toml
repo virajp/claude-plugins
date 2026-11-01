@@ -28,7 +28,6 @@ paths = [
   '''(^|/)DerivedData/''',
   '''(^|/)build/''',
   '''(^|/)dist/''',
-  '''(^|/)graphify-out/''',
   '''(^|/)node_modules/''',
   # <<< tool-config
 ]

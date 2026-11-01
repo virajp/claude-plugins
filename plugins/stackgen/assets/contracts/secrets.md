@@ -110,12 +110,12 @@ that catalogue possible without printing anything.
 ## No repo carries an encrypted secret
 
 **No secret enters a tracked file, encrypted or not.** Committed ciphertext is
-permanent in history, and the secret scanner, the memory palace and review
-would all have to be told to look away from it — an allowance that is a hole
-the day a value lands before it is encrypted. A value lives in the keychain, a
-cloud store, the forge or the cloud provider, never in the repository, so no
-pack emits a scanner allowlist or a mining exclusion for a secrets file, and a
-committed secrets file is a finding whichever pack is pinned.
+permanent in history, and the secret scanner and review would both have to
+be told to look away from it — an allowance that is a hole the day a value
+lands before it is encrypted. A value lives in the keychain, a cloud store,
+the forge or the cloud provider, never in the repository, so no pack emits a
+scanner allowlist for a secrets file, and a committed secrets file is a
+finding whichever pack is pinned.
 
 ## What this contract does not decide
 

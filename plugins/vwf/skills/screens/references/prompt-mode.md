@@ -61,9 +61,10 @@ Components blocks, never left for the canvas to decide.
    format drift: say so and nudge `/vwf:setup`, then elicit the platform set for
    this run. The exception is a project whose only platform is `cli` — a
    terminal surface has no screens and no canvas, so its flows get no briefs;
-   say so and stop, do not treat it as drift. Recall parked UX points (mempalace
-   room `gaps`, tag `parked`) so the brief's Out of scope section carries them;
-   skip silently if mempalace is down. Never touch the canvas in this mode.
+   say so and stop, do not treat it as drift. Recall parked UX points
+   (`docs/memory/gaps/` records whose slug ends in `-parked`) so the brief's
+   Out of scope section carries them; skip silently if the folder is absent.
+   Never touch the canvas in this mode.
 2. **Write one brief per platform** from the screen-prompt template to
    `docs/prompts/screens/<project>/<NNN>-<flow>/<platform>.md` — the prompt tree
    mirrors the flow's blueprint path **exactly** (format 15: same folder shape,

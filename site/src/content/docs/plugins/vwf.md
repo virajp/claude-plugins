@@ -31,10 +31,7 @@ agent afterwards, then run **`/vwf:doctor`** — nothing is verified at install
 time, and doctor is what reports a missing required binary.
 
 The `pnpx @virajp.dev/claude-plugins` installer installs plugins and nothing
-else. **graphify**, which vwf enforces at its own entry gate, is yours to wire
-for the agent — nothing in the toolkit runs `graphify install --platform claude`
-— and a shaped repo refreshes the graph from its own pre-commit `post-commit`
-and `post-merge` hooks, never graphify's own git hook, which pins a Python path.
+else.
 
 A repo shaped by [`/vwf:init`](#vwfinit) runs that one-shot for you: its task
 library carries `setup:ai:all`, whose universal subtask `setup:ai:base` checks
@@ -56,21 +53,16 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 `vwf` shells out to a few external tools. Install them first — nothing checks
 them at install time, and the table below gives the command for each.
 
-| Tool            | Required?    | Why                                                   | Install                                                                         |
-| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------------- |
-| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                             |
-| graphify        | **required** | knowledge graph the commands rely on                  | pinned in the repo by `/stackgen:tool-config`, then `MISE_ENV=dev mise install` |
-| node + pnpm     | **required** | runs vwf's Context7 MCP server and the mockup scripts | `node` and `pnpm` in your global mise config, then `mise install`               |
-| Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`                   |
-| uv              | **required** | installs graphify, through mise's pipx backend        | `uv` in your global mise config, then `mise install`                            |
-| python          | **required** | uv locks graphify's dependencies with it (>= 3.10)    | `python` in your global mise config, then `mise install`                        |
-| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project`        |
+| Tool            | Required?    | Why                                                   | Install                                                                  |
+| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                      |
+| node + pnpm     | **required** | runs vwf's Context7 MCP server and the mockup scripts | `node` and `pnpm` in your global mise config, then `mise install`        |
+| Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`            |
+| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
 
 Your global mise config is `~/.config/mise/config.toml`: add each tool to its
 `[tools]` table at an exact version, then run `mise install`. Never a bare
-`mise use` — it writes a pin nobody reviewed. graphify is the repo's own: the
-skill pins `pipx:graphifyy` (the double `y` is the real name) in the repo's
-`.config/mise/conf.d/ai/mise.dev.toml`.
+`mise use` — it writes a pin nobody reviewed.
 
 **Nothing checks these at install time.** `claude plugin install vwf` succeeds
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
@@ -90,32 +82,11 @@ logged in, or without the `project` scope as a **degradation** with the remedy,
 every run, and skips the forge-state predicate with a note; init prints the
 by-hand list and carries on.
 
-**The memory server is started by Claude Code.** `vwf` declares mempalace over
-**stdio** as `mise x -- mempalace-mcp`, so Claude Code starts it once per
-session, in the project directory, under the repo's mise environment — there is
-no daemon to run. What you install is the `mempalace` tool through mise and, for
-the Qdrant backend, Qdrant, which you run; what configures the server is the
-`[env]` of `.config/mise/conf.d/ai/mise.dev.toml`, which `/stackgen:tool-config`
-renders in every repo, not `~/.claude/settings.json` — the shared `MEMPALACE_*`
-values (`MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together among them) and
-the repo's own `MEMPALACE_PALACE_PATH`. mise loads that file only under
-`MISE_ENV=dev`, so export `MISE_ENV=dev` in the shell that starts Claude Code.
-**Every repo needs its own `MEMPALACE_PALACE_PATH`** —
-`~/.local/share/mempalace/<repo>`, one palace per repo; without it the server
-falls back to a palace shared by every repo on the machine. `/vwf:doctor` probes
-with `mise x -- mempalace status` from the repo root and reports a failure, or a
-missing palace path, as a **degradation** with the fix as the remedy. If you
-separately install the upstream `mempalace` plugin, toggle **its** server off in
-`/mcp` — it would be a second server on the same palace. See
-[mempalace](./mempalace.md#running-the-server).
-
-Nothing beyond the `mempalace` tool, Qdrant and the repo's mise environment
-needs installing for memory. The two mempalace skills are **vendored into
-`vwf`** (`/vwf:mempalace`, `/vwf:mempalace-recall`) and its auto-save hooks are
-reimplemented here, so memory arrives with the plugin rather than depending on
-anything being reachable at install time. Beside those hooks, `vwf` ships the
-five [`/vwf:execute` action-log hooks](#the-action-log) and one hooks module,
-the [`/vwf:execute` progress pane](#the-progress-pane).
+**Memory needs nothing installed.** vwf's cross-session memory is a markdown
+tree under `docs/memory/` in the repo — no server, no daemon, no tool to
+install. See [Memory](#memory). The hooks `vwf` ships are the five
+[`/vwf:execute` action-log hooks](#the-action-log) and one hooks module, the
+[`/vwf:execute` progress pane](#the-progress-pane).
 
 `vwf` also depends on one plugin — `stackgen` — resolved from the same
 `virajp-plugins` marketplace. Claude Code **auto-installs and auto-enables** it
@@ -132,9 +103,9 @@ choose a stack: stackgen acts only when an axis is pinned.
 
 The Markdown/documentation skills and the Context7 docs server used to be two
 more dependencies. They are **part of `vwf` now**: `documentation-standards` and
-`/vwf:readme` are vwf skills, and Context7 is one of vwf's two MCP servers. The
+`/vwf:readme` are vwf skills, and Context7 is vwf's one MCP server. The
 Karpathy coding guidelines were a third, and are now a **vendored** skill —
-`karpathy-guidelines` — for the same reason mempalace's are: as a url-sourced
+`karpathy-guidelines` — because as a url-sourced
 dependency it was silently absent for most installs, and vendoring puts the
 provenance beside the code it governs.
 
@@ -206,23 +177,20 @@ adopting it.
 **Dependencies**
 
 - **External prerequisites, checked at run time rather than install time.**
-  `mise`, `graphify`, `uv`, `python` and `pnpm` must be on your `PATH`. Nothing
-  refuses the install any more; `/vwf:setup` and `/vwf:execute` halt on a
-  missing `graphify` — and on `mise` once a stack is pinned, and `uv`, `python`
-  and `pnpm` fail later in their own ways. `gh`, logged in, is needed by
+  `mise` and `pnpm` must be on your `PATH`. Nothing refuses the install any
+  more; `/vwf:setup` and `/vwf:execute` halt on a missing `mise` once a stack is
+  pinned, and `pnpm` fails later in its own way. `gh`, logged in, is needed by
   [`/vwf:backlog`](#vwfbacklog) (the `project` scope), by
   [`/vwf:init`](#vwfinit)'s forge pass (the `repo` scope — `project` only for
   its backlog step; `glab` on GitLab) and by the doctor predicate that reads the
   forge state back; its absence is a **degradation** too, and init falls back to
   a by-hand list. Dependency auto-install/enable needs Claude Code ≥ 2.1.143.
   See [Prerequisites](#prerequisites).
-- **Memory is written twice, so mempalace is optional.** Every memory write goes
-  to both `mempalace` (a **stdio server Claude Code starts** per session, its
-  environment the repo's mise env, its palace the repo's own) and a markdown
-  tree under `docs/memory/`. Without the server nothing is lost, but recall
-  degrades from semantic search to grep, and says so. `decisions`, `planning`,
-  `gaps` and `problems` are committed; `handoff`, `doctor` and `runs` are
-  gitignored, being one developer's state rather than the team's.
+- **Memory is plain files.** Every memory write is a markdown file under
+  `docs/memory/` — `decisions/`, `gaps/` and `problems/` committed, `handoff/`
+  gitignored, being one developer's state rather than the team's. Recall lists
+  the file names and reads the ones matching the topic at hand. See
+  [Memory](#memory).
 - **Leans on review engines.** `execute` runs the `/code-review` and
   `/security-review` engines itself at each review row the plan places, over the
   branch delta since the previous one, and hands their findings to the code- and
@@ -856,7 +824,7 @@ record.
 | `/vwf:plan [slice]`                     | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                                                                                               |
 | `/vwf:execute <folder>`                 | Run an approved plan folder of either kind unattended in a fresh context — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan; `all` runs every runnable plan, each in its own runner, until one stops |
 | `/vwf:plan-management`                  | Internal — the one writer of the plan queue: the index rows, every folder's status, the archive move, all through its `plan.mjs` script; called by the planners and `execute`, or when you ask to archive or list                                                                                                                                                                                    |
-| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, required binaries, manifests, harness, dependency audit, mempalace, graphify, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                                                                               |
+| `/vwf:doctor [project ... \| baseline]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, required binaries, manifests, harness, dependency audit, the `docs/memory/` store, leftovers of retired tools, the repo shape of every member, stamps; `baseline` runs the local repo-shape predicates alone                                                                                                                               |
 | `/vwf:verify [env]`                     | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                                                                                          |
 | `/vwf:feedback [input]`                 | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                                                                                                        |
 | `/vwf:backlog [verb]`                   | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                                                                                                       |
@@ -942,7 +910,7 @@ repo, and one yes.
 
 **It names no tool, and that is the design.** It fetches no bundle for its
 baseline. The toolchain manager's config, the repo gates and the hygiene config
-files — the ignore and attribute files, the graph's ignore file — come from
+files — the ignore and attribute files — come from
 [`/stackgen:tool-config all`](./stackgen.md#stackgentool-config), which `init`
 calls with its answers as flags — the repo name, the members, the commit scopes,
 the landing pair, the forge and the secrets provider — previewed first, the
@@ -960,11 +928,9 @@ What a shaped repo has when it is done: a `.gitignore` in blocks, a lowercase
 settings files, its `conf.d` section files and its one tracked lock, a
 file-based task library grouped `setup:*`, `code:*` and `p:<project>:*` over a
 shared helper library, pre-commit with the full hook set and conventional
-commits wired for release notes, a post-commit and post-merge hook that
-refreshes the code-intelligence graph, the security and dependency gates
+commits wired for release notes, the security and dependency gates
 configured, `.gitattributes`, `CONTRIBUTING.md`, issue templates under
-`.github/`, an ignore file for the code-intelligence graph, and
-`.config/stackgen.yaml`, the file that holds the answers and marks the repo
+`.github/`, and `.config/stackgen.yaml`, the file that holds the answers and marks the repo
 shaped. `init` asks nothing about editor settings: the one universal
 `.vscode/settings.json` is `/stackgen:tool-config all`'s, shown as one of its
 rows like any other file it lands. Some of its contents follow the answers
@@ -1266,9 +1232,8 @@ ones, and is reported under `Deferred` — its unlock moving its pins into a
 `/vwf:setup reshape`; **keep both** leaves your file where it is beside the
 pack's and reports it under `Deferred` as **unread by the gate**, since the gate
 passes the `.config/` path explicitly; **delete** is reachable only by flipping
-the row yourself and is never proposed. `.gitignore`, `.gitattributes` and
-`.graphifyignore` are `handed` rows, rendered in place by the skill's git and
-graphify tools. A dependency-update policy — a Renovate or Dependabot file — is
+the row yourself and is never proposed. `.gitignore` and `.gitattributes` are
+`handed` rows, rendered in place by the skill's git tool. A dependency-update policy — a Renovate or Dependabot file — is
 no row's: nothing ships one any more, so a root spelling is reported like any
 root file off the allowlist, and one under `.github/` is yours and left alone.
 An entry your `.gitignore` ignores is build output, skipped without a row;
@@ -1347,8 +1312,8 @@ is deferred; setup's own passes complete the file later. The helper library is
 the one pack file this never offers — pass 5 replaces it unconditionally, for
 the timing reason above.
 
-**Your own ignore and attribute lines survive the adoption.** A `.gitignore` or
-`.graphifyignore` with no `tool-config` marker pair is one `write` row in the
+**Your own ignore and attribute lines survive the adoption.** A `.gitignore` with
+no `tool-config` marker pair is one `write` row in the
 skill's preview, replacing the file whole — which would drop a `secrets/` or
 `.env.production` line you wrote, after which a plain `git add` stages what it
 used to ignore. So `init` reads your file first and lists its **own lines** —
@@ -1751,6 +1716,17 @@ any old spelling that fans out to more than one current one. The stamps are
 drift detectors; nothing selects a migration by them, so there is no support
 window.
 
+**`config_format` 24 retires the palace.** A migrate pass that finds a
+`memory:` block (`memory.wing`) in `.config/vwf.yaml`, a `mempalace.yaml` at
+any depth, or a `docs/memory/planning/`, `runs/` or `doctor/` folder offers
+each for removal as a numbered row, applied on consent. The stamp moves to 24
+either way; a declined row stays, and `/vwf:doctor` reports it as drift. Palace
+data on disk is never read, moved or deleted. The graphify and mempalace tool
+files — `.graphifyignore`, the `graphify-refresh` hook, the `pipx` pins, the
+`MEMPALACE_*` variables, the `graphify-out/` excludes — are not vwf's to remove:
+bootstrap's migration M24 or its `remove tools` instruction does, and doctor
+names that remedy.
+
 Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
 linkage; project roles and platforms — `watch`, `tv` and `spatial` from an Xcode
 target's SDK or an `AndroidManifest.xml` feature, Wear OS from
@@ -1764,25 +1740,20 @@ template for leaves that axis for `/vwf:architecture` to settle rather than
 halting the run. An axis setup finds **absent** on a repo architecture has not
 run on is written `unresolved` and the run carries on: the one case in which
 setup writes that value, and it fills an absence only — a pinned slug is never
-rewritten. It also writes the product's **one** `mempalace.yaml`, at the repo
-root — one wing, the seven rooms vwf's memory protocol uses, and a secret
-denylist behind `.gitignore` — mining the whole tree including submodules, and
-consolidating away any config it finds in `.config/` or a submodule root (mining
-reads the config only from the directory it is pointed at, so a stray one is
-silently inert rather than merely wrong). Nothing is written until you approve;
+rewritten. It also writes the product's **one** memory tree, `docs/memory/`
+with its four folders (see [Memory](#memory)) — in the base repo of a
+multi-repo product, merged into one that exists and never overwriting a record.
+Nothing is written until you approve;
 it works in a worktree, never deletes, and **never moves a source file** — a
 layout that differs from its topology's grouping, and an `iac` project sitting
 in another project's repo, both end the run as written recommendations rather
-than as moves. It merges a vwf section into your `CLAUDE.md`, confirms the
-`.graphifyignore` `/stackgen:tool-config all` landed is present (see
-[Code intelligence](#code-intelligence)) — writing no ignore file itself —
-bootstraps `environment.md` from the repo's existing env-var and secret usage
+than as moves. It merges a vwf section into your `CLAUDE.md`, bootstraps `environment.md` from the repo's existing env-var and secret usage
 (names only), detects the repo's verification-harness capabilities (dev server,
 E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
 blueprint and config format versions, harness inventory, enforcement opt-outs,
 and per-project nuances (a coverage-target override, a non-conventional health
 path) — so a later run detects drift, and every command knows how vwf operates
-in this repo (pipeline knobs, verify environments, the mempalace wing).
+in this repo (pipeline knobs, verify environments).
 
 #### The materialize pass
 
@@ -1855,10 +1826,8 @@ is what `/vwf:doctor` reports on demand and what the next spine run stops on.
 write the config, *then* run `/vwf:doctor` against it — a stamp written before
 validation describes a tree nothing checked. A **blocking** doctor finding halts
 the run *and reverts the stamp*, so no stamped-but-unrunnable artifact survives;
-a declined graph build and a recorded `iac` decline are the two exceptions,
-noted as degradations rather than halts. Past the approval gate and commit,
-setup offers the graph build (it is the only command that builds one) and then
-**prints the chain** — `product` → `architecture` → `design-system` →
+a recorded `iac` decline is the one exception, noted as a degradation rather
+than a halt. Past the approval gate and commit, setup **prints the chain** — `product` → `architecture` → `design-system` →
 `blueprint`, with `readme` optional — offering to start the first. It runs none
 of them.
 
@@ -2770,7 +2739,7 @@ the same for both.
 Then the preflight, unattended, which reads the rest of doctor's report. When a
 `code` unit is planned, a missing LSP server was `plan`'s question, and the
 answer is the folder's `consent.lsp`, which this run reads and never asks; on
-`edit` units alone it is a run journal detail. Then every line of
+`edit` units alone it is a line in the final report. Then every line of
 the folder's unit gate and wave gate, once, before the first unit — what is
 written and nothing inferred; a red line
 here is the branch's, not the plan's, and is reported as such rather than worked
@@ -2905,8 +2874,7 @@ What it does, by rule:
   the units fixed. A fix that lands after the last row covering its unit — from
   a wave review, the acceptance or UX pass, or a fix-first loop-back at the
   report — re-runs that row over the fix commits as a new loop with its own
-  round count. Gap and finding drawers in memory are keyed to the plan folder,
-  since row ids repeat across plans. A plan with `code` units that no review row
+  round count. A plan with `code` units that no review row
   covers is refused at preflight — the run infers no row — and so is a review
   row whose `depends_on` names no unit: a row that covers nothing has no range
   to review. With `covers`, after **all** unit waves, one `acceptance + ux` pass
@@ -2917,7 +2885,7 @@ What it does, by rule:
   explicit, never silent. After the last ux round, execute copies the images the
   reviewer names into the main checkout's `docs/scratchpad/<project>/renders/`
   tree, and the final report names [`/vwf:mockups renders`](#vwfmockups) to
-  review them; with no image it copies nothing, says so in the run journal, and
+  review them; with no image it copies nothing, says so in the final report, and
   names no command. Without `covers` both are recorded `skipped` in the folder's
   `stages`: a plan with no slice has no criteria and no Screens contract to
   verify against.
@@ -2942,7 +2910,7 @@ What it does, by rule:
   consent to each new dependency. One the plan missed is captured as a gap,
   never installed on the run's own judgment.
 - **Gaps don't stop it.** Each gap (a hole in the blueprint or plan, not a code
-  bug) is appended to the folder's `gaps` list and to memory, and the run
+  bug) is appended to the folder's `gaps` list — its only record — and the run
   continues; a unit's own `GAP:` line is a stated assumption recorded the same
   way, naming the unit. An `UNRESOLVED:` — a ruling the unit
   could not proceed without — blocks that unit and everything that depends on
@@ -3024,10 +2992,9 @@ rather than recalling the run: by then the run may have spanned dozens of
 dispatches, a compaction, or a handoff-and-resume, and the committed folder is
 the only account that survived all three. Each field is written as its unit or
 stage returns, so round counts are counted rather than remembered and a skipped
-stage is visible as `skipped` with its reason instead of an absence; the
-mempalace journal (room `runs`) mirrors those facts, with each round's detail,
-and is read only when the folder cannot be. If the report had to come from the
-mirror it says so and marks itself **reconstructed** — you should know whether
+stage is visible as `skipped` with its reason instead of an absence. Only when
+the folder cannot be read does the report fall back to `git log` and the
+action log, and then it says so and marks itself **reconstructed** — you should know whether
 you're reading a record or a recollection.
 
 **Then it lands per the recorded consent.** When the plan's `consent.merge`
@@ -3048,11 +3015,7 @@ same commit carries the **release levels**: for each entry of the folder's
 never lowers one; an absent key or file reads `NONE`, and only a release step
 clears a key. The run bumps no version. The file is written on the integration
 branch after the merge, never on the run branch, so two runs landing at once do
-not conflict on it. After that commit is pushed, the run calls
-`mise run code:graph` in the main checkout and waits for the task — not for the
-graphify rebuild, which the task starts in the background — so under
-`/vwf:execute all` each plan starts after a refresh of the graph that the merge
-changed; a repo with no `code:graph` task skips the step. **Where the folder
+not conflict on it. **Where the folder
 ends up depends on the gap list.** Each entry of the folder's `gaps` list
 carries a `state`, `open` or `closed`. The run writes `closed`
 only for what it settled itself with no ruling owed — an Owns widened and the
@@ -3342,7 +3305,7 @@ is no old-format copy of this skill or of `execute`.
 | `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's status to `APPROVED`, and the folder's `run` to `{}`, in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                           | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's status alone — `status.state` `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED`, and `status.detail`; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                               | `execute`, at start, pause, block and landing                                                   |
 | `complete <folder>`                | After the merge: the row `COMPLETE` and its `gaps` count, its `folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                   | `execute`, in the main checkout                                                                 |
-| `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the status set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog` id still open and `/vwf:backlog partial` for every `backlog_pieces` id, the mempalace `runs` drawer marked archived, then, after a move, the action logs of archived plans older than 30 days deleted | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
+| `archive [folder] [--force]`       | The completion check (every warning asks — or, under the *do not ask* preference `execute` declares, is returned and nothing moves; the one refusal is a backlog list that contradicts itself, which `--force` overrides), the whole-folder move, the status set `ARCHIVED <date> — not run; was <previous status>` unless it already reads `COMPLETE`, the row edit and sweep when run in the main checkout, `/vwf:backlog done` for any `backlog` id still open and `/vwf:backlog partial` for every `backlog_pieces` id, then, after a move, the action logs of archived plans older than 30 days deleted | `execute`, on a green landing with no open gap, declaring *do not ask*; a session, on your word |
 | `next`                             | The pick: every `APPROVED` row whose `requires` are all satisfied, lowest `priority`, then date, then name; a `RUNNING` row is never taken                                                                                                                                                                                                                                                                                                                                                                                                                                      | `execute next`                                                                                  |
 | `resolve <folder>`                 | The `requires` list by kind — a change requirement is a `COMPLETE` row or an archived folder, a cycle requirement every `covers` doc stamped `implementation: complete`; an archived folder with no `index.json` satisfies either kind; an entry matching nothing is named, never re-pointed                                                                                                                                                                                                                                                                                                                                                 | the planners at self-review; `execute` at preflight                                             |
 | `priority <folder \| requires…>`   | `10 + max` over the `priority` of every unarchived plan the `requires` list names, or `10` — from the folder, or from the entries themselves before the folder exists                                                                                                                                                                                                                                                                                                                                                                                                          | the planners at their gate                                                                      |
@@ -3474,8 +3437,8 @@ way to production before the single hand-off. The routes:
   A report whose shape change is incidental stays a blueprint hole and reaches
   architecture through blueprint's own sub-step. Deferred, it is one line under
   `## Open Questions` in `docs/blueprint/architecture.md`.
-- **Incident** (`/vwf:feedback incident <what happened>`) → filed to memory as a
-  problem with a postmortem stub appended to `docs/runbooks/postmortems.md`;
+- **Incident** (`/vwf:feedback incident <what happened>`) → written as a
+  `docs/memory/problems/` record, with a postmortem stub appended to `docs/runbooks/postmortems.md`;
   each action item goes back through the classifier as its own intake.
 - **Not a blueprint gap** — tooling, docs, CI, a refactor, a tree the blueprint
   never described → [`/vwf:change-plan`](#vwfchange-plan), handed the report
@@ -3483,7 +3446,7 @@ way to production before the single hand-off. The routes:
   Nothing under `docs/blueprint/` describes this work, so there is no flow,
   entity or screen to edit; change-plan runs its own recall, survey and
   interview, and the folder it writes is the durable record. Deferred instead,
-  it is filed to memory tagged `non-blueprint` — with no blueprint doc to own
+  it is written as a `docs/memory/gaps/` record — with no blueprint doc to own
   it, memory is the only record there is.
 
 ```text
@@ -3670,9 +3633,8 @@ that touched the same tree (its *Out of scope*, *Parked* list and `gaps` are
 often where the request came from), the base repo's
 [backlog project](#vwfbacklog) through `/vwf:backlog list` — recorded as
 unreadable, with the reason, when `gh` cannot reach it — since the request is
-often an item already sitting on it, and the memory palace's `planning`,
-`decisions` and `gaps` rooms when the server is up, skipped silently when it is
-not. Then it surveys through concurrent `Explore` subagents that return
+often an item already sitting on it, and `docs/memory/gaps/` beside the
+decisions, each skipped silently when absent. Then it surveys through concurrent `Explore` subagents that return
 `file:line` conclusions rather than file contents, so the session stays small
 enough to hold an interview afterwards.
 
@@ -3834,7 +3796,7 @@ Long sessions lose fidelity. When the context window grows **beyond ~60%**,
 capture the session so a fresh one can continue:
 
 ```text
-/vwf:handoff auth-refactor      # write a handoff, file it to memory
+/vwf:handoff auth-refactor      # write docs/memory/handoff/auth-refactor.md
 ```
 
 `handoff` first **tidies the tree** — it checkpoints pending work everywhere
@@ -3842,23 +3804,22 @@ capture the session so a fresh one can continue:
 pointers in the outer repo, and removes only fully-merged worktrees (never one
 with unmerged work). It does not push. Then it writes a structured handoff
 document — goal, current state, key decisions, open next steps, and (when
-there's a clear next action) a ready-to-paste **next prompt** — and stores it in
-mempalace under your project. In a new session:
+there's a clear next action) a ready-to-paste **next prompt** — and writes it to
+`docs/memory/handoff/<name>.md` (gitignored: a handoff is your session state,
+not the team's), replacing a handoff of the same name. In a new session:
 
 ```text
 /vwf:recall auth-refactor       # rebuild context, then optionally run the next prompt
 ```
 
-`recall` retrieves the handoff, reads the files it points to, summarizes where
-you left off, and offers to run the captured next prompt. Every handoff is
-written to **both** memory stores, so `recall` works with or without the
-mempalace server.
+`recall` reads the handoff from that file alone, reads the files it points to,
+summarizes where you left off, and offers to run the captured next prompt.
 
-Beside its format check, before it reads the palace, `recall` also runs a
+Beside its format check, before it reads the handoff, `recall` also runs a
 **shape check**: `/vwf:doctor baseline`, the named invocation that evaluates the
 local repo-shape predicates — (a) through (f), file reads against the lockfile,
 the config and the tree, per repo of the product — and nothing else. No stack,
-health, memory or graphify check runs, nothing is written, and the forge
+health or memory check runs, nothing is written, and the forge
 predicate (g) is never read, since it needs the forge CLI and this runs at every
 session start. Doctor answers one line per drifted repo with the letters that
 failed, and a base with no `.config/stackgen.yaml` at `format: 1` on its own
@@ -3884,14 +3845,12 @@ off" handoff:
 /vwf:recall next                # rebuild context, then continue — no prompt
 ```
 
-`next` differs from a named handoff in three ways. It is written to **both**
-surfaces every time — the mempalace drawer *and* `docs/memory/handoff/next.md`
-(gitignored: a handoff is your session state, not the team's) — so either one
-alone can resume the work. The disk copy always lands at the **main checkout**
-root, never a linked worktree: a gitignored file written in a worktree dies with
-it, and the main checkout is the one root every later session resolves. It is a
-**singleton**, overwritten in place, so there is never a stale pile to choose
-from. And `recall` **runs its next prompt without asking**, leaving the handoff
+`next` differs from a named handoff in two ways. It is a **singleton**,
+`docs/memory/handoff/next.md`, overwritten in place, so there is never a stale
+pile to choose from. Like every handoff it lands at the **main checkout** root
+(the base repo, in a multi-repo product), never a linked worktree: a gitignored
+file written in a worktree dies with it, and the main checkout is the one root
+every later session resolves. And `recall` **runs its next prompt without asking**, leaving the handoff
 in place until the next `/vwf:handoff` replaces it.
 
 The one thing it won't do is invent work: if the session had no continuable next
@@ -3968,7 +3927,7 @@ nothing has landed for them to contradict. Run it yourself after work no plan
 folder saw; that ad-hoc turn is what nothing covered before.
 
 It delegates the scan to a stateless `docs-sync-surveyor` subagent, which reads
-the diff graph-first and returns the contradicted passages as `file:line`
+the diff and returns the contradicted passages as `file:line`
 findings rather than file contents, so the orchestrator never loads every doc to
 compare them. Edits are **surgical** — every changed line traces to the change,
 no style rewrites, nothing documented that didn't move. A README the surveyor
@@ -4034,9 +3993,9 @@ protocol**:
   without asking. It never guesses an open decision — it records it instead.
 - **Out-of-scope answers are parked, not lost** — when your answer raises
   something beyond the current pass (a new feature, another flow, a future
-  concern), it stays out of this pass but is captured durably: filed to memory
-  (room `gaps`) and mirrored into the doc's Open Questions / Out of scope
-  section, so the next relevant session recalls it instead of depending on
+  concern), it stays out of this pass but is captured durably: written to
+  `docs/memory/gaps/` as a `-parked` record and mirrored into the doc's Open
+  Questions / Out of scope section, so the next relevant session recalls it instead of depending on
   anyone remembering the conversation.
 - **Propose 2–3 approaches** — with trade-offs and a recommendation, before
   settling a direction.
@@ -4045,83 +4004,43 @@ protocol**:
 
 ## Memory
 
-`vwf` uses mempalace as cross-session memory so each cycle builds on the last
-instead of re-deriving it. It recalls prior decisions and findings before
-working, and persists durable outcomes after. Memory is keyed by your project
-(the **wing**) and split into rooms:
+`vwf` keeps cross-session memory in **one store: a markdown tree on disk**
+under `docs/memory/`, so each cycle builds on the last instead of re-deriving
+it. It recalls prior decisions and findings before working, and persists
+durable outcomes after. Four folders, one file per record:
 
-| Room        | Holds                                                                          |
-| ----------- | ------------------------------------------------------------------------------ |
-| `decisions` | design/architecture decisions and the *why*                                    |
-| `problems`  | review and security findings and how they were resolved                        |
-| `planning`  | plan rationale and deferred options                                            |
-| `gaps`      | blueprint/plan holes from execution + points parked as out-of-scope during Q&A |
-| `runs`      | the mirror of a plan folder's run state — read only when the folder cannot be  |
-| `doctor`    | `/vwf:doctor` findings per run, so a still-present one reports as *known*      |
-| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`                          |
+| Folder      | Holds                                                                         | Git        |
+| ----------- | ----------------------------------------------------------------------------- | ---------- |
+| `decisions` | design and architecture decisions, and the *why*                              | committed  |
+| `gaps`      | blueprint or plan holes found outside a run, and points parked during Q&A     | committed  |
+| `problems`  | problems and how they were resolved — findings worth keeping, incidents       | committed  |
+| `handoff`   | session handoffs for `/vwf:handoff` and `/vwf:recall`, `next.md` among them   | gitignored |
 
-Memory is best-effort: if mempalace is unavailable, `vwf` skips every memory
-step and proceeds — except `handoff`/`recall`, which fall back to
-`docs/memory/handoff/<name>.md` (the handoff *is* the deliverable); the reserved
-`next` handoff writes that file unconditionally, outage or not. Gaps are also
-written to the `gaps` list of the plan folder's `index.json`, so they survive a
-memory outage.
+A record is `<date>-<slug>.md` (a handoff is `<name>.md`). No record is
+overwritten: when the name exists, the new one takes the first free suffix,
+`-2`, then `-3`. A handoff of a name that exists is the one exception — it is
+replaced, as `next.md` always is.
 
-Saving is not left entirely to the workflow steps. `vwf` ships an **auto-save
-hook** that asks the model to persist a diary entry every 15th stop, and again
-when the conversation is about to be compacted — the point where unpersisted
-context is about to be lost. It honours mempalace's own opt-out
-(`MEMPALACE_HOOKS_AUTO_SAVE=false`, or `hooks.auto_save` in
-`~/.mempalace/config.json`), and `MEMPALACE_SAVE_INTERVAL` changes the count.
+**A recall lists, then matches.** It lists each folder's file names, reads the
+files whose slug or title matches the topic at hand — newest first, at most ten
+per folder — and reads no file in full that does not match. Hits are context,
+not truth: the docs on disk stay authoritative.
 
-See **[mempalace](./mempalace.md)** for the server, the hooks and what was
-vendored.
+**Nothing else lives there.** The planning record is the plan folder and
+`docs/plans/index.json`; a run's state is the folder's `index.json` and the
+plan's action log, and a gap a `/vwf:execute` run finds goes into that
+`index.json`'s `gaps` list only; `/vwf:doctor` reports afresh on each run.
 
-## Code intelligence
+The tree sits at the repo root — in a multi-repo product, at the **base repo**,
+so a recall from any repo reads one tree — and always in the main checkout,
+except a `/vwf:execute` run, which writes its decision records inside the run's
+worktree so they land with the merge. Never write a secret value into a record:
+three of the four folders are committed.
 
-`vwf` uses the `graphify` CLI as its code-intelligence layer. When a repo
-carries a knowledge graph (`graphify-out/graph.json`), every
-codebase-understanding moment goes to the graph first — `plan`'s actual-state
-survey, `setup`'s topology detection, `architecture`'s registry-vs-code delta
-detection, `feedback`'s "which flow owns this bug", and execute's coder (reuse
-discovery) and reviewers (impact analysis, call-path threat modeling) — with raw
-file reads reserved for verification: the graph orients, the file is the
-evidence. The graph reflects at best the last commit (the repo's `code:graph`
-task refreshes it from a post-commit and post-merge hook), so the uncommitted
-diff is always read directly, and execute's worktrees reach back to the main
-checkout's graph for pre-change context.
-
-**graphify is mandatory**, and the check happens at the entry gate: a missing
-CLI, or no graph reachable from either the current checkout or the main one, is
-a blocking finding that `/vwf:setup` and `/vwf:execute` halt on. A worktree
-reaching back to the main checkout's graph is the normal path, not an absence.
-Past the gate it still degrades rather than crashes — an unreachable graph falls
-back to direct reads. `/vwf:setup` is the one command that builds a graph
-(consent-gated, at the end of onboarding). The refresh is the repo's pre-commit
-`graphify-refresh` hook at `post-commit` and `post-merge`, which runs
-`code:graph` and which `/stackgen:tool-config all` lands — never graphify's own
-hook, which pins a Python path. A raw graphify hook, a `merge=graphify`
-attribute or a `merge.graphify.*` git config key an earlier install left is
-doctor **drift**, remedy `mise run setup:precommit`, which strips all three. A
-recorded decline is a settled choice, not an unmet mandate.
-
-**What the graph indexes is narrowed by `.graphifyignore`.** graphify already
-honours `.gitignore`, so nothing git excludes — `docs/scratchpad/`, build
-output, `graphify-out/` itself — ever needs restating. The ignore file, at each
-checkout root and in the same syntax, is for the **committed** trees that are
-not code intelligence: `docs/memory/` (recall belongs to the memory layer, and a
-graph copy answers memory questions frozen at the last commit),
-`docs/plans/archived/` and `archived/` (superseded by definition — indexed, they
-surface retired decisions beside current ones), and `docs/prompts/` (design
-briefs regenerated from the flow docs, so indexing both answers every screens
-question twice). The blueprint tree, the code and **active** plans stay in. No
-vwf skill writes the file: the standard set is the universal `.graphifyignore`
-`/stackgen:tool-config` renders between its markers, landed in every repo by
-`/vwf:init` (or `/vwf:setup reshape`), and repo-specific committed noise
-(vendored trees, committed generated output, large fixtures) is yours, added by
-hand below the block, where every render leaves it — and `/vwf:doctor` reports a
-missing one as a **degradation**, never blocking: the graph still answers, just
-noisily, and the fix reaches it only at the next rebuild.
+Earlier vwf versions kept this memory in a mempalace server, with a palace per
+repo and a file mirror beside it. Since `config_format` 24 the files are the
+only store; `/vwf:setup`'s migration removes the leftovers on consent, and
+`/vwf:doctor` reports any that stay as drift, with its remedy.
 
 ## A worked walkthrough
 
@@ -4245,13 +4164,6 @@ One more absorbed skill is user-invoked rather than doctrine:
 [`/vwf:readme`](#vwfreadme), which writes a repo's README against the same
 standards.
 
-The memory pair also comes from outside: **`/vwf:mempalace`** (palace setup and
-mining) and **`/vwf:mempalace-recall`** (the search-before-answer protocol) are
-vendored from [MemPalace](https://github.com/MemPalace/mempalace) under MIT.
-They are here rather than in a plugin of their own because as a url-sourced
-dependency the memory layer was silently absent for most installs — see
-[mempalace](./mempalace.md).
-
 The behaviors `karpathy-guidelines` states are already reinforced structurally
 across the workflow — elicitation (think before coding), the plan-as-a-diff and
 the coder's "nothing not in the plan" (surgical changes, YAGNI/the minimalism
@@ -4349,18 +4261,7 @@ rules:
 
 ## MCP servers
 
-`vwf` declares two, and they are the only MCP servers the workflow needs.
-
-### mempalace — memory, over stdio
-
-Declared as `type: stdio`, running `mise x -- mempalace-mcp` — started by Claude
-Code once per session in the project directory, its environment the repo's mise
-env (`MISE_ENV=dev`, one `MEMPALACE_PALACE_PATH` per repo), and reported by
-`/vwf:doctor` as a degradation when it cannot start. The two skills that drive
-it are vendored into `vwf` under MIT, which is what lets memory ship on every
-target rather than only where a marketplace reaches. Setup, the per-repo palace,
-the second-server trap and the provenance record are in
-[Prerequisites](#prerequisites) above and [mempalace](./mempalace.md) in full.
+`vwf` declares one, and it is the only MCP server the workflow needs.
 
 ### Context7 — current library docs
 
@@ -4398,8 +4299,6 @@ queries that library's documentation when a question is about a specific library
 
 - [readme.md](https://github.com/virajp/claude-plugins/blob/main/readme.md) —
   the marketplace overview and the full plugin list.
-- [mempalace](./mempalace.md) — the memory layer behind `/vwf:handoff` and
-  `/vwf:recall`: the server, the auto-save hooks, and what was vendored.
 - [stackgen](./stackgen.md) — a vwf dependency: the stack plugin that answers
   `/vwf:architecture`'s menu, and the source of the `design-tool` packs
   `/vwf:screens` and `/vwf:design-system` import through, materialized into the

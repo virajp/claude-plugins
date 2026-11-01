@@ -1,8 +1,8 @@
 # vwf's dependencies, and the vendored code
 
 Why vwf depends on exactly one plugin, what the retired dependencies became, and
-why the memory layer and the Karpathy guidelines are vendored rather than
-depended on.
+why the Karpathy guidelines are vendored rather than depended on, and why memory
+needs no dependency at all.
 
 ## Dependencies
 
@@ -23,20 +23,21 @@ the one that closes it. **Installing is not using**: stackgen acts only when an
 axis is pinned, so a user adopting vwf first and choosing a stack later pays
 nothing for having it present.
 
-`mempalace` and `andrej-karpathy-skills` used to be on that list and are gone as
-plugins: vwf **vendored** their skills. That is the one place third-party code
-is vendored into this repo, and it buys something a dependency could not — see
-The memory layer and The vendored guidelines below.
+`andrej-karpathy-skills` used to be on that list and is gone as a plugin: vwf
+**vendored** its skill. That is the one place third-party code is vendored into
+this repo, and it buys something a dependency could not — see The vendored
+guidelines below. `mempalace` was on it too, was vendored the same way, and has
+since been removed outright — see Memory below.
 
 **stackgen is load-bearing at `init` and at `setup`, not only at
 `architecture`.** `/vwf:init` first calls `/stackgen:tool-config all`, which
 lands the toolchain manager's config and the repo gates the `devtools` plugin
-used to scaffold, with init's answers as its flags — the ignore, attribute and
-graph-ignore files among them since 2026-09-27 — and records those answers in
-the repo's `.config/stackgen.yaml`, the file only its script writes; then writes
-its own hygiene assets and materializes the secrets provider the user picked,
-the only thing it fetches through the stack adapter; it fetches no bundle for
-its baseline. With no stack adapter installed, `init` **halts** with the install
+used to scaffold, with init's answers as its flags — the ignore and attribute
+files among them since 2026-09-27 — and records those answers in the repo's
+`.config/stackgen.yaml`, the file only its script writes; then writes its own
+hygiene assets and materializes the secrets provider the user picked, the only
+thing it fetches through the stack adapter; it fetches no bundle for its
+baseline. With no stack adapter installed, `init` **halts** with the install
 command rather than printing an empty plan that reads like an already-shaped
 repo. All of it lands **per repo** — the base and every member `init` resolved,
 each with its own `stackgen.yaml` — so a member is shaped on its own evidence.
@@ -65,34 +66,29 @@ set and refused the install — explicitly not overridable by `--force`. That ga
 stayed retired when the CLI's plugin installs came back as a thin wrapper.
 
 **Doctor does not fully replace it, and the gap is worth stating precisely.** Of
-the five binaries vwf shells out to, `/vwf:doctor` blocks on **`graphify` always
-and `mise` conditionally** — since `config_format` 16 a missing `mise` is
-blocking only once some axis in the repo is pinned or some harness capability is
-claimed, and a degradation before that, since a repo with no stack has no
-toolchain to resolve. A missing language server is an ordinary finding; `uv` and
-`python` are named as prerequisites of graphify's remedy rather than checked on
-their own; a **degradation** finding in §5 is, since 2026-09-18, a forge CLI
-(`gh`) that is absent, not logged in, or without the `project` scope, which
-leaves `/vwf:backlog` with nothing to read and every planner's recall of it
-empty, since the backlog is a GitHub Project with no file fallback — and the
-**Context7 runner is not checked at all**, a missing one surfacing as a dead MCP
-server. That runner is `pnpm
-dlx` by default and `${CONTEXT7_RUNNER}` overrides
-it, so what a check would have to verify is whatever the user pinned, not
-`pnpm`.
+the binaries vwf shells out to, `/vwf:doctor` blocks on **`mise` conditionally**
+— since `config_format` 16 a missing `mise` is blocking only once some axis in
+the repo is pinned or some harness capability is claimed, and a degradation
+before that, since a repo with no stack has no toolchain to resolve. A missing
+language server is an ordinary finding; a **degradation** finding in §5 is,
+since 2026-09-18, a forge CLI (`gh`) that is absent, not logged in, or without
+the `project` scope, which leaves `/vwf:backlog` with nothing to read and every
+planner's recall of it empty, since the backlog is a GitHub Project with no file
+fallback — and the **Context7 runner is not checked at all**, a missing one
+surfacing as a dead MCP server. That runner is `pnpm dlx` by default and
+`${CONTEXT7_RUNNER}` overrides it, so what a check would have to verify is
+whatever the user pinned, not `pnpm`.
 
-So the trade is slightly worse than "doctor already blocked on it": one of six
-blocks always, one once a stack is pinned, one degrades, two are named only as
-another's remedy, and one is silent. It was still worth taking —
-`claude plugin
-install vwf` cannot now fail for a reason the user did not ask
-about — but `readme.md`'s caveat states the gap rather than implying doctor
-covers it, and that is the honest version. **If a Context7-runner check is ever
-added to doctor, this paragraph is what should shrink.**
+So the trade is slightly worse than "doctor already blocked on it": one blocks
+once a stack is pinned, one degrades, and one is silent. It was still worth
+taking — `claude plugin install vwf` cannot now fail for a reason the user did
+not ask about — but `readme.md`'s caveat states the gap rather than implying
+doctor covers it, and that is the honest version. **If a Context7-runner check
+is ever added to doctor, this paragraph is what should shrink.**
 
 `markdown` and `context7` used to be on that list and are gone as plugins: vwf
 **absorbed** them. Their two skills (`documentation-standards`, `readme`) are
-vwf skills now, and the Context7 docs server is one of vwf's two `mcpServers`.
+vwf skills now, and the Context7 docs server is vwf's one `mcpServers` entry.
 Both were authored here, required by the workflow, and useful only alongside it
 — a separate plugin bought nothing but a dependency edge. `/markdown:readme` is
 therefore `/vwf:readme`, and vwf-only; that is intended.
@@ -146,116 +142,31 @@ auto-enables** these dependencies at the same scope. Key rules:
   enabled — not on a continuous reconcile. If a dependency is later disabled on
   its own, re-enable it directly or toggle `vwf` off/on.
 
-### The memory layer: vendored skills, vwf's server
+### Memory: files, no dependency
 
-The memory layer arrives in three pieces, from three different places, and it is
-worth knowing which is which: **the skills are vendored**, **the MCP server is
-declared by vwf**, and **its environment is the repo's**, in its mise
-environment.
+vwf's memory is the `docs/memory/` file store — `decisions/`, `gaps/` and
+`problems/` committed, `handoff/` gitignored — defined by
+`plugins/vwf/assets/memory.md`. It needs no server, no tool and no plugin, so it
+is no dependency at all.
 
-**Why vendored rather than depended on.** `mempalace` was a `url`-sourced entry
-and a vwf dependency, and a url-sourced plugin had no rendered bundle for the
-OpenCode adapter to copy — so **OpenCode users got no memory layer at all**,
-silently: the plugin was listed, the install printed a skip note, and the thing
-vwf leans on hardest was simply absent.
-
-That reason is now historical, since there is one tree and one target. **The
-vendoring stays**, and on its own merits: the provenance travels with the code,
-nothing has to be reachable at install time for memory to work, and a url source
-would pin every reader to whatever ref it resolved. Do not undo it on the
-grounds that the original argument expired.
-
-What was taken is **two skills and nothing else** — not the Python package, not
-the server implementation, not `integrations/`. Provenance, the version taken,
-the MIT licence, the local edits and the resync policy live in
-`plugins/vwf/vendor/mempalace/`, which ships with the plugin. It is a one-time
-fork, deliberately re-synced: nothing watches upstream, so the **Version taken**
-row is the only thing that makes drift detectable, and it is the one edit a
-resync must not skip.
-
-**The auto-save hooks are reimplemented, not vendored** — see Hooks below for
-why upstream's could not be wrapped.
-
-vwf declares its own mempalace server in its `plugin.json` — `type: "stdio"`,
-`command: ${HOME}/.local/bin/mise`, `args: ["x", "--", "mempalace-mcp"]` — so
-Claude Code **starts the server per session**, in the project directory, with no
-daemon and no port. `/vwf:doctor` §7 probes it the same way, with
-`mise x -- mempalace status` from the repo root, and reports a non-zero exit as
-a **degradation**. The command names **no palace on purpose**: a
-`--palace $MEMPALACE_PALACE_PATH` takes its value verbatim, so a `~` in it
-opened `<cwd>/~/…`, while mempalace expands `~` itself when it reads
-`MEMPALACE_PALACE_PATH` from the environment.
-
-Its environment is **the repo's mise environment**, never
-`~/.claude/settings.json` — the `[env]` of
-`.config/mise/conf.d/ai/mise.dev.toml`, rendered by `stackgen:tool-config` and
-loaded only under `MISE_ENV=dev`: the shared `MEMPALACE_*` values
-(`MEMPALACE_BACKEND` and `MEMPALACE_QDRANT_URL` together,
-`MEMPALACE_MAX_BACKUPS`, `MEMPALACE_MCP_ALLOW_PEER_WRITER = 1`) and a
-**per-repo** `MEMPALACE_PALACE_PATH`, `~/.local/share/mempalace/<repo>` — beside
-`~/.mempalace/config.json`. Every repo needs its own palace path, so doctor
-reports one missing from `mise env` as a **degradation**: the server would fall
-back to a palace shared with every other repo. A changed variable reaches the
-server at the next session start. The precedence **differs by setting**, which
-is the fact to reach for when debugging. The backend choice runs `--backend`
-flag → config.json → `MEMPALACE_BACKEND` → chroma default (**file beats env**);
-the qdrant connection settings run `MEMPALACE_QDRANT_*` → config.json → defaults
-(`http://localhost:6333`, 10 s) (**env beats file**). Keep file and env stating
-the same values so the flip never bites. `MEMPALACE_EMBEDDING_MODEL` and
-`MEMPALACE_EMBEDDING_DEVICE` are optional; a palace is bound to the model it was
-built with — another fails with `EmbedderIdentityMismatchError` — and mempalace
-3.10.0's `repair` cannot re-embed a qdrant palace, so a switch means dumping and
-refiling. The full setup — the mise-managed install, the qdrant container, the
-config file and the server's environment — is the `mempalace` skill's
-Prerequisites, which is authoritative for it.
-
-**The transport has reversed three times; stdio is the current ruling.** vwf
-first ran mempalace as one shared HTTP daemon on `127.0.0.1:8765`; commit
-`9dbef1d1` (2026-09-23) moved the manifest to stdio, and the
-[stdio decision](../../../../docs/memory/decisions/2026-09-23-mempalace-stdio-settings-env.md)
-confirmed it for **zero setup**. Commit `3a62fa48` (2026-09-26) moved it back to
-HTTP, shipped in `vwf-v20.0.0`, and the
-[HTTP daemon decision](../../../../docs/memory/decisions/2026-09-29-mempalace-http-daemon.md)
-confirmed that on the user's ruling, "HTTP is intended". Its reasons were the
-costs per-session servers carried: **`hallways.json` was a lockless
-read-modify-write** — on Qdrant the store itself is safe for concurrent
-processes (`palace.py`'s `_MULTI_PROCESS_WRITER_BACKENDS` opts it out of the
-single-writer lease), but `_save_hallways` replaces the whole file atomically
-and takes no lock, so N per-session servers raced and last-writer-wins dropped
-entity edges, which one daemon serialised in-process — and one daemon held **one
-embedder**, ~140 MB, where stdio held one per session. Commit `31a8fc34`
-(2026-10-03, vwf 21.0.0) moved the manifest back to stdio, launched through
-`mise x` so each session inherits the repo's mise environment and its own palace
-path, and the user confirmed it deliberate on 2026-10-07. The hallway race is
-now handled per server by the environment, which carries
-`MEMPALACE_MCP_ALLOW_PEER_WRITER = 1`. The daemon-era lessons — the supervisor's
-captured environment, the literal-`~` directory — live in the 2026-09-23
-decision doc, not here.
-
-**If the upstream mempalace plugin is separately installed, its own stdio server
-must be turned off** — because a second server beside vwf's on the same palace
-is one this repo's environment does not configure, and because its docs say so
-(*"don't point two server processes at the same backend collection"*). Nothing
-here installs it any more, so this only bites a user who adds it themselves.
-Toggle it off in `/mcp` — Claude Code records that in `~/.claude.json` under
-`disabledMcpServers`, which covers plugin servers. The toggle is recorded **per
-project**. Confirm with `/mcp` that exactly one mempalace server is connected.
-
-**Tool names are scoped to whichever plugin declares the server**, so the
-execute subagents' `tools:` lists carry **both** —
-`mcp__plugin_vwf_mempalace__*` (this manifest) and
-`mcp__plugin_mempalace_mempalace__*` (the upstream plugin's stdio server). An
-allowlist entry for a server that isn't connected is inert, so carrying both
-means vwf works under either wiring — which is exactly the case above. **Drop
-one and the subagents silently lose memory**: the orchestrator still has it, so
-recall keeps working while the findings loop-back quietly stops persisting.
+It used to be a mempalace palace: the two upstream skills vendored under
+`plugins/vwf/vendor/mempalace/`, a stdio server vwf declared in its manifest,
+two auto-save hooks reimplemented here, and the files as a mirror beside it. The
+2026-11-01 removal plan took all of it out, reversing the 2026-08-08 "mempalace
+absorbed into vwf" ruling, and graphify's code-intelligence layer went with it —
+see
+[the removal decision](../../../../docs/memory/decisions/2026-11-01-remove-mempalace-graphify.md).
+The only plugin text left naming either tool is cleanup: doctor §8's leftovers
+table and setup's `config_format` 24 migration. The transport history and the
+palace-hygiene rulings stay in their own decision records under
+`docs/memory/decisions/`.
 
 ### The vendored guidelines
 
-**The Karpathy guidelines were vendored for the same reason as memory**, and the
-same reasoning applies to keeping them: `andrej-karpathy-skills` was
-url-sourced, so three of the four targets installed `vwf` and got **none** of
-the behavioural guidelines it assumes are on — each failing quietly. That
+**The Karpathy guidelines were vendored because a url source failed quietly**,
+and the reasoning for keeping them is the provenance: `andrej-karpathy-skills`
+was url-sourced, so three of the four targets installed `vwf` and got **none**
+of the behavioural guidelines it assumes are on — each failing quietly. That
 failure mode is gone with the targets; the vendoring stays because the
 provenance travelling with the code is worth more than the dependency edge.
 
@@ -266,9 +177,8 @@ fence became `text`. It is recorded under **Local edits**, which is the only
 thing that makes vendor drift survivable — an unrecorded edit is silently
 reverted by the next resync.
 
-The licence position differs from mempalace's and the difference is deliberate.
-Upstream declares MIT in its skill frontmatter and its `plugin.json`, but
-**publishes no licence text** — GitHub reports the repo as unlicensed. So this
-vendor directory carries a `NOTICE.md` quoting both declarations verbatim rather
-than a `LICENSE` file. Shipping an MIT text the upstream author never published
-would be worse than an honest note.
+The licence position is deliberate. Upstream declares MIT in its skill
+frontmatter and its `plugin.json`, but **publishes no licence text** — GitHub
+reports the repo as unlicensed. So this vendor directory carries a `NOTICE.md`
+quoting both declarations verbatim rather than a `LICENSE` file. Shipping an MIT
+text the upstream author never published would be worse than an honest note.

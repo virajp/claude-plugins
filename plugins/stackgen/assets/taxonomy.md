@@ -47,8 +47,8 @@ The closed list. A component is exactly one of:
 - **The toolchain manager is no type** since 2026-09-26: the repo's mise
   config, its tool pins and its task library are bootstrap's, and a pack
   ships none of them.
-- **Repo hygiene is no type** since 2026-09-27: the ignore, attribute and
-  graphify-ignore files are bootstrap's, and the licence, security contact,
+- **Repo hygiene is no type** since 2026-09-27: the ignore and attribute files
+  are bootstrap's, and the licence, security contact,
   contributing guide and issue forms are `/vwf:init`'s own assets; a pack
   adds no line to any of them.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and

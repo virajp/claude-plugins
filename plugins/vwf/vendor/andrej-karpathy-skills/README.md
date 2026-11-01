@@ -5,9 +5,9 @@ upstream plugin. Before this, `andrej-karpathy-skills` was a url-sourced
 marketplace entry and a vwf dependency, so a user installing `vwf` anywhere
 that marketplace could not reach got none of the guidelines it assumes are on.
 
-That is the same failure that got mempalace vendored, and the remedy is the
-same: the vendored copy is what `skills/karpathy-guidelines/` ships, so the
-guidelines arrive with the plugin itself.
+Vendoring removes that failure: the vendored copy is what
+`skills/karpathy-guidelines/` ships, so the guidelines arrive with the plugin
+itself.
 
 ## Provenance
 

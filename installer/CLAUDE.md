@@ -11,9 +11,9 @@ table is the full one, and is not repeated here).
 
 `pnpx @virajp.dev/claude-plugins …` does **two things**: installs plugins, and
 removes what the toolkit put on a machine — both through the `claude` CLI and
-nothing else. graphify is not this CLI's job: a shaped repo's pre-commit
-`post-commit` hook refreshes the graph, and nothing in the toolkit runs
-`graphify install --platform claude` any more — that wiring is the user's.
+nothing else. No plugin uses graphify any more, and nothing in the toolkit runs
+`graphify install --platform claude`; what an earlier install left is the
+user's, and `/vwf:doctor` reports it in a shaped repo as drift.
 
 - **Plugin installs are a thin wrapper.** `--all` / `--user <name>` /
   `--project <name>` drive Claude's own `claude plugin marketplace add` and
@@ -198,10 +198,8 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
   a BSD-vs-GNU `script` trap not worth paying for one assertion.
 - **`vitest.config.mts` restricts collection to
   `{installer,scripts}/src/**/*.test.ts`.** A test file anywhere else is
-  silently never run rather than failing — which is why the mempalace checkpoint
-  *shell script* test lives at
-  `installer/src/mempalace-checkpoint-script.test.ts` even though what it
-  exercises is `plugins/`.
+  silently never run rather than failing — so a test of a shipped *shell script*
+  belongs under `installer/src/` even when what it exercises is `plugins/`.
 - `claude` is stubbed in `p:i:test` only because the runs need it to *exist*;
   nothing shells out to it — the plugin path is exercised as `--dry-run` only,
   which never spawns. Do not stub a tool to exercise its command sequence end to

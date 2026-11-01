@@ -18,7 +18,7 @@ depends = [ "node" ]
 version = "latest"
 @@/if@@
 
-# mise's pipx backend installs through uv, and uv needs a Python >= 3.10 to lock graphifyy's dependencies.
+# mise's pipx backend installs pre-commit through uv, which runs on this Python.
 [tools.python]
 version = "latest"
 

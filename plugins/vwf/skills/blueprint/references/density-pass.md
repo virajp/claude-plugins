@@ -15,10 +15,12 @@ can clear these without a user in the loop.
 
 ## Handle the condenser's return
 
-- **`PERSIST:`** — file each to mempalace room `decisions` (the rationale leaves
-  the contract but is not lost).
-- **`PARKED:`** — file each to room `gaps` per the parked-scope rule, and mirror
-  a terse line where the doc kept one.
+- **`PERSIST:`** — write each as one `docs/memory/decisions/` file per
+  `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` (the rationale leaves the contract
+  but is not lost).
+- **`PARKED:`** — write each as one `docs/memory/gaps/` record whose slug ends
+  in `-parked`, per the parked-scope rule, and mirror a terse line where the doc
+  kept one.
 - **`GAPS:`** — a contract hole the cut exposed (a guard that lived only in a
   diagram label, a rule with nowhere to live). This **does** need you: fold it
   into the normal per-flow pass (§§3–4) rather than leaving it, since a hole

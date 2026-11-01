@@ -7,7 +7,7 @@ description: The front door for production feedback — a bug, a metric reading,
   design-system/screens, shape → architecture, incidents → postmortem stub +
   action items, not a blueprint gap → change-plan). "canvas" harvests the
   design review conversations from each project's own design tool, via the
-  design adapter, into the same routes. Durable even when mempalace is down.
+  design adapter, into the same routes.
 argument-hint: "[the feedback — paste a bug report, metric, or complaint | incident <what happened> | canvas]"
 model: sonnet
 
@@ -75,10 +75,9 @@ Everything below applies unchanged to each harvested item.
 
 Read the feedback from `$ARGUMENTS` (or ask for it). Read
 `docs/blueprint/product.md` (goals, metrics) and skim the flow/entity docs it
-plausibly touches — when the repo carries a knowledge graph, locate that surface
-graph-first per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` (`graphify query` the
-symptom to find the owning flow/entity/screens) instead of skimming blind.
-**Recall** rooms `gaps` and `problems` per
+plausibly touches — grep the blueprint for the symptom's terms to find the
+owning flow/entity/screens instead of skimming blind. **Recall**
+`docs/memory/gaps/` and `docs/memory/problems/` per
 `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — if this item is already known, say so
 and show its status instead of re-filing it.
 
@@ -126,8 +125,9 @@ of the fixing command**, and its summary closes with the **remaining path** in
 one line (`then /vwf:plan <slice>, then /vwf:execute`) so the user sees the
 whole way to production before the single hand-off in step 3:
 
-- **Behavior bug** → the blueprint is right, the code is wrong: file to room
-  `gaps` (tagged by flow/entity) and offer `/vwf:plan <slice>` for a fix cycle.
+- **Behavior bug** → the blueprint is right, the code is wrong: write a
+  `docs/memory/gaps/` record naming the flow/entity it concerns, and offer
+  `/vwf:plan <slice>` for a fix cycle.
   Deferred → one line in the owning flow doc's **Open Questions**
   (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), or the entity doc
   under `docs/blueprint/entities/` when the hole is in the data contract: what
@@ -136,7 +136,7 @@ whole way to production before the single hand-off in step 3:
   contract — `/vwf:blueprint`'s released-contract guard and `/vwf:plan`'s
   delta checks decide, feedback only says so. Then `/vwf:plan <slice>`, then
   `/vwf:execute`.
-- **Blueprint hole** → file to room `gaps` and offer
+- **Blueprint hole** → write a `docs/memory/gaps/` file and offer
   `/vwf:blueprint
   <flow|entity>` to pin the behavior down. Deferred → the same
   Open Questions line. When `Build state` reads `contract: released`, say so:
@@ -186,35 +186,36 @@ whole way to production before the single hand-off in step 3:
   pass itself, so feedback offers nothing to setup. Deferred → one line in
   `docs/blueprint/architecture.md`'s open questions — under an
   `## Open Questions` heading, created at the end of the doc when absent — and
-  file to room `gaps`. Then `/vwf:architecture`, then `/vwf:blueprint <unit>`,
-  then `/vwf:plan <slice>`, then `/vwf:execute`.
-- **Incident** → an operational event, not (yet) a blueprint gap: file to room
-  `problems`, and append the postmortem stub to `docs/runbooks/postmortems.md`
-  per the incident-response foundation — what happened, impact window,
-  contributing causes, action items. Then run **each action item** back through
-  this classifier as its own intake (usually a blueprint hole or a behavior
-  bug). An incident is also a reading against the reliability foundation's
-  **error-budget stance** (`conventions.md#reliability`): state what the stance
-  says happens now. Invoked as `/vwf:feedback incident <what happened>` — the
-  form `/vwf:verify` offers when a production probe fails. Then each action
-  item's own path — the route its kind names above, then `/vwf:plan <slice>`,
-  then `/vwf:execute`.
+  write a `docs/memory/gaps/` file. Then `/vwf:architecture`, then
+  `/vwf:blueprint <unit>`, then `/vwf:plan <slice>`, then `/vwf:execute`.
+- **Incident** → an operational event, not (yet) a blueprint gap: write a
+  `docs/memory/problems/` file, and append the postmortem stub to
+  `docs/runbooks/postmortems.md` per the incident-response foundation — what
+  happened, impact window, contributing causes, action items. Then run **each
+  action item** back through this classifier as its own intake (usually a
+  blueprint hole or a behavior bug). An incident is also a reading against the
+  reliability foundation's **error-budget stance**
+  (`conventions.md#reliability`): state what the stance says happens now.
+  Invoked as `/vwf:feedback incident <what happened>` — the form `/vwf:verify`
+  offers when a production probe fails. Then each action item's own path — the
+  route its kind names above, then `/vwf:plan <slice>`, then `/vwf:execute`.
 - **Not a blueprint gap** → nothing under `docs/blueprint/` describes this, so
   there is no flow, entity or screen to edit: offer `/vwf:change-plan <request>`
   and hand it the report **verbatim** as the request, plus the one-line reason
   the classifier ruled it outside the blueprint. `/vwf:change-plan` then runs
   its own recall, survey and interview and writes the plan folder — that folder
-  is the durable record; feedback pre-surveys nothing for it. Deferred → file
-  it to room `gaps` tagged `non-blueprint`: no blueprint doc owns it, so memory
-  is then the only record. Then `/vwf:change-plan <request>`, which commits
-  and pushes the folder, then follow `/vwf:change-plan`'s own ending.
+  is the durable record; feedback pre-surveys nothing for it. Deferred → write
+  it as a `docs/memory/gaps/` record that says no blueprint doc owns it, so
+  memory is then the only record. Then `/vwf:change-plan <request>`,
+  which commits and pushes the folder, then follow `/vwf:change-plan`'s own
+  ending.
 
 ### 3. Persist & commit
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: bugs/holes to room `gaps`,
-incidents to room `problems`, readings and routing decisions — a shape change's
-among them — to room `decisions`. Skip silently if mempalace
-is down — the doc edits from step 2 are the durable record.
+Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, one file per record: bugs/holes
+to `docs/memory/gaps/`, incidents to `docs/memory/problems/`, readings and
+routing decisions — a shape change's among them — to `docs/memory/decisions/`.
+The doc edits from step 2 stay the contract-level record.
 
 Commit any doc edits via `/vwf:git-workflow` (a bare `docs:` message). If the
 user accepted a fixing command, hand off to it now.
