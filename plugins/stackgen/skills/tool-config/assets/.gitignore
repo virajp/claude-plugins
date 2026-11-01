@@ -102,7 +102,8 @@ captures/
 # handoffs and rendered mockups.
 docs/memory/handoff/
 docs/scratchpad/
-# Folders left from config_format 23, kept ignored until the 24 migration removes them.
+# Folders left from config_format 23, kept ignored until the 24 migration
+# removes them.
 docs/memory/doctor/
 docs/memory/runs/
 
