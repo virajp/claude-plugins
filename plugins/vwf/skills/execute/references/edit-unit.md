@@ -38,9 +38,9 @@ checker a repo has.
    `green` once its report is read, `unresolved` or `failed` per the rules —
    and its `rounds`, one `plan.mjs set` each; append each `GAP:` line to the
    `gaps` list, one `plan.mjs append <folder>/index.json gaps --json` of
-   `{id, unit, stage: "edit", text, state: "open"}` with the next `G<n>`; and
-   mirror a record to the run journal — unit, model, round 1, outcome, the
-   `DECIDED:` and `GAP:` lines condensed into its detail. A unit whose agent
+   `{id, unit, stage: "edit", text, state: "open"}` with the next `G<n>`; the
+   `row` event that follows the `status` set carries the outcome, the
+   `DECIDED:` and `GAP:` lines condensed into its `detail`. A unit whose agent
    **errored** rather than returned is re-dispatched once with the same
    prompt; a second error marks it `failed` with `agent died` as detail.
    Write the fields **when the report arrives**, not at the end of the wave —
@@ -103,7 +103,7 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   with the same prompt plus the finding lines, and re-committed on the staging
   discipline. A `code` unit re-enters its own pipeline in
   [code-unit.md](code-unit.md) from step 2 — the coder dispatched
-  with the finding lines appended as the tag, then the commit — so the wave
+  with the finding lines appended, then the commit — so the wave
   review never edits code itself. The re-entry is a further `code` row for
   that unit, not a round of this loop; the fix is reviewed by a `review` row
   still ahead **that covers the unit**, otherwise by the last row covering it
@@ -134,11 +134,11 @@ quietly lost a rule is the defect, exactly as a dropped branch would be.
   a fresh wave reviewer, handed the open findings and the closing fix delta
   alone, answers `RESOLVED` or `OPEN` for each and reports only a regression
   the fix caused. What stays open is recorded as `contested`, with the
-  rounds tried — one `plan.mjs append` to `gaps` per finding, mirrored to the
-  journal — and the wave proceeds to its gate. They are listed
-  in the final report; they do not block, because the plan and its rulings are
-  the contract and a reviewer's residual is an opinion about it.
+  rounds tried — one `plan.mjs append` to `gaps` per finding, each followed
+  by its `log.mjs event gap` — and the wave proceeds to its gate. They are
+  listed in the final report; they do not block, because the plan and its
+  rulings are the contract and a reviewer's residual is an opinion about it.
 
-Every round is a journal record: `R<wave>`, the model, the round,
-`findings(n)` or `pass`, and the finding lines condensed into its detail. The
-wave reviewer is no unit of `index.json`, so its rounds have no field there.
+The wave reviewer is no unit of `index.json`, so its rounds have no field
+there: each round is the reviewer's subagent lines in the action log, and what
+it leaves open is its `contested` entries in `gaps`.

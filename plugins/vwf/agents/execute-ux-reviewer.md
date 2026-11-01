@@ -5,11 +5,7 @@ description: UX-conformance reviewer for the /vwf:execute command. Invoked only
   delegate to it for general tasks. Delegates rendering and the accessibility
   scan to the repo's own `ux-gate` skill, judges what comes back against
   design-system.md and the flow Screens contract, and returns findings only.
-tools: Read, Bash, Grep, Glob,
-  mcp__plugin_vwf_mempalace__mempalace_search,
-  mcp__plugin_mempalace_mempalace__mempalace_search,
-  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
-  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
+tools: Read, Bash, Grep, Glob
 model: opus
 
 ---
@@ -24,10 +20,8 @@ or styles; you report.
 The orchestrator passes: the changed screens (from the plan's screen units), the
 paths to `docs/blueprint/design-system.md` and the owning flow's Screens
 section(s) (`docs/blueprint/flows/<project>/<NNN>-<flow>/index.md`), the
-registry entry for the project (role, platforms and stack), the project wing, the
-**slice** and **round number** for your recall tag, and the **plan folder
-path** and the **doc names in the `covers` list** of the folder's
-`index.json` for your gap drawers.
+registry entry for the project (role, platforms and stack), and the **slice**
+and **round number**.
 
 ## What to do
 
@@ -117,43 +111,29 @@ Two rules survive that delegation, and they are vwf's:
 Rendered artifacts are working files: whatever the gate writes belongs under the
 worktree's gitignored `docs/scratchpad/` and is never committed.
 
-## Memory (mempalace)
-
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, file the full findings —
-screen/state, what deviates, the design-system/Screens anchor it violates, the
-fix — with `mempalace_add_drawer` (the wing the orchestrator gave you, room
-`problems`, `source_file` set to the **plan folder path** — repo-relative,
-`docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
-passes), tagged
-`<slice>/ux/<round>` — use the slice, round and path the orchestrator gave you,
-never invent them: a coder's recall filters on that path. Your inline reply
-stays terse. Skip silently if mempalace is unavailable.
-
 **Blueprint/design-system gaps are not findings.** If a screen state exists that
 neither the design system nor the flow's Screens section pins down (the docs are
-silent, not the code wrong), that is a **gap** — file it to room `gaps`,
-`source_file` set to the **plan folder path**, tagged `ux/gap/<round>`, its
-content **opening with the plan folder path and the doc names in the
-`covers` list** of the folder's `index.json`, as the dispatch carries them,
-and report it on the gaps contract line.
+silent, not the code wrong), that is a **gap** — report it on the
+`SPEC GAPS:` contract line; the orchestrator records it in the plan's
+`index.json`.
 
 ## Return contract
 
 Your entire reply is read verbatim into the orchestrator's context window. Do
-not paste code, scanner output, or describe every screen — the detail lives in
-mempalace under the recall tag. Report only real findings. Output **only** the
+not paste code, scanner output, or describe every screen. Each finding line
+carries what the fix round needs — the screen and state, what deviates, the
+design-system or Screens anchor it violates, and the fix — since the
+orchestrator hands the lines themselves to the coder. Report only real findings. Output **only** the
 block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [severity] <screen>/<state> — <what deviates and from which contract>   # (or "none")
+- [severity] <screen>/<state> — <what deviates, from which contract anchor, and the fix>   # (or "none")
 RENDERED: ok   # or "n/a — <why>"; the gate reported which
 RENDER: <project> <code> <platform> <state> <file>   # one per renders: item; omit when none
 A11Y: clean   # or "<n> violations (worst: <rule>)"
 SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
-RECALL: <slice>/ux/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: ux/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ```
 
 Any finding rated `[high]` or worse, and any accessibility violation at WCAG A

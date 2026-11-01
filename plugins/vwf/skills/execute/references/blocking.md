@@ -9,7 +9,7 @@ Every mark below is one call that sets the unit's `status` in the folder's
     node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs set <folder>/index.json units.U<n>.status <status>
 
 A unit entry has no detail field: a mark's detail rides the status line below
-and the run journal (mempalace room `runs`, drawer `<plan folder>`). Each mark
+and the `detail` of the mark's `row` event in the action log. Each mark
 — the resets of Resume step 4 and 5 included — is followed by one
 `log.mjs event row`, `{"unit", "wave", "status"}`, and each `append` to
 `gaps` by one `log.mjs event gap`, per *The plan files* in `SKILL.md`.
@@ -96,15 +96,15 @@ A re-run against `BLOCKED` or `RUNNING`:
    and the committed tree is ground truth. A `green` `review` row is exempt:
    its `commit` is empty by design, and it is skipped on its `status` alone,
    per [review-unit.md](review-unit.md) — unless a `code` or `edit` unit it
-   covers carries a `commit` that is **not an ancestor of** the `to` its
-   last loop recorded — the row's `range.to` for its main loop, or the `to`
-   the journal records for its last late loop, which `index.json` does not
-   hold (`git merge-base --is-ancestor <commit> <to>` fails): that is a
-   **pending late re-run**, run before continuing, per *Late loop-backs re-run
-   the last row* there. With the journal unreachable the test reads
-   `range.to` alone, so a late re-run already done runs once more — a repeat,
-   never a skip. The test is by ancestry, never by recency, so a resume after
-   a late re-run that already reviewed the commit finds nothing pending; and
+   covers carries a `commit` that is **not an ancestor of** the row's
+   `range.to`, the `to` its main loop recorded
+   (`git merge-base --is-ancestor <commit> <to>` fails): that is a **pending
+   late re-run**, run before continuing, per *Late loop-backs re-run the last
+   row* there. `index.json` holds no late loop's `to`, and the action log is
+   never read to decide a resume, so a late re-run already done runs once
+   more — a repeat, never a skip. The test is by ancestry, never by recency,
+   so a resume after a row's main loop that already reviewed the commit finds
+   nothing pending; and
    each covered unit is tested **once**, whether the row's `depends_on` names
    it directly or reaches it transitively, so no unit counts twice.
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`, one
@@ -116,7 +116,7 @@ A re-run against `BLOCKED` or `RUNNING`:
    `review` rows run in `units` order, each ranged from the previous row in
    `units` order that reached `green`. A plan-level stage whose entry in
    `stages` reads `green` or `skipped` already ran and is not run again.
-   The `gaps` list and the journal records from the earlier attempt stay; a
+   The `gaps` list and the action log's lines from the earlier attempt stay; a
    unit's `rounds` continues from the value recorded, so the final report
    shows the whole history.
 

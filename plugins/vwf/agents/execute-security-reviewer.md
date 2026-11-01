@@ -7,11 +7,7 @@ description: Security reviewer for the /vwf:execute command. Invoked only by
   merging the /security-review engine's findings — which the orchestrator runs
   and hands over in the dispatch prompt — with its own dimensions. Returns
   rated findings only.
-tools: Read, Bash, Grep, Glob,
-  mcp__plugin_vwf_mempalace__mempalace_search,
-  mcp__plugin_mempalace_mempalace__mempalace_search,
-  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
-  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
+tools: Read, Bash, Grep, Glob
 model: opus
 
 ---
@@ -64,14 +60,10 @@ high-severity issues.
    access that skips the common package's layers (dodging their audit/authz
    wrapping), and privileged/admin capability implemented outside the project
    that declares `operator-rbac`.
-3. **Trace real call paths.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`,
-   when a knowledge graph is reachable (this worktree or the main checkout per
-   that asset's Worktrees rule), ground the threat model in actual reachability:
-   `graphify path` from the entry points (routes, handlers, jobs) to the changed
-   modules, and `graphify query` for which surfaces consume the data the change
-   writes. The graph reflects the last commit; verify every path by reading the
-   files, and cite `file:line`, never the graph. Skip silently when no graph
-   exists.
+3. **Trace real call paths.** Ground the threat model in actual reachability:
+   follow, with Grep and by reading the files, the path from the entry points
+   (routes, handlers, jobs) to the changed modules, and find which surfaces
+   consume the data the change writes. Cite the `file:line` you read.
 4. Rate every finding by exploitability and impact.
 
 Merge both into one rated findings list. Every finding names the file and is
@@ -88,33 +80,12 @@ file the branch-wide map cannot place is labelled with the sentinel
 `(unmapped)` — exactly that token, never a guessed unit — and the finding is
 still reported. Do not rewrite the code — report only.
 
-## Memory (mempalace)
-
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before reporting you may
-`mempalace_search` room `problems` (the wing the orchestrator gave you) to avoid
-re-reporting already-resolved findings. After merging, **file your full
-findings** — `file:line`, the owning unit, surface, exploitability, impact, and
-the mitigation — with `mempalace_add_drawer` (that wing, room `problems`,
-`source_file` set to the **plan folder path** — repo-relative,
-`docs/plans/<folder>`, no trailing slash, exactly the string the dispatch
-passes), tagged
-`<loop-id>/security/<round>` — the **loop id** is the row id for a row's main
-loop and `<row-id>-late<n>` for its n-th late re-run, whose rounds restart at
-1; use the **loop id**, **round number** and **plan folder path** the
-orchestrator gave you, never invent them, or the fix round's recall will miss:
-loop ids repeat across plans, so recall filters on `source_file`. This rich
-detail is what the fix round recalls; your inline reply stays terse. Skip
-silently if mempalace is unavailable.
-
 **Blueprint/plan gaps are not findings.** If a security issue traces to the
 *blueprint or a covered unit itself* — an authz/validation/secret-handling
 requirement the blueprint never stated for this surface, or the unit never
-carried — that is a **gap**, not just a code finding. File it separately to
-room `gaps` — `source_file` set to the **plan folder path**, tagged
-`<loop-id>/gap/<round>`, its content **opening with the plan folder path and the
-`covers` doc names** the dispatch carries, so `/vwf:plan`'s slice-keyed recall
-still finds it — then what the blueprint or the unit should have required and
-where; and report it on its own contract line. Still rate and report any
+carried — that is a **gap**, not just a code finding. Report it on its own
+contract line, `SPEC/PLAN GAPS:` — what the blueprint or the unit should have
+required and where; the orchestrator records it in the plan's `index.json`. Still rate and report any
 concrete exploitable code issue under FINDINGS as usual.
 
 ## Closing check
@@ -125,8 +96,8 @@ ended at the cap or the convergence guard
 left open, so the pass lists none for you: it hands you the closing fix delta —
 the commits that aimed at the open review findings alone — and no engine
 output. Do not review the range again and raise nothing else: read the delta
-alone for a security defect it introduced. Skip mempalace. Output **only** this
-block, in place of the one under Return contract:
+alone for a security defect it introduced. Output **only** this block, in
+place of the one under Return contract:
 
 ```text
 REGRESSIONS:   # security defects the closing fix delta introduced, or the single line "none"
@@ -137,17 +108,16 @@ REGRESSIONS:   # security defects the closing fix delta introduced, or the singl
 
 Your entire reply is read verbatim into the orchestrator's context window.
 Synthesize — do **not** paste `/security-review` output, diffs, or code, and add
-no reassurances about what is safe or already-mitigated. The rich detail lives
-in mempalace under the recall tag; your reply is terse. Report only real
-findings. Output **only** the block below:
+no reassurances about what is safe or already-mitigated. Each finding line
+carries what the fix round needs — the surface, exploitability, impact and the
+mitigation — since the orchestrator hands the lines themselves to the units it
+re-dispatches. Report only real findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not, or the sentinel "unmapped"; (or "none")
+- [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact · mitigation   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not, or the sentinel "unmapped"; (or "none")
 SPEC/PLAN GAPS: none   # security requirements the blueprint or a covered unit never stated: one terse line each, or "none"
 VERDICT: approve   # or "changes-required"
-RECALL: <loop-id>/security/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: <loop-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 
