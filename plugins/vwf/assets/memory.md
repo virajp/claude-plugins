@@ -73,7 +73,9 @@ what only one developer needs.**
 
 The `.gitignore` entry (`docs/memory/handoff/`) and the `docs/scratchpad/` line
 are tool-config's: its universal `.gitignore` carries them inside the
-`tool-config` markers, and no vwf skill writes the file.
+`tool-config` markers, and no vwf skill writes the file. It also ignores
+`docs/memory/doctor/` and `docs/memory/runs/`: folders left from
+config_format 23, until the config_format 24 migration removes them.
 
 > **`/vwf:handoff` and `/vwf:recall` never skip.** The handoff *is* the
 > deliverable, not a side memory. `/vwf:handoff <name>` writes
