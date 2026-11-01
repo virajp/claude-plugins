@@ -17,7 +17,7 @@ its own SKILL.md, *What it lands*, is the list, and this file restates none
 of it beyond the root spellings. In short: the mise files under `.config/`
 and the task library, the gate configs — dprint and its root stand-in,
 taplo, pre-commit, gitleaks, grype, the house linter — the git files and the
-commit convention, `.graphifyignore`, `.vscode/settings.json` and the
+commit convention, `.vscode/settings.json` and the
 statusline config, every one rendered from the repo's
 `.config/stackgen.yaml`. It lands no dependency-update policy.
 
@@ -57,7 +57,6 @@ of three:
 | dprint     | `.dprint.json`, root `dprint.json` | `.config/dprint.json`; root `dprint.json` is the skill's shim | `stackgen:tool-config` | `move-and-offer` |
 | mise       | `.mise.toml`, root `mise.toml`     | `.config/mise/` — landed beside it, never folded              | `stackgen:tool-config` | `report`         |
 | git        | `.gitignore`, `.gitattributes`     | the same root files — rendered in place by the skill          | `stackgen:tool-config` | `handed`         |
-| graphify   | `.graphifyignore`                  | the same root file — rendered in place by the skill           | `stackgen:tool-config` | `handed`         |
 
 Some rows need a word:
 
@@ -66,8 +65,8 @@ Some rows need a word:
   config of that name at the root is the move-and-shim case, not a
   keep-both: it moves, the stand-in replaces it, and the settings are read
   through the stand-in. `.dprint.json` has no stand-in and simply moves.
-- **git and graphify.** Their files sit at the root, where git and the graph
-  read them, so there is nothing to move: the skill renders its curated set
+- **git.** Its files sit at the root, where git reads them, so there is
+  nothing to move: the skill renders its curated set
   between the markers, and a repo's own lines below the closing marker
   survive every render.
 - **A dependency-update policy** — a Renovate or Dependabot file — is no

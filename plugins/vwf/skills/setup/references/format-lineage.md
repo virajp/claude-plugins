@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**25**) and `config_format` (**23**) are **drift
+`blueprint_format` (**25**) and `config_format` (**24**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -77,7 +77,8 @@ must go through the rule below. Every other row is mechanical.
 | a prompt tree's `carplay.md` / `android-auto.md` | `auto.md` | file-location | |
 | `docs/prompts/screens/<project>/<device>/CLAUDE--<platform>.md` | `docs/prompts/screens/<project>/CLAUDE--<platform>.md` | file-location | |
 | `docs/handoffs/next.md` | `docs/memory/handoff/next.md` | file-location | |
-| a `mempalace.yaml` per repo, or one under `.config/` | exactly one per mined tree, at that tree's root | file-location | |
+| a `mempalace.yaml` anywhere — per repo, per mined tree, or under `.config/` | retired in `config_format` 24 — the memory store is `docs/memory/` alone; each file is offered for delete by the migrate pipeline, one row each | retirement | |
+| `docs/memory/planning/`, `runs/`, `doctor/` | retired in `config_format` 24 — the plan folder and `docs/plans/index.json` hold the planning record and the run state, and doctor reports again on each run; each folder that exists is offered for delete, one row each | retirement | |
 | an entity's `Serves:` line | `Used by:`, linking the flows that use it (flows keep `Serves:`) | doc-section | |
 | `## Consistency boundary`, `## Failure handling`, `## Idempotency`, and links to them | one `## Guarantees` table, anchored `#guarantees` | doc-section | |
 | a flow's `device:` frontmatter key | the `Platforms` table plus each `<platform>.md`'s `platform:` | doc-section | |
@@ -127,16 +128,16 @@ must go through the rule below. Every other row is mechanical.
 | a top-level `answers:` block (formats 21–22) | retired in `config_format` 23 — the values move into each repo's `.config/stackgen.yaml`, written through `/stackgen:tool-config all`: `answers.secrets` as `secrets` in every repo of the product, `answers.repos.<path>.forge` as that repo's `forge`; the per-repo dependency-bot key retires with nothing to convert, since its tool is no longer landed. The migration is **applied by `/vwf:setup reshape`** (the release that moves the old layout), never by this pass, which leaves the block and its stamp; a config that never carried the block only takes the stamp | retirement | |
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
-| mempalace rooms `plans`, `decision` | `planning`, `decisions` | config-key | |
+| a `memory:` block (`memory.wing`), and the palace rooms it addressed (`plans`, then `planning`; `decision`, then `decisions`) | retired in `config_format` 24 — the block is offered for removal by the migrate pipeline; a room's records are files under `docs/memory/decisions/`, `gaps/` and `problems/` from then on | retirement | |
 | no `projects.<name>.stylesheet` on a project declaring a `site` or `webapp` platform | `stylesheet: unresolved` — the axis `config_format` 19 introduced; nothing converts, the key is written so the deferred decision is visible. A project declaring neither platform takes no key | config-key | |
 | a Screens row on a `site`/`webapp` platform file with no `Metadata` block | the block, `blueprint_format` 25 — propose per row: `title` from the Screen cell, `description` empty, `index: yes` for `site` and `no` for `webapp`, `image: default`; never auto-fix | doc-section | |
 
 Two notes the table cannot carry. **vwf ships no stack templates**: a
 `project/<slug>` pin resolves through a stack plugin
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), so a retired path is repinned from a
-menu, never rewritten by hand. And **renaming a mempalace room in the config
-does not move drawers already filed under the old name** — report what was found
-and let the user decide; a format reconcile never rewrites a live palace.
+menu, never rewritten by hand. And **retiring the palace in `config_format` 24
+moves no drawer into `docs/memory/`** — a format reconcile removes only the
+config that addressed it, and never reads, rewrites or deletes palace data.
 
 ## The fan-out rule
 

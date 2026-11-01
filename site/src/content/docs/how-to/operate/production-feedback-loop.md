@@ -100,8 +100,8 @@ back on the spine at [`/vwf:plan`](../../plugins/vwf.md#vwfplan). Relay defers
 instead — the ownership number is due this week, and the re-rank in step 3 is
 what will schedule the fix — so the item lands as a line in the flow doc's Open
 Questions, recording what production does against what the doc promises. That
-line is written whether or not the memory server is up, which is the property
-that makes deferring safe. [`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
+line is in the doc itself, which is the property that makes deferring safe.
+[`/vwf:feedback`](../../plugins/vwf.md#vwffeedback).
 
 ### 3. Log the metric reading
 

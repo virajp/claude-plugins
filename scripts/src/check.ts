@@ -412,8 +412,8 @@ const PACK_CONFIG_ROOT_FILES = new Set([
 
 /**
  * The files a `stackgen:tool-config` tree may land at the root beyond a pack's:
- * the git and graphify files every repo carries and no pack ships — both tools
- * read them from the root only.
+ * the git files every repo carries and no pack ships — git reads them from the
+ * root only.
  */
 const TOOL_CONFIG_ROOT_FILES = [
   // dprint's config discovery is root-only and `--config` is the CLI's only
@@ -421,7 +421,6 @@ const TOOL_CONFIG_ROOT_FILES = [
   "dprint.json",
   ".gitattributes",
   ".gitignore",
-  ".graphifyignore",
 ];
 
 /** Where a landed repo-local skill sits, relative to the tree's root. */
@@ -1955,7 +1954,7 @@ function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
  * Rule 15: the formatters' exclusion lists state one set, and the scanner's
  * allowlist is a subset of it.
  *
- * A generated tree — `node_modules/`, `dist/`, `graphify-out/` — is excluded
+ * A generated tree — `node_modules/`, `dist/`, `build/` — is excluded
  * from formatting, from TOML formatting and from every pre-commit hook, and
  * each tool reads its own list in its own syntax. The convention is stated
  * once and copied three times, so the drift is the usual kind: a tree added to
@@ -2226,9 +2225,8 @@ const EXPANSION_RE = /\$\{[^}]*\}/g;
 /**
  * Every stdio invocation vwf's manifest declares, as one string per server.
  *
- * `type: http` servers have no `command` and contribute nothing. vwf's
- * mempalace entry is one, `http://127.0.0.1:8765/mcp`, so it carries no runner
- * for the guard to read.
+ * `type: http` servers have no `command` and contribute nothing: an http entry
+ * carries no runner for the guard to read.
  */
 function invocations(manifest: Manifest): string[] {
   const servers = manifest.mcpServers;

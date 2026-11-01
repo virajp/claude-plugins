@@ -18,8 +18,9 @@ under `.config/mise/conf.d/`. There is no root `mise.<env>.toml`.
   machine has this exported): the Python, pipx and uv settings, the dev
   toolchain (python, uv, pre-commit, grype, gitleaks, dprint, taplo),
   `tasks.init` and the shell aliases.
-- `conf.d/ai/mise.dev.toml` — dev only: jq, yq, `pipx:mempalace`,
-  `pipx:graphifyy` and the `MEMPALACE_*` values.
+- `conf.d/ai/mise.dev.toml` — dev only: jq and yq in the shape tool-config
+  lands; this repo's own copy still carries `pipx:mempalace`, `pipx:graphifyy`
+  and the `MEMPALACE_*` values until it is edited by hand.
 - `conf.d/cloudflare/mise.toml` — this repo's own folder: `npm:cf`.
 - `conf.d/_base/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set
   this). It sets one thing, `node.gpg_verify = false` to work around a

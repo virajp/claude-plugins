@@ -3,8 +3,8 @@
 The files a repository carries whatever it is written in and that no tool
 reads. They are `init`'s own, under
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land;
-`init` places them, fills the three placeholders, and stops. The ignore file,
-the attributes file and the graph's ignore file are not among them — they are
+`init` places them, fills the three placeholders, and stops. The ignore file
+and the attributes file are not among them — they are
 `/stackgen:tool-config`'s tools, rendered by its `all` call.
 
 Everything here is **per repo**: one run shapes the base and every member, and
@@ -175,7 +175,6 @@ this reference no longer says anything about them:
 | ----------------------- | ---------------------------------------------------- | ------------------------- |
 | the ignore file         | what git does not track                              | the skill's git tool      |
 | the attributes file     | line-ending normalisation, generated trees, binaries | the skill's git tool      |
-| the graph's ignore file | what the code-intelligence graph does not ingest     | the skill's graphify tool |
 
 No dependency-update policy ships at all: a repo that wants one writes its
 own, and pass 1 reports a root one as it reports any file off the allowlist.

@@ -46,8 +46,7 @@ changed.
      worktree on branch `all-<date>-<HHMM>`, the time this question is asked,
      refreshed from the integration branch before each plan, each plan landing
      in turn while the worktree is kept; the loop's exit removes it, except
-     on a `STOPPED` end. Each landing runs the skill's graph refresh, in the
-     main checkout, before the next plan starts.
+     on a `STOPPED` end.
    - **Deduped after-landing steps** — asked when one step command would run
      after two or more reached plans: an `after_landing` `step` recorded by
      two or more of them, or a command in `.config/vwf.yaml`'s
@@ -191,7 +190,7 @@ already defines. What differs is only this:
 - **It returns the block and nothing else.** Every report `SKILL.md` writes —
   the final report, a pause's report, a refusal, the gap reconciliation, the
   chain-forward launch lines — still goes where that file puts it: the
-  folder's `status`, unit fields and `gaps`, the run journal. What the
+  folder's `status`, unit fields and `gaps`, the action log. What the
   runner sends back to the loop is the five lines below, and no line more.
   The chain-forward lines are not returned: the loop's next `next` finds an
   unblocked plan on its own.

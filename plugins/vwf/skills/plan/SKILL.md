@@ -97,10 +97,10 @@ is missing).
 
 ### 2. Resolve the dependency chain
 
-**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-decisions and plan rationale for this slice (rooms `decisions`, `planning`)
-before computing anything — build on them, don't re-derive resolved choices.
-Skip silently if mempalace is unavailable. Read the backlog too, through
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior
+decisions for this slice (`docs/memory/decisions/`) before computing anything —
+build on them, don't re-derive resolved choices. Skip silently if the folder is
+absent. Read the backlog too, through
 `/vwf:backlog list` — the product's backlog, a project on the **base repo's**
 forge that the `backlog` skill alone writes; it is product-level, resolved from
 the base's remote whichever member this slice will land in. When the verb
@@ -240,14 +240,12 @@ it, and it is what lets a reuse candidate be recognised as one), the relevant
 The resolved **stack conventions prose** stays here rather than going with it.
 The surveyor answers *what exists*; the prose answers *where a new thing
 belongs*, which is this command's question when it sizes the units. Sending it
-along would grow the workflow's largest read to settle a question the surveyor is
-not asked. It surveys **graph-first** per
-`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md` (falling back silently to direct
-reads when no graph is reachable) and returns terse `PRESENT:` / `PARTIAL:` /
-`ABSENT:` / `REUSE CANDIDATES:` / `CONTRADICTIONS:` / `HARNESS:` lines with
-`file:line` pointers — never code. When a chain has several unimplemented
-elements, **dispatch their surveyors in a single message** so they run
-concurrently.
+along would grow the workflow's largest read to settle a question the surveyor
+is not asked. It surveys by direct reads and returns terse `PRESENT:` /
+`PARTIAL:` / `ABSENT:` / `REUSE CANDIDATES:` / `CONTRADICTIONS:` / `HARNESS:`
+lines with `file:line` pointers — never code. When a chain has several
+unimplemented elements, **dispatch their surveyors in a single message** so they
+run concurrently.
 
 Read a pointed-at file yourself only when a specific decision genuinely needs
 its contents. From the surveyor's return, determine what must change and the
@@ -308,11 +306,11 @@ list of its `index.json`
 (`node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs get <folder>/index.json gaps`),
 or, in an old-format folder with an `index.md` and no `index.json`, the "Gaps
 surfaced during execution" section of its `index.md` — and per
-`${CLAUDE_PLUGIN_ROOT}/assets/memory.md` recall room `gaps` for the slice. When
-this plan is a reconcile loop-back from `/vwf:execute`, closing those plan
-holes is the point of the pass — fold each into the units (against the
-now-updated blueprint) rather than re-deriving blind. Skip the recall silently
-if mempalace is unavailable.
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md` read `docs/memory/gaps/` for the
+slice. When this plan is a reconcile loop-back from `/vwf:execute`, closing
+those plan holes is the point of the pass — fold each into the units (against
+the now-updated blueprint) rather than re-deriving blind. Skip the recall
+silently if the folder is absent.
 
 ### 5. Interview
 
@@ -390,11 +388,6 @@ advisory, when any; the parked list. Then wait for explicit approval. Offer:
   on disk; leave a one-line note of what was decided so the next attempt can
   recall it — and abandon the chain's downstream elements too, since they stand
   on it).
-
-**Persist.** On approve, per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the
-approved plan's durable "how to land it" decisions and any deliberately deferred
-options to mempalace (room `planning`) — skip what the folder captures verbatim,
-and skip silently if mempalace is unavailable.
 
 ### 7. Write the folder
 

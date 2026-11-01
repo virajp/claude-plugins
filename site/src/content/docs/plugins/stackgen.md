@@ -210,8 +210,7 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
    generated.
 2. **Generation only for what no pack covers, per uncovered component.** The
    first template fetch runs the pipeline for each uncovered component: resolve
-   the **kind** and its topic bar → detect the real stack (manifests + the
-   graphify graph) → one Context7 research pass per bar topic → instantiate
+   the **kind** and its topic bar → detect the real stack (its manifests) → one Context7 research pass per bar topic → instantiate
    vwf's principles catalog with citations → vet every concrete third-party name
    the component emits — packages, runner-invoked tools, GitHub Actions,
    container images, SwiftPM packages, Maven artifacts and Gradle plugins, and
@@ -447,8 +446,8 @@ gate's config and the hygiene files, and `/vwf:init` arrived to lay them down.
 On 2026-09-26 the mise pack and its kind retired: the `stackgen:tool-config`
 skill owns the mise config now. The four gate packs, the `repo-gates` bundle and
 the `repo-gate` kind followed the same day, into the same skill. On 2026-09-27
-the hygiene kind, its pack and its bundle retired too: the ignore, attribute and
-graph-ignore files became the skill's, and the prose files `/vwf:init`'s own
+the hygiene kind, its pack and its bundle retired too: the ignore and attribute
+files became the skill's, and the prose files `/vwf:init`'s own
 assets. On 2026-10-05 the skill moved to rendering every one of them from its
 own `assets/` and `templates/` trees, a pack shipping files instead of asking
 for lines, and Renovate left it. On 2026-10-23 a pack's toolchain left stackgen:
@@ -625,8 +624,8 @@ than something that rides the landing:
   bootstrap's helpers. Everything else goes under `.config/`: a `config/`
   tree landing a root path outside the **landable** tier of the fixed allowlist
   is a pack authoring error the materializer refuses — that list also names the
-  root files vwf itself writes, `CLAUDE.md` and `mempalace.yaml`, which may sit
-  at a shaped root and which no pack may land. Two **directories** are
+  root file vwf itself writes, `CLAUDE.md`, which may sit at a shaped root and
+  which no pack may land. Two **directories** are
   allowlisted at that root, `.config/` and `.github/`, and a CI workflow inside
   the second is refused outright. Mode is preserved, because a task file
   arriving without its exec bit fails as an *unknown task* rather than as a
@@ -703,12 +702,12 @@ One root file is a **shim** rather than a config: `dprint.json`, whose entire
 content is `{ "extends": ".config/dprint.json" }`. That formatter's config
 discovery is root-only and `--config` is its only override, so the choice was a
 two-line root file or a flag every caller has to remember — the same exception
-`eslint.config.mjs`, `wrangler.jsonc` and `.graphifyignore` already
+`eslint.config.mjs` and `wrangler.jsonc` already
 are. On an existing repo `/vwf:init` **moves** a real root `dprint.json` into
 `.config/` and leaves the shim in its place, telling the two apart by content
 rather than by name, and says in the plan that the settings survive the move. So
 a pack whose correctness depends on a repo-wide edit it genuinely does not own —
-a scanner allowlist, a `.gitignore` block, a mining exclude — carries that edit
+a scanner allowlist or a `.gitignore` block — carries that edit
 as a literal block in the reference that owns it, and ships a gate that fails
 the first commit naming whichever block is missing. No pack needs one today.
 `capability-provider/fnox` did until 2026-10-07, when the secrets contract
@@ -796,9 +795,7 @@ each tool is configured once, inside its subtask. Ahead of them a
 `no-dash-names` hook refuses a commit that stages any path with a file or folder
 name starting with `-`, and asks you to rename it — every tool those tasks call
 would read such a name as an option — and `git-config` holds the local identity
-to the forge's. It also installs at `post-commit` and `post-merge`, where a
-`graphify-refresh` hook — always run — calls `code:graph` to rebuild the
-knowledge graph in place of graphify's own raw git hooks. Both scanners document
+to the forge's. Both scanners document
 the same **baseline step for an existing repo**: run the scan, fix what can be
 fixed — rotate a real secret, upgrade a dependency — and record what remains, a
 gitleaks finding by fingerprint in the allowlist, a grype vulnerability id under
@@ -822,7 +819,7 @@ line to any of them:
   moved by hand, in dev, with `dprint config update`.
 - **Excludes.** The trees a gate skips are **one exclusion set**, spelled in
   three syntaxes: the formatter's `dprint.json` and `taplo.toml` and the hook
-  config's global `exclude` — `.claude`, `.git`, `graphify-out`, `build`,
+  config's global `exclude` — `.claude`, `.git`, `build`,
   `dist`, `*.lock`, `node_modules`, `.turbo`, the `*-lock.json` and
   `*-lock.yaml` globs, `.venv`, `.build`, `.swiftpm`, `Derived`, `DerivedData`,
   `*.xcassets/`, `.gradle`, `.kotlin`, `.cxx`, `.externalNativeBuild` and
@@ -839,7 +836,7 @@ line to any of them:
 - **Linter ignores.** The linter does not read `.gitignore`, so `linter.yaml`'s
   `ignores:` carries the generated trees — `.build`, `.cxx`, `.dart_tool`,
   `.externalNativeBuild`, `.gradle`, `.kotlin`, `.swiftpm`, `.venv`, `Derived`,
-  `DerivedData`, `build`, `graphify-out` — each `**/`-prefixed.
+  `DerivedData` and `build` — each `**/`-prefixed.
 - **Ignore lines and attributes.** `.gitignore` is a curated set in banner
   sections — macOS, editors, AI tooling, mise, secrets and env, build output,
   Node, Python, Dart and Flutter, Swift and Xcode, Gradle and Kotlin, Android,
@@ -850,8 +847,8 @@ line to any of them:
   local file. `.gitattributes` marks `*.lock`, `pnpm-lock.yaml` and
   `Package.resolved` `linguist-generated`.
 
-**Six files carry one marker pair**, `# >>> tool-config` / `# <<< tool-config`
-(`//` in dprint's JSONC): `.gitignore`, `.graphifyignore`, dprint's `excludes`,
+**Five files carry one marker pair**, `# >>> tool-config` / `# <<< tool-config`
+(`//` in dprint's JSONC): `.gitignore`, dprint's `excludes`,
 `linter.yaml`'s `ignores`, the gitleaks allowlist and the hook config's global
 `exclude`. Only the lines between the markers are rendered; **every line outside
 them is yours** and survives every render — the place a repo adds an exclude, an
@@ -871,17 +868,9 @@ are a Markdown hard break.
   cover every path mise loads a local override from, at any depth, so a
   machine-local pin never ends up in a review.
 - **`.gitattributes`** is `* text=auto eol=lf`, the lockfiles, and the binaries
-  as `-text -diff`; there is no graphify merge driver. It carries no marker: an
+  as `-text -diff`. It carries no marker: an
   attribute line of your own is a `write` row you answer `keep-existing` to
   keep.
-- **`.graphifyignore`** holds `graphify-out/` between its markers, with vwf's
-  committed trees that are not code intelligence — `docs/memory/`,
-  `docs/plans/archived/`, `docs/prompts/` and `archived/` — and the AI tooling
-  section of `.gitignore` ignores `graphify-out/` whole: the graph is rebuilt
-  per checkout. No merge driver and no raw git hook: the commit gate's
-  `graphify-refresh` hook rebuilds the graph, and `setup:precommit` strips any
-  raw hook, `merge=graphify` line and `merge.graphify.*` git config an earlier
-  install left.
 - **`.config/git-conventional-commits.yaml`**, the commit convention, is a
   template: its scopes are your repo's `scopes`, and its changelog links render
   only when the repo has an `origin`.
@@ -924,7 +913,7 @@ library everything else runs through. It is no pack and no bundle any more: the
 
 One skill owns the configuration of the tools every repo runs, whatever its
 stack — mise, dprint, taplo, pre-commit, gitleaks, grype, the house linter, git,
-graphify, the editor settings and the statusline config. It renders them from
+the editor settings and the statusline config. It renders them from
 two trees it ships — **`assets/`**, static files laid out as they land, copied
 as they are, and **`templates/`**, files holding `@@` names, rendered from your
 repo's values — and its doctrine sits in `references/<tool>.md`.
@@ -1083,7 +1072,7 @@ There is no root `mise.<env>.toml`. **Each folder has one owner:**
 | Folder          | Owner                    | Holds                                                                |
 | --------------- | ------------------------ | -------------------------------------------------------------------- |
 | `_base/`        | tool-config, every repo  | the repo's values, the gate tools, the shell aliases, `tasks.init`   |
-| `ai/`           | tool-config, every repo  | the agent tooling — jq, yq, mempalace, graphify — dev only           |
+| `ai/`           | tool-config, every repo  | the agent tooling — jq and yq — dev only                             |
 | `<project id>/` | you                      | what one project of this repo pins — written by hand, never rendered |
 
 mise loads folders after single files, alphabetically by name. Which of two
@@ -1104,9 +1093,7 @@ exactly one folder**.
   runs on them. The shell aliases sit here too — `precommit`, `setup`,
   `worktrees`, and one `setup-<slug>` per member.
 - **`_base/mise.ci.toml`** — on a node repo, the node-gpg workaround below.
-- **`ai/mise.dev.toml`** — jq, yq, `pipx:mempalace` and `pipx:graphifyy`, the
-  `MEMPALACE_*` values and `MEMPALACE_PALACE_PATH`, the one per repo. Dev only:
-  a pipeline never builds the graph or the palace.
+- **`ai/mise.dev.toml`** — jq and yq. Dev only: a pipeline never needs them.
 
 `REPO_NAME` is a literal, never derived at load time: the basename of the config
 root is the **branch** name inside a linked worktree.
@@ -1187,10 +1174,10 @@ your own the same way, as a subtask file of your own, never by editing an
 
 - **`code/*` — what a change runs through.** `code:check:all`,
   `code:format:all`, `code:lint:all`, `code:sec`, `code:precommit`,
-  `code:git-config`, `code:graph`, `code:worktrees`, `code:count`,
+  `code:git-config`, `code:worktrees`, `code:count`,
   `code:merge:develop`, `code:merge:main`, and the `code:all` aggregator
   (`check` → `format` → `lint` → `sec`). `code:all` is the one-command gate;
-  `precommit`, `git-config`, `graph`, the merges and `count` are wired into the
+  `precommit`, `git-config`, the merges and `count` are wired into the
   hooks or run by hand. The format and lint gates take an **optional file list**
   — empty meaning the whole tree — and the hooks call **them** rather than the
   tools they wrap: `format` and `lint` pass the staged filenames, `check` takes
@@ -1212,9 +1199,7 @@ your own the same way, as a subtask file of your own, never by editing an
   because git reads its identity before a hook runs. Export the three variables
   where the hook can see them — the global mise `[env]` block is the one place a
   GUI git client that never sources your shell profile still picks up, since the
-  hook runs under `mise x`. `code:graph` rebuilds one graph at a time: a run
-  finding the lock held leaves a re-run marker, and the holder rebuilds once
-  more. `code:count` is a size reading rather than a metric: lines of
+  hook runs under `mise x`. `code:count` is a size reading rather than a metric: lines of
   **tracked** text grouped by extension.
 - **`code/merge/*` — landing, with the predicates first.**
   `code:merge:develop <branch>` refuses a source that is `main` or `develop`,
@@ -1240,9 +1225,7 @@ your own the same way, as a subtask file of your own, never by editing an
   clone and to re-sync, as `MISE_ENV=dev mise run setup:all`; it exits 1 when
   `MISE_ENV` is unset. It calls `setup:mise`, `setup:secrets`,
   `setup:external:start` (on a repo with `external: true`), `setup:deps:all`,
-  `setup:precommit`, `setup:ai:all` and `setup:precommit` again in order — the
-  second pass strips the raw graphify hooks and the `merge=graphify` attribute
-  an installer run inside `setup:ai:all` can let back in — and stays idempotent.
+  `setup:precommit` and `setup:ai:all` in order, and stays idempotent.
   **It never upgrades or overwrites anything it did not create**: a task that
   would have to stops, names what it found and prints the by-hand command, and
   every destructive step sits behind a flag. `setup:mise` runs `mise install`,
@@ -1258,8 +1241,7 @@ your own the same way, as a subtask file of your own, never by editing an
   that keeps its hook manager. A `core.hooksPath` set outside the repo's local
   git-config is named by scope with the by-hand unset; without `--force` that is
   a warning and exit 0, and under `--force` it still exits 1, since `--force`
-  never edits a config outside the repo. It also strips graphify's raw git hooks
-  from the repo's hooks directory before anything else. `setup:ai:all` keeps the
+  never edits a config outside the repo. `setup:ai:all` keeps the
   machine's agent plugins current. Its universal subtask, `setup:ai:base`, first
   checks that the workflow plugin, `vwf@virajp-plugins`, is installed at
   **user** scope, or at **project** or **local** scope whose `projectPath`
@@ -1428,7 +1410,7 @@ toolkit will find it: vwf probes `setup:worktree`, the aggregators call the
 | `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. The payload passes the bundle's `os:` map through as it stands. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. What `stackgen:tool-config` renders for itself and what bootstrap syncs carry no lockfile record and are never diffed here; a record whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report. The lockfile's `bootstrap:` block is diffed against the tools and plugins the current composition needs, read from a fresh bootstrap clone: an `add` or `remove` instruction for bootstrap's `docs/sync/vwf.md` is its own consent line. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
-| `tool-config`             | user **and** model     | Owns every universal file a repo runs — mise, the gates, git, graphify, the editor settings and the statusline config — copied from its `assets/` and rendered from its `templates/` by a shipped node script, from the values in `.config/stackgen.yaml`, in four calls: `all` lands them and runs `setup:all`, `pack` renders one pack's templates and values, `pack-remove` takes a dropped pack's files out, `upgrade` moves the exact pins CI loads. Every change is a numbered row; `preview` returns them without writing and `--answers` hands their answers back. Drift is judged from `preview all`. Called by `/vwf:init`; yours to run as well. No shipped pack has templates or values since 2026-10-23, so the materializer calls neither `pack` verb                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `tool-config`             | user **and** model     | Owns every universal file a repo runs — mise, the gates, git, the editor settings and the statusline config — copied from its `assets/` and rendered from its `templates/` by a shipped node script, from the values in `.config/stackgen.yaml`, in four calls: `all` lands them and runs `setup:all`, `pack` renders one pack's templates and values, `pack-remove` takes a dropped pack's files out, `upgrade` moves the exact pins CI loads. Every change is a numbered row; `preview` returns them without writing and `--answers` hands their answers back. Drift is judged from `preview all`. Called by `/vwf:init`; yours to run as well. No shipped pack has templates or values since 2026-10-23, so the materializer calls neither `pack` verb                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of eight: `npm:`, `pypi:`, `pub:`, `action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo), `maven:` (group:artifact, a Gradle plugin as its marker coordinate) or `mise:` (backend:path, the full backend form only), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`, `spm:github.com/apple/swift-argument-parser@1.5.0`, `mise:aqua:realm/SwiftLint@0.57.0`) pinning what the advisory check runs against. Go, Cargo, Ruby and .NET tools have no prefix of their own and are reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or `mise:dotnet:…`; the mise backend decides which checks run, and a backend with no registry to ask warns at most — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
 

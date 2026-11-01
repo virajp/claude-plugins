@@ -22,7 +22,8 @@ plus its `detail`, and each `append` by one `log.mjs event gap` with its
   in `detail` when its skip condition held. A resume skips a stage that
   already reads `green` or `skipped`.
 - **Acceptance `FAIL` / `NOT-COVERED`, and ux findings → loop to `code`** for
-  the unit that owns the flow/screen (dispatch `execute-coder` with the **tag**;
+  the unit that owns the flow/screen (dispatch `execute-coder` with the
+  **finding lines** the stage returned;
   the fix is the code, the missing E2E test, or the style/state correction),
   re-commit, re-verify the affected stage — **up to 4 rounds** (the review-cap
   rule), under the same **convergence guard**: a round that doesn't strictly
@@ -35,7 +36,7 @@ plus its `detail`, and each `append` by one `log.mjs event gap` with its
   vocabulary) and proceed — never scaffold infrastructure beyond the plan's own
   units.
 - **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) →
-  the `gaps` list of `index.json` + room `gaps`, per the gap rules.
+  the `gaps` list of `index.json`, per the gap rules.
 - **A gap** from either stage is one `gaps` entry:
   `{id, unit, stage, text, state: "open"}`, the next `G<n>`, `stage`
   `acceptance` or `ux`, `unit` the unit that owns the flow or screen, or `""`

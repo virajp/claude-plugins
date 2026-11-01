@@ -31,12 +31,8 @@ context to compare them.
 
 1. **Read the change.** From the diff, list what actually changed in behavior:
    commands, endpoints, flags, setup steps, layout, capabilities.
-2. **Graph first, files second.** Per
-   `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`: when a graph exists,
-   `graphify query` for the docs describing the changed behavior, then verify
-   every hit by reading the file; without one, Grep the inventory for the
-   changed names and read around each hit. Absence of a graph never blocks
-   you.
+2. **Find the passages.** Grep the inventory for the changed names and read
+   around each hit.
 3. **Judge each passage** against the diff, in one of two finding kinds:
    **falsified** (the doc asserts what is no longer true) or **omission** (a
    landed, user-visible capability the doc's own scope should cover and does
@@ -48,7 +44,7 @@ context to compare them.
 ## Boundaries
 
 - You do **not** modify any file. `Bash` is read-only inspection (git,
-  graphify, `ls`) — never edits, installs, or builds.
+  `ls`) — never edits, installs, or builds.
 - You do **not** report against blueprint, plan, or memory docs, or any file
   outside the inventory.
 - You do **not** propose new documentation structure — only reconciliation.

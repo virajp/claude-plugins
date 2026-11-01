@@ -24,8 +24,6 @@
 .claude/todos.json
 .worktrees/
 .opencode/
-# The code-intelligence graph is rebuilt on every commit, per checkout.
-graphify-out/
 
 # ==== mise ====
 # Bare names match at any depth, conf.d folders included.
@@ -101,11 +99,13 @@ captures/
 
 # ==== vwf — working notes and scratch ====
 # Local-only working notes, never reviewed and never shipped: one developer's
-# handoffs, doctor reports and run logs, and rendered mockups.
+# handoffs and rendered mockups.
 docs/memory/handoff/
+docs/scratchpad/
+# Folders left from config_format 23, kept ignored until the 24 migration
+# removes them.
 docs/memory/doctor/
 docs/memory/runs/
-docs/scratchpad/
 
 # ==== Reports ====
 # Gate output is regenerable, and a scanner report quotes what it found.

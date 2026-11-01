@@ -47,7 +47,7 @@ Read the one the step needs, not all of them.
 | [migration & consent](references/migration-and-consent.md)     | the dry-run discipline every write in either pipeline goes through |
 | [format lineage](references/format-lineage.md)                 | a retired spelling has to resolve to what it became                |
 | [environment bootstrap](references/environment-bootstrap.md)   | the registry declares integrations or a secrets-manager `config`   |
-| [memory tree](references/memory-tree.md)                       | writing `docs/memory/` and the product's `mempalace.yaml`          |
+| [memory tree](references/memory-tree.md)                       | writing `docs/memory/` and its four folders                        |
 | [CLAUDE.md section](references/claude-md.md)                   | merging the vwf section into the repo's `CLAUDE.md`                |
 
 ## Hard Rules
@@ -157,11 +157,11 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The latest config step, `22 → 23`, removes the `answers:` block — forge and
-secrets now live in each repo's `.config/stackgen.yaml`, and the bot key is
-retired — and is **not** this pipeline's: `/vwf:setup reshape` applies it, in
-the release that ships the old-layout move;
-[migrate pipeline](references/migrate-pipeline.md) step 1 names it.
+The latest config step, `23 → 24`, retires the palace — the `memory:` block,
+each `mempalace.yaml`, and the `docs/memory/planning/`, `runs/` and `doctor/`
+folders, one removal row each on consent — and is this pipeline's, offered by
+state at any stamp; [migrate pipeline](references/migrate-pipeline.md) step 1
+names it, and the `22 → 23` step before it, which `/vwf:setup reshape` applies.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |
@@ -305,28 +305,14 @@ point, since a stamp written before validation describes a tree nothing checked:
    reports every run, and setup names its unlock (`/vwf:architecture`) and
    finishes.
 
-   **Two exceptions.** A **declined graph build** is a settled choice, not an
-   unmet mandate — note it as a degradation and finish. A **declined `iac`
-   extraction** recorded under `enforcement:` is the same: the finding stays, as
-   a warning reported every run, and neither setup nor
-   `/vwf:execute` halts on it.
+   **One exception.** A **declined `iac` extraction** recorded under
+   `enforcement:` is a settled choice, not an unmet mandate: the finding stays,
+   as a warning reported every run, and neither setup nor `/vwf:execute` halts
+   on it.
 4. **Approval gate & commit.** Summarize everything created and updated, plus
    the recommendations, and wait for approval. On approval commit via
    `/vwf:git-workflow` with an `ops:` or `docs:` message.
-5. **The graph offer.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, `setup` is the
-   **only** vwf command that builds graphs. After the commit, if
-   `graphify-out/graph.json` is missing and the CLI is on `PATH`, offer —
-   consent-gated; it is a long build — to build it against the **main
-   checkout's** root, never the worktree. The refresh hook is the repo's
-   pre-commit `graphify-refresh` hook at `post-commit` and `post-merge`, which
-   runs `code:graph` and which `/stackgen:tool-config all` lands; never
-   graphify's own raw git hook, which pins a Python path. A decline is
-   honored without re-asking. Before building, confirm the `.graphifyignore`
-   `/stackgen:tool-config all` landed is present at the root the build runs
-   from — a commit still local to the worktree has not put it there, and a
-   graph built without it indexes everything the file exists to exclude
-   until the next rebuild.
-6. **Chain forward.** Print the ordered chain and stop:
+5. **Chain forward.** Print the ordered chain and stop:
    `/vwf:product` → `/vwf:architecture` →
    `/vwf:design-system` (once a project declares a screen
    platform) → `/vwf:blueprint`, with
@@ -351,9 +337,11 @@ work. Recording a decline under `enforcement:` stops the proposal recurring, not
 the finding: `/vwf:doctor` keeps reporting it as a warning,
 which is the honest state of a repo that chose its own shape.
 
-**Persist the decisions.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the
+**Persist the decisions.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write the
 durable onboarding decisions and their rationale — topology, linkage, roles and
-platforms, screen surfaces, stack pins — to room `decisions`, skipping what the
-docs capture verbatim, and **recall** that room before Step 0 so a re-run builds
-on what was settled. Skip mempalace silently when it is unavailable; the
-`docs/memory/` mirror is always written.
+platforms, screen surfaces, stack pins — as `docs/memory/decisions/<date>-<slug>.md`
+records (a slug already taken that day takes `-2`, then `-3`; no record is
+overwritten), skipping what the docs capture verbatim. **Recall** them before
+Step 0 so a re-run builds on what was settled: list the folder's file names and
+read the files whose slug or title matches the onboarding at hand, newest first,
+at most ten.

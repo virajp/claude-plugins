@@ -54,8 +54,8 @@ pack", "the gates pack", "the hygiene assets", "the secrets provider pack",
 **Every tool `/stackgen:tool-config all` owns lands through that skill, not
 the adapter.** "The toolchain pack" and "the gates pack" below mean what that
 call lands and what the skill's own references document — and the ignore
-file, the attributes file and the graph's ignore file are that skill's tools
-too. `init` passes it the answers as `--<key> <value>` flags —
+file and the attributes file are that skill's tools too. `init` passes it
+the answers as `--<key> <value>` flags —
 [new repo](references/new-repo.md) §2 lists them — and the skill writes them
 into the repo's `.config/stackgen.yaml` and renders its templates from that
 file. Its files are its own: it records none of them anywhere, and its

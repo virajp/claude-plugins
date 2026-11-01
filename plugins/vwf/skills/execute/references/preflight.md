@@ -42,9 +42,10 @@ folder's `release_levels` list holds one entry per project the units touch,
 
 Read this at Setup step 2 **only when the plan has a `code` unit** — a `units`
 entry whose `kind` is `code`. A plan of `edit` units alone writes no code, so
-neither branch below applies to it: a missing LSP server is a run journal
-detail there, and no conventions are fetched. A `blocking` doctor finding is
-a hard halt handled in `SKILL.md`, not here, whatever the plan's units.
+neither branch below applies to it: a missing LSP server is a line in the
+final report there, and no conventions are fetched. A `blocking` doctor
+finding is a hard halt handled in `SKILL.md`, not here, whatever the plan's
+units.
 
 ### The LSP rule (Setup step 2)
 
@@ -62,7 +63,7 @@ reads it and asks nothing:
   `proceed without` in the folder —
   `plan.mjs set <folder>/index.json consent.lsp.<language> "proceed without"`
   — then re-launch `/vwf:execute <folder>`.
-- **`proceed without`** → log it as a run journal detail and continue;
+- **`proceed without`** → say so in the final report and continue;
   degraded type-safety is a known condition of the run, not a gap.
 - **No key for the flagged language**, or no `consent.lsp` at all → treat it
   as `proceed without`, and append one `open` entry to the folder's `gaps`,

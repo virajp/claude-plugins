@@ -57,11 +57,10 @@ repo has fallen behind, and setup and `/stackgen:stackgen-sync` re-check the
 shape as they finish.
 
 The setup run is the spine's blank-repo bootstrap unchanged
-([`/vwf:setup`](./single-repo.md#vwfsetup)): two questions, both proposed from
-the directory name, both answered `stallfront` — the product name and the memory
-wing. It asks nothing about structure, and could not usefully have: the member
-repos do not exist yet, and neither does the product contract that will say how
-many there should be.
+([`/vwf:setup`](./single-repo.md#vwfsetup)): one question, proposed from the
+directory name and answered `stallfront` — the product name. It asks nothing
+about structure, and could not usefully have: the member repos do not exist yet,
+and neither does the product contract that will say how many there should be.
 
 Stallfront now has a bootstrapped base repo whose config knows a product name
 and nothing about shape.
@@ -179,9 +178,7 @@ the recorded pointer commit, since a submodule arrives detached and `init`
 refuses to commit on a detached member — and then surveys and shapes it in that
 same run; decline and nothing is cloned. A member already present but standing
 on no branch is a refused row naming the branch to check out, its shaping
-deferred until you do. Each member that *is* cloned gets its own
-`.graphifyignore` from that run, since the file is per checkout like the graph
-it narrows — see [Code intelligence](../../plugins/vwf.md#code-intelligence).
+deferred until you do.
 
 Stallfront can now run a vwf command from any of its four checkouts and have it
 resolve the same product.
@@ -334,9 +331,6 @@ first of these surfaces at `/vwf:execute`:
   working tree, and the two commit separately with the base last.
 - **The back-link file stops being belt-and-braces and becomes load-bearing**,
   since there is no superproject walk to fall back on.
-- **Per-checkout tooling multiplies.** Memory and code intelligence follow the
-  checkout, so siblings means one mempalace config per repo, all naming the same
-  wing, where submodule linkage keeps one at the base.
 - **The member paths go in `MEMBERS`.** The base repo's task library finds its
   members through one helper, which reads `.gitmodules` where there is one and
   the `MEMBERS` value in `.config/mise/conf.d/_base/mise.toml` otherwise — so

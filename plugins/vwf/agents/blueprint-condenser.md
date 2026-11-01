@@ -44,8 +44,8 @@ usually pays most:
    the doc *used to say* cannot be contract.
 2. **Rationale** — "…so the screen shows its correct state from the first
    frame". Keep *what* is decided, cut *why*. If the why is genuinely valuable,
-   it is a decision record: note it under `PERSIST:` in your return so the
-   orchestrator can file it to mempalace room `decisions`, then cut it.
+   it is a decision record: note it under `PERSIST:` in your return —
+   `/vwf:blueprint` writes it as a `docs/memory/decisions/` file — then cut it.
 3. **Restatement of a linked target** — a summary of what the linked entity,
    convention, or API operation says. The link is the reference. Keep the link.
 4. **Spillover with a cross-reference back** — one decision split across two
@@ -61,8 +61,8 @@ usually pays most:
    condition the table or steps do not, **do not delete it** — that is a
    contract hole: move the condition into the table and report it under `GAPS:`.
 8. **Parked items in Open Questions** — anything not blocking *this* doc's
-   contract. Report each under `PARKED:` for the orchestrator to file to
-   mempalace room `gaps`; do not silently drop them.
+   contract. Report each under `PARKED:` in your return — `/vwf:blueprint`
+   writes it as a `docs/memory/gaps/` file; do not silently drop them.
 9. **Steps that are paragraphs** — a step needing prose is several steps, or is
    carrying a guarantee (→ the Guarantees table), a screen rule (→ the platform
    file), or rationale (→ cut per 2). Split or move; never summarize away a
@@ -114,7 +114,7 @@ CUTS:
 PERSIST:
 - <decision rationale worth keeping as memory> (or "none")
 PARKED:
-- <open question that belongs in room gaps> (or "none")
+- <open question that belongs in docs/memory/gaps/> (or "none")
 GAPS:
 - <contract hole the pass exposed> (or "none")
 HELD:

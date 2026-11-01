@@ -118,9 +118,9 @@ relationships are typed markdown links (the OKF edge) rather than prose. YAML
 artifacts (`registry.yaml`, `schema.yaml`, `*.openapi.yaml`) are typed by
 **path**, not frontmatter (the OpenAPI files carry only `info.x-vwf.status`).
 This makes a blueprint portable to any OKF-aware tool (e.g. the OKF static-HTML
-visualizer) and ingestable by graphify, and lets the `blueprint-reviewer` verify
-frontmatter + that every edge resolves. The doctrine lives in the
-blueprint-authoring skill's `frontmatter-and-links` reference.
+visualizer), and lets the `blueprint-reviewer` verify frontmatter + that every
+edge resolves. The doctrine lives in the blueprint-authoring skill's
+`frontmatter-and-links` reference.
 
 **Format versioning.** vwf ships the stamp in `assets/blueprint-format`
 (currently **25**). Since vwf 18 the stamps are **drift detectors only** —

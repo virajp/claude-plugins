@@ -83,9 +83,9 @@ to a repo, and every write it makes is consent-gated and committed once.
        nothing here ever lands: the files bootstrap's sync writes are
        bootstrap's,
        `CONTRIBUTING.md`, `SECURITY.md` and `LICENSE` are `/vwf:init`'s,
-       and `CLAUDE.md` and `mempalace.yaml` are vwf's, so a pack shipping
-       any of them is refused like any other unallowlisted path. A
-       language's manifests and lockfiles are not on the list at all. Any
+       and `CLAUDE.md` is vwf's, so a pack shipping any of them is
+       refused like any other unallowlisted path. A language's manifests
+       and lockfiles are not on the list at all. Any
        other root path in a `config/` tree is a **pack authoring error**:
        halt the landing set, name the pack and the path, and write nothing.
        This is the materializer's own assertion because a pack author is

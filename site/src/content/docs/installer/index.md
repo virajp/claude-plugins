@@ -6,8 +6,7 @@ order: 0
 
 [`@virajp.dev/claude-plugins`](https://www.npmjs.com/package/@virajp.dev/claude-plugins)
 is a small CLI with two jobs: install **plugins**, and **remove** what this
-toolkit put on your machine — both through the `claude` CLI. graphify is not its
-job; the plugins' own skills set it up. It was published as
+toolkit put on your machine — both through the `claude` CLI. It was published as
 `@askviraj/ai-plugins` before; that package is sunset and only prints a pointer
 here.
 
@@ -78,10 +77,10 @@ to refuse an install when a required binary was missing, and that gate stayed
 retired when the plugin flags returned.
 
 Doctor is the nearest replacement but not an equivalent one: it **blocks** on a
-missing `graphify`, and on a missing `mise` once any stack axis is pinned, and
-`/vwf:setup` and `/vwf:execute` halt on either; `pnpm` is not checked at all.
-See [usage.md](./usage.md#nothing-is-gated-at-install-time) for the full
-picture. Install all four binaries and do not lean on doctor to catch them.
+missing `mise` once any stack axis is pinned, and `/vwf:setup` and
+`/vwf:execute` halt on it; `pnpm` is not checked at all. See
+[usage.md](./usage.md#nothing-is-gated-at-install-time) for the full picture.
+Install every prerequisite and do not lean on doctor to catch them.
 
 ## Other agents
 

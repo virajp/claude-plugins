@@ -40,7 +40,7 @@ status: draft                                      # required — draft | review
 - **`timestamp`** — optional. In-repo, git already tracks last-modified time
   authoritatively, so a hand-maintained field would just duplicate it (and can
   go stale). Record it only when the bundle travels **outside** git (tarball,
-  mount, visualizer/graphify ingestion), bumping it on every substantive edit
+  mount, visualizer ingestion), bumping it on every substantive edit
   when you do.
 - **`resource`** stays optional on purpose: the blueprint is code-independent,
   so the realizing path/URL frequently does not exist yet. Fill it only when it

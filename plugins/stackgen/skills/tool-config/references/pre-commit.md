@@ -14,13 +14,12 @@ files and drift — is [the skill's](../SKILL.md); what follows is pre-commit's
 own. The commit convention its `commit-msg` hook enforces is
 [git's](git.md#4-the-commit-convention).
 
-| Section                                                | Read before                                          |
-| ------------------------------------------------------ | ---------------------------------------------------- |
-| [1. What lands](#1-what-lands)                         | reading the hook config or `linter.yaml`             |
-| [2. The gate hooks](#2-the-gate-hooks)                 | adding a gate, or reading why the hooks name no tool |
-| [3. The global exclude](#3-the-global-exclude)         | narrowing what the hooks see                         |
-| [4. The gate doctrine](#4-the-gate-doctrine)           | adding a hook by hand                                |
-| [5. The graph refresh hook](#5-the-graph-refresh-hook) | touching `post-commit`, `post-merge` or `code:graph` |
+| Section                                        | Read before                                          |
+| ---------------------------------------------- | ---------------------------------------------------- |
+| [1. What lands](#1-what-lands)                 | reading the hook config or `linter.yaml`             |
+| [2. The gate hooks](#2-the-gate-hooks)         | adding a gate, or reading why the hooks name no tool |
+| [3. The global exclude](#3-the-global-exclude) | narrowing what the hooks see                         |
+| [4. The gate doctrine](#4-the-gate-doctrine)   | adding a hook by hand                                |
 
 ## 1. What lands
 
@@ -41,13 +40,13 @@ file; fold one in by hand.
 
 - `minimum_pre_commit_version: "3.2.0"` — where `commit`/`push` became
   `pre-commit`/`pre-push`; an older pre-commit silently runs nothing.
-- `default_install_hook_types`: `pre-commit`, `commit-msg`, `post-commit`,
-  `post-merge` — a type not installed is not a hook that fails, it is one
-  that never runs, and nothing reports it.
+- `default_install_hook_types`: `pre-commit`, `commit-msg` — a type not
+  installed is not a hook that fails, it is one that never runs, and nothing
+  reports it.
 - `default_stages: [pre-commit]`, so each hook says only what differs.
 - the global `exclude` — [section 3](#3-the-global-exclude).
 - a `local` repo: `no-dash-names`, `git-config`, the four gate hooks
-  `format`, `lint`, `check`, `sec`, then `graphify-refresh`.
+  `format`, `lint`, `check`, `sec`.
 - `pre-commit/pre-commit-hooks` at a pinned rev: large files (1 MB), case
   conflicts, Windows-illegal names, shebang and exec-bit agreement in both
   directions, merge-conflict markers, broken and destroyed symlinks, JSON,
@@ -68,7 +67,7 @@ included, through the config the linter's installer generates. It ships empty
 of overrides. Its `ignores:` list is **generated trees only**, since the linter
 does not read `.gitignore`, and holds every stack's: `.build`, `.cxx`,
 `.dart_tool`, `.externalNativeBuild`, `.gradle`, `.kotlin`, `.swiftpm`,
-`.venv`, `Derived`, `DerivedData`, `build`, `graphify-out`. It is not one of
+`.venv`, `Derived`, `DerivedData`, `build`. It is not one of
 the lists the toolkit's checker holds equal to the exclusion set.
 
 Patterns resolve from the repo root, so every entry is `**/`-prefixed: a
@@ -189,24 +188,3 @@ need answering, and `--no-verify` answers neither — it commits the finding and
 moves it to CI, where it costs more. Its two honest uses are a hook that is
 itself broken, and tooling that performs the hook's job out of band, both
 stated in the commit message.
-
-## 5. The graph refresh hook
-
-`graphify-refresh` runs `mise x -- mise run code:graph` at `post-commit` and
-`post-merge`. `post-merge` is what keeps the graph current on a pull: code a
-teammate committed reaches the checkout through a merge, which no
-`post-commit` sees. Neither stage can fail a commit or a merge — each runs
-after it exists — and `code:graph` exits 0 when the graph tool is missing, is
-a no-op in a linked worktree, mid-rebase, mid-merge, mid-cherry-pick or
-mid-revert, and runs detached under a single-flight lock
-([mise's](mise.md#3-the-task-library)).
-
-It replaces graphify's own `graphify hook install`, whose raw git hooks pin a
-Python path and break on the next upgrade. `setup:precommit` strips them
-first: where `post-commit` or `post-checkout` carries graphify's markers it
-runs `graphify hook uninstall` — stripping each marked block itself when that
-fails or graphify is absent — then strips any `.legacy` copy an earlier
-install chained. A `core.hooksPath` directory is another manager's, so its
-hooks are only named, with the by-hand lines. It also deletes graphify's
-`merge=graphify` line from `.gitattributes` and the `merge.graphify` section
-from the local git config.

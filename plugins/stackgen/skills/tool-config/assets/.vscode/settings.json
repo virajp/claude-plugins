@@ -69,7 +69,7 @@
   "explorer.fileNesting.expand": false,
   "explorer.fileNesting.patterns": {
     ".envrc": "*.env,.env,.env.*,.env.*.secrets,.nvmrc",
-    ".gitignore": ".dockerignore,.env,.eslintignore,.gitattributes,.gitkeep,.gitmodules,.graphifyignore,.npmignore,.prettierignore,.stylelintignore,.yarnclean",
+    ".gitignore": ".dockerignore,.env,.eslintignore,.gitattributes,.gitkeep,.gitmodules,.npmignore,.prettierignore,.stylelintignore,.yarnclean",
     "*.js": "${capture}.d.ts,${capture}.d.ts.map,${capture}.js.map",
     "dockerfile.projects": "docker-bake.hcl",
     "firebase.json": "firebase-debug.json,.firebaserc,*.rules,firestore.indexes.json",

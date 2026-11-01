@@ -44,10 +44,9 @@ its adapter copied a rendered bundle, and there was none to copy. So installing
 `vwf` on three of the four targets left the guidelines it assumes are on simply
 absent.
 
-That is the same failure that got [mempalace](./mempalace.md) vendored, and the
-remedy was the same. This repo used to argue the gap was tolerable here —
-guidelines missing on one target degrade quality, whereas a missing memory layer
-breaks `/vwf:handoff` outright — but the reasoning rested on it being *one*
+The remedy was to vendor them. This repo used to argue the gap was tolerable
+here — guidelines missing on one target degrade quality rather than break a
+command — but the reasoning rested on it being *one*
 target, which was never true: only Claude ever had it. The four-target renderer
 is retired now — this repo is Claude-first, and another agent is served by the
 copy-paste prompt in readme.md's
@@ -96,7 +95,5 @@ and it is exactly where these mistakes occur. The guidelines cover that turn.
   the marketplace overview and full plugin list.
 - [vwf](./vwf.md) — the workflow that ships it, and where each pillar is already
   enforced structurally.
-- [mempalace](./mempalace.md) — the memory layer, vendored into `vwf` for the
-  same reason.
 - [upstream](https://github.com/multica-ai/andrej-karpathy-skills) — the
   authoritative source and its rationale.

@@ -7,11 +7,7 @@ description: Adversarial code reviewer for the /vwf:execute command. Invoked
   resolved stack, merging the /code-review engine's findings — which the
   orchestrator runs and hands over in the dispatch prompt — with its own
   dimensions. Returns findings only.
-tools: Read, Bash, Grep, Glob,
-  mcp__plugin_vwf_mempalace__mempalace_search,
-  mcp__plugin_mempalace_mempalace__mempalace_search,
-  mcp__plugin_vwf_mempalace__mempalace_add_drawer,
-  mcp__plugin_mempalace_mempalace__mempalace_add_drawer
+tools: Read, Bash, Grep, Glob
 model: opus
 
 ---
@@ -85,15 +81,10 @@ and the codebase patterns. You do not approve code with unverified assumptions.
    - **Test quality** — tests actually exercise the behaviour, not just
      coverage.
    - **Naming consistency** — with the surrounding code and the docs.
-   - **Impact** — per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when a
-     knowledge graph is reachable (this worktree or the main checkout per that
-     asset's Worktrees rule), query it for the dependents and call sites of
-     every changed module (`graphify query`, `graphify path`) and check the diff
-     against them — including reuse candidates the minimalism dimension flags
-     (an existing helper the diff re-implements). The graph reflects the last
-     commit — read the diff itself directly — and every finding cites a
-     `file:line` you verified, never the graph. Skip silently when no graph
-     exists.
+   - **Impact** — Grep for the dependents and call sites of every changed
+     module and check the diff against them — including reuse candidates the
+     minimalism dimension flags (an existing helper the diff re-implements).
+     Every finding cites a `file:line` you verified by reading it.
    - **Terminal UX conformance** — when the diff touches a project that declares
      platform `cli` in `docs/blueprint/registry.yaml` and the design system
      (`docs/blueprint/design-system.md` or its folder form) has a Terminal UX
@@ -128,32 +119,12 @@ what to keep. A file the branch-wide map cannot place is labelled with the
 sentinel `(unmapped)` — exactly that token, never a guessed unit — and the
 finding is still reported. Do not rewrite the code — report only.
 
-## Memory (mempalace)
-
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before reporting you may
-`mempalace_search` room `problems` (the wing the orchestrator gave you) to avoid
-re-reporting already-resolved findings. After merging, **file your full
-findings** — `file:line`, the owning unit, why each is wrong, and the fix — with
-`mempalace_add_drawer` (that wing, room `problems`, `source_file` set to the
-**plan folder path** — repo-relative, `docs/plans/<folder>`, no trailing slash,
-exactly the string the dispatch passes), tagged `<loop-id>/review/<round>` —
-the **loop id** is the row id for a row's main loop and `<row-id>-late<n>` for
-its n-th late re-run, whose rounds restart at 1; use the **loop id**, **round
-number** and **plan folder path** the orchestrator gave you, never invent them,
-or the fix round's recall will miss: loop ids repeat across plans, so recall
-filters on `source_file`.
-This rich detail is what the fix round recalls; your inline reply stays terse.
-Skip silently if mempalace is unavailable.
-
 **Blueprint/plan gaps are not findings.** If you spot a hole in the *blueprint
 or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
-**gap**, not a code finding. File it separately to room `gaps` — `source_file`
-set to the **plan folder path**, tagged `<loop-id>/gap/<round>`, its content
-**opening with the plan folder path and the `covers` doc names** the dispatch
-carries, so `/vwf:plan`'s slice-keyed recall still finds it — then what is
-under-/mis-specified and where; and report it on its own contract line, not
-under FINDINGS.
+**gap**, not a code finding. Report it on its own contract line,
+`SPEC/PLAN GAPS:` — what is under-/mis-specified and where — not under
+FINDINGS; the orchestrator records it in the plan's `index.json`.
 
 ## Closing check
 
@@ -164,8 +135,8 @@ review findings, as the loop last reported them, and the closing fix delta — t
 commits that aimed at them alone — and no engine output. Do not review the
 range again and raise nothing new: for each listed finding, read the tree at the
 delta's `to` and answer whether it is fixed; then read the delta alone for a
-defect it introduced. Skip mempalace. Output **only** this block, in place of
-the one under Return contract:
+defect it introduced. Output **only** this block, in place of the one under
+Return contract:
 
 ```text
 CLOSING:   # one line per listed finding, in the order given
@@ -180,18 +151,17 @@ REGRESSIONS:   # defects the closing fix delta itself introduced, or the single 
 Your entire reply is read verbatim into the orchestrator's context window.
 Synthesize — do **not** paste `/code-review` output, diffs, code excerpts, or
 per-file walkthroughs, and add no praise, "verified safe", or "looks good"
-notes. The rich detail lives in mempalace under the recall tag; your reply is
-terse. Report only real findings. Output **only** the block below:
+notes. Each finding line carries what the fix round needs — `file:line`, the
+owning unit, what is wrong, why, and the fix — since the orchestrator hands
+the lines themselves to the units it re-dispatches. Report only real findings. Output **only** the block below:
 
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
-- [severity] file:line (<unit>) — what's wrong and why   # <unit> is what the dispatch's unit map gives for the file, or the sentinel "unmapped"; (or the single line "none")
+- [severity] file:line (<unit>) — what's wrong, why, and the fix   # <unit> is what the dispatch's unit map gives for the file, or the sentinel "unmapped"; (or the single line "none")
 SPEC COMPLIANCE: met   # tree-at-`to` vs covered units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
 SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
 API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
 VERDICT: approve   # or "changes-required"
-RECALL: <loop-id>/review/<round>   # mempalace tag for FINDINGS detail (omit if not filed)
-GAPS: <loop-id>/gap/<round>   # mempalace tag for the gaps detail (omit if none)
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 

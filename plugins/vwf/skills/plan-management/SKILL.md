@@ -495,10 +495,7 @@ move fails, halt and report — do not delete or overwrite.
 left for `complete`, and the commit message the caller should use —
 `docs: archive plan <name>` for a standalone archive through
 `/vwf:git-workflow`; at a landing the move rides `/vwf:execute`'s final
-`docs:` commit. The folder's `index.json` is the record of the run; the
-mempalace journal (room `runs`, drawer `<folder basename>`) mirrors it, so if
-mempalace is available mark that drawer **archived**
-(`mempalace_update_drawer`); skip silently otherwise.
+`docs:` commit. The folder's `index.json` is the record of the run.
 
 **5. Prune old logs.** Last, and only when this archive moved a folder into
 `docs/plans/archived/` — the later archive of a folder a landing kept live

@@ -77,7 +77,7 @@ together in git at all:
 │   ├── docs/blueprint/
 │   ├── docs/plans/index.json
 │   ├── .config/vwf.yaml    # members: [...]
-│   └── mempalace.yaml
+│   └── docs/memory/
 ├── acme-api/               # plain repo
 │   ├── .config/vwf-membership.yaml
 │   └── docs/plans/<date>-<HHMM>-<slice>/
@@ -142,8 +142,7 @@ on the **monorepo** shape becomes multi-repo by that fact alone.
 | A cycle plan folder (`docs/plans/<date>-<HHMM>-<slice>/`) | **the repo whose code it changes** |
 | `docs/plans/index.json` | the base repo — a thin index: its `plans` list, one row per plan folder naming the target repo, per `skills/plan-management/references/plan-index.md` |
 | `implementation:` stamps | the blueprint, so the base repo |
-| `mempalace.yaml` | under `siblings`, one per repo, all naming the same wing; under `submodule`, one at the base and none in members |
-| `graphify-out/` | one per checkout |
+| `docs/memory/` | the base repo, always — one store per product, per `assets/memory.md` |
 
 ## When this is the right shape
 

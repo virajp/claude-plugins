@@ -30,19 +30,16 @@ In order:
    `docs/plans/archived/`. Nothing inside `docs/blueprint/` is authored here —
    an empty tree is the honest state of a product nobody has described yet, and
    a skeleton full of placeholders is not.
-2. **The memory tree.** `docs/memory/` with its seven rooms, plus the
-   product's `mempalace.yaml`, per [the memory tree](memory-tree.md). The
-   graph ignore file is not setup's: `/stackgen:tool-config all` lands
-   `.graphifyignore` with vwf's excludes among its rendered lines.
+2. **The memory tree.** `docs/memory/` with its four folders, per
+   [the memory tree](memory-tree.md).
 3. **CLAUDE.md.** Merge the vwf section from
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` into the repo's
    `CLAUDE.md`, preserving everything already there, per
    [the CLAUDE.md section](claude-md.md).
-4. **The two questions.** `product.name` and `memory.wing`, each one MCQ,
-   proposed from the repo directory name. These are the **only** questions this
-   path asks.
+4. **The one question.** `product.name`, one MCQ, proposed from the repo
+   directory name. It is the **only** question this path asks.
 
-Return `product.name`, `memory.wing`, and both stamps. Write **no** `topology`,
+Return `product.name` and both stamps. Write **no** `topology`,
 `linkage`, `members`, `harness`, `ui`, `enforcement`, or per-project block: a
 key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
@@ -94,12 +91,10 @@ Detection is a starting point, never the truth. Everything below is presented
 and corrected by MCQ, one decision per round, per
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`.
 
-**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read room `decisions`
-for prior topology, surface and stack confirmations — build on them rather than
-re-asking. **Graph-first** where one exists: per
-`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, query `graphify-out/graph.json` for the
-system shape before reading manifests, then confirm what it reports against
-them. Both degrade silently when unavailable.
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, list
+`docs/memory/decisions/` and read the records whose slug or title names a prior
+topology, surface or stack confirmation, newest first, at most ten — build on
+them rather than re-asking. An absent or empty folder is not a finding.
 
 **Resolve the base repo before anything else**, per
 `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A run started inside a member of an
@@ -169,14 +164,6 @@ four facts and acts on that delta alone.
   `${CLAUDE_PLUGIN_ROOT}/assets/templates/`, `flows/index.md`, `entities/index.md`, the
   empty `apis/` and `apis/released/` directories, `docs/plans/` and
   `docs/plans/archived/`.
-- **Graph excludes, recommended only.** setup writes no `.graphifyignore`:
-  the file is `/stackgen:tool-config`'s, vwf's excludes among its rendered
-  lines. Every committed-but-not-code tree detection turned up — vendored
-  third-party code, committed generated output, large fixtures — goes in
-  the recommendations report with its evidence, as a line the person may add
-  **outside** the file's `tool-config` markers, where every render keeps it
-  (`${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`); git-ignored trees are never
-  restated.
 - **Harness detection** per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md` — which
   verification capabilities the repo can already run, and any non-canonical task
   names. Missing capabilities are **recorded, never built**;
@@ -200,6 +187,5 @@ moves no source file, so nothing here is applied — the report is the
 deliverable, and `/vwf:doctor` is what keeps it visible.
 
 Return to the spine with: the confirmed topology and linkage, the members, the
-per-project role/platforms/stack pins, the harness block, `product.name`,
-`memory.wing`, any `enforcement:` decline recorded during the run, and the
-recommendations.
+per-project role/platforms/stack pins, the harness block, `product.name`, any
+`enforcement:` decline recorded during the run, and the recommendations.

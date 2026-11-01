@@ -253,7 +253,7 @@ every run, but no longer blocking, so neither `setup` nor `execute` halts on it.
 The decline settles the *proposal*, never the *fact* — a product that chose to
 keep its `iac` project where it is should keep being told what it costs, and
 silencing the finding would leave the most privileged repo in the product
-looking clean. Treat it exactly as a declined graph build.
+looking clean.
 
 **A project's template must cover its platforms.** Since format 22 a
 project-axis template declares the platforms it serves in its own frontmatter,
@@ -307,7 +307,7 @@ level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
 one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
 Setup materializes no tooling itself — `/vwf:init` does, calling
 `/stackgen:tool-config all` for every universal tool the skill owns, the
-gates, `git` and `graphify` included, and fetches no bundle.
+gates and `git` included, and fetches no bundle.
 **A repo is shaped when `.config/stackgen.yaml` exists with `format: 1`** —
 the values file only that skill's script writes; the skill records nothing in
 the lockfile. A repo carrying old-layout files —

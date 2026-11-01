@@ -82,7 +82,7 @@ already excludes is build output or a local artefact, not configuration, and
 is skipped without a row.
 
 **A `handed` or `report` spelling is in neither.** A root file the table's
-`handed` rows list — the ignore, attributes and graph-ignore files — is not a
+`handed` rows list — the ignore and attributes files — is not a
 stray: the tool-config skill renders it in place and its preview row covers
 it. A root file a `report` row lists — the toolchain manager's own root
 config — enters no rename map and gets no move, keep or delete row either;
@@ -220,7 +220,7 @@ tasks are still pass 3's and pass 9's to read.
 consent, and none where the repo carries none of it:
 
 - **The lock record.** The `repo-hygiene/repo-hygiene` record is removed —
-  the ignore, attributes and graph-ignore files are the skill's `all` call's
+  the ignore and attributes files are the skill's `all` call's
   now, whose preview shows a file with no marker pair as one `write` row
   replacing it whole — each file's own lines, the attributes file's
   included, listed under it and re-appended on `ok`, per

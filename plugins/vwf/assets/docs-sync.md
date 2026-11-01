@@ -23,7 +23,7 @@ changes when code lands, not when a contract is written.
 ## The procedure
 
 /vwf:docs-sync owns it: scope resolution, the
-`docs-sync-surveyor` scan (graph-first), surgical edits, the
+`docs-sync-surveyor` scan, surgical edits, the
 /vwf:readme route for broad README drift, the change-log hook,
 and the mandatory report line — which docs were synced, or the explicit
 `docs: nothing contradicted`, never a silent skip. A calling run passes its own

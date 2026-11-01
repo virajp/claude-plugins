@@ -133,9 +133,9 @@ row, names an unknown one or meets a row that changed since the preview, so
 again in the report, never retried with guessed answers.
 
 **An ignore file adopted whole keeps the repo's own lines.** That `write`
-row on a `.gitignore` or `.graphifyignore` with no marker pair would drop
-every line the repo wrote — a `secrets/` or `.env.production` line among
-them, after which a plain `git add` stages what it used to ignore — and its
+row on a `.gitignore` with no marker pair would drop every line the repo
+wrote — a `secrets/` or `.env.production` line among them, after which a
+plain `git add` stages what it used to ignore — and its
 `keep-existing` lands none of the universal set. So, before the plan,
 `init` reads the repo's file and lists its **own lines**: every pattern line
 the rendered block between the markers does not carry, comments and blank
@@ -169,8 +169,8 @@ unshown.
 **Then `init`'s own hygiene assets**, from
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid down as
 [hygiene assets](readme-and-license.md) states — no adapter fetch and no
-lock record. The ignore file, the attributes file and the graph's ignore
-file are not among them: the call above lands them. The stack adapter
+lock record. The ignore file and the attributes file are not among them:
+the call above lands them. The stack adapter
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) is reached once more, in
 §3, for the secrets provider alone.
 
