@@ -62,11 +62,12 @@ after setup rather than inside it — setup prints the chain and runs none of it
 
 ## Step 3 — Elicit (create) / Reconcile (update)
 
-**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-product decisions and their rationale (room `decisions`) and any parked
-out-of-scope points aimed at the product level (room `gaps`, tag `parked`)
-before eliciting — a parked feature/goal idea whose time has come is elicited
-into this pass, not re-discovered. Skip silently if mempalace is unavailable.
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior
+product decisions and their rationale (`docs/memory/decisions/`) and any parked
+out-of-scope points aimed at the product level (`docs/memory/gaps/` records
+whose slug ends in `-parked`) before eliciting — a parked feature/goal idea
+whose time has come is elicited into this pass, not re-discovered. Skip silently
+if a folder is absent.
 
 Elicit following `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — one decision
 per round, MCQ + "Other", 2–3 proposed framings with a recommendation where the
@@ -124,9 +125,9 @@ anchors. Report — as information, not a gate — any goal **no flow serves yet
 and any flow Purpose linking a **goal that no longer exists** (the latter must
 be reconciled before commit, per Step 5).
 
-**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, store the durable
-product decisions and their rationale (room `decisions`) — skip what the doc
-captures verbatim. Skip silently if mempalace is unavailable.
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write each durable
+product decision and its rationale as one `docs/memory/decisions/` file — skip
+what the doc captures verbatim.
 
 ## Step 8 — Docs sync & commit
 

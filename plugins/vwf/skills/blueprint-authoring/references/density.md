@@ -56,7 +56,7 @@ there.
 
 **Rationale in the contract.** "…so the screen shows its correct gated form from
 the first frame." The contract is *that* it renders gated; why is a decision
-record, and belongs in mempalace room `decisions`.
+record, and belongs in a `docs/memory/decisions/` file.
 
 **Revision narration.** "`subscriber` was renamed to `premium`", "removed
 entirely", "reverses the prior model". Git records this. A blueprint states what
@@ -81,9 +81,10 @@ the lifecycle table — if a label carries a condition the table does not, the
 table is what is incomplete.
 
 **Open Questions as a parking lot.** Open Questions holds what blocks *this*
-doc's contract. Anything else is out-of-scope and goes to mempalace room `gaps`
-per the parked-scope rule in `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — not
-into a contract doc that every later run must read past.
+doc's contract. Anything else is out-of-scope and goes to a
+`docs/memory/gaps/` file per the parked-scope rule in
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — not into a contract doc that
+every later run must read past.
 
 **Spillover with a cross-reference back.** Splitting one decision across two
 sections and linking between them costs more than stating it once in the section

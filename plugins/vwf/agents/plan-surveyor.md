@@ -32,12 +32,8 @@ job is to absorb it and hand back conclusions.
 1. **Read the desired state.** Read the slice's blueprint doc(s) — the flow's
    steps, screens, jobs, and acceptance criteria, or the entity's lifecycle,
    relationships, invariants, and `schema.yaml`.
-2. **Graph first, files second.** Per
-   `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`: if `graphify-out/graph.json`
-   exists, orient with `graphify query` / `path` / `explain`, then **verify
-   every claim by reading the file** — the graph reflects the last commit, so
-   read the uncommitted diff directly. If there is no graph, go straight to
-   Grep/Glob/Read. Absence of a graph never blocks you.
+2. **Read the files.** Orient with Grep/Glob, then **verify every claim by
+   reading the file** — and read the uncommitted diff directly.
 3. **Survey the actual state.** For each blueprint element, find whether an
    implementation exists, and judge it in one of three states:
    - **present** — implemented and consistent with the contract;
@@ -54,8 +50,8 @@ job is to absorb it and hand back conclusions.
 ## Boundaries
 
 - You do **not** write the plan, order units, size effort, or decide libraries.
-- You do **not** modify any file. `Bash` is for read-only inspection (graphify,
-  `ls`, `git diff`, test listing) — never for edits, installs, or running
+- You do **not** modify any file. `Bash` is for read-only inspection (`ls`,
+  `git diff`, test listing) — never for edits, installs, or running
   builds.
 - You do **not** judge code quality. Only contract conformance.
 

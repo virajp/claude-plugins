@@ -83,10 +83,9 @@ the unit files what each subagent reads. Nothing lives in conversation.
   them puts its folder on `gaps_of` — interview item 2b. Reading the file is
   this skill's business; editing it never is — §8's `plan-management add`
   appends the row
-- the mempalace rooms `planning`, `decisions` and `gaps` for this repo's wing,
-  when the server is up; **skip silently** when it is not. Resolve the wing and
-  apply the two-store rules from `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do
-  not restate them here
+- the `docs/memory/decisions/` and `docs/memory/gaps/` folders, read by the
+  recall rule of `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` — do not restate it
+  here; **skip silently** when a folder is absent
 
 A standing decision the request contradicts is a **reversal** — name it as one
 in the interview, never as a fresh choice.

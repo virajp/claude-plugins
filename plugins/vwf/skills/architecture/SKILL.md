@@ -90,20 +90,19 @@ foundation command that never blocks on the preflight).
 
 ## Step 3 — Elicit (create) / Reconcile (update)
 
-**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall prior
-topology, stack, and cross-cutting decisions and their rationale (room
-`decisions`), plus any parked out-of-scope points touching the system shape
-(room `gaps`, tag `parked`), before eliciting — build on them and don't re-ask
-resolved questions. Skip silently if mempalace is unavailable.
+**Recall first.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior
+topology, stack, and cross-cutting decisions and their rationale
+(`docs/memory/decisions/`), plus any parked out-of-scope points touching the
+system shape (`docs/memory/gaps/` records whose slug ends in `-parked`), before
+eliciting — build on them and don't re-ask resolved questions. Skip silently if
+a folder is absent.
 
-**Graph-first grounding.** Per `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`, when
-the repo carries a knowledge graph, query it for the actual system shape —
-projects, stacks (for the config), who calls whom — before eliciting. In create
-mode it grounds the defaults you offer; in update mode it is how you **detect**
-genuine deltas between the registry and the code instead of asking the user to
-enumerate them. Confirm every graph-derived fact with the user (or the file it
-points to) before recording it — never write registry content on graph output
-alone. Skip silently when no graph is reachable.
+**Ground in the code.** Read the repo for the actual system shape — projects,
+stacks (for the config), who calls whom — before eliciting. In create mode it
+grounds the defaults you offer; in update mode it is how you **detect** genuine
+deltas between the registry and the code instead of asking the user to
+enumerate them. Confirm every derived fact with the user (or the file it points
+to) before recording it.
 
 Elicit following the **elicitation protocol** in
 `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`: one decision per
@@ -423,9 +422,9 @@ convergence guard: if the same gap appears after two re-dispatches, stop and
 report the unresolved item rather than looping indefinitely.
 
 **Persist.** Once the checks pass, per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`
-store the durable topology, stack, and cross-cutting decisions and their
-rationale to mempalace (room `decisions`) — skip what the doc captures verbatim.
-Skip silently if mempalace is unavailable.
+write each durable topology, stack, and cross-cutting decision and its
+rationale as one `docs/memory/decisions/` file — skip what the doc captures
+verbatim.
 
 ---
 

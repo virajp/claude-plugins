@@ -76,9 +76,10 @@ core token (per the product-foundations skill) and report it as a **blocking**
 finding — the product is shipping to customers on a foundation it explicitly
 said was not ready; §5 (release) does not fire while one is present.
 
-**Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, recall rooms `gaps`
-and `problems` for still-open items — a criterion already known-failing is
-reported as **known**, not rediscovered. Skip silently if mempalace is down.
+**Recall.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read
+`docs/memory/gaps/` and `docs/memory/problems/` for still-open items — a
+criterion already known-failing is reported as **known**, not rediscovered.
+Skip silently if a folder is absent.
 
 ### 2. Health pass
 
@@ -120,18 +121,23 @@ Present: per-project health, then per-criterion results. Route every failure per
 the **feedback routing** (`/vwf:feedback`'s rules — this command's failures are
 just automated feedback):
 
-- **Criterion FAIL** (behavior regression) → file to room `gaps`; offer the fix
-  path now — `/vwf:blueprint <flow|entity>` if the blueprint is wrong,
-  `/vwf:plan <slice>` for a fix cycle. Deferred → record one line in the owning
-  flow doc's **Open Questions** so it survives a mempalace outage.
+- **Criterion FAIL** (behavior regression) → write a `docs/memory/gaps/` file;
+  offer the fix path now — `/vwf:blueprint <flow|entity>` if the blueprint is
+  wrong, `/vwf:plan <slice>` for a fix cycle. Deferred → record one line in the
+  owning flow doc's **Open Questions** too, so the contract carries it.
 - **Health down / infrastructure failure** → report precisely (project, probe,
   error); this is operational, not a blueprint gap — do not file it as one. On
   a **production** run, additionally name the matching runbook from the
   `conventions.md#incidents` alert-condition table (the incident-response
   foundation) when one exists, and offer `/vwf:feedback incident` to file the
   incident and its postmortem stub.
-- **NOT-COVERED / no harness** → a testing gap; file to room `gaps` and offer a
-  plan step next cycle.
+- **NOT-COVERED / no harness** → a testing gap; write a `docs/memory/gaps/`
+  file and offer a plan step next cycle.
+- **`SPEC/PLAN GAPS:`** (a criterion untestable as written, from §3's
+  verifier return) → write each line as one `docs/memory/gaps/` record per
+  `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, naming the flow doc it concerns (a
+  name that exists takes the next `-2`, `-3` suffix), and offer
+  `/vwf:blueprint <flow>` to pin the criterion down.
 
 **Production failures: name the rollback first.** When this run targeted the
 release environment and a probe or criterion failed, the **first offered
@@ -153,10 +159,11 @@ per-entity `schema.yaml` snapshot into its sibling `entities/` dir (same copy
 machinery, same freeze moment), and the never-overwrite rule. A staging run, or
 any run with a failure, skips this section entirely.
 
-**Persist.** Store the run's outcome (environment, per-criterion results,
-routing, any release recorded) to mempalace room `problems` (releases also to
-room `decisions`), and each gap to room `gaps`. Skip silently if mempalace is
-down — the routed doc edits are the durable record.
+**Persist.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write the run's
+outcome (environment, per-criterion results, routing, any release recorded) as
+one `docs/memory/problems/` file (a release also as one
+`docs/memory/decisions/` file); each gap is already its own
+`docs/memory/gaps/` file from the routing above.
 
 If any doc was edited (deferred routings, release snapshots), commit via
 `/vwf:git-workflow`. Verify is otherwise read-only.
