@@ -86,7 +86,6 @@ universal — every stack's trees, whether or not the repo uses that stack:
 | `.claude`                                   | the agent tooling tree — machine-owned; see below     |
 | `.git`                                      | git's own                                             |
 | `build`, `dist`                             | the generic output trees                              |
-| `graphify-out`                              | the graph tool's output                               |
 | `*.lock`, `*-lock.json`, `*-lock.yaml`      | every tool's lockfile                                 |
 | `node_modules`, `.turbo`                    | Node's install tree and build cache                   |
 | `.venv`                                     | Python's environment                                  |

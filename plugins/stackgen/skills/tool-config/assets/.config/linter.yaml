@@ -17,7 +17,6 @@ ignores:
   - "**/Derived/"
   - "**/DerivedData/"
   - "**/build/"
-  - "**/graphify-out/"
   # <<< tool-config
 
 # overrides:

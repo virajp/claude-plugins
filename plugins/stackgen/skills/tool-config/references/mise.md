@@ -47,7 +47,7 @@ user's shell's, never a file's.
 | Folder          | Owner                    | Holds                                                                |
 | --------------- | ------------------------ | -------------------------------------------------------------------- |
 | `_base/`        | tool-config, every repo  | the repo's values, the gate tools, the shell aliases, `tasks.init`   |
-| `ai/`           | tool-config, every repo  | the agent tooling — jq, yq, mempalace, graphify — dev only           |
+| `ai/`           | tool-config, every repo  | the agent tooling — jq and yq — dev only                             |
 | `<pack slug>/`  | that pack's `templates/` | the pack's own pins, values and aliases                              |
 | `<project id>/` | the repo                 | what one project of this repo pins — written by hand, never rendered |
 
@@ -91,10 +91,8 @@ copy.
 - **`_base/mise.ci.toml`** — on a node repo, `node.gpg_verify = false`, the
   one CI workaround ([section 4](#4-bootstrap-and-ci-parity)); empty
   otherwise, and so not written.
-- **`ai/mise.dev.toml`** — jq, yq, `pipx:mempalace` and `pipx:graphifyy`
-  (the PyPI name really is `graphifyy`, double y; never correct it), the
-  `MEMPALACE_*` values, and `MEMPALACE_PALACE_PATH`, the one per repo. Dev
-  only: a pipeline never builds the graph or the palace.
+- **`ai/mise.dev.toml`** — jq and yq. Dev only: a pipeline never needs
+  them.
 
 **`REPO_NAME` is a literal**, never derived at load time: the basename of
 the config root is the **branch** name inside a linked worktree, so a derived
@@ -341,13 +339,12 @@ libraries in step.**
 | `code:sec [--staged] [files...]`       | secret and vulnerability scan; the `sec` hook calls it with `--staged`                                                                                                           |
 | `code:precommit [--all]`               | run the hooks over what you changed, **before** you stage                                                                                                                        |
 | `code:git-config [--fix]`              | require the forge identity and ssh signing ([git's](git.md))                                                                                                                     |
-| `code:graph [--force]`                 | refresh the knowledge graph after a commit; exits 0 when the tool is missing                                                                                                     |
 | `code:worktrees`                       | list worktrees across the repo and its members                                                                                                                                   |
 | `code:merge:develop <branch>`          | merge a branch into `develop`, or open a pull request — `MERGE_MODEL_DEVELOP`                                                                                                    |
 | `code:merge:main`                      | merge `develop` into `main`, or open a pull request — `MERGE_MODEL_MAIN`                                                                                                         |
 | `code:count`                           | lines of tracked text, grouped by extension, plus a total                                                                                                                        |
 
-`precommit`, `git-config`, `graph`, `merge:*` and `count` are not in
+`precommit`, `git-config`, `merge:*` and `count` are not in
 `code:all` — they are wired into the hooks or run by hand. `setup:all` calls
 every other `setup:*` task except `setup:worktree`.
 
@@ -387,13 +384,8 @@ setup:all  (--all, or --<slug>, recurses into members)
   ├─ setup:deps:all        # every package manager's five verbs
   ├─ setup:precommit       # install the hooks
   ├─ setup:ai:all          # vwf, then each pack's plugins
-  ├─ setup:precommit       # again: strip what the plugin install let in
   └─ <each member>         # --all, or that member's --<slug>
 ```
-
-`setup:precommit` runs twice because the published installer `setup:ai:all`
-may run can put back graphify's raw hooks and its `merge=graphify` line in
-`.gitattributes`; the second pass strips them.
 
 **Keep it idempotent and non-destructive**: re-running converges, never
 errors, and it passes no flag the user did not pass. It exits 1 when
@@ -402,11 +394,7 @@ errors, and it passes no flag the user did not pass. It exits 1 when
 `setup:precommit` skips, without `--force`, on an effective
 `core.hooksPath`, a `.husky/` directory or a lefthook config: it warns,
 prints what it found and the by-hand switch lines, and exits 0, so
-`setup:all` completes. It also takes graphify's raw git hooks out of the
-repo's own hooks directory — through `graphify hook uninstall`, and by
-stripping their marked blocks when that fails — before anything else, so
-unsetting `core.hooksPath` never re-arms them; graphify's merge attribute
-and git-config section go too.
+`setup:all` completes.
 
 #### Member flags
 
@@ -519,18 +507,6 @@ Under `pr` **nothing merges locally**: the request opens through `gh`, else
 successfully. **A conflict leaves the tree mid-merge on purpose.** A repo
 still carrying the single legacy `MERGE_MODEL` has it read in place of an
 unset position, with one warning.
-
-#### `code:graph` — the graph refresh
-
-Run by the `graphify-refresh` hook at `post-commit` and `post-merge`: code
-only, detached, a no-op in a linked worktree, mid-rebase, mid-merge,
-cherry-pick or revert, or after a commit that touched only `graphify-out/`
-(unless `--force`); a first commit builds it. It exits 0 when the tool is
-missing, so a commit never fails on it. **One rebuild at a time**: a lock
-directory in the git dir holds its holder's PID; a run finding it held
-leaves a re-run marker and exits, and the holder rebuilds once more if the
-marker is there when it finishes. A lock is cleared only when its holder is
-dead or it is older than any rebuild runs.
 
 #### `code:count` — a size reading
 

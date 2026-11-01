@@ -1,8 +1,8 @@
 ---
 name: tool-config
 description: Render a repo's universal tool configs — mise, dprint, taplo,
-  pre-commit, gitleaks, grype, the house linter, git, graphify, the editor
-  settings and the statusline config — from two shipped trees, assets copied
+  pre-commit, gitleaks, grype, the house linter, git, the editor settings
+  and the statusline config — from two shipped trees, assets copied
   as they are and templates rendered from .config/stackgen.yaml, plus each
   pack's own templates and subtasks. A shipped node script does it in four
   calls (all, pack, pack-remove, upgrade), shows every change as a numbered
@@ -47,8 +47,6 @@ Between them, every repo gets:
   [gitleaks](references/gitleaks.md), [grype](references/grype.md);
 - **git** — the curated `.gitignore`, `.gitattributes` and the commit
   convention — [references/git.md](references/git.md);
-- **graphify** — `.graphifyignore` —
-  [references/graphify.md](references/graphify.md);
 - **two single files** — `.vscode/settings.json`, an asset shared by every
   repo, and `.config/claude-status.json`, a template naming the project.
 
@@ -259,13 +257,12 @@ no render overwrites it or offers it for deletion.
 
 ## The marked files
 
-Six files carry a marker pair, and only the lines between the markers are
+Five files carry a marker pair, and only the lines between the markers are
 rendered:
 
 | File                             | The marked list                   |
 | -------------------------------- | --------------------------------- |
 | `.gitignore`                     | the ignore set                    |
-| `.graphifyignore`                | what the graph never ingests      |
 | `.config/dprint.json`            | `excludes` (`//` markers — JSONC) |
 | `.config/linter.yaml`            | `ignores`                         |
 | `.config/gitleaks.toml`          | the path allowlist                |

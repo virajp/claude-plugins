@@ -15,8 +15,6 @@
     "../**/build/",
     "**/dist/",
     "../**/dist/",
-    "**/graphify-out/",
-    "../**/graphify-out/",
     "**/*.lock",
     "../**/*.lock",
     "**/node_modules/",

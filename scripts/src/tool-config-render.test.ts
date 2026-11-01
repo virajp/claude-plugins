@@ -221,14 +221,14 @@ describe("the marker pair", () => {
     const original = h.read(".gitignore");
     h.write(
       ".gitignore",
-      original.replace("graphify-out/\n", "") + "my-own/\n",
+      original.replace(".opencode/\n", "") + "my-own/\n",
     );
     const { out } = h.run(["preview", "all"]);
     expect(out.rows).toHaveLength(1);
     expect(out.rows?.[0]).toMatchObject({
       kind: "write",
       path: ".gitignore",
-      added: ["graphify-out/"],
+      added: [".opencode/"],
       removed: [],
       answers: ["ok", "keep-existing"],
     });
@@ -237,10 +237,10 @@ describe("the marker pair", () => {
   });
 
   it("offers the whole file, with a note, when the repo's copy has no marker pair", () => {
-    h.write(".graphifyignore", "vendor/\n");
+    h.write(".gitignore", "vendor/\n");
     const { out } = h.run(["preview", ...NODE_ALL]);
-    expect(out.notes?.join("\n")).toContain(".graphifyignore");
-    expect(out.rows?.find(r => r.path === ".graphifyignore")).toMatchObject({
+    expect(out.notes?.join("\n")).toContain(".gitignore");
+    expect(out.rows?.find(r => r.path === ".gitignore")).toMatchObject({
       kind: "write",
       removed: ["vendor/"],
     });

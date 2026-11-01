@@ -20,68 +20,8 @@ if [ ! -f "${MISE_PROJECT_ROOT}/${CONFIG}" ]; then
   exit 0
 fi
 
-# Strip graphify's marked block from a hook, deleting the file when nothing but a shebang and blank lines is left.
-strip_graphify_block() {
-  local file="$1" name="$2"
-  if [ ! -f "$file" ] || ! grep -q "^# ${name}-start$" "$file"; then
-    return 0
-  fi
-  awk -v s="# ${name}-start" -v e="# ${name}-end" '$0 == s { skip = 1; next } skip && $0 == e { skip = 0; next } !skip' "$file" >"${file}.tmp"
-  if grep -qv -e '^#!' -e '^[[:space:]]*$' "${file}.tmp"; then
-    # Written through the original file so its exec bit survives.
-    cat "${file}.tmp" >"$file"
-    rm -f "${file}.tmp"
-  else
-    rm -f "$file" "${file}.tmp"
-  fi
-}
-
-# graphify's raw hooks pin a Python path. The repo's own hooks directory is stripped before any refusal below — even
-# under core.hooksPath, so unsetting it (`--force`, or by hand) never re-arms them; a core.hooksPath directory is only named.
 HOOKS_PATH=$(git config --get core.hooksPath 2>/dev/null || true)
 HOOKS_DIR="$(git rev-parse --git-path hooks)"
-OWN_HOOKS_DIR="$(git rev-parse --git-common-dir)/hooks"
-graphify_marked() { # <dir> <post-commit file> <post-checkout file>
-  grep -qs "^# graphify-hook-start$" "$1/$2" || grep -qs "^# graphify-checkout-hook-start$" "$1/$3"
-}
-strip_graphify_hooks() { # <dir> <suffix>
-  strip_graphify_block "$1/post-commit$2" graphify-hook
-  strip_graphify_block "$1/post-checkout$2" graphify-checkout-hook
-}
-if [ -n "$HOOKS_PATH" ]; then
-  # A core.hooksPath directory is another manager's, possibly outside the repo, so its hooks are never edited here.
-  if graphify_marked "$HOOKS_DIR" post-commit post-checkout || graphify_marked "$HOOKS_DIR" post-commit.legacy post-checkout.legacy; then
-    print_warn "graphify's raw hooks sit under core.hooksPath (${HOOKS_PATH}) — left alone. Remove them by hand:"
-    print_yellow "  delete each '# graphify-*-start' … '-end' block under ${HOOKS_DIR}"
-  fi
-fi
-if graphify_marked "$OWN_HOOKS_DIR" post-commit post-checkout; then
-  print_subheader "Removing graphify's raw git hooks ..."
-  # graphify's own uninstall runs only with core.hooksPath unset, where it and this task agree on the directory.
-  if [ -z "$HOOKS_PATH" ] && command -v graphify >/dev/null 2>&1; then
-    graphify hook uninstall || print_warn "graphify hook uninstall failed — stripping its blocks instead"
-  fi
-  # The fallback, and a no-op once the uninstall has worked.
-  strip_graphify_hooks "$OWN_HOOKS_DIR" ""
-fi
-# An earlier plain install may already have chained one as <hook>.legacy; graphify's uninstall never looks there.
-if graphify_marked "$OWN_HOOKS_DIR" post-commit.legacy post-checkout.legacy; then
-  print_subheader "Removing graphify's chained .legacy hooks ..."
-  strip_graphify_hooks "$OWN_HOOKS_DIR" .legacy
-fi
-
-# graphify's merge driver goes too: its attribute line and its local git-config section, never the attributes file.
-ATTRIBUTES="${MISE_PROJECT_ROOT}/.gitattributes"
-if grep -qs 'merge=graphify' "$ATTRIBUTES"; then
-  print_subheader "Removing graphify's merge attribute ..."
-  grep -v 'merge=graphify' "$ATTRIBUTES" >"${ATTRIBUTES}.tmp" || true
-  cat "${ATTRIBUTES}.tmp" >"$ATTRIBUTES"
-  rm -f "${ATTRIBUTES}.tmp"
-fi
-if git config --local --get-regexp '^merge\.graphify\.' >/dev/null 2>&1; then
-  print_subheader "Removing graphify's merge driver from the local git config ..."
-  git config --local --remove-section merge.graphify
-fi
 
 # A foreign hook manager is skipped with a warning without `--force`; the effective core.hooksPath is what is read.
 FOREIGN=""

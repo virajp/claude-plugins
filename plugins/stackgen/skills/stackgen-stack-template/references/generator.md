@@ -39,11 +39,11 @@ the composition's single consent gate and landing. Generation is
    (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) inside its bundle's kind
    (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`) — together they fix the output
    structure, scope, facts and invocation modes before a word is written.
-   Then read the repo's manifests (and the graphify graph when one exists)
-   for the component's actual version, config flags, companion tools, and
-   usage shape. Generation targets what the repo has, not the technology in
-   the abstract — a claim about a config-dependent feature the detection
-   never confirmed is a reviewer gap waiting to happen.
+   Then read the repo's manifests for the component's actual version,
+   config flags, companion tools, and usage shape. Generation targets what
+   the repo has, not the technology in the abstract — a claim about a
+   config-dependent feature the detection never confirmed is a reviewer gap
+   waiting to happen.
 2. **Resolve the component's topics.** The unit of research and writing
    is the **bar topic**, never the library: take the kind's topic bar
    (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`) and select the topics the
