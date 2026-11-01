@@ -330,7 +330,7 @@
       "status": "green",
       "started": "2026-11-01T13:01:52.220Z",
       "ended": "2026-11-01T13:03:02.057Z",
-      "commit": "",
+      "commit": "ccc43999",
       "rounds": 1
     }
   ],
@@ -355,9 +355,9 @@
     },
     {
       "id": "W4",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-01T13:01:52.185Z",
-      "ended": ""
+      "ended": "2026-11-01T13:04:37.368Z"
     }
   ],
   "shared_files": [
