@@ -102,6 +102,9 @@ captures/
 # handoffs and rendered mockups.
 docs/memory/handoff/
 docs/scratchpad/
+# Folders left from config_format 23, kept ignored until the 24 migration removes them.
+docs/memory/doctor/
+docs/memory/runs/
 
 # ==== Reports ====
 # Gate output is regenerable, and a scanner report quotes what it found.
