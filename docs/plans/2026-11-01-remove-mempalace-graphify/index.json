@@ -327,11 +327,11 @@
         "U9"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T13:01:52.220Z",
+      "ended": "2026-11-01T13:03:02.057Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -355,8 +355,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-01T13:01:52.185Z",
       "ended": ""
     }
   ],
@@ -711,8 +711,8 @@
       "id": "G13",
       "unit": "U9",
       "stage": "edit",
-      "text": "U9 changed one prose word in the bundle doc plugins/stackgen/stacks/bundles/fnox.md; the plan does not say whether a bundle prose edit owes a version · no version bumped (no unit bumps a version); the wave review and the plan gate p:plugins:check judge it",
-      "state": "open"
+      "text": "U9 changed one prose word in the bundle doc plugins/stackgen/stacks/bundles/fnox.md; the plan does not say whether a bundle prose edit owes a version · no version bumped (no unit bumps a version); the wave review and the plan gate p:plugins:check judge it · closed: U10 found nothing owed — a bundle carries no version, its pin capability-provider/fnox@3.0.0 is unchanged, p:plugins:check and p:plugins:inventory --check pass",
+      "state": "closed"
     },
     {
       "id": "G14",
