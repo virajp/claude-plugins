@@ -209,7 +209,7 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-01T12:17:09.586Z",
-      "ended": "2026-11-01T12:32:29.904Z",
+      "ended": "2026-11-01T12:40:16.617Z",
       "commit": "794e188c",
       "rounds": 2
     },
@@ -236,7 +236,7 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-01T12:17:09.662Z",
-      "ended": "2026-11-01T12:32:19.081Z",
+      "ended": "2026-11-01T12:40:17.320Z",
       "commit": "ab5f3b6a",
       "rounds": 2
     },
@@ -258,14 +258,14 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-01T12:37:42.356Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "804f32ff",
+        "to": "bc7b6919"
       }
     },
     {
@@ -342,8 +342,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-01T12:37:42.321Z",
       "ended": ""
     },
     {
@@ -698,6 +698,13 @@
       "stage": "edit",
       "text": "U7 dropped OWN_HOOKS_DIR in tool-config setup/precommit although 07-stackgen-checker.md edit 3 said keep it · R1 found only the removed graphify code read it, so dropping it is correct and avoids a dead variable; recorded as a decision, no fix",
       "state": "closed"
+    },
+    {
+      "id": "G12",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1",
+      "state": "open"
     }
   ],
   "overrides": [],

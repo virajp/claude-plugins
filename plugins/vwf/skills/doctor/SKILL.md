@@ -200,6 +200,7 @@ each with its remedy:
 | a `post-commit` or `post-merge` entry in `default_install_hook_types` that no remaining hook in that config uses | the same bootstrap remedy |
 | a `pipx:graphifyy` or `pipx:mempalace` pin | the same bootstrap remedy |
 | a `graphify-out/` exclude in any config | the same bootstrap remedy |
+| a `graphify-out/` directory at a checkout root | delete the directory (it is a generated graph; nothing reads it now) |
 | a `MEMPALACE_*` variable in any mise file | the same bootstrap remedy |
 
 A row the user declined at the `23 → 24` step is still reported, every run:
