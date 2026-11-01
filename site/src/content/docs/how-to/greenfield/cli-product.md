@@ -38,8 +38,8 @@ project axis and `npm-package` on the deploy axis — language doctrine included
 There is no backing bundle because clockon talks to no backing service; it
 writes to a per-user file on the machine it runs on. And no design tool is
 pinned, which is the first consequence of `cli` and is unpacked at
-[`/vwf:design-system`](#4-vwfdesign-system) below. Scopes, the post-install
-`/vwf:doctor` run and the memory server's settings `env` are unchanged:
+[`/vwf:design-system`](#4-vwfdesign-system) below. Scopes and the post-install
+`/vwf:doctor` run are unchanged:
 [the spine's install step](./single-repo.md#install-the-plugins).
 
 ### 2. /vwf:setup and /vwf:product

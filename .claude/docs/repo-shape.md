@@ -90,7 +90,7 @@ The CLI installs plugins as a **thin wrapper** — `--all` / `--user <name>` /
 `claude plugin install`, reading the manifest on this repo's `main` (which then
 pins each plugin to its own tag), and Claude's own commands work just as well
 directly. It also removes whatever the toolkit put on the machine, and does
-nothing else — graphify is the skills' job.
+nothing else.
 
 **Nothing it does writes a receipt.** The install path belongs to another tool —
 `claude` for plugins — and it keeps its own records, which is what `--uninstall`
@@ -166,10 +166,10 @@ gates are bootstrap's.
   payload tier being materializable as-is** (six assertions in one rule, the
   landed-tree ones also run over `stackgen:tool-config`'s
   `skills/tool-config/assets/` and `skills/tool-config/templates/` trees, each
-  landed whole at the repo root and admitting the git and graphify ignore files,
-  `.vscode/` and the repo-local mise skill — `.claude/skills/mise/SKILL.md`,
-  nothing else under `.claude/` — and over `/vwf:init`'s
-  `skills/init/assets/<name>/` trees against init's own allowlist
+  landed whole at the repo root and admitting the git ignore and attribute
+  files, `.vscode/` and the repo-local mise skill —
+  `.claude/skills/mise/SKILL.md`, nothing else under `.claude/` — and over
+  `/vwf:init`'s `skills/init/assets/<name>/` trees against init's own allowlist
   (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`):
   exec bit *and* a known shebang on every file under
   `config/.config/mise/tasks/**`, because mise reports a 644 task as an
@@ -177,19 +177,18 @@ gates are bootstrap's.
   same two on every `hooks/*.sh`, which the host execs from a bare path in
   `settings.json`; the tier's root against the **landable** tier of the root
   allowlist, whose two allowed **directories** are `.config/` and `.github/` and
-  whose sibling tier — the root files vwf writes, `CLAUDE.md` and
-  `mempalace.yaml` — no pack may land; a **CI workflow refused inside
-  `.github/`**, since a pack names the task CI runs and never the workflow;
-  under `.config/`, an allowlist — only a `test/` task or a `p/_project/` task,
-  since the toolchain is bootstrap's — and no pack `templates/` tier; the pack's
-  two doctor-read facts in the shapes their readers trust — every `binaries`
-  entry a bare name or a map of exactly `name` and an optional non-empty
-  `probe`, and `lockfile` a non-empty list of relative paths or globs with no
-  `..` — and a `tool-config:`, `machine_env:`, `values:` or `conditional:` key
-  refused outright, since nothing reads any of them; and every `@@` tag in
-  tool-config's `templates/` one the engine reads, held to the global names);
-  **strict-YAML frontmatter** (every skill and agent a plugin ships, every
-  repo-local skill a tool-config asset tree lands, and every
+  whose sibling tier — the root file vwf writes, `CLAUDE.md` — no pack may land;
+  a **CI workflow refused inside `.github/`**, since a pack names the task CI
+  runs and never the workflow; under `.config/`, an allowlist — only a `test/`
+  task or a `p/_project/` task, since the toolchain is bootstrap's — and no pack
+  `templates/` tier; the pack's two doctor-read facts in the shapes their
+  readers trust — every `binaries` entry a bare name or a map of exactly `name`
+  and an optional non-empty `probe`, and `lockfile` a non-empty list of relative
+  paths or globs with no `..` — and a `tool-config:`, `machine_env:`, `values:`
+  or `conditional:` key refused outright, since nothing reads any of them; and
+  every `@@` tag in tool-config's `templates/` one the engine reads, held to the
+  global names); **strict-YAML frontmatter** (every skill and agent a plugin
+  ships, every repo-local skill a tool-config asset tree lands, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
   larger half, and the half that actually lands in a user's repo; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under

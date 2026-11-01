@@ -15,9 +15,9 @@ order: 3
 ## What this CLI is for
 
 Two jobs: **plugins**, and an interactive **`--uninstall`** — both through the
-`claude` CLI; graphify is the skills' job. The plugin half is a thin wrapper —
-it drives `claude plugin marketplace add` and `claude plugin install`, reading
-this repo's `main`, and never edits Claude's settings itself.
+`claude` CLI. The plugin half is a thin wrapper — it drives
+`claude plugin marketplace add` and `claude plugin install`, reading this repo's
+`main`, and never edits Claude's settings itself.
 
 That is a large reduction from what this page used to describe, in two steps.
 The Claude-first release took four plugin adapters, the copied payload, a
@@ -57,11 +57,9 @@ that split is what makes the list testable against a fixture directory rather
 than only by performing it. Removal is a separate switch, and every arm of it
 goes through whatever owns the piece: `claude` for the plugins and the
 marketplace registration, and for a receipt an older version left, a **revert**
-through `receipt.ts`. Nothing graphify left — its hooks, graph,
-`.graphifyignore` or Claude wiring — is listed; that is the repo's or the user's
-to remove. **Nothing here edits a config file directly** — `settings.json` is
-Claude's, and the only key this CLI ever writes is one a receipt is restoring.
-That is also why `~/.config/statusline.json`, a repo's own
+through `receipt.ts`. **Nothing here edits a config file directly** —
+`settings.json` is Claude's, and the only key this CLI ever writes is one a
+receipt is restoring. That is also why `~/.config/statusline.json`, a repo's own
 `.config/statusline.json` and `~/.claude/usage/` never appear: this version
 neither writes nor reads them, so they are not its to remove.
 
@@ -154,9 +152,8 @@ What users install is `main`, and `plugins.yml` validates `main` on every push.
 
 One placement rule that looks arbitrary and is not: `vitest.config.mts` collects
 only `{installer,scripts}/src/**/*.test.ts`, so a test file anywhere else is
-**silently never run** — which is why the test for the mempalace checkpoint
-*shell script* lives under `installer/src/` even though what it exercises is
-`plugins/`.
+**silently never run** — so a test of a shipped *shell script* belongs under
+`installer/src/` even when what it exercises is `plugins/`.
 
 ## Where the rules live
 

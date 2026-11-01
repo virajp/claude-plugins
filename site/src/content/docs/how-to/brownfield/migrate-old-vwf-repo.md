@@ -62,9 +62,9 @@ retired spelling of the grouped and numbered ones; its single-file entity docs
 are the retired spelling of a folder holding the prose beside the data model;
 the `Serves:` line on each of those entities is the retired spelling of
 `Used by:`. Each resolves through vwf's lineage table and lands in the plan as a
-move, never as a question. The root `.graphifyignore` is part of the current
-shape too: Jotter has none, so the standard excludes land in the plan as one
-entry like any other.
+move, never as a question. Jotter's `.config/vwf.yaml` still carries the
+`memory:` block an older format wrote, and its root a `mempalace.yaml`: the
+`config_format` 24 step offers each for removal as one numbered row.
 
 Five lineage rows are about recent formats rather than about old spellings, and
 they behave differently from each other. `config_format` **23**, the current
@@ -126,10 +126,8 @@ reconciled bundle, write `.config/vwf.yaml` with both current stamps, run
 [`/vwf:doctor`](../../plugins/vwf.md#commands) against the config just written,
 then commit behind one approval gate. A stamp written before the validation
 would describe a tree nobody checked. Jotter's doctor run comes back with
-nothing blocking, so the run commits, then offers to build the code-intelligence
-graph — accept it, since setup is the only command that builds one. It ends by
-printing the chain forward, and starts none of it.
-[`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
+nothing blocking, so the run commits. It ends by printing the chain forward, and
+starts none of it. [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
 
 Jotter now has its documentation under `docs/blueprint/` in the current shape,
 both stamps current in `.config/vwf.yaml`, and one commit recording the whole
@@ -160,12 +158,12 @@ called.
 
 ### The consent gate
 
-The dry-run plan covers every write, and it is the one that matters; two lighter
-approvals follow it — the summary before the commit, and the graph-build offer
-after. Read the moves rather than skimming them: a move is where an old tree's
-shape becomes the current one, and it is also the only place a link you care
-about can change. Nothing structural is hiding in there — setup writes and moves
-documentation and config, and never a source file.
+The dry-run plan covers every write, and it is the one that matters; one lighter
+approval follows it — the summary before the commit. Read the moves rather than
+skimming them: a move is where an old tree's shape becomes the current one, and
+it is also the only place a link you care about can change. Nothing structural
+is hiding in there — setup writes and moves documentation and config, and never
+a source file.
 
 That last rule has a consequence worth expecting: a repo whose code sits
 somewhere the current topology would not put it ends the run as a written
@@ -182,8 +180,10 @@ Each of these is a genuine stop, and each is explained where it is enforced.
 - **A blocking `/vwf:doctor` finding halts the run and reverts the stamp**, so
   no stamped-but-unrunnable config survives.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
-- **A missing graphify CLI or graph is blocking**, and an old repo predates
-  both. [Code intelligence](../../plugins/vwf.md#code-intelligence)
+- **Leftovers of retired tools are drift, never blocking.** A declined removal
+  row, or a graphify or mempalace file a tool install left, is reported by
+  `/vwf:doctor` with its remedy, and the stamp still moves to 24.
+  [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
 - **A stack pin no installed plugin defines is blocking** — the likeliest reason
   an old repo halts here, since free-text pins have been retired and a language
   nothing claims counts as unknown.

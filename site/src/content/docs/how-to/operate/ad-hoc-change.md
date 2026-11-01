@@ -75,12 +75,12 @@ remains written as a `- Bnn: <piece>` line under *Parked*. A request that takes
 the gaps of a landed plan — a plan index row whose `gaps.open` is above `0` —
 names that folder in `gaps_of`, and the hand-off sets `gaps.open` to `0` and
 adds this plan to `gaps.moved_to`; when `gh` cannot reach the project the recall
-says so and reads nothing — and the memory palace's `planning`, `decisions` and
-`gaps` rooms. This matters more than it sounds: Relay's release-notes request
-turns out to be sitting in the *Parked* list of the plan that set up its CI six
-weeks earlier, together with the reason it was deferred. That is a fact the
-interview now does not have to re-derive, and a decision it will not
-accidentally reverse in silence.
+says so and reads nothing — and `docs/memory/gaps/`, reading only the files
+whose names match the request. This matters more than it sounds: Relay's
+release-notes request turns out to be sitting in the *Parked* list of the plan
+that set up its CI six weeks earlier, together with the reason it was deferred.
+That is a fact the interview now does not have to re-derive, and a decision it
+will not accidentally reverse in silence.
 
 Then it surveys — concurrent `Explore` subagents that return `file:line`
 conclusions rather than file contents, so the session stays small enough to hold

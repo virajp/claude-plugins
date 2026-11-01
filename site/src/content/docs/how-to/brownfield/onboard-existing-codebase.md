@@ -73,10 +73,8 @@ What Bookable's run proposes, and what the team answers:
 Then the writes, and every one of them is shown first as a dry-run plan covering
 each file created, moved and updated. Nothing lands until you approve. For
 Bookable that plan holds the `docs/blueprint/` and `docs/plans/` trees, the
-memory tree and the product's `mempalace.yaml`, the root `.graphifyignore` — the
-vwf-standard excludes plus whatever committed-but-not-code trees two years of
-history left behind, each proposed with its evidence — and a vwf section merged
-into the existing `CLAUDE.md` (merged, not overwritten).
+memory tree, and a vwf section merged into the existing `CLAUDE.md` (merged, not
+overwritten).
 
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
 checks whether the repo is *shaped* — whether it carries the
@@ -114,31 +112,31 @@ carrying no marker pair yet is one `write` row that would replace it whole — s
 `kept below the markers: <line>`, and on your `ok` appends them below the
 closing marker, unchanged and in order; answer `keep-existing` and Bookable's
 file stands for that run. Once the pair is in, every line Bookable keeps outside
-it survives every later render. `.graphifyignore` takes the same row, and
-`.gitattributes`, which has no markers, keeps its own lines the same way —
-appended to the end, with every later reshape preselecting `keep-existing` so
-they are never dropped by default. A readme, a licence file under any spelling
-or a `SECURITY.md` already there is kept outright. Its **stack read** finds the
-`package.json` and proposes Bookable's sub-projects from it; no ignore template
-is asked for, since the ignore set is a universal superset. (Had Bookable
-already been shaped once, it would carry `.config/stackgen.yaml` and resolve to
-**`shaped`**, whose ten-pass survey adopts rather than flattens: a task the repo
-wrote for itself — a file or an inline `[tasks.*]` table — is kept and listed, a
-helper function the pack's library has no name for moves into a repo-owned
-`_scripts/local` sidecar rather than breaking, and a file a pack owns whose
-**content** has diverged is offered as replace or keep — a file
-`/stackgen:tool-config` renders is never offered, since its own preview shows
-the difference as a row.) In every mode the landing is followed by the same four
-steps — the secrets provider, the placeholders, the readme-licence-security step
-and the bootstrap — and by a re-hash of everything `init` filled or merged, so
-the next `/vwf:doctor` reads none of it as drift. Either way it shows **one**
-plan, with a section per repo naming the mode it got, and takes one consent for
-all of it before setup carries on. Declining is recorded as a deferral, with
-`/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
-and the vwf format are two different things. The offer comes back on its own:
-setup re-checks the shape once more after its materialize pass and on every
-re-run's Step 0. (A repo that was never shaped stays silent at `/vwf:recall`,
-whose drift line is for a shaped repo that has fallen behind.)
+it survives every later render. `.gitattributes`, which has no markers, keeps
+its own lines the same way — appended to the end, with every later reshape
+preselecting `keep-existing` so they are never dropped by default. A readme, a
+licence file under any spelling or a `SECURITY.md` already there is kept
+outright. Its **stack read** finds the `package.json` and proposes Bookable's
+sub-projects from it; no ignore template is asked for, since the ignore set is a
+universal superset. (Had Bookable already been shaped once, it would carry
+`.config/stackgen.yaml` and resolve to **`shaped`**, whose ten-pass survey
+adopts rather than flattens: a task the repo wrote for itself — a file or an
+inline `[tasks.*]` table — is kept and listed, a helper function the pack's
+library has no name for moves into a repo-owned `_scripts/local` sidecar rather
+than breaking, and a file a pack owns whose **content** has diverged is offered
+as replace or keep — a file `/stackgen:tool-config` renders is never offered,
+since its own preview shows the difference as a row.) In every mode the landing
+is followed by the same four steps — the secrets provider, the placeholders, the
+readme-licence-security step and the bootstrap — and by a re-hash of everything
+`init` filled or merged, so the next `/vwf:doctor` reads none of it as drift.
+Either way it shows **one** plan, with a section per repo naming the mode it
+got, and takes one consent for all of it before setup carries on. Declining is
+recorded as a deferral, with `/vwf:setup reshape` as the unlock, and the onboard
+continues — the repo shape and the vwf format are two different things. The
+offer comes back on its own: setup re-checks the shape once more after its
+materialize pass and on every re-run's Step 0. (A repo that was never shaped
+stays silent at `/vwf:recall`, whose drift line is for a shaped repo that has
+fallen behind.)
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task
@@ -155,11 +153,10 @@ recommendation, naming the target layout and why it is worth the work. Full
 mechanics: [`/vwf:setup`](../../plugins/vwf.md#vwfsetup) and
 [Structure](../../plugins/vwf.md#structure).
 
-After the approval gate and the commit, accept the graph build when it is
-offered — setup is the only command that builds one, and the commands that
-follow query it. What exists now: a stamped `.config/vwf.yaml`, the blueprint
-and plan trees, the memory tree, and a recommendations report. No behaviour has
-been described yet, and no code has moved.
+After the approval gate and the commit, what exists now: a stamped
+`.config/vwf.yaml`, the blueprint and plan trees, the memory tree, and a
+recommendations report. No behaviour has been described yet, and no code has
+moved.
 
 ### 3. /vwf:product — the contract for a product that already ships
 
@@ -210,10 +207,10 @@ in, which is what lets you tell a reading from an invention.
 Brownfield gives that derivation two more sources of grounding, and both are
 worth knowing about because they are the difference between a second interview
 and a review. Setup persisted its confirmed topology, roles, platforms and stack
-pins to the `decisions` room, and this command recalls that room before
+pins to `docs/memory/decisions/`, and this command reads those records before
 eliciting anything — so what you already settled comes back settled. It also
-queries the knowledge graph for the system's actual shape, confirming every
-graph-derived fact with you (or with the file it points at) before recording it.
+reads the code for the system's actual shape, confirming every derived fact with
+you (or with the file it points at) before recording it.
 
 Bookable's registry lands as three projects, `apps/api`, `apps/web` and
 `packages/shared`, with `apps/api` carrying the capabilities its flows imply.

@@ -34,7 +34,7 @@ commands and never edits Claude's settings itself — so the two should leave th
 machine in the same state. A divergence is a finding.
 
 The CLI installs nothing else of its own. Everything it puts on a machine
-belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
+belongs to `claude`, which is why it writes **no receipt**.
 
 ## Hard rules
 
@@ -110,10 +110,9 @@ belongs to `claude` or to `graphify`, which is why it writes **no receipt**.
   behaviour (≥ 2.1.143), and it is what the CLI's `--all` leans on: the flag
   installs `DEFAULT_INSTALL` (`vwf`) alone and lets the edge bring `stackgen`.
 - **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear
-  in the installed plugin, and note that a declared server is inert until its
-  transport is reachable — do not report an unconnected mempalace MCP server
-  (the HTTP entry at `http://127.0.0.1:8765/mcp`, a daemon the user runs) as a
-  finding.
+  in the installed plugin. vwf declares one MCP server, Context7; a `mempalace`
+  server in an installed vwf manifest is a finding, since vwf no longer ships
+  one.
 
 ## Procedure
 

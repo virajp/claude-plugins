@@ -111,7 +111,7 @@ much smaller than the one it replaced: whole families of assertion became
     silence rather than an error. The landed-tree assertions also run over
     `stackgen:tool-config`'s two trees, `skills/tool-config/assets/` (copied)
     and `skills/tool-config/templates/` (rendered), until that skill is retired
-    — each root also admitting the dprint shim, the git and graphify ignore
+    — each root also admitting the dprint shim, the git ignore and attribute
     files (`TOOL_CONFIG_ROOT_FILES`), `.vscode/`, and a `.claude/` directory
     holding exactly the repo-local skills `TOOL_CONFIG_LANDED_SKILLS` names —
     and over each of `/vwf:init`'s asset trees (`skills/init/assets/<name>/`),

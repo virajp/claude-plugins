@@ -291,7 +291,8 @@
         "docs/extras/mempalace-setup.md",
         "docs/plans/migrate.md",
         "plugins/vwf/assets/plan-interview.md",
-        "plugins/stackgen/stacks/bundles/fnox.md"
+        "plugins/stackgen/stacks/bundles/fnox.md",
+        "plugins/vwf/assets/docs-sync.md"
       ],
       "depends_on": [
         "U1",
@@ -304,11 +305,11 @@
         "U8"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:45:22.167Z",
+      "ended": "2026-11-01T13:00:58.975Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U10",
@@ -348,8 +349,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-01T12:45:22.132Z",
       "ended": ""
     },
     {
@@ -597,28 +598,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-01T12:45:21.841Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-01T12:45:21.626Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-01T12:45:21.733Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps, registry or environment edit) and no code unit (nothing to persist); no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-01T12:45:21.948Z"
     }
   },
   "gaps": [
@@ -705,6 +706,20 @@
       "stage": "security",
       "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1 · round 2: the reviewer approved; residual low risk: a graphify-out/ directory stays unignored until doctor reports it, and the doctor row checks checkout roots only",
       "state": "open"
+    },
+    {
+      "id": "G13",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "U9 changed one prose word in the bundle doc plugins/stackgen/stacks/bundles/fnox.md; the plan does not say whether a bundle prose edit owes a version · no version bumped (no unit bumps a version); the wave review and the plan gate p:plugins:check judge it",
+      "state": "open"
+    },
+    {
+      "id": "G14",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "R3 rule-5 finding in a file no unit owns: plugins/vwf/assets/docs-sync.md:26 (docs-sync-surveyor scan (graph-first)) · U9 owns widened to it under the plan Goal; U9 fixes it in round 2",
+      "state": "closed"
     }
   ],
   "overrides": [],

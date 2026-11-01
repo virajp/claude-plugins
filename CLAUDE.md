@@ -212,10 +212,10 @@ lands is the same hook-to-task path with one hook more: its hooks call
 `code:sec --staged`, each `…:all` task calling every subtask beside it, shell
 and workflow linting among them — this repo's own
 `.config/pre-commit-config.yaml` keeps the older names until it is edited by
-hand. graphify's graph is refreshed the same way: a `graphify-refresh` hook runs
-`code:graph`, in place of graphify's raw git hooks — at `post-commit` and
-`post-merge` in the shape `stackgen:tool-config` lands, at `post-commit` alone
-in this repo's own `.config/pre-commit-config.yaml` until it is edited by hand.
+hand. No plugin uses graphify or mempalace any more: the shape
+`stackgen:tool-config` lands has no `graphify-refresh` hook, no `code:graph`
+task and no `post-commit` or `post-merge` hook type, while this repo's own
+`.config/` still carries them until it is edited by hand.
 
 What each rule asserts, and what the checker deliberately no longer checks, is
 in [`repo-shape.md`][repo].
@@ -259,10 +259,10 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ---------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the two mempalace auto-save hooks, the `/vwf:execute` action log (five command hooks and one append-only JSONL file per plan under `~/Library/Caches/vwf/`), the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`), and two MCP servers. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                                     |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. `stackgen:tool-config` owns the mise, dprint, taplo, pre-commit, gitleaks, grype, house linter, git, graphify, editor and statusline configs — a shipped node script copies its `assets/` and renders its `templates/` from `.config/stackgen.yaml`, exact pins only where CI loads them — and a pack ships no toolchain: its tool pins, gates and generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s, which the materializer reads from a clone and asks for through bootstrap's `docs/sync/vwf.md`; a pack's `config/` payload is its `test/` and `p/_project/` tasks. `/vwf:init` lands them and writes its own hygiene assets. → [`stackgen-plugin`][sg] |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the `docs/memory/` file store, the `/vwf:execute` action log (five command hooks and one append-only JSONL file per plan under `~/Library/Caches/vwf/`), the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`), and one MCP server, Context7. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                      |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a Context7-researched generator for the uncovered tail, and the repo's own toolchain manager, gates and hygiene since `devtools` dissolved into it. `stackgen:tool-config` owns the mise, dprint, taplo, pre-commit, gitleaks, grype, house linter, git, editor and statusline configs — a shipped node script copies its `assets/` and renders its `templates/` from `.config/stackgen.yaml`, exact pins only where CI loads them — and a pack ships no toolchain: its tool pins, gates and generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s, which the materializer reads from a clone and asks for through bootstrap's `docs/sync/vwf.md`; a pack's `config/` payload is its `test/` and `p/_project/` tasks. `/vwf:init` lands them and writes its own hygiene assets. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
@@ -287,11 +287,11 @@ agent tables, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
 
 `@virajp.dev/claude-plugins`, run as `pnpx @virajp.dev/claude-plugins …`, does
 two things: **plugin installs as a thin wrapper** that sequences Claude's own
-marketplace registration and plugin install commands, and **`--uninstall`**.
-graphify is not its job — the skills own it. It never edits Claude's settings
-itself and writes **no receipt**. `installer/` is the source; `bin/` is the tsup
-output, is gitignored, and is what npm publishes. The statusline is a separate
-package (`claude-status`), not a plugin and not installed here.
+marketplace registration and plugin install commands, and **`--uninstall`**. It
+never edits Claude's settings itself and writes **no receipt**. `installer/` is
+the source; `bin/` is the tsup output, is gitignored, and is what npm publishes.
+The statusline is a separate package (`claude-status`), not a plugin and not
+installed here.
 
 **It is the one-shot, not a repo's reconcile step.** A repo shaped by
 `/vwf:init` keeps its plugins current with the task library's `setup:ai:all`,
@@ -372,23 +372,22 @@ ritual itself is the [`release`][rel] skill — run `/release`.
 
 ## Hooks
 
-What ships as a plugin hook today is vwf's only — the two mempalace auto-save
-hooks, the five `/vwf:execute` action-log hooks (`PreToolUse`, `PostToolUse`,
-`SubagentStart`, `SubagentStop` and `SessionEnd`, each running
-`hooks/action-log.sh`, which exits at once unless a run is logging; on
-`SessionEnd` it appends `session.end` and deletes the session's run marker),
-plus one hooks module, `hooks/monitor/register.tsx`, listed under `modules` in
-`hooks/hooks.json`, which draws the `/vwf:execute` progress pane against the
-state contract the manifest's `types` key names — and is the [`vwf-plugin`][vwf]
-skill's. The pane shows the plan whose row reads `RUNNING` in
-`docs/plans/index.json` and the plan's times from that row, its state and the
-unit, wave and stage times from that folder's `index.json` — the copy in the
-run's worktree, else the main checkout's; `plan.mjs` stamps every `started` and
-`ended` as it sets a status — and from the plan's action log only each unit's
-agent and the log's freshness, which tells a live run from a paused one. One
-more script ships as a **stackgen pack payload** copied into a target repo
-rather than discovered here, covered by the [`stackgen-plugin`][sg] skill. The
-three host rules that bite any command hook — BSD `sed`, never in
+What ships as a plugin hook today is vwf's only — the five `/vwf:execute`
+action-log hooks (`PreToolUse`, `PostToolUse`, `SubagentStart`, `SubagentStop`
+and `SessionEnd`, each running `hooks/action-log.sh`, which exits at once unless
+a run is logging; on `SessionEnd` it appends `session.end` and deletes the
+session's run marker), plus one hooks module, `hooks/monitor/register.tsx`,
+listed under `modules` in `hooks/hooks.json`, which draws the `/vwf:execute`
+progress pane against the state contract the manifest's `types` key names — and
+is the [`vwf-plugin`][vwf] skill's. The pane shows the plan whose row reads
+`RUNNING` in `docs/plans/index.json` and the plan's times from that row, its
+state and the unit, wave and stage times from that folder's `index.json` — the
+copy in the run's worktree, else the main checkout's; `plan.mjs` stamps every
+`started` and `ended` as it sets a status — and from the plan's action log only
+each unit's agent and the log's freshness, which tells a live run from a paused
+one. One more script ships as a **stackgen pack payload** copied into a target
+repo rather than discovered here, covered by the [`stackgen-plugin`][sg] skill.
+The three host rules that bite any command hook — BSD `sed`, never in
 `settings.json`, the per-event verdict shape — and the local gates of a hooks
 module are the [`plugin-authoring`][auth] skill's.
 
@@ -423,11 +422,11 @@ among them and is not a plugin — it is a separate package,
 
 Installing `vwf` pulls in its dependency (`stackgen`) automatically from the
 same `virajp-plugins` marketplace — no other marketplace needs to be registered.
-`mempalace` is not a name here at all — its memory layer ships inside `vwf`, and
-`devtools` is not one either — its toolchain and gate doctrine ships inside
-`stackgen`. **A machine that installed `devtools` before it dissolved must
-uninstall it by hand** (`claude plugin uninstall devtools`): an update simply
-stops listing it as a dependency, leaving it enabled and its stale skills
+`mempalace` is not a name here at all — vwf's memory is the `docs/memory/` file
+store, and `devtools` is not one either — its toolchain and gate doctrine ships
+inside `stackgen`. **A machine that installed `devtools` before it dissolved
+must uninstall it by hand** (`claude plugin uninstall devtools`): an update
+simply stops listing it as a dependency, leaving it enabled and its stale skills
 shadowing the stackgen packs they moved into. The reasoning is
 [`dependencies.md`](.claude/skills/vwf-plugin/references/dependencies.md).
 
