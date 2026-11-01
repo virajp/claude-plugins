@@ -1,381 +1,179 @@
 # Memory Protocol
 
-vwf keeps cross-session memory in **two stores that are always written
-together**: the **mempalace** MCP server, and a **markdown tree on disk** under
+vwf keeps cross-session memory in **one store: a markdown tree on disk** under
 `docs/memory/`. Each cycle recalls prior decisions and findings instead of
-re-deriving them, and review findings are filed once and recalled on fix
-loop-backs — so multi-round detail never piles up in the orchestrator's context.
-The orchestrator resolves the scope and persists durable decisions; the execute
-subagents persist and recall their own findings directly, so that detail
-bypasses the orchestrator entirely. In `/vwf:execute` that per-unit recall
-before dispatch and decision persistence after the run are for `code` units
-only — an `edit` unit's ruling is in its file; the run journal is written for
-every plan.
+re-deriving them, so a resolved question is not asked twice and a parked point
+is not lost with the session. The orchestrator persists durable decisions; the
+execute subagents return their findings and gaps in their reports, and the
+orchestrator records them in the plan folder's `index.json` — a run writes no
+record here except a durable decision. In `/vwf:execute` the per-unit recall
+before dispatch and the decision persistence after the run are for `code`
+units only — an `edit` unit's ruling is in its file.
 
-## The two stores
+## The tree
 
-**Every write goes to both.** The markdown tree is not a fallback that only
-fills up during an outage — it is a continuous mirror, which is what makes
-mempalace **optional** rather than required:
-
-| Store         | Path                             | Strength                                             |
-| ------------- | -------------------------------- | ---------------------------------------------------- |
-| **mempalace** | the MCP server                   | semantic search across everything, ranked by meaning |
-| **markdown**  | `docs/memory/<room>/<drawer>.md` | always present, greppable, survives without a server |
-
-**Recall reads mempalace first**, because semantic search finds things a keyword
-never would. When mempalace is unavailable, recall falls back to the markdown
-tree — and that fallback is honestly weaker: **grep-quality, not semantic**. It
-finds a drawer whose words you can guess, not one that merely means the same
-thing. Say so when it happens rather than presenting a degraded recall as a
-complete one.
-
-**Writes never block.** If mempalace is unreachable, write the markdown side and
-carry on — the reverse (markdown unwritable) is a real error, since it is the
-durable half.
-
-## The markdown tree
-
-One directory per room, one file per drawer, mirroring the room vocabulary
-exactly:
+Four folders, one file per record:
 
 ```text
 docs/memory/
-├── decisions/<drawer>.md
-├── problems/<drawer>.md
-├── planning/<drawer>.md
-├── gaps/<drawer>.md
-├── runs/<drawer>.md
-├── doctor/<drawer>.md
-└── handoff/<drawer>.md      # includes the reserved next.md
+├── decisions/<date>-<slug>.md
+├── gaps/<date>-<slug>.md
+├── problems/<date>-<slug>.md
+└── handoff/<name>.md        # includes the reserved next.md
 ```
 
-Each file opens with the same AAAK-style line the drawer carries, then the
-detail. A drawer written to mempalace and a file written here are the **same
-content**, so either store alone is enough to resume work.
+- **`decisions`** — design and architecture decisions, and the *why*.
+- **`gaps`** — blueprint or plan holes found **outside a run** — by
+  `/vwf:blueprint`, `/vwf:verify` and `/vwf:feedback` — and out-of-scope points
+  **parked during elicitation** (below). A gap a `/vwf:execute` run finds goes
+  into the plan folder's `index.json` `gaps` list only, never here.
+- **`problems`** — problems and how they were resolved: review and security
+  findings worth keeping past their run, production problems, incidents and
+  postmortems.
+- **`handoff`** — session handoffs, the one folder `/vwf:handoff` and
+  `/vwf:recall` own.
+
+`<date>` is the ISO date the record is written (`2026-06-21`); `<slug>` is a
+few lowercase hyphenated words naming the subject. **No record is
+overwritten:** when `<date>-<slug>.md` already exists, the new record takes the
+first free suffix — `<date>-<slug>-2.md`, then `-3`, and so on. A handoff is
+the one exception: `handoff/<name>.md` of a name that exists is replaced, as
+`next.md` always is.
+
+Nothing else lives under `docs/memory/`: the planning record is the plan folder
+and `docs/plans/index.json`, the run state is the folder's `index.json` and the
+plan's action log, and `/vwf:doctor` reports afresh on each run.
+
+### Where the tree lives
+
+In a `repo` or `monorepo` topology, at the repo root. In `multi-repo`, at the
+**base repo** root, under either linkage — beside the blueprint, never in a
+member: a member's run, review or handoff writes its record there, so a recall
+from any repo of the product reads one tree. Always at the **main checkout**,
+never inside a worktree — a gitignored file written there dies with it, and a
+committed one lands only with the branch.
+
+**One exception: a `/vwf:execute` run.** A run never dirties the main
+checkout, so it writes its durable decision records — `decisions/` only; a run
+writes no `gaps/` or `problems/` file — inside the run's worktree, where they
+ride the run's commits and land with the merge. Under `multi-repo` with
+`linkage: siblings` that worktree is of the member, so the records go to the
+base checkout as the second working tree, the way Reconcile writes its stamps.
+Every other writer keeps the main-checkout rule.
 
 ### What is committed, and what is not
 
 The split follows one rule: **commit what every contributor needs; leave out
 what only one developer needs.**
 
-| Room                                        | Git        | Why                                                 |
-| ------------------------------------------- | ---------- | --------------------------------------------------- |
-| `decisions`, `planning`, `gaps`, `problems` | committed  | Durable product knowledge the whole team works from |
-| `handoff`, `doctor`, `runs`                 | gitignored | One developer's session state, machine, or run      |
+| Folder                          | Git        | Why                                                 |
+| ------------------------------- | ---------- | --------------------------------------------------- |
+| `decisions`, `gaps`, `problems` | committed  | Durable product knowledge the whole team works from |
+| `handoff`                       | gitignored | One developer's session state                       |
 
-The `.gitignore` entries (`docs/memory/handoff/`, `docs/memory/doctor/`,
-`docs/memory/runs/`) and the `docs/scratchpad/` line are tool-config's: its
-universal `.gitignore` carries them inside the `tool-config` markers, and no
-vwf skill writes the file.
-
-`doctor` is ignored because its findings are about *this machine's* toolchain,
-not the repo. `runs` is ignored because it mirrors one developer's run — the
-record itself is the unit fields of the plan folder's `index.json`, which is
-committed with the folder.
-Both still exist locally, and both still survive a mempalace outage — they just
-do not enter anyone else's diff.
+The `.gitignore` entry (`docs/memory/handoff/`) and the `docs/scratchpad/` line
+are tool-config's: its universal `.gitignore` carries them inside the
+`tool-config` markers, and no vwf skill writes the file.
 
 > **`/vwf:handoff` and `/vwf:recall` never skip.** The handoff *is* the
-> deliverable, not a side memory. The reserved **`next`** handoff writes
-> `docs/memory/handoff/next.md` unconditionally, alongside the drawer, so both
-> surfaces always carry it — and always at the **main checkout** root, since a
-> gitignored file written inside a worktree dies with it. (Before format 19 this file lived at
+> deliverable, not a side memory. `/vwf:handoff <name>` writes
+> `docs/memory/handoff/<name>.md`, and the reserved **`next`** handoff writes
+> `docs/memory/handoff/next.md`, which `/vwf:recall` resumes; `/vwf:recall`
+> reads a handoff from that file alone. (Before format 19 this file lived at
 > `docs/handoffs/next.md` and was committed; it now sits in the ignored half,
 > because a handoff is personal.)
 
-## Scope (wing + room)
+## What a record holds
 
-- **wing** — the current project. The orchestrator resolves it once: use
-  `memory.wing` from `.config/vwf.yaml` when present (falling back to
-  `product.name`); otherwise reuse the project's existing wing from
-  `mempalace_status`, else the first write creates it) and passes it to every
-  subagent it dispatches. Subagents never resolve the wing themselves — they use
-  the wing they were given.
-- **room** — a **closed set of seven**. `decisions` (design/architecture
-  decisions + the *why*), `problems` (review/security findings + how they were
-  resolved), `planning` (plan rationale and deferred options), `gaps`
-  (blueprint/plan holes surfaced **during execution** + how they were
-  reconciled, and out-of-scope points **parked during elicitation** — see
-  below), `runs` (the **execute** run journal — the mirror of the run facts in
-  the plan folder's `index.json`, written for every plan, per node for a `code`
-  unit and per report
-  for an `edit` unit, read only when the folder is unreachable; see below),
-  `doctor` (`/vwf:doctor`'s
-  findings per run, so a later run reports a known one as **known** rather than
-  rediscovering it), and `handoff` (session handoffs — the one room
-  `/vwf:handoff` and `/vwf:recall` own).
-
-  **Never invent an eighth.** mempalace creates a room implicitly on first
-  write, so a mistyped name (`decision` for `decisions`) succeeds, returns no
-  error, and every later recall against the real room comes back empty. That
-  silence is why the set is closed and why `/vwf:doctor` checks it.
-
-## Repo config — `mempalace.yaml`
-
-**One product, one wing — and one config file per mined tree, at its root.**
-`/vwf:setup` writes them; `/vwf:doctor` reports
-a config sitting anywhere other than a repo root, or one naming a different
-wing, as **blocking**. How many there are follows the topology:
-
-| Topology | Configs |
-| --- | --- |
-| `repo`, `monorepo` | **exactly one**, at the repo root |
-| `multi-repo`, `linkage: submodule` | **exactly one**, at the base repo root; members get **none** |
-| `multi-repo`, `linkage: siblings` | **one per repo** — base and every member — all naming the **same wing** |
-
-**The path is not a preference.** `mempalace mine` looks for `mempalace.yaml` in
-the directory it is pointed at and nowhere else — no parent search, no
-`.config/` convention, and the CLI has no flag to name one. A config anywhere
-else is therefore **silently inert**: the mine still runs, reports that it found
-no config and is using auto-detected defaults, and files everything into
-`general`. Nothing errors, so the only symptom is recall coming back empty
-months later.
-
-**That mechanism is the whole reason siblings need one config each.** A sibling
-member sits *outside* the base repo's tree, so a single config at the base would
-mine the base alone — the blueprint and the `docs/memory/` mirror, and none of
-the product's code. Silently, in exactly the way above. Submodule members are
-*inside* that tree, which is why they still need none.
-
-**One wing per product, regardless.** Every config names the same
-`memory.wing` resolved above. Repos are not their own wings: recall would
-otherwise have to guess which of several wings holds an answer, and vwf's own
-rooms are product-wide by nature — a decision about the API contract is not a
-`backend` fact. A member config naming a different wing is the failure this rule
-exists to prevent, and `/vwf:doctor` blocks on it.
-
-**Submodules are mined by the base repo, not excluded from it.** The walk
-descends into every submodule directory, and each directory's own `.gitignore`
-joins the active matchers as it goes (they apply in ancestor order), so a
-submodule's ignores are honoured without a config of its own. A submodule path in
-`exclude_patterns` is now a bug: it drops that project's files from the palace
-entirely.
-
-```yaml
-wing: <memory.wing>
-exclude_patterns: # secrets first, then trees not worth mining
-  - .env*
-  - "*.pem"
-  - "*.key"
-  - "*.p12"
-  - "*credentials*"
-  - "*secret*"
-  - .git/
-  - node_modules/
-  - dist/
-rooms:
-  - name: decisions
-    description: Architecture and product decisions from docs/memory/decisions/
-    keywords: [ decision, decisions, adr ]
-  - name: problems
-    description: Problems and postmortems from docs/memory/problems/
-    keywords: [ problem, problems, incident, postmortem ]
-  - name: planning
-    description: Plan-folder rationale from docs/memory/planning/
-    keywords: [ plan, plans, planning ]
-  - name: gaps
-    description: Gaps the pipeline captured
-    keywords: [ gap, gaps ]
-  - name: runs
-    description: Execute run records
-    keywords: [ run, runs, execute ]
-  - name: doctor
-    description: Doctor reports
-    keywords: [ doctor, drift ]
-  - name: handoff
-    description: Session handoffs from docs/memory/handoff/
-    keywords: [ handoff, handoffs, session ]
-```
-
-`exclude_patterns` takes gitignore syntax and survives for exactly two jobs: the
-secret denylist below, and trees no one gains from mining (dependency
-directories, build output). Never a submodule path.
-
-**The rooms vwf requires.** Seed **all seven** protocol rooms — `decisions`,
-`problems`, `planning`, `gaps`, `runs`, `doctor`, `handoff` — then add
-path-derived rooms for what the product actually holds (`documentation`,
-`testing`, `configuration`, …). Without the seed, the first write creates the
-room implicitly, with no keywords, so a `mine` routes nothing to it and the room
-only ever holds what vwf put there by hand.
-
-**Room routing walks path parts outermost-first and returns on the first
-match.** So a broad keyword shadows every narrower room beneath it: a
-`documentation` room keyed on `docs` swallows `docs/memory/handoff/` before the
-`handoff` room is ever tested. Key `documentation` on `documentation`,
-`blueprint`, `plans`, `prompts` — never on the bare parent directory that
-contains another room's path.
-
-**Collisions merge — now inside the one file.** A path-derived room covers every
-project at once, so one `documentation` room holds all of the product's docs.
-That is right for `documentation` and harmless for `general`; it is misleading
-where the same word means different things per project (a backend
-`configuration` of `deploy/` versus a frontend `configuration` of `config/`) —
-the single room then quietly mixes two subjects. Name those apart rather than
-letting one keyword claim both. This is also the shape `/vwf:setup` meets when
-it unions several pre-existing per-repo files into one: the **same room name
-carrying two different descriptions is a question for the user**, never a silent
-merge.
-
-## Secrets — what must never be mined
-
-Mining ingests file **contents** into a semantic index that agents query and
-read back into context. A secret that reaches the palace is not merely stored:
-it is retrievable, it re-surfaces in an unrelated recall months later, and
-deleting the source file does not delete the drawer. Treat the palace as a
-published surface.
-
-Two layers, and **both** are required:
-
-1. **`.gitignore` is the primary, and it already works.** Mining honours every
-   `.gitignore` in the tree **by default** — so `.env` files, untracked scratch
-   and local credentials stay out because the repo already maintains and reviews
-   that denylist for its own reasons. **Never disable it** (there is a flag to;
-   it exists for non-git trees, not for repos).
-2. **A pattern denylist in `exclude_patterns` is the backstop** — the block
-   above. It catches the one case `.gitignore` cannot: **a secret that was
-   committed anyway**, which is by definition not ignored. It also covers a tree
-   that is not git-backed at all, where there is no `.gitignore` to honour.
-
-Neither alone is enough: `.gitignore` is blind to what is already tracked, and a
-hand-written pattern list is blind to everything nobody thought to name.
-
-**Mine the checkout itself** — never an export, a copy, or a temporary tree.
-Every drawer records the `source_path` it came from, so mining a copy points
-recall at paths that do not exist and breaks the prune pass, which matches
-drawers against those same paths to drop what has been gitignored, deleted or
-moved.
-
-**Neither `/vwf:setup` nor `/vwf:doctor` scans for actual secrets.** They check
-only that the patterns are *configured*. Detecting credentials in a repo is a
-dedicated scanner's job, and `/stackgen:tool-config all` lands its config in
-the repo's own `.config/`, where it is present in the checkout itself rather
-than conditional on a plugin being installed — two tools
-scanning for credentials under different rules produces a false sense of
-coverage, not more of it.
-
-## Recall — before work
-
-Before deriving anything, `mempalace_search` (or `mempalace_kg_query`) scoped to
-wing + room with a natural-language query for the entity/slice, `limit` 3-5.
-Hits are **context, not truth**: the blueprint/plan/conventions docs on disk
-stay authoritative. Use recall to skip resolved questions and to check work
-against prior findings — never to replace reading a doc you must follow exactly.
-
-**When mempalace is unavailable**, grep `docs/memory/<room>/` for the same query
-terms. State that recall was degraded — a keyword sweep will miss a drawer that
-means the same thing in different words, and presenting it as a clean recall is
-how a resolved question gets re-asked.
-
-## Persist — durable only
-
-Store only **durable** outcomes — decisions and their rationale, findings and
-how they were resolved, flagged drift — never transient chatter or text a doc
-already captures verbatim.
-
-**Write both stores, every time:** `mempalace_add_drawer(wing, room, content)`
-**and** `docs/memory/<room>/<drawer>.md` with the same content. The orchestrator
-may additionally use `mempalace_kg_add` for an atomic fact that may later change
-(and `mempalace_kg_invalidate` it when it does) — the knowledge graph has no
-markdown counterpart, so it is the one part that is lost without the server.
-
-If mempalace is unreachable, write the markdown side and proceed. If the
-markdown write fails, that is a real error worth surfacing: it is the half that
-survives.
-
-Keep entries compressed in the spirit of AAAK — tight, one fact per line,
-pipe-separated fields, ISO dates, importance ★1-5; skip the personal emotion
-markers, these are technical memories. Example:
+Each file opens with one compressed line in the spirit of AAAK — tight, one
+fact per line, pipe-separated fields, ISO dates, importance ★1-5; skip the
+personal emotion markers, these are technical memories — then the detail:
 
     DECISION 2026-06-21 ★4 | entity:order | embed line-items vs ref → embed
     — items immutable post-checkout, read-locality wins | alt ref rejected (no reuse)
 
-## Findings memory — execute loop-backs
+- **A decision** — what was decided, the alternatives rejected, and why.
+- **A gap** — the doc names it concerns, so a slice recall finds it; what is
+  under- or mis-specified, where, and the assumption work proceeded on; how it
+  was reconciled, once it is.
+- **A parked point** — what was raised, why it is out of scope now, and what
+  pass it belongs to; its slug ends in `-parked`.
+- **A problem** — what went wrong, where, and how it was resolved.
+- **A handoff** — the shape of `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md`.
+
+## Secrets — never written
+
+A record is a file other agents read back into context, and three of the four
+folders are committed: treat `docs/memory/` as a published surface. **Never
+write a secret value into a record** — a key, a token, a password, a
+connection string with credentials. Name where the secret lives (the secrets
+provider, the variable name), never the value. Deleting a committed file does
+not delete it from history.
+
+**Neither `/vwf:setup` nor `/vwf:doctor` scans for actual secrets.** Detecting
+credentials in a repo is a dedicated scanner's job, and
+`/stackgen:tool-config all` lands its config in the repo's own `.config/`,
+where it is present in the checkout itself rather than conditional on a plugin
+being installed — two tools scanning for credentials under different rules
+produces a false sense of coverage, not more of it.
+
+## Recall — before work
+
+Before deriving anything — and before asking the user — recall the folders the
+work at hand concerns:
+
+1. **List the file names** of each folder; never read a whole folder.
+2. **Read the files whose slug or title matches the topic at hand** — the
+   entity, flow, slice or subject — **newest first, at most ten** per folder.
+3. **Read no file in full that does not match.**
+
+Hits are **context, not truth**: the blueprint, plan and conventions docs on
+disk stay authoritative. Use recall to skip resolved questions and to check
+work against prior findings — never to replace reading a doc you must follow
+exactly. A match is by words in the name, so a record named for the same
+subject in other words is missed: name a record for the subject a later recall
+will look for.
+
+## Persist — durable only
+
+Store only **durable** outcomes — decisions and their rationale, gaps and how
+they were reconciled, problems and how they were resolved — never transient
+chatter or text a doc already captures verbatim. **Write one file per record**,
+in the folder its kind names, under the naming and suffix rule above. A write
+that fails is a real error worth surfacing: the tree is the only store.
+
+## Findings — execute loop-backs
 
 This is the `review` row's loop — the row the plan placed over its `code`
-units. The wave review's findings ride the `runs` journal, not this room.
+units. Each review and security subagent returns its **full** findings in its
+findings block, each finding labelled `(<unit>)` with the unit whose commit
+last touched its file in the row's range. The orchestrator presents the block
+at the gate and, on a fix loop-back, hands each coder the finding lines
+labelled with its own unit id, from both reviewers, and nothing else — the
+coder fixes only those. A run files no finding here; a finding worth keeping
+past the run is a `problems` record written by whoever resolves it.
 
-Each review/security subagent files its **full** findings to room `problems`,
-tagged `<loop-id>/<stage>/<round>` (e.g. `U7/review/2`; the loop id is the
-`review` row's id for its main loop, `<row-id>-late<n>` for its n-th late
-re-run — `U7-late1` — whose rounds restart at 1) with the plan folder
-path as the drawer's `source_file` — in one pinned form, the repo-relative
-`docs/plans/<folder>` with no trailing slash, exactly as the `folder` of its
-row in `docs/plans/index.json` names it, the same string filed and filtered
-on; loop ids repeat
-across plans filed to one wing, so every recall of a tag filters on that path
-— each finding labelled
-`(<unit>)` with the unit whose commit last touched its file in the row's
-range, and returns only
-its terse contract block plus that tag. The orchestrator presents the terse
-block at the gate and, on a fix loop-back, hands each coder just the **tags**,
-the path and its own unit id — not the findings text. The coder recalls the
-tagged drawers filtered on the path, fixes only the findings labelled with its
-id, and the detail never enters the orchestrator's context. This is the core
-context optimization: rich review detail lives in mempalace, not in the
-conversation.
-
-## Gap memory — blueprint/plan holes surfaced during execution
+## Gaps — blueprint and plan holes
 
 A **gap** is distinct from a finding: a finding is wrong *code*; a gap is a hole
-in the *blueprint or plan* that execution exposed — an underspecified behaviour
-the coder had to guess, a plan unit contradicted by the real code, a requirement
-the blueprint never stated that review/security found missing. Gaps are captured
-**as they surface**, never silently worked around.
+in the *blueprint or plan* — an underspecified behaviour work had to guess, a
+plan unit contradicted by the real code, a requirement the blueprint never
+stated. Gaps are captured **as they surface**, never silently worked around.
 
-Each stage subagent that hits a gap — the five writers are the coder (its
-unit id), the review and security reviewers (their loop id — the `review`
-row's id for its main loop, `<row-id>-late<n>` for its n-th late re-run), the
-acceptance verifier (`acceptance`) and the UX reviewer (`ux`) — files its
-**full** gap detail to room `gaps` under **one scheme**: tagged
-`<unit, loop or stage id>/gap/<round>`, `source_file` the plan folder path in
-the same pinned form as above (ids repeat across plans in one wing, so recall
-filters on it), and the
-content opening with the plan folder and the plan's `covers` doc names, so
-`/vwf:plan`'s slice recall still finds it — then what is under/mis-specified,
-where, and the assumption it proceeded on — and surfaces only a terse
-one-line pointer in its return block. The orchestrator mirrors that terse line
-into a durable entry of the **`gaps`** list in the plan folder's `index.json`
-— one `plan.mjs append` — (the on-disk copy that survives a mempalace
-outage), and at reconcile recalls
-the `gaps` room to drive the blueprint/plan fixes. Because mempalace is
-skip-if-unavailable, the folder's entry is the source of truth when recall is
-empty; the `gaps` room and `docs/memory/gaps/` carry the rich detail.
+**During a run** each stage subagent that hits a gap — the coder, the review
+and security reviewers, the acceptance verifier and the UX reviewer — returns
+it as a `GAP:` line in its report, and the orchestrator appends it to the
+`gaps` list of the plan folder's `index.json` — one `plan.mjs append`. That
+entry is the durable copy and the only one; reconcile works from it.
 
-**Parked scope — out-of-scope points raised during elicitation.** The same room
-also holds what a Q&A answer surfaces *beyond the current pass's scope* (per the
-elicitation protocol's scope check): the orchestrator files the full point to
-room `gaps`, tagged `<slice>/parked` — what was raised, why it is out of scope
-now, and what pass it belongs to — and mirrors a terse line into the pass's
+**Outside a run** — `/vwf:blueprint`, `/vwf:verify`, `/vwf:feedback` — a gap is
+a `gaps` record, per *What a record holds*.
+
+**Parked scope — out-of-scope points raised during elicitation.** What a Q&A
+answer surfaces *beyond the current pass's scope* (per the elicitation
+protocol's scope check) is a `gaps` record, and a terse line in the pass's
 durable doc (the flow/entity doc's Open Questions, the plan folder's "Out of
-scope", the product doc's Risks & assumptions). Parked points ride the
-existing recall paths: `blueprint` and `plan` already recall room `gaps` before
-working and treat closing recalled gaps as a first-class goal of the pass — so a
-scope change arriving in a fresh session finds the parked point instead of
-losing it. Same fallback rule: the doc line survives a mempalace outage.
-
-## Run journal — the mirror of `index.json`'s run facts (execute only)
-
-**The plan folder's `index.json` is the authoritative record.** `/vwf:execute`
-sets each unit's `status`, `commit` and `rounds`, a review unit's `range`, the
-`gaps` list and the plan-level `stages` there with `plan.mjs set` or `append`
-as each node returns for a `code` unit — coder, reviewer, security, acceptance
-— and as each report returns for an `edit` unit, and mirrors each fact into a
-single drawer per plan in room `runs` (drawer = `<plan folder>`), for **every
-plan** whatever its units' Kind:
-the result of the plan's `requires` prerequisite check (each prerequisite plan
-and whether it is satisfied), the dependency-ordered unit sequence and, per
-unit, its status (`pending`, `running`, `green`, `failed`, `unresolved`,
-`skipped`), commit ref, review/security round counts, and
-gap tags. The orchestrator writes the drawer when it derives the order and
-updates it as each fact is set (`mempalace_add_drawer` then
-`mempalace_update_drawer`), the cadence `/vwf:execute` and `execute-stages.md`
-state. Because an autonomous run's
-primary pause is a resource cap (`/vwf:handoff` → later `/vwf:recall next`), a
-resumed run reads the unit fields and `stages` of the folder's `index.json`
-first to skip finished units and pick up
-at the current one, and the journal only when the folder is unreachable —
-without either, resume would re-implement completed work. Skip the journal
-silently if mempalace is unavailable; when the two disagree, the worktree's
-commits win over the journal. This room is execute-specific; blueprint/plan do
-not use it.
+scope", the product doc's Risks & assumptions). Parked points ride the existing
+recall paths: `blueprint` and `plan` recall `gaps` before working and treat
+closing recalled gaps as a first-class goal of the pass — so a scope change
+arriving in a fresh session finds the parked point instead of losing it.

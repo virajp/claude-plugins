@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-01 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-01 in .worktrees/remove-mempalace-graphify"
   },
   "consent": {
     "merge": true,
@@ -84,11 +84,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.211Z",
+      "ended": "2026-11-01T12:18:09.267Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -111,11 +111,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.285Z",
+      "ended": "2026-11-01T12:32:06.175Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -130,11 +130,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.359Z",
+      "ended": "2026-11-01T12:19:20.267Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U4",
@@ -155,11 +155,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.436Z",
+      "ended": "2026-11-01T12:32:40.321Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -186,11 +186,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.511Z",
+      "ended": "2026-11-01T12:33:04.926Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -207,11 +207,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.586Z",
+      "ended": "2026-11-01T12:32:29.904Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -234,11 +234,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.662Z",
+      "ended": "2026-11-01T12:32:19.081Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U8",
@@ -289,7 +289,9 @@
         "docs/memory/decisions/**",
         "package.json",
         "docs/extras/mempalace-setup.md",
-        "docs/plans/migrate.md"
+        "docs/plans/migrate.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/stackgen/stacks/bundles/fnox.md"
       ],
       "depends_on": [
         "U1",
@@ -334,8 +336,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-01T12:17:09.173Z",
       "ended": ""
     },
     {
@@ -619,7 +621,85 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The plan does not say where handoff and recall write when the base-repo walk ends at not a vwf repo · the unit took the repo main checkout as the root, so handoff still works in an unshaped repo",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "D16 does not say how recall matches records to the topic at hand · the unit took the topic of the handoff itself, and applied the ten-file limit to decisions/ and gaps/ separately",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "The plan does not say whether the tool-config .gitignore asset keeps ignoring docs/memory/doctor/ and runs/, now that those folders are gone · left to the tool-config owner U7; the wave review checks it · closed: U7 removed docs/memory/doctor/ and runs/ from the .gitignore asset; R1 confirmed it matches memory.md",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "memory.md headings renamed or removed (Scope, Repo config, Run journal, Findings, Gaps) · no anchor cites them, only prose; settled, no ruling owed",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "The plan does not fix how a gaps/ record carries a tag such as parked · U5 wrote tag parked as a field, while U2 memory.md marks a parked point by a slug that ends in -parked; the wave review checks the drift · closed: R1 round 1 finding; U5 changed all six files to the -parked slug form",
+      "state": "closed"
+    },
+    {
+      "id": "G6",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "The plan does not say whether the doctor docs/memory/ check keeps blocking findings · assumed none; only the handoff/ ignore line is checked, as drift",
+      "state": "open"
+    },
+    {
+      "id": "G7",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "The plan does not give the scope of the doctor Leftovers rule · assumed the repo-shape scope: the base and each locally-present member",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "execute-stages.md (U2) and the execute files (U4) must agree on the fix loop and the per-node record · U4 assumed finding lines instead of tags, findings carry the fix inline, and row/review.round events instead of a journal; the wave review checks the drift · closed: R1 confirmed execute-stages.md and the execute files agree",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "verify (U5) dispatches the acceptance verifier, which now returns gaps on its SPEC/PLAN GAPS line · assumed verify writes them to docs/memory/gaps/; the wave review checks it · closed: R1 round 1 finding; U5 added the SPEC/PLAN GAPS route in verify",
+      "state": "closed"
+    },
+    {
+      "id": "G10",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "R1 rule-5 findings in files no unit owns: plugins/vwf/assets/plan-interview.md:46 (a recalled drawer) and plugins/stackgen/stacks/bundles/fnox.md:37 (mining edit) · U9 owns widened to both under the plan Goal; U9 fixes them in wave 3",
+      "state": "closed"
+    },
+    {
+      "id": "G11",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "U7 dropped OWN_HOOKS_DIR in tool-config setup/precommit although 07-stackgen-checker.md edit 3 said keep it · R1 found only the removed graphify code read it, so dropping it is correct and avoids a dead variable; recorded as a decision, no fix",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/remove-mempalace-graphify",

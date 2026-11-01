@@ -25,13 +25,13 @@ sometimes raise something beyond the current pass's scope (a new feature,
 another flow or entity's behaviour, a future concern). Acknowledge it and do
 **not** expand the pass — but never leave it only in conversation. Before asking
 the next question, capture it per the parked-scope rule in
-`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: file the full point to mempalace room
-`gaps`, and mirror a terse line into the pass's durable doc — the flow/entity
-doc's Open Questions, the plan's "Out of scope for this cycle", the product
-doc's Risks & assumptions, or the doc's nearest equivalent. A parked point must
-survive the session: when the scope change arrives in a later session, the
-`gaps` recall and the doc line are what surface it — a point that lived only in
-chat is lost.
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`: write the full point as a
+`docs/memory/gaps/` file, and a terse line into the pass's durable doc — the
+flow/entity doc's Open Questions, the plan's "Out of scope for this cycle", the
+product doc's Risks & assumptions, or the doc's nearest equivalent. A parked
+point must survive the session: when the scope change arrives in a later
+session, the `docs/memory/gaps/` recall and the doc line are what surface it —
+a point that lived only in chat is lost.
 
 ## 3. One question at a time
 
@@ -76,8 +76,8 @@ Two rules that follow:
   contract question that names only one side will be answered for that side.
 
 Do this in a single-project workspace too. It costs a few words, and the
-transcript is what a later `/vwf:recall` — or a reader of the mempalace
-`decisions` drawer — has to reconstruct the decision from.
+transcript is what a later `/vwf:recall` — or a reader of a
+`docs/memory/decisions/` file — has to reconstruct the decision from.
 
 ## 4. What to ask — the decisions-vs-mechanics filter
 

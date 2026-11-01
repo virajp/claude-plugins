@@ -181,19 +181,10 @@ Two things follow that are worth knowing before implementing against this:
   plan's own repo need not be present to know its work landed. The index row
   is what `next`, the claim and visibility use; it is not that test.
 
-## Memory and code intelligence follow the repo
+## Memory lives in the base repo
 
-Both are per-checkout tools, so `multi-repo` changes where they live, not what
-they do.
-
-- **mempalace** — under `linkage: siblings`, **one `mempalace.yaml` per repo**,
-  every one naming the same wing and the same seven rooms. `mempalace mine`
-  reads its config only from the directory it is pointed at, and sibling members
-  are outside the base repo's tree, so a single config would silently mine the
-  base alone. Under `linkage: submodule` the members *are* inside that tree, so
-  today's rule holds unchanged: exactly one config, at the parent root, members
-  get none. Full contract: `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
-- **graphify** — a graph per checkout, refreshed by running that checkout's
-  `code:graph` task by hand. /vwf:doctor gates every **locally-present**
-  repo; an absent member is a blind spot, not a finding. Full contract:
-  `${CLAUDE_PLUGIN_ROOT}/assets/graphify.md`.
+`docs/memory/` is one store per product, and in `multi-repo` it sits in the
+**base repo**, under either linkage — beside the blueprint, never in a member.
+A member's run, review or handoff writes its records there, so a recall from
+any repo of the product reads one tree. Full contract:
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
