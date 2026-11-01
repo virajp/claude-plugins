@@ -1,0 +1,16 @@
+# Security review — round 2, fix delta bc7b6919..12d4f712 (docs/plans/** excluded)
+
+No HIGH or MEDIUM confidence vulnerabilities found.
+
+Scope reviewed:
+- plugins/stackgen/skills/tool-config/assets/.gitignore: adds back the ignore
+  lines for docs/memory/doctor/ and docs/memory/runs/, the folders left from
+  config_format 23. This makes it less likely that local reports get committed.
+  It adds nothing an attacker can use.
+- plugins/vwf/skills/doctor/SKILL.md: a documentation row telling doctor to
+  report a leftover graphify-out/ directory at a checkout root and remedy it by
+  deleting it. This is a markdown instruction file (insecure-documentation
+  exclusion), and the remedy names a fixed generated path with no
+  user-controlled input. Not a vulnerability.
+
+No candidate findings came up, so no false-positive filter sub-tasks were needed.

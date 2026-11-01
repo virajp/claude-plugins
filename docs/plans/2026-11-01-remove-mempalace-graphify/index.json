@@ -237,7 +237,7 @@
       "status": "green",
       "started": "2026-11-01T12:17:09.662Z",
       "ended": "2026-11-01T12:40:17.320Z",
-      "commit": "ab5f3b6a",
+      "commit": "12d4f712",
       "rounds": 2
     },
     {
@@ -258,14 +258,14 @@
         "U7"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-01T12:37:42.356Z",
-      "ended": "",
+      "ended": "2026-11-01T12:41:38.821Z",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
         "from": "804f32ff",
-        "to": "bc7b6919"
+        "to": "12d4f712"
       }
     },
     {
@@ -342,9 +342,9 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-01T12:37:42.321Z",
-      "ended": ""
+      "ended": "2026-11-01T12:41:46.718Z"
     },
     {
       "id": "W3",
@@ -703,7 +703,7 @@
       "id": "G12",
       "unit": "U8",
       "stage": "security",
-      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1",
+      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1 · round 2: the reviewer approved; residual low risk: a graphify-out/ directory stays unignored until doctor reports it, and the doctor row checks checkout roots only",
       "state": "open"
     }
   ],
