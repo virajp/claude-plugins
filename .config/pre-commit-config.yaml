@@ -20,7 +20,10 @@ default_install_hook_types:
 default_stages: [ pre-commit ]
 
 # Generated files. No hook may rewrite them.
-exclude: (^|/)\.config/mise/locks/
+# Hand-edited until repo-sync supports a repo-level exclude: also the template
+# trees (`@@` lines are not valid TOML, YAML or shell until rendered), the
+# shipped JSONC assets, and the design exports kept byte for byte.
+exclude: (^|/)\.config/mise/locks/|^plugins/stackgen/skills/tool-config/templates/|^plugins/[^/]+/stacks/[^/]+/[^/]+/templates/|^plugins/stackgen/skills/tool-config/assets/(\.vscode/|\.config/dprint\.json$)|^docs/design/
 repos:
   - repo: local
     hooks:
