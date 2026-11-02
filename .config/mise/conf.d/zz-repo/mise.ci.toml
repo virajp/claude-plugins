@@ -1,0 +1,19 @@
+# The mise config of this repository for `MISE_ENV=ci`, for example its own
+# [env] values. This repository owns the file: the sync writes it only when it
+# is missing, and the next sync keeps your version. The shared variables are
+# in .config/mise.toml.
+min_version = "2026.10.0"
+
+[settings]
+# mise's bundled Node release-key import (gpg --import) fails on the Ubuntu CI
+# runner's gpg with "no valid OpenPGP data found", aborting `mise install`. The
+# same mise version verifies fine on macOS, so it is a mise-on-Linux bug, not a
+# version issue — pinning does not help. Disable only the gpg signature check in
+# CI; the Node tarball is still SHA256-checksum verified (node.verify). Local dev
+# keeps full gpg verification.
+node.gpg_verify = false
+raw = true
+status.missing_tools = "always"
+task.run_auto_install = true
+
+[env]

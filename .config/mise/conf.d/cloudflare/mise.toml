@@ -1,4 +1,0 @@
-[tools."npm:cf"]
-allow_builds = true
-depends      = [ "node", "pnpm" ]
-version      = "latest"

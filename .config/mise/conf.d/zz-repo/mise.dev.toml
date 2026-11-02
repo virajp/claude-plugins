@@ -1,0 +1,16 @@
+# The mise config of this repository for `MISE_ENV=dev`, for example its own
+# [env] values. This repository owns the file: the sync writes it only when it
+# is missing, and the next sync keeps your version. The shared variables are
+# in .config/mise.toml.
+min_version = "2026.10.0"
+
+[settings]
+raw = true
+status.missing_tools = "always"
+# Tools will auto install if task needs them
+task.run_auto_install = true
+
+[env]
+
+[shell_alias]
+worktrees = "mise run code:worktrees"
