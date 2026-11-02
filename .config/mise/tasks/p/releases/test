@@ -8,7 +8,7 @@ set -uo pipefail
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/local"
 
-cd "$MISE_PROJECT_ROOT"
+cd "$MISE_PROJECT_ROOT" || exit 1
 
 SANDBOX="$(mktemp -d)"
 trap 'rm -rf "$SANDBOX"' EXIT
@@ -27,7 +27,7 @@ eq() {
   shift 2
   local actual
   total=$((total + 1))
-  actual="$("$@" 2>/dev/null)" || fail "$label (non-zero exit)"
+  actual="$("$@" 2> /dev/null)" || fail "$label (non-zero exit)"
   [[ "$actual" == "$expected" ]] || fail "$label" "$expected" "$actual"
   print_yellow "  ok   $label"
 }
@@ -37,7 +37,7 @@ refuses() {
   local label="$1"
   shift
   total=$((total + 1))
-  if "$@" >/dev/null 2>&1; then
+  if "$@" > /dev/null 2>&1; then
     fail "$label (expected a refusal)"
   fi
   print_yellow "  ok   $label"
@@ -47,7 +47,7 @@ refuses() {
 file_is() {
   local label="$1" file="$2" expected="$3"
   total=$((total + 1))
-  [[ "$(<"$file")" == "$expected" ]] || fail "$label" "$expected" "$(<"$file")"
+  [[ "$(< "$file")" == "$expected" ]] || fail "$label" "$expected" "$(< "$file")"
   print_yellow "  ok   $label"
 }
 
@@ -65,12 +65,12 @@ e3() {
 print_header "releases_level ..."
 F="$SANDBOX/level.yaml"
 eq "absent file → NONE" NONE releases_level "$SANDBOX/missing.yaml" vwf
-printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\nbad: HUGE\n' "$C1" "$C2" >"$F"
+printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\nbad: HUGE\n' "$C1" "$C2" > "$F"
 eq "absent key → NONE" NONE releases_level "$F" stackgen
 eq "present key → value" MAJOR releases_level "$F" vwf
 eq "second key → value" PATCH releases_level "$F" site
 refuses "bad value → non-zero" releases_level "$F" bad
-printf 'vwf: PATCH\nsite: MINOR\nvwf: MAJOR\n' >"$SANDBOX/dup.yaml"
+printf 'vwf: PATCH\nsite: MINOR\nvwf: MAJOR\n' > "$SANDBOX/dup.yaml"
 refuses "duplicated key → non-zero" releases_level "$SANDBOX/dup.yaml" vwf
 eq "duplicated other key → value" MINOR releases_level "$SANDBOX/dup.yaml" site
 
@@ -98,7 +98,7 @@ print_yellow "  ok   NONE into an absent file writes nothing"
 
 print_header "releases_clear ..."
 F="$SANDBOX/clear.yaml"
-printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\n' "$C1" "$C2" >"$F"
+printf '%s\n%s\nvwf: MAJOR\nsite: PATCH\n' "$C1" "$C2" > "$F"
 releases_clear "$F" vwf || fail "clear a present key"
 file_is "removes one key; others and comments stay" "$F" "$C1
 $C2

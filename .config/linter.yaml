@@ -44,6 +44,9 @@ ignores:
   # The release levels: the release tasks clear each key, so after a release
   # the file holds only its comments, which the YAML rules call an empty document.
   - ".config/releases.yaml"
+  # The fenced code blocks of the plugin docs: fragments with placeholders and
+  # elisions, written to be read, not run. The prose of each doc stays linted.
+  - "plugins/**/*.md/**"
 
 overrides:
   markdown:

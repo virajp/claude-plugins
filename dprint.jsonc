@@ -1,3 +1,39 @@
 {
   "extends": "~/.config/dprint/dprint.jsonc",
+  // This repository's own excludes, on top of the shared config's.
+  "excludes": [
+    "**/node_modules/",
+    "**/dist/",
+    "**/build/",
+    "**/.astro/",
+    "**/.turbo/",
+    "**/*-lock.json",
+    "**/*-lock.yaml",
+    "**/.config/mise/locks/",
+    ".dev-marketplace/",
+    // Plugin markdown keeps its hand-matched fold width.
+    "plugins/**/*.md",
+    // Payload, copied byte for byte into a target repo and formatted there by
+    // the config stackgen:tool-config lands, never by this one.
+    "plugins/*/stacks/*/*/config/",
+    "plugins/*/stacks/*/*/templates/",
+    "plugins/stackgen/skills/tool-config/assets/",
+    "plugins/stackgen/skills/tool-config/templates/",
+    "plugins/vwf/skills/init/assets/",
+    "**/.claude/skills/flutter-interoperating-with-native-apis",
+    "site/public/**/*.svg",
+    "brag-output/",
+    // Plan folders are written field by field by plan.mjs.
+    "docs/plans/",
+    // Design exports kept byte for byte.
+    "docs/design/",
+  ],
+  "shuck": {
+    // The shared association, less the node scripts beside the task scripts.
+    "associations": [
+      "**/.config/mise/tasks/**",
+      "!**/*.tmpl",
+      "!**/*.mjs",
+    ],
+  },
 }
