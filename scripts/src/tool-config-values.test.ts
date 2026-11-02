@@ -30,13 +30,12 @@ const parse = (text: string) => yaml.parseYaml(text, { source: "t.yaml" });
 /** The YamlError `text` throws, for asserting its message and line. */
 function refusal(
   text: string,
-): { message: string; line: number; source: string; } {
+): { message: string; line: number; source: string } {
   try {
     parse(text);
-  }
-  catch (e) {
+  } catch (e) {
     expect(e).toBeInstanceOf(yaml.YamlError);
-    return e as { message: string; line: number; source: string; };
+    return e as { message: string; line: number; source: string };
   }
   throw new Error("expected a YamlError");
 }
@@ -169,7 +168,7 @@ describe("parseYaml", () => {
     ],
     ...["False", "FALSE", "True", "yes", "no", "on", "off", "null", "Null", "~"]
       .map(
-        w =>
+        (w) =>
           [`a plain ${w}`, `a: 1\nb: ${w}`, 2, /ambiguous/] as [
             string,
             string,
@@ -498,7 +497,7 @@ describe("loadValues", () => {
 
   it.each(["merge_model_main", "forge", "project_name"])(
     "refuses an absent global %s as a pack key",
-    key => {
+    (key) => {
       writeStackgen(`format: 1\npacks:\n  swiftui:\n    ${key}: x`);
       expect(() => values.loadValues(root, { pack: "swiftui" })).toThrow(
         /already a global name/,

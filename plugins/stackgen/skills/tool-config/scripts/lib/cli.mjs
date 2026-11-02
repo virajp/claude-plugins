@@ -21,8 +21,7 @@ import {
 
 export const COMMANDS = ["all", "pack", "pack-remove", "upgrade"];
 
-const SURFACE =
-  "the script takes all, pack, pack-remove or upgrade (each optionally after preview)";
+const SURFACE = "the script takes all, pack, pack-remove or upgrade (each optionally after preview)";
 
 const GLOBALS = ["repo-root", "plugin-root"];
 
@@ -60,14 +59,14 @@ const mergeModel = (key, v) => {
   return v;
 };
 
-const list = test => (key, v) => {
+const list = (test) => (key, v) => {
   if (v === "") {
     return [];
   }
   const items = v.split(",");
   for (const item of items) {
     if (
-      !test.test(item) || item.split("/").some(s => s === "." || s === "..")
+      !test.test(item) || item.split("/").some((s) => s === "." || s === "..")
     ) {
       throw new RefusalError(
         `--${key}: ${JSON.stringify(item)} is not a valid entry`,
@@ -85,19 +84,19 @@ export const ALL_FLAGS = {
   "repo-name": ["repo_name", word],
   "merge-model-develop": ["merge_model.develop", mergeModel],
   "merge-model-main": ["merge_model.main", mergeModel],
-  members: ["members", list(MEMBER)],
-  scopes: ["scopes", list(WORD)],
-  node: ["node", bool],
-  external: ["external", bool],
-  forge: ["forge", word],
-  secrets: ["secrets", word],
+  "members": ["members", list(MEMBER)],
+  "scopes": ["scopes", list(WORD)],
+  "node": ["node", bool],
+  "external": ["external", bool],
+  "forge": ["forge", word],
+  "secrets": ["secrets", word],
 };
 
 const FLAGS = {
-  all: Object.keys(ALL_FLAGS),
-  pack: ["slug", "dir", "set"],
+  "all": Object.keys(ALL_FLAGS),
+  "pack": ["slug", "dir", "set"],
   "pack-remove": ["slug"],
-  upgrade: [],
+  "upgrade": [],
 };
 
 /** `--set key=value` → [key, value]; the value is held like any other. */
@@ -107,13 +106,11 @@ function setPair(text) {
   const value = eq > 0 ? text.slice(eq + 1) : "";
   if (!SET_KEY.test(key)) {
     throw new RefusalError(
-      `--set ${
-        JSON.stringify(text)
-      } is not <key>=<value> with a lowercase key (letters, digits, _)`,
+      `--set ${JSON.stringify(text)} is not <key>=<value> with a lowercase key (letters, digits, _)`,
     );
   }
   if (
-    [...value].some(c => {
+    [...value].some((c) => {
       const code = c.codePointAt(0);
       return code <= 0x1f
         || (code >= 0x7f && code <= 0x9f)
@@ -166,11 +163,9 @@ export function parseArgs(argv) {
     if (eq >= 0) {
       value = key.slice(eq + 1);
       key = key.slice(0, eq);
-    }
-    else if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
+    } else if (i + 1 < args.length && !args[i + 1].startsWith("--")) {
       value = args[++i];
-    }
-    else {
+    } else {
       value = "";
     }
     if (!/^[a-z][a-z0-9-]*$/.test(key)) {
@@ -178,26 +173,20 @@ export function parseArgs(argv) {
     }
     if (GLOBALS.includes(key)) {
       call.globals[key] = value;
-    }
-    else if (key === "answers") {
+    } else if (key === "answers") {
       call.answers = value;
-    }
-    else if (key === "for") {
+    } else if (key === "for") {
       throw new RefusalError(
         `--for is retired: a pack's lines come from its templates/ — ${SURFACE}`,
       );
-    }
-    else if (!FLAGS[head].includes(key)) {
-      const names = FLAGS[head].map(k => `--${k}`).join(", ") || "none";
+    } else if (!FLAGS[head].includes(key)) {
+      const names = FLAGS[head].map((k) => `--${k}`).join(", ") || "none";
       throw new RefusalError(`unknown flag --${key} — valid: ${names}`);
-    }
-    else if (key === "set") {
+    } else if (key === "set") {
       sets.push(value);
-    }
-    else if (key in call.flags) {
+    } else if (key in call.flags) {
       throw new RefusalError(`--${key} is given twice`);
-    }
-    else {
+    } else {
       call.flags[key] = value;
     }
   }
@@ -221,16 +210,12 @@ export function parseArgs(argv) {
     }
     if (RESERVED_SLUGS.includes(call.flags.slug)) {
       throw new RefusalError(
-        `--slug ${call.flags.slug} is reserved — ${
-          RESERVED_SLUGS.join(", ")
-        } name tool-config's own folders and tasks`,
+        `--slug ${call.flags.slug} is reserved — ${RESERVED_SLUGS.join(", ")} name tool-config's own folders and tasks`,
       );
     }
     if (!SLUG.test(call.flags.slug)) {
       throw new RefusalError(
-        `--slug ${
-          JSON.stringify(call.flags.slug)
-        } is not a pack slug (lowercase letters, digits, -)`,
+        `--slug ${JSON.stringify(call.flags.slug)} is not a pack slug (lowercase letters, digits, -)`,
       );
     }
   }

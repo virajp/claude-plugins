@@ -95,12 +95,12 @@ export interface Harness {
   run(
     args: string[],
     env?: Record<string, string>,
-  ): { status: number | null; out: Out; };
+  ): { status: number | null; out: Out };
   apply(
     args: string[],
     pick?: (row: Row) => string,
     env?: Record<string, string>,
-  ): { status: number | null; out: Out; };
+  ): { status: number | null; out: Out };
   read(path: string): string;
   write(path: string, text: string): void;
   log(): string[];
@@ -150,15 +150,14 @@ export function harness(name: string): Harness {
       let out: Out;
       try {
         out = JSON.parse(res.stdout) as Out;
-      }
-      catch {
+      } catch {
         throw new Error(
           `not JSON (exit ${res.status}): ${res.stdout}\n${res.stderr}`,
         );
       }
       return { status: res.status, out };
     },
-    apply(args, pick = row => row.answers[0] ?? "ok", env = {}) {
+    apply(args, pick = (row) => row.answers[0] ?? "ok", env = {}) {
       const preview = h.run(["preview", ...args], env);
       expect(preview.out.error).toBeUndefined();
       expect(preview.status).toBe(0);
@@ -169,10 +168,10 @@ export function harness(name: string): Harness {
       return h.run([
         ...args,
         "--answers",
-        rows.map(r => `${r.id}:${pick(r)}`).join(","),
+        rows.map((r) => `${r.id}:${pick(r)}`).join(","),
       ], env);
     },
-    read: path => readFileSync(join(repo, path), "utf8"),
+    read: (path) => readFileSync(join(repo, path), "utf8"),
     write(path, text) {
       mkdirSync(join(repo, path, ".."), { recursive: true });
       writeFileSync(join(repo, path), text);
@@ -180,8 +179,7 @@ export function harness(name: string): Harness {
     log: () => {
       try {
         return readFileSync(miseLog, "utf8").trimEnd().split("\n");
-      }
-      catch {
+      } catch {
         return [];
       }
     },

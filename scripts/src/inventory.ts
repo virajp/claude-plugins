@@ -144,16 +144,14 @@ function readPacks(stacksDir: string): Pack[] {
       });
     }
   }
-  return packs.sort((a, b) =>
-    a.type.localeCompare(b.type) || a.slug.localeCompare(b.slug)
-  );
+  return packs.sort((a, b) => a.type.localeCompare(b.type) || a.slug.localeCompare(b.slug));
 }
 
 /** Every `bundles/<slug>.md` frontmatter, sorted by slug. */
 function readBundles(bundlesDir: string): Bundle[] {
   const bundles: Bundle[] = [];
   const files = readdirSync(bundlesDir)
-    .filter(f => f.endsWith(".md"))
+    .filter((f) => f.endsWith(".md"))
     .sort((a, b) => a.localeCompare(b));
   for (const file of files) {
     const rel = `${BUNDLES_DIR}/${file}`;
@@ -203,8 +201,8 @@ export function renderInventory(inventory: Inventory): string {
     "| ---- | ----: | ------: |",
   ];
   for (const kind of kinds) {
-    const p = packs.filter(x => x.kind === kind).length;
-    const b = bundles.filter(x => x.kind === kind).length;
+    const p = packs.filter((x) => x.kind === kind).length;
+    const b = bundles.filter((x) => x.kind === kind).length;
     lines.push(`| \`${kind}\` | ${p} | ${b} |`);
   }
 
@@ -241,7 +239,7 @@ export function renderInventory(inventory: Inventory): string {
       b.name,
       `\`${b.kind}\``,
       b.axis,
-      b.components.map(c => `\`${c}\``).join(", "),
+      b.components.map((c) => `\`${c}\``).join(", "),
     ]));
   }
 
@@ -250,9 +248,7 @@ export function renderInventory(inventory: Inventory): string {
 
 /** One table row; a cell's pipes and newlines cannot be allowed to split it. */
 function row(cells: readonly string[]): string {
-  const safe = cells.map(c =>
-    c.replace(/\s*\n\s*/g, " ").replace(/\|/g, "\\|")
-  );
+  const safe = cells.map((c) => c.replace(/\s*\n\s*/g, " ").replace(/\|/g, "\\|"));
   return `| ${safe.join(" | ")} |`;
 }
 
@@ -262,8 +258,8 @@ function row(cells: readonly string[]): string {
 
 function subdirs(dir: string): string[] {
   return readdirSync(dir, { withFileTypes: true })
-    .filter(e => e.isDirectory())
-    .map(e => e.name)
+    .filter((e) => e.isDirectory())
+    .map((e) => e.name)
     .sort((a, b) => a.localeCompare(b));
 }
 
@@ -310,7 +306,7 @@ function assertComponents(
   packs: readonly Pack[],
   bundles: readonly Bundle[],
 ): void {
-  const byRef = new Map(packs.map(p => [`${p.type}/${p.slug}`, p]));
+  const byRef = new Map(packs.map((p) => [`${p.type}/${p.slug}`, p]));
   for (const bundle of bundles) {
     const rel = `${BUNDLES_DIR}/${bundle.slug}.md`;
     for (const entry of bundle.components) {
@@ -363,8 +359,7 @@ if (import.meta.main) {
       process.exit(1);
     }
     console.log(`${INVENTORY_PATH} is up to date.`);
-  }
-  else {
+  } else {
     writeFileSync(target, generated);
     console.log(`wrote ${INVENTORY_PATH}`);
   }

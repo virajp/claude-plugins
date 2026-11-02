@@ -301,7 +301,7 @@ with it.
 One ritual, on `develop` with a clean tree:
 
 ```sh
-mise run p:release -- --dry-run   # one line per project: tag, level, → version | skip | refused
+mise run p:release -- --dry-run # one line per project: tag, level, → version | skip | refused
 mise run p:release
 ```
 

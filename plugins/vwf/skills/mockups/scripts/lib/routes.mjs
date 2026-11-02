@@ -105,8 +105,8 @@ export function routeDir(root, path) {
 export function pathShape(path) {
   return String(path)
     .split("/")
-    .filter(segment => segment !== "")
-    .map(segment => (PARAM_RE.test(segment) ? "[]" : segment))
+    .filter((segment) => segment !== "")
+    .map((segment) => (PARAM_RE.test(segment) ? "[]" : segment))
     .join("/");
 }
 
@@ -140,8 +140,8 @@ export function routeToPath(route) {
   return String(route)
     .replace(/[?#].*$/, "")
     .split("/")
-    .filter(segment => segment !== "")
-    .map(segment => {
+    .filter((segment) => segment !== "")
+    .map((segment) => {
       if (segment.startsWith(":") && segment.length > 1) {
         return `[${segment.slice(1)}]`;
       }
@@ -162,10 +162,10 @@ export function isReserved(segment) {
 // segment — the one rule a route's path (pathError) and a URL path
 // (splitPath) share.
 function segmentError(segments) {
-  if (segments.some(segment => segment.includes("\0"))) {
+  if (segments.some((segment) => segment.includes("\0"))) {
     return "holds a NUL";
   }
-  if (segments.some(segment => segment === "." || segment === "..")) {
+  if (segments.some((segment) => segment === "." || segment === "..")) {
     return "holds a . or .. segment";
   }
   return null;
@@ -178,7 +178,7 @@ function segmentError(segments) {
  * alike.
  */
 export function pathError(path) {
-  const segments = String(path).split("/").filter(segment => segment !== "");
+  const segments = String(path).split("/").filter((segment) => segment !== "");
   const bad = segmentError(segments);
   if (bad) {
     return bad;
@@ -199,7 +199,7 @@ export function sampleRoute(path) {
   }
   return "/" + path
     .split("/")
-    .map(segment => (PARAM_RE.test(segment) ? "1" : segment))
+    .map((segment) => (PARAM_RE.test(segment) ? "1" : segment))
     .join("/");
 }
 
@@ -212,8 +212,7 @@ export function readRoutes(root, reserved = RESERVED) {
   let data;
   try {
     data = JSON.parse(readFileSync(file, "utf8"));
-  }
-  catch (error) {
+  } catch (error) {
     throw new Error(`cannot read ${file}: ${error.message}`, { cause: error });
   }
   if (
@@ -228,9 +227,7 @@ export function readRoutes(root, reserved = RESERVED) {
   for (const [index, screen] of data.screens.entries()) {
     const ok = screen !== null
       && typeof screen === "object"
-      && ["code", "screen", "slug", "flow", "route", "path"].every(key =>
-        typeof screen[key] === "string"
-      )
+      && ["code", "screen", "slug", "flow", "route", "path"].every((key) => typeof screen[key] === "string")
       && typeof screen.routed === "boolean"
       && (screen.overlay === undefined
         || (typeof screen.overlay === "string"
@@ -251,8 +248,7 @@ export function inRoot(root, path) {
   let real;
   try {
     real = realpathSync(path);
-  }
-  catch {
+  } catch {
     return null;
   }
   return real === root || real.startsWith(root + sep) ? real : null;
@@ -270,8 +266,7 @@ function servable(root, path) {
 export function isFile(path) {
   try {
     return statSync(path).isFile();
-  }
-  catch {
+  } catch {
     return false;
   }
 }
@@ -279,8 +274,7 @@ export function isFile(path) {
 export function isDir(path) {
   try {
     return statSync(path).isDirectory();
-  }
-  catch {
+  } catch {
     return false;
   }
 }
@@ -288,8 +282,7 @@ export function isDir(path) {
 function namesIn(dir) {
   try {
     return readdirSync(dir).sort();
-  }
-  catch {
+  } catch {
     return [];
   }
 }
@@ -303,8 +296,8 @@ export function statesIn(dir, overlay = null) {
     ? new RegExp(`^index--overlay-${overlay}--(.+)\\.html$`)
     : /^index--(.+)\.html$/;
   return namesIn(dir)
-    .map(name => re.exec(name)?.[1])
-    .filter(state => state !== undefined && isState(state));
+    .map((name) => re.exec(name)?.[1])
+    .filter((state) => state !== undefined && isState(state));
 }
 
 // Every directory the segments can reach, a static folder before a [param]
@@ -338,11 +331,10 @@ export function splitPath(urlPath) {
   let decoded;
   try {
     decoded = decodeURIComponent(urlPath);
-  }
-  catch {
+  } catch {
     return null;
   }
-  const segments = decoded.split("/").filter(segment => segment !== "");
+  const segments = decoded.split("/").filter((segment) => segment !== "");
   return segmentError(segments) ? null : segments;
 }
 
@@ -384,12 +376,10 @@ export function findScreen(routes, urlPath) {
     for (const [index, part] of pattern.entries()) {
       if (part === segments[index]) {
         score += "1";
-      }
-      else if (!PARAM_RE.test(part)) {
+      } else if (!PARAM_RE.test(part)) {
         ok = false;
         break;
-      }
-      else {
+      } else {
         score += "0";
       }
     }
@@ -464,9 +454,7 @@ export function matchPath(root, routes, urlPath, state, overlay = null) {
 
   if (overlay !== null && overlay !== undefined) {
     const sheet = screen
-      && routes.screens.find(s =>
-        s.code === overlay && s.overlay === screen.code
-      );
+      && routes.screens.find((s) => s.code === overlay && s.overlay === screen.code);
     if (!sheet) {
       return { kind: "none", reason: `no overlay ${overlay} on this route` };
     }
@@ -516,12 +504,10 @@ export function matchPath(root, routes, urlPath, state, overlay = null) {
 function namedBy(screens) {
   return {
     paths: new Set(
-      screens.filter(s => s.overlay === undefined).map(s => s.path),
+      screens.filter((s) => s.overlay === undefined).map((s) => s.path),
     ),
     overlays: new Set(
-      screens.filter(s => s.overlay !== undefined).map(s =>
-        `${s.path}\0${s.code}`
-      ),
+      screens.filter((s) => s.overlay !== undefined).map((s) => `${s.path}\0${s.code}`),
     ),
   };
 }
@@ -544,7 +530,7 @@ export function prunePages(root, previous, screens) {
   }
   const was = namedBy(previous);
   const now = namedBy(screens);
-  const gonePath = rel => was.paths.has(rel) && !now.paths.has(rel);
+  const gonePath = (rel) => was.paths.has(rel) && !now.paths.has(rel);
   const pruned = [];
   const visit = (dir, rel) => {
     const entries = readdirSync(dir, { withFileTypes: true })

@@ -201,7 +201,7 @@ function join_(path, key) {
 }
 
 function check(value, spec, path, ctx, out) {
-  const at = message => out.push({ path: path || "(file)", message });
+  const at = (message) => out.push({ path: path || "(file)", message });
   if (value === null && spec.nullable) {
     return;
   }
@@ -252,14 +252,12 @@ function check(value, spec, path, ctx, out) {
               path: `${path}${segment}.id`,
               message: `must match ${ID_RE}`,
             });
-          }
-          else if (ok && seen.has(e.id)) {
+          } else if (ok && seen.has(e.id)) {
             out.push({
               path: `${path}${segment}.id`,
               message: `${e.id} is not unique in the list`,
             });
-          }
-          else if (ok) {
+          } else if (ok) {
             seen.add(e.id);
             segment = `.${e.id}`;
           }
@@ -315,7 +313,7 @@ function check(value, spec, path, ctx, out) {
 }
 
 function strs(value) {
-  return Array.isArray(value) ? value.filter(v => typeof v === "string") : [];
+  return Array.isArray(value) ? value.filter((v) => typeof v === "string") : [];
 }
 
 function unitPath(u, i) {
@@ -353,8 +351,7 @@ function folderRules(doc, dir, out) {
           path: `${p}.depends_on`,
           message: `${d} is not a unit of this plan`,
         });
-      }
-      else if (
+      } else if (
         Number.isInteger(u.wave)
         && Number.isInteger(target.wave)
         && target.wave >= u.wave
@@ -393,8 +390,7 @@ function folderRules(doc, dir, out) {
       if (!Object.hasOwn(u, "range")) {
         out.push({ path: `${p}.range`, message: "a review unit has a range" });
       }
-    }
-    else if (Object.hasOwn(u, "range")) {
+    } else if (Object.hasOwn(u, "range")) {
       out.push({
         path: `${p}.range`,
         message: "only a review unit has a range",
@@ -405,10 +401,10 @@ function folderRules(doc, dir, out) {
   if (Array.isArray(doc.waves)) {
     const top = Math.max(
       0,
-      ...units.map(u => (isObject(u) && Number.isInteger(u.wave) ? u.wave : 0)),
+      ...units.map((u) => (isObject(u) && Number.isInteger(u.wave) ? u.wave : 0)),
     );
     const want = Array.from({ length: top }, (_, i) => `W${i + 1}`);
-    const have = doc.waves.map(w => (isObject(w) ? w.id : undefined));
+    const have = doc.waves.map((w) => (isObject(w) ? w.id : undefined));
     for (const w of want) {
       if (!have.includes(w)) {
         out.push({ path: "waves", message: `${w} is missing` });
@@ -422,7 +418,7 @@ function folderRules(doc, dir, out) {
         });
       }
     }
-    const listed = have.filter(w => want.includes(w));
+    const listed = have.filter((w) => want.includes(w));
     if (
       listed.length === want.length
       && listed.some((w, i) => w !== want[i])
@@ -459,10 +455,9 @@ function folderRules(doc, dir, out) {
         path: "backlog_pieces",
         message: "the folder has no index.md to hold its piece lines",
       });
-    }
-    else {
+    } else {
       const lines = readFileSync(md, "utf8").split("\n");
-      const has = b => lines.some(l => l.startsWith(`- ${b}:`));
+      const has = (b) => lines.some((l) => l.startsWith(`- ${b}:`));
       for (const b of pieces) {
         if (!has(b)) {
           out.push({
@@ -483,7 +478,7 @@ function folderRules(doc, dir, out) {
   }
 
   if (isObject(doc.run)) {
-    const keys = ["worktree", "log"].filter(k => Object.hasOwn(doc.run, k));
+    const keys = ["worktree", "log"].filter((k) => Object.hasOwn(doc.run, k));
     if (keys.length === 1) {
       const missing = keys[0] === "worktree" ? "log" : "worktree";
       out.push({

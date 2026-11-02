@@ -45,8 +45,7 @@ function walk(
     const full = path.join(dir, name);
     if (statSync(full).isDirectory()) {
       walk(full, keep, out);
-    }
-    else if (keep(name)) {
+    } else if (keep(name)) {
       out.push(full);
     }
   }
@@ -130,7 +129,7 @@ const failures: string[] = [];
 let checked = 0;
 let fragments = 0;
 
-const pages = walk(DIST, name => name.endsWith(".html"));
+const pages = walk(DIST, (name) => name.endsWith(".html"));
 for (const file of pages) {
   const html = readFileSync(file, "utf8");
   const from = pagePath(file);
@@ -167,7 +166,7 @@ for (const file of pages) {
 // left exactly as the HTML pass does. A `#fragment` is only checkable when the
 // target is a built page; on a `.md` target there are no ids to check against.
 const mirrors = [
-  ...walk(DIST, name => name.endsWith(".md")),
+  ...walk(DIST, (name) => name.endsWith(".md")),
   path.join(DIST, "llms.txt"),
   path.join(DIST, "llms-full.txt"),
 ];
@@ -225,8 +224,7 @@ for (const file of pages) {
     const url = new URL(href, `https://site.invalid${pagePath(file)}`);
     if (fileFor(url.pathname)) {
       alternates += 1;
-    }
-    else {
+    } else {
       failures.push(`${label}: ${href}`);
     }
   }

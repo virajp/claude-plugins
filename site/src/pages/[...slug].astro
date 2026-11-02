@@ -12,7 +12,7 @@ import { routeFor } from "../lib/routes.ts";
 // `how-to/index` → /how-to/, `plugins/vwf` → /plugins/vwf/.
 export async function getStaticPaths() {
   const entries = await getCollection("docs");
-  return entries.map(entry => ({
+  return entries.map((entry) => ({
     params: { slug: routeFor(entry.id).slice(1, -1) },
     props: { entry },
   }));
@@ -29,8 +29,8 @@ const hasMermaid = (entry.body ?? "").includes("```mermaid");
   id={entry.id}
   title={entry.data.title}
   description={entry.data.description}
-  headings={headings}
-  hasMermaid={hasMermaid}
+  {headings}
+  {hasMermaid}
 >
   <Content />
 </Docs>

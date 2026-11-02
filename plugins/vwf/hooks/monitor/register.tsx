@@ -50,9 +50,7 @@ function clock(ms: number | undefined): string {
   }
   const d = new Date(ms);
 
-  return `${String(d.getHours()).padStart(2, "0")}:${
-    String(d.getMinutes()).padStart(2, "0")
-  }`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function span(from: number | undefined, to: number | undefined): string {
@@ -133,9 +131,7 @@ function progressSvg(shown: string[], gapCounts: number[]): string {
       ? "#d0d4da"
       : HEX[colorOf(one, gapCounts[i] ?? 0) ?? ""] ?? "#4a90d9";
 
-    return `<rect x="${
-      i * step
-    }" y="0" width="${segment}" height="12" rx="2" fill="${fill}"/>`;
+    return `<rect x="${i * step}" y="0" width="${segment}" height="12" rx="2" fill="${fill}"/>`;
   });
   const total = Math.max(step, shown.length * step - (step - segment));
 
@@ -164,7 +160,7 @@ const bases = new Map<string, string | undefined>();
 // mtime it was read at: an unchanged file is not read again.
 const states = new Map<
   string,
-  { size: number; mtimeMs: number; folder?: PlanFolder; problem?: string; }
+  { size: number; mtimeMs: number; folder?: PlanFolder; problem?: string }
 >();
 const logs = new Map<
   string,
@@ -242,7 +238,7 @@ async function start($: $, args: string, isExecute: boolean) {
 async function finish($: $, message: string) {
   stopTimer();
   const now = await $.clock.now();
-  await update($, run, value =>
+  await update($, run, (value) =>
     value
       ? {
         mode: value.mode,
@@ -279,7 +275,7 @@ async function baseOf($: $, cwd: string): Promise<string | undefined> {
     bases.set(
       cwd,
       await resolveBase(cwd, {
-        read: path => $.fs.read(path).catch(() => undefined),
+        read: (path) => $.fs.read(path).catch(() => undefined),
         git: (dir, args) => git($, dir, args),
       }),
     );
@@ -296,7 +292,7 @@ async function stat($: $, path: string) {
 async function readState(
   $: $,
   path: string,
-): Promise<{ folder?: PlanFolder; problem?: string; }> {
+): Promise<{ folder?: PlanFolder; problem?: string }> {
   const now = await stat($, path);
   if (now === undefined) {
     return { problem: `Cannot read ${path}.` };
@@ -322,7 +318,7 @@ async function readState(
 async function readLog(
   $: $,
   path: string,
-): Promise<{ lines: string[]; partial: boolean; problem?: string; }> {
+): Promise<{ lines: string[]; partial: boolean; problem?: string }> {
   const now = await stat($, path);
   if (now === undefined) {
     return { lines: [], partial: false };
@@ -331,7 +327,7 @@ async function readLog(
   if (last && last.size === now.size && last.mtimeMs === now.mtimeMs) {
     return last;
   }
-  let read: { lines: string[]; partial: boolean; problem?: string; };
+  let read: { lines: string[]; partial: boolean; problem?: string };
   if (now.size > READ_MAX) {
     const out = await $
       .process
@@ -350,8 +346,7 @@ async function readLog(
           : `exit ${out.exitCode}`
       }`;
     }
-  }
-  else {
+  } else {
     const text = await $.fs.read(path).catch(() => undefined);
     read = text === undefined
       ? { lines: [], partial: false, problem: `Cannot read ${path}.` }
@@ -367,11 +362,11 @@ const OLD_FORMAT =
 const NO_RUNNING = "No plan reads RUNNING in docs/plans/index.json.";
 
 type Found =
-  | { kind: "plan"; plan: PlanRun; problem?: string; }
-  | { kind: "none"; message: string; }
-  | { kind: "final"; message: string; }
-  | { kind: "choice"; folders: string[]; }
-  | { kind: "problem"; problem: string; };
+  | { kind: "plan"; plan: PlanRun; problem?: string }
+  | { kind: "none"; message: string }
+  | { kind: "final"; message: string }
+  | { kind: "choice"; folders: string[] }
+  | { kind: "problem"; problem: string };
 
 /**
  * One RUNNING row's plan: its folder's index.json in the main checkout (the
@@ -388,9 +383,9 @@ async function loadPlan(
   const repos = [base];
   if (row.target_repo !== null) {
     const yaml = await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => "");
-    memberPaths(yaml).forEach(path => repos.push(joinPath(base, path)));
+    memberPaths(yaml).forEach((path) => repos.push(joinPath(base, path)));
   }
-  let main: { repo: string; path: string; } | undefined;
+  let main: { repo: string; path: string } | undefined;
   let hasMd = false;
   for (const repo of repos) {
     for (
@@ -490,11 +485,10 @@ async function find($: $, r: Run, base: string): Promise<Found> {
   }
   let candidates = rows;
   if (r.named !== undefined) {
-    const hit = rows.filter(row => nameOf(row.folder) === r.named);
+    const hit = rows.filter((row) => nameOf(row.folder) === r.named);
     if (hit.length > 0) {
       candidates = hit;
-    }
-    else if (r.plan === undefined || nameOf(r.plan.folder) !== r.named) {
+    } else if (r.plan === undefined || nameOf(r.plan.folder) !== r.named) {
       return {
         kind: "none",
         message: `${r.named} does not read RUNNING in docs/plans/index.json.`,
@@ -512,7 +506,7 @@ async function find($: $, r: Run, base: string): Promise<Found> {
     return loaded[0] as Found;
   }
   const session = await $.session.id().catch(() => undefined);
-  const mine = loaded.filter(one =>
+  const mine = loaded.filter((one) =>
     one.kind === "plan"
     && session !== undefined
     && one.plan.replay.session === session
@@ -521,7 +515,7 @@ async function find($: $, r: Run, base: string): Promise<Found> {
     return mine[0] as Found;
   }
 
-  return { kind: "choice", folders: candidates.map(row => row.folder) };
+  return { kind: "choice", folders: candidates.map((row) => row.folder) };
 }
 
 /** Refreshes at most once each THROTTLE_MS, and never twice at the same time. */
@@ -561,7 +555,7 @@ function settle(
     return state;
   }
   const isOver = (id: string, startedAt?: number) => {
-    const info = listed.find(one => one.id === id);
+    const info = listed.find((one) => one.id === id);
 
     return info
       ? ENDED.includes(info.status)
@@ -572,12 +566,12 @@ function settle(
       ? { ...agent, live: false }
       : agent;
   const starts = new Map<string, number | undefined>();
-  state.units.forEach(unit => {
+  state.units.forEach((unit) => {
     if (unit.agent) {
       starts.set(unit.agent.id, unit.agent.startedAt);
     }
   });
-  Object.values(state.reviews).forEach(agent => {
+  Object.values(state.reviews).forEach((agent) => {
     starts.set(agent.id, agent.startedAt);
   });
   const reviews: Record<string, AgentRun> = {};
@@ -587,11 +581,9 @@ function settle(
 
   return {
     ...state,
-    units: state.units.map(unit =>
-      unit.agent ? { ...unit, agent: fix(unit.agent) } : unit
-    ),
+    units: state.units.map((unit) => unit.agent ? { ...unit, agent: fix(unit.agent) } : unit),
     reviews,
-    live: state.live.filter(id => !isOver(id, starts.get(id))),
+    live: state.live.filter((id) => !isOver(id, starts.get(id))),
   };
 }
 
@@ -624,7 +616,7 @@ async function refresh($: $) {
       await finish($, found.message);
       return;
     }
-    await update($, run, value => {
+    await update($, run, (value) => {
       if (!value) {
         return value;
       }
@@ -644,9 +636,8 @@ async function refresh($: $) {
 
       return next;
     });
-  }
-  else if (found.kind === "choice") {
-    await update($, run, value => {
+  } else if (found.kind === "choice") {
+    await update($, run, (value) => {
       if (!value) {
         return value;
       }
@@ -658,22 +649,19 @@ async function refresh($: $) {
 
       return next;
     });
-  }
-  else if (found.kind === "problem") {
+  } else if (found.kind === "problem") {
     await update(
       $,
       run,
-      value =>
-        value ? { ...value, problem: found.problem, refreshedAt: now } : value,
+      (value) => value ? { ...value, problem: found.problem, refreshedAt: now } : value,
     );
-  }
-  else {
+  } else {
     const session = await $.session.id().catch(() => undefined);
     const plan = phased({
       ...found.plan,
       replay: settle(found.plan.replay, listed, now, session),
     }, now);
-    await update($, run, value => {
+    await update($, run, (value) => {
       if (!value) {
         return value;
       }
@@ -695,13 +683,12 @@ async function refresh($: $) {
     if (timer === undefined) {
       startTimer($);
     }
-  }
-  else {
+  } else {
     stopTimer();
   }
 }
 
-export const register: Register = on => {
+export const register: Register = (on) => {
   on("session.start", async ($, e, next) => {
     await $.command.register({
       name: "vwf-monitor",
@@ -709,7 +696,7 @@ export const register: Register = on => {
     });
     // After a reload: the pane may still be up, and a live run goes on.
     const panes = await $.ui.panes().catch(() => []);
-    isOpen = panes.some(pane => pane.id === PANE);
+    isOpen = panes.some((pane) => pane.id === PANE);
     if (isLive(await read($, run))) {
       startTimer($);
     }
@@ -842,8 +829,7 @@ export const register: Register = on => {
     // The terminal lays columns out in cells; a graphical surface draws a proportional
     // font, so its text is never padded and its tables are rows of sized boxes.
     const isTerminal = e.surface === "terminal";
-    const cut = (text: string, size: number) =>
-      isTerminal ? fit(text, size) : text;
+    const cut = (text: string, size: number) => isTerminal ? fit(text, size) : text;
 
     const back = async () => {
       await $.ui.view({});
@@ -873,17 +859,13 @@ export const register: Register = on => {
             key="quiet"
             label={quiet ? "Show tool rows" : "Hide tool rows"}
             hotkey="t"
-            onPress={() => update($, isQuiet, value => !value)}
+            onPress={() => update($, isQuiet, (value) => !value)}
           />
         )}
-        {isTerminal && (
-          <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>
-        )}
+        {isTerminal && <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>}
       </Box>
     );
-    const problem = r?.problem !== undefined && (
-      <Text color="red">{cut(r.problem, width)}</Text>
-    );
+    const problem = r?.problem !== undefined && <Text color="red">{cut(r.problem, width)}</Text>;
 
     if (!r) {
       return (
@@ -909,9 +891,7 @@ export const register: Register = on => {
           <Text>
             {`${r.choices.length} plans read RUNNING; none ran in this session:`}
           </Text>
-          {r.choices.map(folder => (
-            <Text key={`choice-${folder}`}>{cut(`- ${folder}`, width)}</Text>
-          ))}
+          {r.choices.map((folder) => <Text key={`choice-${folder}`}>{cut(`- ${folder}`, width)}</Text>)}
           <Text dimColor>Run /vwf-monitor &lt;folder&gt; to show one.</Text>
           {problem}
         </Box>
@@ -935,13 +915,9 @@ export const register: Register = on => {
     const state = p.replay;
     const isEnded = p.phase === "ended";
     const units = state.units;
-    const shown = units.map(unit =>
-      unit.agent?.live && unit.status === "pending" ? "running" : unit.status
-    );
-    const done = shown.filter(one => FINISHED.includes(one)).length;
-    const gapCounts = units.map(unit =>
-      state.gaps.filter(gap => gap.unit === unit.id).length
-    );
+    const shown = units.map((unit) => unit.agent?.live && unit.status === "pending" ? "running" : unit.status);
+    const done = shown.filter((one) => FINISHED.includes(one)).length;
+    const gapCounts = units.map((unit) => state.gaps.filter((gap) => gap.unit === unit.id).length);
     const barWidth = Math.max(units.length * 2, width - 10);
     const segment = units.length === 0
       ? 0
@@ -975,8 +951,7 @@ export const register: Register = on => {
       const moved = await $.ui.view({ agentId: agent.id });
       if (moved.deny) {
         $.ui.toast(`Cannot show ${label}: ${moved.deny}`);
-      }
-      else {
+      } else {
         await update($, viewing, () => agent.id);
       }
     };
@@ -998,9 +973,7 @@ export const register: Register = on => {
       // One row of sized cells: the share of the pane's width each column takes.
       const COLUMNS = ["8%", "26%", "7%", "10%", "13%", "9%", "9%", "9%", "9%"];
       const NAME = "41%";
-      const cell = (size: string, child: RenderChildren) => (
-        <Box width={size} flexShrink={0}>{child}</Box>
-      );
+      const cell = (size: string, child: RenderChildren) => <Box width={size} flexShrink={0}>{child}</Box>;
       const timeCells = (started: string, ended: string) => {
         const from = time(started);
         const end = time(ended);
@@ -1070,9 +1043,7 @@ export const register: Register = on => {
                 "Time",
                 "Gaps",
               ]
-                .map((head, i) =>
-                  cell(COLUMNS[i]!, <Text dimColor>{head}</Text>)
-                )}
+                .map((head, i) => cell(COLUMNS[i]!, <Text dimColor>{head}</Text>))}
             </Box>
             {units.map((unit, i) => {
               const one = shown[i] ?? "";
@@ -1106,7 +1077,7 @@ export const register: Register = on => {
                 </Box>
               );
             })}
-            {state.waves.map(wave =>
+            {state.waves.map((wave) =>
               sideRow(
                 `wave-${wave.id}`,
                 <Text>{wave.id}</Text>,
@@ -1131,7 +1102,7 @@ export const register: Register = on => {
                 [],
               )
             )}
-            {state.stages.map(stage =>
+            {state.stages.map((stage) =>
               sideRow(
                 `stage-${stage.name}`,
                 <Text>{stage.name}</Text>,
@@ -1145,7 +1116,7 @@ export const register: Register = on => {
           {state.gaps.length > 0 && (
             <Box flexDirection="column">
               <Text bold>Gaps</Text>
-              {state.gaps.map(gap => (
+              {state.gaps.map((gap) => (
                 <Text key={`gap-${gap.id}`} color="yellow">
                   {`- ${gap.id} · ${gap.unit || gap.stage} · ${gap.text}`}
                 </Text>
@@ -1223,7 +1194,7 @@ export const register: Register = on => {
             </Button>
           );
         })}
-        {state.waves.map(wave => (
+        {state.waves.map((wave) => (
           <Text key={`wave-${wave.id}`}>
             {fit(wave.id, 32)}
             {fit("wave", 8)}
@@ -1242,7 +1213,7 @@ export const register: Register = on => {
             <Text>{fit(agent.live ? "running" : "done", 12)}</Text>
           </Button>
         ))}
-        {state.stages.map(stage => (
+        {state.stages.map((stage) => (
           <Text key={`stage-${stage.name}`}>
             {fit(stage.name, 32)}
             {fit("stage", 8)}
@@ -1252,7 +1223,7 @@ export const register: Register = on => {
         ))}
         {state.gaps.length > 0 && <Text>{" "}</Text>}
         {state.gaps.length > 0 && <Text bold>Gaps</Text>}
-        {state.gaps.map(gap => (
+        {state.gaps.map((gap) => (
           <Text color="yellow">
             {fit(`- ${gap.id} · ${gap.unit || gap.stage} · ${gap.text}`, width)}
           </Text>

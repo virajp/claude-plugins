@@ -11,7 +11,7 @@ cd "$MISE_PROJECT_ROOT"
 
 HOOK="plugins/stackgen/stacks/package-manager/pnpm/hooks/npm-normalize.sh"
 
-command -v jq >/dev/null 2>&1 || {
+command -v jq > /dev/null 2>&1 || {
   print_error "jq is required to run the hook tests"
   exit 1
 }
@@ -63,7 +63,7 @@ run_table() {
   shift 2
   local sandbox input expected payload result updated actual
   sandbox=$(mktemp -d)
-  [[ -n "$marker" ]] && : >"$sandbox/$marker"
+  [[ -n "$marker" ]] && : > "$sandbox/$marker"
 
   print_yellow "  -- $label"
   for case in "$@"; do

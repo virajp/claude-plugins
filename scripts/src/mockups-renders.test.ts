@@ -135,7 +135,7 @@ describe("renders.mjs", () => {
     expect(status).toBe(0);
     const lines = stdout.trimEnd().split("\n");
     expect(lines.at(-1)).toBe("COPIED: 3");
-    const skipped = lines.filter(line => line.startsWith("SKIPPED:"));
+    const skipped = lines.filter((line) => line.startsWith("SKIPPED:"));
     expect(skipped).toHaveLength(1);
     expect(skipped[0]).toMatch(/^SKIPPED: 999z mobile default — /);
     expect(readFileSync(tree("mobile", "orders", "[id]", "index.png"), "utf8"))
@@ -152,7 +152,7 @@ describe("renders.mjs", () => {
     );
     const json = rendersJson("mobile");
     expect(json).toMatchObject({ project: "demo", platform: "mobile" });
-    expect(json.renders.map(e => [e.code, e.state, e.file])).toEqual([
+    expect(json.renders.map((e) => [e.code, e.state, e.file])).toEqual([
       ["200b", "default", "orders/[id]/index.png"],
       ["200b", "error", "orders/[id]/index--error.png"],
     ]);
@@ -165,7 +165,7 @@ describe("renders.mjs", () => {
       readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
     );
     expect(routes.platform).toBe("mobile");
-    expect(routes.screens.map((s: { code: string; }) => s.code)).toEqual([
+    expect(routes.screens.map((s: { code: string }) => s.code)).toEqual([
       "200a",
       "200b",
     ]);
@@ -197,8 +197,7 @@ describe("renders.mjs", () => {
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     const second = rendersJson("mobile");
     expect(second.renders).toHaveLength(2);
-    const by = (list: Entry[], state: string) =>
-      list.find(e => e.state === state);
+    const by = (list: Entry[], state: string) => list.find((e) => e.state === state);
     expect(by(second.renders, "default")).toEqual(
       by(first.renders, "default"),
     );
@@ -234,7 +233,7 @@ describe("renders.mjs", () => {
     expect(status).toBe(0);
     expect(stdout.trimEnd()).toBe("COPIED: 1");
     const json = rendersJson("mobile");
-    expect(json.renders.map(e => [e.code, e.state])).toEqual([
+    expect(json.renders.map((e) => [e.code, e.state])).toEqual([
       ["200a", "default"],
     ]);
     expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
@@ -251,7 +250,7 @@ describe("renders.mjs", () => {
       readFileSync(tree("mobile", "__renders", "routes.json"), "utf8"),
     );
     expect(
-      routes.screens.find((s: { code: string; }) => s.code === "200b").route,
+      routes.screens.find((s: { code: string }) => s.code === "200b").route,
     )
       .toBe("/order/:id");
   });
@@ -261,10 +260,10 @@ describe("renders.mjs", () => {
     put(
       w,
       "docs/blueprint/flows/demo/200-orders/mobile.md",
-      DOC.split("\n").filter(line => !line.startsWith("| 200b")).join("\n"),
+      DOC.split("\n").filter((line) => !line.startsWith("| 200b")).join("\n"),
     );
     run("RENDER: demo 200a mobile default shots/b.png\n");
-    expect(rendersJson("mobile").renders.map(e => e.code)).toEqual(["200a"]);
+    expect(rendersJson("mobile").renders.map((e) => e.code)).toEqual(["200a"]);
     expect(existsSync(tree("mobile", "orders", "[id]", "index.png"))).toBe(
       false,
     );
@@ -278,7 +277,7 @@ describe("renders.mjs", () => {
       DOC.replace("`/orders/:id`", "`/order/:id`"),
     );
     run("RENDER: demo 200b mobile default shots/b.png\n");
-    expect(rendersJson("mobile").renders.map(e => [e.code, e.file])).toEqual([
+    expect(rendersJson("mobile").renders.map((e) => [e.code, e.file])).toEqual([
       ["200b", "order/[id]/index.png"],
     ]);
     expect(readFileSync(tree("mobile", "order", "[id]", "index.png"), "utf8"))
@@ -298,7 +297,7 @@ describe("renders.mjs", () => {
       DOC.replace("`/orders/:id`", "`/orders/{orderId}`"),
     );
     run("RENDER: demo 200a mobile default shots/b.png\n");
-    expect(rendersJson("mobile").renders.map(e => [e.code, e.state])).toEqual([
+    expect(rendersJson("mobile").renders.map((e) => [e.code, e.state])).toEqual([
       ["200a", "default"],
       ["200b", "default"],
       ["200b", "error"],
@@ -329,7 +328,7 @@ describe("renders.mjs", () => {
     run("RENDER: demo 200a mobile default shots/b.png\n");
     expect(readFileSync(join(base, "victim.png"), "utf8")).toBe("VICTIM");
     expect(existsSync(tree("mobile", "__renders", "index.png"))).toBe(true);
-    expect(rendersJson("mobile").renders.map(e => e.code)).not.toContain(
+    expect(rendersJson("mobile").renders.map((e) => e.code)).not.toContain(
       "999y",
     );
   });
@@ -397,8 +396,7 @@ describe("renders.mjs", () => {
       expect(result.status).not.toBe(0);
       expect(result.stdout).toBe("");
       expect(result.stderr).toMatch(/stdin/);
-    }
-    finally {
+    } finally {
       closeSync(fd);
     }
   });
@@ -416,7 +414,7 @@ describe("renders.mjs", () => {
     // The same folder in another case: one folder on a case-insensitive disk.
     const folded = existsSync(tree("mobile", "ORDERS", "index.png"));
     run("RENDER: demo 200a mobile default shots/b.png\n");
-    const states = rendersJson("mobile").renders.map(e => e.state);
+    const states = rendersJson("mobile").renders.map((e) => e.state);
     expect(states).toEqual(folded ? ["default"] : ["default", "empty"]);
     expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
       "PNG-B",
@@ -434,7 +432,7 @@ describe("renders.mjs", () => {
     );
     const { stdout } = run("RENDER: demo 200b mobile default shots/b.png\n");
     expect(stdout.trimEnd()).toBe("COPIED: 1");
-    expect(rendersJson("mobile").renders.map(e => [e.code, e.file])).toEqual([
+    expect(rendersJson("mobile").renders.map((e) => [e.code, e.file])).toEqual([
       ["200b", "orders/index.png"],
     ]);
     expect(readFileSync(tree("mobile", "orders", "index.png"), "utf8")).toBe(
@@ -477,7 +475,7 @@ describe("renders.mjs", () => {
     expect(readFileSync(join(base, "outside-routes.json"), "utf8")).toBe(
       "OUTSIDE-S",
     );
-    expect(rendersJson("mobile").renders.map(e => e.code)).toEqual(["200a"]);
+    expect(rendersJson("mobile").renders.map((e) => e.code)).toEqual(["200a"]);
     expect(
       JSON
         .parse(
@@ -507,7 +505,7 @@ describe("renders.mjs", () => {
     expect(status).toBe(0);
     expect(stdout).toMatch(/^SKIPPED: 200b mobile default — cannot copy: /m);
     expect(stdout.trimEnd().split("\n").at(-1)).toBe("COPIED: 2");
-    expect(rendersJson("mobile").renders.map(e => e.state)).toEqual(["error"]);
+    expect(rendersJson("mobile").renders.map((e) => e.state)).toEqual(["error"]);
     expect(rendersJson("web").renders).toHaveLength(1);
     expect(existsSync(tree("mobile", "__renders", "routes.json"))).toBe(true);
   });

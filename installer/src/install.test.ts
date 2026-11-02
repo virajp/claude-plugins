@@ -63,7 +63,7 @@ beforeEach(() => {
     home: join(tmp, "home"),
     cwd: repo,
     now: "2026-01-01T00:00:00Z",
-    log: message => notes.push(message),
+    log: (message) => notes.push(message),
     exec: (command, args, execOptions) => {
       ran.push({
         command,
@@ -142,7 +142,7 @@ describe("planInstall", () => {
   it("registers the marketplace first on a fresh machine, then installs", () => {
     const steps = planInstall(request({ user: ["vwf", "stackgen"] }), options);
 
-    expect(steps.map(s => s.id)).toEqual([
+    expect(steps.map((s) => s.id)).toEqual([
       "marketplace",
       "plugin:user:stackgen",
       "plugin:user:vwf",
@@ -167,7 +167,7 @@ describe("planInstall", () => {
 
     const steps = planInstall(request({ user: ["vwf"] }), options);
 
-    expect(steps.map(s => s.id)).toEqual(["plugin:user:vwf"]);
+    expect(steps.map((s) => s.id)).toEqual(["plugin:user:vwf"]);
   });
 
   it("reports an installed plugin as already satisfied, never an update", () => {
@@ -217,8 +217,8 @@ describe("executeInstall", () => {
       options,
     );
 
-    expect(outcomes.every(o => o.error === undefined)).toBe(true);
-    expect(ran.map(r => r.command)).toEqual(["claude", "claude"]);
+    expect(outcomes.every((o) => o.error === undefined)).toBe(true);
+    expect(ran.map((r) => r.command)).toEqual(["claude", "claude"]);
     expect(ran[0]?.args).toEqual([
       "plugin",
       "marketplace",
@@ -257,7 +257,7 @@ describe("executeInstall", () => {
     );
 
     expect(ran).toHaveLength(0);
-    expect(outcomes.map(o => o.actions[0]?.summary)).toEqual([
+    expect(outcomes.map((o) => o.actions[0]?.summary)).toEqual([
       "claude plugin marketplace add virajp/claude-plugins",
       "claude plugin install vwf@virajp-plugins --scope user",
     ]);

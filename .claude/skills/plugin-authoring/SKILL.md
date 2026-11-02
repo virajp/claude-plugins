@@ -44,9 +44,9 @@ Never edit either by hand.
 A change under `plugins/` is not done until the gates pass:
 
 ```sh
-mise run p:plugins:check              # validates the authored tree
-mise run p:plugins:marketplace        # regenerate, if you touched a manifest
-mise run p:plugins:inventory          # regenerate, if you touched stackgen's stacks/ or kinds.md
+mise run p:plugins:check       # validates the authored tree
+mise run p:plugins:marketplace # regenerate, if you touched a manifest
+mise run p:plugins:inventory   # regenerate, if you touched stackgen's stacks/ or kinds.md
 ```
 
 No gate lints or formats the shell a pack ships.

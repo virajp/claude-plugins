@@ -140,8 +140,7 @@ function resolveFile(urlPath) {
   let decoded;
   try {
     decoded = decodeURIComponent(urlPath);
-  }
-  catch {
+  } catch {
     return null;
   }
   if (decoded.includes("\0")) {
@@ -154,8 +153,7 @@ function resolveFile(urlPath) {
   let real;
   try {
     real = realpathSync(candidate);
-  }
-  catch {
+  } catch {
     return null;
   }
   if (!real.startsWith(root + sep)) {
@@ -197,7 +195,7 @@ function countComments() {
   }
   return readFileSync(commentsPath, "utf8")
     .split("\n")
-    .filter(line => /^- id: /.test(line))
+    .filter((line) => /^- id: /.test(line))
     .length;
 }
 
@@ -220,7 +218,7 @@ function readJson(req) {
   return new Promise((resolvePromise, reject) => {
     const chunks = [];
     let size = 0;
-    req.on("data", chunk => {
+    req.on("data", (chunk) => {
       size += chunk.length;
       if (size > 65536) {
         reject(new Error("body too large"));
@@ -232,8 +230,7 @@ function readJson(req) {
     req.on("end", () => {
       try {
         resolvePromise(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-      }
-      catch (error) {
+      } catch (error) {
         reject(error);
       }
     });
@@ -244,17 +241,14 @@ function readJson(req) {
 function isComment(body) {
   return body !== null
     && typeof body === "object"
-    && ["screen", "selector", "text"].every(key =>
-      typeof body[key] === "string" && body[key].length > 0
-    );
+    && ["screen", "selector", "text"].every((key) => typeof body[key] === "string" && body[key].length > 0);
 }
 
 async function postComment(req, res) {
   let body;
   try {
     body = await readJson(req);
-  }
-  catch {
+  } catch {
     res.writeHead(400).end();
     return;
   }

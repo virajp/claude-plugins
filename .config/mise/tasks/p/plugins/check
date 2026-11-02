@@ -16,7 +16,7 @@ if ! node scripts/src/check.ts 2>&1; then
 fi
 
 # `--strict` fails an unknown field; skipped, announced, where `claude` is absent (CI).
-if command -v claude >/dev/null 2>&1; then
+if command -v claude > /dev/null 2>&1; then
   print_header "Validating manifests with claude plugin validate --strict ..."
   failed=0
   for manifest in .claude-plugin/marketplace.json plugins/*/; do

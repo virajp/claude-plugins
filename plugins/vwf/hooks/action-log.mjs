@@ -38,7 +38,7 @@ const ROOT = process.env.VWF_LOG_ROOT
   || join(homedir(), "Library", "Caches", "vwf");
 const MAX = 200;
 
-const clip = s => (typeof s === "string"
+const clip = (s) => (typeof s === "string"
   ? s.replace(/\s+/g, " ").trim().slice(0, MAX)
   : undefined);
 
@@ -100,17 +100,16 @@ function gapLines(text) {
   }
   return text
     .split("\n")
-    .map(l => l.trim())
-    .filter(l => /^(GAP|UNRESOLVED):/.test(l) && !/:\s*none\b/i.test(l))
-    .map(l => l.slice(0, 2 * MAX));
+    .map((l) => l.trim())
+    .filter((l) => /^(GAP|UNRESOLVED):/.test(l) && !/:\s*none\b/i.test(l))
+    .map((l) => l.slice(0, 2 * MAX));
 }
 
 function main() {
   let p;
   try {
     p = JSON.parse(readFileSync(0, "utf8"));
-  }
-  catch {
+  } catch {
     return;
   }
   if (!p || typeof p.session_id !== "string") {
@@ -120,11 +119,10 @@ function main() {
   let text;
   try {
     text = readFileSync(marker, "utf8");
-  }
-  catch {
+  } catch {
     return; // no marker, or one removed before the read: no run
   }
-  const [file = "", run = ""] = text.split("\n").map(l => l.trim());
+  const [file = "", run = ""] = text.split("\n").map((l) => l.trim());
   if (!file) {
     return;
   }
@@ -183,7 +181,6 @@ function main() {
 
 try {
   main();
-}
-catch {
+} catch {
   // A logging fault never reaches the session.
 }

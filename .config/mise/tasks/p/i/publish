@@ -11,7 +11,7 @@ cd "$MISE_PROJECT_ROOT"
 
 # Local fallback — prefer p:i:release, so CI publishes with OIDC provenance.
 print_header "Verifying npm authentication ..."
-if ! npm whoami >/dev/null 2>&1; then
+if ! npm whoami > /dev/null 2>&1; then
   print_error "Not logged in to npm. Run \`npm login\` first, then retry."
   exit 1
 fi

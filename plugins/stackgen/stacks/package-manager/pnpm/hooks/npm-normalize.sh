@@ -22,7 +22,7 @@ resolve_pm() {
     fi
     if [[ -f "$dir/.config/vwf.yaml" ]]; then
       if grep -qE '^[[:space:]]*package_manager:[[:space:]]*bun[[:space:]]*$' \
-        "$dir/.config/vwf.yaml" 2>/dev/null; then
+        "$dir/.config/vwf.yaml" 2> /dev/null; then
         echo bun
       else
         echo pnpm

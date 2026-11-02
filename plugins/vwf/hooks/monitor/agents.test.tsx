@@ -25,9 +25,7 @@ const FINAL = ["green", "failed", "unresolved", "skipped"];
 const hhmm = (time: string) => {
   const d = new Date(time);
 
-  return `${String(d.getHours()).padStart(2, "0")}:${
-    String(d.getMinutes()).padStart(2, "0")
-  }`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 };
 
 const plans = (...rows: [string, string, string?][]) =>
@@ -50,8 +48,7 @@ const plans = (...rows: [string, string, string?][]) =>
     })),
   });
 
-const logOf = (folder: string) =>
-  `${HOME}/Library/Caches/vwf/repo/${folder}.jsonl`;
+const logOf = (folder: string) => `${HOME}/Library/Caches/vwf/repo/${folder}.jsonl`;
 
 const plan = (
   title: string,
@@ -582,7 +579,7 @@ test(
     await $.prompt.submit(execute(`docs/plans/${A}`));
     await clock.advance(3500);
     await clock.advance(3500);
-    const count = (path: string) => w.reads.filter(one => one === path).length;
+    const count = (path: string) => w.reads.filter((one) => one === path).length;
     expect(count(logOf(A))).toBe(1);
     expect(count(`${MAIN}/docs/plans/${A}/index.json`)).toBe(1);
     w.files[logOf(A)] += line("phase.start", { phase: "wave 1" });
@@ -708,8 +705,7 @@ test(
     mock.clock(on, { now: NOW });
     world(on, {
       files: {
-        [`${MAIN}/.config/vwf.yaml`]:
-          "topology: multi-repo\nmembers:\n  - name: api\n    path: ../api\n",
+        [`${MAIN}/.config/vwf.yaml`]: "topology: multi-repo\nmembers:\n  - name: api\n    path: ../api\n",
         [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING", "api"]),
         [`/api/docs/plans/${A}/index.json`]: plan("Member plan", ["pending"]),
       },
@@ -727,15 +723,15 @@ test("D8: the timer runs only while a run is live", async ($, on) => {
   let periods: (() => void)[] = [];
   on("clock.now", () => ({ value: now }));
   on("clock.every", () =>
-    new Promise(resolve => {
+    new Promise((resolve) => {
       periods.push(() => resolve({ value: undefined }));
     }));
   const tick = async () => {
     now += 3500;
     const due = periods;
     periods = [];
-    due.forEach(release => release());
-    await new Promise<void>(resolve => setTimeout(resolve, 20));
+    due.forEach((release) => release());
+    await new Promise<void>((resolve) => setTimeout(resolve, 20));
   };
   const w = world(on, {
     files: running(line("run.start", { mode: "fresh" })),

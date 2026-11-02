@@ -17,7 +17,7 @@ async function renderMermaid(): Promise<void> {
   }
 
   const { default: mermaid } = await import("mermaid");
-  const nodes = Array.from(blocks, pre => {
+  const nodes = Array.from(blocks, (pre) => {
     const div = document.createElement("div");
     div.className = "mermaid";
     div.textContent = pre.textContent ?? "";

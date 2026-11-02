@@ -90,9 +90,9 @@ export interface Plugin {
 /** Read every plugin under a `plugins/` root, in directory order. */
 export function readPlugins(pluginsRoot: string): Plugin[] {
   return globSync("*/.claude-plugin/plugin.json", { cwd: pluginsRoot })
-    .map(path => path.split("/")[0] ?? "")
+    .map((path) => path.split("/")[0] ?? "")
     .sort()
-    .map(dir => readPlugin(pluginsRoot, dir));
+    .map((dir) => readPlugin(pluginsRoot, dir));
 }
 
 export function readPlugin(pluginsRoot: string, dir: string): Plugin {
@@ -106,7 +106,7 @@ export function readPlugin(pluginsRoot: string, dir: string): Plugin {
   // bring a `vendor/`, and hook scripts need their mode bits — enumerating
   // directories here would silently drop whichever one is added next.
   const files = globSync("**/*", { cwd: root })
-    .map(path => fileSource(root, path))
+    .map((path) => fileSource(root, path))
     .filter((f): f is PluginFile => f !== null)
     .sort((a, b) => a.path.localeCompare(b.path));
 

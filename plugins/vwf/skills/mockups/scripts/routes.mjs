@@ -102,8 +102,7 @@ const flowsDir = join("docs", "blueprint", "flows", args.project);
 let map;
 try {
   map = buildRouteMap(flowsDir, args.platform);
-}
-catch (error) {
+} catch (error) {
   fail(error.message, 1);
 }
 const { flows, screens, errors } = map;
@@ -130,8 +129,7 @@ const outFile = join(outDir, "routes.json");
 let previous;
 try {
   previous = readRoutes(dirname(outDir)).screens;
-}
-catch {
+} catch {
   previous = null;
 }
 writeFileSync(
@@ -146,9 +144,7 @@ writeFileSync(
 const pruned = prunePages(realpathSync(dirname(outDir)), previous, screens);
 
 // An overlay takes its parent's route; only the parent is named.
-const unrouted = screens.filter(screen =>
-  !screen.routed && screen.overlay === undefined
-);
+const unrouted = screens.filter((screen) => !screen.routed && screen.overlay === undefined);
 process.stdout.write(
   `ROUTES: ${screens.length} screens in ${flows.length} flows, `
     + `${unrouted.length} with no route -> ${outFile}\n`,

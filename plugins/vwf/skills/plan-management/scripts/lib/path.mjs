@@ -22,14 +22,14 @@ export function split(path) {
     return [];
   }
   const segments = path.split(".");
-  if (segments.some(s => s === "")) {
+  if (segments.some((s) => s === "")) {
     throw new PathError("a path segment is empty");
   }
   return segments;
 }
 
 function entry(list, id) {
-  return list.findIndex(e => isObject(e) && e.id === id);
+  return list.findIndex((e) => isObject(e) && e.id === id);
 }
 
 function step(node, segment) {

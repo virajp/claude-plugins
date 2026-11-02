@@ -376,7 +376,7 @@ action logs of archived plans untouched for more than 30 days.
   yours.
 - **It will not gate on what you did not name.** The unit, wave and plan gates
   are lists you wrote in the interview.
-- **It will not pick up an item from *Out of scope* or *Parked***, however
+- __It will not pick up an item from *Out of scope* or *Parked*__, however
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.
 - **It will not release anything.** No plan carries a release step; the run

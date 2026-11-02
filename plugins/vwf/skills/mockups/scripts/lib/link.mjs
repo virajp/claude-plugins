@@ -30,8 +30,7 @@ export function parseTarget(raw) {
   const pathname = query === -1 ? bare : bare.slice(0, query);
   try {
     decodeURIComponent(pathname);
-  }
-  catch {
+  } catch {
     return null;
   }
   return {

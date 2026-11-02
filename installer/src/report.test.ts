@@ -47,11 +47,11 @@ describe("renderProgress", () => {
       { name: "plugin:user:vwf", actions: [{ summary: "b" }] },
     ])
       .split("\n")
-      .filter(l => l.includes("1 change"));
+      .filter((l) => l.includes("1 change"));
 
     // The DETAIL column starts at the same offset on every row, which is the
     // whole point of the table — a ragged one is just prose with extra spaces.
-    const offsets = lines.map(l => l.indexOf("1 change"));
+    const offsets = lines.map((l) => l.indexOf("1 change"));
     expect(new Set(offsets).size).toBe(1);
   });
 

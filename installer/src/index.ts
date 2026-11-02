@@ -84,7 +84,7 @@ export async function run(args: Args): Promise<void> {
     home: homedir(),
     cwd: process.cwd(),
     now: new Date().toISOString(),
-    log: message => notes.push(message),
+    log: (message) => notes.push(message),
     exec: execCommand,
   };
   const progress = createProgress(process.stderr);
@@ -167,8 +167,7 @@ export async function run(args: Args): Promise<void> {
   // nothing, as one sentence rather than three failed commands.
   try {
     resolveRequest(request);
-  }
-  catch (error) {
+  } catch (error) {
     process.stderr.write(`${(error as Error).message}\n`);
     process.exit(1);
   }
@@ -307,8 +306,7 @@ function walkUpForPackage(start: string): string | undefined {
         if (parsed.name === PACKAGE_NAME) {
           return dir;
         }
-      }
-      catch {
+      } catch {
         // An unreadable package.json on the way up is somebody else's problem.
       }
     }
@@ -369,8 +367,7 @@ function isEntrypoint(): boolean {
   }
   try {
     return realpathSync(invoked) === fileURLToPath(import.meta.url);
-  }
-  catch {
+  } catch {
     return true;
   }
 }
@@ -387,8 +384,7 @@ export async function main(argv: readonly string[]): Promise<void> {
   let args: Args;
   try {
     args = parse(argv);
-  }
-  catch (error) {
+  } catch (error) {
     process.stderr.write(`${renderUsage()}\n${(error as Error).message}\n`);
     process.exit(1);
   }

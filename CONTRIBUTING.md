@@ -49,10 +49,10 @@ The same checks run on every commit and in CI, so there is nothing to remember
 beyond running them before you push:
 
 ```sh
-mise run code:format      # the formatter, over what it owns
-mise run code:lint        # the linters, per language
-mise run code:sec         # secret and vulnerability scanning
-mise run code:precommit   # every hook, over the whole tree
+mise run code:format    # the formatter, over what it owns
+mise run code:lint      # the linters, per language
+mise run code:sec       # secret and vulnerability scanning
+mise run code:precommit # every hook, over the whole tree
 ```
 
 The commit hooks call those same three tasks rather than the tools inside them,

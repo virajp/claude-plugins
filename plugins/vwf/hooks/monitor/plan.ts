@@ -48,26 +48,25 @@ const REVIEWER = /(?:^|:)execute-(?:code|security)-reviewer$/;
  */
 function unitOf(
   text: string,
-  units: { id: string; file: string; }[],
+  units: { id: string; file: string }[],
   name?: string,
   type?: string,
 ): string | undefined {
   const named = name?.match(UNIT_NAME)?.[1];
-  if (named && (units.length === 0 || units.some(unit => unit.id === named))) {
+  if (named && (units.length === 0 || units.some((unit) => unit.id === named))) {
     return named;
   }
   const byRow = () => {
     for (const match of text.matchAll(ROW_ID)) {
       const id = match[0].match(UNIT_ID)?.[0];
-      if (units.some(unit => unit.id === id)) {
+      if (units.some((unit) => unit.id === id)) {
         return id;
       }
     }
 
     return undefined;
   };
-  const byFile = () =>
-    units.find(unit => unit.file !== "" && text.includes(unit.file))?.id;
+  const byFile = () => units.find((unit) => unit.file !== "" && text.includes(unit.file))?.id;
 
   return type !== undefined && REVIEWER.test(type)
     ? byRow() ?? byFile()
@@ -106,7 +105,7 @@ export function memberPaths(yaml: string): string[] {
 
 /** The `host:` of a `.config/vwf-membership.yaml`. */
 export function hostOf(yaml: string): string | undefined {
-  const line = yaml.split("\n").find(one => /^host:/.test(one));
+  const line = yaml.split("\n").find((one) => /^host:/.test(one));
   const host = line === undefined ? "" : value(line);
 
   return host === "" ? undefined : host;
@@ -120,8 +119,7 @@ export function joinPath(base: string, rel: string): string {
   ) {
     if (part === "..") {
       parts.pop();
-    }
-    else if (part !== "" && part !== ".") {
+    } else if (part !== "" && part !== ".") {
       parts.push(part);
     }
   }
@@ -242,11 +240,10 @@ export function phaseOf(facts: {
     : "paused";
 }
 
-function parse(text: string): { value?: unknown; problem?: string; } {
+function parse(text: string): { value?: unknown; problem?: string } {
   try {
     return { value: JSON.parse(text) };
-  }
-  catch (error) {
+  } catch (error) {
     // The message may quote the bad input, control characters and all.
     return {
       problem: str(error instanceof Error ? error.message : String(error)),
@@ -264,11 +261,11 @@ function parse(text: string): { value?: unknown; problem?: string; } {
 export function unitForAgent(
   type: string,
   name: string | undefined,
-  units: { id: string; file: string; }[],
+  units: { id: string; file: string }[],
   text = "",
 ): string | undefined {
   const named = name?.match(UNIT_NAME)?.[1];
-  if (named && units.some(unit => unit.id === named)) {
+  if (named && units.some((unit) => unit.id === named)) {
     return named;
   }
   if (!type.startsWith(PREFIX) || type === RUNNER) {
@@ -281,7 +278,7 @@ export function unitForAgent(
 /** The RUNNING rows of a docs/plans/index.json text. */
 export function runningRows(
   text: string,
-): { rows: PlanIndexRow[]; problem?: string; } {
+): { rows: PlanIndexRow[]; problem?: string } {
   const { value, problem } = parse(text);
   if (problem !== undefined) {
     return { rows: [], problem: `docs/plans/index.json: ${problem}` };
@@ -294,8 +291,8 @@ export function runningRows(
   }
   const rows = plans
     .filter(isObject)
-    .filter(row => row["status"] === "RUNNING")
-    .map(row => ({
+    .filter((row) => row["status"] === "RUNNING")
+    .map((row) => ({
       id: str(row["id"]),
       folder: str(row["folder"]),
       kind: str(row["kind"]),
@@ -307,7 +304,7 @@ export function runningRows(
         ? str(row["target_repo"])
         : null,
     }))
-    .filter(row => row.folder !== "");
+    .filter((row) => row.folder !== "");
 
   return { rows };
 }
@@ -327,54 +324,52 @@ export function isOldFormat(facts: {
 /** What the pane shows of a plan folder's index.json text. */
 export function readFolder(
   text: string,
-): { folder?: PlanFolder; problem?: string; } {
+): { folder?: PlanFolder; problem?: string } {
   const { value, problem } = parse(text);
   if (problem !== undefined || !isObject(value)) {
     return { problem: `index.json: ${problem ?? "not an object"}` };
   }
   const status = isObject(value["status"]) ? value["status"] : {};
   const run = isObject(value["run"]) ? value["run"] : {};
-  const units: PlanUnit[] =
-    (Array.isArray(value["units"]) ? value["units"] : [])
-      .filter(isObject)
-      .map(unit => {
-        const out: PlanUnit = {
-          id: str(unit["id"]),
-          title: str(unit["title"]),
-          wave: num(unit["wave"]),
-          file: str(unit["file"]),
-          kind: str(unit["kind"]),
-          status: str(unit["status"]) || "pending",
-          commit: str(unit["commit"]),
-          rounds: num(unit["rounds"]),
-          started: str(unit["started"]),
-          ended: str(unit["ended"]),
-        };
-        const range = unit["range"];
-        if (isObject(range)) {
-          out.range = { from: str(range["from"]), to: str(range["to"]) };
-        }
+  const units: PlanUnit[] = (Array.isArray(value["units"]) ? value["units"] : [])
+    .filter(isObject)
+    .map((unit) => {
+      const out: PlanUnit = {
+        id: str(unit["id"]),
+        title: str(unit["title"]),
+        wave: num(unit["wave"]),
+        file: str(unit["file"]),
+        kind: str(unit["kind"]),
+        status: str(unit["status"]) || "pending",
+        commit: str(unit["commit"]),
+        rounds: num(unit["rounds"]),
+        started: str(unit["started"]),
+        ended: str(unit["ended"]),
+      };
+      const range = unit["range"];
+      if (isObject(range)) {
+        out.range = { from: str(range["from"]), to: str(range["to"]) };
+      }
 
-        return out;
-      });
+      return out;
+    });
   const gaps: PlanGap[] = (Array.isArray(value["gaps"]) ? value["gaps"] : [])
     .filter(isObject)
-    .map(gap => ({
+    .map((gap) => ({
       id: str(gap["id"]),
       unit: str(gap["unit"]),
       stage: str(gap["stage"]),
       text: str(gap["text"]),
       state: str(gap["state"]),
     }));
-  const waves: PlanWave[] =
-    (Array.isArray(value["waves"]) ? value["waves"] : [])
-      .filter(isObject)
-      .map(wave => ({
-        id: str(wave["id"]),
-        status: str(wave["status"]) || "pending",
-        started: str(wave["started"]),
-        ended: str(wave["ended"]),
-      }));
+  const waves: PlanWave[] = (Array.isArray(value["waves"]) ? value["waves"] : [])
+    .filter(isObject)
+    .map((wave) => ({
+      id: str(wave["id"]),
+      status: str(wave["status"]) || "pending",
+      started: str(wave["started"]),
+      ended: str(wave["ended"]),
+    }));
   const stages: PlanStage[] = Object
     .entries(isObject(value["stages"]) ? value["stages"] : {})
     .filter((entry): entry is [string, Json] => isObject(entry[1]))
@@ -415,7 +410,7 @@ export function expandHome(path: string, home: string): string {
  */
 function splitSummary(
   summary: string,
-): { type: string; name?: string; description: string; } {
+): { type: string; name?: string; description: string } {
   const parts = summary.replace(/ \[bg\]$/, "").split(" :: ");
   if (parts.length >= 3) {
     return {
@@ -439,7 +434,7 @@ function splitSummary(
 export function replay(
   lines: string[],
   folder: PlanFolder,
-  options: { partial?: boolean; } = {},
+  options: { partial?: boolean } = {},
 ): Replay {
   let skipped = 0;
   let lastSession: string | undefined;
@@ -459,7 +454,7 @@ export function replay(
   const pending: string[] = [];
   const agents = new Map<
     string,
-    { call?: string; startedAt?: number; started: boolean; ended: boolean; }
+    { call?: string; startedAt?: number; started: boolean; ended: boolean }
   >();
   const agentOf = (id: string) => {
     let agent = agents.get(id);
@@ -479,8 +474,7 @@ export function replay(
     let e: unknown;
     try {
       e = JSON.parse(raw);
-    }
-    catch {
+    } catch {
       skipped++;
       continue;
     }
@@ -542,12 +536,12 @@ export function replay(
         // oldest open call of its type until tool.end names the child.
         if (agent.call === undefined) {
           const type = str(e["agent_type"]);
-          const index = pending.findIndex(call => {
+          const index = pending.findIndex((call) => {
             const one = calls.get(call);
 
             return one !== undefined
               && one.child === undefined
-              && ![...agents.values()].some(a => a.call === call)
+              && ![...agents.values()].some((a) => a.call === call)
               && (one.type === type || one.type === "");
           });
           if (index >= 0) {
@@ -613,8 +607,8 @@ export function replay(
     }
   }
 
-  const units: ReplayUnit[] = folder.units.map(unit => {
-    const mine = tied.filter(one => one.unit === unit.id).map(one => one.agent);
+  const units: ReplayUnit[] = folder.units.map((unit) => {
+    const mine = tied.filter((one) => one.unit === unit.id).map((one) => one.agent);
     const out: ReplayUnit = { ...unit };
     const latest = mine[mine.length - 1];
     if (latest !== undefined) {
@@ -631,7 +625,7 @@ export function replay(
     units,
     waves: folder.waves,
     stages: folder.stages,
-    gaps: folder.gaps.filter(gap => gap.state === "open"),
+    gaps: folder.gaps.filter((gap) => gap.state === "open"),
     reviews,
     live: [...agents]
       .filter(([, agent]) => agent.started && !agent.ended)

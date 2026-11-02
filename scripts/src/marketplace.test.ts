@@ -42,7 +42,7 @@ describe("the generated marketplace manifest", () => {
   });
 
   it("reads every plugin in the tree", () => {
-    expect(parsed.plugins.map(p => p["name"])).toEqual(plugins.map(p => p.dir));
+    expect(parsed.plugins.map((p) => p["name"])).toEqual(plugins.map((p) => p.dir));
   });
 
   it("carries the header constants that used to live in marketplace.yaml", () => {
@@ -89,8 +89,8 @@ describe("the generated marketplace manifest", () => {
     // The whole reason no `sha` is emitted: resolving a tag to a commit would
     // need git, and `--check` has to work offline and in a fresh clone.
     for (const plugin of plugins) {
-      const entry = parsed.plugins.find(e => e["name"] === plugin.dir);
-      const source = entry?.["source"] as { ref?: string; };
+      const entry = parsed.plugins.find((e) => e["name"] === plugin.dir);
+      const source = entry?.["source"] as { ref?: string };
       expect(source.ref, plugin.dir).toBe(
         `${plugin.dir}-v${plugin.manifest.version as string}`,
       );
@@ -102,7 +102,7 @@ describe("the generated marketplace manifest", () => {
     // `v*` filter matched `vwf-v19.9.0` and fired the npm publish on a plugin
     // release. Both tag families are prefixed now; this is what keeps them so.
     for (const entry of parsed.plugins) {
-      const ref = (entry["source"] as { ref: string; }).ref;
+      const ref = (entry["source"] as { ref: string }).ref;
       expect(ref, entry["name"] as string).toMatch(
         /^[a-z][a-z0-9-]*-v\d+\.\d+\.\d+/,
       );
@@ -122,7 +122,7 @@ describe("the generated marketplace manifest", () => {
     // place the rename is applied — a plugin authoring `tags` in its manifest
     // would silently produce an entry with none.
     for (const plugin of plugins) {
-      const entry = parsed.plugins.find(e => e["name"] === plugin.dir);
+      const entry = parsed.plugins.find((e) => e["name"] === plugin.dir);
       expect(entry?.["tags"], plugin.dir).toEqual(plugin.manifest.keywords);
       expect(entry?.["keywords"], plugin.dir).toBeUndefined();
     }
@@ -139,7 +139,7 @@ describe("the generated marketplace manifest", () => {
   });
 
   it("passes vwf's repository and dependencies through, and nobody else's", () => {
-    const vwf = parsed.plugins.find(e => e["name"] === "vwf");
+    const vwf = parsed.plugins.find((e) => e["name"] === "vwf");
     expect(vwf?.["repository"]).toBe(
       "https://github.com/virajp/claude-plugins",
     );
@@ -205,8 +205,7 @@ describe("the local authoring manifest", () => {
     // The one assertion that keeps this a second *view* rather than a second
     // source of truth. Strip `source` from both and they must be equal — so a
     // field added to one projection and forgotten in the other fails here.
-    const strip = (entries: Record<string, unknown>[]) =>
-      entries.map(({ source: _source, ...rest }) => rest);
+    const strip = (entries: Record<string, unknown>[]) => entries.map(({ source: _source, ...rest }) => rest);
 
     expect(strip(parsedDev.plugins)).toEqual(strip(parsed.plugins));
   });

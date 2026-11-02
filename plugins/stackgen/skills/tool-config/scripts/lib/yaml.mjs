@@ -41,11 +41,9 @@ function stripComment(text) {
     if (quote) {
       if (c === "\\" && quote === "\"") {
         i++;
-      }
-      else if (c === "'" && quote === "'" && text[i + 1] === "'") {
+      } else if (c === "'" && quote === "'" && text[i + 1] === "'") {
         i++;
-      }
-      else if (c === quote) {
+      } else if (c === quote) {
         quote = null;
       }
       continue;
@@ -57,8 +55,7 @@ function stripComment(text) {
     expect = flow && i >= first && (c === "[" && i === first || c === ",");
     if ((c === "\"" || c === "'") && opens) {
       quote = c;
-    }
-    else if (c === "#" && (i === 0 || /[ \t]/.test(text[i - 1]))) {
+    } else if (c === "#" && (i === 0 || /[ \t]/.test(text[i - 1]))) {
       return text.slice(0, i);
     }
   }
@@ -76,27 +73,20 @@ function splitFlow(body, fail) {
     if (quote) {
       if (c === "\\" && quote === "\"") {
         i++;
-      }
-      else if (c === "'" && quote === "'" && body[i + 1] === "'") {
+      } else if (c === "'" && quote === "'" && body[i + 1] === "'") {
         i++;
-      }
-      else if (c === quote) {
+      } else if (c === quote) {
         quote = null;
       }
-    }
-    else if (expect && (c === " " || c === "\t")) {
+    } else if (expect && (c === " " || c === "\t")) {
       continue;
-    }
-    else if ((c === "\"" || c === "'") && expect) {
+    } else if ((c === "\"" || c === "'") && expect) {
       quote = c;
-    }
-    else if (c === "[" || c === "{") {
+    } else if (c === "[" || c === "{") {
       fail("a nested flow collection is not supported");
-    }
-    else if (c === "]") {
+    } else if (c === "]") {
       fail("an unquoted ] inside a flow list — quote the element");
-    }
-    else if (c === ",") {
+    } else if (c === ",") {
       parts.push(body.slice(start, i));
       start = i + 1;
       expect = true;
@@ -105,11 +95,11 @@ function splitFlow(body, fail) {
     expect = false;
   }
   parts.push(body.slice(start));
-  const items = parts.map(p => p.replace(BLANK, ""));
+  const items = parts.map((p) => p.replace(BLANK, ""));
   if (items.length === 1 && items[0] === "") {
     return [];
   }
-  if (items.some(p => p === "")) {
+  if (items.some((p) => p === "")) {
     fail("an empty flow list item");
   }
   return items;
@@ -175,9 +165,7 @@ function scalar(text, fail, { list = true } = {}) {
         "an unterminated flow list — multi-line flow lists are not supported",
       );
     }
-    return splitFlow(t.slice(1, -1), fail).map(p =>
-      scalar(p, fail, { list: false })
-    );
+    return splitFlow(t.slice(1, -1), fail).map((p) => scalar(p, fail, { list: false }));
   }
   if (t.startsWith("\"")) {
     return doubleQuoted(t, fail);
@@ -249,11 +237,11 @@ function prepare(text, source) {
 export function parseYaml(text, { source = "<yaml>" } = {}) {
   const lines = prepare(text, source);
   let i = 0;
-  const failAt = line => message => {
+  const failAt = (line) => (message) => {
     throw new YamlError(message, { source, line });
   };
 
-  const isItem = l => l.text === "-" || l.text.startsWith("- ");
+  const isItem = (l) => l.text === "-" || l.text.startsWith("- ");
 
   function block(indent) {
     return isItem(lines[i]) ? list(indent) : mapping(indent);

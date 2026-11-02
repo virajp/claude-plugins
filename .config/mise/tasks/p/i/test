@@ -9,23 +9,23 @@ cd "$MISE_PROJECT_ROOT"
 
 # Tests the built bin/, not the source — see installer/CLAUDE.md.
 print_header "Bundling installer/ into bin/ ..."
-pnpm exec tsup >/dev/null
+pnpm exec tsup > /dev/null
 
 CLI=(node bin/installer.mjs)
 
 print_header "Rendering --help ..."
-"${CLI[@]}" --help >/dev/null
+"${CLI[@]}" --help > /dev/null
 
 # The invocations below never mutate anything: each exits before an install runs.
 print_header "Asserting no flags exits non-zero ..."
-if "${CLI[@]}" >/dev/null 2>&1; then
+if "${CLI[@]}" > /dev/null 2>&1; then
   print_error "Expected non-zero exit with no flags"
   exit 1
 fi
 
 print_header "Asserting every retired flag is rejected ..."
 for flag in --platform --upgrade --force; do
-  if "${CLI[@]}" "$flag" claude >/dev/null 2>&1; then
+  if "${CLI[@]}" "$flag" claude > /dev/null 2>&1; then
     print_error "Expected non-zero exit for a retired flag (${flag})"
     exit 1
   fi
@@ -39,7 +39,7 @@ trap 'rm -rf "$E2E_HOME"' EXIT
 
 NODE_DIR="$(dirname "$(command -v node)")"
 mkdir -p "$E2E_HOME/bin"
-printf '#!/bin/sh\nexit 0\n' >"$E2E_HOME/bin/claude"
+printf '#!/bin/sh\nexit 0\n' > "$E2E_HOME/bin/claude"
 chmod +x "$E2E_HOME/bin/claude"
 
 # All three of HOME and the XDG vars, or a run writes into the real config.
@@ -58,7 +58,7 @@ plugin_dry="$(e2e --user vwf --dry-run)"
 for expected in \
   "claude plugin marketplace add virajp/claude-plugins" \
   "claude plugin install vwf@virajp-plugins --scope user"; do
-  if ! grep -qF "$expected" <<<"$plugin_dry"; then
+  if ! grep -qF "$expected" <<< "$plugin_dry"; then
     print_error "--user vwf --dry-run did not describe: $expected"
     printf '%s\n' "$plugin_dry"
     exit 1
@@ -78,10 +78,10 @@ ARTIFACT="$E2E_HOME/.cursor/rules/virajp.md"
 CONFIG="$E2E_HOME/.cursor/settings.json"
 
 mkdir -p "$E2E_HOME/.cursor/rules" "$RECEIPT_DIR"
-printf 'the file that install wrote\n' >"$ARTIFACT"
-printf '{\n  "virajp": "ours"\n}\n' >"$CONFIG"
+printf 'the file that install wrote\n' > "$ARTIFACT"
+printf '{\n  "virajp": "ours"\n}\n' > "$CONFIG"
 
-cat >"$RECEIPT" <<JSON
+cat > "$RECEIPT" << JSON
 {
   "version": 3,
   "installedAt": "2026-08-01T00:00:00Z",
@@ -101,12 +101,12 @@ JSON
 # The restore itself is asserted in uninstall.test.ts; --uninstall needs a TTY.
 print_header "Asserting --uninstall --dry-run finds the legacy receipt ..."
 dry_out="$(e2e --uninstall --dry-run 2>&1)"
-if ! grep -qF "$RECEIPT" <<<"$dry_out"; then
+if ! grep -qF "$RECEIPT" <<< "$dry_out"; then
   print_error "--uninstall --dry-run did not name ${RECEIPT}"
   printf '%s\n' "$dry_out"
   exit 1
 fi
-if ! grep -qF "revert" <<<"$dry_out"; then
+if ! grep -qF "revert" <<< "$dry_out"; then
   print_error "--uninstall --dry-run described no revert for it"
   print_warn "A delete rather than a revert would leave the user with nothing."
   printf '%s\n' "$dry_out"
@@ -123,7 +123,7 @@ if ! grep -qF '"virajp": "ours"' "$CONFIG"; then
 fi
 
 print_header "Asserting --uninstall refuses without a terminal ..."
-if e2e --uninstall </dev/null >/dev/null 2>&1; then
+if e2e --uninstall < /dev/null > /dev/null 2>&1; then
   print_error "Expected non-zero exit for --uninstall with no TTY to ask on"
   exit 1
 fi

@@ -71,7 +71,7 @@ export interface ExecResult {
 export type Exec = (
   command: string,
   args: readonly string[],
-  options?: { readonly cwd?: string; readonly env?: NodeJS.ProcessEnv; },
+  options?: { readonly cwd?: string; readonly env?: NodeJS.ProcessEnv },
 ) => ExecResult;
 
 /**
@@ -105,7 +105,7 @@ export interface Action {
   /** Absolute path this touches, when it is a file operation. */
   readonly path?: string;
   /** A diff to show under `--dry-run`, when the change is to a text file. */
-  readonly diff?: { readonly before: string; readonly after: string; };
+  readonly diff?: { readonly before: string; readonly after: string };
 }
 
 /** Is `bin` on the PATH? */
@@ -113,7 +113,7 @@ export function hasBin(bin: string): boolean {
   const path = process.env["PATH"] ?? "";
   return path
     .split(process.platform === "win32" ? ";" : ":")
-    .some(dir => dir.length > 0 && existsSync(join(dir, bin)));
+    .some((dir) => dir.length > 0 && existsSync(join(dir, bin)));
 }
 
 /**

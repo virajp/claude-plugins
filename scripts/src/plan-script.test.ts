@@ -170,7 +170,7 @@ describe("set", () => {
 
   it.each([["--force the push"], ["--json"], ["--raw"]])(
     "sets a value that starts with -- (%s) as a string",
-    value => {
+    (value) => {
       const r = plan(["set", change, "status.detail", value]);
       expect(r.status).toBe(0);
       expect(parse(change).status.detail).toBe(value);
@@ -254,7 +254,7 @@ describe("set", () => {
   it("leaves no temporary file behind", () => {
     plan(["set", change, "units.U1.status", "green"]);
     plan(["set", change, "units.U1.status", "bogus"]);
-    expect(readdirSync(join(root, "change")).filter(f => f.endsWith(".tmp")))
+    expect(readdirSync(join(root, "change")).filter((f) => f.endsWith(".tmp")))
       .toEqual([]);
   });
 });
@@ -262,8 +262,7 @@ describe("set", () => {
 describe("set stamps started and ended", () => {
   const LATER = "2026-10-25T07:00:00.000Z";
   const times = (o: Json) => ({ started: o.started, ended: o.ended });
-  const unitOf = (id: string) =>
-    parse(change).units.find((u: Json) => u.id === id);
+  const unitOf = (id: string) => parse(change).units.find((u: Json) => u.id === id);
   const row = (id: string) => parse(index).plans.find((p: Json) => p.id === id);
 
   it("stamps a unit running, then green", () => {
@@ -289,7 +288,7 @@ describe("set stamps started and ended", () => {
     expect(times(unitOf("U1"))).toEqual({ started: NOW, ended: "" });
   });
 
-  it.each(["unresolved", "skipped"])("sets ended on a unit %s", status => {
+  it.each(["unresolved", "skipped"])("sets ended on a unit %s", (status) => {
     expect(plan(["set", change, "units.U1.status", status]).status).toBe(0);
     expect(times(unitOf("U1"))).toEqual({ started: "", ended: NOW });
   });
@@ -491,7 +490,7 @@ describe("remove", () => {
 });
 
 describe("rewave", () => {
-  type Spec = { wave: number; depends_on?: string[]; };
+  type Spec = { wave: number; depends_on?: string[] };
 
   /**
    * A change plan made in the temp folder from the change fixture, one unit
@@ -534,8 +533,7 @@ describe("rewave", () => {
     return file;
   }
 
-  const waveOf = (file: string, id: string) =>
-    parse(file).units.find((u: Json) => u.id === id).wave;
+  const waveOf = (file: string, id: string) => parse(file).units.find((u: Json) => u.id === id).wave;
 
   /** Runs rewave, expecting a refusal that leaves the bytes as they were. */
   function refused(file: string, pairs: string[], code = 1) {
@@ -599,9 +597,7 @@ describe("rewave", () => {
     const doc = parse(file);
     expect(doc.waves[0]).toEqual(w1);
     expect(
-      doc.waves.slice(1).every((w: Json) =>
-        w.status === "pending" && w.started === "" && w.ended === ""
-      ),
+      doc.waves.slice(1).every((w: Json) => w.status === "pending" && w.started === "" && w.ended === ""),
     )
       .toBe(true);
   });
@@ -677,7 +673,7 @@ describe("rewave", () => {
     [["U1"]],
     [["=1"]],
     [["U1=1", "U1=2"]],
-  ])("exits 2 on the pairs %j", pairs => {
+  ])("exits 2 on the pairs %j", (pairs) => {
     refused(made([1, 2, 2]), pairs, 2);
   });
 
@@ -795,8 +791,7 @@ describe("validate", () => {
     expect(plan(["validate", "-"], read(change)).status).toBe(2);
   });
 
-  const unit = (doc: Json, id: string) =>
-    doc.units.find((u: Json) => u.id === id);
+  const unit = (doc: Json, id: string) => doc.units.find((u: Json) => u.id === id);
 
   const folderCases: [
     string,
@@ -804,117 +799,117 @@ describe("validate", () => {
     (doc: Json) => void,
     string,
   ][] = [
-    ["format is not 1", "change", d => {
+    ["format is not 1", "change", (d) => {
       d.format = 2;
     }, "format: must be 1"],
-    ["type is not valid", "change", d => {
+    ["type is not valid", "change", (d) => {
       d.type = "vwf-other";
     }, "type:"],
-    ["a required key is missing", "change", d => {
+    ["a required key is missing", "change", (d) => {
       delete d.stages;
     }, "stages: is missing"],
-    ["a key has the wrong JSON type", "change", d => {
+    ["a key has the wrong JSON type", "change", (d) => {
       d.title = 3;
     }, "title: must be a string"],
-    ["an enum value is not valid", "change", d => {
+    ["an enum value is not valid", "change", (d) => {
       unit(d, "U1").status = "done";
     }, "units.U1.status:"],
-    ["a release level is not valid", "change", d => {
+    ["a release level is not valid", "change", (d) => {
       d.release_levels[0].level = "HUGE";
     }, "release_levels.vwf.level:"],
-    ["an after-landing mode is not run", "change", d => {
+    ["an after-landing mode is not run", "change", (d) => {
       d.after_landing[0].mode = "ask";
     }, "after_landing.A1.mode:"],
-    ["a gap state is not valid", "cycle", d => {
+    ["a gap state is not valid", "cycle", (d) => {
       d.gaps[0].state = "maybe";
     }, "gaps.G1.state:"],
-    ["an LSP answer is not valid", "cycle", d => {
+    ["an LSP answer is not valid", "cycle", (d) => {
       d.consent.lsp.dart = "maybe";
     }, "consent.lsp.dart:"],
-    ["an id is not unique", "change", d => {
+    ["an id is not unique", "change", (d) => {
       unit(d, "U2").id = "U1";
     }, "U1 is not unique"],
-    ["an id breaks the pattern", "change", d => {
+    ["an id breaks the pattern", "change", (d) => {
       d.shared_files[0].id = "S 1";
     }, "shared_files[0].id: must match"],
-    ["a unit file is not in the folder", "change", d => {
+    ["a unit file is not in the folder", "change", (d) => {
       unit(d, "U1").file = "09-gone.md";
     }, "units.U1.file: 09-gone.md is not in the folder"],
-    ["depends_on names no unit", "change", d => {
+    ["depends_on names no unit", "change", (d) => {
       unit(d, "U2").depends_on = ["U7"];
     }, "units.U2.depends_on: U7 is not a unit"],
-    ["depends_on names a later wave", "change", d => {
+    ["depends_on names a later wave", "change", (d) => {
       unit(d, "U1").depends_on = ["U2"];
     }, "units.U1.depends_on: U2 is not in an earlier wave"],
-    ["waits is empty above wave 1", "change", d => {
+    ["waits is empty above wave 1", "change", (d) => {
       unit(d, "U2").waits = "";
     }, "units.U2.waits:"],
-    ["a review unit owns a path", "change", d => {
+    ["a review unit owns a path", "change", (d) => {
       unit(d, "R3").owns = ["x"];
     }, "units.R3.owns:"],
-    ["a review unit depends on nothing", "change", d => {
+    ["a review unit depends on nothing", "change", (d) => {
       unit(d, "R3").depends_on = [];
     }, "units.R3.depends_on:"],
-    ["a review unit has no range", "change", d => {
+    ["a review unit has no range", "change", (d) => {
       delete unit(d, "R3").range;
     }, "units.R3.range:"],
-    ["a non-review unit has a range", "change", d => {
+    ["a non-review unit has a range", "change", (d) => {
       unit(d, "U1").range = { from: "", to: "" };
     }, "units.U1.range: only a review unit"],
-    ["backlog and backlog_pieces share an id", "change", d => {
+    ["backlog and backlog_pieces share an id", "change", (d) => {
       d.backlog.push("B2");
     }, "B2 is on backlog too"],
-    ["a source id is on neither list", "change", d => {
+    ["a source id is on neither list", "change", (d) => {
       d.source.push("B9");
     }, "B9 is on neither"],
-    ["a backlog piece has no index.md line", "change", d => {
+    ["a backlog piece has no index.md line", "change", (d) => {
       d.backlog_pieces = ["B7"];
       d.source = ["B1", "B7"];
     }, "B7 has no line"],
-    ["a whole backlog id has an index.md line", "change", d => {
+    ["a whole backlog id has an index.md line", "change", (d) => {
       d.backlog = ["B2"];
       d.backlog_pieces = [];
     }, "B2 is whole"],
-    ["an unknown key", "change", d => {
+    ["an unknown key", "change", (d) => {
       d.stages.ux.note = "x";
     }, "stages.ux.note: is not a key the schema names"],
-    ["a cycle-only key on a change plan", "change", d => {
+    ["a cycle-only key on a change plan", "change", (d) => {
       d.acceptance = [];
     }, "acceptance: is a cycle-only key"],
-    ["consent.lsp on a change plan", "change", d => {
+    ["consent.lsp on a change plan", "change", (d) => {
       d.consent.lsp = {};
     }, "consent.lsp: is a cycle-only key"],
-    ["a cycle plan lacks covers", "cycle", d => {
+    ["a cycle plan lacks covers", "cycle", (d) => {
       delete d.covers;
     }, "covers: is missing"],
-    ["a stage is missing", "cycle", d => {
+    ["a stage is missing", "cycle", (d) => {
       delete d.stages.ux;
     }, "stages.ux: is missing"],
-    ["a gap names no unit", "cycle", d => {
+    ["a gap names no unit", "cycle", (d) => {
       d.gaps[0].unit = "U9";
     }, "gaps.G1.unit: U9 is not a unit"],
-    ["a gap has no text", "cycle", d => {
+    ["a gap has no text", "cycle", (d) => {
       d.gaps[0].text = "";
     }, "gaps.G1.text: must not be empty"],
-    ["waves is missing", "change", d => {
+    ["waves is missing", "change", (d) => {
       delete d.waves;
     }, "waves: is missing"],
-    ["a wave is missing", "change", d => {
+    ["a wave is missing", "change", (d) => {
       d.waves.splice(2, 1);
     }, "waves: W3 is missing"],
-    ["a wave is extra", "cycle", d => {
+    ["a wave is extra", "cycle", (d) => {
       d.waves.push({ id: "W3", status: "pending", started: "", ended: "" });
     }, "waves.W3: is not a wave of this plan"],
-    ["the waves are out of order", "cycle", d => {
+    ["the waves are out of order", "cycle", (d) => {
       d.waves.reverse();
     }, "waves: must list W1, W2 in order"],
-    ["a wave status is not valid", "cycle", d => {
+    ["a wave status is not valid", "cycle", (d) => {
       d.waves[0].status = "done";
     }, "waves.W1.status:"],
-    ["a unit lacks ended", "change", d => {
+    ["a unit lacks ended", "change", (d) => {
       delete unit(d, "U1").ended;
     }, "units.U1.ended: is missing"],
-    ["a stage lacks started", "change", d => {
+    ["a stage lacks started", "change", (d) => {
       delete d.stages.ux.started;
     }, "stages.ux.started: is missing"],
   ];
@@ -983,41 +978,41 @@ describe("validate", () => {
   });
 
   const indexCases: [string, (doc: Json) => void, string][] = [
-    ["format is not 1", d => {
+    ["format is not 1", (d) => {
       d.format = 0;
     }, "format: must be 1"],
-    ["plans is not a list", d => {
+    ["plans is not a list", (d) => {
       d.plans = {};
     }, "plans: must be a list"],
-    ["a row lacks a key", d => {
+    ["a row lacks a key", (d) => {
       delete d.plans[0].priority;
     }, "plans.2026-10-24-plan-json-format.priority: is missing"],
-    ["a row's status is not valid", d => {
+    ["a row's status is not valid", (d) => {
       d.plans[0].status = "DRAFT";
     }, "plans.2026-10-24-plan-json-format.status:"],
-    ["a row's kind is not valid", d => {
+    ["a row's kind is not valid", (d) => {
       d.plans[0].kind = "other";
     }, ".kind:"],
-    ["a row's gaps has the wrong shape", d => {
+    ["a row's gaps has the wrong shape", (d) => {
       d.plans[1].gaps = { open: "1", moved_to: [] };
     }, "gaps.open: must be an integer"],
-    ["a row's target_repo is a number", d => {
+    ["a row's target_repo is a number", (d) => {
       d.plans[0].target_repo = 1;
     }, "target_repo: must be a string or null"],
-    ["a row's id is not its folder's basename", d => {
+    ["a row's id is not its folder's basename", (d) => {
       d.plans[0].id = "2026-10-24-other";
     }, "does not match the basename"],
-    ["two rows share an id", d => {
+    ["two rows share an id", (d) => {
       d.plans[1].id = d.plans[0].id;
       d.plans[1].folder = d.plans[0].folder;
     }, "is not unique"],
-    ["a row has an unknown key", d => {
+    ["a row has an unknown key", (d) => {
       d.plans[0].owner = "me";
     }, "owner: is not a key the schema names"],
-    ["a row lacks started", d => {
+    ["a row lacks started", (d) => {
       delete d.plans[0].started;
     }, "plans.2026-10-24-plan-json-format.started: is missing"],
-    ["a row's ended is not a time", d => {
+    ["a row's ended is not a time", (d) => {
       d.plans[1].ended = "yesterday";
     }, "plans.2026-10-20-sign-in.ended: must be"],
   ];
@@ -1047,7 +1042,7 @@ describe("usage", () => {
     [["set", "--json", "a", "b"]],
     [["append", "x", "gaps", "{}", "--json"]],
     [["validate", "x", "--raw"]],
-  ])("exits 2 on %j", args => {
+  ])("exits 2 on %j", (args) => {
     expect(plan(args).status).toBe(2);
   });
 });

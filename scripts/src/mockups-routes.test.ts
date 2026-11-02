@@ -44,9 +44,7 @@ const HEADER =
   + "| ---- | ------ | ----- | ------------------- | ---------------------------- | ------- | --------------- |\n";
 
 function flowDoc(rows: string[], header = HEADER): string {
-  return `# Flow\n\n## Screens → app\n\n${header}${
-    rows.join("\n")
-  }\n\n### Next\n`;
+  return `# Flow\n\n## Screens → app\n\n${header}${rows.join("\n")}\n\n### Next\n`;
 }
 
 let repo: string;
@@ -139,20 +137,20 @@ describe("routes.mjs", () => {
     expect(status).toBe(0);
     const lines = stdout.trimEnd().split("\n");
     expect(lines[0]).toMatch(/^ROUTES: 5 screens in 2 flows/);
-    expect(lines.filter(line => line.startsWith("NO ROUTE:"))).toEqual([
+    expect(lines.filter((line) => line.startsWith("NO ROUTE:"))).toEqual([
       "NO ROUTE: 200c Receipt preview",
     ]);
     const json = routesJson();
     expect(json.project).toBe("demo");
     expect(json.platform).toBe("web");
-    expect(json.screens.map(s => s.code)).toEqual([
+    expect(json.screens.map((s) => s.code)).toEqual([
       "100a",
       "100b",
       "200a",
       "200b",
       "200c",
     ]);
-    const by = Object.fromEntries(json.screens.map(s => [s.code, s]));
+    const by = Object.fromEntries(json.screens.map((s) => [s.code, s]));
     expect(by["100a"]).toMatchObject({
       route: "/",
       path: "",
@@ -257,8 +255,7 @@ describe("routes.mjs", () => {
     run();
     const first = routesJson();
     rmSync(join(repo, "docs", "blueprint"), { recursive: true });
-    const header =
-      "| Route | Actions | Screen | Code |\n| --- | --- | --- | --- |\n";
+    const header = "| Route | Actions | Screen | Code |\n| --- | --- | --- | --- |\n";
     writeFlow(
       "100-signin",
       "web",
@@ -295,7 +292,7 @@ describe("routes.mjs", () => {
     expect(stderr).toBe("");
     expect(status).toBe(0);
     expect(stdout).not.toMatch(/NO ROUTE: 300/);
-    const by = Object.fromEntries(routesJson().screens.map(s => [s.code, s]));
+    const by = Object.fromEntries(routesJson().screens.map((s) => [s.code, s]));
     expect(by["300a"]).toMatchObject({
       route: "/orders/:id",
       path: "orders/[id]",
@@ -356,7 +353,7 @@ describe("routes.mjs", () => {
     const { status, stderr } = run();
     expect(stderr).toBe("");
     expect(status).toBe(0);
-    const by = Object.fromEntries(routesJson().screens.map(s => [s.code, s]));
+    const by = Object.fromEntries(routesJson().screens.map((s) => [s.code, s]));
     expect(by["300a"]).toMatchObject({ route: "/confirm", path: "confirm" });
     expect(by["300a"]).not.toHaveProperty("overlay");
   });
@@ -385,7 +382,7 @@ describe("routes.mjs", () => {
       ]),
     );
     expect(run().status).toBe(0);
-    expect(routesJson().screens.map(s => [s.route, s.path])).toEqual([
+    expect(routesJson().screens.map((s) => [s.route, s.path])).toEqual([
       ["/orders/:id", "orders/[id]"],
       ["/settings", "settings"],
       ["/help", "help"],

@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="https://claude-plugins.virajp.dev/brand/social-preview.png" width="640" alt="vwf">
+  <img
+    src="https://claude-plugins.virajp.dev/brand/social-preview.png"
+    width="640"
+    alt="vwf"
+  >
 </p>
 
 # vwf — Product → Blueprint → Plan → Execute for Claude Code

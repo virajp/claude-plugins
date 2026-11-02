@@ -99,7 +99,7 @@ const DPRINT_CONFIG = ".config/dprint.json";
 const HOOK_CONFIG = ".config/pre-commit-config.yaml";
 const CONF_D = ".config/mise/conf.d";
 
-const modeOf = exec => (exec ? "755" : "644");
+const modeOf = (exec) => (exec ? "755" : "644");
 
 // --- the workspace: the repo as the call would leave it --------------------------
 
@@ -119,15 +119,14 @@ class Workspace {
   safe(path) {
     checkRelPath(path);
     this.realRoot ??= realpathSync(this.root);
-    const parts = path.split("/").filter(p => p !== "" && p !== ".");
+    const parts = path.split("/").filter((p) => p !== "" && p !== ".");
     let at = this.realRoot;
     for (const part of parts) {
       at = join(at, part);
       let st;
       try {
         st = lstatSync(at);
-      }
-      catch (e) {
+      } catch (e) {
         if (e.code === "ENOENT" || e.code === "ENOTDIR") {
           break;
         }
@@ -221,7 +220,7 @@ class Workspace {
 
   /** Forget a planned change: the path reads as the disk has it. */
   drop(path) {
-    this.order = this.order.filter(p => p !== path);
+    this.order = this.order.filter((p) => p !== path);
     this.files.delete(path);
     this.modes.delete(path);
   }
@@ -231,7 +230,7 @@ class Workspace {
     const base = dir.replace(/\/$/, "");
     const out = new Set();
     // the directory and its parents are held to safe(); a symlink inside it is never followed or listed
-    const visit = rel => {
+    const visit = (rel) => {
       const abs = this.safe(rel);
       if (!existsSync(abs) || !statSync(abs).isDirectory()) {
         return;
@@ -243,8 +242,7 @@ class Workspace {
         const p = `${rel}/${d.name}`;
         if (d.isDirectory()) {
           visit(p);
-        }
-        else {
+        } else {
           out.add(p);
         }
       }
@@ -256,8 +254,7 @@ class Workspace {
       }
       if (text === null) {
         out.delete(p);
-      }
-      else {
+      } else {
         out.add(p);
       }
     }
@@ -266,7 +263,7 @@ class Workspace {
 
   /** The paths this call will write (not delete), before any is written. */
   pending() {
-    return this.order.filter(p => typeof this.files.get(p) === "string");
+    return this.order.filter((p) => typeof this.files.get(p) === "string");
   }
 
   /**
@@ -277,7 +274,7 @@ class Workspace {
     const written = [];
     const deleted = [];
     // every path is held to safe() before the first byte is written
-    const targets = new Map(this.order.map(p => [p, this.safe(p)]));
+    const targets = new Map(this.order.map((p) => [p, this.safe(p)]));
     const before = new Map();
     for (const path of this.order) {
       const abs = targets.get(path);
@@ -302,8 +299,7 @@ class Workspace {
     };
     try {
       this.writeEach(targets, written, deleted);
-    }
-    catch (e) {
+    } catch (e) {
       // a failure midway leaves nothing half-written
       restore();
       throw e;
@@ -374,7 +370,7 @@ function place(ctx, path, source, exec, raw = source) {
     text = spliced ?? source;
   }
   if (isCiLoaded(path)) {
-    text = pinExact(text, existing, tool => env.runner.latest(tool));
+    text = pinExact(text, existing, (tool) => env.runner.latest(tool));
   }
   if (existing !== null && text !== existing) {
     text = formatted(ctx, path, text) ?? text;
@@ -407,7 +403,7 @@ function renderTree(ctx, templates, values, { tiers = [0, 1, 2] } = {}) {
     if (!tiers.includes(tier)) {
       continue;
     }
-    for (const t of templates.filter(t => t.tier === tier)) {
+    for (const t of templates.filter((t) => t.tier === tier)) {
       place(
         ctx,
         t.path,
@@ -420,7 +416,7 @@ function renderTree(ctx, templates, values, { tiers = [0, 1, 2] } = {}) {
 }
 
 function readTree(dir) {
-  return walk(dir).map(f => {
+  return walk(dir).map((f) => {
     const text = readFileSync(f.abs, "utf8");
     return { ...f, text, tier: tierOf(text) };
   });
@@ -439,7 +435,7 @@ function setDoc(ctx, doc) {
   const text = stackgenText(doc);
   const existing = ctx.ws.disk(STACKGEN_PATH);
   // a pack call with no values never creates the file for `format` alone
-  const empty = Object.keys(doc).every(k => k === "format");
+  const empty = Object.keys(doc).every((k) => k === "format");
   if (text !== existing && !(existing === null && empty)) {
     ctx.ws.write(STACKGEN_PATH, text, "644");
   }
@@ -470,7 +466,7 @@ function rerenderAll(ctx, text) {
 
 /** Every path tool-config's own assets/ and templates/ ship. */
 function shippedPaths(ctx) {
-  return [...walk(ctx.assetsDir), ...walk(ctx.templatesDir)].map(f => f.path);
+  return [...walk(ctx.assetsDir), ...walk(ctx.templatesDir)].map((f) => f.path);
 }
 
 /**
@@ -506,7 +502,7 @@ function cmdPack(ctx, call) {
   }
   const text = setDoc(ctx, withPack(readDoc(ctx.ws), slug, call.sets));
   const templates = readTree(join(dir, "templates"));
-  const shipped = new Set(shippedPaths(ctx).map(p => p.toLowerCase()));
+  const shipped = new Set(shippedPaths(ctx).map((p) => p.toLowerCase()));
   for (const t of templates) {
     const why = refusedDestination(t.path.toLowerCase(), slug, shipped);
     if (why) {
@@ -526,10 +522,10 @@ function cmdPackRemove(ctx, call) {
     ...ctx.ws.list(`${CONF_D}/${slug}/`),
     ...Object
       .values(SUBTASK_DIRS)
-      .map(d => `${TASKS_DIR}/${d}/${slug}`)
-      .filter(p => ctx.ws.read(p) !== null),
+      .map((d) => `${TASKS_DIR}/${d}/${slug}`)
+      .filter((p) => ctx.ws.read(p) !== null),
   ];
-  for (const path of owned.filter(p => !shipped.has(p)).sort()) {
+  for (const path of owned.filter((p) => !shipped.has(p)).sort()) {
     ctx.ws.remove(path);
   }
   rerenderAll(ctx, text);
@@ -553,8 +549,7 @@ function cmdUpgrade(ctx) {
       let to;
       try {
         to = env.runner.latest(pin.tool);
-      }
-      catch (e) {
+      } catch (e) {
         if (!(e instanceof RefusalError)) {
           throw e;
         }
@@ -599,8 +594,7 @@ function lineDiff(before, after) {
   for (const l of after) {
     if (count.get(l)) {
       count.set(l, count.get(l) - 1);
-    }
-    else {
+    } else {
       added.push(l);
     }
   }
@@ -611,7 +605,7 @@ function lineDiff(before, after) {
 /** The create, write and delete rows: each planned path against the disk. */
 function fileRows(ws) {
   const rows = [];
-  const short = t => (t === null ? null : sha256(t).slice(0, 12));
+  const short = (t) => (t === null ? null : sha256(t).slice(0, 12));
   for (const path of ws.order) {
     const before = ws.disk(path);
     const after = ws.read(path);
@@ -646,14 +640,14 @@ function fileRows(ws) {
  * `…:all` — that stops running a task the answers keep.
  */
 function refuseOrphans(ws, rows, answers) {
-  const tasks = answer =>
+  const tasks = (answer) =>
     rows
-      .filter(r =>
+      .filter((r) =>
         r.kind === "delete"
         && answers.get(r.id) === answer
         && r.path.startsWith(`${TASKS_DIR}/`)
       )
-      .map(r => r.path.slice(TASKS_DIR.length + 1).split("/").join(":"));
+      .map((r) => r.path.slice(TASKS_DIR.length + 1).split("/").join(":"));
   // a task name holds no pattern syntax but `.`, which only widens the match
   const runs = (text, t) => new RegExp(`mise run ${t}(\\s|$)`, "m").test(text);
   const gone = tasks("ok");
@@ -662,7 +656,7 @@ function refuseOrphans(ws, rows, answers) {
     const before = ws.disk(row.path) ?? "";
     const answer = answers.get(row.id);
     if (answer === "keep-existing") {
-      const task = gone.find(t => runs(before, t));
+      const task = gone.find((t) => runs(before, t));
       if (task) {
         throw new RefusalError(
           `${row.id} keeps ${row.path}, which still runs ${task} — a task this call deletes; answer both rows alike`,
@@ -672,7 +666,7 @@ function refuseOrphans(ws, rows, answers) {
     }
     if (answer === "ok" && row.kind === "write") {
       const after = ws.read(row.path) ?? "";
-      const task = stays.find(t => runs(before, t) && !runs(after, t));
+      const task = stays.find((t) => runs(before, t) && !runs(after, t));
       if (task) {
         throw new RefusalError(
           `${row.id} rewrites ${row.path} without ${task} — a task the answers keep; answer both rows alike`,
@@ -716,16 +710,13 @@ function land(ws, env, { all, tail = [], written: onWritten }) {
   if (all) {
     const kept = (why, output) =>
       new RefusalError(
-        `${why} — the files this call wrote stay; re-run all once it passes${
-          output ? `:\n${output}` : ""
-        }`,
+        `${why} — the files this call wrote stay; re-run all once it passes${output ? `:\n${output}` : ""}`,
         undefined,
         { written, deleted },
       );
     try {
       runner.trust();
-    }
-    catch (e) {
+    } catch (e) {
       throw e instanceof RefusalError ? kept(e.message) : e;
     }
     const setup = runner.setupAll();
@@ -735,7 +726,7 @@ function land(ws, env, { all, tail = [], written: onWritten }) {
     setupOutput = setup.output;
   }
   const held = new Map(
-    finish.filter(p => !written.includes(p)).map(p => {
+    finish.filter((p) => !written.includes(p)).map((p) => {
       const abs = ws.safe(p);
       return [p, existsSync(abs) ? readFileSync(abs) : null];
     }),
@@ -748,7 +739,7 @@ function land(ws, env, { all, tail = [], written: onWritten }) {
       }
     }
   };
-  const files = finish.filter(p => held.get(p) !== null);
+  const files = finish.filter((p) => held.get(p) !== null);
   try {
     if (formats && files.length) {
       runner.tool("dprint", [
@@ -762,8 +753,7 @@ function land(ws, env, { all, tail = [], written: onWritten }) {
     if (validates) {
       runner.tool("pre-commit", ["validate-config", HOOK_CONFIG]);
     }
-  }
-  catch (e) {
+  } catch (e) {
     restore();
     if (e instanceof RefusalError) {
       throw new RefusalError(
@@ -822,14 +812,11 @@ async function run(argv) {
   let raised = [];
   if (call.command === "all") {
     cmdAll(ctx, call);
-  }
-  else if (call.command === "pack") {
+  } else if (call.command === "pack") {
     cmdPack(ctx, call);
-  }
-  else if (call.command === "pack-remove") {
+  } else if (call.command === "pack-remove") {
     cmdPackRemove(ctx, call);
-  }
-  else {
+  } else {
     raised = cmdUpgrade(ctx);
   }
   const rows = numberRows([...fileRows(ws), ...raised]);
@@ -850,8 +837,7 @@ async function run(argv) {
   }
   if (rows.length) {
     checkAnswers(rows, call.answers ?? new Map(), store.get(signature));
-  }
-  else if (call.answers?.size) {
+  } else if (call.answers?.size) {
     // a re-run of a call that wrote and then stopped: nothing is left to answer
     ctx.notes.push("no rows to answer — --answers ignored");
     extra.notes = ctx.notes;
@@ -862,20 +848,17 @@ async function run(argv) {
       if (answer === "ok") {
         row._apply();
       }
-    }
-    else if (answer === "keep-existing") {
+    } else if (answer === "keep-existing") {
       ws.drop(row.path);
     }
   }
   refuseOrphans(ws, rows, call.answers ?? new Map());
   const kept = new Set(
-    rows.filter(r => call.answers?.get(r.id) === "keep-existing").map(r =>
-      r.path
-    ),
+    rows.filter((r) => call.answers?.get(r.id) === "keep-existing").map((r) => r.path),
   );
   const { written, deleted, setup } = land(ws, env, {
     all: call.command === "all",
-    tail: [...ctx.rendered].filter(p => !kept.has(p)),
+    tail: [...ctx.rendered].filter((p) => !kept.has(p)),
     written: () => store.drop(signature),
   });
   return { written, deleted, ...(setup && { setup }), ...extra };
@@ -884,8 +867,7 @@ async function run(argv) {
 try {
   const out = await run(process.argv.slice(2));
   process.stdout.write(JSON.stringify(out, null, 2) + "\n");
-}
-catch (e) {
+} catch (e) {
   // exitCode, never exit(): exit() can cut a large JSON body short on a pipe
   if (
     e instanceof RefusalError
@@ -900,8 +882,7 @@ catch (e) {
     };
     process.stdout.write(JSON.stringify(body, null, 2) + "\n");
     process.exitCode = 2;
-  }
-  else {
+  } else {
     process.stdout.write(
       JSON.stringify({ error: String(e?.message ?? e) }, null, 2) + "\n",
     );

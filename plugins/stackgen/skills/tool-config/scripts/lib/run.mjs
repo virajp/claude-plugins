@@ -18,8 +18,7 @@ import {
 } from "node:path";
 import { RefusalError } from "./rows.mjs";
 
-export const MISSING_MISE =
-  "mise is not on PATH — install mise (https://mise.jdx.dev), then re-run.";
+export const MISSING_MISE = "mise is not on PATH — install mise (https://mise.jdx.dev), then re-run.";
 
 /** What installs every tool the repo's mise config pins. */
 export const SETUP_REMEDY = "MISE_ENV=dev mise run setup:all";
@@ -34,8 +33,7 @@ function realOf(printed) {
     : printed;
   try {
     return realpathSync(abs);
-  }
-  catch {
+  } catch {
     return abs;
   }
 }
@@ -50,11 +48,10 @@ function tail(res) {
 }
 
 export function onPath(bin, path = process.env.PATH ?? "") {
-  return path.split(delimiter).some(dir => {
+  return path.split(delimiter).some((dir) => {
     try {
       return dir && statSync(join(dir, bin)).isFile();
-    }
-    catch {
+    } catch {
       return false;
     }
   });
@@ -96,16 +93,14 @@ export class Runner {
     const root = realpathSync(this.repoRoot);
     const untrusted = `${res.stdout ?? ""}`
       .split("\n")
-      .map(l => /^(.*): untrusted$/.exec(l.trim())?.[1])
-      .filter(p => {
+      .map((l) => /^(.*): untrusted$/.exec(l.trim())?.[1])
+      .filter((p) => {
         const real = p && realOf(p);
         return real && (real === root || real.startsWith(root + sep));
       });
     if (untrusted.length) {
       throw new RefusalError(
-        `the repo's mise config is not trusted (${
-          untrusted.join(", ")
-        }) — ${TRUST_REMEDY}`,
+        `the repo's mise config is not trusted (${untrusted.join(", ")}) — ${TRUST_REMEDY}`,
       );
     }
   }
@@ -144,8 +139,7 @@ export class Runner {
     try {
       this.ensure(tool);
       return true;
-    }
-    catch (e) {
+    } catch (e) {
       if (e instanceof RefusalError) {
         return false;
       }

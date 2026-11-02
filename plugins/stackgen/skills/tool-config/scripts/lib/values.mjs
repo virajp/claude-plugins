@@ -21,14 +21,13 @@ export class ValuesError extends Error {}
 const MERGE_MODELS = ["direct", "pr"];
 const NAME = /^[A-Z][A-Z0-9_]*$/;
 
-const isMap = v => v !== null && typeof v === "object" && !Array.isArray(v);
-const isStringList = v =>
-  Array.isArray(v) && v.every(x => typeof x === "string");
-const isScalar = v => ["string", "number", "boolean"].includes(typeof v);
+const isMap = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
+const isStringList = (v) => Array.isArray(v) && v.every((x) => typeof x === "string");
+const isScalar = (v) => ["string", "number", "boolean"].includes(typeof v);
 
 const kind = {
-  string: [v => typeof v === "string", "a string"],
-  bool: [v => typeof v === "boolean", "true or false"],
+  string: [(v) => typeof v === "string", "a string"],
+  bool: [(v) => typeof v === "boolean", "true or false"],
   list: [isStringList, "a list of strings"],
 };
 
@@ -126,8 +125,7 @@ export function toNames(obj, prefix = "") {
     const name = `${prefix}${key.toUpperCase()}`;
     if (isMap(value)) {
       Object.assign(out, toNames(value, `${name}_`));
-    }
-    else {
+    } else {
       out[name] = value;
     }
   }
@@ -153,7 +151,7 @@ function parseRemote(url) {
   ) {
     return null;
   }
-  if (path.split("/").some(seg => seg === "." || seg === "..")) {
+  if (path.split("/").some((seg) => seg === "." || seg === "..")) {
     return null;
   }
   // An https port is part of the web URL; an ssh port is not.
@@ -180,8 +178,7 @@ export function deriveOrigin(repoRoot) {
       return {};
     }
     url = git("remote", "get-url", "origin");
-  }
-  catch {
+  } catch {
     return {};
   }
   const remote = parseRemote(url);
@@ -195,13 +192,12 @@ export function deriveOrigin(repoRoot) {
 }
 
 /** A line break, a C0/C1 control character, or U+2028/U+2029. */
-const unsafe = c =>
-  c <= 0x1f || (c >= 0x7f && c <= 0x9f) || c === 0x2028 || c === 0x2029;
+const unsafe = (c) => c <= 0x1f || (c >= 0x7f && c <= 0x9f) || c === 0x2028 || c === 0x2029;
 
 function checkScalar(name, value) {
   if (
     typeof value === "string"
-    && [...value].some(ch => unsafe(ch.codePointAt(0)))
+    && [...value].some((ch) => unsafe(ch.codePointAt(0)))
   ) {
     throw new ValuesError(
       `${STACKGEN_PATH}: ${name} holds a line break, a control character or a line/paragraph separator — refused`,
@@ -211,9 +207,7 @@ function checkScalar(name, value) {
 
 /** Every name D6 and D7 can produce, present in this repo or not. */
 const GLOBAL_NAMES = new Set([
-  ...Object.keys(TOP).filter(k => k !== "packs" && k !== "merge_model").map(k =>
-    k.toUpperCase()
-  ),
+  ...Object.keys(TOP).filter((k) => k !== "packs" && k !== "merge_model").map((k) => k.toUpperCase()),
   "MERGE_MODEL_DEVELOP",
   "MERGE_MODEL_MAIN",
   "REPO_URL",
@@ -235,9 +229,7 @@ export function loadValues(repoRoot, { pack } = {}) {
       const name = key.toUpperCase();
       if (seen.has(name)) {
         throw new ValuesError(
-          `${STACKGEN_PATH}: packs.${pack}.${
-            seen.get(name)
-          } and packs.${pack}.${key} both name ${name} — refused`,
+          `${STACKGEN_PATH}: packs.${pack}.${seen.get(name)} and packs.${pack}.${key} both name ${name} — refused`,
         );
       }
       if (GLOBAL_NAMES.has(name)) {

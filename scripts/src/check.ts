@@ -83,7 +83,7 @@ const SEMVER_RE = /^\d+\.\d+\.\d+(?:-.+)?$/;
 export function check(repoRoot: string): Finding[] {
   const pluginsRoot = join(repoRoot, "plugins");
   const plugins = readPlugins(pluginsRoot);
-  const dirs = new Set(plugins.map(p => p.dir));
+  const dirs = new Set(plugins.map((p) => p.dir));
 
   const findings: Finding[] = [];
   for (const plugin of plugins) {
@@ -131,8 +131,7 @@ function checkManifest(plugin: Plugin): Finding[] {
 
   if (typeof m.name !== "string" || m.name === "") {
     at("plugin.json declares no `name`");
-  }
-  // The directory is what the marketplace `source` points at and what Claude
+  } // The directory is what the marketplace `source` points at and what Claude
   // keys the installed bundle by; the name is what dependency lists and prose
   // use. A disagreement installs a plugin nothing can refer to.
   else if (m.name !== plugin.dir) {
@@ -141,19 +140,16 @@ function checkManifest(plugin: Plugin): Finding[] {
 
   if (typeof m.version !== "string" || !SEMVER_RE.test(m.version)) {
     at(
-      `plugin.json version ${
-        JSON.stringify(m.version)
-      } is not plain semver — it `
+      `plugin.json version ${JSON.stringify(m.version)} is not plain semver — it `
         + `is what an end-user install pins to, and a +N build number belongs `
         + `only to the staged dev copy`,
     );
-  }
-  // 13 and 17 are never issued, on any version line this repo maintains. Only a
+  } // 13 and 17 are never issued, on any version line this repo maintains. Only a
   // whole component counts — `1.130.0` and `113.0.0` are fine. The prerelease
   // suffix `SEMVER_RE` allows comes off first, so `1.0.17-rc.1` is caught too.
   // Reached only when the assertion above passed, so the split is safe.
   else if (
-    m.version.replace(/-.*$/, "").split(".").some(n => n === "13" || n === "17")
+    m.version.replace(/-.*$/, "").split(".").some((n) => n === "13" || n === "17")
   ) {
     at(
       `plugin.json version ${JSON.stringify(m.version)} has a 13 or 17 `
@@ -217,19 +213,18 @@ function checkDependencies(
 
 /** Hook scripts must exist and be executable, or the hook dies at run time. */
 function checkHookScripts(plugin: Plugin): Finding[] {
-  const hooks = plugin.files.find(f => f.path === "hooks/hooks.json");
+  const hooks = plugin.files.find((f) => f.path === "hooks/hooks.json");
   if (hooks === undefined) {
     return [];
   }
 
   const findings: Finding[] = [];
-  const byPath = new Map(plugin.files.map(f => [f.path, f]));
+  const byPath = new Map(plugin.files.map((f) => [f.path, f]));
 
-  let doc: { hooks?: Record<string, unknown>; };
+  let doc: { hooks?: Record<string, unknown> };
   try {
     doc = JSON.parse(readText(hooks.absolute));
-  }
-  catch (error) {
+  } catch (error) {
     return [{
       scope: plugin.dir,
       message: `hooks/hooks.json is not valid JSON — ${firstLine(error)}`,
@@ -247,8 +242,7 @@ function checkHookScripts(plugin: Plugin): Finding[] {
           scope: plugin.dir,
           message: `${event} hook names a missing script: ${path}`,
         });
-      }
-      else if (!file.executable) {
+      } else if (!file.executable) {
         findings.push({
           scope: plugin.dir,
           message: `${event} hook script is not executable: ${path}`,
@@ -262,8 +256,7 @@ function checkHookScripts(plugin: Plugin): Finding[] {
 /** The one interpreter a skill's script entry may name. */
 const SKILL_SCRIPT_SHEBANG = "#!/usr/bin/env node";
 /** A static module specifier: `from "x"`, `import "x"` or `import("x")`. */
-const MODULE_SPECIFIER_RE =
-  /\b(?:from\s*|import\s*\(?\s*)["']([^"']+)["']|\brequire\s*\(/g;
+const MODULE_SPECIFIER_RE = /\b(?:from\s*|import\s*\(?\s*)["']([^"']+)["']|\brequire\s*\(/g;
 
 /**
  * A skill's node scripts run from the installed plugin with nothing installed
@@ -283,8 +276,7 @@ function checkSkillScripts(plugin: Plugin): Finding[] {
   ) {
     const absolute = join(plugin.root, path);
     const text = readText(absolute);
-    const at = (message: string) =>
-      findings.push({ scope: `${plugin.dir}:${path}`, message });
+    const at = (message: string) => findings.push({ scope: `${plugin.dir}:${path}`, message });
 
     if (path.split("/").length === 4) {
       if (text.split("\n", 1)[0] !== SKILL_SCRIPT_SHEBANG) {
@@ -297,8 +289,7 @@ function checkSkillScripts(plugin: Plugin): Finding[] {
     for (const [, specifier] of text.matchAll(MODULE_SPECIFIER_RE)) {
       if (specifier === undefined) {
         at("calls `require(` — a skill script is ESM with zero dependencies");
-      }
-      else if (!/^(?:\.{1,2}\/|\/|node:)/.test(specifier)) {
+      } else if (!/^(?:\.{1,2}\/|\/|node:)/.test(specifier)) {
         at(
           `imports ${JSON.stringify(specifier)} — a skill script ships no `
             + "node_modules, so only `node:` built-ins and relative modules",
@@ -315,9 +306,9 @@ function* hookCommands(
 ): Generator<[string, string]> {
   for (const [event, groups] of Object.entries(byEvent)) {
     for (const group of asArray(groups)) {
-      const entries = (group as { hooks?: unknown; }).hooks;
+      const entries = (group as { hooks?: unknown }).hooks;
       for (const hook of asArray(entries)) {
-        const command = (hook as { command?: unknown; }).command;
+        const command = (hook as { command?: unknown }).command;
         if (typeof command === "string") {
           yield [event, command];
         }
@@ -575,7 +566,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       // at the shebang beneath it, so that guard line is not the first line.
       const shebang = readText(absolute)
         .split("\n")
-        .find(line => !TEMPLATE_GUARD.test(line)) ?? "";
+        .find((line) => !TEMPLATE_GUARD.test(line)) ?? "";
       if (!PACK_TASK_SHEBANGS.has(shebang)) {
         at(
           `mise task file does not start with one of `
@@ -636,9 +627,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     landedTree(landed, "init asset tree", null);
     for (const absolute of filesUnder(landed)) {
       const rel = relative(landed, absolute).split(sep).join("/");
-      const allowed = INIT_ROOT_ALLOWLIST.some(entry =>
-        entry.endsWith("/") ? rel.startsWith(entry) : rel === entry
-      );
+      const allowed = INIT_ROOT_ALLOWLIST.some((entry) => entry.endsWith("/") ? rel.startsWith(entry) : rel === entry);
       if (!allowed) {
         at(
           `init asset tree lands a file outside its allowlist — only `
@@ -673,7 +662,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     for (const absolute of filesUnder(join(config, ".config"))) {
       const rel = relative(config, absolute).split(sep).join("/");
       if (
-        !PACK_CONFIG_DOTCONFIG_ALLOWLIST.some(entry => rel.startsWith(entry))
+        !PACK_CONFIG_DOTCONFIG_ALLOWLIST.some((entry) => rel.startsWith(entry))
       ) {
         at(
           `pack config/ tier ships ${rel} — under .config/ a pack ships only `
@@ -698,8 +687,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     let document: unknown;
     try {
       document = parseYaml(readText(packYaml));
-    }
-    catch (error) {
+    } catch (error) {
       at(
         `${path(packYaml)}: pack.yaml is not valid YAML — ${firstLine(error)}`,
       );
@@ -757,12 +745,10 @@ function packFactFaults(document: unknown): string[] {
         faults.push(`${at} is neither a name nor a { name, probe } map`);
         return;
       }
-      const extra = Object.keys(entry).filter(k =>
-        k !== "name" && k !== "probe"
-      );
+      const extra = Object.keys(entry).filter((k) => k !== "name" && k !== "probe");
       if (extra.length > 0) {
         faults.push(
-          `${at} carries ${extra.map(k => `\`${k}\``).join(", ")} — only `
+          `${at} carries ${extra.map((k) => `\`${k}\``).join(", ")} — only `
             + `\`name\` and \`probe\``,
         );
       }
@@ -782,14 +768,12 @@ function packFactFaults(document: unknown): string[] {
     const lockfile = document.lockfile;
     if (!Array.isArray(lockfile) || lockfile.length === 0) {
       faults.push("`lockfile` is not a non-empty list");
-    }
-    else {
+    } else {
       lockfile.forEach((entry: unknown, index) => {
         const label = `\`lockfile[${index}]\``;
         if (typeof entry !== "string" || entry === "") {
           faults.push(`${label} is not a path or glob`);
-        }
-        else if (isAbsolute(entry) || entry.split("/").includes("..")) {
+        } else if (isAbsolute(entry) || entry.split("/").includes("..")) {
           faults.push(
             `${label} (${entry}) climbs out of the repo — a lockfile path is `
               + `relative to the repo root and stays inside it`,
@@ -848,8 +832,7 @@ function templateNameFaults(
   for (const absolute of filesUnder(tree)) {
     readText(absolute).split("\n").forEach((text, index) => {
       for (const [tag, inner = ""] of text.matchAll(TEMPLATE_TAG)) {
-        const at = (message: string) =>
-          faults.push({ absolute, line: index + 1, message });
+        const at = (message: string) => faults.push({ absolute, line: index + 1, message });
         const parsed = TEMPLATE_TAG_GRAMMAR.exec(inner);
         if (parsed === null) {
           at(
@@ -869,8 +852,7 @@ function templateNameFaults(
               + `tool-config's templates read the stored and derived names `
               + `alone`,
           );
-        }
-        else if (!declared.has(name)) {
+        } else if (!declared.has(name)) {
           at(
             `\`${tag}\` names ${name}, which is neither a global template `
               + `name nor declared in the pack's \`values:\``,
@@ -888,18 +870,18 @@ function templateNameFaults(
  */
 function toolConfigTrees(plugin: Plugin): string[] {
   return [TOOL_CONFIG_ASSETS, TOOL_CONFIG_TEMPLATES]
-    .filter(tree => existsSync(join(plugin.root, tree)));
+    .filter((tree) => existsSync(join(plugin.root, tree)));
 }
 
 /** Every landed tree directly under `assets`, plugin-relative. */
 function assetTrees(plugin: Plugin, assets: string): string[] {
   return globSync(`${assets}/*`, { cwd: plugin.root })
-    .filter(tree => statSync(join(plugin.root, tree)).isDirectory());
+    .filter((tree) => statSync(join(plugin.root, tree)).isDirectory());
 }
 
 /** A list whose every item is a string. */
 function isStringList(value: unknown): boolean {
-  return Array.isArray(value) && value.every(item => typeof item === "string");
+  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 /** A JSON object — not an array, not `null`. */
@@ -950,8 +932,7 @@ function checkFrontmatterYaml(plugin: Plugin): Finding[] {
     }
     try {
       parseYaml(raw);
-    }
-    catch (error) {
+    } catch (error) {
       findings.push({
         scope: plugin.dir,
         message: `${path}: frontmatter is not valid YAML — ${firstLine(error)}`,
@@ -973,12 +954,12 @@ const PACK_AGENT_RE = /^stacks\/[^/]+\/[^/]+\/agents\/[^/]+\.md$/;
 function frontmatteredDocs(plugin: Plugin): string[] {
   const packs = plugin
     .files
-    .map(f => f.path)
-    .filter(path => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
-  const landedSkills = toolConfigTrees(plugin).flatMap(tree =>
+    .map((f) => f.path)
+    .filter((path) => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
+  const landedSkills = toolConfigTrees(plugin).flatMap((tree) =>
     [...filesUnder(join(plugin.root, tree, LANDED_SKILLS_DIR, "skills"))]
-      .filter(absolute => basename(absolute) === "SKILL.md")
-      .map(absolute => relative(plugin.root, absolute))
+      .filter((absolute) => basename(absolute) === "SKILL.md")
+      .map((absolute) => relative(plugin.root, absolute))
   );
   return [...plugin.skills, ...plugin.agents, ...packs, ...landedSkills];
 }
@@ -1037,13 +1018,10 @@ function checkRootRefs(plugin: Plugin, pluginsRoot: string): Finding[] {
           message: `reference to ${ref} climbs out of plugins/ — only sibling `
             + `plugins are installed alongside this one`,
         });
-      }
-      else if (!existsSync(target)) {
+      } else if (!existsSync(target)) {
         findings.push({
           scope: `${plugin.dir}:${file.path}`,
-          message: `reference to ${ref} resolves to nothing (${
-            relative(pluginsRoot, target)
-          })`,
+          message: `reference to ${ref} resolves to nothing (${relative(pluginsRoot, target)})`,
         });
       }
     }
@@ -1281,11 +1259,11 @@ function* landedFiles(plugin: Plugin): Generator<LandedFile> {
  */
 function stackTypes(plugin: Plugin): string[] {
   return globSync("stacks/*", { cwd: plugin.root })
-    .filter(path =>
+    .filter((path) =>
       path !== "stacks/bundles"
       && statSync(join(plugin.root, path)).isDirectory()
     )
-    .map(path => path.slice("stacks/".length));
+    .map((path) => path.slice("stacks/".length));
 }
 
 /** `<type>/<slug>/<segment…>`, or null when the plugin ships no packs. */
@@ -1294,7 +1272,7 @@ function packPathPattern(types: readonly string[]): RegExp | null {
     return null;
   }
   const alternation = types
-    .map(type => type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
+    .map((type) => type.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"))
     .join("|");
   return new RegExp(
     `(?<![\\w./-])((?:${alternation})/[a-z0-9-]+)/[A-Za-z0-9_]`,
@@ -1311,7 +1289,7 @@ function packPathPattern(types: readonly string[]): RegExp | null {
 function blankFences(body: string): string {
   return body.replace(
     /^```[\s\S]*?^```/gm,
-    block => "\n".repeat((block.match(/\n/g) ?? []).length),
+    (block) => "\n".repeat((block.match(/\n/g) ?? []).length),
   );
 }
 
@@ -1380,7 +1358,7 @@ function checkAgentReferences(plugin: Plugin): Finding[] {
   const declared = new Set(plugin.agents.map(agentName));
   const roles = new Set([...declared].map(roleOf));
   const tokens = new Set(
-    proseOf(plugin).flatMap(t => [...captures(t, TOKEN_RE)]),
+    proseOf(plugin).flatMap((t) => [...captures(t, TOKEN_RE)]),
   );
 
   const findings: Finding[] = [];
@@ -1439,19 +1417,18 @@ function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
     // filesystem — one entry per `stacks/design-tool/<tool>/pack.yaml`.
     const tools = plugin
       .files
-      .map(file => /^stacks\/design-tool\/([^/]+)\/pack\.yaml$/.exec(file.path))
-      .filter(match => match !== null)
-      .map(match => match[1]!);
+      .map((file) => /^stacks\/design-tool\/([^/]+)\/pack\.yaml$/.exec(file.path))
+      .filter((match) => match !== null)
+      .map((match) => match[1]!);
 
     for (const tool of tools) {
       for (const kind of KINDS) {
         const wanted = `stacks/design-tool/${tool}/skills/${kind}/SKILL.md`;
-        const file = plugin.files.find(entry => entry.path === wanted);
+        const file = plugin.files.find((entry) => entry.path === wanted);
         if (file === undefined) {
           findings.push({
             scope: `${plugin.dir}:stacks/design-tool/${tool}`,
-            message:
-              `design-tool pack is missing its "${kind}" skill — vwf delegates `
+            message: `design-tool pack is missing its "${kind}" skill — vwf delegates `
               + `to that exact name, and a missing one is silently unavailable `
               + `rather than a smaller feature`,
           });
@@ -1509,18 +1486,18 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
 
   for (const plugin of plugins) {
     const skills = new Map(
-      plugin.skills.map(path => [skillName(path), path] as const),
+      plugin.skills.map((path) => [skillName(path), path] as const),
     );
     const keywords = plugin.manifest.keywords;
     if (!Array.isArray(keywords) || !keywords.includes("vwf-stack-adapter")) {
       const shipped = STACK_ADAPTER_KINDS
-        .filter(kind => skills.has(`${plugin.dir}-${kind}`));
+        .filter((kind) => skills.has(`${plugin.dir}-${kind}`));
       if (shipped.length > 0) {
         findings.push({
           scope: plugin.dir,
           message: `ships ${
             shipped
-              .map(kind => `"${plugin.dir}-${kind}"`)
+              .map((kind) => `"${plugin.dir}-${kind}"`)
               .join(" and ")
           } `
             + `but does not declare the \`vwf-stack-adapter\` keyword — the `
@@ -1546,8 +1523,7 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
       if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
         findings.push({
           scope: plugin.dir,
-          message:
-            `${expected} is not \`disable-model-invocation: false\` — vwf `
+          message: `${expected} is not \`disable-model-invocation: false\` — vwf `
             + `reaches it by constructed name, and a skill the model cannot `
             + `invoke returns an empty menu rather than an error, which is `
             + `indistinguishable from a plugin that offers nothing`,
@@ -1556,8 +1532,7 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
       if (!/^user-invocable:\s*false\s*$/m.test(front)) {
         findings.push({
           scope: plugin.dir,
-          message:
-            `${expected} is not \`user-invocable: false\` — an adapter skill `
+          message: `${expected} is not \`user-invocable: false\` — an adapter skill `
             + `is vwf's to call, not a user's to type, and leaving it in the `
             + `\`/\` menu offers a skill that answers only a program`,
         });
@@ -1593,7 +1568,7 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
   for (const plugin of plugins) {
     const flagged = new Map<
       string,
-      { path: string; platforms: string[] | null; }[]
+      { path: string; platforms: string[] | null }[]
     >();
 
     for (const file of plugin.files) {
@@ -1607,8 +1582,7 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
       let doc: unknown;
       try {
         doc = parseYaml(block);
-      }
-      catch {
+      } catch {
         continue; // rule 4's finding, not this one's
       }
       if (typeof doc !== "object" || doc === null) {
@@ -1662,16 +1636,16 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
             continue;
           }
           const theirs = b.platforms;
-          const shared = a.platforms.filter(p => theirs.includes(p));
+          const shared = a.platforms.filter((p) => theirs.includes(p));
           if (shared.length === 0) {
             continue;
           }
           findings.push({
             scope: plugin.dir,
             message: `${pair} both carry \`default: true\` on the `
-              + `\`${axis}\` axis and share the platform${
-                shared.length > 1 ? "s" : ""
-              } ${shared.map(p => `\`${p}\``).join(", ")} — the menu `
+              + `\`${axis}\` axis and share the platform${shared.length > 1 ? "s" : ""} ${
+                shared.map((p) => `\`${p}\``).join(", ")
+              } — the menu `
               + `preselects one entry per round, and two flagged is whichever `
               + `sorts first rather than a choice`,
           });
@@ -1706,7 +1680,7 @@ const EXCLUSION_LISTS: readonly {
     path: `${TOOL_CONFIG_ASSETS}/.config/dprint.json`,
     syntax: "glob",
     role: "formatter",
-    entries: source => {
+    entries: (source) => {
       // JSONC: the tool-config markers are `//` comments inside the list.
       const excludes = (JSON.parse(stripJsonComments(source)) as {
         excludes?: unknown;
@@ -1719,20 +1693,20 @@ const EXCLUSION_LISTS: readonly {
     path: `${TOOL_CONFIG_ASSETS}/.config/taplo.toml`,
     syntax: "glob",
     role: "formatter",
-    entries: source => tomlStringList(source, "exclude"),
+    entries: (source) => tomlStringList(source, "exclude"),
   },
   {
     path: `${TOOL_CONFIG_ASSETS}/.config/gitleaks.toml`,
     syntax: "regex",
     role: "scanner",
-    entries: source => tomlStringList(source, "paths"),
+    entries: (source) => tomlStringList(source, "paths"),
   },
   {
     path: `${TOOL_CONFIG_ASSETS}/.config/pre-commit-config.yaml`,
     syntax: "regex",
     role: "formatter",
-    entries: source => {
-      const exclude = (parseYaml(source) as { exclude?: unknown; } | null)
+    entries: (source) => {
+      const exclude = (parseYaml(source) as { exclude?: unknown } | null)
         ?.exclude;
       // No global exclude is a legitimate config that excludes nothing.
       if (exclude === undefined) {
@@ -1817,7 +1791,7 @@ function tomlStringList(source: string, key: string): string[] | null {
     return null;
   }
   return [...(match[1] ?? "").matchAll(/'''(.*?)'''|'([^']*)'|"([^"]*)"/gs)]
-    .map(m => m[1] ?? m[2] ?? m[3])
+    .map((m) => m[1] ?? m[2] ?? m[3])
     .filter((s): s is string => s !== undefined);
 }
 
@@ -1853,7 +1827,7 @@ function regexAlternatives(pattern: string): string[] {
     return [source];
   }
   const [, prefix = "", inner = "", suffix = ""] = group;
-  return splitTopLevel(inner).map(alt => `${prefix}${alt}${suffix}`);
+  return splitTopLevel(inner).map((alt) => `${prefix}${alt}${suffix}`);
 }
 
 /** A regex's `(^|/)` or `(?:^|/)` — the anchor a glob spells with two stars. */
@@ -1865,7 +1839,7 @@ const REGEX_ANYWHERE_ANCHOR = /\((?:\?:)?\^\|\/\)/g;
  */
 function* regexChars(
   source: string,
-): Generator<{ char: string; depth: number; inClass: boolean; }> {
+): Generator<{ char: string; depth: number; inClass: boolean }> {
   let depth = 0;
   let inClass = false;
   for (let index = 0; index < source.length; index++) {
@@ -1883,11 +1857,9 @@ function* regexChars(
     }
     if (char === "[") {
       inClass = true;
-    }
-    else if (char === "(") {
+    } else if (char === "(") {
       depth++;
-    }
-    else if (char === ")") {
+    } else if (char === ")") {
       depth--;
     }
     yield { char, depth, inClass };
@@ -1980,15 +1952,14 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
   for (const plugin of plugins) {
     const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
     const present = new Map<string, Set<string>>();
-    let scanner: { path: string; set: Set<string>; } | null = null;
+    let scanner: { path: string; set: Set<string> } | null = null;
     for (const list of EXCLUSION_LISTS) {
       const absolute = join(plugin.root, list.path);
       if (!existsSync(absolute)) {
         if (owner) {
           findings.push({
             scope: plugin.dir,
-            message:
-              `${list.path}: exclusion list is missing — the tool-config `
+            message: `${list.path}: exclusion list is missing — the tool-config `
               + `skill ships all four lists`,
           });
         }
@@ -1997,13 +1968,10 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
       let entries: string[] | null;
       try {
         entries = list.entries(readText(absolute));
-      }
-      catch (error) {
+      } catch (error) {
         findings.push({
           scope: plugin.dir,
-          message: `${list.path}: exclusion list could not be read — ${
-            firstLine(error)
-          }`,
+          message: `${list.path}: exclusion list could not be read — ${firstLine(error)}`,
         });
         continue;
       }
@@ -2014,22 +1982,21 @@ function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
         });
         continue;
       }
-      const set = new Set(entries.map(e => normalizeExclusion(e, list.syntax)));
+      const set = new Set(entries.map((e) => normalizeExclusion(e, list.syntax)));
       if (list.role === "scanner") {
         scanner = { path: list.path, set };
-      }
-      else {
+      } else {
         present.set(list.path, set);
       }
     }
 
-    const union = new Set([...present.values()].flatMap(s => [...s]));
+    const union = new Set([...present.values()].flatMap((s) => [...s]));
     if (present.size >= 2) {
       for (const entry of [...union].sort()) {
         const has = [...present].filter(([, set]) => set.has(entry)).map(
           ([path]) => path,
         );
-        const lacks = [...present.keys()].filter(path => !has.includes(path));
+        const lacks = [...present.keys()].filter((path) => !has.includes(path));
         if (lacks.length === 0) {
           continue;
         }
@@ -2182,8 +2149,7 @@ function stripFences(body: string): string {
  * `deploy/npm-package` both escaped the symmetric form — as would
  * `docker-compose`, `postgres-backed` and `terraform-managed`.
  */
-const anchored = (token: string) =>
-  new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9]|$)`, "g");
+const anchored = (token: string) => new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9]|$)`, "g");
 
 /**
  * Does this document *prescribe* the token, rather than enumerate it?
@@ -2199,16 +2165,14 @@ const anchored = (token: string) =>
  * line-based rule would flag the first line of every one of them.
  */
 export function prescribes(body: string, token: string): boolean {
-  const others = [...TOOL_TOKENS, ...ENUMERATION_PEERS].filter(t =>
-    t !== token
-  );
+  const others = [...TOOL_TOKENS, ...ENUMERATION_PEERS].filter((t) => t !== token);
   for (const match of body.matchAll(anchored(token))) {
     const at = match.index ?? 0;
     const window = body.slice(
       Math.max(0, at - ENUMERATION_WINDOW),
       at + token.length + ENUMERATION_WINDOW,
     );
-    const enumerated = others.some(other => anchored(other).test(window));
+    const enumerated = others.some((other) => anchored(other).test(window));
     if (!enumerated) {
       return true;
     }
@@ -2233,15 +2197,15 @@ function invocations(manifest: Manifest): string[] {
   if (typeof servers !== "object" || servers === null) {
     return [];
   }
-  return Object.values(servers as Record<string, unknown>).flatMap(server => {
+  return Object.values(servers as Record<string, unknown>).flatMap((server) => {
     if (typeof server !== "object" || server === null) {
       return [];
     }
-    const { command, args } = server as { command?: unknown; args?: unknown; };
+    const { command, args } = server as { command?: unknown; args?: unknown };
     if (typeof command !== "string") {
       return [];
     }
-    const argv = asArray(args).filter(a => typeof a === "string");
+    const argv = asArray(args).filter((a) => typeof a === "string");
     return [[command, ...argv].join(" ")];
   });
 }
@@ -2265,11 +2229,11 @@ function checkManifestRunners(vwf: Plugin): Finding[] {
   const findings: Finding[] = [];
   for (const invocation of invocations(vwf.manifest)) {
     const fixed = invocation.toLowerCase().replaceAll(EXPANSION_RE, " ");
-    const hits = TOOL_TOKENS.filter(token => anchored(token).test(fixed));
+    const hits = TOOL_TOKENS.filter((token) => anchored(token).test(fixed));
     if (hits.length > 0) {
       findings.push({
         scope: "vwf:.claude-plugin/plugin.json",
-        message: `hardcodes ${hits.map(h => `"${h}"`).join(", ")} in the `
+        message: `hardcodes ${hits.map((h) => `"${h}"`).join(", ")} in the `
           + `"${invocation}" MCP server invocation — the dependency is vwf's, `
           + `the runner is the user's. Put it behind a \${VAR:-default} `
           + `expansion so the recommendation stays and another runner still `
@@ -2295,7 +2259,7 @@ function checkManifestRunners(vwf: Plugin): Finding[] {
  */
 function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
-  const vwf = plugins.find(p => p.dir === "vwf");
+  const vwf = plugins.find((p) => p.dir === "vwf");
   if (vwf === undefined) {
     return findings;
   }
@@ -2337,14 +2301,14 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     // anything. Both spellings are matched: a repo upgrading from an earlier
     // version can still carry the old one in its prose.
     const designMcp = TOOL_TOKENS
-      .filter(token =>
+      .filter((token) =>
         body.includes(`mcp__plugin_design-tools_${token}`)
         || new RegExp(`mcp__${token}__`).test(body)
       );
     if (designMcp.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,
-        message: `reaches the ${designMcp.map(t => `"${t}"`).join(", ")} MCP `
+        message: `reaches the ${designMcp.map((t) => `"${t}"`).join(", ")} MCP `
           + `server directly — vwf talks to no design tool, it calls the three `
           + `fixed adapter skill names and lets the adapter resolve which tool `
           + `answers (assets/design-adapter.md). Reaching one tool's server `
@@ -2357,13 +2321,11 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     // — and the generic message's advice ("add the path to TOOL_NAME_EXCEPTIONS")
     // is exactly wrong here: an allowlist entry would bless the seam violation
     // rather than fix it. The specific finding is the one that helps.
-    const hits = TOOL_TOKENS.filter(token =>
-      !designMcp.includes(token) && prescribes(body, token)
-    );
+    const hits = TOOL_TOKENS.filter((token) => !designMcp.includes(token) && prescribes(body, token));
     if (hits.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,
-        message: `names ${hits.map(h => `"${h}"`).join(", ")} — vwf states the `
+        message: `names ${hits.map((h) => `"${h}"`).join(", ")} — vwf states the `
           + `requirement, the plugin states the mechanism, so a tool name here `
           + `is a bug in that contract (assets/stack-adapter.md). If this is `
           + `genuinely recognition rather than prescription, add the path to `
@@ -2414,7 +2376,7 @@ const RETIRED_TERMS: readonly RetiredTerm[] = [
   {
     name: "`web` platform",
     pattern: /`web`/,
-    when: line => /`(?:mobile|tablet|desktop|auto)`|token/.test(line),
+    when: (line) => /`(?:mobile|tablet|desktop|auto)`|token/.test(line),
   },
   // The UX gate is the repo's own unprefixed `ux-gate` skill. The literal
   // `<plugin>-ux-gate` spelling names no skill and only ever appears where the
@@ -2436,7 +2398,7 @@ const RETIRED_TERMS: readonly RetiredTerm[] = [
   {
     name: "`devtools` plugin",
     pattern: /`devtools`/,
-    when: line => line.includes("plugin") && !line.includes("uninstall"),
+    when: (line) => line.includes("plugin") && !line.includes("uninstall"),
   },
 ];
 
@@ -2453,8 +2415,7 @@ const RETIRED_TERMS: readonly RetiredTerm[] = [
  * marker on whichever line carries the token — a small tax, paid so that a
  * "retired at format 22" sentence never shields a live claim beneath it.
  */
-const RETIRED_LINE_EXEMPT =
-  /retire|migrat|dissolved|moved|→|pre-22|[Ff]ormat 2\d/;
+const RETIRED_LINE_EXEMPT = /retire|migrat|dissolved|moved|→|pre-22|[Ff]ormat 2\d/;
 
 /**
  * Files whose whole job is history: the format lineage, and any changelog.
@@ -2484,7 +2445,7 @@ function checkRetiredVocabulary(plugin: Plugin): Finding[] {
     if (!/\.(?:md|ya?ml)$/.test(file.path)) {
       continue;
     }
-    if (RETIRED_FILE_EXEMPT.some(re => re.test(file.path))) {
+    if (RETIRED_FILE_EXEMPT.some((re) => re.test(file.path))) {
       continue;
     }
     const lines = readText(file.absolute).split("\n");
@@ -2534,14 +2495,10 @@ function checkBareMiseUse(plugin: Plugin): Finding[] {
   for (const absolute of filesUnder(plugin.root)) {
     const lines = readText(absolute).split("\n");
     for (const [index, line] of lines.entries()) {
-      const runs = [...line.matchAll(BARE_MISE_USE)].some(match =>
-        runsMiseUse(line, match.index)
-      );
+      const runs = [...line.matchAll(BARE_MISE_USE)].some((match) => runsMiseUse(line, match.index));
       if (runs) {
         findings.push({
-          scope: `${plugin.dir}:${relative(plugin.root, absolute)}:${
-            index + 1
-          }`,
+          scope: `${plugin.dir}:${relative(plugin.root, absolute)}:${index + 1}`,
           message: "runs a bare `mise use` — enter the tool into the config, "
             + "then run `mise install`",
         });
@@ -2564,13 +2521,10 @@ function checkBareMiseUse(plugin: Plugin): Finding[] {
  * its own file.
  */
 function proseOf(plugin: Plugin): string[] {
-  const isDoc = (f: PluginFile) =>
-    f.path.endsWith("/SKILL.md") || f.path.startsWith("agents/");
+  const isDoc = (f: PluginFile) => f.path.endsWith("/SKILL.md") || f.path.startsWith("agents/");
 
-  const docs = plugin.files.filter(f => f.path.endsWith(".md"));
-  return docs.map(f =>
-    isDoc(f) ? bodyOf(readText(f.absolute)) : readText(f.absolute)
-  );
+  const docs = plugin.files.filter((f) => f.path.endsWith(".md"));
+  return docs.map((f) => isDoc(f) ? bodyOf(readText(f.absolute)) : readText(f.absolute));
 }
 
 /** First capture group of every match, skipping any that did not participate. */

@@ -56,7 +56,7 @@ afterEach(() => {
 /** Every file under a tree, repo-relative. */
 function files(dir: string, at = ""): string[] {
   return readdirSync(join(dir, at), { withFileTypes: true })
-    .flatMap(d => {
+    .flatMap((d) => {
       const rel = at ? `${at}/${d.name}` : d.name;
       return d.isDirectory() ? files(dir, rel) : [rel];
     })
@@ -112,13 +112,13 @@ describe("all on a greenfield repo", () => {
   it("runs setup:all after writing, then formats the written files, every tool as mise x --", () => {
     h.apply(NODE_ALL);
     const log = h.log();
-    const setup = log.findIndex(l => l === "MISE_ENV=dev run setup:all");
-    const fmt = log.findIndex(l =>
+    const setup = log.findIndex((l) => l === "MISE_ENV=dev run setup:all");
+    const fmt = log.findIndex((l) =>
       l.startsWith(
         "MISE_ENV=dev x -- dprint fmt --config .config/dprint.json --allow-no-files",
       )
     );
-    const validate = log.findIndex(l =>
+    const validate = log.findIndex((l) =>
       l
         === "MISE_ENV=dev x -- pre-commit validate-config .config/pre-commit-config.yaml"
     );
@@ -164,13 +164,13 @@ describe("stackgen.yaml", () => {
   it("shows a value change as a row answered ok alone, and renders from it", () => {
     h.apply(NODE_ALL);
     const { out } = h.run(["preview", "all", "--merge-model-main", "direct"]);
-    const row = out.rows?.find(r => r.path === ".config/stackgen.yaml");
+    const row = out.rows?.find((r) => r.path === ".config/stackgen.yaml");
     expect(row?.answers).toEqual(["ok"]);
     expect(row?.added).toContain("  main: \"direct\"");
     expect(
       out
         .rows
-        ?.find(r => r.path === ".config/mise/conf.d/_base/mise.toml")
+        ?.find((r) => r.path === ".config/mise/conf.d/_base/mise.toml")
         ?.added,
     )
       .toContain("MERGE_MODEL_MAIN    = \"direct\"");
@@ -240,7 +240,7 @@ describe("the marker pair", () => {
     h.write(".gitignore", "vendor/\n");
     const { out } = h.run(["preview", ...NODE_ALL]);
     expect(out.notes?.join("\n")).toContain(".gitignore");
-    expect(out.rows?.find(r => r.path === ".gitignore")).toMatchObject({
+    expect(out.rows?.find((r) => r.path === ".gitignore")).toMatchObject({
       kind: "write",
       removed: ["vendor/"],
     });
@@ -285,7 +285,7 @@ describe("whole-owned files", () => {
       "setup:external:start",
     );
     const { out } = h.run(["preview", "all", "--external", "false"]);
-    expect(out.rows?.filter(r => r.kind === "delete").map(r => r.path))
+    expect(out.rows?.filter((r) => r.kind === "delete").map((r) => r.path))
       .toEqual([
         ".config/mise/tasks/setup/external/pull",
         start,
@@ -308,7 +308,7 @@ describe("whole-owned files", () => {
       ),
     );
     const rows = h.run(["preview", "all"]).out.rows ?? [];
-    expect(rows.map(r => r.path)).not.toContain(
+    expect(rows.map((r) => r.path)).not.toContain(
       ".config/mise/tasks/setup/secrets",
     );
   });
@@ -320,11 +320,9 @@ describe("whole-owned files", () => {
     const log = h.log().length;
     h.write(path, h.read(path) + "\n");
     const { out } = h.run(["preview", "all"]);
-    expect(out.rows?.map(r => r.path)).toEqual([path]);
+    expect(out.rows?.map((r) => r.path)).toEqual([path]);
     expect(
-      h.log().slice(log).some(l =>
-        l.includes(`dprint fmt --config .config/dprint.json --stdin ${path}`)
-      ),
+      h.log().slice(log).some((l) => l.includes(`dprint fmt --config .config/dprint.json --stdin ${path}`)),
     )
       .toBe(true);
   });
@@ -376,14 +374,14 @@ describe("pins", () => {
     );
     const later = { FAKE_MISE_LATEST: "3.1.0" };
     const { out } = h.run(["preview", "upgrade"], later);
-    expect(out.rows?.map(r => [r.kind, r["tool"], r["from"], r["to"]]))
+    expect(out.rows?.map((r) => [r.kind, r["tool"], r["from"], r["to"]]))
       .toEqual([
         ["pin", "alpha", "1.0.0", "3.1.0"],
         ["pin", "beta", "2.0.0", "3.1.0"],
       ]);
     h.apply(
       ["upgrade"],
-      r => (r["tool"] === "beta" ? "keep-existing" : "ok"),
+      (r) => (r["tool"] === "beta" ? "keep-existing" : "ok"),
       later,
     );
     expect(h.read(".config/mise/conf.d/tools/mise.toml")).toBe(
@@ -428,7 +426,7 @@ describe("argument refusals", () => {
 describe("rows and answers", () => {
   it("numbers rows in order, each with its answers", () => {
     const { out } = h.run(["preview", ...NODE_ALL]);
-    expect(out.rows?.map(r => r.id).slice(0, 3)).toEqual(["r1", "r2", "r3"]);
+    expect(out.rows?.map((r) => r.id).slice(0, 3)).toEqual(["r1", "r2", "r3"]);
     expect(out.rows?.[0]).toMatchObject({
       kind: "create",
       path: ".config/stackgen.yaml",
@@ -451,7 +449,7 @@ describe("rows and answers", () => {
 
   it("refuses a missing id, an unknown id and a wrong answer — writing nothing", () => {
     const rows = h.run(["preview", ...NODE_ALL]).out.rows ?? [];
-    const all = rows.map(r => `${r.id}:ok`);
+    const all = rows.map((r) => `${r.id}:ok`);
     for (
       const answers of [
         all.slice(1).join(","),
@@ -586,7 +584,7 @@ describe("review round 1", () => {
     const { status } = h.run([
       ...NODE_ALL,
       "--answers",
-      rows.map(r => `${r.id}:ok`).join(","),
+      rows.map((r) => `${r.id}:ok`).join(","),
     ]);
     chmodSync(join(h.repo, ".vscode"), 0o755);
     expect(status).not.toBe(0);
@@ -613,7 +611,7 @@ describe("review round 1", () => {
     h.write(start, "#!/usr/bin/env bash\necho start\n");
     chmodSync(join(h.repo, start), 0o755);
     const { out } = h.run(["preview", "all", "--external", "false"]);
-    expect(out.rows?.filter(r => r.kind === "delete").map(r => r.path))
+    expect(out.rows?.filter((r) => r.kind === "delete").map((r) => r.path))
       .toEqual([
         ".config/mise/tasks/setup/external/pull",
         ".config/mise/tasks/setup/external/stop",
@@ -630,7 +628,7 @@ describe("review round 1", () => {
 
 describe("review round 2", () => {
   const fmtLine = (log: string[]) =>
-    log.find(l =>
+    log.find((l) =>
       l.startsWith(
         "MISE_ENV=dev x -- dprint fmt --config .config/dprint.json --allow-no-files",
       )
@@ -638,7 +636,7 @@ describe("review round 2", () => {
 
   it("finishes a run stopped by a trust refusal: the original answers re-run the whole tail", () => {
     const rows = h.run(["preview", ...NODE_ALL]).out.rows ?? [];
-    const answers = rows.map(r => `${r.id}:ok`).join(",");
+    const answers = rows.map((r) => `${r.id}:ok`).join(",");
     const stopped = h.run([...NODE_ALL, "--answers", answers], {
       FAKE_MISE_UNTRUSTED: "1",
     });
@@ -689,9 +687,9 @@ describe("review round 3", () => {
     h.apply(["all", "--repo-name", "widget", "--members", members.join(",")]);
     const yaml = h.read(".config/stackgen.yaml");
     expect(yaml).toContain(
-      "members:\n" + members.map(m => `  - "${m}"\n`).join(""),
+      "members:\n" + members.map((m) => `  - "${m}"\n`).join(""),
     );
-    expect(yaml.split("\n").every(l => l.length <= 80)).toBe(true);
+    expect(yaml.split("\n").every((l) => l.length <= 80)).toBe(true);
     expect(values.loadValues(h.repo).MEMBERS).toEqual(members);
     expect(h.run(["preview", "all"]).out.rows).toEqual([]);
   });

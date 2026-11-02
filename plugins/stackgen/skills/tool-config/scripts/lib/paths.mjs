@@ -3,7 +3,7 @@
 
 import { createHash } from "node:crypto";
 
-export const sha256 = text => createHash("sha256").update(text).digest("hex");
+export const sha256 = (text) => createHash("sha256").update(text).digest("hex");
 
 /** A path the script refuses to act on. */
 export class UnsafePathError extends Error {}
@@ -16,7 +16,7 @@ export function checkRelPath(path) {
     || path.startsWith("/")
     || /^[A-Za-z]:/.test(path)
     || path.includes("\\")
-    || path.split("/").some(seg => seg === "..")
+    || path.split("/").some((seg) => seg === "..")
   ) {
     throw new UnsafePathError(
       `${JSON.stringify(path)} is not a repo-relative path — refused`,

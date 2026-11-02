@@ -25,7 +25,7 @@ export interface Outcome {
 
 /** Did anything fail? Drives the process exit code. */
 export function failed(outcomes: readonly Outcome[]): boolean {
-  return outcomes.some(o => o.error !== undefined);
+  return outcomes.some((o) => o.error !== undefined);
 }
 
 export interface ProgressReport {
@@ -103,7 +103,7 @@ export function shorten(text: string, home: string = homedir()): string {
 
 /** Wrap to `width`, continuation lines aligned under the first. */
 function wrap(text: string, width: number, indent: string): string[] {
-  const words = text.split(/\s+/).filter(w => w.length > 0);
+  const words = text.split(/\s+/).filter((w) => w.length > 0);
   const lines: string[] = [];
   let line = "";
   for (const word of words) {
@@ -144,11 +144,11 @@ export function renderProgress(
   }
 
   const rows = outcomes.map(rowFor);
-  const wName = Math.max(4, ...rows.map(r => r.name.length));
-  const wResult = Math.max(6, ...rows.map(r => r.result.length));
+  const wName = Math.max(4, ...rows.map((r) => r.name.length));
+  const wResult = Math.max(6, ...rows.map((r) => r.result.length));
   const table = [
     `  ${pad("STEP", wName)}  ${pad("RESULT", wResult)}  DETAIL`,
-    ...rows.map(r =>
+    ...rows.map((r) =>
       `  ${pad(r.name, wName)}  ${pad(r.result, wResult)}  ${r.detail}`
         .trimEnd()
     ),
@@ -157,19 +157,19 @@ export function renderProgress(
 
   if (notes.length > 0) {
     blocks.push(
-      ["  Notes", ...notes.flatMap(n => wrap(shorten(n), 68, "    "))]
+      ["  Notes", ...notes.flatMap((n) => wrap(shorten(n), 68, "    "))]
         .join("\n"),
     );
   }
 
-  const failures = outcomes.filter(o => o.error !== undefined);
+  const failures = outcomes.filter((o) => o.error !== undefined);
   if (failures.length > 0) {
     blocks.push(
       [
         "  Failures",
-        ...failures.flatMap(o => [
+        ...failures.flatMap((o) => [
           `    ${o.name}`,
-          ...(o.error ?? "").split("\n").map(l => `      ${l}`),
+          ...(o.error ?? "").split("\n").map((l) => `      ${l}`),
         ]),
       ]
         .join("\n"),
@@ -182,14 +182,14 @@ export function renderProgress(
 
 /** Counted over the **rows**, so the verdict cannot disagree with the table. */
 function verdict(rows: readonly Row[], elapsedMs?: number): string {
-  const failures = rows.filter(r => r.result.startsWith(BAD)).length;
+  const failures = rows.filter((r) => r.result.startsWith(BAD)).length;
   const took = elapsedMs === undefined
     ? ""
     : ` in ${(elapsedMs / 1000).toFixed(1)}s`;
   if (failures > 0) {
     return `${BAD} ${failures} of ${plural(rows.length, "step")} failed${took}`;
   }
-  const changed = rows.filter(r => r.result.includes("updated")).length;
+  const changed = rows.filter((r) => r.result.includes("updated")).length;
   if (changed === 0) {
     return `${OK} everything already up to date${took}`;
   }
@@ -255,14 +255,14 @@ function diffLines(before: string, after: string): string {
     tail++;
   }
 
-  const removed = a.slice(head, a.length - tail).map(l => `- ${l}`);
-  const added = b.slice(head, b.length - tail).map(l => `+ ${l}`);
+  const removed = a.slice(head, a.length - tail).map((l) => `- ${l}`);
+  const added = b.slice(head, b.length - tail).map((l) => `+ ${l}`);
   return [...removed, ...added].join("\n");
 }
 
 function indent(text: string): string {
   return text
     .split("\n")
-    .map(line => `    ${line}`)
+    .map((line) => `    ${line}`)
     .join("\n");
 }

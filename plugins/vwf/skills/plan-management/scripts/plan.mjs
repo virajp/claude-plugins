@@ -102,14 +102,12 @@ function load(file) {
   let text;
   try {
     text = readFileSync(file === "-" ? 0 : file, "utf8");
-  }
-  catch (e) {
+  } catch (e) {
     fail(file, "", `cannot read the file (${e.code ?? e.message})`, 2);
   }
   try {
     return JSON.parse(text);
-  }
-  catch (e) {
+  } catch (e) {
     fail(file, "", `not valid JSON (${e.message})`, 2);
   }
 }
@@ -130,8 +128,7 @@ function write(file, doc) {
   try {
     writeFileSync(tmp, `${JSON.stringify(doc, null, 2)}\n`);
     renameSync(tmp, file);
-  }
-  catch (e) {
+  } catch (e) {
     rmSync(tmp, { force: true });
     fail(file, "", `cannot write the file (${e.code ?? e.message})`, 2);
   }
@@ -164,11 +161,9 @@ function stamp(file, doc, segments, value) {
       entry.started = now;
     }
     entry.ended = "";
-  }
-  else if (onIndex ? value === "COMPLETE" : FINAL.includes(value)) {
+  } else if (onIndex ? value === "COMPLETE" : FINAL.includes(value)) {
     entry.ended = now;
-  }
-  else if (onIndex && value === "APPROVED") {
+  } else if (onIndex && value === "APPROVED") {
     entry.started = "";
     entry.ended = "";
   }
@@ -180,8 +175,7 @@ function parseValue(file, path, raw, json) {
   }
   try {
     return JSON.parse(raw);
-  }
-  catch (e) {
+  } catch (e) {
     fail(file, path, `the --json value is not valid JSON (${e.message})`, 2);
   }
 }
@@ -189,8 +183,7 @@ function parseValue(file, path, raw, json) {
 function at(file, path, action) {
   try {
     return action();
-  }
-  catch (e) {
+  } catch (e) {
     if (e instanceof PathError) {
       fail(file, path, e.message, e.code);
     }
@@ -217,11 +210,11 @@ function parseArgs(verb, rest) {
   };
   switch (verb) {
     case "get": {
-      const args = rest.filter(a => a !== "--raw");
+      const args = rest.filter((a) => a !== "--raw");
       if (rest.length > args.length) {
         flags.add("--raw");
       }
-      const unknown = args.find(a => a.startsWith("--"));
+      const unknown = args.find((a) => a.startsWith("--"));
       if (unknown !== undefined) {
         usage(`get takes no ${unknown}`);
       }
@@ -240,7 +233,7 @@ function parseArgs(verb, rest) {
       flagsIn(rest.slice(2), undefined);
       return { args: rest.slice(0, 2), flags };
     case "rewave": {
-      const flag = rest.find(a => a.startsWith("--"));
+      const flag = rest.find((a) => a.startsWith("--"));
       if (flag !== undefined) {
         usage(`rewave takes no ${flag}`);
       }
@@ -341,11 +334,11 @@ switch (verb) {
     const doc = load(file);
     const units = Array.isArray(doc.units) ? doc.units : [];
     const waves = Array.isArray(doc.waves) ? doc.waves : [];
-    const entry = id => waves.find(w => isObject(w) && w.id === id);
+    const entry = (id) => waves.find((w) => isObject(w) && w.id === id);
     const moves = [];
     for (const p of args.slice(1)) {
       const [id, wave] = p.split("=");
-      const unit = units.find(u => isObject(u) && u.id === id);
+      const unit = units.find((u) => isObject(u) && u.id === id);
       if (unit === undefined) {
         fail(file, `units.${id}`, "is not a unit of this plan", 2);
       }
@@ -355,7 +348,7 @@ switch (verb) {
     }
     const refusals = [];
     const refuse = (path, message) => {
-      if (!refusals.some(r => r.path === path && r.message === message)) {
+      if (!refusals.some((r) => r.path === path && r.message === message)) {
         refusals.push({ path, message });
       }
     };
@@ -392,8 +385,8 @@ switch (verb) {
       unit.wave = to;
     }
     const placed = units
-      .filter(u => isObject(u) && Number.isInteger(u.wave))
-      .map(u => u.wave);
+      .filter((u) => isObject(u) && Number.isInteger(u.wave))
+      .map((u) => u.wave);
     const top = Math.max(0, ...placed);
     const want = Array.from({ length: top }, (_, i) => `W${i + 1}`);
     for (const w of waves) {
@@ -415,9 +408,7 @@ switch (verb) {
     if (moves.length === 0) {
       break;
     }
-    doc.waves = want.map(id =>
-      entry(id) ?? { id, status: "pending", started: "", ended: "" }
-    );
+    doc.waves = want.map((id) => entry(id) ?? { id, status: "pending", started: "", ended: "" });
     write(file, doc);
     break;
   }

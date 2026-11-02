@@ -38,7 +38,7 @@ const ORDER = [
   "packs",
 ];
 
-const quote = s => `"${s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
+const quote = (s) => `"${s.replace(/\\/g, "\\\\").replace(/"/g, "\\\"")}"`;
 
 function scalar(value) {
   if (typeof value === "string") {
@@ -59,7 +59,7 @@ function entry(indent, key, value) {
   if (!value.length) {
     return [`${indent}${key}: []`];
   }
-  return [`${indent}${key}:`, ...value.map(v => `${indent}  - ${scalar(v)}`)];
+  return [`${indent}${key}:`, ...value.map((v) => `${indent}  - ${scalar(v)}`)];
 }
 
 /** The file's text for a parsed document. */
@@ -85,9 +85,7 @@ export function stackgenText(doc) {
       }
       lines.push("packs:");
       for (const slug of slugs) {
-        const entries = Object.entries(doc.packs[slug]).sort(([a], [b]) =>
-          a < b ? -1 : a > b ? 1 : 0
-        );
+        const entries = Object.entries(doc.packs[slug]).sort(([a], [b]) => a < b ? -1 : a > b ? 1 : 0);
         if (!entries.length) {
           continue;
         }
@@ -116,8 +114,7 @@ export function withValues(doc, values) {
         ...out.merge_model,
         [key.slice("merge_model.".length)]: value,
       };
-    }
-    else {
+    } else {
       out[key] = value;
     }
   }
@@ -131,14 +128,12 @@ export function withPack(doc, slug, sets) {
   const packs = { ...out.packs };
   if (sets === null) {
     delete packs[slug];
-  }
-  else if (Object.keys(sets).length) {
+  } else if (Object.keys(sets).length) {
     packs[slug] = { ...packs[slug], ...sets };
   }
   if (Object.keys(packs).length) {
     out.packs = packs;
-  }
-  else {
+  } else {
     delete out.packs;
   }
   return out;
@@ -155,8 +150,7 @@ export function valuesFrom(text, repoRoot, pack) {
     mkdirSync(join(dir, ".config"));
     writeFileSync(join(dir, STACKGEN_PATH), text);
     return { ...loadValues(dir, { pack }), ...deriveOrigin(repoRoot) };
-  }
-  finally {
+  } finally {
     rmSync(dir, { recursive: true, force: true });
   }
 }

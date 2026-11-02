@@ -4,9 +4,9 @@
     // No `baseUrl`: removed in TypeScript 7 (TS5102).
     "rootDir": ".",
     "outDir": "./dist/",
-    "paths": { "@/*": ["./src/*"] },
+    "paths": { "@/*": ["./src/*"] }
   },
   // No project `references`: nothing in this repo emits via `tsc --build`, so
   // `tsc` is only ever a checker here and tsup is what builds the bundle.
-  "include": ["src/**/*.ts"],
+  "include": ["src/**/*.ts"]
 }

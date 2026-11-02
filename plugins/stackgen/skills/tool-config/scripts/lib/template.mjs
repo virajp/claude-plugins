@@ -25,8 +25,8 @@ const BLOCK_LINE = new RegExp(
     .raw`^[ \t]*@@(?:(#if|#each) (${REF})|(#else|\/if|\/each))@@[ \t]*(?:\r?\n)?$`,
 );
 // C0 and C1 controls (line breaks among them), DEL, and U+2028/U+2029.
-const unsafe = text =>
-  [...text].some(ch => {
+const unsafe = (text) =>
+  [...text].some((ch) => {
     const code = ch.codePointAt(0);
     return code <= 0x1f
       || (code >= 0x7f && code <= 0x9f)
@@ -58,7 +58,7 @@ function tokenize(template, source) {
     }
     let at = 0;
     // Text keeps no `@@`: a malformed tag is refused here, taken branch or not.
-    const pushText = piece => {
+    const pushText = (piece) => {
       if (piece.includes("@@")) {
         throw new TemplateError(
           source,

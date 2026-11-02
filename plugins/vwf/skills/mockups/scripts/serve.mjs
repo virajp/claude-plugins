@@ -201,8 +201,7 @@ const OWN = RENDER_MODE ? RENDERS : RESERVED;
 let routes;
 try {
   routes = readRoutes(root, OWN);
-}
-catch (error) {
+} catch (error) {
   fail(`--root holds no valid ${OWN}/routes.json: ${error.message}`);
 }
 
@@ -216,8 +215,7 @@ function refreshRoutes() {
   }
   try {
     routes = readRoutes(root, OWN);
-  }
-  catch (error) {
+  } catch (error) {
     process.stderr.write(
       `serve.mjs: keeping the last route map: ${error.message}\n`,
     );
@@ -234,7 +232,7 @@ function readRenders() {
   if (!Array.isArray(data?.renders)) {
     throw new Error("needs a renders list");
   }
-  return data.renders.filter(entry =>
+  return data.renders.filter((entry) =>
     entry !== null
     && typeof entry === "object"
     && typeof entry.code === "string"
@@ -244,8 +242,7 @@ function readRenders() {
 if (RENDER_MODE) {
   try {
     readRenders();
-  }
-  catch (error) {
+  } catch (error) {
     fail(`--root holds no valid ${RENDERS}/renders.json: ${error.message}`);
   }
 }
@@ -261,12 +258,11 @@ function renders() {
   let list;
   try {
     list = readRenders();
-  }
-  catch {
+  } catch {
     return [];
   }
-  return list.filter(entry => {
-    const screen = routes.screens.find(s => s.code === entry.code);
+  return list.filter((entry) => {
+    const screen = routes.screens.find((s) => s.code === entry.code);
     if (
       !screen
       || typeof entry.route !== "string"
@@ -288,8 +284,7 @@ function realPrefix(full) {
   for (;;) {
     try {
       return join(realpathSync(dir), ...rest);
-    }
-    catch {
+    } catch {
       const parent = dirname(dir);
       if (parent === dir) {
         return full;
@@ -308,8 +303,7 @@ function scratchFile(flag, value, mustExist) {
   let dir;
   try {
     dir = realpathSync(dirname(full));
-  }
-  catch {
+  } catch {
     if (mustExist) {
       fail(`${flag} has no directory: ${value}`);
     }
@@ -343,8 +337,7 @@ function peerOrigin() {
   let url;
   try {
     url = new URL(readFileSync(real, "utf8").trim());
-  }
-  catch {
+  } catch {
     return null;
   }
   if (
@@ -382,8 +375,7 @@ function refreshMockups() {
   try {
     mockRoutes = readRoutes(mockRoot);
     mockWarning = null;
-  }
-  catch (error) {
+  } catch (error) {
     // Never fall back to the render route map: a mockup matched through the
     // wrong map could be shown beside another screen's render.
     mockRoutes = null;
@@ -406,8 +398,7 @@ if (RENDER_MODE && args.mockups !== undefined) {
       fail(`--mockups must resolve under ${scratchpad}${sep}: ${args.mockups}`);
     }
     refreshMockups();
-  }
-  else if (!wanted.startsWith(scratchpad + sep)) {
+  } else if (!wanted.startsWith(scratchpad + sep)) {
     fail(`--mockups must resolve under ${scratchpad}${sep}: ${args.mockups}`);
   }
 }
@@ -540,7 +531,7 @@ function listPage() {
     flows.get(screen.flow).push(screen);
   }
   const sections = [...flows.entries()].map(([flow, screens]) => {
-    const items = screens.map(screen => {
+    const items = screens.map((screen) => {
       const dir = routeDir(root, screen.path);
       const overlay = screen.overlay === undefined ? null : screen.code;
       const href = sampleRoute(screen.path)
@@ -548,27 +539,21 @@ function listPage() {
       const glue = overlay ? "&" : "?";
       const rendered = existsSync(join(dir, pageName(null, overlay)));
       const states = statesIn(dir, overlay)
-        .map(state =>
-          `<a href="${escapeHtml(href)}${glue}state=${
-            encodeURIComponent(state)
-          }">${escapeHtml(state)}</a>`
+        .map((state) =>
+          `<a href="${escapeHtml(href)}${glue}state=${encodeURIComponent(state)}">${escapeHtml(state)}</a>`
         )
         .join(" · ");
-      return `<li><code>${escapeHtml(screen.code)}</code> ${
-        escapeHtml(screen.screen)
-      } — <a href="${escapeHtml(href)}">${escapeHtml(screen.route)}${
-        overlay ? ` (${escapeHtml(screen.overlay)}'s overlay)` : ""
-      }</a>${states ? ` — states: ${states}` : ""}${
-        rendered ? "" : " <span class=\"muted\">not rendered yet</span>"
-      }</li>`;
+      return `<li><code>${escapeHtml(screen.code)}</code> ${escapeHtml(screen.screen)} — <a href="${
+        escapeHtml(href)
+      }">${escapeHtml(screen.route)}${overlay ? ` (${escapeHtml(screen.overlay)}'s overlay)` : ""}</a>${
+        states ? ` — states: ${states}` : ""
+      }${rendered ? "" : " <span class=\"muted\">not rendered yet</span>"}</li>`;
     });
     return `<h2>${escapeHtml(flow)}</h2>\n<ul>\n${items.join("\n")}\n</ul>`;
   });
   return page(
     `Mockups — ${routes.project} ${routes.platform}`,
-    `<h1>Mockups — ${escapeHtml(routes.project)} · ${
-      escapeHtml(routes.platform)
-    }</h1>\n${sections.join("\n")}`,
+    `<h1>Mockups — ${escapeHtml(routes.project)} · ${escapeHtml(routes.platform)}</h1>\n${sections.join("\n")}`,
   );
 }
 
@@ -577,17 +562,13 @@ function listPage() {
 function placeholderPage(screen, state) {
   return page(
     `${screen.code} — not rendered yet`,
-    `<h1><code>${escapeHtml(screen.code)}</code> ${
-      escapeHtml(screen.screen)
-    }</h1>\n<p>Flow <code>${escapeHtml(screen.flow)}</code> — route <code>${
-      escapeHtml(screen.route)
-    }</code>${
+    `<h1><code>${escapeHtml(screen.code)}</code> ${escapeHtml(screen.screen)}</h1>\n<p>Flow <code>${
+      escapeHtml(screen.flow)
+    }</code> — route <code>${escapeHtml(screen.route)}</code>${
       screen.overlay === undefined
         ? ""
         : `, an overlay of <code>${escapeHtml(screen.overlay)}</code>`
-    }.</p>\n${
-      state ? `<p>State <code>${escapeHtml(state)}</code>.</p>\n` : ""
-    }<p><b>Not rendered yet.</b></p>\n`
+    }.</p>\n${state ? `<p>State <code>${escapeHtml(state)}</code>.</p>\n` : ""}<p><b>Not rendered yet.</b></p>\n`
       + `<p><a href="/${RESERVED}/">All mockups</a></p>`,
   );
 }
@@ -602,9 +583,7 @@ function fileUrl(file) {
 
 // The renders.json entry of one image, or undefined.
 function renderEntry(list, code, state) {
-  return list.find(entry =>
-    entry.code === code && entry.state === (state ?? "default")
-  );
+  return list.find((entry) => entry.code === code && entry.state === (state ?? "default"));
 }
 
 // The states of a code other than default, from renders.json.
@@ -612,9 +591,9 @@ function renderStates(list, code) {
   return [
     ...new Set(
       list
-        .filter(entry => entry.code === code && entry.state !== "default")
-        .map(entry => entry.state)
-        .filter(state => STATE_RE.test(state)),
+        .filter((entry) => entry.code === code && entry.state !== "default")
+        .map((entry) => entry.state)
+        .filter((state) => STATE_RE.test(state)),
     ),
   ]
     .sort();
@@ -625,7 +604,7 @@ function renderListPage() {
   const list = renders();
   const flows = new Map();
   for (const screen of routes.screens) {
-    const entries = list.filter(entry => entry.code === screen.code);
+    const entries = list.filter((entry) => entry.code === screen.code);
     if (entries.length === 0) {
       continue;
     }
@@ -634,20 +613,16 @@ function renderListPage() {
     }
     const href = sampleRoute(screen.path);
     const states = entries
-      .map(entry => {
+      .map((entry) => {
         const link = entry.state === "default"
           ? href
           : `${href}?state=${encodeURIComponent(entry.state)}`;
         return `<a href="${escapeHtml(link)}">${escapeHtml(entry.state)}</a>`
-          + ` <span class="muted">${escapeHtml(entry.plan ?? "")} · ${
-            escapeHtml(entry.date ?? "")
-          }</span>`;
+          + ` <span class="muted">${escapeHtml(entry.plan ?? "")} · ${escapeHtml(entry.date ?? "")}</span>`;
       })
       .join(" — ");
     flows.get(screen.flow).push(
-      `<li><code>${escapeHtml(screen.code)}</code> ${
-        escapeHtml(screen.screen)
-      } — <a href="${escapeHtml(href)}">${
+      `<li><code>${escapeHtml(screen.code)}</code> ${escapeHtml(screen.screen)} — <a href="${escapeHtml(href)}">${
         escapeHtml(screen.route)
       }</a> — states: ${states}</li>`,
     );
@@ -657,9 +632,7 @@ function renderListPage() {
   );
   return page(
     `Renders — ${routes.project} ${routes.platform}`,
-    `<h1>Renders — ${escapeHtml(routes.project)} · ${
-      escapeHtml(routes.platform)
-    }</h1>\n${
+    `<h1>Renders — ${escapeHtml(routes.project)} · ${escapeHtml(routes.platform)}</h1>\n${
       sections.length > 0
         ? sections.join("\n")
         : "<p class=\"muted\">No render yet.</p>"
@@ -671,11 +644,9 @@ function renderListPage() {
 function renderPlaceholderPage(screen) {
   return page(
     `${screen.code} — no render yet`,
-    `<h1><code>${escapeHtml(screen.code)}</code> ${
-      escapeHtml(screen.screen)
-    }</h1>\n<p>Flow <code>${escapeHtml(screen.flow)}</code> — route <code>${
-      escapeHtml(screen.route)
-    }</code>.</p>\n<p><b>No render yet.</b></p>\n`
+    `<h1><code>${escapeHtml(screen.code)}</code> ${escapeHtml(screen.screen)}</h1>\n<p>Flow <code>${
+      escapeHtml(screen.flow)
+    }</code> — route <code>${escapeHtml(screen.route)}</code>.</p>\n<p><b>No render yet.</b></p>\n`
       + `<p><a href="/${RENDERS}/">All renders</a></p>`,
   );
 }
@@ -696,14 +667,10 @@ function renderPage(screen, pathname, state, entry) {
       mockup = `/${RESERVED}${pathname}${query}`;
     }
   }
-  const caption = `${screen.code} ${screen.screen}${
-    state === null ? "" : ` — ${state}`
-  }`;
+  const caption = `${screen.code} ${screen.screen}${state === null ? "" : ` — ${state}`}`;
   const img = `<figure><figcaption>Render — ${escapeHtml(entry.plan ?? "")} · ${
     escapeHtml(entry.date ?? "")
-  }</figcaption><img id="render" src="${escapeHtml(image)}" alt="${
-    escapeHtml(caption)
-  }"></figure>`;
+  }</figcaption><img id="render" src="${escapeHtml(image)}" alt="${escapeHtml(caption)}"></figure>`;
   const body = mockup === null
     ? `<div class="drv-pair">${img}</div>`
     : `<div class="drv-pair"><figure><figcaption>Mockup</figcaption>`
@@ -733,7 +700,7 @@ function countComments() {
   }
   return readFileSync(commentsPath, "utf8")
     .split("\n")
-    .filter(line => /^- id: /.test(line))
+    .filter((line) => /^- id: /.test(line))
     .length;
 }
 
@@ -756,7 +723,7 @@ function appendComments(text) {
 function yamlString(value) {
   return JSON.stringify(String(value)).replace(
     /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]/g,
-    ch => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
+    (ch) => `\\u${ch.charCodeAt(0).toString(16).padStart(4, "0")}`,
   );
 }
 
@@ -764,7 +731,7 @@ function readJson(req) {
   return new Promise((resolvePromise, reject) => {
     const chunks = [];
     let size = 0;
-    req.on("data", chunk => {
+    req.on("data", (chunk) => {
       size += chunk.length;
       if (size > 65536) {
         reject(new Error("body too large"));
@@ -776,8 +743,7 @@ function readJson(req) {
     req.on("end", () => {
       try {
         resolvePromise(JSON.parse(Buffer.concat(chunks).toString("utf8")));
-      }
-      catch (error) {
+      } catch (error) {
         reject(error);
       }
     });
@@ -790,9 +756,7 @@ function readJson(req) {
 function isComment(body) {
   return body !== null
     && typeof body === "object"
-    && ["path", "selector", "text"].every(key =>
-      typeof body[key] === "string" && body[key].length > 0
-    )
+    && ["path", "selector", "text"].every((key) => typeof body[key] === "string" && body[key].length > 0)
     && typeof body.state === "string"
     && (body.overlay === undefined || typeof body.overlay === "string");
 }
@@ -821,8 +785,7 @@ async function postComment(req, res) {
   let body;
   try {
     body = await readJson(req);
-  }
-  catch {
+  } catch {
     res.writeHead(400).end();
     return;
   }
@@ -831,7 +794,7 @@ async function postComment(req, res) {
     return;
   }
   const { screen, fallback } = commentTarget(body);
-  const yamlOrNull = value => (value ? yamlString(value) : "null");
+  const yamlOrNull = (value) => (value ? yamlString(value) : "null");
   // Renders mode: the plan that made the image, from renders.json.
   const plan = RENDER_MODE && screen
     ? [
@@ -908,7 +871,7 @@ function refusal(req) {
   const origin = req.headers.origin;
   if (
     origin !== undefined
-    && !hosts().map(h => `http://${h}`).includes(origin.toLowerCase())
+    && !hosts().map((h) => `http://${h}`).includes(origin.toLowerCase())
   ) {
     return 403;
   }
@@ -924,14 +887,13 @@ function failed(res, error) {
   process.stderr.write(`request failed: ${error?.stack ?? error}\n`);
   if (!res.headersSent) {
     res.writeHead(500).end();
-  }
-  else {
+  } else {
     res.destroy();
   }
 }
 
 const server = createServer((req, res) => {
-  handle(req, res).catch(error => failed(res, error));
+  handle(req, res).catch((error) => failed(res, error));
 });
 
 async function handle(req, res) {
@@ -958,7 +920,7 @@ async function handle(req, res) {
     if (url.pathname === "/" && findScreen(routes, []) === null) {
       res
         .writeHead(302, {
-          location: `/${RESERVED}/`,
+          "location": `/${RESERVED}/`,
           "cache-control": "no-store",
         })
         .end();
@@ -1058,7 +1020,7 @@ function getRender(res, url) {
     const rel = segments.join("/");
     const real = inRoot(root, join(root, ...segments));
     if (
-      !renders().some(entry => entry.file === rel)
+      !renders().some((entry) => entry.file === rel)
       || !real
       || real === root
       || !real.toLowerCase().endsWith(".png")
@@ -1124,8 +1086,7 @@ function removeUrlFile() {
     if (readFileSync(urlFile, "utf8").trim() === ownUrl) {
       rmSync(urlFile);
     }
-  }
-  catch {
+  } catch {
     // already gone
   }
 }
@@ -1136,7 +1097,7 @@ for (const signal of ["SIGINT", "SIGTERM", "SIGHUP"]) {
 }
 
 // A port in use, or one it may not bind: one line, exit 2, no stack trace.
-server.on("error", error => {
+server.on("error", (error) => {
   fail(`cannot listen on 127.0.0.1:${port}: ${error.code ?? error.message}`);
 });
 

@@ -10,7 +10,7 @@ TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
 # The touch icon must be full-bleed — iOS paints transparent corners black.
-sed 's/rx="14"/rx="0"/' "$SRC" >"$TMP/square.svg"
+sed 's/rx="14"/rx="0"/' "$SRC" > "$TMP/square.svg"
 
 # One-off tools, run from $TMP so nothing resolves against the workspace.
 mkdir -p "$TMP/stage" "$TMP/out"
@@ -36,14 +36,14 @@ render "$SRC" 48 ico-48
 
 # Not png-to-ico's bin: it reads only its first path and upscales it to 256.
 (
-  cd "$TMP" && pnpm init >/dev/null &&
-    pnpm add --silent png-to-ico@3 >/dev/null
+  cd "$TMP" && pnpm init > /dev/null &&
+    pnpm add --silent png-to-ico@3 > /dev/null
 )
 node --input-type=module -e "
   import pngToIco from '$TMP/node_modules/png-to-ico/index.js';
   const sizes = [16, 32, 48].map(s => '$TMP/out/ico-' + s + '.png');
   process.stdout.write(await pngToIco(sizes));
-" >"$TMP/favicon.ico"
+" > "$TMP/favicon.ico"
 
 mv "$TMP/out/icon-512.png" "$TMP/out/icon-192.png" \
   "$TMP/out/apple-touch-icon.png" "$TMP/favicon.ico" "$OUT/"

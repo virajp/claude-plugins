@@ -45,11 +45,11 @@ installed_version() {
     const r = (require('${INSTALLED_JSON}').plugins['$1@${MARKETPLACE}'] || [])
       .find(e => e.scope === 'user');
     r ? r.version : ''
-  " 2>/dev/null || true
+  " 2> /dev/null || true
 }
 
 manifest_version() {
-  node -p "require('./$1/.claude-plugin/plugin.json').version" 2>/dev/null || true
+  node -p "require('./$1/.claude-plugin/plugin.json').version" 2> /dev/null || true
 }
 
 # The build number of a version, or 0 when it has none or a different base.
@@ -60,11 +60,11 @@ build_of() { # <version> <base>
 # Whether a tree and its staged copy differ anywhere but the version line.
 changed() { # <tree> <staged>
   [[ -d "$2" ]] || return 0
-  ! diff -rq -x plugin.json "$1" "$2" >/dev/null && return 0
+  ! diff -rq -x plugin.json "$1" "$2" > /dev/null && return 0
   ! diff -q \
     <(sed -E 's/^(  "version": ")[^"]+/\1/' "$1/.claude-plugin/plugin.json") \
     <(sed -E 's/^(  "version": ")[^"]+/\1/' "$2/.claude-plugin/plugin.json") \
-    >/dev/null
+    > /dev/null
 }
 
 mkdir -p "${STAGE}"

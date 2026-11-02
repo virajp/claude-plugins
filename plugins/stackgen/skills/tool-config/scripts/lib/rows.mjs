@@ -28,7 +28,7 @@ export const ANSWERS = {
   pin: ["ok", "keep-existing"],
 };
 
-const hidden = key => key === "effects" || key === "id" || key.startsWith("_");
+const hidden = (key) => key === "effects" || key === "id" || key.startsWith("_");
 
 /** What identifies a row's content: everything shown but its id. */
 export function fingerprint(row) {
@@ -106,7 +106,7 @@ export function checkAnswers(rows, answers, stored) {
       rows,
     );
   }
-  const before = new Map(stored.map(r => [r.id, r.fingerprint]));
+  const before = new Map(stored.map((r) => [r.id, r.fingerprint]));
   for (const row of rows) {
     if (!before.has(row.id) || before.get(row.id) !== row._fingerprint) {
       throw new RefusalError(
@@ -121,7 +121,7 @@ export function checkAnswers(rows, answers, stored) {
       rows,
     );
   }
-  const ids = new Set(rows.map(r => r.id));
+  const ids = new Set(rows.map((r) => r.id));
   for (const id of answers.keys()) {
     if (!ids.has(id)) {
       throw new RefusalError(`answers: no row ${id}`, rows);
@@ -164,17 +164,16 @@ function storePath(repoRoot) {
 
 export function previewStore(repoRoot) {
   const path = storePath(repoRoot);
-  const load =
-    () => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {});
-  const save = all => {
+  const load = () => (existsSync(path) ? JSON.parse(readFileSync(path, "utf8")) : {});
+  const save = (all) => {
     mkdirSync(dirname(path), { recursive: true });
     writeFileSync(path, JSON.stringify(all, null, 2) + "\n");
   };
   return {
-    get: signature => load()[signature] ?? null,
+    get: (signature) => load()[signature] ?? null,
     put(signature, rows) {
       const all = load();
-      all[signature] = rows.map(r => ({
+      all[signature] = rows.map((r) => ({
         id: r.id,
         fingerprint: r._fingerprint,
       }));

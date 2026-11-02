@@ -88,7 +88,7 @@ function skill(name: string, extra = "", body = "prose"): string {
   return `---\nname: ${name}\ndescription: does something\n${extra}---\n\n${body}\n`;
 }
 
-const messages = (findings: readonly Finding[]) => findings.map(f => f.message);
+const messages = (findings: readonly Finding[]) => findings.map((f) => f.message);
 
 describe("the manifest", () => {
   it("flags a name that disagrees with the directory", () => {
@@ -397,7 +397,7 @@ describe("the pack config tier", () => {
     "CONTRIBUTING.md",
     "SECURITY.md",
     "LICENSE",
-  ])("flags %s at the config/ tier root — tool-config's or init's", file => {
+  ])("flags %s at the config/ tier root — tool-config's or init's", (file) => {
     // A pack asks tool-config for its lines in these files, or init writes them.
     const root = tree({ alpha: { files: { [`${pack}/${file}`]: "x\n" } } });
     expect(messages(check(root))).toEqual([
@@ -462,16 +462,14 @@ describe("the pack config tier", () => {
     const root = tree({
       alpha: {
         files: Object.fromEntries(
-          files.map(f => [`${pack}/${f}`, "#!/usr/bin/env bash\n"]),
+          files.map((f) => [`${pack}/${f}`, "#!/usr/bin/env bash\n"]),
         ),
-        executable: files.filter(f => f.includes("tasks")).map(f =>
-          `${pack}/${f}`
-        ),
+        executable: files.filter((f) => f.includes("tasks")).map((f) => `${pack}/${f}`),
       },
     });
     expect(messages(check(root)).sort()).toEqual(
       files
-        .map(f =>
+        .map((f) =>
           `pack config/ tier ships ${f} — under .config/ a pack ships only `
           + ".config/mise/tasks/test/, .config/mise/tasks/p/_project/; the toolchain "
           + `is bootstrap's: ${pack}/${f}`
@@ -902,8 +900,7 @@ describe("frontmatter", () => {
     const root = tree({
       alpha: {
         files: {
-          "skills/one/SKILL.md":
-            "---\nname: one\ndescription: a: b\n---\n\nx\n",
+          "skills/one/SKILL.md": "---\nname: one\ndescription: a: b\n---\n\nx\n",
         },
       },
     });
@@ -927,10 +924,8 @@ describe("frontmatter", () => {
     const root = tree({
       stackgen: {
         files: {
-          "stacks/language/x/skills/x/SKILL.md":
-            "---\nname: x\ndescription: a: b\n---\n\nprose\n",
-          "stacks/language/x/agents/x-writer.md":
-            "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
+          "stacks/language/x/skills/x/SKILL.md": "---\nname: x\ndescription: a: b\n---\n\nprose\n",
+          "stacks/language/x/agents/x-writer.md": "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
         },
       },
     });
@@ -1010,8 +1005,7 @@ describe("agent cross-references", () => {
     const root = tree({
       alpha: {
         files: {
-          "agents/thing-writer.md":
-            "---\nname: thing-writer\ndescription: the `thing-writer` agent\n---\n\nx\n",
+          "agents/thing-writer.md": "---\nname: thing-writer\ndescription: the `thing-writer` agent\n---\n\nx\n",
         },
       },
     });
@@ -1088,8 +1082,7 @@ describe("root-relative references", () => {
     const root = tree({
       stackgen: {
         files: {
-          "stacks/language/x/conventions.md":
-            "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
+          "stacks/language/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
         },
       },
     });
@@ -1129,11 +1122,9 @@ describe("landed citations", () => {
           "",
           "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
         ),
-        "stacks/language/x/conventions.md":
-          "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
+        "stacks/language/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
         "stacks/bundles/thing.md": "read `${CLAUDE_PLUGIN_ROOT}`\n",
-        [task]:
-          "#!/usr/bin/env bash\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
+        [task]: "#!/usr/bin/env bash\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
       },
       [task],
     ));
@@ -1167,8 +1158,7 @@ describe("landed citations", () => {
     // The lookbehind is what keeps the token form from being counted twice and
     // keeps a word merely ending in `assets` out.
     const root = tree(packs({
-      "stacks/language/x/conventions.md":
-        "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
+      "stacks/language/x/conventions.md": "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
         + " and `my-assets/x.md`\n",
     }));
     expect(messages(check(root))).toEqual([
@@ -1188,8 +1178,7 @@ describe("landed citations", () => {
         "",
         "see [d](../two/references/z.md)",
       ),
-      "stacks/language/x/skills/one/references/y.md":
-        "see [a](../references/z.md), [b](../../two/references/z.md) and"
+      "stacks/language/x/skills/one/references/y.md": "see [a](../references/z.md), [b](../../two/references/z.md) and"
         + " [c](../../../conventions.md)\n",
       "stacks/language/x/skills/two/SKILL.md": skill("two"),
       "stacks/language/x/skills/two/references/z.md": "z\n",
@@ -1216,8 +1205,7 @@ describe("landed citations", () => {
     // Only a trailing segment makes it a path — and a path is what breaks,
     // because the sibling lands under its own template name or not at all.
     const root = tree(packs({
-      "stacks/bundles/thing.md":
-        "pins `cloud-provider/cloudflare` and `cloud-provider/cloudflare@1.0.0`,"
+      "stacks/bundles/thing.md": "pins `cloud-provider/cloudflare` and `cloud-provider/cloudflare@1.0.0`,"
         + " see `cloud-provider/cloudflare/conventions.md`\n",
     }));
     expect(messages(check(root))).toEqual([
@@ -1277,7 +1265,7 @@ describe("the design-adapter contract", () => {
 
   const three = (extra: string) =>
     Object.fromEntries(
-      ["screens", "design-system", "conversations"].map(kind => [
+      ["screens", "design-system", "conversations"].map((kind) => [
         `stacks/design-tool/acme/skills/design-import-${kind}/SKILL.md`,
         skill(`design-import-${kind}`, extra),
       ]),
@@ -1346,7 +1334,7 @@ describe("the stack-adapter contract", () => {
 
   const both = (extra: string) =>
     Object.fromEntries(
-      ["stack-menu", "stack-template"].map(kind => [
+      ["stack-menu", "stack-template"].map((kind) => [
         `skills/stackgen-${kind}/SKILL.md`,
         skill(`stackgen-${kind}`, extra),
       ]),
@@ -1435,7 +1423,7 @@ describe("bundle defaults", () => {
   const bundle = (axis: string, extra = "", platforms: string[] = []) =>
     `---\nname: X\naxis: ${axis}\nkind: k\n${extra}${
       platforms.length > 0
-        ? `platforms:\n${platforms.map(p => `- ${p}\n`).join("")}`
+        ? `platforms:\n${platforms.map((p) => `- ${p}\n`).join("")}`
         : ""
     }components:\n- k/x@1.0.0\n---\n\nprose\n`;
 
@@ -1616,8 +1604,7 @@ describe("the exclusion sets", () => {
         excludes: ["**/.turbo/", "**/dist/", "**/*.lock"],
       }),
       taplo: "exclude = [ \"**/.turbo/**\", \"**/dist/**\", \"**/*.lock\" ]\n",
-      gitleaks:
-        "[allowlist]\npaths = [ '''(^|/)\\.turbo/''', '''(?:^|/)dist/''' ]\n",
+      gitleaks: "[allowlist]\npaths = [ '''(^|/)\\.turbo/''', '''(?:^|/)dist/''' ]\n",
       preCommit: "exclude: (^|/)(\\.turbo|dist)/|(^|/)[^/]*\\.lock$\n"
         + "repos:\n  - repo: local\n",
     }));
@@ -1754,8 +1741,7 @@ describe("the technology-free vwf guard", () => {
     // version can still be carrying in its prose.
     const root = tree(
       vwf({
-        "assets/feedback.md":
-          "Call mcp__plugin_design-tools_claude-design_get_page.\n",
+        "assets/feedback.md": "Call mcp__plugin_design-tools_claude-design_get_page.\n",
       }),
     );
     expect(messages(check(root))).toEqual([
@@ -1969,10 +1955,8 @@ describe("retired vocabulary", () => {
   // source of truth and a dozen other files keep stating the old one as live.
   // Nothing fails, because prose is not a reference — so the rule is pinned
   // per term in the failing direction, and per exemption in the passing one.
-  const doc = (text: string) =>
-    tree({ alpha: { files: { "assets/x.md": text } } });
-  const retired = (text: string) =>
-    messages(check(doc(text))).filter(m => m.includes("retired vocabulary"));
+  const doc = (text: string) => tree({ alpha: { files: { "assets/x.md": text } } });
+  const retired = (text: string) => messages(check(doc(text))).filter((m) => m.includes("retired vocabulary"));
 
   it.each([
     ["`web` platform", "platforms: `mobile` / `desktop` / `web`\n"],
@@ -1995,7 +1979,7 @@ describe("retired vocabulary", () => {
 
   it("reports the path and the line", () => {
     const found = check(doc("fine\n\nfine\nthe four axes\n"));
-    expect(found.map(f => f.scope)).toEqual(["alpha:assets/x.md:4"]);
+    expect(found.map((f) => f.scope)).toEqual(["alpha:assets/x.md:4"]);
   });
 
   it("scans yaml as well as markdown", () => {
@@ -2021,7 +2005,7 @@ describe("retired vocabulary", () => {
     "→",
     "pre-22",
     "format 22",
-  ])("exempts a line carrying %s", marker => {
+  ])("exempts a line carrying %s", (marker) => {
     expect(check(doc(`the \`web\` token, ${marker}\n`))).toEqual([]);
   });
 
@@ -2049,7 +2033,7 @@ describe("retired vocabulary", () => {
         + "a stack is composed from four axes\n"
         + "(the fourth was retired at format 22)\n",
     ));
-    expect(found.map(f => f.scope)).toEqual([
+    expect(found.map((f) => f.scope)).toEqual([
       "alpha:assets/x.md:2",
       "alpha:assets/x.md:3",
       "alpha:assets/x.md:5",

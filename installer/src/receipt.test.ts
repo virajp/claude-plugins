@@ -153,7 +153,7 @@ describe("reverting a receipt", () => {
           undo: ["config", "set", "k", ""],
         },
       ]),
-      { ...jsonHooks, runUndo: undo => ran.push([...undo]) },
+      { ...jsonHooks, runUndo: (undo) => ran.push([...undo]) },
     );
 
     expect(ran).toEqual([["config", "set", "k", ""]]);

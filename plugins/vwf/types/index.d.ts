@@ -72,7 +72,7 @@ export type PlanUnit = {
   status: string;
   commit: string;
   rounds: number;
-  range?: { from: string; to: string; };
+  range?: { from: string; to: string };
   started: string;
   ended: string;
 };
@@ -112,7 +112,7 @@ export type PlanFolder = {
   waves: PlanWave[];
   stages: PlanStage[];
   gaps: PlanGap[];
-  run: { worktree?: string; log?: string; };
+  run: { worktree?: string; log?: string };
 };
 
 /** One subagent, as the action log records it. */

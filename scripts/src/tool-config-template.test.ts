@@ -14,18 +14,16 @@ import * as engine from "../../plugins/stackgen/skills/tool-config/scripts/lib/t
 const { render, TemplateError } = engine;
 
 const source = "templates/demo.tmpl";
-const run = (template: string, values: Record<string, unknown> = {}): string =>
-  render(template, values, { source });
+const run = (template: string, values: Record<string, unknown> = {}): string => render(template, values, { source });
 
 /** The TemplateError a render throws, so a case can assert its message and line. */
 function fault(
   template: string,
   values: Record<string, unknown> = {},
-): { message: string; line: number; } {
+): { message: string; line: number } {
   try {
     run(template, values);
-  }
-  catch (error) {
+  } catch (error) {
     expect(error).toBeInstanceOf(TemplateError);
     const { message, line, source: label } = error as {
       message: string;
@@ -230,8 +228,7 @@ describe("#each", () => {
   });
 
   it("nests #each inside #if", () => {
-    const template =
-      "@@#if L@@\n[list]\n@@#each L@@\n@@.name@@\n@@/each@@\n@@/if@@\n";
+    const template = "@@#if L@@\n[list]\n@@#each L@@\n@@.name@@\n@@/each@@\n@@/if@@\n";
     expect(run(template, { L: [{ name: "a" }, { name: "b" }] })).toBe(
       "[list]\na\nb\n",
     );
@@ -239,8 +236,7 @@ describe("#each", () => {
   });
 
   it("nests #if inside #each, reading .key", () => {
-    const template =
-      "@@#each L@@\n@@.name@@@@#if .local@@ (local)@@/if@@\n@@/each@@";
+    const template = "@@#each L@@\n@@.name@@@@#if .local@@ (local)@@/if@@\n@@/each@@";
     const L = [{ name: "a", local: true }, { name: "b", local: false }, {
       name: "c",
     }];

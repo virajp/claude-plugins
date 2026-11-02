@@ -138,11 +138,11 @@ describe("buildVersionReport", () => {
     const asked: string[] = [];
     const report = await buildVersionReport({
       sourceRoot: repoRoot,
-      fetchNpm: async url => {
+      fetchNpm: async (url) => {
         asked.push(`npm ${url}`);
         return { version: "99.0.0" } as never;
       },
-      fetchGithub: async url => {
+      fetchGithub: async (url) => {
         asked.push(`github ${url}`);
         return { plugins: [{ name: "vwf", version: "99.0.0" }] } as never;
       },

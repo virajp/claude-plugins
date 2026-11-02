@@ -73,7 +73,7 @@ for task in "${TASKS[@]}"; do
         owns=true
         ;;
     esac
-  done <<<"${lines}"
+  done <<< "${lines}"
   [[ "${owns}" == "true" ]] && RELEASING_TASKS+=("${task}")
 done
 
@@ -94,11 +94,11 @@ releases() {
 #    gh, which the installer and site tag steps push and watch with, and the
 #    gates those tag steps would otherwise run again on main.
 if releases installer || releases site; then
-  if ! command -v gh >/dev/null 2>&1; then
+  if ! command -v gh > /dev/null 2>&1; then
     print_error "gh (GitHub CLI) is required to push and watch the installer and site releases. Install: brew install gh"
     exit 1
   fi
-  if ! gh auth status >/dev/null 2>&1; then
+  if ! gh auth status > /dev/null 2>&1; then
     print_error "gh is not authenticated. Run: gh auth login"
     exit 1
   fi
@@ -127,9 +127,15 @@ done
 staged_version() {
   local file
   case "$1" in
-    installer) file="package.json" ;;
-    site) file="site/package.json" ;;
-    *) file="plugins/$1/.claude-plugin/plugin.json" ;;
+    installer)
+      file="package.json"
+      ;;
+    site)
+      file="site/package.json"
+      ;;
+    *)
+      file="plugins/$1/.claude-plugin/plugin.json"
+      ;;
   esac
   git show ":${file}" | node -e 'let s = ""; process.stdin.on("data", d => (s += d)).on("end", () => console.log(JSON.parse(s).version))'
 }
@@ -162,14 +168,18 @@ STEPS+=("git switch ${RELEASE_BRANCH}")
 # may follow a fix on main that no gate of this run checked.
 for task in "${RELEASING_TASKS[@]}"; do
   case "${task}" in
-    p:i:release | p:site:release) STEPS+=("RELEASE_GATES_DONE=1 mise run ${task} --tag-only") ;;
-    *) STEPS+=("mise run ${task} --tag-only") ;;
+    p:i:release | p:site:release)
+      STEPS+=("RELEASE_GATES_DONE=1 mise run ${task} --tag-only")
+      ;;
+    *)
+      STEPS+=("mise run ${task} --tag-only")
+      ;;
   esac
 done
 STEPS+=("git switch ${BUMP_BRANCH}")
 
-remote_has_tag() { [[ -n "$(git ls-remote --tags origin "refs/tags/$1" 2>/dev/null)" ]]; }
-local_has_tag() { git rev-parse -q --verify "refs/tags/$1" >/dev/null; }
+remote_has_tag() { [[ -n "$(git ls-remote --tags origin "refs/tags/$1" 2> /dev/null)" ]]; }
+local_has_tag() { git rev-parse -q --verify "refs/tags/$1" > /dev/null; }
 
 # One step's resume lines, judged when the run stops: a tag already on origin is
 # not cut again, and a tag cut here but never pushed is pushed rather than re-made,

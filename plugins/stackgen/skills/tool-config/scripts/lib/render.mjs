@@ -51,13 +51,12 @@ export function walk(dir) {
     return [];
   }
   const out = [];
-  const visit = abs => {
+  const visit = (abs) => {
     for (const d of readdirSync(abs, { withFileTypes: true })) {
       const p = join(abs, d.name);
       if (d.isDirectory()) {
         visit(p);
-      }
-      else if (d.isFile()) {
+      } else if (d.isFile()) {
         out.push({
           path: relative(dir, p).split("\\").join("/"),
           abs: p,
@@ -82,8 +81,7 @@ export function tierOf(text) {
 export function renderTemplate(text, values, source) {
   try {
     return render(text, values, { source });
-  }
-  catch (e) {
+  } catch (e) {
     if (e instanceof TemplateError) {
       throw new RefusalError(
         `${e.message} — the render needs that value (a pack's own: --set <key>=<value>)`,
@@ -99,12 +97,12 @@ const OPEN = /^\s*(?:#|\/\/)\s*>>> tool-config\s*$/;
 const CLOSE = /^\s*(?:#|\/\/)\s*<<< tool-config\s*$/;
 
 function markers(lines) {
-  const open = lines.findIndex(l => OPEN.test(l));
-  const close = lines.findIndex(l => CLOSE.test(l));
+  const open = lines.findIndex((l) => OPEN.test(l));
+  const close = lines.findIndex((l) => CLOSE.test(l));
   if (
     open < 0
     || close <= open
-    || lines.filter(l => OPEN.test(l) || CLOSE.test(l)).length !== 2
+    || lines.filter((l) => OPEN.test(l) || CLOSE.test(l)).length !== 2
   ) {
     return null;
   }
@@ -112,7 +110,7 @@ function markers(lines) {
 }
 
 /** Whether a source file carries the marker pair. */
-export const isMarked = text => markers(splitLines(text).lines) !== null;
+export const isMarked = (text) => markers(splitLines(text).lines) !== null;
 
 /**
  * The repo's file with the source's marked lines in place of its own — or
@@ -147,19 +145,17 @@ export const filledSlot = (source, existing) =>
 // --- pins -----------------------------------------------------------------------
 
 /** A mise file every CI environment loads: the base config, or a conf.d `mise{,.ci,.test}.toml`. */
-export const isCiLoaded = path =>
+export const isCiLoaded = (path) =>
   path === ".config/mise.toml"
   || /^\.config\/mise\/conf\.d\/[^/]+\/mise(?:\.ci|\.test)?\.toml$/.test(path);
 
 /** An exact version: three numeric parts at least, an optional pre-release or build tail. */
-export const isExact = v =>
-  /^v?\d+\.\d+\.\d+([-+.][0-9A-Za-z.-]+)?$/.test(v ?? "");
+export const isExact = (v) => /^v?\d+\.\d+\.\d+([-+.][0-9A-Za-z.-]+)?$/.test(v ?? "");
 
 const HEADER = /^\s*\[([^\]]+)\]\s*(?:#.*)?$/;
 const TOOL_HEADER = /^tools\.(?:"([^"]+)"|([A-Za-z0-9_.:/@-]+))$/;
 const VERSION_LINE = /^(\s*version\s*=\s*)"([^"]*)"(.*)$/;
-const INLINE_PIN =
-  /^(\s*)(?:"([^"]+)"|([A-Za-z0-9_:/@.-]+))(\s*=\s*)"([^"]*)"(.*)$/;
+const INLINE_PIN = /^(\s*)(?:"([^"]+)"|([A-Za-z0-9_:/@.-]+))(\s*=\s*)"([^"]*)"(.*)$/;
 
 /**
  * Every pin in a mise file: `{tool, version, line}` per `version = "…"` in a
@@ -199,8 +195,7 @@ export function setPin(text, line, version) {
     ? lines[line].replace(VERSION_LINE, `$1"${version}"$3`)
     : lines[line].replace(
       INLINE_PIN,
-      (_, ind, q, b, eq, _v, rest) =>
-        `${ind}${q ? `"${q}"` : b}${eq}"${version}"${rest}`,
+      (_, ind, q, b, eq, _v, rest) => `${ind}${q ? `"${q}"` : b}${eq}"${version}"${rest}`,
     );
   return joinLines(lines, eol);
 }
@@ -212,7 +207,7 @@ export function setPin(text, line, version) {
  */
 export function pinExact(text, existing, latest) {
   const held = new Map(
-    pinsOf(existing).filter(p => isExact(p.version)).map(p => [
+    pinsOf(existing).filter((p) => isExact(p.version)).map((p) => [
       p.tool,
       p.version,
     ]),
@@ -238,7 +233,7 @@ export function pinExact(text, existing, latest) {
 // --- derived names ------------------------------------------------------------
 
 /** A member's slug: its folder name, lowercased, every other run of characters a `-`. */
-export const slugOf = path =>
+export const slugOf = (path) =>
   path
     .split("/")
     .at(-1)
@@ -262,20 +257,16 @@ export function valueNames(values) {
   }
   out.MEMBERS_SPACED = out.MEMBERS.join(" ");
   const seen = new Map();
-  out.MEMBER_ENTRIES = out.MEMBERS.map(path => {
+  out.MEMBER_ENTRIES = out.MEMBERS.map((path) => {
     const slug = slugOf(path);
     if (!slug || slug === "all") {
       throw new RefusalError(
-        `member ${path} has no usable slug (${
-          slug || "empty"
-        }) — rename its folder`,
+        `member ${path} has no usable slug (${slug || "empty"}) — rename its folder`,
       );
     }
     if (seen.has(slug)) {
       throw new RefusalError(
-        `members ${
-          seen.get(slug)
-        } and ${path} share the slug ${slug} — their setup flags would collide`,
+        `members ${seen.get(slug)} and ${path} share the slug ${slug} — their setup flags would collide`,
       );
     }
     seen.set(slug, path);
@@ -297,10 +288,8 @@ export function subtaskNames(ws) {
     const prefix = `${TASKS_DIR}/${dir}/`;
     out[name] = ws
       .list(prefix)
-      .map(p => p.slice(prefix.length))
-      .filter(leaf =>
-        !leaf.includes("/") && leaf !== "all" && isTask(ws, prefix + leaf)
-      )
+      .map((p) => p.slice(prefix.length))
+      .filter((leaf) => !leaf.includes("/") && leaf !== "all" && isTask(ws, prefix + leaf))
       .sort();
   }
   return out;
@@ -310,7 +299,7 @@ const DESCRIPTION = /^#MISE description="((?:[^"\\]|\\.)*)"\s*$/m;
 const TOML_TASK = /^tasks\.(?:"([^"]+)"|([A-Za-z0-9_:-]+))$/;
 const TOML_DESCRIPTION = /^\s*description\s*=\s*"((?:[^"\\]|\\.)*)"/;
 
-const unescape = s => s.replace(/\\(.)/g, "$1");
+const unescape = (s) => s.replace(/\\(.)/g, "$1");
 
 /**
  * `TASKS`: every task the tree defines — each file task under the tasks
@@ -322,7 +311,7 @@ export function taskNames(ws) {
   for (const path of ws.list(`${TASKS_DIR}/`)) {
     const rel = path.slice(TASKS_DIR.length + 1);
     if (
-      rel.split("/").some(seg => seg.startsWith("_") || seg.startsWith("."))
+      rel.split("/").some((seg) => seg.startsWith("_") || seg.startsWith("."))
       || !ws.isExec(path)
     ) {
       continue;
@@ -333,9 +322,7 @@ export function taskNames(ws) {
   const configs = [
     ".config/mise.toml",
     // a machine's own mise.local.toml / mise.<env>.local.toml is gitignored, never the repo's
-    ...ws.list(`${CONF_D}/`).filter(p =>
-      p.endsWith(".toml") && !/(^|\/)mise(\.[^/]+)?\.local\.toml$/.test(p)
-    ),
+    ...ws.list(`${CONF_D}/`).filter((p) => p.endsWith(".toml") && !/(^|\/)mise(\.[^/]+)?\.local\.toml$/.test(p)),
   ];
   for (const path of configs) {
     let task = null;

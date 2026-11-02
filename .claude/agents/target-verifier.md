@@ -164,7 +164,7 @@ belongs to `claude`, which is why it writes **no receipt**.
 
    ```sh
    mkdir -p "$XDG_CONFIG_HOME/ai-plugins/receipts" "$HOME/.cursor"
-   printf 'ours\n'                      > "$HOME/.cursor/ours.txt"
+   printf 'ours\n' > "$HOME/.cursor/ours.txt"
    printf '{"editor":{"theme":"ours"}}' > "$HOME/.cursor/settings.json"
    ```
 
