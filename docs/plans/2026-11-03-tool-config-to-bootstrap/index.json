@@ -167,7 +167,8 @@
         "scripts/src/tool-config-template.test.ts",
         "scripts/src/tool-config-values.test.ts",
         "scripts/src/fixtures/tool-config/**",
-        "plugins/stackgen/assets/output-tree.md"
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/assets/ids.md"
       ],
       "depends_on": [],
       "waits": "",
@@ -594,6 +595,33 @@
       "units": [
         "U1",
         "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "doctor's Project ids predicate compares commitScopes with the project ids, but bootstrap now owns commit_scopes. What does it do?",
+      "ruling": "The user ruled: drop the commit-scope check. Project ids keeps its task-group check only; commit scopes are bootstrap's, and Bootstrap drift covers the synced config.",
+      "rejected": "Read commit_scopes from .config/bootstrap.toml and warn on a missing project id",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "D14 says init commits only what it wrote. Does the base commit still stage the gitlinks the member commits moved, and is a detached member still refused?",
+      "ruling": "Yes, confirmed by the user. Members commit first; the base commit stages init's own files plus the gitlinks those member commits moved, and the report keeps the Gitlinks staged line. A member on a detached HEAD is still a refused row.",
+      "rejected": "The base commit stages init's own files only",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Is shaped (has .config/bootstrap.toml) a titled baseline predicate?",
+      "ruling": "No, as today: doctor reports not shaped on its own line, before the predicates, and evaluates no predicate in a repo that is not shaped. The titled predicates are those of D30. Derived from doctor's current shape.",
+      "rejected": "Make shape a titled predicate",
+      "units": [
         "U3"
       ]
     }

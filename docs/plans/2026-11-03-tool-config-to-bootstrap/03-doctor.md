@@ -118,6 +118,13 @@
    "no `.config/bootstrap.toml`". Per D16, an unknown drift prints a
    one-line warning, not the drift line. Change nothing else in recall.
 
+- **D31** — the user's ruling: Project ids (431–445) drops its
+  `commitScopes` check and keeps the task-group check only. Commit scopes
+  are bootstrap's `commit_scopes`; Bootstrap drift covers them.
+- **D33** — "shaped" (has `.config/bootstrap.toml`) is not a titled
+  predicate: as today, doctor reports "not shaped" on its own line and
+  evaluates no predicate in that repo. Edit 1's "(a) each repository has
+  `.config/bootstrap.toml`" becomes that line, not a lettered predicate.
 - **D30** — doctor's predicates keep their bold titles; every citation
   outside the doctor skill names a predicate by its title.
 

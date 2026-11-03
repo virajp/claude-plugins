@@ -178,6 +178,11 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    no `code:*:all`, no `code:check:all`. This file lands in user repos: no
    plugin-relative path (checker rule 13).
 
+- **D32** — the user's ruling: members commit first; the base commit
+  stages init's own files plus the gitlinks the member commits moved, and
+  the report keeps the "Gitlinks staged" line (`init/SKILL.md` 129, 716;
+  `new-repo.md` 600–610, 1002). A member on a detached HEAD stays a refused
+  row. Keep that text through the §11 rewrite.
 - **D30** — doctor's predicates are cited by title, never by letter, since
   U3 renumbers them in the same wave. Rewrite `init/SKILL.md` (817: "(a)
   through (f)", "(g)"), `references/existing-repo.md` (489: "predicate
