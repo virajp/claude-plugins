@@ -36,15 +36,15 @@
 >   them.
 > - D14: init keeps the sections that write its own files: §1 (the
 >   repository itself, git init before bootstrap), §4 placeholders, §5
->   template fallback, §7 renamed The project ids (the ids its own files use;
->   the rest of §7 that fed the all call is deleted), §8 readme, licence and
->   security file, §11(e) the push of init's own commit (D23), §11(f) the
->   forge pass, and §12 the report, rewritten without the rows of deleted
->   steps. It deletes §2 the all call (replaced by the bootstrap step), §3
->   the secrets provider (D5), §6 hook fragments, §9 trust and mise run init,
->   §10 the aggregator and §11(a) the landing model. §11(b) to (d) become one
->   step: after bootstrap ends, stage and commit only what init wrote, on the
->   branch bootstrap left, with one consent; the branches are bootstrap's.
+>   template fallback, §7 renamed The project ids (the ids its own files
+>   use; the rest of §7 that fed the all call is deleted), §8 readme,
+>   licence and security file, §11(f) the forge pass, and §12 the report,
+>   rewritten without the rows of deleted steps. It deletes §2 the all call
+>   (replaced by the bootstrap step), §3 the secrets provider (D5), §6 hook
+>   fragments, §9 trust and mise run init, §10 the aggregator, §11(a) the
+>   landing model and §11(e) the push. §11(b) to (d) become one step: after
+>   bootstrap ends, hand the commits to /vwf:git-workflow with one consent
+>   (D37).
 > - D24: init keeps only the passes of existing-repo.md for its own files:
 >   pass 2 the readme and pass 6 missing files. It deletes passes 1, 3, 4, 5,
 >   7, 8, 9 and 10, the hook-manager row and The gate configuration commits
@@ -63,24 +63,31 @@
 > - D36: When the bootstrap step leaves its sync uncommitted, init commits
 >   bootstrap's sync first, in its own commit, under init's one consent, then
 >   commits its own files.
-> - D37: init lands through vwf's git-workflow skill. In each repo,
->   members before the base, init stages its commits (the sync commit of
->   D36 when there is one, then its own files and the gitlinks of D32) and
->   hands the landing to /vwf:git-workflow, which owns branches, protected
->   core branches, merge_model, conflicts, failures and reruns. The answer
->   commit means commit only, no push; commit and push means land and push.
->   A repo git-workflow does not land is reported with its reason and is
->   pending on its Forge line.
+> - D37: The user ruled: init lands through vwf's git-workflow skill, not a
+>   landing engine of its own. In each repo, members before the base, init
+>   hands /vwf:git-workflow the commits to make, in order: the
+>   bootstrap-sync commit of D36 when there is one, then init's own files
+>   with the gitlinks of D32. git-workflow makes both commits itself, after
+>   it isolates the work (a commit on a protected core branch is refused by
+>   bootstrap's hook, so init cannot commit first), and owns branches,
+>   protected core branches, merge_model, conflicts, failures and reruns.
+>   init's one consent is the answer git-workflow needs: commit means commit
+>   only, with no push; commit and push means land and push. init has no
+>   push step of its own: §11(e) is deleted. A repo is pushed for the forge
+>   pass (D23) when git-workflow landed it with a push: direct pushed the
+>   core branch, or pr opened the pull request (the user's ruling). A repo
+>   git-workflow does not land is reported with its reason and is pending on
+>   its Forge line.
 > - D38: Before the bootstrap step, init checks every repo, the base and
 >   each member. If any tree is not clean, init stops the whole run before
 >   it writes anything and lists each dirty repo. The one plan carries a
 >   conditional line per repo: if bootstrap leaves its sync uncommitted,
 >   commit it first.
-> - D23: init's one consent asks commit, or commit and push. On commit and
->   push, init pushes its own commit in each repo, members before the base,
->   never a force-push; no remote, or a rejected push, is a deferral for that
->   repo, as §11(e) says today. The forge pass runs once for the product,
->   after the base push, for each repo that init pushed; any other repo is
+> - D23: init's one consent asks commit, or commit and push; git-workflow
+>   does the landing and the push (D37), members before the base, never a
+>   force-push. The forge pass runs once for the product, after the base
+>   lands, for each repo that git-workflow landed with a push (direct pushed
+>   the core branch, or pr opened the pull request); any other repo is
 >   pending on its Forge line with the reason.
 > - D15: Green means the repository has .config/bootstrap.toml and mise run
 >   setup:configs --dry-run shows no change. init deletes
@@ -163,16 +170,16 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    marker text (145), "The values `all` writes" and the `_default` slot
    (450–492), §9 trust and `mise run init` (521–566), §10 the aggregator,
    §6 the hook fragments, the parts of §7 that fed `all`, and §11(a)
-   (623–650). Replace §11(b) to (d) with the one commit step of D14, whose
-   consent has two answers, commit or commit and push (D23). Keep §11(e),
-   the push, rewritten to push init's commit only on commit and push,
-   members before the base. Delete §3, the secrets provider (D5). Rename
+   (623–650). Replace §11(b) to (d) with the one step of D14 and D37, whose
+   consent has two answers, commit or commit and push (D23). Delete
+   §11(e), the push: git-workflow pushes (D37). Delete §3, the secrets provider (D5). Rename
    §7 to exactly "The project ids" (U3 cites it by that title, with no
    number). Keep §12, the report, without the rows of deleted steps. Keep
    §1, §4, §5, §8 and §11(f); renumber the sections left and every
    cross-reference to them in the owned files.
    The forge pass eligibility (823–850) reads D23: a repo takes the pass
-   only where init pushed it at §11(e). The forge pass (890–891) decides "PR rule expected" from `merge_model`
+   only where git-workflow landed it with a push — direct pushed the core
+   branch, or pr opened the pull request. The forge pass (890–891) decides "PR rule expected" from `merge_model`
    of `[branch.main]` and `[branch.develop]` in the base's
    `.config/bootstrap.toml`, default `direct`. Ignore-file attributions
    (312, 670) name bootstrap's git tool. The record of the repo is its
@@ -205,10 +212,13 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     commit. Members commit before the base (D32). Write this into the
     commit step that replaces §11(b) to (d) and into the report.
 4d. **D37** — the commit step that replaces §11(b) to (d) lands through
-    `/vwf:git-workflow`: in each repo, members before the base, stage the
-    commits (D36, then init's own files and the D32 gitlinks) and invoke
-    git-workflow with the consent's answer — commit only, or land and
-    push. Write no branch, merge task, `SKIP` or conflict rule of init's
+    `/vwf:git-workflow`: in each repo, members before the base, invoke
+    git-workflow with the two commits to make, in order — the D36 sync
+    commit when there is one, then init's own files and the D32 gitlinks —
+    and the consent's answer, commit only or land and push. git-workflow
+    makes the commits after it isolates the work; init commits nothing
+    itself, since bootstrap's hook refuses a commit on a protected core
+    branch. Write no branch, merge task, `SKIP` or conflict rule of init's
     own; cite git-workflow for them. Report a repo it does not land with
     git-workflow's reason.
 4e. **D38** — before the bootstrap step, init checks every repo, base

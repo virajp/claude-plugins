@@ -432,7 +432,7 @@
     {
       "id": "D14",
       "decision": "Which of init's other sections stay, given that bootstrap makes the first commit, creates develop and asks before a push?",
-      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §7 renamed The project ids (the ids its own files use; the rest of §7 that fed the all call is deleted), §8 readme, licence and security file, §11(e) the push of init's own commit (D23), §11(f) the forge pass, and §12 the report, rewritten without the rows of deleted steps. It deletes §2 the all call (replaced by the bootstrap step), §3 the secrets provider (D5), §6 hook fragments, §9 trust and mise run init, §10 the aggregator and §11(a) the landing model. §11(b) to (d) become one step: after bootstrap ends, stage and commit only what init wrote, on the branch bootstrap left, with one consent; the branches are bootstrap's.",
+      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §7 renamed The project ids (the ids its own files use; the rest of §7 that fed the all call is deleted), §8 readme, licence and security file, §11(f) the forge pass, and §12 the report, rewritten without the rows of deleted steps. It deletes §2 the all call (replaced by the bootstrap step), §3 the secrets provider (D5), §6 hook fragments, §9 trust and mise run init, §10 the aggregator, §11(a) the landing model and §11(e) the push. §11(b) to (d) become one step: after bootstrap ends, hand the commits to /vwf:git-workflow with one consent (D37).",
       "rejected": "Keep init's git pass §11(b) to (e) as today",
       "units": [
         "U1"
@@ -523,7 +523,7 @@
     {
       "id": "D23",
       "decision": "Bootstrap pushes its own commits, but init commits its own files after bootstrap ends. Who pushes init's commit, and which repo takes the forge pass?",
-      "ruling": "init's one consent asks commit, or commit and push. On commit and push, init pushes its own commit in each repo, members before the base, never a force-push; no remote, or a rejected push, is a deferral for that repo, as §11(e) says today. The forge pass runs once for the product, after the base push, for each repo that init pushed; any other repo is pending on its Forge line with the reason.",
+      "ruling": "init's one consent asks commit, or commit and push; git-workflow does the landing and the push (D37), members before the base, never a force-push. The forge pass runs once for the product, after the base lands, for each repo that git-workflow landed with a push (direct pushed the core branch, or pr opened the pull request); any other repo is pending on its Forge line with the reason.",
       "rejected": "init commits only and never pushes; the forge pass keyed on the remote state alone",
       "units": [
         "U1"
@@ -659,7 +659,7 @@
     {
       "id": "D37",
       "decision": "How does init land its commits, given bootstrap's no-commit-to-branch hook on main and develop, the merge models and the answer commit or commit and push?",
-      "ruling": "The user ruled: init lands through vwf's git-workflow skill, not a merge engine of its own. In each repo, members before the base, init stages its commits (D36's sync commit when there is one, then its own files and the gitlinks of D32) and hands the landing to /vwf:git-workflow, which owns branches, protected core branches, merge_model, conflicts, failures and reruns. init's one consent is the answer git-workflow needs: commit means commit only, with no push; commit and push means land and push. A repo that git-workflow does not land is reported with git-workflow's reason, and is pending on its Forge line (D23).",
+      "ruling": "The user ruled: init lands through vwf's git-workflow skill, not a landing engine of its own. In each repo, members before the base, init hands /vwf:git-workflow the commits to make, in order: the bootstrap-sync commit of D36 when there is one, then init's own files with the gitlinks of D32. git-workflow makes both commits itself, after it isolates the work (a commit on a protected core branch is refused by bootstrap's hook, so init cannot commit first), and owns branches, protected core branches, merge_model, conflicts, failures and reruns. init's one consent is the answer git-workflow needs: commit means commit only, with no push; commit and push means land and push. init has no push step of its own: §11(e) is deleted. A repo is pushed for the forge pass (D23) when git-workflow landed it with a push: direct pushed the core branch, or pr opened the pull request (the user's ruling). A repo git-workflow does not land is reported with its reason and is pending on its Forge line.",
       "rejected": "A vwf/init branch landed by init itself through code:merge:develop, code:merge:main or a local merge with SKIP (the earlier D37, D39 and D40, replaced because each added init-only landing cases)",
       "units": [
         "U1"
