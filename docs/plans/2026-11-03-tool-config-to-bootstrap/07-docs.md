@@ -22,6 +22,11 @@
 >   2026-10-05-tool-config-templates, checker rule 15, and git-workflow's
 >   MERGE_MODEL_* env reads (the record 2026-09-20-branch-model). The docs unit writes one new decision record and
 >   marks each reversed record superseded.
+> - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
+>   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
+>   run setup; setup is the task bootstrap ships (setup/_default). The
+>   MISE_ENV=dev prefix stays where it is today, because bootstrap loads no
+>   conf.d file without MISE_ENV. History rows keep their text.
 
 ## Edits
 
@@ -58,6 +63,14 @@
 4. Add one superseded line at the top of each reversed record named in D13
    that exists in `docs/memory/decisions/`, pointing to the new record.
    Change nothing else in those records.
+5. Apply D21 to each live `setup:all` in the owned docs: `readme.md`,
+   root `CONTRIBUTING.md`, `.claude/skills/vwf-plugin/SKILL.md`,
+   `.claude/skills/vwf-plugin/references/skills-and-agents.md`,
+   `.claude/skills/stackgen-plugin/SKILL.md`,
+   `site/src/content/docs/plugins/vwf.md`,
+   `site/src/content/docs/plugins/stackgen.md` and
+   `site/src/content/docs/how-to/greenfield/multi-repo.md`. Re-grep with
+   `grep -rn 'setup:all'` over the owned docs: only history rows remain.
 
 ## Verification
 

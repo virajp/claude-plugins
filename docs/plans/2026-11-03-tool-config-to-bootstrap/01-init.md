@@ -33,12 +33,19 @@
 >   them.
 > - D14: init keeps the sections that write its own files: §1 (the
 >   repository itself, git init before bootstrap), §4 placeholders, §5
->   template fallback, §8 readme, licence and security file, and §11(f) the
->   forge pass. It deletes §6 hook fragments, the parts of §7 that fed the all
->   call (project ids stay only where init's own files use them) and §10 the
->   aggregator. §11(b) to (e) become one step: after bootstrap ends, stage and
->   commit only what init wrote, on the branch bootstrap left, with one
->   consent; the branches and the push are bootstrap's.
+>   template fallback, §8 readme, licence and security file, §11(e) the push
+>   of init's own commit (D23), and §11(f) the forge pass. It deletes §6 hook
+>   fragments, the parts of §7 that fed the all call (project ids stay only
+>   where init's own files use them) and §10 the aggregator. §11(b) to (d)
+>   become one step: after bootstrap ends, stage and commit only what init
+>   wrote, on the branch bootstrap left, with one consent; the branches are
+>   bootstrap's.
+> - D23: init's one consent asks commit, or commit and push. On commit and
+>   push, init pushes its own commit in each repo, members before the base,
+>   never a force-push; no remote, or a rejected push, is a deferral for that
+>   repo, as §11(e) says today. The forge pass runs once for the product,
+>   after the base push, for each repo that init pushed; any other repo is
+>   pending on its Forge line with the reason.
 > - D15: Green means the repository has .config/bootstrap.toml and mise run
 >   setup:configs --dry-run shows no change. init deletes
 >   .config/stackgen.yaml in each repository, base and each member, that is
@@ -71,8 +78,11 @@ files of docs/sync/ when index.md tells you to. Apply only what is relevant to
 this repository. Ask me before each choice that docs/sync/ does not decide.
 ```
 
-> - D21: Every live mention of mise run setup:all becomes mise run setup,
->   the task bootstrap ships (setup/_default). History rows keep their text.
+> - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
+>   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
+>   run setup; setup is the task bootstrap ships (setup/_default). The
+>   MISE_ENV=dev prefix stays where it is today, because bootstrap loads no
+>   conf.d file without MISE_ENV. History rows keep their text.
 
 ## Edits
 
@@ -115,10 +125,14 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    marker text (145), "The values `all` writes" and the `_default` slot
    (450–492), §9 trust and `mise run init` (521–566), §10 the aggregator,
    §6 the hook fragments, the parts of §7 that fed `all`, and §11(a)
-   (623–650). Replace §11(b) to (e) with the one commit step of D14. Keep
+   (623–650). Replace §11(b) to (d) with the one commit step of D14, whose
+   consent has two answers, commit or commit and push (D23). Keep §11(e),
+   the push, rewritten to push init's commit only on commit and push,
+   members before the base. Keep
    §1, §4, §5, §8 and §11(f); renumber the sections left and every
    cross-reference to them in the owned files.
-   The forge pass (890–891) decides "PR rule expected" from `merge_model`
+   The forge pass eligibility (823–850) reads D23: a repo takes the pass
+   only where init pushed it at §11(e). The forge pass (890–891) decides "PR rule expected" from `merge_model`
    of `[branch.main]` and `[branch.develop]` in the base's
    `.config/bootstrap.toml`, default `direct`. Ignore-file attributions
    (312, 670) name bootstrap's git tool. The record of the repo is its
@@ -147,7 +161,7 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    plugin-relative path (checker rule 13).
 
 - **D21, every owned file** — replace each live `setup:all` with
-  `mise run setup` (init); leave history rows as they are. Verify with
+  `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (init); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.
 
 ## Verification

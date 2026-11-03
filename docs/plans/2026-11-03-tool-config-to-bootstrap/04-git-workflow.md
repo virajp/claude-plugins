@@ -16,8 +16,11 @@
 > - D12: optional-tools runs first; read the owned files as that plan left
 >   them.
 
-> - D21: Every live mention of mise run setup:all becomes mise run setup,
->   the task bootstrap ships (setup/_default). History rows keep their text.
+> - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
+>   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
+>   run setup; setup is the task bootstrap ships (setup/_default). The
+>   MISE_ENV=dev prefix stays where it is today, because bootstrap loads no
+>   conf.d file without MISE_ENV. History rows keep their text.
 > - D22: git-workflow reads it as bootstrap's _scripts/merge does: pr means
 >   pr; any other value, or no value, means direct. doctor reports a value
 >   other than direct or pr as a warning with the remedy to fix
@@ -54,7 +57,7 @@
    tool, not tool-config's universal `.gitignore`.
 
 - **D21, every owned file** — replace each live `setup:all` with
-  `mise run setup` (mockups 179, screen-review 32, worktree-setup 104-126, readme/SKILL.md 73 and 110); leave history rows as they are. Verify with
+  `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (mockups 179, screen-review 32, worktree-setup 104-126, readme/SKILL.md 73 and 110); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.
 - **D22** — after the read, the snippet maps `pr` to `pr` and every other
   value to `direct`, as bootstrap's `_scripts/merge` does.

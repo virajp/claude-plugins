@@ -48,8 +48,11 @@
 >   repository; it refreshes bootstrap's own clone cache under
 >   ~/.cache/bootstrap, which D17 accepts.
 
-> - D21: Every live mention of mise run setup:all becomes mise run setup,
->   the task bootstrap ships (setup/_default). History rows keep their text.
+> - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
+>   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
+>   run setup; setup is the task bootstrap ships (setup/_default). The
+>   MISE_ENV=dev prefix stays where it is today, because bootstrap loads no
+>   conf.d file without MISE_ENV. History rows keep their text.
 
 ## Edits
 
@@ -106,7 +109,7 @@
 11. **`plugins/vwf/assets/stack-vocabulary.md`** — 56: delete pack `values:`.
 
 - **D21, every owned file** — replace each live `setup:all` with
-  `mise run setup` (setup and the owned assets); leave history rows as they are. Verify with
+  `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (setup and the owned assets); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.
 
 ## Verification

@@ -426,7 +426,7 @@
     {
       "id": "D14",
       "decision": "Which of init's other sections stay, given that bootstrap makes the first commit, creates develop and asks before a push?",
-      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §8 readme, licence and security file, and §11(f) the forge pass. It deletes §6 hook fragments, the parts of §7 that fed the all call (project ids stay only where init's own files use them) and §10 the aggregator. §11(b) to (e) become one step: after bootstrap ends, stage and commit only what init wrote, on the branch bootstrap left, with one consent; the branches and the push are bootstrap's.",
+      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §8 readme, licence and security file, §11(e) the push of init's own commit (D23), and §11(f) the forge pass. It deletes §6 hook fragments, the parts of §7 that fed the all call (project ids stay only where init's own files use them) and §10 the aggregator. §11(b) to (d) become one step: after bootstrap ends, stage and commit only what init wrote, on the branch bootstrap left, with one consent; the branches are bootstrap's.",
       "rejected": "Keep init's git pass §11(b) to (e) as today",
       "units": [
         "U1"
@@ -494,13 +494,14 @@
     {
       "id": "D21",
       "decision": "setup:all is a tool-config task that bootstrap does not ship. What replaces it?",
-      "ruling": "Every live mention of mise run setup:all becomes mise run setup, the task bootstrap ships (setup/_default). History rows keep their text.",
+      "ruling": "Every live mention of MISE_ENV=dev mise run setup:all becomes MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise run setup; setup is the task bootstrap ships (setup/_default). The MISE_ENV=dev prefix stays where it is today, because bootstrap loads no conf.d file without MISE_ENV. History rows keep their text.",
       "rejected": "none — setup:all no longer exists",
       "units": [
         "U1",
         "U2",
         "U3",
-        "U4"
+        "U4",
+        "U7"
       ]
     },
     {
@@ -511,6 +512,15 @@
       "units": [
         "U3",
         "U4"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Bootstrap pushes its own commits, but init commits its own files after bootstrap ends. Who pushes init's commit, and which repo takes the forge pass?",
+      "ruling": "init's one consent asks commit, or commit and push. On commit and push, init pushes its own commit in each repo, members before the base, never a force-push; no remote, or a rejected push, is a deferral for that repo, as §11(e) says today. The forge pass runs once for the product, after the base push, for each repo that init pushed; any other repo is pending on its Forge line with the reason.",
+      "rejected": "init commits only and never pushes; the forge pass keyed on the remote state alone",
+      "units": [
+        "U1"
       ]
     }
   ],

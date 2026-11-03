@@ -43,8 +43,11 @@
 >   repository; it refreshes bootstrap's own clone cache under
 >   ~/.cache/bootstrap, which D17 accepts.
 
-> - D21: Every live mention of mise run setup:all becomes mise run setup,
->   the task bootstrap ships (setup/_default). History rows keep their text.
+> - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
+>   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
+>   run setup; setup is the task bootstrap ships (setup/_default). The
+>   MISE_ENV=dev prefix stays where it is today, because bootstrap loads no
+>   conf.d file without MISE_ENV. History rows keep their text.
 > - D22: git-workflow reads it as bootstrap's _scripts/merge does: pr means
 >   pr; any other value, or no value, means direct. doctor reports a value
 >   other than direct or pr as a warning with the remedy to fix
@@ -84,6 +87,9 @@
    - 701–703: (g) the PR rule is expected when `[branch.main].merge_model`
      or `[branch.develop].merge_model` in the base's
      `.config/bootstrap.toml` is `pr`; missing file or key = `direct`.
+   - 434: check (b) cites "init's own **§7**" in `new-repo.md`. U1
+     renumbers that file in the same wave, so cite the section by its
+     title, "The project ids", with no section number.
    - Leftovers: add a row — `.config/stackgen.yaml` present beside
      `.config/bootstrap.toml` → a leftover values file from before
      bootstrap, remedy: delete it (do not write the word tool-config in
@@ -102,7 +108,7 @@
    one-line warning, not the drift line. Change nothing else in recall.
 
 - **D21, every owned file** — replace each live `setup:all` with
-  `mise run setup` (for example stack-checks.md 627); leave history rows as they are. Verify with
+  `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (for example stack-checks.md 627); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.
 - **D22** — the merge_model row reads `.config/bootstrap.toml`: a value other
   than `direct` or `pr` is a warning, remedy: fix the value.
