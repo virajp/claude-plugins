@@ -576,6 +576,26 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D29",
+      "decision": "setup Step 0 today counts the forge state (doctor's Forge state predicate) as part of current. Does it keep it?",
+      "ruling": "Yes, confirmed by the user. Current means shaped, no bootstrap drift (D16, D19), and the Forge state predicate holds, read when the forge CLI is on PATH and logged in, else not checked. Only recall's line and doctor baseline stay local (D20).",
+      "rejected": "Drop the forge read from Step 0 and leave it to doctor's full run",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "U3 renumbers doctor's baseline predicates, and init and setup cite them by letter. How do citations stay correct?",
+      "ruling": "Derived from D24. U3 keeps the bold title of each predicate it keeps: Pack versions, Project ids, Branches, Content drift (without its preview half) and Forge state, and titles the new dry-run check Bootstrap drift. Every citation of a doctor predicate outside the doctor skill names it by its title, never by its letter; U1 rewrites init/SKILL.md (817), existing-repo.md (489) and new-repo.md (888), U2 rewrites setup.",
+      "rejected": "Fix the new letters in the plan before the run",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
     }
   ],
   "stages": {

@@ -178,6 +178,13 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    no `code:*:all`, no `code:check:all`. This file lands in user repos: no
    plugin-relative path (checker rule 13).
 
+- **D30** — doctor's predicates are cited by title, never by letter, since
+  U3 renumbers them in the same wave. Rewrite `init/SKILL.md` (817: "(a)
+  through (f)", "(g)"), `references/existing-repo.md` (489: "predicate
+  (e)", which is Content drift) and `references/new-repo.md` (888:
+  "predicate (g)", which is Forge state). The titles are Pack versions,
+  Project ids, Branches, Content drift, Bootstrap drift and Forge state.
+
 - **D21, every owned file** — replace each live `setup:all` with
   `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (init); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.

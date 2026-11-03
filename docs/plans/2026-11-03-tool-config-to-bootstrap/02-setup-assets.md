@@ -64,7 +64,10 @@
      each member; old layout = `.config/stackgen.yaml` without it (or the
      older layouts already named) → offer init; "current" = doctor's
      baseline predicates hold, now: shaped, and `setup:configs --dry-run`
-     shows no change (D19; unknown per D16). baseline reads no forge (D20).
+     shows no change (D19; unknown per D16), and doctor's Forge state
+     predicate holds, read when the forge CLI is on `PATH` and logged in,
+     else not checked (D29). doctor's baseline reads no forge (D20). Cite
+     doctor's predicates by their titles, not by letter (D30).
      Remove `preview all` / `preview pack`.
    - 181: `.gitignore` and `.gitattributes` are bootstrap's.
    - The materialize pass (207–221): delete pack `values:` gathering and
@@ -109,6 +112,11 @@
     docs/sync says that is where repo lines go; else say `.gitignore`);
     117: bootstrap lands the config in `.config/`.
 11. **`plugins/vwf/assets/stack-vocabulary.md`** — 56: delete pack `values:`.
+
+- **D29** — Step 0's "current" keeps the Forge state predicate (the user's
+  ruling): shaped, no bootstrap drift, and the forge state holds.
+- **D30** — cite each doctor predicate by its title: Pack versions,
+  Project ids, Branches, Content drift, Bootstrap drift, Forge state.
 
 - **D21, every owned file** — replace each live `setup:all` with
   `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (setup and the owned assets); leave history rows as they are. Verify with

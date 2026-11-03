@@ -102,17 +102,24 @@
      bootstrap, remedy: delete it (do not write the word tool-config in
      the row).
    - Renumber the check letters left and every cross-reference inside the
-     owned files.
+     owned files. Per D30, keep the bold title of each kept predicate —
+     Pack versions, Project ids, Branches, Content drift (without its
+     preview half) and Forge state — and title the new dry-run check
+     **Bootstrap drift**. Other skills cite these titles.
 3. **`plugins/vwf/skills/doctor/references/harness-and-memory.md`** — 25:
    the `.gitignore` handoff line comes from the repo's `.gitignore`, synced
    by bootstrap's git tool.
 4. **`plugins/vwf/skills/recall/SKILL.md`** — 75–82: it cites "the local
-   baseline predicates (a)–(f)" and prints the shape-drift line. Make the
-   letters match the renumbered baseline predicates, and the drift line
+   baseline predicates (a)–(f)" and prints the shape-drift line. Cite the
+   local baseline predicates by title, not by letter (D30), and make the
+   drift line
    name `/vwf:setup reshape`. Per D17, drop "file reads only" (baseline now
    runs the dry-run, which clones bootstrap), and make the not-shaped test
    "no `.config/bootstrap.toml`". Per D16, an unknown drift prints a
    one-line warning, not the drift line. Change nothing else in recall.
+
+- **D30** — doctor's predicates keep their bold titles; every citation
+  outside the doctor skill names a predicate by its title.
 
 - **D21, every owned file** — replace each live `setup:all` with
   `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (for example stack-checks.md 627); leave history rows as they are. Verify with
