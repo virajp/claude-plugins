@@ -162,7 +162,8 @@
         "scripts/src/tool-config-render.test.ts",
         "scripts/src/tool-config-template.test.ts",
         "scripts/src/tool-config-values.test.ts",
-        "scripts/src/fixtures/tool-config/**"
+        "scripts/src/fixtures/tool-config/**",
+        "plugins/stackgen/assets/output-tree.md"
       ],
       "depends_on": [],
       "waits": "",
@@ -521,6 +522,17 @@
       "rejected": "init commits only and never pushes; the forge pass keyed on the remote state alone",
       "units": [
         "U1"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "existing-repo.md surveys the repo against what tool-config lands (passes 1, 3, 4, 5, 7, 8, 9, 10, the hook-manager row and the gate-configuration ordering). Which passes stay in init?",
+      "ruling": "init keeps only the passes for its own files: pass 2 the readme and pass 6 missing files (the hygiene files and kept_files). It deletes passes 1, 3, 4, 5, 7, 8, 9 and 10, the hook-manager row and The gate configuration commits first, alone: bootstrap's docs/sync owns them (migrate.md M3 task renames, M10 helper files). The passes left are renumbered, and every citation of an existing-repo pass, inside and outside init, names the pass by its title, never by its number.",
+      "rejected": "Keep pass 1 as well; keep every pass and re-point passes 3 and 5 at bootstrap's migrate.md",
+      "units": [
+        "U1",
+        "U3",
+        "U5"
       ]
     }
   ],

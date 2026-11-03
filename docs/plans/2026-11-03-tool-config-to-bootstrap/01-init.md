@@ -42,6 +42,11 @@
 >   §10 the aggregator and §11(a) the landing model. §11(b) to (d) become one
 >   step: after bootstrap ends, stage and commit only what init wrote, on the
 >   branch bootstrap left, with one consent; the branches are bootstrap's.
+> - D24: init keeps only the passes of existing-repo.md for its own files:
+>   pass 2 the readme and pass 6 missing files. It deletes passes 1, 3, 4, 5,
+>   7, 8, 9 and 10, the hook-manager row and The gate configuration commits
+>   first, alone: bootstrap's docs/sync owns them (migrate.md M3, M10). Every
+>   citation of an existing-repo pass names it by its title, never by number.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -144,12 +149,15 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    (312, 670) name bootstrap's git tool. The record of the repo is its
    `.config/bootstrap.toml` (196).
 3. **`plugins/vwf/skills/init/references/existing-repo.md`** — shaped vs
-   source keyed on `.config/bootstrap.toml` (3–11). Delete the root-file
-   survey against the tool-config table, the Legacy names table reference
-   (292), the helper-library comparison (364), pass 8 (`all` flags against
-   `stackgen.yaml`, 630–647) and pass 10 (`--scopes`, 701–703); renumber the
-   passes left and every cross-reference to them in the owned files. Pass 6
-   (`kept_files`) stays, without the tool-config exclusion text (460, 929).
+   source keyed on `.config/bootstrap.toml` (3–11). Per D24, delete passes
+   1 (root files, 50), 3 (task names, 287), 4 (shebangs, 337), 5 (the helper
+   library, 352), 7 (the ignore file, 577), 8 (per-project groups, 587), 9
+   (repo-only tasks, 652) and 10 (the commit-scope argument, 699), the
+   hook-manager row (239) and "The gate configuration commits first, alone"
+   (970). Keep pass 2 (the readme) and pass 6 (missing files, the
+   `kept_files` record), the latter without the tool-config exclusion text
+   (460, 929). Renumber the passes left and cite each pass by its title,
+   never by number, in the owned files.
    The apply order (864–915) starts with the bootstrap step. Report lines
    (1006–1126) lose the tool-config rows.
 4. **`plugins/vwf/skills/init/references/readme-and-license.md`** — delete

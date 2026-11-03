@@ -89,6 +89,8 @@
    - 701–703: (g) the PR rule is expected when `[branch.main].merge_model`
      or `[branch.develop].merge_model` in the base's
      `.config/bootstrap.toml` is `pr`; missing file or key = `direct`.
+   - 566–567: "existing-repo pass 6" — cite the pass by its title, "Missing
+     files", with no number (D24: U1 renumbers the passes in the same wave).
    - Keep the heading "The repo shape against its baseline" (371)
      exactly: `setup/SKILL.md` (120) cites it by that title.
    - 434: check (b) cites "init's own **§7**" in `new-repo.md`. U1

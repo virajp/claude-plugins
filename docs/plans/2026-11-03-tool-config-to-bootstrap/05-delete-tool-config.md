@@ -20,6 +20,9 @@
 >   (test/, p/_project/) becomes a constant local to check.ts.
 > - D12: optional-tools runs first; read check.ts and check.test.ts as that
 >   plan left them.
+> - D24: init deletes existing-repo pass 1 (root files against the
+>   allowlist), among others. Every citation of an existing-repo pass names
+>   it by its title, never by number.
 
 ## Edits
 
@@ -58,6 +61,12 @@
    `config/` tiers, rule 11's allowlist, the retired `tool-config:` key and
    rule 16, using a fixture path that is not `skills/tool-config/` where
    the old path only served as an example.
+5. **`plugins/stackgen/assets/output-tree.md`** — 164 says the last tier
+   is on the list because init's pass 1 reports root files the list does
+   not name. D24 deletes that pass. Grep `plugins/` for other readers of
+   the list. If one remains, name it by its title. If none remains, delete
+   the sentence and the reason that follows it, and keep the list. Change
+   nothing else in this file.
 
 ## Verification
 
@@ -72,7 +81,8 @@
 ## Guardrails
 
 - Touch nothing outside the owned paths: no exclude file (`dprint.jsonc`,
-  `.config/**`), no doc, no `vitest.config.mts`.
+  `.config/**`), no doc other than `plugins/stackgen/assets/output-tree.md`,
+  no `vitest.config.mts`.
 - The deletion and the `check.ts` change land in one commit: never leave
   the tree deleted with the import still in place.
 - Delete with `rm`, never `git rm`.
