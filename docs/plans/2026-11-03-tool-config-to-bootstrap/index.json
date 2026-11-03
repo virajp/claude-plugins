@@ -658,9 +658,9 @@
     },
     {
       "id": "D37",
-      "decision": "bootstrap's no-commit-to-branch hook protects main and develop unless direct_commit is true, so it refuses init's commits on the core branch bootstrap left. What does init do?",
-      "ruling": "The user ruled: cut a branch and merge. On a core branch the hook protects, init makes its commits (D36's sync commit, then its own) on a new branch vwf/init cut from that core branch, and lands it with bootstrap's merge task for that core branch (code:merge:develop or code:merge:main), which follows merge_model: direct merges locally, pr opens a PR. On a branch the hook does not protect, init commits in place. Under pr, the PR push counts as init's push for D23.",
-      "rejected": "Commit on the core branch with SKIP=no-commit-to-branch; stop the repo",
+      "decision": "How does init land its commits, given bootstrap's no-commit-to-branch hook on main and develop, the merge models and the answer commit or commit and push?",
+      "ruling": "The user ruled: init lands through vwf's git-workflow skill, not a merge engine of its own. In each repo, members before the base, init stages its commits (D36's sync commit when there is one, then its own files and the gitlinks of D32) and hands the landing to /vwf:git-workflow, which owns branches, protected core branches, merge_model, conflicts, failures and reruns. init's one consent is the answer git-workflow needs: commit means commit only, with no push; commit and push means land and push. A repo that git-workflow does not land is reported with git-workflow's reason, and is pending on its Forge line (D23).",
+      "rejected": "A vwf/init branch landed by init itself through code:merge:develop, code:merge:main or a local merge with SKIP (the earlier D37, D39 and D40, replaced because each added init-only landing cases)",
       "units": [
         "U1"
       ]
@@ -668,26 +668,8 @@
     {
       "id": "D38",
       "decision": "D36's sync commit is known only after the bootstrap step, but the one plan and consent come before it; and changed or untracked files can include the user's own earlier work. How is this handled?",
-      "ruling": "The user ruled: init refuses a repo whose tree is not clean before the bootstrap step, and reports it with the reason, as D35 does. The one plan carries a conditional line in each repo: if bootstrap leaves its sync uncommitted, commit it first. On a clean start every change after the step is bootstrap's, so the one consent covers the sync commit.",
+      "ruling": "The user ruled: before the bootstrap step, init checks every repo, the base and each member. If any tree is not clean, init stops the whole run before it writes anything and lists each dirty repo, because the one bootstrap prompt covers every repo and cannot skip one. The one plan carries a conditional line per repo: if bootstrap leaves its sync uncommitted, commit it first. On a clean start every change after the step is bootstrap's, so the one consent covers the sync commit.",
       "rejected": "Snapshot the dirty paths, exclude them, and ask a second consent after the step",
-      "units": [
-        "U1"
-      ]
-    },
-    {
-      "id": "D39",
-      "decision": "bootstrap's code:merge:main runs only from develop. Where does vwf/init land when the core branch bootstrap left is a protected main?",
-      "ruling": "The user ruled: if develop exists, init cuts vwf/init from develop and lands it with code:merge:develop; main gets it at the next release merge. If only main exists, init leaves vwf/init unlanded and reports it with the remedy.",
-      "rejected": "Always leave vwf/init unlanded on a protected main",
-      "units": [
-        "U1"
-      ]
-    },
-    {
-      "id": "D40",
-      "decision": "The merge task always pushes. What does init do with vwf/init when the answer is commit (no push) or the repo has no origin remote?",
-      "ruling": "The user ruled: init merges vwf/init into its core branch locally itself, with SKIP=no-commit-to-branch, whatever the merge_model, and pushes nothing; it does not run the merge task. After a clean merge it deletes the local vwf/init branch. A merge conflict leaves vwf/init in place, aborts the merge and is reported. The merge task (D37) runs only on commit and push with an origin remote.",
-      "rejected": "Leave vwf/init unlanded and report it",
       "units": [
         "U1"
       ]

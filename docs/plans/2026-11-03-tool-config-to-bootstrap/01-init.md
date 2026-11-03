@@ -3,7 +3,10 @@
 - **Read first:** every owned file, top to bottom, before editing.
 - **Lazy-load:** `plugins/vwf/skills/setup/SKILL.md` (Step 0 and `reshape`,
   read only), `plugins/vwf/skills/doctor/references/stack-checks.md` (read
-  only), a fresh shallow clone of bootstrap for `README.md` and
+  only), `plugins/vwf/skills/git-workflow/SKILL.md` (read only: the
+  landing that D37 hands to it; U4 edits it in the same wave, so cite it
+  by name and step title, not by line), a fresh shallow clone of bootstrap
+  for `README.md` and
   `docs/sync/index.md` (read only, removed after).
 
 ## Ruling
@@ -60,19 +63,19 @@
 > - D36: When the bootstrap step leaves its sync uncommitted, init commits
 >   bootstrap's sync first, in its own commit, under init's one consent, then
 >   commits its own files.
-> - D37: On a core branch the no-commit-to-branch hook protects, init
->   commits on a new branch vwf/init and lands it with bootstrap's merge task
->   for that branch, which follows merge_model. On an unprotected branch it
->   commits in place.
-> - D39: On a protected main, init cuts vwf/init from develop and lands it
->   with code:merge:develop when develop exists; with main alone it leaves
->   vwf/init unlanded and reports it.
-> - D40: On commit (no push) or with no origin remote, init merges vwf/init
->   locally with SKIP=no-commit-to-branch and pushes nothing; the merge task
->   runs only on commit and push with a remote.
-> - D38: init refuses a repo whose tree is not clean before the bootstrap
->   step. The one plan carries a conditional line: if bootstrap leaves its
->   sync uncommitted, commit it first.
+> - D37: init lands through vwf's git-workflow skill. In each repo,
+>   members before the base, init stages its commits (the sync commit of
+>   D36 when there is one, then its own files and the gitlinks of D32) and
+>   hands the landing to /vwf:git-workflow, which owns branches, protected
+>   core branches, merge_model, conflicts, failures and reruns. The answer
+>   commit means commit only, no push; commit and push means land and push.
+>   A repo git-workflow does not land is reported with its reason and is
+>   pending on its Forge line.
+> - D38: Before the bootstrap step, init checks every repo, the base and
+>   each member. If any tree is not clean, init stops the whole run before
+>   it writes anything and lists each dirty repo. The one plan carries a
+>   conditional line per repo: if bootstrap leaves its sync uncommitted,
+>   commit it first.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -201,27 +204,18 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     sync, and the one consent covers it. init's own files go in a second
     commit. Members commit before the base (D32). Write this into the
     commit step that replaces §11(b) to (d) and into the report.
-4d. **D37** — on a core branch that bootstrap's `no-commit-to-branch`
-    hook protects (no `direct_commit = true`), init commits on a new branch
-    `vwf/init` cut from it and lands it with bootstrap's merge task for
-    that branch (`code:merge:develop` or `code:merge:main`), which follows
-    `merge_model`. On an unprotected branch init commits in place. Under
-    `pr`, the PR push counts as init's push for D23.
-4f. **D39** — when the protected core branch is `main`: if `develop`
-    exists, cut `vwf/init` from `develop` and land it with
-    `code:merge:develop` (bootstrap's `code:merge:main` runs only from
-    `develop`); if only `main` exists, leave `vwf/init` unlanded and report
-    it with the remedy.
-4g. **D40** — on the answer "commit" (no push), or with no `origin`
-    remote, init does not run the merge task. It merges `vwf/init` into its
-    core branch locally with `SKIP=no-commit-to-branch`, whatever the
-    `merge_model`, pushes nothing, and deletes the local `vwf/init` after a
-    clean merge. On a conflict it aborts the merge, keeps `vwf/init` and
-    reports it.
-4e. **D38** — before the bootstrap step, init refuses a repo whose tree is
-    not clean and reports it, as D35 does. The one plan carries a
-    conditional line per repo: "if bootstrap leaves its sync uncommitted,
-    commit it first" (D36).
+4d. **D37** — the commit step that replaces §11(b) to (d) lands through
+    `/vwf:git-workflow`: in each repo, members before the base, stage the
+    commits (D36, then init's own files and the D32 gitlinks) and invoke
+    git-workflow with the consent's answer — commit only, or land and
+    push. Write no branch, merge task, `SKIP` or conflict rule of init's
+    own; cite git-workflow for them. Report a repo it does not land with
+    git-workflow's reason.
+4e. **D38** — before the bootstrap step, init checks every repo, base
+    and members. Any tree that is not clean stops the whole run before
+    init writes anything, and the report lists each dirty repo. The one
+    plan carries a conditional line per repo: "if bootstrap leaves its
+    sync uncommitted, commit it first" (D36).
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the
