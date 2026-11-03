@@ -103,9 +103,11 @@
 > - D23: init's one consent asks commit, or commit and push; git-workflow
 >   does the landing and the push (D37), members before the base, never a
 >   force-push. The forge pass runs once for the product, after the base
->   lands, for each repo that git-workflow landed with a push (direct pushed
->   the core branch, or pr opened the pull request); any other repo is
->   pending on its Forge line with the reason.
+>   lands, for each repo that git-workflow landed with a push this run
+>   (direct pushed the core branch, or pr opened the pull request), and for
+>   each repo that had nothing to land and whose core branches already exist
+>   on origin (the user's ruling); any other repo is pending on its Forge
+>   line with the reason.
 > - D15: Green means the repository has .config/bootstrap.toml and mise run
 >   setup:configs --dry-run shows no change. init deletes
 >   .config/stackgen.yaml in each repository, base and each member, that is
@@ -196,8 +198,9 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    §1, §4, §5, §8 and §11(f); renumber the sections left and every
    cross-reference to them in the owned files.
    The forge pass eligibility (823–850) reads D23: a repo takes the pass
-   only where git-workflow landed it with a push — direct pushed the core
-   branch, or pr opened the pull request. The forge pass (890–891) decides "PR rule expected" from `merge_model`
+   where git-workflow landed it with a push this run — direct pushed the
+   core branch, or pr opened the pull request — or where it had nothing to
+   land and its core branches already exist on origin. The forge pass (890–891) decides "PR rule expected" from `merge_model`
    of `[branch.main]` and `[branch.develop]` in the base's
    `.config/bootstrap.toml`, default `direct`. Ignore-file attributions
    (312, 670) name bootstrap's git tool. The record of the repo is its

@@ -128,8 +128,13 @@
   not shaped) is `/vwf:setup reshape`. Rewrite "All seven sub-checks carry
   the same remedy" (stack-checks.md 380–384) and the remedy sentences at
   425–429, 566–571 and 581–584 to match, and make §9 print one remedy line
-  per remedy. Delete text that ties pass 6 or `kept_files` to pack files
-  (D41).
+  per remedy. Forge state names `/vwf:setup reshape`. Also rewrite every
+  other single-remedy passage: stack-checks.md 393–395, 729–730 and
+  738–742, `doctor/SKILL.md` 54–55, and the baseline mode; recall (Edit 4)
+  prints one line per remedy, with the rows that led to it. A file in
+  `enforcement.kept_files` is still skipped by every check, a pack file
+  included; delete only the sentences that say init or pass 6 records pack
+  files (D41).
 - **D42** — the user's ruling: Project ids checks a `p/<id>/` task group
   only for a project whose pinned pack ships `p/_project/` tasks; setup's
   materialize pass creates the group. A project with no such pack is not a

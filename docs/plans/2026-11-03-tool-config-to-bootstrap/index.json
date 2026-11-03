@@ -524,7 +524,7 @@
     {
       "id": "D23",
       "decision": "Bootstrap pushes its own commits, but init commits its own files after bootstrap ends. Who pushes init's commit, and which repo takes the forge pass?",
-      "ruling": "init's one consent asks commit, or commit and push; git-workflow does the landing and the push (D37), members before the base, never a force-push. The forge pass runs once for the product, after the base lands, for each repo that git-workflow landed with a push (direct pushed the core branch, or pr opened the pull request); any other repo is pending on its Forge line with the reason.",
+      "ruling": "init's one consent asks commit, or commit and push; git-workflow does the landing and the push (D37), members before the base, never a force-push. The forge pass runs once for the product, after the base lands, for each repo that git-workflow landed with a push this run (direct pushed the core branch, or pr opened the pull request), and for each repo that had nothing to land and whose core branches already exist on origin (the user's ruling); any other repo is pending on its Forge line with the reason.",
       "rejected": "init commits only and never pushes; the forge pass keyed on the remote state alone",
       "units": [
         "U1"
@@ -716,7 +716,7 @@
     {
       "id": "D45",
       "decision": "init runs no materializer and /vwf:setup reshape runs no materialize pass. What remedy do doctor's pack rows name?",
-      "ruling": "The user ruled: rows about packs (Pack versions, the hash half of Content drift, a missing pack lockfile, Project ids) name /vwf:setup, a full run whose materialize pass re-pins and re-copies packs. Rows about bootstrap (Bootstrap drift, Branches, not shaped) name /vwf:setup reshape. doctor's §9 prints one remedy line per remedy with the rows that led to it. Text that ties pass 6 or kept_files to pack files is deleted (D41).",
+      "ruling": "The user ruled: rows about packs (Pack versions, the hash half of Content drift, a missing pack lockfile, Project ids) name /vwf:setup, a full run whose materialize pass re-pins and re-copies packs. Rows about bootstrap (Bootstrap drift, Branches, not shaped) and Forge state name /vwf:setup reshape. Every passage that says all rows share one remedy is rewritten: doctor's §9, the baseline mode and recall print one remedy line per remedy, each with the rows that led to it. A file in enforcement.kept_files is still skipped by every check, a pack file included (the user's ruling); only the sentences that say init or pass 6 records pack files are deleted (D41).",
       "rejected": "Give /vwf:setup reshape a materialize pass so one remedy covers every row",
       "units": [
         "U3"
