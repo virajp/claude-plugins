@@ -105,13 +105,15 @@
    `grep -rn 'setup:all'` over the owned docs: only history rows remain.
    In `site/src/content/docs/how-to/greenfield/multi-repo.md` (334–341),
    the bullet "The member paths go in `MEMBERS`" describes tool-config's
-   render (`stackgen.yaml`, `--members`) and a per-member flag and alias
-   (`setup:all --api`, `setup-api`) that bootstrap's `setup` does not
-   accept (it takes `--upgrade` and `--all` only). Per D27, rewrite the
-   bullet to say that bootstrap's `docs/sync` (its Siblings section) decides
-   how a base lists its sibling members, and that `setup --all` and
-   `code:worktrees` walk that list. Delete the per-member flag and alias
-   text.
+   render (`stackgen.yaml`, `--members`) and a `setup-api` alias. In
+   bootstrap, `setup --all` and the per-member `--<member>` flags exist for
+   git submodules only (`tools/mise/.config/mise/tasks/setup/_default.tmpl`
+   9–15), and `code:worktrees` reads `.gitmodules`. Per D27, rewrite the
+   bullet: under `siblings`, each member is its own repository that
+   bootstrap adopts on its own (bootstrap's `docs/sync`, its Siblings
+   section), and bootstrap's member flags cover submodules only. Delete the
+   `MEMBERS`, `stackgen.yaml`, `--members` and alias text. Read the bootstrap
+   clone to confirm each fact before you write it.
 
 ## Verification
 

@@ -57,6 +57,9 @@
 >   bootstrap step: no hygiene file, no kept_files, no commit, no push, no
 >   forge pass there. The report names the repo and the reason; the other
 >   repos continue. A stopped base means no forge pass (D23).
+> - D36: When the bootstrap step leaves its sync uncommitted, init commits
+>   bootstrap's sync first, in its own commit, under init's one consent, then
+>   commits its own files.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -179,6 +182,12 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     `references/readme-and-license.md` (19), and every sentence in the
     owned files that lands the issue forms. Bootstrap's github tool writes
     them.
+4c. **D36** — when the bootstrap step leaves changed or untracked files in
+    a repo (the user kept bootstrap's sync for review), init's one plan
+    lists a first commit of those files in that repo, named as bootstrap's
+    sync, and the one consent covers it. init's own files go in a second
+    commit. Members commit before the base (D32). Write this into the
+    commit step that replaces §11(b) to (d) and into the report.
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the

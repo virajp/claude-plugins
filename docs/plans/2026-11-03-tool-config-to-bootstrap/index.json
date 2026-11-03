@@ -646,6 +646,15 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D36",
+      "decision": "bootstrap docs/sync lets the user leave its sync uncommitted for review; pre-commit then refuses init's commit of its own files. What does init do?",
+      "ruling": "The user ruled: init commits bootstrap's sync first. When the bootstrap step leaves changed or untracked files in a repo, init's one plan lists a first commit of those files in that repo, and the one consent covers it; init then commits its own files in a second commit. The first commit message names bootstrap's sync. Members commit before the base, as D32 says.",
+      "rejected": "Write init's files and skip the commit; stop the repo as D35 does",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {

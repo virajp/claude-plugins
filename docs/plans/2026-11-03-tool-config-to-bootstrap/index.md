@@ -137,9 +137,12 @@ convention is `.config/git-conventional-commits.yaml`: types `feat`, `fix`,
 scopes.
 
 **Commit order inside wave 1.** U5 deletes the tree and removes the
-`check.ts` import in one commit, so the checker always loads. U1 to U4 do
-not touch what the checker reads, so their commits pass the pre-commit hook
-in any order.
+`check.ts` import in one commit, so the checker always loads. **U1 commits
+before U5**: U5 drops `.github/ISSUE_TEMPLATE/` from the checker's init
+allowlist (D34), and U1 deletes init's copies of the issue forms. If U5
+commits first, the pre-commit stash restores U1's uncommitted issue forms
+and `p:plugins:check` fails. U2 to U4 do not touch what the checker reads,
+so their commits pass the hook in any order.
 
 ## Unit contract
 

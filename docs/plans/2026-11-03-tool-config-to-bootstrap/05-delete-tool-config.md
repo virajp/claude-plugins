@@ -67,8 +67,10 @@
    is on the list because init's pass 1 reports root files the list does
    not name. D24 deletes that pass. Grep `plugins/` for other readers of
    the list. If one remains, name it by its title. If none remains, delete
-   the sentence and the reason that follows it, and keep the list. Change
-   nothing else in this file.
+   the sentence and the reason that follows it, and keep the list. Per
+   D34, also fix 158–159: `.github/ISSUE_TEMPLATE/` is no longer a file
+   `/vwf:init` writes; bootstrap's github tool writes it. Change nothing
+   else in this file.
 7. **D34, `scripts/src/check.ts`** (337) — drop `.github/ISSUE_TEMPLATE/`
    from `INIT_ROOT_ALLOWLIST` and fix its doc comment (now two root files
    and one directory). In `scripts/src/check.test.ts` (690–720), the clean
