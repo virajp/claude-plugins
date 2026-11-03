@@ -26,6 +26,13 @@
 >   user's ruling). setup:ai:all and setup:ai:base become setup:ai,
 >   code:format:all becomes code:format, code:lint:all becomes code:lint,
 >   and code:check:all is dropped. History rows keep their text.
+> - D24: init keeps only the existing-repo passes for its own files (the
+>   readme, missing files). Every citation of a pass names it by its title,
+>   never by number.
+> - D30: doctor's predicates keep their bold titles (Pack versions, Project
+>   ids, Branches, Content drift, Bootstrap drift, Forge state). Every
+>   citation outside the doctor skill names a predicate by its title, never
+>   by its letter.
 > - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
 >   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
 >   run setup; setup is the task bootstrap ships (setup/_default). The
@@ -74,6 +81,14 @@
 4. Add one superseded line at the top of each reversed record named in D13
    that exists in `docs/memory/decisions/`, pointing to the new record.
    Change nothing else in those records.
+6. Per D24 and D30, replace each citation of a doctor predicate by letter
+   and of an init section or pass by number with its title. Known hits:
+   `site/src/content/docs/plugins/vwf.md` (1472, 1584, 1630, 3844),
+   `.claude/docs/ci-and-releases.md` (69),
+   `.claude/skills/vwf-plugin/references/skills-and-agents.md` (42) and
+   `.claude/skills/vwf-plugin/SKILL.md` (140–145). Re-grep the owned docs
+   with `grep -rnE 'predicate \([a-g]\)|\([a-g]\) (through|to|–) \([a-g]\)|pass [0-9]+|§[0-9]+'`
+   and fix each hit that cites doctor, init or setup.
 5. Apply D21 to each live `setup:all` in the owned docs: `readme.md`,
    root `CONTRIBUTING.md`, `.claude/skills/vwf-plugin/SKILL.md`,
    `.claude/skills/vwf-plugin/references/skills-and-agents.md`,
