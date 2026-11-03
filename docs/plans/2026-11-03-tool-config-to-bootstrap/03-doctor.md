@@ -121,6 +121,14 @@
 - **D31** — the user's ruling: Project ids (431–445) drops its
   `commitScopes` check and keeps the task-group check only. Commit scopes
   are bootstrap's `commit_scopes`; Bootstrap drift covers them.
+- **D42** — the user's ruling: Project ids checks a `p/<id>/` task group
+  only for a project whose pinned pack ships `p/_project/` tasks; setup's
+  materialize pass creates the group. A project with no such pack is not a
+  finding.
+- **D43** — the user's ruling: bootstrap creates `develop` and `main`. The
+  Branches remedy (471) is bootstrap's `docs/sync`, reached through
+  `/vwf:setup reshape`; delete "which creates the missing branch" as an act
+  of init.
 - **D33** — "shaped" (has `.config/bootstrap.toml`) is not a titled
   predicate: as today, doctor reports "not shaped" on its own line and
   evaluates no predicate in that repo. Edit 1's "(a) each repository has

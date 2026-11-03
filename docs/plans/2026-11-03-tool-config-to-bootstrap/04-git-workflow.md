@@ -47,7 +47,10 @@
      `mise env -s bash` snippet with a read of the key, through the pinned
      yq, run in each repository's root. yq exits 1 on a missing file, so
      the snippet tests the file first and prints `direct` without it:
-     `if [ -f .config/bootstrap.toml ]; then mise x -- yq -p toml '.branch.main.merge_model // "direct"' .config/bootstrap.toml; else echo direct; fi`
+     `if [ -f .config/bootstrap.toml ]; then mise x -- yq -p toml -o yaml '.branch.main.merge_model // "direct"' .config/bootstrap.toml; else echo direct; fi`
+     (`-o yaml` as bootstrap's `_scripts/merge` passes it; without it the
+     pinned yq prints a warning on every run). The release tasks of Edit 5
+     pass `-o yaml` too.
      (and the same for `.branch.develop`). Per D28, when the file exists
      and yq exits non-zero, the step stops with "cannot read the merge
      config of .config/bootstrap.toml." and offers no landing option. Keep

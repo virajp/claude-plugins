@@ -683,6 +683,35 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D42",
+      "decision": "init no longer writes the p/<slug>/_default slots. Who creates a project's task group, and do init's question 1 (repo name) and question 2 (project ids) stay?",
+      "ruling": "The user ruled: a task group comes only from a pack's p/_project/ tasks, which setup's materialize pass renames to p/<id>/. doctor's Project ids checks only projects whose pinned pack ships p/_project/. init drops question 1 (repo_name is bootstrap's) and keeps question 2 only where its own files use the ids.",
+      "rejected": "init writes an empty p/<slug>/_default for each project and keeps both questions",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "init's §1 makes develop the first branch and §11(d), now deleted, created main. Bootstrap's docs/sync makes the first commit on main and handles the core branches. Who creates develop and main?",
+      "ruling": "The user ruled: bootstrap. §1 runs a plain git init and nothing more. doctor's Branches remedy is bootstrap's docs/sync, reached through /vwf:setup reshape, whose bootstrap step runs it; it no longer says init creates the missing branch.",
+      "rejected": "init keeps creating develop and main after bootstrap ends",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "A repo with no commit holds only untracked files, so D38's clean-tree check fails it. Bootstrap's first commit holds only its two-line .gitignore. What does init do?",
+      "ruling": "The user ruled: D38 applies as written. A repo with no commit and untracked files stops the whole run, and the report says: commit your files, then re-run /vwf:setup reshape. A repo with no commit and no files is clean and passes. The user's files never enter a bootstrap commit.",
+      "rejected": "Record the untracked paths and leave them out of the sync commit; exempt a repo with no commit",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {

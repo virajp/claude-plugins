@@ -91,6 +91,12 @@
 >   it writes anything and lists each dirty repo. The one plan carries a
 >   conditional line per repo: if bootstrap leaves its sync uncommitted,
 >   commit it first.
+> - D42: A task group comes only from a pack's p/_project/ tasks through
+>   setup's materialize pass. init drops question 1 (repo_name is
+>   bootstrap's) and keeps question 2 only where its own files use the ids.
+> - D43: Bootstrap creates develop and main. §1 runs a plain git init.
+> - D44: A repo with no commit and untracked files stops the whole run
+>   (D38); the report says to commit the files and re-run.
 > - D41: init calls no materializer. Pass 6 runs over init's own hygiene
 >   assets only. From §2, the hygiene-asset lay-down and the
 >   .config/vwf.yaml stub that holds kept_files survive in the hygiene step.
@@ -248,6 +254,17 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     the hygiene step; delete "The answers each fetch carries" (184–232) and
     the materializer's Skipped and conflict rows, except the hygiene skips
     on init's own condition.
+4i. **D42** — delete question 1 (the repo name; `repo_name` is
+    bootstrap's) and every `p/<slug>/_default` slot (`new-repo.md` 485).
+    Keep question 2 (the project ids) only where init's own files use
+    them; a project's task group comes from setup's materialize pass.
+4j. **D43** — §1 runs a plain `git init` and nothing more: no first branch
+    named `develop`, no `main` created later. Bootstrap's `docs/sync` makes
+    the first commit and the core branches. Delete every sentence that says
+    init creates a branch.
+4k. **D44** — D38 covers a repo with no commit: untracked files there
+    stop the whole run, and the report says "commit your files, then re-run
+    `/vwf:setup reshape`". A repo with no commit and no files is clean.
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the
