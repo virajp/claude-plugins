@@ -626,6 +626,26 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D34",
+      "decision": "init's hygiene assets and bootstrap's github tool both write .github/ISSUE_TEMPLATE/, and the forge value init read is gone. Does init keep the issue forms?",
+      "ruling": "No, the user ruled: bootstrap's github tool owns the issue forms. init deletes its .github/ISSUE_TEMPLATE assets and every row or sentence that lands them.",
+      "rejected": "Keep them and write them when the origin host is github.com",
+      "units": [
+        "U1",
+        "U5",
+        "U7"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "What does init do in a repo that has no .config/bootstrap.toml after the bootstrap step (the user stopped bootstrap's questions, or the clone failed)?",
+      "ruling": "The user ruled: init stops in that repo. It writes no hygiene file, records no kept_files, makes no commit, no push and no forge pass there, and the report names the repo and the reason. The other repos continue; a re-run of /vwf:setup reshape picks it up. When the stopped repo is the base, the forge pass does not run (D23).",
+      "rejected": "Continue with init's own files and skip only the push and the forge pass",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {

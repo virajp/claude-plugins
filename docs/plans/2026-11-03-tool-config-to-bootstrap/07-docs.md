@@ -26,6 +26,8 @@
 >   user's ruling). setup:ai:all and setup:ai:base become setup:ai,
 >   code:format:all becomes code:format, code:lint:all becomes code:lint,
 >   and code:check:all is dropped. History rows keep their text.
+> - D34: bootstrap's github tool owns the issue forms; init no longer
+>   lands .github/ISSUE_TEMPLATE.
 > - D24: init keeps only the existing-repo passes for its own files (the
 >   readme, missing files). Every citation of a pass names it by its title,
 >   never by number.
@@ -89,6 +91,10 @@
    `.claude/skills/vwf-plugin/SKILL.md` (140–145). Re-grep the owned docs
    with `grep -rnE 'predicate \([a-g]\)|\([a-g]\) (through|to|–) \([a-g]\)|pass [0-9]+|§[0-9]+'`
    and fix each hit that cites doctor, init or setup.
+7. Per D34, init no longer lands the issue forms; bootstrap's github tool
+   does. Fix `.claude/docs/repo-shape.md` (173),
+   `.claude/skills/plugin-authoring/references/checks.md` (120) and
+   `site/src/content/docs/plugins/stackgen.md` (893).
 5. Apply D21 to each live `setup:all` in the owned docs: `readme.md`,
    root `CONTRIBUTING.md`, `.claude/skills/vwf-plugin/SKILL.md`,
    `.claude/skills/vwf-plugin/references/skills-and-agents.md`,

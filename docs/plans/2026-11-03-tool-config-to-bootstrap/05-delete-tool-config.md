@@ -20,6 +20,8 @@
 >   (test/, p/_project/) becomes a constant local to check.ts.
 > - D12: optional-tools runs first; read check.ts and check.test.ts as that
 >   plan left them.
+> - D34: bootstrap's github tool owns the issue forms; init no longer
+>   ships .github/ISSUE_TEMPLATE, so the checker's init allowlist drops it.
 > - D24: init deletes existing-repo pass 1 (root files against the
 >   allowlist), among others. Every citation of an existing-repo pass names
 >   it by its title, never by number.
@@ -67,6 +69,12 @@
    the list. If one remains, name it by its title. If none remains, delete
    the sentence and the reason that follows it, and keep the list. Change
    nothing else in this file.
+7. **D34, `scripts/src/check.ts`** (337) — drop `.github/ISSUE_TEMPLATE/`
+   from `INIT_ROOT_ALLOWLIST` and fix its doc comment (now two root files
+   and one directory). In `scripts/src/check.test.ts` (690–720), the clean
+   case no longer has an issue form, the issue-form path becomes an
+   outside-the-allowlist case, and the expected messages drop
+   `.github/ISSUE_TEMPLATE/` from the list.
 6. **`plugins/stackgen/assets/ids.md`** (64–98) — the repo name is now
    `repo_name` in `.config/bootstrap.toml`, which bootstrap writes, and the
    commit scopes are bootstrap's `commit_scopes` (D31). Rewrite the token

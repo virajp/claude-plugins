@@ -51,6 +51,12 @@
 >   over before it deletes the file. bootstrap's docs/sync decides
 >   [branch.*].merge_model in .config/bootstrap.toml during adoption; members
 >   stay in .config/vwf.yaml, and the forge is read live.
+> - D34: bootstrap's github tool owns the issue forms; init deletes its
+>   .github/ISSUE_TEMPLATE assets and every row or sentence that lands them.
+> - D35: init stops in a repo that has no .config/bootstrap.toml after the
+>   bootstrap step: no hygiene file, no kept_files, no commit, no push, no
+>   forge pass there. The report names the repo and the reason; the other
+>   repos continue. A stopped base means no forge pass (D23).
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -168,6 +174,16 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    "What moved to the tool-config skill" (169–171); the assets run after
    the bootstrap step (8, 26); task names `code:format`, `code:lint`,
    `code:sec`, `code:precommit` (37–38); no `stackgen.yaml`.
+4a. **D34** — delete `plugins/vwf/skills/init/assets/hygiene/.github/`
+    (the three issue forms) with `rm`, its row in
+    `references/readme-and-license.md` (19), and every sentence in the
+    owned files that lands the issue forms. Bootstrap's github tool writes
+    them.
+4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
+    with no `.config/bootstrap.toml` after the step gets no hygiene file,
+    no `kept_files` record, no commit, no push and no forge pass, and the
+    report names it with the reason. The other repos continue. Write this
+    into the apply order (SKILL.md) and the report section.
 5. **`plugins/vwf/skills/init/references/tool-configs.md`** — delete the file
    with `rm`; remove every link to it in the owned files.
 6. **`plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md`** — rewrite to
