@@ -97,7 +97,8 @@
      renumbers that file in the same wave, so cite the section by its
      title, "The project ids", with no section number. U1 renames §7 to
      exactly that title.
-   - Leftovers: add a row — `.config/stackgen.yaml` present beside
+   - Leftovers (the table is in `doctor/SKILL.md` §8, 185–200, not in
+     this file): add a row there — `.config/stackgen.yaml` present beside
      `.config/bootstrap.toml` → a leftover values file from before
      bootstrap, remedy: delete it (do not write the word tool-config in
      the row).
@@ -121,6 +122,14 @@
 - **D31** — the user's ruling: Project ids (431–445) drops its
   `commitScopes` check and keeps the task-group check only. Commit scopes
   are bootstrap's `commit_scopes`; Bootstrap drift covers them.
+- **D45** — the user's ruling: the remedy of a pack row (Pack versions,
+  the hash half of Content drift, a missing pack lockfile, Project ids) is
+  `/vwf:setup`; the remedy of a bootstrap row (Bootstrap drift, Branches,
+  not shaped) is `/vwf:setup reshape`. Rewrite "All seven sub-checks carry
+  the same remedy" (stack-checks.md 380–384) and the remedy sentences at
+  425–429, 566–571 and 581–584 to match, and make §9 print one remedy line
+  per remedy. Delete text that ties pass 6 or `kept_files` to pack files
+  (D41).
 - **D42** — the user's ruling: Project ids checks a `p/<id>/` task group
   only for a project whose pinned pack ships `p/_project/` tasks; setup's
   materialize pass creates the group. A project with no such pack is not a

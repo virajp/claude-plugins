@@ -15,13 +15,19 @@
 > - D12: optional-tools runs first; the docs are as that plan left them.
 > - D13: Confirmed by the user: 2026-09-26-tool-config,
 >   2026-09-26-tool-config-gates, 2026-09-27-tool-config-hygiene,
->   2026-10-05-shaped-means-stackgen-yaml, 2026-10-05-doctor-drift-by-preview,
+>   2026-10-05-shaped-means-stackgen-yaml,
+>   2026-10-05-doctor-drift-by-preview,
 >   2026-10-05-stackgen-yaml-replaces-vwf-answers,
 >   2026-10-01-trust-is-the-users-setup-all-is-tool-configs,
 >   2026-10-01-tool-config-renders-with-a-node-script,
 >   2026-10-05-tool-config-templates, checker rule 15, and git-workflow's
->   MERGE_MODEL_* env reads (the record 2026-09-20-branch-model). The docs unit writes one new decision record and
->   marks each reversed record superseded.
+>   MERGE_MODEL_* env reads (the record 2026-09-20-branch-model). Also
+>   confirmed, reversed by D14, D24, D37 and D43:
+>   2026-09-06-init-owns-the-first-commit,
+>   2026-09-10-init-replaces-a-diverged-helper-library,
+>   2026-09-12-init-brownfield-sidecar-and-diverged-files and
+>   2026-09-20-init-brownfield-reads. The docs unit writes one new decision
+>   record and marks each reversed record superseded.
 > - D27: setup:* and code:* are supported and owned by bootstrap (the
 >   user's ruling). setup:ai:all and setup:ai:base become setup:ai,
 >   code:format:all becomes code:format, code:lint:all becomes code:lint,
