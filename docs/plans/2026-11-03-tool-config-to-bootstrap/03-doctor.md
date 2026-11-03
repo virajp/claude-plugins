@@ -58,8 +58,6 @@
 ## Edits
 
 1. **`plugins/vwf/skills/doctor/SKILL.md`**
-   - Keep the heading "The repo shape against its baseline" exactly:
-     `setup/SKILL.md` (120) cites it by that title.
    - `baseline` mode (48–55): its predicates become (a) each repository —
      base and each locally present member — has `.config/bootstrap.toml`;
      (b) in each, `mise run setup:configs --dry-run` shows no change (D19;
@@ -91,6 +89,8 @@
    - 701–703: (g) the PR rule is expected when `[branch.main].merge_model`
      or `[branch.develop].merge_model` in the base's
      `.config/bootstrap.toml` is `pr`; missing file or key = `direct`.
+   - Keep the heading "The repo shape against its baseline" (371)
+     exactly: `setup/SKILL.md` (120) cites it by that title.
    - 434: check (b) cites "init's own **§7**" in `new-repo.md`. U1
      renumbers that file in the same wave, so cite the section by its
      title, "The project ids", with no section number. U1 renames §7 to
