@@ -470,7 +470,7 @@
     {
       "id": "D18",
       "decision": "When is the consent to delete .config/stackgen.yaml asked, and which commit carries the deletion?",
-      "ruling": "init's one plan, shown before the bootstrap step, lists delete .config/stackgen.yaml if the repository is green for each repository that has the file; the one consent covers it. The deletion rides init's own commit in that repository, base and each member, with init's own files.",
+      "ruling": "init's one plan, shown before the bootstrap step, lists delete .config/stackgen.yaml if the repository is green for each repository that has the file; the one consent covers it. The deletion rides init's own commit in that repository, base and each member, with init's own files; git-workflow makes that commit (D37).",
       "rejected": "A second question per repository after bootstrap ends",
       "units": [
         "U1"
@@ -641,7 +641,7 @@
     {
       "id": "D35",
       "decision": "What does init do in a repo that has no .config/bootstrap.toml after the bootstrap step (the user stopped bootstrap's questions, or the clone failed)?",
-      "ruling": "The user ruled: init stops in that repo. It writes no hygiene file, records no kept_files, makes no commit, no push and no forge pass there, and the report names the repo and the reason. The other repos continue; a re-run of /vwf:setup reshape picks it up. When the stopped repo is the base, the forge pass does not run (D23).",
+      "ruling": "The user ruled: init stops in that repo. It writes no hygiene file, records no kept_files, makes no commit, no push and no forge pass there, and the report names the repo and the reason. The other repos continue. A stopped step can leave bootstrap's files uncommitted in that repo; the report then shows git status for it and says: commit or discard bootstrap's partial sync, then re-run /vwf:setup reshape (the user's ruling). init never cleans or commits a partial sync, and D38's clean-tree check stays strict. When the stopped repo is the base, the forge pass does not run (D23).",
       "rejected": "Continue with init's own files and skip only the push and the forge pass",
       "units": [
         "U1"
@@ -650,7 +650,7 @@
     {
       "id": "D36",
       "decision": "bootstrap docs/sync lets the user leave its sync uncommitted for review; pre-commit then refuses init's commit of its own files. What does init do?",
-      "ruling": "The user ruled: init commits bootstrap's sync first. When the bootstrap step leaves changed or untracked files in a repo, init's one plan lists a first commit of those files in that repo, and the one consent covers it; init then commits its own files in a second commit. The first commit message names bootstrap's sync. Members commit before the base, as D32 says.",
+      "ruling": "The user ruled: bootstrap's sync is committed first. When the bootstrap step leaves changed or untracked files in a repo, init's one plan lists a first commit of those files in that repo, and the one consent covers it; init's own files go in a second commit. git-workflow makes both commits (D37). The first commit message names bootstrap's sync. Members commit before the base, as D32 says.",
       "rejected": "Write init's files and skip the commit; stop the repo as D35 does",
       "units": [
         "U1"

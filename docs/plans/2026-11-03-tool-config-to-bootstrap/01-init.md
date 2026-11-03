@@ -56,13 +56,21 @@
 >   stay in .config/vwf.yaml, and the forge is read live.
 > - D34: bootstrap's github tool owns the issue forms; init deletes its
 >   .github/ISSUE_TEMPLATE assets and every row or sentence that lands them.
-> - D35: init stops in a repo that has no .config/bootstrap.toml after the
->   bootstrap step: no hygiene file, no kept_files, no commit, no push, no
->   forge pass there. The report names the repo and the reason; the other
->   repos continue. A stopped base means no forge pass (D23).
-> - D36: When the bootstrap step leaves its sync uncommitted, init commits
->   bootstrap's sync first, in its own commit, under init's one consent, then
->   commits its own files.
+> - D35: The user ruled: init stops in that repo. It writes no hygiene file,
+>   records no kept_files, makes no commit, no push and no forge pass there,
+>   and the report names the repo and the reason. The other repos continue.
+>   A stopped step can leave bootstrap's files uncommitted in that repo; the
+>   report then shows git status for it and says: commit or discard
+>   bootstrap's partial sync, then re-run /vwf:setup reshape (the user's
+>   ruling). init never cleans or commits a partial sync, and D38's
+>   clean-tree check stays strict. When the stopped repo is the base, the
+>   forge pass does not run (D23).
+> - D36: The user ruled: bootstrap's sync is committed first. When the
+>   bootstrap step leaves changed or untracked files in a repo, init's one
+>   plan lists a first commit of those files in that repo, and the one
+>   consent covers it; init's own files go in a second commit. git-workflow
+>   makes both commits (D37). The first commit message names bootstrap's
+>   sync. Members commit before the base, as D32 says.
 > - D37: The user ruled: init lands through vwf's git-workflow skill, not a
 >   landing engine of its own. In each repo, members before the base, init
 >   hands /vwf:git-workflow the commits to make, in order: the
@@ -101,9 +109,10 @@
 >   the repository as not green, keeps .config/stackgen.yaml and names the
 >   repository in the report.
 > - D18: init's one plan, shown before the bootstrap step, lists delete
->   .config/stackgen.yaml if the repository is green for each repository that
->   has the file; the one consent covers it. The deletion rides init's own
->   commit in that repository, base and each member, with init's own files.
+>   .config/stackgen.yaml if the repository is green for each repository
+>   that has the file; the one consent covers it. The deletion rides init's
+>   own commit in that repository, base and each member, with init's own
+>   files; git-workflow makes that commit (D37).
 > - D19: The dry-run prints its lines on stderr, each with the prefix
 >   repo-sync: (bootstrap's _scripts/repo-sync, _rs_log). Read stderr. After
 >   that prefix, a line that starts with would (would update, would remove,
@@ -229,8 +238,12 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the
-    report names it with the reason. The other repos continue. Write this
-    into the apply order (SKILL.md) and the report section.
+    report names it with the reason. The other repos continue. When the
+    stopped step left bootstrap's files uncommitted, the report shows
+    `git status --short` for that repo and the remedy: commit or discard
+    the partial sync, then re-run `/vwf:setup reshape`. init never cleans
+    or commits a partial sync. Write this into the apply order (SKILL.md)
+    and the report section.
 5. **`plugins/vwf/skills/init/references/tool-configs.md`** — delete the file
    with `rm`; remove every link to it in the owned files.
 6. **`plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md`** — rewrite to
