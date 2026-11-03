@@ -82,6 +82,15 @@
    `site/src/content/docs/plugins/stackgen.md` and
    `site/src/content/docs/how-to/greenfield/multi-repo.md`. Re-grep with
    `grep -rn 'setup:all'` over the owned docs: only history rows remain.
+   In `site/src/content/docs/how-to/greenfield/multi-repo.md` (334–341),
+   the bullet "The member paths go in `MEMBERS`" describes tool-config's
+   render (`stackgen.yaml`, `--members`) and a per-member flag and alias
+   (`setup:all --api`, `setup-api`) that bootstrap's `setup` does not
+   accept (it takes `--upgrade` and `--all` only). Per D27, rewrite the
+   bullet to say that bootstrap's `docs/sync` (its Siblings section) decides
+   how a base lists its sibling members, and that `setup --all` and
+   `code:worktrees` walk that list. Delete the per-member flag and alias
+   text.
 
 ## Verification
 
