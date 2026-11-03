@@ -179,7 +179,9 @@ the unit could not proceed without; it blocks the unit and its dependents.
 - The folder-name string in `plugins/vwf/hooks/monitor/plan.test.ts`.
 - The open gaps of `2026-11-01-remove-mempalace-graphify` (handoff, recall,
   doctor memory checks). They are not B102 work.
-- This repo's own `.config/` files, which the user edits by hand.
+- This repo's own `.config/` files, which the user edits by hand. The one
+  exception is the four release tasks under `.config/mise/tasks/p/`, which
+  U4 moves onto `.config/bootstrap.toml` (D26).
 
 ## Parked
 

@@ -22,6 +22,10 @@
 >   2026-10-05-tool-config-templates, checker rule 15, and git-workflow's
 >   MERGE_MODEL_* env reads (the record 2026-09-20-branch-model). The docs unit writes one new decision record and
 >   marks each reversed record superseded.
+> - D27: setup:* and code:* are supported and owned by bootstrap (the
+>   user's ruling). setup:ai:all and setup:ai:base become setup:ai,
+>   code:format:all becomes code:format, code:lint:all becomes code:lint,
+>   and code:check:all is dropped. History rows keep their text.
 > - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
 >   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
 >   run setup; setup is the task bootstrap ships (setup/_default). The
@@ -33,7 +37,11 @@
 1. Run `vwf:docs-sync` over the run's branch delta; apply its findings and
    every `DOCS FALSIFIED:` line.
 2. Make each U7 hit in index.md's facts true, re-grepped:
-   `grep -rn -iE 'tool-config|stackgen\.yaml|MERGE_MODEL' readme.md CLAUDE.md CONTRIBUTING.md .claude/docs .claude/skills site/src/content/docs plugins/stackgen/stacks/readme.md`.
+   `grep -rn -iE 'tool-config|stackgen\.yaml|MERGE_MODEL|setup:ai:(all|base)|code:[a-z]+:all' readme.md CLAUDE.md CONTRIBUTING.md .claude/docs .claude/skills site/src/content/docs plugins/stackgen/stacks/readme.md`.
+   Per D27, `setup:ai:all` and `setup:ai:base` become `setup:ai`,
+   `code:format:all` becomes `code:format`, `code:lint:all` becomes
+   `code:lint`, and `code:check:all` is dropped. Name bootstrap as the owner
+   of the `setup:*` and `code:*` tasks; do not restate what they do.
    Known hits outside the facts list: `site/src/content/docs/how-to/brownfield/migrate-old-vwf-repo.md`
    (72, 75), `.claude/skills/vwf-plugin/references/docs-tree.md` (141),
    and root `CONTRIBUTING.md` (30, the landing model).

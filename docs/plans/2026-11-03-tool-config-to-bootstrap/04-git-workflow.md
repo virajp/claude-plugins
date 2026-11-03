@@ -22,6 +22,10 @@
 >   does: pr refuses the full sequence as today; any other value, a missing
 >   key or a missing file means direct. The MERGE_MODEL and MERGE_MODEL_MAIN
 >   reads are deleted.
+> - D28: When .config/bootstrap.toml exists but yq cannot read it,
+>   git-workflow and the release tasks stop, as bootstrap's _scripts/merge
+>   does, with the message cannot read the merge config of
+>   .config/bootstrap.toml. A missing file still means direct.
 > - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
 >   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
 >   run setup; setup is the task bootstrap ships (setup/_default). The
@@ -44,8 +48,10 @@
      yq, run in each repository's root. yq exits 1 on a missing file, so
      the snippet tests the file first and prints `direct` without it:
      `if [ -f .config/bootstrap.toml ]; then mise x -- yq -p toml '.branch.main.merge_model // "direct"' .config/bootstrap.toml; else echo direct; fi`
-     (and the same for `.branch.develop`). Keep it a bash snippet; no
-     python.
+     (and the same for `.branch.develop`). Per D28, when the file exists
+     and yq exits non-zero, the step stops with "cannot read the merge
+     config of .config/bootstrap.toml." and offers no landing option. Keep
+     it a bash snippet; no python.
    - 51: the `no-commit-to-branch` hook is in `.config/pre-commit-config.yaml`,
      synced by bootstrap; reword only if the text says tool-config renders it.
    - Remove every `MERGE_MODEL_DEVELOP`, `MERGE_MODEL_MAIN` and
@@ -72,7 +78,10 @@
    `p/site/release` (172). Replace each `MERGE_MODEL` / `MERGE_MODEL_MAIN`
    read with a read of `merge_model` of `[branch.main]` from
    `.config/bootstrap.toml`, through `yq -p toml`, as bootstrap's
-   `_scripts/merge` reads it. A missing file prints `direct`. `pr` refuses
+   `_scripts/merge` reads it. A missing file prints `direct`. If the file
+   exists and yq exits non-zero, the task prints "cannot read the merge
+   config of .config/bootstrap.toml." and exits 1 before it writes (D28).
+   `pr` refuses
    the full sequence with the message each task prints today; any other
    value means `direct`. Update the comments above each check to match.
    Keep each task's other behaviour as it is.

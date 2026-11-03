@@ -557,6 +557,25 @@
         "U4",
         "U7"
       ]
+    },
+    {
+      "id": "D27",
+      "decision": "setup:ai:all, setup:ai:base and code:{format,lint,check}:all are tool-config task names that bootstrap does not ship. What do the docs say in their place?",
+      "ruling": "The user ruled: setup:* and code:* are supported and owned by bootstrap. Each live mention of a tool-config task name becomes the bootstrap task that exists (setup:ai:all and setup:ai:base become setup:ai; code:format:all becomes code:format; code:lint:all becomes code:lint; code:check:all is dropped, since bootstrap ships no code:check). A passage names bootstrap as the owner of these tasks and does not restate what a bootstrap task does. History rows keep their text.",
+      "rejected": "Rewrite each passage to describe the bootstrap task from its script",
+      "units": [
+        "U1",
+        "U7"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "What do git-workflow and the four release tasks do when .config/bootstrap.toml exists but yq cannot read it?",
+      "ruling": "They stop, as bootstrap's _scripts/merge does, with the message cannot read the merge config of .config/bootstrap.toml. git-workflow offers no landing option; a release task exits 1 before it writes anything. A missing file still means direct.",
+      "rejected": "Read a failed parse as direct",
+      "units": [
+        "U4"
+      ]
     }
   ],
   "stages": {
