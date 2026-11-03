@@ -60,6 +60,13 @@
 > - D36: When the bootstrap step leaves its sync uncommitted, init commits
 >   bootstrap's sync first, in its own commit, under init's one consent, then
 >   commits its own files.
+> - D37: On a core branch the no-commit-to-branch hook protects, init
+>   commits on a new branch vwf/init and lands it with bootstrap's merge task
+>   for that branch, which follows merge_model. On an unprotected branch it
+>   commits in place.
+> - D38: init refuses a repo whose tree is not clean before the bootstrap
+>   step. The one plan carries a conditional line: if bootstrap leaves its
+>   sync uncommitted, commit it first.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -188,6 +195,16 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     sync, and the one consent covers it. init's own files go in a second
     commit. Members commit before the base (D32). Write this into the
     commit step that replaces §11(b) to (d) and into the report.
+4d. **D37** — on a core branch that bootstrap's `no-commit-to-branch`
+    hook protects (no `direct_commit = true`), init commits on a new branch
+    `vwf/init` cut from it and lands it with bootstrap's merge task for
+    that branch (`code:merge:develop` or `code:merge:main`), which follows
+    `merge_model`. On an unprotected branch init commits in place. Under
+    `pr`, the PR push counts as init's push for D23.
+4e. **D38** — before the bootstrap step, init refuses a repo whose tree is
+    not clean and reports it, as D35 does. The one plan carries a
+    conditional line per repo: "if bootstrap leaves its sync uncommitted,
+    commit it first" (D36).
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the
