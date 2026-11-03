@@ -64,6 +64,12 @@
 >   commits on a new branch vwf/init and lands it with bootstrap's merge task
 >   for that branch, which follows merge_model. On an unprotected branch it
 >   commits in place.
+> - D39: On a protected main, init cuts vwf/init from develop and lands it
+>   with code:merge:develop when develop exists; with main alone it leaves
+>   vwf/init unlanded and reports it.
+> - D40: On commit (no push) or with no origin remote, init merges vwf/init
+>   locally with SKIP=no-commit-to-branch and pushes nothing; the merge task
+>   runs only on commit and push with a remote.
 > - D38: init refuses a repo whose tree is not clean before the bootstrap
 >   step. The one plan carries a conditional line: if bootstrap leaves its
 >   sync uncommitted, commit it first.
@@ -201,6 +207,17 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     that branch (`code:merge:develop` or `code:merge:main`), which follows
     `merge_model`. On an unprotected branch init commits in place. Under
     `pr`, the PR push counts as init's push for D23.
+4f. **D39** — when the protected core branch is `main`: if `develop`
+    exists, cut `vwf/init` from `develop` and land it with
+    `code:merge:develop` (bootstrap's `code:merge:main` runs only from
+    `develop`); if only `main` exists, leave `vwf/init` unlanded and report
+    it with the remedy.
+4g. **D40** — on the answer "commit" (no push), or with no `origin`
+    remote, init does not run the merge task. It merges `vwf/init` into its
+    core branch locally with `SKIP=no-commit-to-branch`, whatever the
+    `merge_model`, pushes nothing, and deletes the local `vwf/init` after a
+    clean merge. On a conflict it aborts the merge, keeps `vwf/init` and
+    reports it.
 4e. **D38** — before the bootstrap step, init refuses a repo whose tree is
     not clean and reports it, as D35 does. The one plan carries a
     conditional line per repo: "if bootstrap leaves its sync uncommitted,

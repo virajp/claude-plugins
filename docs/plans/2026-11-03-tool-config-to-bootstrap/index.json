@@ -673,6 +673,24 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D39",
+      "decision": "bootstrap's code:merge:main runs only from develop. Where does vwf/init land when the core branch bootstrap left is a protected main?",
+      "ruling": "The user ruled: if develop exists, init cuts vwf/init from develop and lands it with code:merge:develop; main gets it at the next release merge. If only main exists, init leaves vwf/init unlanded and reports it with the remedy.",
+      "rejected": "Always leave vwf/init unlanded on a protected main",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D40",
+      "decision": "The merge task always pushes. What does init do with vwf/init when the answer is commit (no push) or the repo has no origin remote?",
+      "ruling": "The user ruled: init merges vwf/init into its core branch locally itself, with SKIP=no-commit-to-branch, whatever the merge_model, and pushes nothing; it does not run the merge task. After a clean merge it deletes the local vwf/init branch. A merge conflict leaves vwf/init in place, aborts the merge and is reported. The merge task (D37) runs only on commit and push with an origin remote.",
+      "rejected": "Leave vwf/init unlanded and report it",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
