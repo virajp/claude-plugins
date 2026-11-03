@@ -336,19 +336,22 @@ entirely, so it **cannot be invoked by another skill**, and the failure is
 anything delegates to it, user-only when nothing does.
 
 The planners and the executor are the one place the rule is applied by hand
-rather than read off the delegation graph. `execute` is **user only**: it must
-run in a fresh context — a fresh session, or a runner that `all` dispatches —
-which no caller can guarantee, and nothing delegates to it — the plan's own
-launch line is the invocation, and the folder that line names arrives **already
-committed and pushed** on the integration branch, because `plan` and
-`change-plan` commit it at hand-off with its index row; a folder that is not on
-that branch is refused rather than swept into a wave commit. `next` is the same
-skill reading that index for its argument, and no more model-invocable for it;
-`all` is the same skill as a loop, and its `execute-runner` reads the skill file
-it is handed rather than invoking the skill, so `all` needs no model invocation
-either. `execute` joined this state on 2026-09-16, when `/vwf:plan`'s in-session
-execute hand-off — the one caller that needed it model-invocable — was retired;
-every resume is a person re-running `/vwf:execute <folder>`. `plan` and
+rather than read off the delegation graph. `execute` is **user and model**,
+though nothing delegates to it: it must run in a fresh context — a fresh
+session, or a runner that `all` dispatches — which no caller can guarantee, so
+when the model invokes it rather than the person typing it, its first step asks
+one question — start a **new session** (the host's session tool where it has
+one, else the launch line printed) or **continue in this session** — before the
+format test. The plan's own launch line is the usual invocation, and the folder
+that line names arrives **already committed and pushed** on the integration
+branch, because `plan` and `change-plan` commit it at hand-off with its index
+row; a folder that is not on that branch is refused rather than swept into a
+wave commit. `all`'s `execute-runner` reads the skill file it is handed rather
+than invoking the skill, so a runner never meets the question. `execute` was
+user-only from 2026-09-16, when `/vwf:plan`'s in-session execute hand-off was
+retired, until 2026-11-03, when the user ruled that the model may start a run
+as long as it asks where. `recall` still prints a cap-paused run's launch line
+rather than launching it. `plan` and
 `change-plan` are **user and model**: `plan` is reached by name from
 `/vwf:feedback`'s blueprint-gap routes and by `execute`'s gap reconciliation,
 and the seam `change-plan` reserved is live too — `/vwf:feedback`'s *not a

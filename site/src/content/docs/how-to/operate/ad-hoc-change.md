@@ -252,8 +252,9 @@ last answer it asks nothing until it ends.
 The fresh context is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. Under
 `all`, each runner is that fresh context, and your session keeps only the
-results. The skill is user-only for the same reason — nothing else can promise
-you a clean window.
+results. For the same reason, when the model starts the skill itself rather
+than you typing it, it first asks whether to start a new session or continue in
+the current one — only you can promise a clean window.
 
 It refuses a folder that is not committed on the integration branch, which after
 a normal approval it always is. If you wrote or moved one by hand, commit and

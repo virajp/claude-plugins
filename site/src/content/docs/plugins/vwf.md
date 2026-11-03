@@ -835,15 +835,17 @@ record.
 | `/vwf:docs-sync [range]`                | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                                                                                                    |
 | `/vwf:git-workflow`                     | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                                                                                          |
 
-**Four are user-only** — `verify`, `mockups`, `recall` and `execute` carry
+**Three are user-only** — `verify`, `mockups` and `recall` carry
 `disable-model-invocation: true`, so the model never fires them on its own; you
-decide when a post-deploy check, a re-render, a session resume or an unattended
-run happens. `design-system` is not among them: no skill calls it by name, but
-the model can start a design-system import when your request asks for one. The
-executor is user-only for a reason of
-its own: it must start in a session that has done nothing else, and only you can
-guarantee that — which is why `recall` prints the `/vwf:execute <folder>` launch
-line for a cap-paused run rather than launching it. Its partners `plan` and
+decide when a post-deploy check, a re-render or a session resume happens.
+`design-system` is not among them: no skill calls it by name, but the model can
+start a design-system import when your request asks for one. `execute` is not
+among them either: the model can start it when you ask for a run, but a run
+must start in a session that has done nothing else, and only you can guarantee
+that. So when the model starts it, its first step asks you whether to start a
+**new session** or **continue in this session**, and `recall` still prints the
+`/vwf:execute <folder>` launch line for a cap-paused run rather than launching
+it. It was user-only from 2026-09-16 until 2026-11-03. Its partners `plan` and
 `change-plan` stay model-invocable, and that seam is live: a `/vwf:feedback`
 intake routes into one or the other by name. The rest stay model-invocable
 because the workflow **delegates to them by name** — `recall` resumes a paused
@@ -2606,8 +2608,11 @@ one executor for every plan folder. Execution is mechanical from the folder:
 needs, and each unit file its scope, so it decides from a fixed rule set, stops
 only at a few defined pause points, and ends at a **final report** from which it
 lands per the consent the plan recorded. It cannot verify the fresh context,
-which is why the skill is user-only and why the planner's last line, once
-nothing is left to plan, is the launch line.
+which is why the planner's last line, once nothing is left to plan, is the
+launch line, and why, when the model starts the skill itself rather than you
+typing it, its first step asks whether to start a **new session** or
+**continue in this session**. A new session starts with the host's tool for
+that where it has one; otherwise the skill prints the launch line and stops.
 
 ```text
 /vwf:execute docs/plans/2026-06-26-1430-order                 # a cycle plan
@@ -2954,7 +2959,7 @@ unresolvable git conflict); a stage subagent dying twice on the same unit; a
 the pending run state to `index.json`, commits what is green, sets the status to
 `RUNNING — paused at unit <n> for context`, hands off and stops with the launch
 line (`/vwf:recall next` surfaces it; you re-run `/vwf:execute <folder>` in a
-fresh session — the skill is user-only, so nothing launches it for you); a gap
+fresh session — `recall` never launches it for you); a gap
 that blocks *all* remaining work; a security or breaking-API finding whose fix
 loop isn't converging; or a decision the rules don't cover that is irreversible,
 a wave order the written order cannot settle, or blocking format drift — each a
@@ -3875,8 +3880,9 @@ action, `handoff` says so instead of padding the prompt, and `recall` reports
 the same and waits for your direction. This is also the pair the **context-caps
 hook** drives when an autonomous `/vwf:execute` run hits a budget — snapshot
 with a bare `/vwf:handoff`, then `/clear` and `/vwf:recall next`. That is the
-one prompt `recall` prints rather than runs: `execute` is user-only, so it shows
-the `/vwf:execute <folder>` launch line and you re-run it, and the run resumes
+one prompt `recall` prints rather than runs: `execute` must start in a fresh
+context, so it shows the `/vwf:execute <folder>` launch line and you re-run it,
+and the run resumes
 from the run state in the folder's `index.json`.
 
 Neither recommends a run while planning is unfinished. Before `handoff` writes a

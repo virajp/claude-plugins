@@ -117,8 +117,8 @@ the user whether to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
   command — `blueprint` / `plan` — when it names one). A prompt naming
-  `/vwf:execute <folder>` is the exception: `execute` is launched only by a
-  person in a fresh context — a fresh session, or a runner that
+  `/vwf:execute <folder>` is the exception: `execute` must start in a
+  fresh context — a fresh session, or a runner that
   `/vwf:execute all` dispatches — so print that launch line and stop — the
   run resumes from its row `RUNNING` in `docs/plans/index.json` and the unit
   fields of the folder's `index.json` (`status`, `commit`, `rounds`), which
