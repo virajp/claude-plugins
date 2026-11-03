@@ -138,7 +138,11 @@
         "plugins/vwf/skills/handoff/SKILL.md",
         "plugins/vwf/skills/mockups/SKILL.md",
         "plugins/vwf/skills/blueprint/references/screen-review.md",
-        "plugins/vwf/skills/readme/SKILL.md"
+        "plugins/vwf/skills/readme/SKILL.md",
+        ".config/mise/tasks/p/release",
+        ".config/mise/tasks/p/plugins/release",
+        ".config/mise/tasks/p/i/release",
+        ".config/mise/tasks/p/site/release"
       ],
       "depends_on": [],
       "waits": "",
@@ -533,6 +537,25 @@
         "U1",
         "U3",
         "U5"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Nothing in bootstrap docs/sync reads .config/stackgen.yaml, so its merge_model, members and forge values are not carried over when init deletes the file. Does init carry them over?",
+      "ruling": "No. Confirmed by the user: MERGE_MODEL_* is not used anymore; bootstrap uses a different approach. bootstrap docs/sync decides [branch.*].merge_model in .config/bootstrap.toml during adoption. init reads no value from .config/stackgen.yaml and carries none over; members stay in .config/vwf.yaml and the forge is read live.",
+      "rejected": "init carries the merge_model values into .config/bootstrap.toml before the delete; init keeps the file when a value differs",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "This repo's four release tasks (p/release, p/plugins/release, p/i/release, p/site/release) read the MERGE_MODEL and MERGE_MODEL_MAIN env, which no longer exists. Are they in scope?",
+      "ruling": "Yes, confirmed by the user: they are repo-specific and migrate to .config/bootstrap.toml. Each reads merge_model of [branch.main] (the release branch) from .config/bootstrap.toml with yq, as bootstrap's _scripts/merge does: pr refuses the full sequence as today; any other value, a missing key or a missing file means direct. The MERGE_MODEL and MERGE_MODEL_MAIN reads are deleted. CLAUDE.md says the release tasks read [branch.main].merge_model in .config/bootstrap.toml. This reverses the standing rule that a plan never edits this repo's own .config files, for these four files only.",
+      "rejected": "Park the env reads for a hand edit; describe the old env in CLAUDE.md; drop the sentence",
+      "units": [
+        "U4",
+        "U7"
       ]
     }
   ],

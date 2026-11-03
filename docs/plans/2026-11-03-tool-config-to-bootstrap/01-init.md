@@ -47,6 +47,10 @@
 >   7, 8, 9 and 10, the hook-manager row and The gate configuration commits
 >   first, alone: bootstrap's docs/sync owns them (migrate.md M3, M10). Every
 >   citation of an existing-repo pass names it by its title, never by number.
+> - D25: init reads no value from .config/stackgen.yaml and carries none
+>   over before it deletes the file. bootstrap's docs/sync decides
+>   [branch.*].merge_model in .config/bootstrap.toml during adoption; members
+>   stay in .config/vwf.yaml, and the forge is read live.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that

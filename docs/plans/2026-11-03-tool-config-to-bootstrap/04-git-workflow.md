@@ -16,6 +16,12 @@
 > - D12: optional-tools runs first; read the owned files as that plan left
 >   them.
 
+> - D26: This repo's four release tasks (p/release, p/plugins/release,
+>   p/i/release, p/site/release) migrate to .config/bootstrap.toml. Each
+>   reads merge_model of [branch.main] with yq, as bootstrap's _scripts/merge
+>   does: pr refuses the full sequence as today; any other value, a missing
+>   key or a missing file means direct. The MERGE_MODEL and MERGE_MODEL_MAIN
+>   reads are deleted.
 > - D21: Every live mention of MISE_ENV=dev mise run setup:all becomes
 >   MISE_ENV=dev mise run setup, and a bare mise run setup:all becomes mise
 >   run setup; setup is the task bootstrap ships (setup/_default). The
@@ -61,6 +67,16 @@
    ignore line comes from the repo's `.gitignore`, synced by bootstrap's git
    tool, not tool-config's universal `.gitignore`.
 
+5. **This repo's release tasks (D26)** — `.config/mise/tasks/p/release`
+   (47–50), `p/plugins/release` (144), `p/i/release` (161–164) and
+   `p/site/release` (172). Replace each `MERGE_MODEL` / `MERGE_MODEL_MAIN`
+   read with a read of `merge_model` of `[branch.main]` from
+   `.config/bootstrap.toml`, through `yq -p toml`, as bootstrap's
+   `_scripts/merge` reads it. A missing file prints `direct`. `pr` refuses
+   the full sequence with the message each task prints today; any other
+   value means `direct`. Update the comments above each check to match.
+   Keep each task's other behaviour as it is.
+
 - **D21, every owned file** — replace each live `setup:all` with
   `setup`, keeping a `MISE_ENV=dev` prefix where the line has one (mockups 179, screen-review 32, worktree-setup 104-126, readme/SKILL.md 73 and 110); leave history rows as they are. Verify with
   `grep -rn "setup:all"` over the owned paths: only history rows remain.
@@ -76,6 +92,10 @@
 - In a scratch directory under the scratchpad, a `.config/bootstrap.toml`
   with `[branch.main]` `merge_model = "pr"` makes the snippet print `pr`;
   with no file it prints `direct`.
+
+- `grep -n 'MERGE_MODEL' .config/mise/tasks/p/release .config/mise/tasks/p/plugins/release .config/mise/tasks/p/i/release .config/mise/tasks/p/site/release`
+  returns nothing, and `bash -n` passes on each of the four files.
+- Run none of the four release tasks. They bump, commit, merge and tag.
 
 ## Guardrails
 

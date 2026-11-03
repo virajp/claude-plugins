@@ -42,7 +42,10 @@
      configs; no `stackgen:tool-config`); "seventeen rules" → sixteen rules,
      rule 15 retired, and the rule list in Tasks; the "shape tool-config
      lands" passages; the per-branch landing model reads
-     `[branch.*].merge_model` in `.config/bootstrap.toml`.
+     `[branch.*].merge_model` in `.config/bootstrap.toml`. The release
+     tasks refuse the full sequence unless `[branch.main].merge_model` in
+     `.config/bootstrap.toml` is `direct` (a missing file or key is
+     `direct`), per D26.
    - `.claude/skills/plugin-authoring/references/checks.md`: rule 15 marked
      retired; rules 11 and 16 lose the tool-config trees.
      `.claude/skills/plugin-authoring/SKILL.md`: drop the tool-config script
