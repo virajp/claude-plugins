@@ -91,6 +91,9 @@
 >   it writes anything and lists each dirty repo. The one plan carries a
 >   conditional line per repo: if bootstrap leaves its sync uncommitted,
 >   commit it first.
+> - D41: init calls no materializer. Pass 6 runs over init's own hygiene
+>   assets only. From §2, the hygiene-asset lay-down and the
+>   .config/vwf.yaml stub that holds kept_files survive in the hygiene step.
 > - D23: init's one consent asks commit, or commit and push; git-workflow
 >   does the landing and the push (D37), members before the base, never a
 >   force-push. The forge pass runs once for the product, after the base
@@ -235,6 +238,16 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
     init writes anything, and the report lists each dirty repo. The one
     plan carries a conditional line per repo: "if bootstrap leaves its
     sync uncommitted, commit it first" (D36).
+4h. **D41** — init calls no materializer. In `SKILL.md`, delete the
+    materializer detection (320–335) and its halt when none is installed,
+    and every sentence that feeds pass 6 from the materializer's conflict
+    list (245–248). Pass 6, missing files, runs over init's own hygiene
+    assets only (`existing-repo.md` 446; `new-repo.md` 233–247). From §2 of
+    `new-repo.md`, keep the hygiene-asset lay-down (172–177) and the
+    `.config/vwf.yaml` stub that holds `kept_files` (249–262), moved into
+    the hygiene step; delete "The answers each fetch carries" (184–232) and
+    the materializer's Skipped and conflict rows, except the hygiene skips
+    on init's own condition.
 4b. **D35** — the bootstrap step's result gates the rest per repo: a repo
     with no `.config/bootstrap.toml` after the step gets no hygiene file,
     no `kept_files` record, no commit, no push and no forge pass, and the

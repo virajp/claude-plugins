@@ -77,6 +77,9 @@
    case no longer has an issue form, the issue-form path becomes an
    outside-the-allowlist case, and the expected messages drop
    `.github/ISSUE_TEMPLATE/` from the list.
+8. **D34, `plugins/stackgen/assets/taxonomy.md`** (51–52) — the issue
+   forms are no longer `/vwf:init`'s own assets; bootstrap's github tool
+   writes them. Reword that clause; change nothing else in this file.
 6. **`plugins/stackgen/assets/ids.md`** (64–98) — the repo name is now
    `repo_name` in `.config/bootstrap.toml`, which bootstrap writes, and the
    commit scopes are bootstrap's `commit_scopes` (D31). Rewrite the token
@@ -100,7 +103,7 @@
 
 - Touch nothing outside the owned paths: no exclude file (`dprint.jsonc`,
   `.config/**`), no doc other than `plugins/stackgen/assets/output-tree.md` and
-  `plugins/stackgen/assets/ids.md`,
+  `plugins/stackgen/assets/ids.md` and `plugins/stackgen/assets/taxonomy.md`,
   no `vitest.config.mts`.
 - The deletion and the `check.ts` change land in one commit: never leave
   the tree deleted with the import still in place.

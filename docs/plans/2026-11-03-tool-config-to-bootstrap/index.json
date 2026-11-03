@@ -168,7 +168,8 @@
         "scripts/src/tool-config-values.test.ts",
         "scripts/src/fixtures/tool-config/**",
         "plugins/stackgen/assets/output-tree.md",
-        "plugins/stackgen/assets/ids.md"
+        "plugins/stackgen/assets/ids.md",
+        "plugins/stackgen/assets/taxonomy.md"
       ],
       "depends_on": [],
       "waits": "",
@@ -670,6 +671,15 @@
       "decision": "D36's sync commit is known only after the bootstrap step, but the one plan and consent come before it; and changed or untracked files can include the user's own earlier work. How is this handled?",
       "ruling": "The user ruled: before the bootstrap step, init checks every repo, the base and each member. If any tree is not clean, init stops the whole run before it writes anything and lists each dirty repo, because the one bootstrap prompt covers every repo and cannot skip one. The one plan carries a conditional line per repo: if bootstrap leaves its sync uncommitted, commit it first. On a clean start every change after the step is bootstrap's, so the one consent covers the sync commit.",
       "rejected": "Snapshot the dirty paths, exclude them, and ask a second consent after the step",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "With the secrets provider gone (D5), init no longer calls the stackgen materializer, and deleting §2 of new-repo.md whole drops parts the kept passes need. What survives?",
+      "ruling": "The user accepted: (1) init drops the materializer detection (SKILL.md 320–335) and its halt when none is installed; init calls no materializer. (2) Pass 6, missing files, runs over init's own hygiene assets only: the files init would write; a hygiene file the repo already has is kept, as today. (3) From §2, the hygiene-asset lay-down and the .config/vwf.yaml stub that holds kept_files survive, moved into the hygiene step; The answers each fetch carries and the materializer's Skipped and conflict rows are deleted, except the hygiene skips on init's own condition.",
+      "rejected": "Keep a materializer dry-run so pass 6 also offers replace-or-keep over pack files",
       "units": [
         "U1"
       ]
