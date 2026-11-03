@@ -33,13 +33,15 @@
 >   them.
 > - D14: init keeps the sections that write its own files: §1 (the
 >   repository itself, git init before bootstrap), §4 placeholders, §5
->   template fallback, §8 readme, licence and security file, §11(e) the push
->   of init's own commit (D23), and §11(f) the forge pass. It deletes §6 hook
->   fragments, the parts of §7 that fed the all call (project ids stay only
->   where init's own files use them) and §10 the aggregator. §11(b) to (d)
->   become one step: after bootstrap ends, stage and commit only what init
->   wrote, on the branch bootstrap left, with one consent; the branches are
->   bootstrap's.
+>   template fallback, §7 renamed The project ids (the ids its own files use;
+>   the rest of §7 that fed the all call is deleted), §8 readme, licence and
+>   security file, §11(e) the push of init's own commit (D23), §11(f) the
+>   forge pass, and §12 the report, rewritten without the rows of deleted
+>   steps. It deletes §2 the all call (replaced by the bootstrap step), §3
+>   the secrets provider (D5), §6 hook fragments, §9 trust and mise run init,
+>   §10 the aggregator and §11(a) the landing model. §11(b) to (d) become one
+>   step: after bootstrap ends, stage and commit only what init wrote, on the
+>   branch bootstrap left, with one consent; the branches are bootstrap's.
 > - D23: init's one consent asks commit, or commit and push. On commit and
 >   push, init pushes its own commit in each repo, members before the base,
 >   never a force-push; no remote, or a rejected push, is a deferral for that
@@ -61,10 +63,12 @@
 >   .config/stackgen.yaml if the repository is green for each repository that
 >   has the file; the one consent covers it. The deletion rides init's own
 >   commit in that repository, base and each member, with init's own files.
-> - D19: A line that starts with would (would update, would remove, would
->   chmod, would set bootstrap_commit) is a change. Lines that read unchanged,
->   kept seed or skip are not. No would line and exit 0 means no drift.
->   doctor, setup, init and recall all parse it this way.
+> - D19: The dry-run prints its lines on stderr, each with the prefix
+>   repo-sync: (bootstrap's _scripts/repo-sync, _rs_log). Read stderr. After
+>   that prefix, a line that starts with would (would update, would remove,
+>   would chmod, would set bootstrap_commit) is a change. Lines that read
+>   unchanged, kept seed or skip are not. No would line and exit 0 means no
+>   drift. doctor, setup, init and recall all parse it this way.
 
 The prompt, quoted exactly as bootstrap's `README.md` carries it (a `text`
 fence, line breaks as they are):
@@ -128,7 +132,9 @@ this repository. Ask me before each choice that docs/sync/ does not decide.
    (623–650). Replace §11(b) to (d) with the one commit step of D14, whose
    consent has two answers, commit or commit and push (D23). Keep §11(e),
    the push, rewritten to push init's commit only on commit and push,
-   members before the base. Keep
+   members before the base. Delete §3, the secrets provider (D5). Rename
+   §7 to exactly "The project ids" (U3 cites it by that title, with no
+   number). Keep §12, the report, without the rows of deleted steps. Keep
    §1, §4, §5, §8 and §11(f); renumber the sections left and every
    cross-reference to them in the owned files.
    The forge pass eligibility (823–850) reads D23: a repo takes the pass

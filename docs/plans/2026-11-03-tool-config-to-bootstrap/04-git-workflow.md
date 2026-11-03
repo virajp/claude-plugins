@@ -49,7 +49,12 @@
    member, from its own `.config/bootstrap.toml`).
 3. **`plugins/vwf/skills/git-workflow/references/worktree-setup.md`** — 37:
    the `.worktrees/` line is in the repo's `.gitignore`, synced by
-   bootstrap's git tool.
+   bootstrap's git tool. 115–128 ("Why the probe prefers it"): rewrite the
+   comparison of `setup:worktree` with the fallback against bootstrap's
+   `.config/mise/tasks/setup/_default` and `setup/worktree`, read in the
+   clone. Today the text says "Both tasks refuse an unset `MISE_ENV`" and
+   that the fallback runs the upgrade verb. Bootstrap's `setup` runs an
+   upgrade only with `--upgrade`. State only what the two scripts do.
 4. **`plugins/vwf/skills/handoff/SKILL.md`** (146),
    **`plugins/vwf/skills/mockups/SKILL.md`** (171),
    **`plugins/vwf/skills/blueprint/references/screen-review.md`** (28) — the

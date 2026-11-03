@@ -426,7 +426,7 @@
     {
       "id": "D14",
       "decision": "Which of init's other sections stay, given that bootstrap makes the first commit, creates develop and asks before a push?",
-      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §8 readme, licence and security file, §11(e) the push of init's own commit (D23), and §11(f) the forge pass. It deletes §6 hook fragments, the parts of §7 that fed the all call (project ids stay only where init's own files use them) and §10 the aggregator. §11(b) to (d) become one step: after bootstrap ends, stage and commit only what init wrote, on the branch bootstrap left, with one consent; the branches are bootstrap's.",
+      "ruling": "init keeps the sections that write its own files: §1 (the repository itself, git init before bootstrap), §4 placeholders, §5 template fallback, §7 renamed The project ids (the ids its own files use; the rest of §7 that fed the all call is deleted), §8 readme, licence and security file, §11(e) the push of init's own commit (D23), §11(f) the forge pass, and §12 the report, rewritten without the rows of deleted steps. It deletes §2 the all call (replaced by the bootstrap step), §3 the secrets provider (D5), §6 hook fragments, §9 trust and mise run init, §10 the aggregator and §11(a) the landing model. §11(b) to (d) become one step: after bootstrap ends, stage and commit only what init wrote, on the branch bootstrap left, with one consent; the branches are bootstrap's.",
       "rejected": "Keep init's git pass §11(b) to (e) as today",
       "units": [
         "U1"
@@ -473,7 +473,7 @@
     {
       "id": "D19",
       "decision": "Which lines of the setup:configs --dry-run output count as a change?",
-      "ruling": "A line that starts with would (would update, would remove, would chmod, would set bootstrap_commit) is a change. Lines that read unchanged, kept seed or skip are not. No would line and exit 0 means no drift. doctor, setup, init and recall all parse it this way.",
+      "ruling": "The dry-run prints its lines on stderr, each with the prefix repo-sync: (bootstrap's _scripts/repo-sync, _rs_log). Read stderr. After that prefix, a line that starts with would (would update, would remove, would chmod, would set bootstrap_commit) is a change. Lines that read unchanged, kept seed or skip are not. No would line and exit 0 means no drift. doctor, setup, init and recall all parse it this way.",
       "rejected": "none — follows from repo_sync's output format",
       "units": [
         "U1",

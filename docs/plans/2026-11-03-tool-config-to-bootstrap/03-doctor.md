@@ -34,10 +34,12 @@
 > - D17: Yes. baseline runs mise run setup:configs --dry-run in each
 >   repository. recall's text changes to match: baseline is no longer file
 >   reads only, and recall's not-shaped test is no .config/bootstrap.toml.
-> - D19: A line that starts with would (would update, would remove, would
->   chmod, would set bootstrap_commit) is a change. Lines that read unchanged,
->   kept seed or skip are not. No would line and exit 0 means no drift.
->   doctor, setup, init and recall all parse it this way.
+> - D19: The dry-run prints its lines on stderr, each with the prefix
+>   repo-sync: (bootstrap's _scripts/repo-sync, _rs_log). Read stderr. After
+>   that prefix, a line that starts with would (would update, would remove,
+>   would chmod, would set bootstrap_commit) is a change. Lines that read
+>   unchanged, kept seed or skip are not. No would line and exit 0 means no
+>   drift. doctor, setup, init and recall all parse it this way.
 > - D20: baseline reads no forge, as doctor and recall say today; the forge
 >   check stays in doctor's full mode. The dry-run writes nothing in the
 >   repository; it refreshes bootstrap's own clone cache under
@@ -56,6 +58,8 @@
 ## Edits
 
 1. **`plugins/vwf/skills/doctor/SKILL.md`**
+   - Keep the heading "The repo shape against its baseline" exactly:
+     `setup/SKILL.md` (120) cites it by that title.
    - `baseline` mode (48–55): its predicates become (a) each repository —
      base and each locally present member — has `.config/bootstrap.toml`;
      (b) in each, `mise run setup:configs --dry-run` shows no change (D19;
@@ -89,7 +93,8 @@
      `.config/bootstrap.toml` is `pr`; missing file or key = `direct`.
    - 434: check (b) cites "init's own **§7**" in `new-repo.md`. U1
      renumbers that file in the same wave, so cite the section by its
-     title, "The project ids", with no section number.
+     title, "The project ids", with no section number. U1 renames §7 to
+     exactly that title.
    - Leftovers: add a row — `.config/stackgen.yaml` present beside
      `.config/bootstrap.toml` → a leftover values file from before
      bootstrap, remedy: delete it (do not write the word tool-config in

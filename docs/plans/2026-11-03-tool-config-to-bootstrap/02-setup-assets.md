@@ -39,10 +39,12 @@
 >   Step 0 says it could not check drift and continues as current; init treats
 >   the repository as not green, keeps .config/stackgen.yaml and names the
 >   repository in the report.
-> - D19: A line that starts with would (would update, would remove, would
->   chmod, would set bootstrap_commit) is a change. Lines that read unchanged,
->   kept seed or skip are not. No would line and exit 0 means no drift.
->   doctor, setup, init and recall all parse it this way.
+> - D19: The dry-run prints its lines on stderr, each with the prefix
+>   repo-sync: (bootstrap's _scripts/repo-sync, _rs_log). Read stderr. After
+>   that prefix, a line that starts with would (would update, would remove,
+>   would chmod, would set bootstrap_commit) is a change. Lines that read
+>   unchanged, kept seed or skip are not. No would line and exit 0 means no
+>   drift. doctor, setup, init and recall all parse it this way.
 > - D20: baseline reads no forge, as doctor and recall say today; the forge
 >   check stays in doctor's full mode. The dry-run writes nothing in the
 >   repository; it refreshes bootstrap's own clone cache under
