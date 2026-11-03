@@ -79,9 +79,8 @@
      the "tool-config files are judged by preview" sentence.
    - 606–659: delete (f) `merge_model.*` validity from `stackgen.yaml`,
      `members` linkage from `stackgen.yaml`, and the mise layout
-     (`miserc.toml`, `conf.d` `_base/`, `ai/`). If `merge_model` validity is
-     still worth a row, read it from `.config/bootstrap.toml`
-     (`direct` or `pr`).
+     (`miserc.toml`, `conf.d` `_base/`, `ai/`). Put the `merge_model`
+     validity row of D22 in their place: it reads `.config/bootstrap.toml`.
    - 701–703: (g) the PR rule is expected when `[branch.main].merge_model`
      or `[branch.develop].merge_model` in the base's
      `.config/bootstrap.toml` is `pr`; missing file or key = `direct`.
