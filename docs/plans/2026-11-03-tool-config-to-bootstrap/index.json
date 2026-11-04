@@ -16,8 +16,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-04T15:34:45Z in /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/tool-config-to-bootstrap"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at wave 2 — U6 UNRESOLVED: two security findings did not converge (G10); need a ruling on D17 (keep the bootstrap dry-run in doctor baseline and recall, or return it to explicit runs, or require content-tied trust) and D20 (pin bootstrap to a reviewed commit, with a handoff item to bootstrap); U7, U8 skipped (depend on U6); worktree /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/tool-config-to-bootstrap"
   },
   "consent": {
     "merge": true,
@@ -123,7 +123,7 @@
       "status": "green",
       "started": "2026-11-04T15:35:28.135Z",
       "ended": "2026-11-04T15:44:17.809Z",
-      "commit": "3ae1d94c",
+      "commit": "d0dfa90f",
       "rounds": 2
     },
     {
@@ -195,14 +195,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "running",
+      "status": "unresolved",
       "started": "2026-11-04T15:59:19.213Z",
-      "ended": "",
+      "ended": "2026-11-04T16:10:28.234Z",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "a376b34d",
-        "to": "2dcdb710"
+        "from": "2dcdb710",
+        "to": "d0dfa90f"
       }
     },
     {
@@ -233,9 +233,9 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-04T16:10:28.313Z",
       "commit": "",
       "rounds": 0
     },
@@ -254,9 +254,9 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-04T16:10:28.394Z",
       "commit": "",
       "rounds": 0
     }
@@ -270,9 +270,9 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "failed",
       "started": "2026-11-04T15:59:19.088Z",
-      "ended": ""
+      "ended": "2026-11-04T16:10:28.470Z"
     },
     {
       "id": "W3",
@@ -813,6 +813,13 @@
       "unit": "U6",
       "stage": "security",
       "text": "D17 and D20 accept the networked dry-run and a clone-cache refresh, but never state that it executes repo-task code and fetched code · they should rule on a trust precondition and on pinning",
+      "state": "open"
+    },
+    {
+      "id": "G10",
+      "unit": "U6",
+      "stage": "security",
+      "text": "Security findings at U6, cap-exempt, round 1 count 2, round 2 count 2, so the convergence guard paused the row. (1) stack-checks.md:505 and setup/SKILL.md:119: the mise trust gate stops a never-run clone only; mise auto-trusts on first run and trust is not content-tied (probed on 2026.10.25), so a hostile branch in a trusted repo runs its setup:configs task unprompted from recall. (2) doctor/SKILL.md:46: bootstrap's main, unpinned, is executed from a routine check; round 1's fix disclosed it and could not mitigate it, since D17 keeps the dry-run in baseline and bootstrap edits are out of scope. Ruling needed in D17 and D20 · no assumption taken, the run stops",
       "state": "open"
     }
   ],
