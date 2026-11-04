@@ -91,7 +91,7 @@
       "owns": [
         "plugins/stackgen/skills/stackgen-stack-template/references/generator.md",
         "plugins/stackgen/skills/stackgen-stack-menu/SKILL.md",
-        "plugins/stackgen/skills/stackgen-reputation/SKILL.md",
+        "plugins/stackgen/skills/stackgen-reputation/**",
         "plugins/stackgen/agents/stackgen-skill-reviewer.md"
       ],
       "depends_on": [],
@@ -131,7 +131,7 @@
       "status": "green",
       "started": "2026-11-04T03:36:39.236Z",
       "ended": "2026-11-04T03:43:26.163Z",
-      "commit": "0fb4fbff",
+      "commit": "854e0c85",
       "rounds": 2
     },
     {
@@ -249,10 +249,10 @@
       "started": "2026-11-04T04:03:33.851Z",
       "ended": "",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "c1031514",
-        "to": "6dc8c89a"
+        "from": "6dc8c89a",
+        "to": "854e0c85"
       }
     }
   ],
@@ -744,6 +744,20 @@
       "unit": "U1",
       "stage": "security",
       "text": "D12 says recorded entries move to vwf-tools; a recorded .mcp.json key no shipped pack declares now stays and is reported, by the U8 security finding · shipped-pack keys only",
+      "state": "open"
+    },
+    {
+      "id": "G16",
+      "unit": "U2",
+      "stage": "security",
+      "text": "U8 round 2 url-vetting fix falsified stackgen-reputation/references/signals.md and sources.md, outside U2's owns · owns widened to stackgen-reputation/** under the plan's Goal and the fix applied",
+      "state": "closed"
+    },
+    {
+      "id": "G17",
+      "unit": "U2",
+      "stage": "security",
+      "text": "U8 round 2: no reputation source vets a remote MCP host, so every generated host: row blocks and a generated http MCP server cannot land · taken as the block rule; a ruling may want a vetted path",
       "state": "open"
     }
   ],

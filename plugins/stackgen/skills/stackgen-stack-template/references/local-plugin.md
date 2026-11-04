@@ -59,6 +59,13 @@ Generation emits these under the same rule it emits everything else: the
 component declares, the materializer writes. The generator itself never
 writes a manifest (`generator.md` step 4).
 
+**A generated declaration bound for `vwf-tools` is researched from fresh
+sources**, resolved from the technology's name by the generator's own research
+channel, at first generation and at every regeneration alike. Its `command`,
+`args`, `env` and `url` never come from a citations file or any other text the
+repo holds: whoever wrote the repo wrote those, and this declaration runs in
+every repo on the machine.
+
 ## The two files
 
 Both under `~/.claude/plugins/local/vwf-tools/.claude-plugin/`. The
@@ -292,11 +299,14 @@ manifest write of item 1 above: every server of the union is shown with its
 full declaration and the reach of user scope.
 
 **The seed.** The migration writes the current repo's path into the claims
-file for each key this repo's lockfile claims and the old manifest holds, and
-the gate lists each seeded claim. A seed is a claim and carries no declaration;
-a conflict key gets none. Other repos add theirs on their
-next sync. An inherited key no repo claims is never deleted automatically;
-`/vwf:doctor` reports it as drift.
+file for each key this repo's lockfile claims and the old manifest holds, only
+when the old manifest's declaration of that key matches the shipped pack's, or
+the one a generator run emitted on this machine in this same run; a copy in a
+repo file is not that record. The lockfile is committed, so naming a key earns
+no claim. Any other key stays unclaimed and is kept. The gate lists each seeded
+claim. A seed is a claim and carries no declaration; a conflict key gets none.
+Other repos add theirs on their next sync. An inherited key no repo claims is
+never deleted automatically; `/vwf:doctor` reports it as drift.
 
 **The lockfile, in the same consented step.** A `local_plugin` block that names
 `stackgen-lsp` is rewritten to the `vwf-tools` names, `registered:` following
@@ -320,8 +330,9 @@ takes one of two paths:
   in the repo, included, and every `.mcp.json` key the lockfile does not record.
   It is reported by name and left in place, in `.mcp.json` and in the top-level
   list. A generated component's server reaches `vwf-tools` when
-  `/stackgen:stackgen-sync` regenerates it, through the generator's own review
-  and reputation check.
+  `/stackgen:stackgen-sync` regenerates it, its declaration researched from
+  [fresh sources](#what-a-component-declares), through the generator's own
+  review and reputation check.
 
 The removal from the repo's `.mcp.json` is its own consent line, which removes
 only keys the move landed in the manifest, never a key the user wrote, and

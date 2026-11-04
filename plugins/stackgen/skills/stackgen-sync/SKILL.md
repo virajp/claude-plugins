@@ -122,6 +122,9 @@ user's clock.
    component alone (the pipeline in `/stackgen:stackgen-stack-template`'s
    references — fresh research against its recorded citations, reviewer
    gate included) and diff its output against the repo's copy. A
+   declaration bound for `vwf-tools` is the exception: it is researched
+   from fresh sources alone, never from those citations or any other text
+   the repo holds, because a repo can plant them. A
    regenerated component goes through the generator and so through its
    `stackgen-reputation` check: every concrete name it emits is re-checked
    at regeneration, a name that passed at first generation included, and
