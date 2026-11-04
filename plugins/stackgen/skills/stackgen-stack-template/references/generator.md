@@ -151,11 +151,12 @@ the composition's single consent gate and landing. Generation is
    before the `--`), `npm:` for `npx`, `pnpx`, `bunx`, `bun x`, `npm exec`,
    `pnpm dlx` and `yarn dlx`, `pypi:` for `uvx`, `uv run` and `pipx run`. With
    no package flag the package is the runner's first positional. `--package`,
-   `-p` and `--from` name the package, each time they appear and on either
-   side of a subcommand, and the positional is then a bin of it, not a package;
-   `--with` adds a package beside the positional.
+   `-p`, `--from` and `--spec` name the package, each time they appear and on
+   either side of a subcommand, and the positional is then a bin of it, not a
+   package; `--with` adds a package beside the positional.
    `mise x -- pnpm --package=a --package=b dlx b` lists pnpm's `mise:` name,
-   `npm:a` and `npm:b`; `npx -p evil ok` lists `npm:evil`. A chain that cannot
+   `npm:a` and `npm:b`; `npx -p evil ok` lists `npm:evil`;
+   `pipx run --spec evil ok` lists `pypi:evil`. A chain that cannot
    be read this way — a runner that fetches and is not named here, a package
    spec that is no registry name (`github:…`, `git+…`, a path) — stops
    generation as `UNRESOLVED:`.
@@ -176,7 +177,8 @@ the composition's single consent gate and landing. Generation is
 
    - **A shell, or an interpreter's inline code,** as a server's command or
      anywhere in its chain, by any path: every shell, with or without `-c`
-     (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`); every inline-code form of
+     (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`), and a shell that `env`
+     starts counts as a shell (`env sh -c`); every inline-code form of
      every interpreter (`node -e`, `node -p`, `python -c`, `perl -e`,
      `ruby -e`, `php -r`, `bun -e`, `deno eval`, `npx -c`); and a flag that
      loads code beside the tool named (`node --import`, `node --require`).
@@ -187,6 +189,12 @@ the composition's single consent gate and landing. Generation is
      a shell load or run something (`NODE_OPTIONS`, `NODE_PATH`, `PYTHONPATH`,
      `PYTHONSTARTUP`, `PERL5OPT`, `RUBYOPT`, `JAVA_TOOL_OPTIONS`, `BASH_ENV`,
      `ENV`, `ZDOTDIR`, `LD_PRELOAD`, `DYLD_*`, `PATH`).
+
+   **Where the vetting ends.** The generator vets the names that it can read
+   from the declared command. The consent gate shows the full command and its
+   env values: `command`, `args`, the `env` keys and their values, and `url`,
+   per [the local plugin](local-plugin.md). The person at the gate is the
+   control for any form that the vetting does not parse.
 
    A SwiftPM name is read
    from the dependency's package URL, the host kept (`github.com` included). A

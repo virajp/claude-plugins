@@ -101,8 +101,9 @@ edits. You never write files.
     tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
     `user_mcp_servers:` and `lsp_servers:` commands, every package a server's
     runner chain fetches (nested runners, `--package`, `-p`, `--from`,
-    `--with`, `dlx`, the positional a runner starts when it has no package
-    flag), `user_mcp_servers:` `url` hosts, the host of any URL or bare host
+    `pipx run --spec`, whose name is the one vetted, `--with`, `dlx`, the
+    positional a runner starts when it has no package flag),
+    `user_mcp_servers:` `url` hosts, the host of any URL or bare host
     (a hostname or IP address with no scheme) in either kind of entry's `args`
     or `env` values, action references, image references — and
     look each one up in the verdict table you were handed.
@@ -111,7 +112,8 @@ edits. You never write files.
     read (a fetching runner the generator's rule does not name, a package spec
     that is no registry name); a server's command, or any link of its chain,
     that is a shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`, by any path,
-    with or without `-c`), an interpreter's inline-code form (`node -e`,
+    with or without `-c`, and a shell that `env` starts, as in `env sh -c`),
+    an interpreter's inline-code form (`node -e`,
     `python -c`, `perl -e`, `npx -c` and the like) or a flag that loads code
     beside the tool named (`node --import`, `node --require`); an `args` or
     `env` value that is or embeds a `data:` or `file:` URL; and a code-loading

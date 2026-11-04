@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "BLOCKED",
-    "detail": "BLOCKED at wave 2 — U8 UNRESOLVED: security loop did not converge after D32 (3, 2, 1, 2, 3 findings over five rounds, then a closing pass). The D32 fixes landed and two of the three round 5 findings closed. Open on generator.md:152 and reviewer check 10: pipx run is named without --spec, so pipx run --spec evil ok goes unvetted; env sh -c is not literally covered. Ruling needed: fix these on U2 and let U8 count that closing fix as its last, or rule where vetting of generated servers ends; see G21. U6, U7 skipped (depend on U8). Worktree .worktrees/all-2026-11-04-0903"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-04T13:55:17Z in .worktrees/all-2026-11-04-0903 — resume at U8 under D33"
   },
   "consent": {
     "merge": true,
@@ -98,7 +98,7 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-04T03:36:39.159Z",
-      "ended": "2026-11-04T12:39:11.326Z",
+      "ended": "2026-11-04T13:57:25.735Z",
       "commit": "196760ef",
       "rounds": 2
     },
@@ -202,7 +202,7 @@
         "U8"
       ],
       "waits": "",
-      "status": "skipped",
+      "status": "pending",
       "started": "",
       "ended": "2026-11-04T12:44:43.735Z",
       "commit": "",
@@ -223,7 +223,7 @@
         "U6"
       ],
       "waits": "",
-      "status": "skipped",
+      "status": "pending",
       "started": "",
       "ended": "2026-11-04T12:44:43.807Z",
       "commit": "",
@@ -245,9 +245,9 @@
         "U5"
       ],
       "waits": "",
-      "status": "unresolved",
+      "status": "running",
       "started": "2026-11-04T04:03:33.851Z",
-      "ended": "2026-11-04T12:44:43.664Z",
+      "ended": "",
       "commit": "",
       "rounds": 5,
       "range": {
@@ -265,9 +265,9 @@
     },
     {
       "id": "W2",
-      "status": "failed",
+      "status": "running",
       "started": "2026-11-04T04:03:33.814Z",
-      "ended": "2026-11-04T12:44:43.880Z"
+      "ended": ""
     },
     {
       "id": "W3",
