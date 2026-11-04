@@ -99,14 +99,25 @@ edits. You never write files.
 10. **Every name has a verdict.** Grep the generated component for every
     concrete third-party name it emits — `mise_tool` entries, runner-invoked
     tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
-    `user_mcp_servers:` and `lsp_servers:` commands, `user_mcp_servers:`
-    `url` hosts, the host of any URL in either kind of entry's `args` or
-    `env` values, action references, image references — and
+    `user_mcp_servers:` and `lsp_servers:` commands, every package a server's
+    runner chain fetches (nested runners, `--package`, `-p`, `--from`,
+    `--with`, `dlx`, the positional a runner starts when it has no package
+    flag), `user_mcp_servers:` `url` hosts, the host of any URL or bare host
+    (a hostname or IP address with no scheme) in either kind of entry's `args`
+    or `env` values, action references, image references — and
     look each one up in the verdict table you were handed.
-    A name with no row is a gap; a row reading `block` is a gap. A
-    `user_mcp_servers:` or `lsp_servers:` command that is a shell wrapper
-    (`sh`, `bash`, `sh -c …`), or whose runner starts one, is a gap whatever
-    the table says. You do
+    A name with no row is a gap; a row reading `block` is a gap. Each of these
+    is a gap whatever the table says: a chain whose fetched packages cannot be
+    read (a fetching runner the generator's rule does not name, a package spec
+    that is no registry name); a server's command, or any link of its chain,
+    that is a shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`, by any path,
+    with or without `-c`), an interpreter's inline-code form (`node -e`,
+    `python -c`, `perl -e`, `npx -c` and the like) or a flag that loads code
+    beside the tool named (`node --import`, `node --require`); an `args` or
+    `env` value that is or embeds a `data:` or `file:` URL; and a code-loading
+    variable (`NODE_OPTIONS`, `NODE_PATH`, `PYTHONPATH`, `BASH_ENV`,
+    `LD_PRELOAD`, `DYLD_*`, `PATH` and the like) set as an `env` key or a
+    `VAR=value` element of `args`. You do
     **no lookup of your own** — no registry, no network, nothing beyond the
     table: the verdicts are the generator's to obtain and yours only to
     reconcile against what the artifact actually names.

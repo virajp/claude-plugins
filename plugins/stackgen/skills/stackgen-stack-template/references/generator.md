@@ -117,7 +117,8 @@ the composition's single consent gate and landing. Generation is
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
    `uv run --with`, `uvx`), every `user_mcp_servers:` and `lsp_servers:`
-   command, every `user_mcp_servers:` `url`, every URL in either kind of
+   command, every package a server's runner chain fetches, every
+   `user_mcp_servers:` `url`, every URL or bare host in either kind of
    entry's `args` or `env` values,
    every action reference, every image reference, every
    dependency in a `Package.swift`, and every Maven dependency and Gradle
@@ -140,19 +141,54 @@ the composition's single consent gate and landing. Generation is
    | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
    | a `user_mcp_servers:` entry's `url`          | `host:<hostname>`                           |
    | any URL in a server's `args` or `env` value  | `host:<hostname>`                           |
+   | a bare host in a server's `args` or `env`    | `host:<hostname>`                           |
 
    A server is a `user_mcp_servers:` or an `lsp_servers:` entry, and the two
-   take the same rules. A server's command takes the prefix of the registry
-   its runner fetches from — `npm:` for `npx`, `pypi:` for `uvx`, `mise:` for
-   `mise x --` — and the name is the tool the runner starts, the first `args`
-   element after the runner's own. An MCP `url` is vetted by its
+   take the same rules. A server's **chain** is its command and every runner
+   nested in its `args`, however deep, and every package the chain fetches is
+   listed, with the prefix of the registry the runner that fetches it reads:
+   `mise:` for `mise x` (the tool it starts after `--`, and each tool named
+   before the `--`), `npm:` for `npx`, `pnpx`, `bunx`, `bun x`, `npm exec`,
+   `pnpm dlx` and `yarn dlx`, `pypi:` for `uvx`, `uv run` and `pipx run`. With
+   no package flag the package is the runner's first positional. `--package`,
+   `-p` and `--from` name the package, each time they appear and on either
+   side of a subcommand, and the positional is then a bin of it, not a package;
+   `--with` adds a package beside the positional.
+   `mise x -- pnpm --package=a --package=b dlx b` lists pnpm's `mise:` name,
+   `npm:a` and `npm:b`; `npx -p evil ok` lists `npm:evil`. A chain that cannot
+   be read this way — a runner that fetches and is not named here, a package
+   spec that is no registry name (`github:…`, `git+…`, a path) — stops
+   generation as `UNRESOLVED:`.
+
+   An MCP `url` is vetted by its
    host alone, never its path, query or credentials, and so is a URL in
    `args` or in an `env` value: `npx mcp-remote <url>` lists the runner's
    package and the `host:` name both, `env: { API_URL: <url> }` lists the
    `host:` name beside the command's, and the `host:` row blocks either. A
-   generated shell wrapper as a server's command, or as the tool a runner
-   starts (`sh`, `bash`, `sh -c …`), names no one thing
-   to vet, so it stops generation as `UNRESOLVED:`. A SwiftPM name is read
+   **bare host** takes the same row: an `args` element or `env` value that
+   reads as a hostname or an IP address, with no scheme, with or without a
+   port or path (`API_HOST: evil.example.com`, `10.0.0.1:9000`), `localhost`
+   among them. A dotted value that could be a file or a host is a host, a
+   `${VAR}` reference names none, and the default it carries is read as a value.
+
+   Three forms name no one thing to vet, so each stops generation as
+   `UNRESOLVED:`, whatever the verdict table says:
+
+   - **A shell, or an interpreter's inline code,** as a server's command or
+     anywhere in its chain, by any path: every shell, with or without `-c`
+     (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`); every inline-code form of
+     every interpreter (`node -e`, `node -p`, `python -c`, `perl -e`,
+     `ruby -e`, `php -r`, `bun -e`, `deno eval`, `npx -c`); and a flag that
+     loads code beside the tool named (`node --import`, `node --require`).
+   - **A `data:` or `file:` value:** an `args` element or `env` value that is
+     such a URL or embeds one.
+   - **A code-loading variable,** whatever its value, set as an `env` key or
+     as a `VAR=value` element of `args`: one that makes a runtime, a loader or
+     a shell load or run something (`NODE_OPTIONS`, `NODE_PATH`, `PYTHONPATH`,
+     `PYTHONSTARTUP`, `PERL5OPT`, `RUBYOPT`, `JAVA_TOOL_OPTIONS`, `BASH_ENV`,
+     `ENV`, `ZDOTDIR`, `LD_PRELOAD`, `DYLD_*`, `PATH`).
+
+   A SwiftPM name is read
    from the dependency's package URL, the host kept (`github.com` included). A
    Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
    Ruby and .NET tools have no prefix of their own: they are mise tools,
@@ -177,8 +213,8 @@ the composition's single consent gate and landing. Generation is
    before the step resumes. The generator never swaps a name silently — a
    swap is a new recommendation, and it is the user's. No source vets a
    remote host, so a `host:` row always reads `block`, and only a stdio
-   command that clears the check, with no URL in its `args` or `env` values,
-   can replace it. `warn` rows travel
+   command that clears the check, with no URL or bare host in its `args` or
+   `env` values, can replace it. `warn` rows travel
    with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
    the same way a Context7 outage does (the preconditions above): a name
    whose sources could not be reached is never landed on an inferred
