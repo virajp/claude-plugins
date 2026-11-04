@@ -210,7 +210,10 @@ That is the two definitions doing different jobs, not disagreeing.
 
 Say the **resolved set** in one line before doing anything else: the base, then
 each member with `present` or `absent`, and each repo's mode with the evidence
-that decided it.
+that decided it. Where any repo resolved `shaped`, end that line with: the survey
+runs `setup:configs --dry-run` in each shaped repo mise trusts, before any
+consent: it writes nothing in the repo, refreshes `~/.cache/bootstrap` and runs
+bootstrap's `main` with no pin.
 
 ### The clean-tree check
 
@@ -406,10 +409,19 @@ reads which it was.
 
 **Green, per repo, once the step ends.** Green means the repository has
 `.config/bootstrap.toml` and `mise run setup:configs --dry-run` shows no change.
-Here, once the step ends, that dry-run runs code inside `init`'s one consent, the
-repo's own `setup:configs` task and the `main` branch of bootstrap with no pin,
-and the trust gate of mise is not tied to file content, so it does not vouch for
-either. Read that command by its exit code and its **stderr**, where it prints each line
+Here, once the step ends, that dry-run runs code inside `init`'s one consent: it
+writes nothing in the repo, but the repo's own `setup:configs` task refreshes
+bootstrap's clone under `~/.cache/bootstrap` and executes the `main` branch of
+bootstrap from that clone with no pin, and the trust gate of mise is not tied to
+file content, so it does not vouch for either.
+
+Run that dry-run only when mise lists the repo as trusted: `mise trust --show`,
+run in that repo, lists a path inside the repo, and every such line reads
+`trusted`. A parent's line does not count. Otherwise do not run it: the repo is
+**drift unknown**, with the reason `repo not trusted by mise`. That check is a
+limit, not a safeguard: it stops only a clone mise has never run.
+
+Read that command by its exit code and its **stderr**, where it prints each line
 with the prefix `repo-sync:`:
 
 - After that prefix, a line that starts with `would` — `would update`,
@@ -435,11 +447,14 @@ that still holds that file is not empty: its section carries the delete line, th
 one question is asked, and the deletion rides `init`'s own commit there. Where
 every repo reads green, the bootstrap step still does not run, and the survey's
 read is the green the deletion goes on. A repo that reads drift, or drift unknown,
-takes the step in the plan like any other. This survey read runs before the one
-consent, and no consent follows it where the plan comes out empty, as part of the
-explicit `/vwf:setup` run the user started: it executes the repo's own
-`setup:configs` task and the `main` branch of bootstrap with no pin, and the trust
-gate of mise is not tied to file content.
+takes the step in the plan like any other, and that includes a repo that fails
+the trust check, which is not run. This survey read runs before the one consent,
+and no consent follows it where the plan comes out empty, as part of the explicit
+`/vwf:setup` run the user started: it writes nothing in the repo, but it executes
+the repo's own `setup:configs` task, which refreshes bootstrap's clone under
+`~/.cache/bootstrap`, and the `main` branch of bootstrap from that clone with no
+pin, and the trust gate of mise is not tied to file content. So the resolved-set
+line in Step 0 prints this, whatever the plan comes to.
 
 ### The record of a keep
 

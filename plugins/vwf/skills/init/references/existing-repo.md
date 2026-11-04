@@ -15,8 +15,8 @@ is bootstrap's `docs/sync`, reached through SKILL.md's bootstrap step, and
 runs *Missing files* below. Everything else in this file is this pipeline's.
 
 Three phases, in order and never interleaved: **survey**, **plan**, **apply**.
-The survey writes nothing. The plan is one document. The apply touches only
-what the survey listed, after the bootstrap step.
+The survey writes nothing in the repo. The plan is one document. The apply
+touches only what the survey listed, after the bootstrap step.
 
 **All three run across the resolved repo set, not across one repo.** The survey
 runs its passes **in each repo** that resolved to this pipeline's modes. The plan
@@ -29,13 +29,14 @@ the same one consent; nothing about the set changes which pipeline a repo reads.
 
 ## Survey
 
-Read-only, and exhaustive before anything is printed. It starts with one read
-per `shaped` repo, whether it is green, by the read SKILL.md's bootstrap step
-states: where it is not, the bootstrap step is a row of that repo's section, and
-an `old layout` repo always carries that row. That read executes code before the
-one consent, as SKILL.md's *The same read is what a survey does* states. Two
-passes then run **per repo**: each reads, and reports on, the repo it is running
-in and no other.
+Exhaustive before anything is printed, and it writes nothing in the repo. It
+starts with one read per `shaped` repo, whether it is green, by the read
+SKILL.md's bootstrap step states, its trust check included: where it is not, the
+bootstrap step is a row of that repo's section, and an `old layout` repo always
+carries that row. That read executes code before the one consent and refreshes
+bootstrap's clone under `~/.cache/bootstrap`, as SKILL.md's *The same read is
+what a survey does* states. Two read-only passes then run **per repo**: each
+reads, and reports on, the repo it is running in and no other.
 
 **An absent member is surveyed once its clone has run.** A member the resolution
 found and this machine does not have has nothing on disk to read, so its section
