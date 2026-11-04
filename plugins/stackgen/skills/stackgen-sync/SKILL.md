@@ -209,9 +209,9 @@ user's clock.
    - the bootstrap delta of step 2 — each instruction as it will be sent,
      on the terms of step 7 of the bootstrap handoff;
    - anything from step 4 — the **tier-3** line, which shows each server's
-     full declaration (`command`, `args`, the names of its `env` keys, `url`),
-     says plainly that it writes to this machine outside the repo and that a
-     server landing in `vwf-tools`, with any account grant it holds, is
+     full declaration (`command`, `args`, the `env` keys and their values,
+     `url`), says plainly that it writes to this machine outside the repo and
+     that a server landing in `vwf-tools`, with any account grant it holds, is
      reachable from every repo on this machine, not only the one that picked
      it, and where a
      registration or de-registration is involved **prints the `claude`

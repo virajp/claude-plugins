@@ -284,10 +284,10 @@ writes to a repo, and every write it makes is consent-gated and committed once.
 
    - **The manifest write.** Show the exact `lspServers` and `mcpServers`
      keys being added, each with its full declaration (`command`, `args`, the
-     names of its `env` keys, `url`) and whether it is new or already present
-     from another repo. It **merges, never owns** — an existing key the claims
-     file does not list for this repo is left untouched, whatever the committed
-     lockfile names, and a key another repo already
+     `env` keys and their values, `url`) and whether it is new or already
+     present from another repo. It **merges, never owns** — an existing key the
+     claims file does not list for this repo is left untouched, whatever the
+     committed lockfile names, and a key another repo already
      contributed is reported, not rewritten. This repo's path joins each key
      in the claims file beside the manifest, in the same step.
    - **The registration.** Print the two commands and ask; **never run

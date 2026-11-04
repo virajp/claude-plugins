@@ -183,12 +183,12 @@ each other**. Declining either leaves everything else landed.
 
 **1 — the manifest write.** Show the exact `lspServers` and `mcpServers`
 keys, each with its state from the table above and its full declaration as it
-would be written: `command`, `args`, the names of its `env` keys, `url`. A key
-and a state alone are not consent to a process. Say plainly that this writes
-outside the repo, onto this machine, at user scope, that collaborators get none
-of it, and that a server landing in `vwf-tools`, with any account grant it
-holds, is reachable from every repo on this machine, not only the one that
-picked it. The claims file is written in this step.
+would be written: `command`, `args`, the `env` keys and their values, `url`. A
+key and a state alone are not consent to a process. Say plainly that this
+writes outside the repo, onto this machine, at user scope, that collaborators
+get none of it, and that a server landing in `vwf-tools`, with any account
+grant it holds, is reachable from every repo on this machine, not only the
+one that picked it. The claims file is written in this step.
 Declined → the servers are simply absent;
 the plan says so and no `local_plugin` block is written.
 
