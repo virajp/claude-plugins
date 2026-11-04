@@ -6,9 +6,9 @@ order: 2
 
 One writer, and it is worth being clear about what it puts where.
 
-| Written by              | What                                            |
-| ----------------------- | ----------------------------------------------- |
-| `claude plugin install` | the plugins: skills, agents, hooks, MCP servers |
+| Written by              | What                               |
+| ----------------------- | ---------------------------------- |
+| `claude plugin install` | the plugins: skills, agents, hooks |
 
 **`pnpx @virajp.dev/claude-plugins` is not a second writer.** It sequences
 `claude plugin` and writes nothing itself: the plugin flags (`--all`, `--user`,

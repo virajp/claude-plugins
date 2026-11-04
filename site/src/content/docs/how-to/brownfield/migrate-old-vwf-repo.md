@@ -66,15 +66,21 @@ move, never as a question. Jotter's `.config/vwf.yaml` still carries the
 `memory:` block an older format wrote, and its root a `mempalace.yaml`: the
 `config_format` 24 step offers each for removal as one numbered row.
 
-Five lineage rows are about recent formats rather than about old spellings, and
-they behave differently from each other. `config_format` **23**, the current
-one, retires the top-level `answers:` block: the secrets provider and each
+Six lineage rows are about recent formats rather than about old spellings, and
+they behave differently from each other. `config_format` **25**, the current
+one, adds the top-level `addons:` list of optional tools and keeps what a repo
+has: `notion` leaves every `backing_template` and joins the list when a list or
+a repo's stackgen lockfile names it, `taste-skill` joins when a lockfile records
+it, and one yes/no question asks whether to keep Context7, the server vwf's
+manifest used to ship. It is one numbered row; declined, the stamp stays at 24
+and the next pass offers it again. `config_format` **23** retires the top-level
+`answers:` block: the secrets provider and each
 repo's forge now live in that repo's own `.config/stackgen.yaml`, and the
 dependency-bot key goes with the bot config it chose. That move is **not shipped
 yet** — it arrives with a later `/vwf:setup reshape`, together with the move of
 a repo shaped on the old mise layout onto `.config/stackgen.yaml`. Until then a
 repo still stamped 22 stays exactly as it is: its `answers:` block is ignored
-wherever it would have been read, `/vwf:doctor` reports 22 against 23, and a
+wherever it would have been read, `/vwf:doctor` reports 22 against 25, and a
 repo still carrying `.config/mise/conf.d/tools.toml`,
 `.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` makes setup and
 `init` name it as **shaped on the old layout** and stop rather than reshape it.

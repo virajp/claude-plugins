@@ -202,11 +202,11 @@
         "U8"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-04T12:44:43.735Z",
+      "status": "green",
+      "started": "2026-11-04T14:06:59.753Z",
+      "ended": "2026-11-04T14:16:42.463Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -271,8 +271,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T14:06:59.708Z",
       "ended": ""
     },
     {
@@ -813,6 +813,13 @@
       "unit": "U1",
       "stage": "edit",
       "text": "D30 seeds every key the lockfile claims; a U8 security fix narrowed local-plugin.md:301-307 to keys whose old-manifest declaration matches the shipped pack or a same-run generator emission, since a committed lockfile cannot earn a claim · the narrowing stands; a generated or stale key stays unclaimed and kept, and a ruling may widen it",
+      "state": "open"
+    },
+    {
+      "id": "G23",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "07-docs.md ties node and pnpm to the context7 tool alone, yet vwf scripts still need node · split it: node stays required, pnpm is needed when context7 is picked",
       "state": "open"
     }
   ],

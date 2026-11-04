@@ -249,7 +249,8 @@ gates are bootstrap's.
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
   subtler than it sounds — and it reads the manifest's `mcpServers` invocations
-  beside the prose, where the bar is not "names no tool" (a manifest must name
+  and every stackgen pack's `user_mcp_servers:` beside the prose, where the bar
+  is not "names no tool" (a manifest must name
   something executable) but that the runner is **overridable**. And the
   plugin-root rule caught a defect that had shipped in all four render trees for
   months: `${CLAUDE_PLUGIN_ROOT}` names only its *own* plugin, so `typescript`

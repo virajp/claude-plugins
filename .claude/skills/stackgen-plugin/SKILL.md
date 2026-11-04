@@ -81,7 +81,7 @@ restate a count or a rule that an asset below already owns.
 | `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `assets/output-tree.md`       | where a materialization lands, the lockfile, the two targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `assets/ids.md`               | one **slug rule**, two independent tokens: a project's **id** (`p:<id>/` and the commit scopes) and a repo's **name** (`REPO_NAME`, the checkout folder); flags name member **repos**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin; the newest is `contracts/workspace.md`, the `workspace` category's, which states how the agent **reaches** the team's knowledge workspace and what it may read and write, and is the third contract to realize no vwf token at all. Before it, `contracts/web-head.md`, what **any** web framework pack — shipped or generated — realizes for a project declaring `site`, or `webapp` with `seo`: the head set, the icon sizes, the manifest, robots and sitemap, and the icon task; and before that `contracts/audit.md`, the `audit` category's, realizing vwf's `audit-store` and deliberately beside `observability.md` rather than inside it |
@@ -104,15 +104,28 @@ pins, stackgen resolves its composition and dispatches **per component**:
 2. An uncovered component is **generated**: resolve the kind and its topic bar →
    detect the real stack → one Context7 research pass per topic → instantiate
    vwf's principles catalog with citations → at assemble, every concrete
-   third-party name the component emits (packages, runner-invoked tools,
-   actions, images, SwiftPM packages, Maven artifacts and Gradle plugins, mise
-   tools as `mise:<backend>:<path>@<version>`) through `stackgen-reputation` —
-   eight prefixes, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
+   third-party name the component emits (packages, runner-invoked tools, a
+   `user_mcp_servers:` or `lsp_servers:` entry's whole runner chain and every
+   URL or bare host in its `args` and `env` values, actions, images, SwiftPM
+   packages, Maven artifacts and Gradle plugins, mise tools as
+   `mise:<backend>:<path>@<version>`) through `stackgen-reputation` — nine
+   prefixes, `host:` the newest, which always blocks since no source vets a
+   remote host, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
    halting the component with the verdict table until the user names a
    replacement, never a silent swap → the `stackgen-skill-reviewer` gate, capped
    at **four rounds**, after which residuals are reported rather than looped;
    its tenth check reads the verdict table it is handed — every name has a row,
-   none reads `block` — and it stays offline. Context7 or a reputation source
+   none reads `block` — and it stays offline. A shell or inline code in a chain,
+   a `data:` or `file:` value and a code-loading variable each stop generation
+   as
+   `UNRESOLVED:`. The vetting ends at what it can read from the declared
+   command:
+   the consent gate shows the full command and its env values, and the person at
+   the gate is the control for any form it does not parse. **The generator's
+   context7 halt:** generation needs a Context7 server from some source — the
+   `context7` addon in `vwf-tools`, a user-level MCP, another plugin — and halts
+   without one, naming the remedy: add `context7` in `/vwf:architecture`'s tools
+   menu, run `/vwf:setup`, restart the session. Context7 or a reputation source
    unreachable → **halt, never guess**. The verdict table is shown whole beside
    the reviewer's verdict at the dry-run consent gate; a template read-back
    (`/vwf:plan`, `/vwf:execute`) never re-checks.
@@ -189,9 +202,20 @@ the canvas from the repo, waits for **Done**, then applies every open comment).
 The server is the skill's own `scripts/serve.mjs`, a single-file Node program
 with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
 canvas, carries no auth and no TLS, and appends each comment to a **committed**
-`comments/<flow>--<platform>.yaml`. It names `taste-skill@taste-skill`, at user
-scope, in the `## Claude plugins` section of its `conventions.md`, and the
-materializer asks bootstrap to install it.
+`comments/<flow>--<platform>.yaml`. It does not install `taste-skill`:
+`design-session` halts plainly when the plugin is absent, naming the tools menu,
+and the three import skills do not need it.
+
+**The `addon` axis holds the optional tools**, each a pack and a bundle of type,
+kind and axis `addon`, no bundle flagged `default: true`: `addon/context7` and
+`addon/notion` declare `user_mcp_servers:`, and `addon/taste-skill` names
+`taste-skill@taste-skill`, at user scope, in the `## Claude plugins` section of
+its `conventions.md`, which the materializer asks bootstrap to install. The menu
+carries them for `/vwf:architecture`'s tools round, with an optional `needed_by`
+note on an entry. `.config/vwf.yaml`'s product-level `addons:` list records the
+pick, and `/vwf:setup` materializes each slug in the base repo alone, on every
+run, and removes a dropped one. `addon` is the eighth axis and not a tool axis:
+"the three tool axes" stays `design`, `cicd` and `stylesheet`.
 
 A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,
 since 2026-10-10: its keys a subset of the bundle's `platforms:`, the first OS
@@ -206,15 +230,23 @@ it, reads as no OS known.
 
 Both paths land **directly in the repo's committed `.claude/` tree** — output
 closed to skills, agents, hooks and rules — recorded per component in
-`.claude/stackgen/lock.yaml`. Three targets sit outside it, each **merging,
-never owning**, removed only by subtraction of the keys the lockfile recorded:
+`.claude/stackgen/lock.yaml`. Two targets sit outside it, each **merging, never
+owning**, removed only by subtraction of the keys the lockfile recorded:
 
-- the project's own `.mcp.json`;
-- a generated **local plugin** at the fixed path
-  `~/.claude/plugins/local/stackgen-lsp/`, which exists because `lspServers` is
-  a manifest-only feature no project file can express — the one way to provide a
-  language server is to *be* a plugin. User scope is safe because every
-  generated `lspServers` entry **must** carry an `extensionToLanguage` map;
+- a generated **local plugin**, `vwf-tools`, at the fixed path
+  `~/.claude/plugins/local/vwf-tools/`, which exists because `lspServers` is a
+  manifest-only feature no project file can express — the one way to provide a
+  language server is to *be* a plugin — and which holds every MCP server too,
+  from a pack's `user_mcp_servers:`, the only MCP key. **The project-scoped
+  `mcp_servers:` key and the `.mcp.json` write path are retired**; a machine
+  with
+  the older `stackgen-lsp` plugin is offered one migration, and a declaration is
+  never copied out of a repo's `.mcp.json`, only taken from a shipped pack. A
+  `claims.json` beside the manifest maps each key to the repos claiming it, so a
+  removal drops a key only when no repo claims it. User scope is safe for a
+  language server because every generated `lspServers` entry **must** carry an
+  `extensionToLanguage` map; an MCP server has no such map, so the gate states
+  its reach across every repo on the machine;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
   Since 2026-10-23 the tier is an **allowlist**, and rule 11 refuses any other
@@ -252,7 +284,7 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   `assets/output-tree.md` and the materializer reference both say so.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
-`settings.json`, `.mcp.json`, a pack's `config/` tree and the bootstrap
+`settings.json`, a pack's `config/` tree and the bootstrap
 instructions are never written or sent without their own separate consent lines;
 and the local plugin is two separately declinable items — the manifest write,
 and the user-scoped registration, whose two `claude plugin` commands are

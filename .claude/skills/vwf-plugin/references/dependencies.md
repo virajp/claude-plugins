@@ -11,7 +11,7 @@ marketplace itself**, so installing `vwf` needs no other marketplace registered.
 It is authored here.
 
 **`stackgen` is a dependency because without it the stack menu is empty.** The
-seven stack axes are closed to what the installed stack plugins declare, and
+eight stack axes are closed to what the installed stack plugins declare, and
 since `config_format` 14 there is no *other (describe)* escape. Since 16 that is
 no longer a dead end — the user can defer the axis as `unresolved` and keep
 defining the product — but deferral only moves the wall: `plan` and `execute`
@@ -74,10 +74,10 @@ language server is an ordinary finding; a **degradation** finding in §5 is,
 since 2026-09-18, a forge CLI (`gh`) that is absent, not logged in, or without
 the `project` scope, which leaves `/vwf:backlog` with nothing to read and every
 planner's recall of it empty, since the backlog is a GitHub Project with no file
-fallback — and the **Context7 runner is not checked at all**, a missing one
-surfacing as a dead MCP server. That runner is `pnpm dlx` by default and
-`${CONTEXT7_RUNNER}` overrides it, so what a check would have to verify is
-whatever the user pinned, not `pnpm`.
+fallback — and where a product picks the `context7` tool, the **Context7 runner
+is not checked at all**, a missing one surfacing as a dead MCP server. That
+runner is `pnpm dlx` by default and `${CONTEXT7_RUNNER}` overrides it, so what a
+check would have to verify is whatever the user pinned, not `pnpm`.
 
 So the trade is slightly worse than "doctor already blocked on it": one blocks
 once a stack is pinned, one degrades, and one is silent. It was still worth
@@ -86,12 +86,22 @@ not ask about — but `readme.md`'s caveat states the gap rather than implying
 doctor covers it, and that is the honest version. **If a Context7-runner check
 is ever added to doctor, this paragraph is what should shrink.**
 
-`markdown` and `context7` used to be on that list and are gone as plugins: vwf
-**absorbed** them. Their two skills (`documentation-standards`, `readme`) are
-vwf skills now, and the Context7 docs server is vwf's one `mcpServers` entry.
-Both were authored here, required by the workflow, and useful only alongside it
-— a separate plugin bought nothing but a dependency edge. `/markdown:readme` is
-therefore `/vwf:readme`, and vwf-only; that is intended.
+`markdown` used to be on that list and is gone as a plugin: vwf **absorbed** it.
+Its two skills (`documentation-standards`, `readme`) are vwf skills now,
+authored
+here, required by the workflow, and useful only alongside it — a separate plugin
+bought nothing but a dependency edge. `/markdown:readme` is therefore
+`/vwf:readme`, and vwf-only; that is intended.
+
+`context7` went the same way and then left. **vwf declares no MCP server.** No
+vwf skill, agent or reference uses Context7 at run time, so its one `mcpServers`
+entry installed a server for everyone that vwf itself never called. It is now a
+stackgen `addon` pack, `addon/context7`, picked on `/vwf:architecture`'s tools
+round and landed in `vwf-tools` by `/vwf:setup`, and the one thing that needs
+it,
+the stackgen generator, halts with that remedy when no Context7 server is
+reachable from any source. This reverses the absorption; the record is
+[the optional-tools decision](../../../../docs/memory/decisions/2026-11-02-optional-tools-in-vwf-tools.md).
 
 The dependency list is declared in **one** place —
 `plugins/vwf/.claude-plugin/plugin.json` — and the marketplace entry is
@@ -120,7 +130,9 @@ retired, which is the intended direction whenever an entry stops feeling
 arguable. And **the guard's MCP rule was generalized**: it matched the
 plugin-scoped `mcp__plugin_design-tools_` prefix, which a project-scoped
 `.mcp.json` server never produces, so matching only that would have quietly
-stopped catching anything.
+stopped catching anything. It was widened once more when `.mcp.json` stopped
+being a target at all: a design tool's server now lands in `vwf-tools`, whose
+prefix is `mcp__plugin_vwf-tools_<token>__`.
 
 **There is no CI dependency edge at all any more.** vwf owns the
 delivery-pipeline **contract** (`assets/delivery-pipeline.md`), which states

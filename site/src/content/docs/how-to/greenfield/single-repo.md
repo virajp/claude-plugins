@@ -204,7 +204,9 @@ axis, both from `stackgen`. The repo axis is answered once for the checkout
 rather than per project. Because `relay` declares `webapp`, one more round
 follows its design round — the **stylesheet** axis, where Relay pins
 `tailwindcss`; a project declaring neither `site` nor `webapp` is never asked.
-What each axis means and why they never merge:
+Last comes the tools round, once per product, a menu of optional tools with
+nothing preselected: Relay takes whichever it wants, and none is a complete
+answer. What each axis means and why they never merge:
 [stack templates](../../plugins/vwf.md#stack-templates).
 
 Last comes the product-foundations walk — thirteen concerns; the eight elective

@@ -44,8 +44,9 @@ rest of this step is the spine's
 [Install the plugins](./single-repo.md#install-the-plugins).
 
 Then connect the canvas. Claude Design is a remote MCP server, and pinning the
-`claude-design` bundle wires it into the repo's own `.mcp.json` behind its own
-consent line; run `/mcp` and sign in once. Lovable and Stitch are packs of their
+`claude-design` bundle lands it in `vwf-tools`, the local plugin stackgen
+generates on your machine, behind its own consent line; run `/mcp` and sign in
+once. Lovable and Stitch are packs of their
 own and bring different surfaces.
 
 ### 2. /vwf:setup and /vwf:product
