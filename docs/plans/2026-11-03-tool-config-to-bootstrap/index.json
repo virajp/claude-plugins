@@ -81,9 +81,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-04T15:35:27.978Z",
-      "ended": "2026-11-04T15:44:17.612Z",
-      "commit": "3bd21d86",
-      "rounds": 2
+      "ended": "2026-11-04T17:42:24.945Z",
+      "commit": "43d9be72",
+      "rounds": 4
     },
     {
       "id": "U2",
@@ -103,9 +103,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-04T15:35:28.058Z",
-      "ended": "2026-11-04T15:44:17.713Z",
-      "commit": "d8967086",
-      "rounds": 2
+      "ended": "2026-11-04T17:34:36.437Z",
+      "commit": "c22b5007",
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -122,9 +122,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-04T15:35:28.135Z",
-      "ended": "2026-11-04T15:44:17.809Z",
-      "commit": "d0dfa90f",
-      "rounds": 2
+      "ended": "2026-11-04T17:32:47.197Z",
+      "commit": "11d11424",
+      "rounds": 3
     },
     {
       "id": "U4",
@@ -195,14 +195,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "unresolved",
+      "status": "green",
       "started": "2026-11-04T15:59:19.213Z",
-      "ended": "2026-11-04T16:10:28.234Z",
+      "ended": "2026-11-04T17:42:55.860Z",
       "commit": "",
-      "rounds": 2,
+      "rounds": 4,
       "range": {
-        "from": "2dcdb710",
-        "to": "d0dfa90f"
+        "from": "61d46c84",
+        "to": "43d9be72"
       }
     },
     {
@@ -233,7 +233,7 @@
         "U6"
       ],
       "waits": "",
-      "status": "skipped",
+      "status": "pending",
       "started": "",
       "ended": "2026-11-04T16:10:28.313Z",
       "commit": "",
@@ -254,7 +254,7 @@
         "U7"
       ],
       "waits": "",
-      "status": "skipped",
+      "status": "pending",
       "started": "",
       "ended": "2026-11-04T16:10:28.394Z",
       "commit": "",
@@ -270,9 +270,9 @@
     },
     {
       "id": "W2",
-      "status": "failed",
+      "status": "green",
       "started": "2026-11-04T15:59:19.088Z",
-      "ended": "2026-11-04T16:10:28.470Z"
+      "ended": "2026-11-04T17:46:34.735Z"
     },
     {
       "id": "W3",
@@ -838,6 +838,41 @@
       "unit": "U6",
       "stage": "security",
       "text": "bootstrap runs from its main branch with no pin, on explicit dry-runs, and this plan cannot edit bootstrap · ruling D46: the user hands bootstrap a request for a reviewed-commit pin, per docs/prompts in the bootstrap repo",
+      "state": "open"
+    },
+    {
+      "id": "G12",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "D46 calls doctor full mode an explicit run, but /vwf:plan and /vwf:execute run it too, so bootstrap main can run unpinned from an unattended pipeline · doctor discloses this; behaviour unchanged, the pin request of G11 covers it",
+      "state": "open"
+    },
+    {
+      "id": "G13",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U3 verification grep -i MERGE_MODEL hits the lowercase [branch.*].merge_model that D22 requires · read as expected, the check meant the env names",
+      "state": "closed"
+    },
+    {
+      "id": "G14",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but setup second shape check after the materialize pass repeats Step 0 · taken as the same explicit setup run, under Step 0 disclosure; init adoption check (D15) is the same case",
+      "state": "open"
+    },
+    {
+      "id": "G15",
+      "unit": "U1",
+      "stage": "security",
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but init runs it twice more: its green check inside the consent, and its survey on a shaped repo before the consent · both kept as parts of the explicit /vwf:setup run; disclosed at each place in init; the user may rule the survey read moves behind the consent",
+      "state": "open"
+    },
+    {
+      "id": "G16",
+      "unit": "U6",
+      "stage": "security",
+      "text": "D46 requires disclosure of the dry-run in doctor and setup only, never at run time and never in init, and names no trust check in init · the closing pass applies setup trust check and a printed line in init; D46 and 01-init.md would state it",
       "state": "open"
     }
   ],
