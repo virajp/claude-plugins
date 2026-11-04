@@ -397,8 +397,8 @@ describe("the pack config tier", () => {
     "CONTRIBUTING.md",
     "SECURITY.md",
     "LICENSE",
-  ])("flags %s at the config/ tier root — tool-config's or init's", (file) => {
-    // A pack asks tool-config for its lines in these files, or init writes them.
+  ])("flags %s at the config/ tier root — bootstrap's or init's", (file) => {
+    // bootstrap's sync or init writes these; a pack never lands one.
     const root = tree({ alpha: { files: { [`${pack}/${file}`]: "x\n" } } });
     expect(messages(check(root))).toEqual([
       expect.stringContaining("unallowlisted root entry"),
@@ -631,34 +631,6 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  // stackgen:tool-config's assets/ and templates/ land whole as a repo root,
-  // so they are held to the same bar as a pack's config/ tier.
-  const assets = "skills/tool-config/assets";
-  const templates = "skills/tool-config/templates";
-
-  it("accepts the git files at the assets/ root", () => {
-    // tool-config writes these at the root, where only a pack is refused them.
-    const root = tree({
-      stackgen: {
-        files: {
-          [`${assets}/.gitignore`]: ".DS_Store\n",
-          [`${assets}/.gitattributes`]: "* text=auto\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a retired renovate config at the assets/ root", () => {
-    const root = tree({
-      stackgen: { files: { [`${assets}/renovate.json`]: "{}\n" } },
-    });
-    expect(messages(check(root))).toEqual([
-      `tool-config assets/ tree holds an unallowlisted root entry — `
-      + `everything else belongs under .config/: ${assets}/renovate.json`,
-    ]);
-  });
-
   it("walks an init asset tree as a landed tree", () => {
     // init's hygiene assets land in a repo with no plugin installed.
     const hygiene = "skills/init/assets/hygiene";
@@ -688,7 +660,8 @@ describe("the pack config tier", () => {
   });
 
   it("flags an init asset file outside the hygiene allowlist", () => {
-    // init writes the hygiene files alone; every tool config is tool-config's.
+    // init writes the hygiene files alone; every tool config and the issue
+    // forms are bootstrap's.
     const hygiene = "skills/init/assets/hygiene";
     const clean = tree({
       vwf: {
@@ -696,7 +669,6 @@ describe("the pack config tier", () => {
           [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
           [`${hygiene}/SECURITY.md`]: "# Security\n",
           [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
-          [`${hygiene}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
       },
     });
@@ -706,148 +678,27 @@ describe("the pack config tier", () => {
         files: {
           [`${hygiene}/.editorconfig`]: "root = true\n",
           [`${hygiene}/.github/CODEOWNERS`]: "* @me\n",
+          [`${hygiene}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
       },
     });
     expect(messages(check(root)).sort()).toEqual([
       `init asset tree lands a file outside its allowlist — only `
-      + `CONTRIBUTING.md, SECURITY.md, licenses/, .github/ISSUE_TEMPLATE/: `
+      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
       + `${hygiene}/.editorconfig`,
       `init asset tree lands a file outside its allowlist — only `
-      + `CONTRIBUTING.md, SECURITY.md, licenses/, .github/ISSUE_TEMPLATE/: `
+      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
       + `${hygiene}/.github/CODEOWNERS`,
+      `init asset tree lands a file outside its allowlist — only `
+      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
+      + `${hygiene}/.github/ISSUE_TEMPLATE/bug.md`,
     ]
       .sort());
-  });
-
-  it("walks a tool-config asset tree as a landed tree", () => {
-    const task = `${assets}/.config/mise/tasks/code/graph`;
-    const clean = tree({
-      stackgen: {
-        files: {
-          [task]: "#!/usr/bin/env bash\n",
-          [`${assets}/.config/mise/conf.d/_base/mise.toml`]: "[tools]\n",
-        },
-        executable: [task],
-      },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: {
-          [task]: "#!/bin/zsh\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
-          [`${assets}/.prettierrc`]: "{}\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      `mise task file is not executable: ${task}`,
-      expect.stringContaining("does not start with one of"),
-      expect.stringContaining("unallowlisted root entry"),
-      expect.stringContaining("expands to nothing"),
-    ]);
-  });
-
-  it("accepts the repo-local mise skill, held to the landed rules", () => {
-    const landed = `${templates}/.claude/skills/mise/SKILL.md`;
-    const clean = tree({ stackgen: { files: { [landed]: skill("mise") } } });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: {
-          [landed]: "---\nname: mise\ndescription: a: b\n---\n\n"
-            + "See ${CLAUDE_PLUGIN_ROOT}/x.md\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(`${landed}: frontmatter is not valid YAML`),
-      expect.stringContaining("expands to nothing"),
-    ]);
-  });
-
-  it("walks a flat tool-config assets/ and templates/ tree as the repo root", () => {
-    // assets/ and templates/ are one landed tree each, allowed the git root
-    // files plus `.claude/` and `.vscode/`.
-    const flat = "skills/tool-config/assets";
-    const templates = "skills/tool-config/templates";
-    const task = `${flat}/.config/mise/tasks/code/count`;
-    const guarded = `${templates}/.config/mise/tasks/setup/external/pull`;
-    const clean = tree({
-      stackgen: {
-        files: {
-          [task]: "#!/usr/bin/env bash\n",
-          [guarded]: "@@#if EXTERNAL@@\n#!/usr/bin/env bash\n@@/if@@\n",
-          [`${flat}/.gitignore`]: "node_modules/\n",
-          [`${flat}/dprint.json`]: "{ \"extends\": \".config/dprint.json\" }\n",
-          [`${flat}/.vscode/settings.json`]: "{}\n",
-          [`${templates}/.claude/skills/mise/SKILL.md`]: skill("mise"),
-        },
-        executable: [task, guarded],
-      },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: {
-          [`${flat}/.config/x.toml`]: "[x]\n",
-          [`${templates}/.prettierrc`]: "{}\n",
-          [`${templates}/.config/y.toml`]: "# ${CLAUDE_PLUGIN_ROOT}/x.md\n",
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining("unallowlisted root entry"),
-        expect.stringContaining("expands to nothing"),
-      ]),
-    );
-  });
-
-  it("flags any other file under .claude/ in a tool-config tree", () => {
-    // Only the mise skill lands under `.claude/`.
-    const root = tree({
-      stackgen: {
-        files: {
-          [`${templates}/.claude/skills/other/SKILL.md`]: skill("other"),
-        },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      "tool-config templates/ tree lands an unallowlisted file under .claude/ "
-      + "— only .claude/skills/mise/SKILL.md: "
-      + `${templates}/.claude/skills/other/SKILL.md`,
-    ]);
-  });
-
-  it("holds tool-config's templates to the stored and derived names", () => {
-    // No pack keys are in scope there, so any other name renders as missing.
-    const file = `${templates}/.config/claude-status.json`;
-    const clean = tree({
-      stackgen: {
-        files: {
-          [file]: "{ \"projectName\": \"@@PROJECT_NAME@@\" }\n"
-            + "@@#each MEMBER_ENTRIES@@@@.slug@@ @@.@@@@/each@@\n"
-            + "@@#if NODE@@x@@#else@@y@@/if@@\n",
-        },
-      },
-    });
-    expect(messages(check(clean))).toEqual([]);
-    const root = tree({
-      stackgen: {
-        files: { [file]: "@@#if NODE@@\n@@XCODE_VERSION@@\n@@/if@@\n" },
-      },
-    });
-    expect(messages(check(root))).toEqual([
-      `${file}:2: \`@@XCODE_VERSION@@\` names XCODE_VERSION, which is not a `
-      + "template name — tool-config's templates read the stored and derived "
-      + "names alone",
-    ]);
   });
 });
 
 describe("skill scripts", () => {
-  const scripts = "skills/tool-config/scripts";
+  const scripts = "skills/a/scripts";
 
   it("accepts a shebanged executable entry and its lib modules", () => {
     const root = tree({
@@ -1501,216 +1352,6 @@ describe("bundle defaults", () => {
       "bundle `default` is \"true\", not a boolean — the menu preselects on "
       + "`default: true` alone, so any other spelling never preselects and "
       + "reports nothing",
-    ]);
-  });
-});
-
-describe("the exclusion sets", () => {
-  // Four tools, four syntaxes, one convention: the generated trees every gate
-  // skips. Each list is authored by hand in its tool's own spelling, so the
-  // drift is an entry added to some of them — which no tool reports, since each
-  // reads only its own list. The three formatter lists must agree; the scanner's
-  // allowlist is held to a subset of them, since upstream's default config
-  // already skips part of the set and authored source must stay scanned.
-  const gate = "skills/tool-config/assets";
-  const dprint = `${gate}/.config/dprint.json`;
-  const taplo = `${gate}/.config/taplo.toml`;
-  const gitleaks = `${gate}/.config/gitleaks.toml`;
-  const preCommit = `${gate}/.config/pre-commit-config.yaml`;
-
-  const lists = (overrides: Partial<Record<string, string>> = {}) => ({
-    stackgen: {
-      files: {
-        "skills/tool-config/SKILL.md": skill("tool-config"),
-        [dprint]: overrides.dprint ?? JSON.stringify({
-          excludes: ["**/node_modules/", "**/dist/", "**/*.lock", "**/.env.*"],
-        }),
-        [taplo]: overrides.taplo ?? "exclude = [\n"
-            + "  \"**/node_modules/**\",\n  \"**/dist/**\",\n  \"**/*.lock\",\n"
-            + "  \"**/.env.*\",\n]\ninclude = [ \"**/*.toml\" ]\n",
-        [gitleaks]: overrides.gitleaks ?? "[allowlist]\npaths = [\n"
-            + "  '''node_modules/*''',\n  '''dist/*''',\n  '''.*\\.lock''',\n"
-            + "  '''\\.env\\..*''',\n]\n",
-        [preCommit]: overrides.preCommit
-          ?? "exclude: ^(node_modules/|dist/|.*\\.lock|\\.env\\..*)\n"
-            + "repos:\n  - repo: local\n",
-      },
-    },
-  });
-
-  it("passes four lists that agree after normalisation", () => {
-    expect(messages(check(tree(lists())))).toEqual([]);
-  });
-
-  it("flags an entry present in some formatter lists and absent from another", () => {
-    const root = tree(lists({
-      dprint: JSON.stringify({
-        excludes: ["**/node_modules/", "**/*.lock", "**/.env.*"],
-      }),
-    }));
-    expect(messages(check(root))).toEqual([
-      `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
-      + "the formatters' exclusion lists state one set",
-    ]);
-  });
-
-  it("passes a gitleaks allowlist narrower than the formatters' set", () => {
-    // Upstream's default config already skips part of the set, and `.claude/`
-    // is authored source the scanner must read — the allowlist is a subset.
-    const root = tree(lists({
-      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
-        + "  '''.*\\.lock''',\n  '''\\.env\\..*''',\n]\n",
-    }));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags a gitleaks allowlist entry no formatter excludes", () => {
-    // An allowlist entry with no generated tree behind it is a scanner quietly
-    // not scanning.
-    const root = tree(lists({
-      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
-        + "  '''dist/*''',\n  '''.*\\.lock''',\n  '''\\.env\\..*''',\n"
-        + "  '''src/secrets/*''',\n]\n",
-    }));
-    expect(messages(check(root))).toEqual([
-      `${gitleaks}: allowlists \`src/secrets\`, which no formatter list `
-      + "excludes — the scanner's allowlist is a subset of the formatters' set",
-    ]);
-  });
-
-  it("reads a verbose pre-commit pattern the same as a one-line one", () => {
-    const root = tree(lists({
-      preCommit: "exclude: |\n  (?x)^(\n    node_modules/ | # a comment\n"
-        + "    dist/ |\n    .*\\.lock |\n    \\.env\\..*\n  )\n"
-        + "repos:\n  - repo: local\n",
-    }));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("holds a pre-commit config with no global exclude to the others", () => {
-    const root = tree(lists({ preCommit: "repos:\n  - repo: local\n" }));
-    expect(messages(check(root))).toHaveLength(4);
-    expect(messages(check(root))[0]).toContain(
-      `exclusion \`*.lock\` is in ${dprint}, ${taplo} and not in ${preCommit}`,
-    );
-  });
-
-  it("reads the anywhere anchor as a glob's leading double star", () => {
-    // gitleaks and pre-commit anchor a directory as `(^|/)dir/` so it matches
-    // at the root and under any parent — the regex spelling of `**/dir/` — and
-    // a segment wildcard as `[^/]*`, the regex spelling of `*`.
-    const root = tree(lists({
-      dprint: JSON.stringify({
-        excludes: ["**/.turbo/", "**/dist/", "**/*.lock"],
-      }),
-      taplo: "exclude = [ \"**/.turbo/**\", \"**/dist/**\", \"**/*.lock\" ]\n",
-      gitleaks: "[allowlist]\npaths = [ '''(^|/)\\.turbo/''', '''(?:^|/)dist/''' ]\n",
-      preCommit: "exclude: (^|/)(\\.turbo|dist)/|(^|/)[^/]*\\.lock$\n"
-        + "repos:\n  - repo: local\n",
-    }));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("keeps a bar inside a bracket class out of the alternation", () => {
-    const root = tree(lists({
-      preCommit: "exclude: ^(node_modules/|dist/|[^/]*[|.]lock|\\.env\\..*)\n"
-        + "repos:\n  - repo: local\n",
-    }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("exclusion `*.lock` is in "),
-      expect.stringContaining(`exclusion \`*[|.]lock\` is in ${preCommit}`),
-    ]);
-  });
-
-  it("refuses a pre-commit pattern with two alternation groups", () => {
-    // `^(?:build|dist)/.*\.(json|yaml)$` has no one reading as entries.
-    const root = tree(lists({
-      preCommit: "exclude: ^(?:build|dist)/.*\\.(json|yaml)$\n"
-        + "repos:\n  - repo: local\n",
-    }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(
-        `${preCommit}: exclusion list could not be read — more than one `
-          + "alternation group — spell one entry per line",
-      ),
-    ]);
-  });
-
-  it("flags an exclusion list that cannot be read", () => {
-    // Nothing else parses dprint.json, taplo.toml or gitleaks.toml.
-    const root = tree(lists({ dprint: "{ \"excludes\": [\n" }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(`${dprint}: exclusion list could not be read`),
-    ]);
-  });
-
-  it("keeps a bracket inside a quoted TOML entry", () => {
-    const root = tree(lists({
-      gitleaks: "[allowlist]\npaths = [\n  '''node_modules/*''',\n"
-        + "  '''dist/*''',\n  '''.*\\.lock''',\n  '''\\.env\\.[a-z]*''',\n]\n",
-    }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("allowlists `.env.[a-z]*`"),
-    ]);
-  });
-
-  it("flags a list the tool-config skill no longer carries", () => {
-    // A moved file used to end the comparison silently; now it is named.
-    const files = lists().stackgen.files as Record<string, string>;
-    const { [taplo]: _dropped, ...rest } = files;
-    const root = tree({ stackgen: { files: rest } });
-    expect(messages(check(root))).toEqual([
-      `${taplo}: exclusion list is missing — the tool-config skill ships all `
-      + "four lists",
-    ]);
-  });
-
-  it("reads dprint's JSONC markers and its `../X` + `**/X` pairs as one entry", () => {
-    // The tool-config markers are `//` comments; a plugin URL's `//` is not.
-    const dprintJsonc = "{\n"
-      + "  \"plugins\": [\"https://plugins.dprint.dev/json-0.20.0.wasm\"],\n"
-      + "  \"includes\": [\"../**\"],\n"
-      + "  \"excludes\": [\n"
-      + "    // >>> tool-config\n"
-      + "    \"**/node_modules/\", \"../**/node_modules/\",\n"
-      + "    \"**/dist/\", \"../**/dist/\",\n"
-      + "    \"**/*.lock\", \"../**/*.lock\",\n"
-      + "    /* the repo's own */ \"**/.env.*\", \"../**/.env.*\"\n"
-      + "    // <<< tool-config\n"
-      + "  ]\n}\n";
-    expect(messages(check(tree(lists({ dprint: dprintJsonc }))))).toEqual([]);
-    const missing = dprintJsonc.replace(
-      "\"**/dist/\", \"../**/dist/\",\n",
-      "",
-    );
-    expect(messages(check(tree(lists({ dprint: missing }))))).toEqual([
-      `exclusion \`dist\` is in ${taplo}, ${preCommit} and not in ${dprint} — `
-      + "the formatters' exclusion lists state one set",
-    ]);
-  });
-
-  it("reads dprint's trailing commas, and keeps a comma inside a string", () => {
-    // dprint writes a trailing comma in a JSONC file it is told to; a `,]`
-    // inside a string is an entry, not one.
-    const dprintJsonc = "{\n"
-      + "  \"includes\": [\"../**\",],\n"
-      + "  \"excludes\": [\n"
-      + "    \"**/node_modules/\",\n    \"**/dist/\",\n    \"**/*.lock\",\n"
-      + "    \"**/.env.*\", // trailing\n"
-      + "  ],\n}\n";
-    expect(messages(check(tree(lists({ dprint: dprintJsonc }))))).toEqual([]);
-    const inString = dprintJsonc.replace("\"**/dist/\",", "\"**/dist,]/\",");
-    expect(messages(check(tree(lists({ dprint: inString }))))).toEqual(
-      expect.arrayContaining([
-        expect.stringContaining("exclusion `dist,]` is in "),
-      ]),
-    );
-  });
-
-  it("flags a dprint config that lost its excludes list", () => {
-    const root = tree(lists({ dprint: "{}\n" }));
-    expect(messages(check(root))).toEqual([
-      `${dprint}: declares no exclusion list to compare`,
     ]);
   });
 });

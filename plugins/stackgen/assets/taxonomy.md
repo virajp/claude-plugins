@@ -48,9 +48,9 @@ The closed list. A component is exactly one of:
   config, its tool pins and its task library are bootstrap's, and a pack
   ships none of them.
 - **Repo hygiene is no type** since 2026-09-27: the ignore and attribute files
-  are bootstrap's, and the licence, security contact,
-  contributing guide and issue forms are `/vwf:init`'s own assets; a pack
-  adds no line to any of them.
+  and the issue forms are bootstrap's, and the licence, security contact and
+  contributing guide are `/vwf:init`'s own assets; a pack adds no line to any
+  of them.
 - **`cloud-provider`** — a provider itself: the account/IAM/billing and
   emulator judgment that spans its services.
 - **`cloud-service`** — one service of one provider: a compute target, a
