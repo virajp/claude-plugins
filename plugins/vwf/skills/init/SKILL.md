@@ -565,8 +565,9 @@ nothing when the check is clean:
 - **`/stackgen:stackgen-sync`** — after a sync, by invoking
   `/vwf:setup reshape` in-session.
 - **`/vwf:recall`** — at session start, as printed lines from doctor's local
-  baseline predicates alone, every one but Forge state; Forge state stays
-  doctor's whole run and setup's Step 0.
+  baseline predicates alone, file reads only, every one but Bootstrap drift and
+  Forge state; those two stay doctor's whole run and setup's Step 0. So recall
+  does not report config drift: doctor's full mode does.
 
 A run that finds nothing costs one empty plan and says the repo is shaped —
 which is the answer, not a wasted run. On a product, that empty plan still
