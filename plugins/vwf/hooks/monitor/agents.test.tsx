@@ -503,10 +503,10 @@ test(
 );
 
 test(
-  "D7: of two RUNNING rows, the one whose last run.start is this session's; else the choice",
+  "D7: of two RUNNING rows, /vwf:execute next shows the one this session runs; another session's plan does not end the wait",
   async ($, on) => {
-    const clock = mock.clock(on, { now: NOW });
-    const w = world(on, {
+    mock.clock(on, { now: NOW });
+    world(on, {
       files: {
         [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
           B,
@@ -522,49 +522,44 @@ test(
     const ui = await $.ui.mount(PANE);
     expect(await ui.find({ type: "Text", text: new RegExp(B) }))
       .toBeDefined();
-    // Plan B resumed in another session: neither is this session's.
-    w.files[logOf(B)] += line("run.start", { mode: "resume", session: "x" });
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
-      .toBeDefined();
-    expect(
-      await ui.find({ type: "Text", text: new RegExp(`- docs/plans/${A}`) }),
-    )
-      .toBeDefined();
     await ui.unmount();
   },
 );
 
 test(
-  "G2: the list of RUNNING plans refreshes on the timer, with no event",
+  "the plan list shows until the claim, then the claimed plan; the list refreshes on the timer",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
         [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
           B,
-          "RUNNING",
+          "APPROVED",
         ]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
-        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
         [logOf(A)]: line("run.start", { mode: "fresh", session: "x" }),
-        [logOf(B)]: line("run.start", { mode: "fresh", session: "y" }),
       },
     });
     await $.prompt.submit(execute("next"));
     const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
-      .toBeDefined();
-    // Plan A lands in its own session; this session stays idle.
+    expect(await ui.find({ key: `plan-${A}` })).toBeDefined();
+    expect(await ui.find({ key: `plan-${B}` })).toBeDefined();
+    // Another session's plan moves: the list stays, with no event here.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
+      B,
+      "APPROVED",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ key: `plan-${A}`, text: /Complete/ })).toBeDefined();
+    // The claim.
     w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
       B,
       "RUNNING",
     ]);
     await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /\/vwf-monitor <folder>/ }))
-      .toBeUndefined();
-    expect(await ui.find({ type: "Text", text: new RegExp(B) }))
-      .toBeDefined();
+    expect(await ui.find({ key: `plan-${B}` })).toBeUndefined();
+    expect(await ui.find({ type: "Text", text: new RegExp(B) })).toBeDefined();
     await ui.unmount();
   },
 );
@@ -613,59 +608,173 @@ test(
 );
 
 test(
-  "D20, D32: /vwf:execute waits for the claim; COMPLETE waits for the next plan, which shows at once; 10 minutes with none closes",
+  "/vwf:execute <folder> shows the plan at once; a landed plan stays on screen and the pane stays open",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
         [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"], {}),
-        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
-        [logOf(B)]: line("run.start", { mode: "fresh" }),
       },
     });
     await $.prompt.submit(execute(`docs/plans/${A}`));
     const ui = await $.ui.mount(PANE);
-    expect(await ui.find({ type: "Text", text: /waiting for the claim/ }))
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    expect(await ui.find({ key: "unit-U1" })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /claim in progress/ }))
       .toBeDefined();
-    // The claim: RUNNING, and no run key yet.
+    // With no claim in 10 minutes the status says so, and the pane stays.
+    await clock.advance(PATIENCE_MS + 3500);
+    expect(await ui.find({ type: "Text", text: /not run/ })).toBeDefined();
+    expect(w.closed).toEqual([]);
+    // The claim.
     w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"]);
     await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /no run data yet/ }))
-      .toBeDefined();
-    // Plan A lands; the next plan of an `all` run is claimed.
+    expect(await ui.find({ type: "Text", text: /claim in progress/ }))
+      .toBeUndefined();
+    // The landing.
     w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"]);
     await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /waiting for the next plan/ }))
-      .toBeDefined();
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    await clock.advance(PATIENCE_MS + 20_000);
+    expect(w.closed).toEqual([]);
+    await ui.unmount();
+  },
+);
+
+test(
+  "an `all` run stays on a landed plan, then changes to the next RUNNING plan",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"], [
+          B,
+          "APPROVED",
+        ]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
+      },
+    });
+    await $.prompt.submit(execute("all"));
+    const ui = await $.ui.mount(PANE);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"], [
+      B,
+      "APPROVED",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
+      B,
+      "APPROVED",
+    ]);
+    await clock.advance(3500);
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
     w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
       B,
       "RUNNING",
     ]);
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: new RegExp(B) })).toBeDefined();
-    // Plan B lands, and nothing follows.
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
-      B,
-      "COMPLETE",
-    ]);
-    await clock.advance(3500);
-    expect(await ui.find({ type: "Text", text: /waiting for the next plan/ }))
+    await ui.unmount();
+  },
+);
+
+const monitor = (args: string) => // The engine stamps the presentation; the kit does not.
+({
+  command: "vwf-monitor",
+  args,
+  presentation: { isFullscreen: false, columns: 100 },
+});
+
+test(
+  "/vwf-monitor <name> shows any plan: complete, not run, or archived with no row",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [
+          B,
+          "APPROVED",
+        ]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
+          state: "COMPLETE",
+          detail: "COMPLETE 2026-10-25",
+        }),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
+        [`${MAIN}/docs/plans/archived/2026-01-01-old/index.json`]: plan("Old plan", ["green"], {}, {
+          state: "COMPLETE",
+          detail: "",
+        }),
+        [`${MAIN}/docs/plans/archived/2026-01-02-older/index.md`]: "# Older\n",
+      },
+    });
+    const run = (args: string) => $.command.run(monitor(args) as Parameters<typeof $.command.run>[0]);
+    await run(A);
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    expect(await ui.find({ key: "unit-U1", text: /green/ })).toBeDefined();
+    await ui.unmount();
+
+    await run(B);
+    const second = await $.ui.mount(PANE);
+    expect(await second.find({ type: "Text", text: /not run/ })).toBeDefined();
+    await second.unmount();
+
+    await run("2026-01-01-old");
+    const third = await $.ui.mount(PANE);
+    expect(await third.find({ type: "Text", text: /Old plan/ })).toBeDefined();
+    expect(await third.find({ key: "unit-U1", text: /green/ })).toBeDefined();
+    await third.unmount();
+
+    await run("2026-01-02-older");
+    const fourth = await $.ui.mount(PANE);
+    expect(await fourth.find({ type: "Text", text: /old format, no details/ }))
       .toBeDefined();
-    await clock.advance(PATIENCE_MS - 5000);
+    expect(await fourth.find({ key: `plan-${A}` })).toBeDefined();
+    await fourth.unmount();
+
+    await run("2026-09-09-nothing");
+    const fifth = await $.ui.mount(PANE);
+    expect(await fifth.find({ type: "Text", text: /No plan named/ })).toBeDefined();
+    await clock.advance(20_000);
     expect(w.closed).toEqual([]);
-    await clock.advance(6000);
-    expect(await ui.find({ type: "Text", text: /No plan reads RUNNING/ }))
-      .toBeDefined();
-    await clock.advance(10_500);
-    expect(w.closed).toEqual(["vwf-monitor"]);
+    await fifth.unmount();
+  },
+);
+
+test(
+  "a bare /vwf-monitor shows the latest plan, and Plans lists every row",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [
+          B,
+          "APPROVED",
+        ]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
+          state: "COMPLETE",
+          detail: "",
+        }),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
+      },
+    });
+    await $.command.run(monitor("") as Parameters<typeof $.command.run>[0]);
+    const ui = await $.ui.mount(PANE);
+    expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
+    await ui.press({ key: "plans" });
+    await clock.advance(100);
+    expect(await ui.find({ key: `plan-${B}` })).toBeDefined();
+    await ui.press({ key: `plan-${B}` });
+    await clock.advance(100);
+    expect(await ui.find({ type: "Text", text: /not run/ })).toBeDefined();
     await ui.unmount();
   },
 );
 
 test(
-  "D3: the old format shows its message and closes after 10 s; so does /vwf-monitor with no RUNNING row",
+  "D3: the old format shows its message and closes after 10 s",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
@@ -680,22 +789,6 @@ test(
     await clock.advance(1500);
     expect(w.closed).toEqual(["vwf-monitor"]);
     await ui.unmount();
-
-    w.files = { [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"]) };
-    // The engine stamps the presentation; the kit does not.
-    await $.command.run(
-      {
-        command: "vwf-monitor",
-        args: "",
-        presentation: { isFullscreen: false, columns: 100 },
-      } as Parameters<typeof $.command.run>[0],
-    );
-    const again = await $.ui.mount(PANE);
-    expect(await again.find({ type: "Text", text: /No plan reads RUNNING/ }))
-      .toBeDefined();
-    await clock.advance(10_500);
-    expect(w.closed).toEqual(["vwf-monitor", "vwf-monitor"]);
-    await again.unmount();
   },
 );
 

@@ -380,9 +380,11 @@ a run is logging; on `SessionEnd` it appends `session.end` and deletes the
 session's run marker), plus one hooks module, `hooks/monitor/register.tsx`,
 listed under `modules` in `hooks/hooks.json`, which draws the `/vwf:execute`
 progress pane against the state contract the manifest's `types` key names — and
-is the [`vwf-plugin`][vwf] skill's. The pane shows the plan whose row reads
-`RUNNING` in `docs/plans/index.json` and the plan's times from that row, its
-state and the unit, wave and stage times from that folder's `index.json` — the
+is the [`vwf-plugin`][vwf] skill's. The pane shows any plan of
+`docs/plans/index.json` or of
+its archive, in any status, with a plan list, and the plan's times from its row,
+its state and the unit, wave and stage times from that folder's `index.json` —
+the
 copy in the run's worktree, else the main checkout's; `plan.mjs` stamps every
 `started` and `ended` as it sets a status — and from the plan's action log only
 each unit's agent and the log's freshness, which tells a live run from a paused

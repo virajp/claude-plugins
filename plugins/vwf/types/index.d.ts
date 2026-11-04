@@ -4,10 +4,10 @@
  */
 export type AgentRun = ReplayAgent;
 
-/** A run as the pane shows it (T8): live, paused or stopped, or ended. */
-export type RunPhase = "live" | "paused" | "ended";
+/** A run as the pane shows it (T8): live, paused or stopped, ended, or not run. */
+export type RunPhase = "live" | "paused" | "ended" | "not-run";
 
-/** The plan the pane shows: the RUNNING row's folder, replayed with its log. */
+/** The plan the pane shows: a row's or a folder's plan, replayed with its log. */
 export type PlanRun = {
   /** The row's folder, relative to its repo root (`docs/plans/<name>`). */
   folder: string;
@@ -33,12 +33,21 @@ export type Run = {
   endedAt?: number;
   /** The folder name the opening named, until that plan has shown and gone. */
   named?: string;
-  /** What the pane waits for while no plan reads RUNNING. */
+  /** What the pane waits for: the named plan's claim, or an `all` run's next plan. */
   waiting?: "claim" | "next";
   waitStartedAt?: number;
   plan?: PlanRun;
-  /** The RUNNING folders, when none of several is this session's. */
-  choices?: string[];
+  /** An opening by /vwf:execute next or all: the claim changes the pane to its plan. */
+  isQueue?: boolean;
+  /** The folders that read RUNNING before this run claimed: no claim of this run. */
+  baseline?: string[];
+  /** The plan list shows, over the plan if there is one. */
+  isListOpen?: boolean;
+  /** The plan list's rows, read while the list shows. */
+  queue?: QueueRow[];
+  /** The archived folder names, the latest first, read while the list shows. */
+  archived?: string[];
+  isArchivedOpen?: boolean;
   /** The message shown for 10 s before the pane closes. */
   message?: string;
   /** When the mod last read the plan files. */
@@ -48,7 +57,7 @@ export type Run = {
 };
 
 /**
- * A RUNNING row of docs/plans/index.json. A time is an ISO-8601 UTC string,
+ * A row of docs/plans/index.json. A time is an ISO-8601 UTC string,
  * "" when not set (or absent from an older row).
  */
 export type PlanIndexRow = {
@@ -60,6 +69,28 @@ export type PlanIndexRow = {
   started: string;
   ended: string;
   target_repo: string | null;
+  priority: number;
+  /** The folder names of the plans it requires. */
+  requires: string[];
+};
+
+/** One row of the plan list. */
+export type QueueRow = {
+  folder: string;
+  title: string;
+  kind: string;
+  priority: number;
+  status: string;
+  started: string;
+  ended: string;
+  group: "running" | "ready" | "waiting" | "complete";
+  /** The place in the pick order, on a ready row. */
+  number?: number;
+  /** The required plans that did not land. */
+  waitsFor: string[];
+  /** The units finished and all units, when the folder was read. */
+  done?: number;
+  total?: number;
 };
 
 /** One unit of a plan folder's index.json. */

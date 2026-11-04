@@ -8,14 +8,16 @@ import {
   folderIn,
   FRESH_MS,
   hostOf,
-  isOldFormat,
   joinPath,
+  latestRow,
   memberPaths,
   phaseOf,
+  queueRows,
   readFolder,
   replay,
   resolveBase,
   reviewName,
+  rowFromFolder,
   runningRows,
   time,
   unitForAgent,
@@ -156,13 +158,89 @@ test("strips control characters from a malformed JSON's problem", async () => {
   expect(control.test(folder)).toBe(false);
 });
 
-test("tells the old markdown format apart", async () => {
-  expect(isOldFormat({ indexMd: true })).toBe(true);
-  expect(isOldFormat({ indexMd: false, folderMd: true, folderJson: false }))
-    .toBe(true);
-  expect(isOldFormat({ indexMd: false, folderMd: true, folderJson: true }))
-    .toBe(false);
-  expect(isOldFormat({ indexMd: false })).toBe(false);
+test("orders the queue as the plan index picks", async () => {
+  const row = (name: string, status: string, priority: number, extra = {}) => ({
+    id: name,
+    folder: `docs/plans/${name}`,
+    kind: "change",
+    title: name,
+    status,
+    started: "",
+    ended: "",
+    target_repo: null,
+    priority,
+    requires: [] as string[],
+    ...extra,
+  });
+  const out = queueRows([
+    row("2026-01-01-done", "COMPLETE", 10, { ended: "2026-01-02T00:00:00.000Z" }),
+    row("2026-01-03-later", "COMPLETE", 10, { ended: "2026-01-04T00:00:00.000Z" }),
+    row("2026-01-05-b", "APPROVED", 20),
+    row("2026-01-04-a", "APPROVED", 20),
+    row("2026-01-06-first", "APPROVED", 10),
+    row("2026-01-07-wait", "APPROVED", 5, { requires: ["2026-01-08-run"] }),
+    row("2026-01-09-gone", "APPROVED", 30, { requires: ["2025-01-01-archived"] }),
+    row("2026-01-08-run", "RUNNING", 10),
+  ]);
+  expect(out.map((one) => one.folder.slice(11))).toEqual([
+    "2026-01-08-run",
+    "2026-01-06-first",
+    "2026-01-04-a",
+    "2026-01-05-b",
+    "2026-01-09-gone",
+    "2026-01-07-wait",
+    "2026-01-03-later",
+    "2026-01-01-done",
+  ]);
+  expect(out.map((one) => one.number ?? 0)).toEqual([0, 1, 2, 3, 4, 0, 0, 0]);
+  expect(out[5]?.waitsFor).toEqual(["2026-01-08-run"]);
+});
+
+test("the latest row, and a row made from a folder", async () => {
+  const row = (name: string, started: string, ended: string) => ({
+    id: name,
+    folder: name,
+    kind: "",
+    title: name,
+    status: "",
+    started,
+    ended,
+    target_repo: null,
+    priority: 0,
+    requires: [],
+  });
+  expect(latestRow([row("a", "", "")])).toBe(undefined);
+  expect(
+    latestRow([
+      row("a", "2026-01-01T00:00:00.000Z", "2026-01-03T00:00:00.000Z"),
+      row("b", "2026-01-02T00:00:00.000Z", ""),
+    ])
+      ?.folder,
+  )
+    .toBe("a");
+  const folder = readFolder(JSON.stringify({
+    title: "T",
+    status: { state: "COMPLETE", detail: "" },
+    units: [
+      { id: "U1", started: "2026-01-02T00:00:00.000Z", ended: "2026-01-03T00:00:00.000Z" },
+      { id: "U2", started: "2026-01-01T00:00:00.000Z", ended: "2026-01-02T00:00:00.000Z" },
+    ],
+  }))
+    .folder;
+  const made = rowFromFolder("docs/plans/archived/x", folder!);
+  expect(made).toMatchObject({
+    status: "COMPLETE",
+    title: "T",
+    started: "2026-01-01T00:00:00.000Z",
+    ended: "2026-01-03T00:00:00.000Z",
+  });
+});
+
+test("a row that reads APPROVED did not run", async () => {
+  expect(phaseOf({ state: "APPROVED", rowStatus: "APPROVED", hasLiveAgent: false, now: 0 }))
+    .toBe("not-run");
+  expect(phaseOf({ state: "ARCHIVED", rowStatus: "ARCHIVED", hasLiveAgent: false, now: 0 }))
+    .toBe("ended");
 });
 
 test("expands a leading ~/ only", async () => {

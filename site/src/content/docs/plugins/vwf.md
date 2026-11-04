@@ -3199,35 +3199,47 @@ Code places such a pane only on a terminal of 144 columns or more (110 once you
 have opened it yourself); narrower, it waits undrawn until you open it or widen
 the terminal. `/vwf-monitor` opens it by hand, also for a run already in
 progress, and
-`/vwf-monitor <folder>` starts it over on the named plan folder. The command is
+`/vwf-monitor <plan>` starts it over on the named plan, in any status. The plan
+name is the folder name, or its part after the date. The command is
 `/vwf-monitor`, not `/vwf:monitor`, because a registered command name cannot
 contain a colon.
 
-**What it shows.** The plan, its start and end times, and one progress
-segment per unit — pending dim, running plain, failed red, skipped gray,
-finished green, and finished with gaps yellow. Below that, one row per unit with
-its status, its times and its gaps, one line per wave and per stage with its
-status and times, and one line per wave review with its status. The line under
-the plan title names the folder, the plan's state, and whether the run is
-`live`, `ended`, or `paused or stopped`. Before a run has written its log,
-the pane shows the plan with every unit pending and the line `no run data yet`.
-Plan text and log text are stripped of terminal control characters before they
-render. Select a unit row or a wave-review line to open that subagent's
-transcript; the **Main transcript** button goes back.
+**What it shows.** The plan, its start and end times, its status, and one
+progress segment per unit — pending dim, running blue, failed red, skipped gray,
+finished green, and finished with gaps yellow. Below that, the current units,
+one row per unit with its status, its times and its gaps, one line per wave and
+per stage with its status and times, and one line per wave review with its
+status. The status says whether the run is live, paused or stopped, ended, or
+not run. Before a run has written its log, the pane shows the plan with every
+unit pending and the line `no run data yet`. Plan text and log text are stripped
+of terminal control characters before they render. Select a unit id or a
+wave-review name to open that subagent's transcript; the **Main transcript**
+button goes back. The **Plans** button opens the plan list, and **Back to plan**
+returns.
+
+**The plan list.** One row per row of the plan index: running plans; then the
+plans ready to run, numbered, in the order `/vwf:execute next` picks them; then
+the plans that wait for a required plan; then the completed plans, the latest
+first. Each row shows the plan's status, the units finished and its time. Select
+a row to show that plan. Archived plans are one collapsed row with a count;
+expanded, they are folder names, and an archived folder in the old markdown
+format shows `old format, no details`.
 
 **Terminal or desktop.** The pane reads the surface that draws it each time it
 draws. In the terminal, the bar is a row of block characters and the tables are
 columns of fixed-width text. In the Claude desktop app, the VS Code extension
-and the mobile app, the bar is one image with a colored segment for each unit,
-the tables are rows of sized cells, and the unit id or the review name is the
-button that opens the transcript. Close is the surface's own close control
-there, and the pane shows no key hints.
+and the mobile app, the plan is a timeline: each unit has a bar on one time axis
+with a line at the current time, grouped by wave, and the unit id or the review
+name is the button that opens the transcript. Close is the surface's own close
+control there, and the pane shows no key hints.
 
 **Where it reads.** Three files, and nothing else:
 
 - **The plan index**, `docs/plans/index.json` — the base repo's, in a
-  multi-repo product. The row that reads `RUNNING` is the plan it shows, and
-  the row's `started` and `ended` are the plan's times.
+  multi-repo product. Its rows are the plan list, and a row's `started` and
+  `ended` are the plan's times. A plan with no row, as an archived plan can be,
+  is read from `docs/plans/<name>/` or `docs/plans/archived/<name>/`, and its
+  times come from its units and waves.
 - **The plan's `index.json`** — the plan's state and every time below it: its
   status; each unit's title, wave, kind, status, commit, rounds, range and
   `started` and `ended`; each wave's and each stage's status and times; and
@@ -3249,16 +3261,28 @@ of the plan (`U<n>`, `U<n>-late<k>`) or a wave review (`R<wave>`,
 When a unit has had several subagents, its row shows the latest. In an
 `/vwf:execute all` run each plan has a log of its own, so the log is the scope.
 
-**Which plan it shows.** With no folder named, the plan whose row reads
-`RUNNING`. When several rows read `RUNNING`, the one whose log's last run start
-came from this session; otherwise it lists them and asks you to run
-`/vwf-monitor <folder>`. Opened by `/vwf:execute` before the plan is claimed, it
-shows `waiting for the claim`; once the plan lands, or between two plans of an
-`all` run, `waiting for the next plan`. Each wait lasts up to 10 minutes, and a
-new `RUNNING` row shows at once.
+**Which plan it shows.**
+
+- `/vwf:execute <folder>` shows that plan at once, with `claim in progress`
+  until its row reads `RUNNING`. After 10 minutes with no claim, it reads
+  `not run`.
+- `/vwf:execute next` and `/vwf:execute all` show the plan list until the claim,
+  then the claimed plan. Another session's running plan does not end the wait.
+- A landed plan stays on screen until you close the pane. An `all` run changes
+  to
+  its next plan when that plan reads `RUNNING`.
+- `/vwf-monitor <plan>` shows the named plan. A name it cannot find shows the
+  plan
+  list with a line that says so.
+- A bare `/vwf-monitor` keeps a live run. Else it shows the one `RUNNING` plan,
+  or
+  the one this session runs of several, or the plan that started or ended last.
+  If
+  it cannot pick one, it shows the plan list.
 
 **When the run ends.** The JSON decides it: the folder's status `BLOCKED` or
-`COMPLETE`, or the row `COMPLETE`, is an ended run. While both read `RUNNING`,
+`COMPLETE`, or the row `COMPLETE`, is an ended run. A row that reads `APPROVED`
+did not run. While both read `RUNNING`,
 the run is live while one of its subagents is live or the log's last line is
 under 10 minutes old; otherwise the header reads
 `paused or stopped — <the folder's status detail>`. That check decides only the
@@ -3267,9 +3291,9 @@ header, never a status. A resume makes the run live again.
 **How it closes.** `/vwf-monitor close`, Esc at an idle prompt, or `ctrl+x tab`
 then `c` in the terminal; the **Close** button on any surface. When the run asks
 you a question, the pane steps aside until you
-answer. With nothing to show — no `RUNNING` row once a wait ends, a folder it
-cannot find, or a repo still on the old markdown plan format — it shows one
-message for 10 seconds and closes.
+answer. With nothing to show — no `docs/plans/index.json`, or a repo still on
+the
+old markdown plan format — it shows one message for 10 seconds and closes.
 
 **Its limits.**
 

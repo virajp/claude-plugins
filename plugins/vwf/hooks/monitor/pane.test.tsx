@@ -207,7 +207,7 @@ test(
 );
 
 test(
-  "on the desktop the pane draws an Svg bar and box rows, with no padding or key hints",
+  "on the desktop the pane draws the timeline, with no padding or key hints",
   async ($, on) => {
     const opened: string[] = [];
     const closed: string[] = [];
@@ -217,17 +217,18 @@ test(
     expect((await ui.find({ key: "unit-U2" }))?.props).toMatchObject({
       label: "U2",
     });
-    expect(await ui.find({ type: "Text", text: /G1 · U2 · U2 has no owner/ }))
+    expect(await ui.find({ type: "Text", text: /^U2 has no owner$/ }))
       .toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^2\/3$/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^W1$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^G1$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^2 of 3 units$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^Wave 1$/ })).toBeDefined();
     expect(await ui.find({ type: "Text", text: /Started \d\d:\d\d/ }))
       .toBeDefined();
+    expect(await ui.find({ key: "plans" })).toBeDefined();
     const drawn = JSON.stringify(await ui.drawn());
-    // The bar is one Svg: U1 green, U2 pending, U3 skipped gray.
-    expect(drawn).toContain("2 of 3 units finished");
+    // One segment for each unit: U1 green, U2 pending, U3 skipped gray.
     expect(drawn).toContain("#3fa66a");
-    expect(drawn).toContain("#d0d4da");
+    expect(drawn).toContain("2 of 3 units finished");
     expect(drawn).toContain("#8a8f98");
     expect(drawn).not.toContain("█");
     expect(drawn).not.toContain("ctrl+x tab");

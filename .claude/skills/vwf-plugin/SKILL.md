@@ -455,9 +455,10 @@ skill.
 The same `hooks/hooks.json` also lists one **hooks module** under `modules`:
 `hooks/monitor/register.tsx`, a Claude Code mod that draws the `/vwf:execute`
 progress pane and registers `/vwf-monitor` (no colon: a registered command name
-refuses one). It reads three sources and nothing else: the `RUNNING` row of the
-base repo's `docs/plans/index.json`, with the plan's `started` and `ended`; the
-folder's `index.json` for the state and every unit, wave and stage time, which
+refuses one). It reads three sources and nothing else: the rows of the base
+repo's `docs/plans/index.json`, with each plan's `started` and `ended`, or a
+folder with no row under `docs/plans/` or `docs/plans/archived/`; the folder's
+`index.json` for the state and every unit, wave and stage time, which
 `plan.mjs` stamps on each status set — the copy at `run.worktree` (or archived
 there during the landing), else the main checkout's or its archived copy; and
 the log at `run.log`, `~` expanded from `HOME`, replayed whole at each read
@@ -466,17 +467,26 @@ unit's agent and its liveness, the transcript and the session alone — it
 computes no time and no run end. A folder `BLOCKED` or `COMPLETE`, or the row
 `COMPLETE`, is an ended run; a `RUNNING` one is live while an agent is live or
 the log's last line is under 10 minutes old, and the header reads
-`paused or stopped` otherwise. It never searches a worktree. With several
-`RUNNING` rows it takes the one whose log's last `run.start` carries this
-session's id. With no `RUNNING` row it waits up to 10 minutes, showing
-`waiting for the claim` when `/vwf:execute` opened it or
-`waiting for the next plan` once a plan has landed; when the wait ends empty, on
-the old markdown format, or with a folder it cannot find, it shows one message
-for 10 s and closes. The pane hook branches on `e.surface`: the terminal keeps
-its cell-padded `fit()` columns, block-character bar and key hints; every other
-surface draws an `Svg` bar (`progressSvg`), rows of percent-width `Box` cells
-with the unit id as the `Button`, and a `role: "dismiss"` Close, and
-`pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers and the
+`paused or stopped` otherwise; a row `APPROVED` or `DRAFT` is `not-run`. It
+never
+searches a worktree. `/vwf:execute <folder>` shows that plan with
+`claim in progress`; `/vwf:execute next` or `all` shows the plan list until a
+`RUNNING` row outside the opening's `baseline`, or one with this session's
+`run.start`, is the claim; `/vwf-monitor <plan>` shows any plan in any status; a
+bare `/vwf-monitor` keeps a live run, else shows the running or latest plan,
+else
+the list. A landed plan stays on screen, and an `all` run moves on at the next
+claim. Only the old markdown format and a missing `docs/plans/index.json` show
+one message for 10 s and close. The pane hook branches on `e.surface`: the
+terminal keeps its cell-padded `fit()` columns, block-character bar and key
+hints; every other surface draws `view.tsx`'s `drawTimeline`, bars of
+whole-percent
+`Box` parts on one axis (the engine refuses a fractional percent) with the unit
+id as the `Button`, and a `role: "dismiss"` Close; `drawList` draws the plan
+list
+on all surfaces, and
+`pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers, the
+queue order and the
 replay, and strips terminal control characters from plan and log text before it
 renders; `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and
 `agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,

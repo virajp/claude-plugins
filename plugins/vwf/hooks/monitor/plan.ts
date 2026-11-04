@@ -5,6 +5,7 @@ import type {
   PlanStage,
   PlanUnit,
   PlanWave,
+  QueueRow,
   Replay,
   ReplayAgent,
   ReplayUnit,
@@ -17,6 +18,9 @@ const UNIT_ID = /\bU\d+\b/;
 // from a plan file reaches the terminal.
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
+
+/** A folder's last path part. */
+export const nameOf = (path: string) => path.replace(/\/+$/, "").split("/").pop() ?? "";
 
 /** The plan folder that a text names, if any. */
 export function folderIn(text: string): string | undefined {
@@ -212,10 +216,11 @@ export function time(value: unknown): number | undefined {
 export const FRESH_MS = 10 * 60 * 1000;
 
 /**
- * Whether a plan's run is live, paused or ended (T8): the folder BLOCKED or
- * COMPLETE, or the row COMPLETE, ends it; else it is live while an agent is
- * live or the log's last line (none yet: the row's start) is under FRESH_MS
- * old, and paused or stopped otherwise.
+ * Whether a plan's run is live, paused, ended or not run (T8): the folder
+ * BLOCKED, COMPLETE or ARCHIVED, or the row COMPLETE, ends it; a row that
+ * reads APPROVED or DRAFT did not run; else it is live while an agent is live
+ * or the log's last line (none yet: the row's start) is under FRESH_MS old,
+ * and paused or stopped otherwise.
  */
 export function phaseOf(facts: {
   state: string;
@@ -228,9 +233,13 @@ export function phaseOf(facts: {
   if (
     facts.state === "BLOCKED"
     || facts.state === "COMPLETE"
+    || facts.state === "ARCHIVED"
     || facts.rowStatus === "COMPLETE"
   ) {
     return "ended";
+  }
+  if (facts.rowStatus === "APPROVED" || facts.rowStatus === "DRAFT") {
+    return "not-run";
   }
   const last = facts.lastAt ?? facts.rowStarted;
 
@@ -275,8 +284,8 @@ export function unitForAgent(
   return unitOf(text, units, undefined, type);
 }
 
-/** The RUNNING rows of a docs/plans/index.json text. */
-export function runningRows(
+/** Every row of a docs/plans/index.json text. */
+export function indexRows(
   text: string,
 ): { rows: PlanIndexRow[]; problem?: string } {
   const { value, problem } = parse(text);
@@ -291,7 +300,6 @@ export function runningRows(
   }
   const rows = plans
     .filter(isObject)
-    .filter((row) => row["status"] === "RUNNING")
     .map((row) => ({
       id: str(row["id"]),
       folder: str(row["folder"]),
@@ -303,22 +311,128 @@ export function runningRows(
       target_repo: typeof row["target_repo"] === "string"
         ? str(row["target_repo"])
         : null,
+      priority: num(row["priority"]),
+      requires: (Array.isArray(row["requires"]) ? row["requires"] : [])
+        .map((one) => nameOf(str(one)))
+        .filter((one) => one !== ""),
     }))
     .filter((row) => row.folder !== "");
 
   return { rows };
 }
 
-/** True for the old markdown plan format. */
-export function isOldFormat(facts: {
-  /** docs/plans/index.md exists. */
-  indexMd: boolean;
-  /** The folder has an index.md. */
-  folderMd?: boolean;
-  /** The folder has an index.json. */
-  folderJson?: boolean;
-}): boolean {
-  return facts.indexMd || (facts.folderMd === true && !facts.folderJson);
+/** The RUNNING rows of a docs/plans/index.json text. */
+export function runningRows(
+  text: string,
+): { rows: PlanIndexRow[]; problem?: string } {
+  const { rows, problem } = indexRows(text);
+
+  return {
+    rows: rows.filter((row) => row.status === "RUNNING"),
+    ...(problem === undefined ? {} : { problem }),
+  };
+}
+
+/** The row that started or ended last; undefined when no row has a time. */
+export function latestRow(rows: PlanIndexRow[]): PlanIndexRow | undefined {
+  const at = (row: PlanIndexRow) => Math.max(time(row.ended) ?? -1, time(row.started) ?? -1);
+  const sorted = rows
+    .filter((row) => at(row) >= 0)
+    .sort((a, b) => at(b) - at(a));
+
+  return sorted[0];
+}
+
+/**
+ * The plan list: RUNNING rows; ready rows, numbered, in the order of the plan
+ * index's `next` (priority, then the folder's date prefix, then its name);
+ * rows that wait for a required plan, in that order; other rows, the latest
+ * first. A requirement is satisfied when its row reads COMPLETE or the index
+ * has no row for it: an archived plan has none.
+ */
+export function queueRows(rows: PlanIndexRow[]): QueueRow[] {
+  const status = new Map(rows.map((row) => [nameOf(row.folder), row.status]));
+  const waitsFor = (row: PlanIndexRow) =>
+    row.requires.filter((one) => {
+      const of = status.get(one);
+
+      return of !== undefined && of !== "COMPLETE";
+    });
+  const order = (a: QueueRow, b: QueueRow) => {
+    const left = nameOf(a.folder);
+    const right = nameOf(b.folder);
+
+    return a.priority - b.priority
+      || left.slice(0, 10).localeCompare(right.slice(0, 10))
+      || left.localeCompare(right);
+  };
+  const late = (row: QueueRow) => Math.max(time(row.ended) ?? -1, time(row.started) ?? -1);
+  const out: QueueRow[] = rows.map((row) => {
+    const wait = waitsFor(row);
+
+    return {
+      folder: row.folder,
+      title: row.title,
+      kind: row.kind,
+      priority: row.priority,
+      status: row.status,
+      started: row.started,
+      ended: row.ended,
+      waitsFor: wait,
+      group: row.status === "RUNNING"
+        ? "running"
+        : row.status !== "APPROVED"
+        ? "complete"
+        : wait.length > 0
+        ? "waiting"
+        : "ready",
+    };
+  });
+  const ready = out.filter((row) => row.group === "ready").sort(order);
+  ready.forEach((row, i) => {
+    row.number = i + 1;
+  });
+
+  return [
+    ...out.filter((row) => row.group === "running").sort(order),
+    ...ready,
+    ...out.filter((row) => row.group === "waiting").sort(order),
+    ...out
+      .filter((row) => row.group === "complete")
+      .sort((a, b) => late(b) - late(a)),
+  ];
+}
+
+/**
+ * The row of a plan the index does not hold: status from the folder, started
+ * from the earliest start of its units and waves, ended from the latest end.
+ */
+export function rowFromFolder(
+  folder: string,
+  plan: PlanFolder,
+): PlanIndexRow {
+  const dated = [...plan.units, ...plan.waves];
+  const starts = dated
+    .map((one) => one.started)
+    .filter((one) => time(one) !== undefined)
+    .sort((a, b) => (time(a) ?? 0) - (time(b) ?? 0));
+  const ends = dated
+    .map((one) => one.ended)
+    .filter((one) => time(one) !== undefined)
+    .sort((a, b) => (time(a) ?? 0) - (time(b) ?? 0));
+
+  return {
+    id: nameOf(folder),
+    folder,
+    kind: "",
+    title: plan.title,
+    status: plan.state,
+    started: starts[0] ?? "",
+    ended: ends[ends.length - 1] ?? "",
+    target_repo: null,
+    priority: 0,
+    requires: [],
+  };
 }
 
 /** What the pane shows of a plan folder's index.json text. */
