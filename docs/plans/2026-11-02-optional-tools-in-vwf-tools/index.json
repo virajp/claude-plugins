@@ -612,6 +612,16 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D32",
+      "decision": "G18: the U8 security loop did not converge on the vetting of generated servers. Fix the two open findings, or rule where the vetting ends?",
+      "ruling": "The user ruled: fix both on U2 and extend the vetting in generator.md to them. (1) URLs in env values are vetted, and the consent gate shows the env values, not only the key names. (2) lsp_servers: entries take the same command, args and wrapper rules as the other generated servers.",
+      "rejected": "Rule a limit where the vetting of generated servers ends",
+      "units": [
+        "U2",
+        "U8"
+      ]
     }
   ],
   "stages": {
@@ -764,8 +774,8 @@
       "id": "G18",
       "unit": "U8",
       "stage": "security",
-      "text": "U8 convergence guard tripped on cap-exempt security findings: rounds 1-4 returned 3, 2, 1, 2 findings, each round a new layer on generated-server vetting. Open, unfixed, both generator.md (U2): env-value URLs are not vetted and the gate shows env key names only; lsp_servers: entries skip the command, args and wrapper rules · no assumption taken; a ruling is needed",
-      "state": "open"
+      "text": "\"U8 convergence guard tripped on cap-exempt security findings: rounds 1-4 returned 3, 2, 1, 2 findings, each round a new layer on generated-server vetting. Open, unfixed, both generator.md (U2): env-value URLs are not vetted and the gate shows env key names only; lsp_servers: entries skip the command, args and wrapper rules · no assumption taken; a ruling is needed\" · closed by the user's ruling D32: fix both on U2",
+      "state": "closed"
     },
     {
       "id": "G19",
