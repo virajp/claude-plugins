@@ -438,6 +438,11 @@ it says what drifted, and each remedy stays one line for the whole product —
 both doors walk the members too, so one re-run covers that remedy's rows under
 every heading.
 
+**The local baseline predicates are every one but two**: (a) Pack versions, (b)
+Project ids, (c) Branches, (e) Content drift and (f) Merge model, which are what
+`/vwf:doctor baseline` evaluates. (d) Bootstrap drift, which executes code, and
+(g) Forge state, which reads the remote, run in full mode only.
+
 **An absent member is a blind spot, not a finding.** A member this machine
 does not carry is said in §5's output as `<member> — not present, not checked`
 and nothing more: it is the blind spot the membership contract already
@@ -502,20 +507,26 @@ neither branch
 and reports one row saying that, not two — and a member is its own repository,
 so a base carrying both branches says nothing about the member beside it.
 
-**(d) Bootstrap drift.** First, from the repo's root, run `mise trust --show`.
-Run the dry-run only when it lists a config of that repo and every one it lists
-there reads `trusted`; a line for a parent directory does not count, and a repo
-with no config listed is not trusted. `mise run` runs a repo's task with no
-trust prompt, and trusts the repo's config as it does, so this is the one check
-before a cloned repo's code runs. Otherwise the dry-run does not run: drift is
+**(d) Bootstrap drift.** Full mode only: `baseline`, and so `/vwf:recall`, never
+runs it. First, from the repo's root, run `mise trust --show`. Run the dry-run
+only when it lists a config of that repo and every one it lists there reads
+`trusted`; a line for a parent directory does not count, and a repo with no
+config listed is not trusted. Otherwise the dry-run does not run: drift is
 **unknown**, one `warning` naming the repo with the reason
 `repo not trusted by mise`.
 
+That check is a limit, not a safeguard. It stops only a clone mise has never
+run: `mise run` runs a repo's task with no trust prompt and trusts the repo's
+config as it does, and the trust gate of mise is not tied to file content, so a
+repo trusted once runs whatever its `setup:configs` task holds on the branch
+checked out now.
+
 In a trusted repo, from its root, run `mise run setup:configs --dry-run`,
-bootstrap's own done-check. It writes nothing in the repository, but it does run
-code: the repo's own `setup:configs` task, which refreshes bootstrap's clone of
-its `main` under `~/.cache/bootstrap` and executes bootstrap's task code from
-that clone, unpinned. It is the only bootstrap command doctor runs. Judge it by
+bootstrap's own done-check. This explicit dry-run writes nothing in the
+repository, but it does run code: the repo's own `setup:configs` task, which
+refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and executes
+the `main` branch of bootstrap from that clone, with no pin. It is the only
+bootstrap command doctor runs. Judge it by
 its exit code and its stderr, where it prints its lines, each with the prefix
 `repo-sync:`. After that prefix, a line that starts with `would` — `would
 update`, `would remove`, `would chmod`, `would set bootstrap_commit` — is a

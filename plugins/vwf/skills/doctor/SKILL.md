@@ -16,8 +16,9 @@ disable-model-invocation: false
 # doctor — Check the Repo Against Its Config
 
 `.config/vwf.yaml` declares what each project is built with. This checks the
-repo agrees. Everything here is a **read** — doctor reports and offers, it never
-edits without consent.
+repo agrees. Everything here is a **read**, save the one dry-run full mode runs
+(below the table in §§3–8) — doctor reports and offers, it never edits without
+consent.
 
 Scope to the projects named in `$ARGUMENTS`; with no argument, check every
 project in the registry. **That scope narrows §§3–5 only.** The harness, the
@@ -29,44 +30,36 @@ sits unread, and `/vwf:setup` / `/vwf:execute`
 halt on a blocking finding they were never told about.
 
 The one argument that is not a project name is **`baseline`** — a named
-invocation that runs the repo-shape check alone, described below.
+invocation that runs the repo-shape check alone, described below. Every other
+run, scoped or not, is doctor's **full mode**.
 
 ## The `baseline` invocation
 
 `/vwf:doctor baseline` evaluates the **local** baseline predicates of the
-repo-shape check — **(a) through (f)** in the stack-checks reference, Pack
-versions, Project ids, Branches, Bootstrap drift, Content drift and Merge model
-— **per repo**, the base and every locally-present member, and returns that
-result and **nothing else**. Bootstrap drift runs
-`mise run setup:configs --dry-run` in each repo whose configs mise trusts: only
-when `mise trust --show`, run in that repo, lists a config of that repo and
-every one it lists there reads `trusted`. Otherwise the dry-run does not run and
-drift is unknown, with the reason `repo not trusted by mise`.
+repo-shape check — Pack versions, Project ids, Branches, Content drift and Merge
+model, **(a), (b), (c), (e) and (f)** in the stack-checks reference, the file
+reads against the lockfile, the config and the tree — **per repo**, the base
+and every locally-present member, and returns that result and **nothing else**.
 No stack, manifest, health, memory, leftovers or format-stamp check runs, §§1–4
-and §§6–8 are skipped entirely, and predicate **(g)** — Forge state — is
-never read: this invocation reads no forge, and is meant to be cheap
-enough to run at every session start. It writes nothing in the repository, but
-it does run code: the dry-run executes the repo's own `setup:configs` task,
-which refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and
-executes bootstrap's task code from that clone, unpinned, so what runs is
-whatever `main` holds at that moment. It offers no remedy: the caller decides
-what to print.
+and §§6–8 are skipped entirely, and predicates **(d)** — Bootstrap drift — and
+**(g)** — Forge state — never run: this invocation runs no mise task and no
+bootstrap code and reads no forge, and is meant to be cheap enough to run at
+every session start. So it does **not report config drift**: doctor's full mode
+is the place that does. It writes nothing and offers no remedy — the caller
+decides what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the titles of
 the predicates that failed — `<repo>: Pack versions, Branches` — and no line for
 a repo that is clean. A repo with no `.config/bootstrap.toml` is reported on its
 own line and evaluates no predicate — **`shaped on the old layout`** where it
 carries `.config/stackgen.yaml` or the older mise files, **`not shaped`** where
-it carries none — since neither has the baseline these predicates read. A
-Bootstrap drift that could not be judged is its own line too, `<repo>: drift
-unknown — <reason>`, a warning rather than drift. An
+it carries none — since neither has the baseline these predicates read. An
 absent member is `not present, not checked`, exactly as §5
 reports it. Whether any of that is shown, and how, is the caller's: this is
 what **`/vwf:recall`** calls to print its shape-drift lines. Each row keeps the
 remedy the full run prints under §9: `/vwf:setup` for Pack versions, Project ids
-and Content drift; `/vwf:setup reshape` for Branches, Bootstrap drift, not
-shaped and the old layout; a fixed value in `.config/bootstrap.toml` for Merge
-model.
+and Content drift; `/vwf:setup reshape` for Branches, not shaped and the old
+layout; a fixed value in `.config/bootstrap.toml` for Merge model.
 
 `$ARGUMENTS` is either project names or `baseline`, never both — `baseline`
 scopes nothing, since the repo-shape check is per repo, not per project.
@@ -95,8 +88,7 @@ in this table, are only ever read.
 - **Read-only by default.** Every fix is offered, never applied unprompted, and
   each is its own consent — never a batch "fix all".
 - **Never install anything, and never build anything.** Report the command; the
-  user runs it. This matches the installer CLI's own rule and keeps doctor safe
-  to run anywhere.
+  user runs it. This matches the installer CLI's own rule.
 - **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
   LSP shipped in this marketplace is reported as *unavailable* with no
   suggested command; only a language that *has* a plugin and isn't installed
@@ -179,9 +171,18 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, whether the repo is shaped (`.config/bootstrap.toml`) or still on the old layout, the two branches, `mise run setup:configs --dry-run` showing a change as drift, every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` values in `.config/bootstrap.toml`, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, whether the repo is shaped (`.config/bootstrap.toml`) or still on the old layout, the two branches, `mise run setup:configs --dry-run` showing a change as drift (the one check here that runs code, stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` values in `.config/bootstrap.toml`, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `docs/memory/` store's handoff ignore line |
 | **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
+
+**Full mode's drift check runs code.** Bootstrap drift (§5) is an explicit
+`mise run setup:configs --dry-run`, on a full run whoever starts it: a person, or
+a caller named at the end of this file. It writes nothing in the repository, but
+it executes the `main` branch of bootstrap with no pin, from bootstrap's clone
+under `~/.cache/bootstrap`, which it refreshes first, so what runs is whatever
+`main` holds at that moment. It runs only in a repo mise trusts, and that is a
+limit rather than a safeguard: the trust gate of mise is not tied to file
+content. `baseline` never runs it.
 
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
 run the ecosystem's own audit command against each project's lockfile — the
@@ -251,8 +252,9 @@ forge at all, or no backlog project for the base. Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a
 row. A repo behind its baseline still works, so none of those is ever blocking),
 **warning** (the repo-shape check could not judge a row, or read a value it cannot
-use: a `setup:configs --dry-run` that failed, or did not run because the repo is
-not trusted by mise, so drift is unknown, with the reason; a `merge_model` in
+use: in full mode, a `setup:configs --dry-run` that failed, or did not run
+because the repo is not trusted by mise, so drift is unknown, with the reason; a
+`merge_model` in
 `.config/bootstrap.toml` other than `direct` or `pr`,
 with the remedy to fix the value; never blocking),
 **missing** (something declared has no install — including a **`B`**-kind
@@ -318,5 +320,6 @@ without, and records the answer as `consent.lsp.<language>` in the plan
 folder's `index.json` (`installed` or `proceed without`). `/vwf:execute` halts
 on `blocking` alone and reads that key; it never asks. `/vwf:recall` calls the
 `baseline` invocation alone, at session start, and prints its result as one
-shape-drift line per remedy — it never runs doctor whole, and it never reads the
-forge.
+shape-drift line per remedy — it never runs doctor whole, never reads the forge,
+and runs no mise task and no bootstrap code, so it does not report config drift.
+Full mode does.
