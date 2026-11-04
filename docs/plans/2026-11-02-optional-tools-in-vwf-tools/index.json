@@ -223,11 +223,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-04T12:44:43.807Z",
+      "status": "green",
+      "started": "2026-11-04T14:22:28.448Z",
+      "ended": "2026-11-04T14:23:29.943Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -277,8 +277,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T14:22:28.413Z",
       "ended": ""
     }
   ],
@@ -821,6 +821,13 @@
       "stage": "edit",
       "text": "07-docs.md ties node and pnpm to the context7 tool alone, yet vwf scripts still need node · split it: node stays required, pnpm is needed when context7 is picked",
       "state": "open"
+    },
+    {
+      "id": "G24",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "U7 generator also wrote the gitignored .dev-marketplace manifest in the worktree, outside Owns · left as written, nothing is committed from it · closed: the path is gitignored and the generator always writes it, no ruling owed",
+      "state": "closed"
     }
   ],
   "overrides": [
