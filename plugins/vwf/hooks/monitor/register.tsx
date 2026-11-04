@@ -37,7 +37,7 @@ import {
 } from "./plan";
 import {
   chipProps,
-  drawChipButton,
+  drawChip,
   drawList,
   drawTimeline,
 } from "./view";
@@ -50,6 +50,8 @@ const FINISHED = ["green", "skipped"];
 const run = atom({ plugin: "vwf", key: "monitorRun" } as const, null);
 const isQuiet = atom({ plugin: "vwf", key: "monitorQuiet" } as const, true);
 const viewing = atom({ plugin: "vwf", key: "monitorViewing" } as const, null);
+const live = atom({ plugin: "vwf", key: "monitorLive" } as const, null);
+const hasPlans = atom({ plugin: "vwf", key: "monitorHasPlans" } as const, false);
 
 type $ = EngineInterface;
 
@@ -106,12 +108,14 @@ async function close($: $) {
   await $.ui.close({ id: PANE });
 }
 
-// The chip's Client failed on this surface.
-let chipFailed = false;
-
-/** A press on the chip above the prompt: the pane opens. */
+/** A press on Monitor: the pane opens on the row's plan, else as /vwf-monitor does. */
 async function openFromChip($: $) {
   isOpen = true;
+  const chip = await read($, live);
+  const r = await read($, run);
+  if (chip !== null ? r?.plan === undefined || nameOf(r.plan.folder) !== chip.folder : !isLive(r)) {
+    await start($, chip?.folder ?? "attached", false);
+  }
   await open($);
   if (needsRefresh(await read($, run))) {
     startTimer($);
@@ -119,28 +123,61 @@ async function openFromChip($: $) {
   await poke($, true);
 }
 
-/** The person closed the pane: an ended plan's chip goes with it. */
-async function hideChip($: $) {
-  await update($, run, (value) => value?.plan?.phase === "ended" ? { ...value, isChipHidden: true } : value);
-}
-
 /** The person closes the pane: the status line goes with it. */
 async function dismiss($: $) {
   $.ui.status(undefined);
-  await hideChip($);
   await close($);
 }
 
-/** True while the chip above the prompt shows: a claim, a run, or an ended plan not closed. */
-function showsChip(r: Run | null): boolean {
-  if (r === null || r.endedAt !== undefined || r.plan === undefined) {
-    return false;
+/**
+ * Reads what the row above the prompt shows, whatever the pane shows: the plan
+ * that reads RUNNING and is live or paused, whoever runs it. Of several, this
+ * session's, then a live one, then the latest started. With none, the last one
+ * stays with its final status until a /clear, so that the row keeps the result.
+ */
+async function refreshLive($: $) {
+  const now = await $.clock.now();
+  const cwd = await $.session.cwd();
+  const base = (await baseOf($, cwd)) ?? cwd;
+  const text = (await stat($, `${base}/docs/plans/index.md`)) === undefined
+    ? await $.fs.read(`${base}/docs/plans/index.json`).catch(() => undefined)
+    : undefined;
+  const session = await $.session.id().catch(() => undefined);
+  const listed = await $.agent.list().catch(() => undefined);
+  const plans: PlanRun[] = [];
+  const rows = text === undefined ? [] : indexRows(text).rows;
+  if (text !== undefined) {
+    const running = rows.filter((row) => row.status === "RUNNING");
+    for (const row of running) {
+      const one = await loadPlan($, base, row);
+      if (one.kind === "plan") {
+        const plan = phased({
+          ...one.plan,
+          replay: settle(one.plan.replay, listed, now, session),
+        }, now);
+        if (plan.phase === "live" || plan.phase === "paused") {
+          plans.push(plan);
+        }
+      }
+    }
   }
-  if (r.plan.phase === "not-run") {
-    return r.waiting === "claim" && r.isQueue !== true;
+  const rank = (plan: PlanRun) => (plan.replay.session === session ? 2 : 0) + (plan.phase === "live" ? 1 : 0);
+  const best = plans.sort((a, b) => rank(b) - rank(a) || (time(b.row.started) ?? 0) - (time(a.row.started) ?? 0))[0];
+  const last = await read($, live);
+  let chip = best === undefined ? last : chipProps(best, now);
+  if (best === undefined && last !== null && text !== undefined) {
+    const one = await loadNamed($, base, rows, last.folder);
+    if (one.kind === "plan") {
+      // Unclaimed: it did not end, and nothing is left to report.
+      chip = one.plan.phase === "not-run" ? null : chipProps(one.plan, now);
+    }
   }
-
-  return r.plan.phase !== "ended" || r.isChipHidden !== true;
+  if (JSON.stringify(await read($, live)) !== JSON.stringify(chip)) {
+    await update($, live, () => chip);
+  }
+  if ((await read($, hasPlans)) !== (text !== undefined)) {
+    await update($, hasPlans, () => text !== undefined);
+  }
 }
 
 /**
@@ -202,6 +239,8 @@ function colorOf(state: string, gaps: number): string | undefined {
 const PATIENCE_MS = 10 * 60 * 1000;
 const CLOSE_MS = 10 * 1000;
 const THROTTLE_MS = 3000;
+// How often the row above the prompt reads the plan index.
+const LIVE_MS = 5000;
 // $.fs.read refuses a file over 4 MiB: a larger log is read from its tail.
 const READ_MAX = 4194304;
 const TAIL_BYTES = "4000000";
@@ -848,21 +887,20 @@ async function refresh($: $) {
     }
     // A press during this read stays.
     const merged: Run = { ...next };
-    const { openUnit, openGaps, isArchivedOpen, isChipHidden } = value;
+    const { openUnit, openGaps, isArchivedOpen } = value;
     delete merged.openUnit;
     delete merged.openGaps;
     delete merged.isArchivedOpen;
-    delete merged.isChipHidden;
 
     return {
       ...merged,
       ...(openUnit === undefined ? {} : { openUnit }),
       ...(openGaps === undefined ? {} : { openGaps }),
       ...(isArchivedOpen === undefined ? {} : { isArchivedOpen }),
-      ...(isChipHidden === undefined ? {} : { isChipHidden }),
     };
   });
   notify($, r.plan, next.plan);
+  await refreshLive($);
   const after = await read($, run);
   if (needsRefresh(after)) {
     if (timer === undefined) {
@@ -874,6 +912,15 @@ async function refresh($: $) {
 }
 
 export const register: Register = (on) => {
+  // A /clear starts the session over, with no session.start: the row forgets.
+  on("session.end", async ($, e, next) => {
+    if (e.reason === "clear") {
+      await update($, live, () => null);
+    }
+
+    return next(e);
+  });
+
   on("session.start", async ($, e, next) => {
     await $.command.register({
       name: "vwf-monitor",
@@ -885,6 +932,8 @@ export const register: Register = (on) => {
     if (needsRefresh(await read($, run))) {
       startTimer($);
     }
+    await refreshLive($);
+    $.clock.every(LIVE_MS, () => void refreshLive($));
 
     return next(e);
   });
@@ -962,7 +1011,6 @@ export const register: Register = (on) => {
       isOpen = false;
       if (e.origin === "person") {
         $.ui.status(undefined);
-        await hideChip($);
       }
     }
 
@@ -1007,47 +1055,14 @@ export const register: Register = (on) => {
     return <Text dimColor>· {e.props.tool}</Text>;
   });
 
-  // The chip above the prompt: one press opens the pane. A question takes the band.
+  // The row above the prompt: the live plan and Monitor, or Monitor alone. A
+  // question takes the band, and a repo with no plan index has no row.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
-    const r = await read($, run);
-    if (e.props.hasSurvey || !showsChip(r) || !r?.plan) {
+    if (e.props.hasSurvey || !(await read($, hasPlans))) {
       return next(e);
     }
-    const chip = chipProps(
-      r.plan,
-      r.refreshedAt ?? Date.now(),
-      r.waiting === "claim" && r.isQueue !== true,
-    );
-    if (e.surface === "desktop" && !chipFailed) {
-      const { Box, Client } = $.ui.resolve(e);
 
-      return (
-        <Box flexDirection="row" alignSelf="flex-start" borderStyle="round" paddingX="sm">
-          <Client key="vwf-chip" module="./chip.tsx" props={chip} />
-        </Box>
-      );
-    }
-
-    return drawChipButton($.ui.resolve(e), chip, () => openFromChip($));
-  });
-
-  // A press on the desktop chip.
-  on("ui.message", async ($, e, next) => {
-    if (e.element === "vwf-chip") {
-      await openFromChip($);
-    }
-
-    return next(e);
-  });
-
-  // The chip's Client failed: the next draw is the plain Button.
-  on("ui.fault", async ($, e, next) => {
-    if (e.element === "vwf-chip") {
-      chipFailed = true;
-      $.ui.invalidate("ui.render");
-    }
-
-    return next(e);
+    return drawChip($.ui.resolve(e), await read($, live), () => openFromChip($));
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {

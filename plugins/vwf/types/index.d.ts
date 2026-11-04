@@ -24,6 +24,20 @@ export type PlanRun = {
   phase: RunPhase;
 };
 
+/** The live plan, or the last one to be live, as the row above the prompt shows it. */
+export type LiveChip = {
+  /** One glyph for each unit: its color, or null while it is pending. */
+  glyphs: (string | null)[];
+  /** The plan's folder name. */
+  folder: string;
+  /** The folder name with its date dropped. */
+  name: string;
+  count: string;
+  word: string;
+  color: string;
+  took: string;
+};
+
 /** One opening of the pane, by /vwf:execute or /vwf-monitor. */
 export type Run = {
   mode: string;
@@ -48,8 +62,6 @@ export type Run = {
   /** The archived folder names, the latest first, read while the list shows. */
   archived?: string[];
   isArchivedOpen?: boolean;
-  /** The person closed the pane on an ended plan: the chip above the prompt hides. */
-  isChipHidden?: boolean;
   /** The unit whose details show on the timeline. */
   openUnit?: string;
   /** The gaps whose full text shows on the timeline. */
@@ -204,6 +216,10 @@ declare module "claude-code" {
       monitorRun: Run | null;
       monitorQuiet: boolean;
       monitorViewing: string | null;
+      /** The live plan, whoever runs it, else the last one, until a /clear. */
+      monitorLive: LiveChip | null;
+      /** This repo has a docs/plans/index.json: the Monitor button shows. */
+      monitorHasPlans: boolean;
     };
   }
 }

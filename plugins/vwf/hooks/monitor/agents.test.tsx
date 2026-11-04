@@ -693,6 +693,82 @@ test(
   },
 );
 
+const BAND = {
+  plugin: "vwf",
+  surface: "desktop",
+  component: "AbovePrompt",
+  props: {
+    hasSurvey: false,
+    isWorking: false,
+    maxRows: 10,
+    bodyColumns: 100,
+    scroll: { offset: 0, bodyRows: 10 },
+  },
+} as const;
+
+test(
+  "the row above the prompt follows the live plan with no opening, and shows Monitor alone with none",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    on("session.end", () => ({ sessionId: SESSION }));
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [B, "RUNNING"]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
+          state: "COMPLETE",
+          detail: "",
+        }),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["running"]),
+        [logOf(B)]: line("run.start", { mode: "fresh", session: "other" }),
+      },
+    });
+    await $.session.start({ cwd: MAIN, surface: "desktop", isInteractive: true });
+    const band = await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]);
+    // Another session's plan shows, with no /vwf:execute here.
+    expect(await band.find({ type: "Text", text: /^b-plan$/ })).toBeDefined();
+    // It lands: the row keeps its last status, and the press opens that plan.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "COMPLETE"]);
+    w.files[`${MAIN}/docs/plans/${B}/index.json`] = plan(B, ["green"], undefined, {
+      state: "COMPLETE",
+      detail: "",
+    });
+    await clock.advance(5500);
+    expect(await band.find({ type: "Text", text: /^b-plan$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^Complete$/ })).toBeDefined();
+    await band.press({ key: "vwf-chip" });
+    expect(w.opened).toEqual(["vwf-monitor"]);
+    // A new live plan takes the row.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"], [B, "COMPLETE"]);
+    w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(A, ["running"]);
+    w.files[logOf(A)] = line("run.start", { mode: "fresh", session: "other" });
+    await clock.advance(5500);
+    expect(await band.find({ type: "Text", text: /^a-plan$/ })).toBeDefined();
+    // It lands, then a /clear: Monitor alone.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "COMPLETE"]);
+    await clock.advance(5500);
+    await $.session.end({ reason: "clear", sessionId: SESSION } as Parameters<typeof $.session.end>[0]);
+    expect(await band.find({ type: "Text", text: /plan$/ })).toBe(undefined);
+    expect(await band.find({ type: "Text", text: /^▰$/ })).toBe(undefined);
+    expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({ label: "Monitor" });
+    await band.unmount();
+  },
+);
+
+test(
+  "a repo with no plan index has no row above the prompt",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    world(on);
+    await $.session.start({ cwd: MAIN, surface: "desktop", isInteractive: true });
+    let isPassed = false;
+    await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]).catch(() => {
+      // The hook passed, and in a test nothing sits beneath it.
+      isPassed = true;
+    });
+    expect(isPassed).toBe(true);
+  },
+);
+
 test(
   "an `all` run stays on a landed plan, then changes to the next RUNNING plan",
   async ($, on) => {
@@ -885,12 +961,12 @@ test("D8: the timer runs only while a run is live", async ($, on) => {
     surface: "terminal",
     isInteractive: true,
   });
-  // No run: no timer.
-  expect(periods.length).toBe(0);
+  // No run: only the timer of the row above the prompt.
+  expect(periods.length).toBe(1);
   await $.prompt.submit(execute(`docs/plans/${A}`));
-  expect(periods.length).toBe(1);
+  expect(periods.length).toBe(2);
   await tick();
-  expect(periods.length).toBe(1);
+  expect(periods.length).toBe(2);
   // The run ends: the timer stops asking for periods.
   w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(
     A,
@@ -900,5 +976,5 @@ test("D8: the timer runs only while a run is live", async ($, on) => {
   );
   await tick();
   await tick();
-  expect(periods.length).toBe(0);
+  expect(periods.length).toBe(1);
 });

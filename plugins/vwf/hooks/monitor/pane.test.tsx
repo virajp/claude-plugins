@@ -286,13 +286,18 @@ test(
     const ui = await openPane($, on, "desktop", opened, closed);
     const band = await $.ui.mount({ ...BAND, surface: "desktop" } as Parameters<typeof $.ui.mount>[0]);
     // The colored glyphs: U1 green, U2 pending, U3 skipped gray.
-    const glyphs = await band.findAll({ type: "Text", text: /^▰$/, in: "vwf-chip" });
-    expect(glyphs.map((one) => one.props?.color)).toEqual(["#3fa66a", "#8a8f98"]);
-    expect(await band.find({ type: "Text", text: /^▱$/, in: "vwf-chip" })).toBeDefined();
-    expect(await band.find({ type: "Text", text: / 2\/3 /, in: "vwf-chip" })).toBeDefined();
-    // A press anywhere on the chip opens the pane.
-    await band.pointer({ type: "down", x: 1, y: 0, button: "left" });
-    await band.pointer({ type: "up", x: 1, y: 0, button: "left" });
+    // One glyph shape, since the app draws the empty glyph at another size.
+    const glyphs = await band.findAll({ type: "Text", text: /^▰$/ });
+    expect(glyphs.map((one) => one.props?.color)).toEqual(["#3fa66a", undefined, "#8a8f98"]);
+    expect(glyphs[1]?.props?.dimColor).toBe(true);
+    expect(await band.find({ type: "Text", text: /^▱$/ })).toBe(undefined);
+    // The plan's name, its date dropped, and the counts.
+    expect(await band.find({ type: "Text", text: /^a-plan$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^2\/3 $/ })).toBeDefined();
+    expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({
+      label: "Monitor",
+    });
+    await band.press({ key: "vwf-chip" });
     expect(opened).toEqual(["vwf-monitor", "vwf-monitor"]);
     await band.unmount();
     await ui.unmount();

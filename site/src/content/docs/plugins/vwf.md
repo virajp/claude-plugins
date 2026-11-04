@@ -2833,12 +2833,20 @@ resume command** button. If the surface cannot copy, a toast says so, and you
 can
 read the command in the pane.
 
-**The chip above the prompt.** In the terminal and the desktop app, a small chip
-sits directly above the prompt: one glyph per unit, the units finished, the
-current wave or the state, and the elapsed time. Press it to open the pane. It
-shows while the plan waits for its claim or runs, whether the pane is open or
-closed. After the plan ends, it shows until you close the pane. A question takes
-that band, and the chip returns after your answer.
+**The row above the prompt.** In the terminal and the desktop app, in a repo
+with
+a `docs/plans/index.json`, a small row sits directly above the prompt, with no
+command to start it. While a plan reads `RUNNING` and is live or paused, in any
+session, the row shows that plan: one colored glyph per unit, its name, the
+units
+finished, the current wave or `Paused`, and the elapsed time. With several, it
+shows this session's, then a live one, then the latest started. The **Monitor**
+button opens the pane on that plan. When the plan ends and no other plan is
+live,
+the row keeps its last status, such as `Complete` or `Blocked`, until you run
+`/clear`. If no plan was live in the session, the row is the button alone, which
+opens the pane as `/vwf-monitor` does. A question takes that band,
+and the row returns after your answer.
 
 **The plan list.** One row per row of the plan index: running plans; then the
 plans ready to run, numbered, in the order `/vwf:execute next` picks them; then

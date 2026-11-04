@@ -426,11 +426,14 @@ whole-percent
 `Box` parts on one axis (the engine refuses a fractional percent) with the unit
 id as the `Button`, and a `role: "dismiss"` Close; `drawList` draws the plan
 list
-on all surfaces, the `AbovePrompt` band draws the chip: on the desktop a
-`Client` (`chip.tsx`),
-since a desktop `Button` draws one plain label, and its press reaches
-`ui.message`; on the terminal, or after a `ui.fault`, one `Button`
-(`drawChipButton`), a
+on all surfaces, `drawChip` draws the `AbovePrompt` band from the `monitorLive`
+state, which
+`refreshLive` reads on its own 5 s timer in every session, separate from what
+the
+pane shows; the last live plan stays with its final status until `session.end`
+says `clear`: colored `Text` glyphs and the plan's name beside a `Monitor`
+`Button`,
+since a desktop `Button` draws one plain label, or the button alone, a
 `notify` in `register.tsx` raises the toast and the status
 line
 when a followed run changes, and
@@ -439,7 +442,8 @@ queue order and the
 replay, and strips terminal control characters from plan and log text before it
 renders; `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and
 `agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,
-`monitorQuiet`, `monitorViewing`) sit under the plugin name `vwf` and are
+`monitorQuiet`, `monitorViewing`, `monitorLive`, `monitorHasPlans`) sit under
+the plugin name `vwf` and are
 declared in `types/index.d.ts`, which the manifest's `types` key names. It ties
 an agent to a unit through the log: the Agent call's `tool.start` summary names
 a unit (`U<n>`, `U<n>-late<k>`) or a wave review (`R<wave>`, `R<wave>-late`,

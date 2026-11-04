@@ -5,11 +5,11 @@ import type {
 
 import type {
   AgentRun,
+  LiveChip,
   PlanRun,
   QueueRow,
   ReplayUnit,
 } from "../../types";
-import type { ChipProps } from "./chip";
 import {
   nameOf,
   time,
@@ -641,20 +641,16 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
   );
 }
 
-/** What the chip shows of a plan, as plain data. */
-export function chipProps(plan: PlanRun, now: number, isClaiming: boolean): ChipProps {
+/** What the chip shows of a plan: the live one, or the last one to be live. */
+export function chipProps(plan: PlanRun, now: number): LiveChip {
   const state = plan.replay;
   const units = state.units;
   const shown = units.map((unit) => unit.agent?.live && unit.status === "pending" ? "running" : unit.status);
   const done = shown.filter((one) => FINISHED.includes(one)).length;
-  const startedAt = time(plan.row.started);
-  const endedAt = time(plan.row.ended);
-  const isEnded = plan.phase === "ended";
   const wave = state.waves.find((one) => one.status === "running")?.id.replace(/^W/, "")
     ?? units.find((_, i) => shown[i] === "running")?.wave;
-  const word = isClaiming
-    ? "Claim"
-    : state.state === "BLOCKED"
+  const isEnded = plan.phase === "ended";
+  const word = state.state === "BLOCKED"
     ? "Blocked"
     : plan.phase === "paused"
     ? "Paused"
@@ -663,6 +659,7 @@ export function chipProps(plan: PlanRun, now: number, isClaiming: boolean): Chip
     : wave === undefined
     ? "Running"
     : `Wave ${wave}`;
+  const startedAt = time(plan.row.started);
 
   return {
     glyphs: units.map((unit, i) => {
@@ -671,33 +668,56 @@ export function chipProps(plan: PlanRun, now: number, isClaiming: boolean): Chip
 
       return one === "pending" ? null : fillOf(one, gaps);
     }),
+    folder: nameOf(plan.folder),
+    name: nameOf(plan.folder).replace(/^\d{4}-\d{2}-\d{2}(-\d{4})?-/, ""),
     count: `${done}/${units.length}`,
     word,
-    color: FILL[badgeOf(plan, isClaiming).color]!,
-    took: span(startedAt, endedAt ?? (isEnded || startedAt === undefined ? undefined : now)),
+    color: FILL[badgeOf(plan, false).color]!,
+    took: span(startedAt, time(plan.row.ended) ?? (isEnded ? undefined : now)),
   };
 }
 
 /**
- * The chip as one Button, one press anywhere on it: the terminal's, and the
- * desktop's when its Client fails. A desktop Button draws one plain label, so
- * the glyphs lose their colors there.
+ * The row above the prompt: the live plan in colored text, if there is one,
+ * beside a Monitor button. The glyphs sit outside the Button, since a desktop
+ * Button draws one plain label.
  */
-export function drawChipButton(ui: Ui, chip: ChipProps, open: () => unknown) {
+export function drawChip(ui: Ui, chip: LiveChip | null, open: () => unknown) {
   const { Box, Text, Button } = ui;
 
   return (
-    <Box flexDirection="row" alignSelf="flex-start">
-      <Button key="vwf-chip" plain onPress={open}>
-        {chip.glyphs.map((color, i) =>
-          color === null
-            ? <Text key={`glyph-${i}`} dimColor>▱</Text>
-            : <Text key={`glyph-${i}`} color={color}>▰</Text>
-        )}
-        <Text key="count">{` ${chip.count} `}</Text>
-        <Text key="word" color={chip.color}>{chip.word}</Text>
-        <Text key="took" dimColor>{` ${chip.took}`}</Text>
-      </Button>
+    <Box
+      flexDirection="row"
+      justifyContent={chip === null ? "flex-end" : "space-between"}
+      alignItems="center"
+      gap="sm"
+    >
+      {chip !== null && (
+        <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
+          <Box flexShrink={0}>
+            <Text>
+              {chip.glyphs.map((color, i) =>
+                color === null
+                  ? <Text key={`glyph-${i}`} dimColor>▰</Text>
+                  : <Text key={`glyph-${i}`} color={color}>▰</Text>
+              )}
+            </Text>
+          </Box>
+          <Box flexShrink={1} overflow="hidden">
+            <Text wrap="truncate">{chip.name}</Text>
+          </Box>
+          <Box flexShrink={0}>
+            <Text>
+              <Text key="count" dimColor>{`${chip.count} `}</Text>
+              <Text key="word" color={chip.color}>{chip.word}</Text>
+              <Text key="took" dimColor>{` ${chip.took}`}</Text>
+            </Text>
+          </Box>
+        </Box>
+      )}
+      <Box flexShrink={0}>
+        <Button key="vwf-chip" label="Monitor" onPress={open} />
+      </Box>
     </Box>
   );
 }
