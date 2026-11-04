@@ -117,11 +117,16 @@ that marked it. Second, is it **current**, evaluated **per repo** on that repo's
 own artifacts by two predicates under **"The repo shape against its baseline"**
 in `/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
 drift**: `mise run setup:configs --dry-run`, run in that repo, shows no change.
-A clone's own task can sit behind that name and mise runs it with no trust
-prompt, so run the dry-run only when mise lists this repo as trusted:
+This explicit dry-run writes nothing in the repository, but it runs code: the
+repo's own `setup:configs` task, which refreshes bootstrap's clone under
+`~/.cache/bootstrap` and executes the `main` branch of bootstrap from that clone
+with no pin. Run it only when mise lists this repo as trusted:
 `mise trust --show`, run in that repo, lists a path inside the repo, and every
 such line reads `trusted`. A parent's line does not count. Otherwise drift is
-unknown, with the reason `repo not trusted by mise`. The dry-run prints on
+unknown, with the reason `repo not trusted by mise`. That check is a limit, not
+a safeguard: it stops only a clone mise has never run, and the trust gate of
+mise is not tied to file content, so a repo trusted once runs whatever its task
+holds now. The dry-run prints on
 stderr, each line prefixed `repo-sync:`; after the prefix, a line
 starting `would` is a change, and `unchanged`, `kept seed` or `skip` are not.
 No `would` line and exit 0 is no drift. A listed change is drift. Exit 5 or any
