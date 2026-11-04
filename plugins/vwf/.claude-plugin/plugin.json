@@ -30,18 +30,6 @@
     "git-workflow",
     "vwf-design-adapter"
   ],
-  "mcpServers": {
-    "context7": {
-      "args": [
-        "-c",
-        "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"
-      ],
-      "command": "sh",
-      "env": {
-        "CONTEXT7_API_KEY": "${CONTEXT7_API_KEY:-}"
-      }
-    }
-  },
   "name": "vwf",
   "repository": "https://github.com/virajp/claude-plugins",
   "types": "./types/index.d.ts",

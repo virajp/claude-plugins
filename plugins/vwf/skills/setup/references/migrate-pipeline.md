@@ -57,6 +57,23 @@ Four sources define it, and none of them is a history:
    24 setup is current, does not re-enter this step and does not ask again,
    and `/vwf:doctor` reports the item as drift with its remedy. The step reads,
    rewrites and deletes no palace data outside the repo.
+   **`config_format` 24 → 25** adds `addons:` and moves into it each optional
+   tool the repo already records. It runs once the stamp reads 24, including
+   when this pass just moved it there; a config held at 22 takes none of it
+   yet. Build the list as the
+   [format lineage](format-lineage.md) row for 25 states, reading the
+   `.claude/stackgen/lock.yaml` of every repo of the product cloned locally,
+   with one warning line per member that is not. Then ask the row's one yes/no
+   question, per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`; either answer
+   is complete. The result is **one numbered row** in the dry-run plan: the
+   `addons:` list it writes and each `backing_template` entry it removes, a list
+   it empties reading `[]`. On consent it is applied and the stamp moves to
+   **25**. A declined row leaves the config and the stamp at 24, since a 25 stamp
+   over an addon slug left in `backing_template` would claim a move that did
+   not happen, and the next migrate pass offers it again. The lockfile's
+   `local_plugin` rename and the recorded `.mcp.json` entries are stackgen's,
+   behind its own consent, run by the [materialize pass](materialize.md) that
+   follows.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

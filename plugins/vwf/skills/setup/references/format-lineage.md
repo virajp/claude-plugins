@@ -15,7 +15,7 @@ registering as something unknown.
 
 ## What the stamps mean now
 
-`blueprint_format` (**25**) and `config_format` (**24**) are **drift
+`blueprint_format` (**25**) and `config_format` (**25**) are **drift
 detectors** and nothing else. `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md` compares
 a repo's stamps against the shipped integers and nudges
 `/vwf:setup`. Nothing selects a migration path by them any more,
@@ -129,6 +129,7 @@ must go through the rule below. Every other row is mechanical.
 | a flow id carrying a `<device>` segment, or missing its `<platform>` leaf | `<project>/<NNN>-<flow>/<platform>` | config-key | |
 | `environments` keys `dev`, `test`, `stage`, `prod` | `development`, `staging`, `production` — `test` has no single canonical partner; propose, never auto-fix | config-key | yes |
 | a `memory:` block (`memory.wing`), and the palace rooms it addressed (`plans`, then `planning`; `decision`, then `decisions`) | retired in `config_format` 24 — the block is offered for removal by the migrate pipeline; a room's records are files under `docs/memory/decisions/`, `gaps/` and `problems/` from then on | retirement | |
+| no top-level `addons:`; a `notion` entry in a `projects.<name>.stack.backing_template`; the MCP server vwf's manifest shipped | `config_format` 25 — `addons:`, always a list, `[]` when none, never `unresolved`. `notion` leaves every `backing_template` and joins `addons:` when any such list names the slug `notion`, or any repo's stackgen lockfile in the product records the `capability-provider/notion` pack or its `.mcp.json` server. `taste-skill` joins when any repo's stackgen lockfile `bootstrap:` block records `taste-skill@taste-skill`. "Any repo" means those cloned locally, base and members; a member not cloned is skipped with a one-line warning. One yes/no question, "Keep the context7 MCP server? vwf no longer installs it", adds `context7` on yes. 24 → 25 is the only new step | config-key | |
 | no `projects.<name>.stylesheet` on a project declaring a `site` or `webapp` platform | `stylesheet: unresolved` — the axis `config_format` 19 introduced; nothing converts, the key is written so the deferred decision is visible. A project declaring neither platform takes no key | config-key | |
 | a Screens row on a `site`/`webapp` platform file with no `Metadata` block | the block, `blueprint_format` 25 — propose per row: `title` from the Screen cell, `description` empty, `index: yes` for `site` and `no` for `webapp`, `image: default`; never auto-fix | doc-section | |
 
