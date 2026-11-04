@@ -290,9 +290,8 @@ function repoItems(context: Context): Item[] {
 function legacyItems(receiptDir: string): Item[] {
   let names: string[];
   try {
-    names = readdirSync(receiptDir).filter(n => n.endsWith(".json")).sort();
-  }
-  catch {
+    names = readdirSync(receiptDir).filter((n) => n.endsWith(".json")).sort();
+  } catch {
     return [];
   }
 
@@ -318,7 +317,7 @@ function legacyItems(receiptDir: string): Item[] {
 }
 
 function describePlugins(receipt: Receipt): string | undefined {
-  const names = [...new Set((receipt.plugins ?? []).map(p => p.name))];
+  const names = [...new Set((receipt.plugins ?? []).map((p) => p.name))];
   return names.length === 0 ? undefined : names.join(", ");
 }
 
@@ -327,10 +326,10 @@ function describePlugins(receipt: Receipt): string | undefined {
 // ---------------------------------------------------------------------------
 
 export type Selection =
-  | { readonly kind: "cancel"; }
-  | { readonly kind: "toggle"; readonly toggle: ReadonlySet<number>; }
+  | { readonly kind: "cancel" }
+  | { readonly kind: "toggle"; readonly toggle: ReadonlySet<number> }
   /** Something in the answer was not a valid row number. */
-  | { readonly kind: "invalid"; readonly tokens: readonly string[]; };
+  | { readonly kind: "invalid"; readonly tokens: readonly string[] };
 
 /**
  * Read an answer as the set of rows to **toggle**.
@@ -352,7 +351,7 @@ export function parseSelection(answer: string, count: number): Selection {
 
   const keep = new Set<number>();
   const bad: string[] = [];
-  for (const token of text.split(/[\s,]+/).filter(t => t.length > 0)) {
+  for (const token of text.split(/[\s,]+/).filter((t) => t.length > 0)) {
     const n = /^\d+$/.test(token) ? Number.parseInt(token, 10) : Number.NaN;
     if (Number.isNaN(n) || n < 1 || n > count) {
       bad.push(token);
@@ -370,9 +369,7 @@ export function resolveSelection(
   items: readonly Item[],
   toggle: ReadonlySet<number>,
 ): Item[] {
-  return items.filter((item, index) =>
-    toggle.has(index + 1) ? !defaultSelected(item) : defaultSelected(item)
-  );
+  return items.filter((item, index) => toggle.has(index + 1) ? !defaultSelected(item) : defaultSelected(item));
 }
 
 /** Is this row selected before the user says anything? */
@@ -406,8 +403,7 @@ export function renderItems(items: readonly Item[]): string {
  * and one prompt that toggles is honest about both — where "enter what to keep"
  * would leave a user no way to ask for the one row that is off.
  */
-export const PROMPT =
-  "\nEnter the numbers to TOGGLE, Enter to accept as shown, "
+export const PROMPT = "\nEnter the numbers to TOGGLE, Enter to accept as shown, "
   + "or q to cancel: ";
 
 /**
@@ -426,8 +422,7 @@ export async function askSelection(count: number): Promise<Selection> {
   const rl = createInterface({ input: process.stdin, output: process.stderr });
   try {
     return parseSelection(await rl.question(PROMPT), count);
-  }
-  finally {
+  } finally {
     rl.close();
   }
 }
@@ -447,7 +442,7 @@ export function removeItems(
   items: readonly Item[],
   options: RunOptions,
 ): Outcome[] {
-  const outcomes = items.map(item => {
+  const outcomes = items.map((item) => {
     options.progress?.step(`removing ${item.label}`);
     return removeItem(item, options);
   });
@@ -504,7 +499,7 @@ function runTool(
   options: RunOptions,
   bin: string,
   args: readonly string[],
-  execOptions: { readonly cwd?: string; readonly env?: NodeJS.ProcessEnv; },
+  execOptions: { readonly cwd?: string; readonly env?: NodeJS.ProcessEnv },
 ): Outcome {
   const action = { summary: `${bin} ${args.join(" ")}` };
   if (!hasBin(bin)) {
@@ -558,7 +553,7 @@ function revertLegacyReceipt(item: Item, options: RunOptions): Outcome {
         // installs, and running both would uninstall a plugin twice.
         ? {
           ...receipt,
-          entries: receipt.entries.filter(e => e.kind !== "command"),
+          entries: receipt.entries.filter((e) => e.kind !== "command"),
         }
         : receipt,
       // No `runUndo`: it existed for the retired targets' `command` entries,
@@ -570,8 +565,7 @@ function revertLegacyReceipt(item: Item, options: RunOptions): Outcome {
     // after undoing one makes every later run believe in it and offer it again.
     rmSync(path, { force: true });
     return { name: item.id, actions: [action] };
-  }
-  catch (error) {
+  } catch (error) {
     // Kept on failure, deliberately: a half-reverted install still has state to
     // undo, and throwing the record away would strand it.
     return { name: item.id, actions: [], error: (error as Error).message };
@@ -584,8 +578,7 @@ function removeIfEmpty(path: string): void {
     if (readdirSync(path).length === 0) {
       rmdirSync(path);
     }
-  }
-  catch {
+  } catch {
     // Absent, not a directory, or not ours to remove: nothing to clean up.
   }
 }

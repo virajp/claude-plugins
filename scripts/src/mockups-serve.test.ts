@@ -128,14 +128,14 @@ function start(args = ["--root", root]): Promise<Server> {
   child = proc;
   let out = "";
   let err = "";
-  proc.stderr.on("data", chunk => {
+  proc.stderr.on("data", (chunk) => {
     err += String(chunk);
   });
-  const exited = new Promise<number | null>(done => {
-    proc.on("exit", code => done(code));
+  const exited = new Promise<number | null>((done) => {
+    proc.on("exit", (code) => done(code));
   });
   return new Promise((resolve, reject) => {
-    proc.stdout.on("data", chunk => {
+    proc.stdout.on("data", (chunk) => {
       out += String(chunk);
       const line = out.split("\n")[0];
       if (out.includes("\n") && line !== undefined) {
@@ -147,7 +147,7 @@ function start(args = ["--root", root]): Promise<Server> {
         });
       }
     });
-    proc.on("exit", code => reject(new Error(`exited ${code} before URL`)));
+    proc.on("exit", (code) => reject(new Error(`exited ${code} before URL`)));
   });
 }
 
@@ -157,13 +157,11 @@ function rawGet(base: string, path: string, host?: string): Promise<number> {
   return new Promise((resolve, reject) => {
     const socket = connect(port, "127.0.0.1", () => {
       socket.write(
-        `GET ${path} HTTP/1.1\r\nHost: ${
-          host ?? `127.0.0.1:${port}`
-        }\r\nConnection: close\r\n\r\n`,
+        `GET ${path} HTTP/1.1\r\nHost: ${host ?? `127.0.0.1:${port}`}\r\nConnection: close\r\n\r\n`,
       );
     });
     let data = "";
-    socket.on("data", chunk => {
+    socket.on("data", (chunk) => {
       data += String(chunk);
     });
     socket.on("end", () => resolve(Number(data.split(" ")[1])));
@@ -188,7 +186,7 @@ function send(
         path,
         headers: { connection: "close", ...headers },
       },
-      res => {
+      (res) => {
         res.resume();
         res.on("end", () => resolve(res.statusCode ?? 0));
       },
@@ -260,7 +258,7 @@ describe("serve.mjs", () => {
     expect(await rawGet(server.url, "/", "127.0.0.1:1")).toBe(403);
     expect(await rawGet(server.url, "/", `localhost:${port}`)).toBe(200);
     const json = {
-      host: `127.0.0.1:${port}`,
+      "host": `127.0.0.1:${port}`,
       "content-type": "application/json",
     };
     expect(
@@ -419,8 +417,8 @@ describe("serve.mjs", () => {
     expect(file).not.toMatch(
       /[\u007f-\u009f\u2028\u2029\ufeff\ufffe\uffff]|[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/,
     );
-    const parsed = parseYaml(file) as Array<{ text: string; }>;
-    expect(parsed.map(c => c.text)).toEqual(texts);
+    const parsed = parseYaml(file) as Array<{ text: string }>;
+    expect(parsed.map((c) => c.text)).toEqual(texts);
   });
 
   it("answers POST /done with 204 and exits 0", async () => {
@@ -476,7 +474,7 @@ describe("serve.mjs", () => {
       "__mockups/routes.json",
       JSON.stringify({
         ...ROUTES,
-        screens: ROUTES.screens.filter(s => s.code !== "100a"),
+        screens: ROUTES.screens.filter((s) => s.code !== "100a"),
       }),
     );
     const { url } = await start();
@@ -700,7 +698,7 @@ describe("serve.mjs --renders", () => {
 
   function renderTree(platform: string) {
     const dir = renderRoot(platform);
-    const screens = ROUTES.screens.map(s => ({ ...s }));
+    const screens = ROUTES.screens.map((s) => ({ ...s }));
     put(
       join(dir, "__renders", "routes.json"),
       JSON.stringify({ project: "demo", platform, screens }),
@@ -977,9 +975,7 @@ describe("serve.mjs --renders", () => {
     const { url } = await startRenders("web");
     expect((await fetch(new URL("/history", url))).status).toBe(404);
     const dir = renderRoot("web");
-    const screens = ROUTES.screens.map(s =>
-      s.code === "200a" ? { ...s, route: "/history", path: "history" } : s
-    );
+    const screens = ROUTES.screens.map((s) => s.code === "200a" ? { ...s, route: "/history", path: "history" } : s);
     put(
       join(dir, "__renders", "routes.json"),
       JSON.stringify({ project: "demo", platform: "web", screens }),
@@ -1012,7 +1008,7 @@ describe("serve.mjs --renders", () => {
     const { url } = await startRenders("web");
     // 200a leaves /orders for /history; 200d takes /orders. renders.json still
     // holds 200a's old entry, and orders/index.png is still on disk.
-    const screens = ROUTES.screens.map(s =>
+    const screens = ROUTES.screens.map((s) =>
       s.code === "200a"
         ? { ...s, route: "/history", path: "history" }
         : s.code === "200d"
@@ -1058,7 +1054,7 @@ describe("serve.mjs --renders", () => {
   });
 
   it("keeps a screen's renders when its route only renames a parameter", async () => {
-    const screens = ROUTES.screens.map(s =>
+    const screens = ROUTES.screens.map((s) =>
       s.code === "200b"
         ? { ...s, route: "/orders/{orderId}", path: "orders/[orderId]" }
         : s

@@ -85,7 +85,7 @@ function hook(payload: object) {
 }
 
 function lines(file: string) {
-  return readFileSync(file, "utf8").trim().split("\n").map(l => JSON.parse(l));
+  return readFileSync(file, "utf8").trim().split("\n").map((l) => JSON.parse(l));
 }
 
 function startRun(mode = "fresh", session = SID) {
@@ -114,7 +114,7 @@ describe("log.mjs start", () => {
       agent: null,
     });
     expect(second).toMatchObject({ event: "plan.snapshot", run: id, folder });
-    expect(second.units.map((u: { kind: string; }) => u.kind)).toEqual([
+    expect(second.units.map((u: { kind: string }) => u.kind)).toEqual([
       "edit",
       "code",
     ]);
@@ -123,11 +123,11 @@ describe("log.mjs start", () => {
   it("a second start appends to the same file under a new run id", async () => {
     const file = startRun();
     const before = lines(file);
-    await new Promise(r => setTimeout(r, 1100));
+    await new Promise((r) => setTimeout(r, 1100));
     expect(startRun("resume")).toBe(file);
     const after = lines(file);
     expect(after.slice(0, before.length)).toEqual(before);
-    const starts = after.filter(e => e.event === "run.start");
+    const starts = after.filter((e) => e.event === "run.start");
     expect(starts).toHaveLength(2);
     expect(starts[1].mode).toBe("resume");
     expect(starts[1].run).not.toBe(starts[0].run);
@@ -209,7 +209,7 @@ describe("log.mjs event and run", () => {
     const bad = log(["run", "--tier", "plan", "--", "sh", "-c", "exit 3"]);
     expect(ok.status).toBe(0);
     expect(bad.status).toBe(3);
-    const gates = lines(file).filter(e => e.event === "gate");
+    const gates = lines(file).filter((e) => e.event === "gate");
     expect(gates).toHaveLength(2);
     expect(gates[0]).toMatchObject({
       tier: "wave",
@@ -261,7 +261,7 @@ describe("log.mjs event row and gap", () => {
         .status,
     )
       .toBe(0);
-    const rows = lines(file).filter(e => e.event === "row");
+    const rows = lines(file).filter((e) => e.event === "row");
     expect(rows[0]).toMatchObject({ unit: "U2", status: "green" });
     expect(rows[1]).toMatchObject({ stage: "ux", status: "skipped" });
     expect(rows).toHaveLength(3);
@@ -296,8 +296,8 @@ describe("log.mjs event row and gap", () => {
     expect(gap({ ...base, class: "contested", source: "review-row" }).status)
       .toBe(0);
     expect(gap(base).status).toBe(0);
-    const gaps = lines(file).filter(e => e.event === "gap");
-    expect(gaps.map(g => g.id)).toEqual(["G1", "L1", "L2"]);
+    const gaps = lines(file).filter((e) => e.event === "gap");
+    expect(gaps.map((g) => g.id)).toEqual(["G1", "L1", "L2"]);
     expect(gaps[0]).toMatchObject({ class: "GAP", source: "unit" });
     expect(gaps[1]).toMatchObject({ class: "contested", state: "open" });
   });
@@ -362,7 +362,7 @@ describe("log.mjs prune", () => {
     expect(existsSync(fresh)).toBe(true);
     expect(existsSync(live)).toBe(true);
     expect(existsSync(kept)).toBe(true);
-    expect(r.stdout.trim().split("\n").map(p => basename(p)).sort()).toEqual([
+    expect(r.stdout.trim().split("\n").map((p) => basename(p)).sort()).toEqual([
       "old.jsonl",
       "suffixed.jsonl",
     ]);
@@ -434,8 +434,7 @@ describe("action-log hook", () => {
         hook_event_name: "SubagentStop",
         agent_id: "a9",
         agent_type: "general-purpose",
-        last_assistant_message:
-          "CHANGED: x\nGAP: the plan named no owner — took U3\nUNRESOLVED: none",
+        last_assistant_message: "CHANGED: x\nGAP: the plan named no owner — took U3\nUNRESOLVED: none",
       },
       {
         hook_event_name: "PostToolUse",
@@ -449,7 +448,7 @@ describe("action-log hook", () => {
       expect(hook({ session_id: SID, ...p }).status).toBe(0);
     }
     const ev = lines(file).slice(2);
-    expect(ev.map(e => e.event)).toEqual([
+    expect(ev.map((e) => e.event)).toEqual([
       "tool.start",
       "agent.start",
       "tool.start",
@@ -457,7 +456,7 @@ describe("action-log hook", () => {
       "agent.end",
       "tool.end",
     ]);
-    expect(ev.every(e => e.run === id)).toBe(true);
+    expect(ev.every((e) => e.run === id)).toBe(true);
     expect(ev[0]).toMatchObject({
       agent: null,
       tool: "Agent",
@@ -626,8 +625,7 @@ describe("log.mjs summary", () => {
 
   it("reports each run and totals without the pause", () => {
     const file = join(root, "two.jsonl");
-    const at = (h: number, m: number) =>
-      new Date(Date.UTC(2026, 9, 24, h, m)).toISOString();
+    const at = (h: number, m: number) => new Date(Date.UTC(2026, 9, 24, h, m)).toISOString();
     const ev = [
       {
         ts: at(12, 0),
@@ -655,7 +653,7 @@ describe("log.mjs summary", () => {
       },
       { ts: at(15, 0), run: "r2", event: "run.end", outcome: "complete" },
     ];
-    writeFileSync(file, ev.map(e => JSON.stringify(e)).join("\n") + "\n");
+    writeFileSync(file, ev.map((e) => JSON.stringify(e)).join("\n") + "\n");
     const s = log(["summary", file]);
     expect(s.status).toBe(0);
     expect(s.stdout).toMatch(

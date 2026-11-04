@@ -28,8 +28,7 @@
 /** The environment variable, named once. */
 export const TOKEN_VAR = "GITHUB_API_TOKEN";
 
-export const RATE_LIMIT_HINT =
-  `rate-limited by GitHub — set $${TOKEN_VAR} to a read-only (public-repo) `
+export const RATE_LIMIT_HINT = `rate-limited by GitHub — set $${TOKEN_VAR} to a read-only (public-repo) `
   + "token and re-run";
 
 /**

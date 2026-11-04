@@ -1,5 +1,10 @@
 # Decision — `init` adopts a brownfield task library, and `doctor` keeps it relevant
 
+> **SUPERSEDED 2026-11-03** — `init` keeps only the existing-repo passes for its
+> own files; bootstrap's `docs/sync` owns the rest. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-12 · **Branch** `2026-09-12-init-brownfield` · **Plan**
 [`docs/plans/2026-09-12-init-brownfield/`](../../plans/2026-09-12-init-brownfield/index.md)
 · **Reverses** two standing rules of `init`'s existing-repo pipeline — the

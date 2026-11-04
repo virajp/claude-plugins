@@ -27,7 +27,7 @@ description: Execute an approved plan folder — a cycle plan from /vwf:plan or
 argument-hint: "<plan-folder, its index.json, next, or all>"
 model: opus
 
-disable-model-invocation: true
+disable-model-invocation: false
 ---
 
 # execute — Run an Approved Plan to Completion
@@ -63,13 +63,30 @@ wave.
 the planner and recorded in the folder; where the folder is silent and the
 rules below do not decide, the run reports what is missing and stops — it
 never offers a choice, waits for a yes, or asks how to proceed. A fix goes
-into the folder, and the person re-runs `/vwf:execute <folder>`. The one
-exception is `all`'s run-level questions — asked once by the loop, before its
-first plan, about the run of several plans, and never by a run.
+into the folder, and the person re-runs `/vwf:execute <folder>`. Two
+exceptions, both asked before the run starts and never by a run: `all`'s
+run-level questions — asked once by the loop, before its first plan, about
+the run of several plans — and the session question below.
 
 Run it in a fresh context: a fresh session, or a runner that `all`
-dispatches. It cannot check that, so the plan's launch line says it and this
-skill trusts it.
+dispatches. It cannot check that. When the person typed `/vwf:execute`, the
+launch line said it, and this skill trusts it.
+
+**The session question.** When the model invoked this skill itself — through
+the `Skill` tool, not a command the person typed, and not as an
+`execute-runner` — ask one question first, before the format test and before
+anything else: run in a **new session**, or **continue in this session**?
+Say why it matters in one line: the run needs the whole context window, and
+this session has already used part of it.
+
+- **New session** → start a fresh session with the host's tool for that,
+  where the host has one, its prompt the same `/vwf:execute <argument>` line;
+  where it has none, print that line for the person to run in a fresh
+  session. Then stop: claim nothing, cut no worktree, start no log.
+- **Continue in this session** → run here, from the format test on.
+
+A runner never asks it — it reads this file rather than invoking the skill —
+and neither does a run the person typed.
 
 Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
 rules, isolate all work in one worktree, document what you can't resolve, and
@@ -614,8 +631,8 @@ and stop — do not guess past it.
 The resume command is always `/vwf:execute <folder>`, run by a person in a
 fresh session — after a **resource-cap** pause too, where a bare `/vwf:handoff`
 wrote the reserved `next` handoff first and `/vwf:recall next` may point the
-person at that command but never launches it (this skill is not
-model-invocable). The resume reads the folder's `index.json` and `git log`,
+person at that command but never launches it (the run must start in a
+fresh context). The resume reads the folder's `index.json` and `git log`,
 per the Resume check.
 
 **Always on**
@@ -1279,7 +1296,8 @@ report with its resume command. Everything else is recorded in the folder's
   orchestrator's because it may write outside the worktree
 - Lowers or clears a key in `.config/releases.yaml`, or writes it anywhere
   but the release-levels write on a merged landing
-- Asks the user anything at run time
+- Asks the user anything at run time — the session question and `all`'s
+  run-level questions are asked before the run starts
 - Writes a lock file — the file a package manager or a toolchain manager
   writes to pin what it resolved — with Write, Edit, `sed` or a script, or
   lets a unit do it: a lock file changes only as the output of the CLI that

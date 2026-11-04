@@ -1,5 +1,10 @@
 # Decision — trust is the user's; `setup:all` is part of `tool-config all`
 
+> **SUPERSEDED 2026-11-03** — the skill, its script and its trees are gone, and
+> the repo shape is bootstrap's. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-gates` ·
 **Plan**
 [`docs/plans/2026-10-01-tool-config-script-gates/`](../../plans/2026-10-01-tool-config-script-gates/index.md)

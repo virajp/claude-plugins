@@ -1,5 +1,10 @@
 # Decision — tool-config renders mise with a shipped node script
 
+> **SUPERSEDED 2026-11-03** — the skill, its script and its trees are gone, and
+> the repo shape is bootstrap's. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
 [`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
 · **Supersedes**

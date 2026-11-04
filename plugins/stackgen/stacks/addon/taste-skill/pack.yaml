@@ -1,0 +1,9 @@
+name: taste-skill
+summary: The Claude plugin whose design skills the claude-code design tool's
+  design-session authors through, handed to bootstrap when picked.
+version: 1.0.0
+type: addon
+kind: addon
+axis: addon
+# An optional tool satisfies no harness capability: nothing is booted or probed.
+harness: n/a

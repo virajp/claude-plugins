@@ -4,8 +4,8 @@
   // conflict with Astro's. `astro check` is this package's type gate.
   "extends": "astro/tsconfigs/strict",
   "compilerOptions": {
-    "paths": { "@/*": ["./src/*"] },
+    "paths": { "@/*": ["./src/*"] }
   },
   "include": [".astro/types.d.ts", "**/*"],
-  "exclude": ["dist"],
+  "exclude": ["dist"]
 }

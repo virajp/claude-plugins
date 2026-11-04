@@ -6,8 +6,8 @@ shape `../assets/pack-format.md` defines (`<type>/<slug>/pack.yaml` + prose
 + optional skills/agents).
 
 **Wave A — `toolchain-gate/`, kind `repo-gate`:** `dprint`, `gitleaks`,
-`grype`, `pre-commit`. Moved into `stackgen:tool-config` on 2026-09-26, with
-the `repo-gate` kind retired; no pack or bundle carries them now.
+`grype`, `pre-commit`. Left the packs on 2026-09-26, with the `repo-gate` kind
+retired, and are bootstrap's now; no pack or bundle carries them.
 
 **Wave B — `datastore/`, kind `database`:** `postgres`. And
 `capability-provider/`, kind `capability-provider`: `oidc` (identity),
@@ -50,7 +50,7 @@ directories: `language/typescript`, `package-manager/pnpm`,
 
 Note `toolchain-gate` composes into its toolchain's bundle, never into a
 repo-wide one: `eslint` and `tsconfig` are meaningful for exactly one
-toolchain. The gates that run over any repo are `stackgen:tool-config`'s.
+toolchain. The gates that run over any repo are bootstrap's.
 
 **The Swift package stack made Swift the fourth language root on 2026-09-23**,
 after TypeScript and the Markdown and Bash pair the `claude-code-plugin` bundle
@@ -208,13 +208,14 @@ skill that runs the design session. The bundle whose frontmatter carries
 at most one per axis per platform, where a bundle declaring no `platforms:`
 covers every platform on its axis, which the checker enforces.
 
-`claude-design` also declares an MCP server, which the materializer writes into
-the project's own `.mcp.json` behind its own consent line. That is the charter
-change Wave D made deliberately (`../assets/output-tree.md`): a curated registry
-of servers fails on **scaling** before it fails on charter, since a list can only
-hold what someone curated. LSP configuration stays out of the repo — no
-project file can express one — and reaches the developer's machine through
-the generated local plugin instead, the third output target Wave E added.
+`claude-design` also declares an MCP server, under `user_mcp_servers:`, which
+the materializer writes into the generated local plugin, `vwf-tools`, behind its
+own consent line (`../assets/output-tree.md`). A curated registry of servers
+fails on **scaling** before it fails on charter, since a list can only hold what
+someone curated. LSP configuration stays out of the repo too — no project file
+can express one — and reaches the developer's machine through the same plugin,
+the output target Wave E added. The project-scoped `mcp_servers:` key and the
+`.mcp.json` path Wave D opened were retired on 2026-11-02.
 
 **Secrets — `capability-provider/`, category `secrets-manager`:** `fnox`, the
 one pack left in the category since its hosted-vault sibling was deleted. Its
@@ -254,23 +255,34 @@ to the realization: the D1 pack states plainly that it cannot write atomically
 with the act and so writes the event first, over-reporting under a monitor. The
 contract's realizations table is where that comparison lives.
 
-**Workspace — `capability-provider/`, category `workspace`:** `notion`, the
-first provider of a category minted for something no blueprint chooses. The
-workspace is where the team's docs, specs and tickets live, and it is the
-**agent's** knowledge source rather than anything the product runs against —
-so the category realizes no vwf token and none is pending, which its neutral
-contract `../assets/contracts/workspace.md` states in its opening lines
-instead of leaving the reader to infer a gap.
+**Optional tools — `addon/`, kind `addon`:** `context7`, `notion` and
+`taste-skill`, each with a bundle on the `addon` axis and none a default. They
+serve the agent rather than the product, so `/vwf:architecture`'s tools round
+offers them with nothing preselected, `.config/vwf.yaml`'s `addons:` records the
+pick, and `/vwf:setup` materializes each only while it is picked. `context7` and
+`notion` land one server each in `vwf-tools`; `taste-skill` carries a
+`## Claude plugins` section the materializer hands to bootstrap. `context7` left
+vwf's manifest and `taste-skill` left the `claude-code` design tool's default
+bundle to get here; the generator and `design-session` halt without them, each
+naming this round.
 
-What the pack lands is **wiring and nothing else**: an `mcp_servers:` entry
-the materializer writes into the repo's own `.mcp.json` behind its own
-consent line, the second pack to use that door after `claude-design`. That
-is the whole scope — no vwf step reads a workspace today. The contract's
-work is therefore the permission shape rather than an availability one: the
-person authenticates and not the repository, the agent's reach stops where
-that person's does, writes need the person to ask in the session, and a
-declined consent line leaves the skills landed and **says** the tool is
-unreachable rather than returning an empty search.
+**Workspace — `addon/`, category `workspace`:** `notion`, moved from
+`capability-provider/` on 2026-11-02, the first provider of a category minted
+for something no blueprint chooses. The workspace is where the team's docs,
+specs and tickets live, and it is the **agent's** knowledge source rather than
+anything the product runs against — so the category realizes no vwf token and
+none is pending, which its neutral contract
+`../assets/contracts/workspace.md` states in its opening lines instead of
+leaving the reader to infer a gap.
+
+What the pack lands is **wiring and nothing else**: its skills, and a
+`user_mcp_servers:` entry the materializer writes into `vwf-tools` behind its
+own consent line. That is the whole scope — no vwf step reads a workspace
+today. The contract's work is therefore the permission shape rather than an
+availability one: the person authenticates and not the repository, the
+agent's reach stops where that person's does, writes need the person to ask
+in the session, and a declined consent line leaves the skills landed and
+**says** the tool is unreachable rather than returning an empty search.
 
 **Stylesheet — `stylesheet/`, kind `stylesheet`:** `tailwindcss`, `stylex`
 and `plain-css`, the first three packs of a type and a kind minted together

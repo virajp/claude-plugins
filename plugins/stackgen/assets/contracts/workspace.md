@@ -1,8 +1,8 @@
 # Workspace — the capability contract
 
 What **any** knowledge workspace has to satisfy to serve a vwf product,
-stated without naming one. The provider packs under
-`stacks/capability-provider/` say how a particular tool satisfies it.
+stated without naming one. The provider packs under `stacks/addon/` say how
+a particular tool satisfies it.
 
 A **workspace** is where the team's prose lives: the docs, the specs, the
 tickets, the meeting notes, the decisions nobody wrote into the repo. It is
@@ -20,8 +20,9 @@ it **the workspace**.
 ## The rule that outranks every other
 
 **The agent reaches the workspace through an MCP server the pack lands in
-the repo's `.mcp.json` behind its own consent line — never through an API
-key in the tree, and never through a file the application reads.**
+`vwf-tools`, the local plugin stackgen generates, at user scope, behind its
+own consent line — never through an API key in the tree, and never through a
+file the application reads.**
 
 Both halves matter. A server is the only reach shape that keeps the
 workspace out of the product: no client library enters a manifest, no
@@ -33,11 +34,13 @@ decline the second.
 
 ## What a workspace must be able to do
 
-1. **Be reached by one project-scoped server.** Project-scoped means the
-   repo's `.mcp.json`, so the wiring travels with the checkout and is
-   reviewable in a diff. **One server per provider** — two entries naming
-   the same workspace give the agent two answers to the same question and
-   the lockfile two writers.
+1. **Be reached by one server in `vwf-tools`.** The pick is the product's,
+   committed in `.config/vwf.yaml`'s `addons:`, so it travels with the checkout
+   and is reviewable in a diff. The wiring is each person's: their machine gets
+   the server in their own `vwf-tools`, at user scope, when they run
+   `/vwf:setup` and say yes to that write. **One server per provider** — two
+   entries naming the same workspace give the agent two answers to the same
+   question and the lockfile two writers.
 2. **Record its key where the materialization is recorded.** The lockfile
    carries the server key the pack landed, which is what lets a later
    re-sync diff it as its own declinable line rather than silently
@@ -98,15 +101,15 @@ contract, and this one does not describe it.
 
 ## Absence
 
-**A project with no workspace pinned loses nothing.** Every vwf step works
+**A product with no workspace picked loses nothing.** Every vwf step works
 from the repo's own docs, which is where the durable contracts live anyway;
 a workspace adds reach to what the team wrote elsewhere and removes no
 obligation to write things down here.
 
 ## What this contract does not decide
 
-- **Which tool.** That is the user's pick from the menu, pinned per project
-  on the backing axis.
+- **Which tool.** That is the user's pick from the tools menu, recorded once
+  per product in `.config/vwf.yaml`'s `addons:`.
 - **What lives in the workspace.** That is the team's, and it changes
   without telling the repo — which is exactly why clause 5 makes the
   person's own permissions the fence.

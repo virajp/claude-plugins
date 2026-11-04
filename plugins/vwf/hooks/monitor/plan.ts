@@ -5,6 +5,7 @@ import type {
   PlanStage,
   PlanUnit,
   PlanWave,
+  QueueRow,
   Replay,
   ReplayAgent,
   ReplayUnit,
@@ -17,6 +18,9 @@ const UNIT_ID = /\bU\d+\b/;
 // from a plan file reaches the terminal.
 // eslint-disable-next-line no-control-regex
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f-\u009f]/g;
+
+/** A folder's last path part. */
+export const nameOf = (path: string) => path.replace(/\/+$/, "").split("/").pop() ?? "";
 
 /** The plan folder that a text names, if any. */
 export function folderIn(text: string): string | undefined {
@@ -48,26 +52,25 @@ const REVIEWER = /(?:^|:)execute-(?:code|security)-reviewer$/;
  */
 function unitOf(
   text: string,
-  units: { id: string; file: string; }[],
+  units: { id: string; file: string }[],
   name?: string,
   type?: string,
 ): string | undefined {
   const named = name?.match(UNIT_NAME)?.[1];
-  if (named && (units.length === 0 || units.some(unit => unit.id === named))) {
+  if (named && (units.length === 0 || units.some((unit) => unit.id === named))) {
     return named;
   }
   const byRow = () => {
     for (const match of text.matchAll(ROW_ID)) {
       const id = match[0].match(UNIT_ID)?.[0];
-      if (units.some(unit => unit.id === id)) {
+      if (units.some((unit) => unit.id === id)) {
         return id;
       }
     }
 
     return undefined;
   };
-  const byFile = () =>
-    units.find(unit => unit.file !== "" && text.includes(unit.file))?.id;
+  const byFile = () => units.find((unit) => unit.file !== "" && text.includes(unit.file))?.id;
 
   return type !== undefined && REVIEWER.test(type)
     ? byRow() ?? byFile()
@@ -106,7 +109,7 @@ export function memberPaths(yaml: string): string[] {
 
 /** The `host:` of a `.config/vwf-membership.yaml`. */
 export function hostOf(yaml: string): string | undefined {
-  const line = yaml.split("\n").find(one => /^host:/.test(one));
+  const line = yaml.split("\n").find((one) => /^host:/.test(one));
   const host = line === undefined ? "" : value(line);
 
   return host === "" ? undefined : host;
@@ -120,8 +123,7 @@ export function joinPath(base: string, rel: string): string {
   ) {
     if (part === "..") {
       parts.pop();
-    }
-    else if (part !== "" && part !== ".") {
+    } else if (part !== "" && part !== ".") {
       parts.push(part);
     }
   }
@@ -214,10 +216,11 @@ export function time(value: unknown): number | undefined {
 export const FRESH_MS = 10 * 60 * 1000;
 
 /**
- * Whether a plan's run is live, paused or ended (T8): the folder BLOCKED or
- * COMPLETE, or the row COMPLETE, ends it; else it is live while an agent is
- * live or the log's last line (none yet: the row's start) is under FRESH_MS
- * old, and paused or stopped otherwise.
+ * Whether a plan's run is live, paused, ended or not run (T8): the folder
+ * BLOCKED, COMPLETE or ARCHIVED, or the row COMPLETE, ends it; a row that
+ * reads APPROVED or DRAFT did not run; else it is live while an agent is live
+ * or the log's last line (none yet: the row's start) is under FRESH_MS old,
+ * and paused or stopped otherwise.
  */
 export function phaseOf(facts: {
   state: string;
@@ -230,9 +233,13 @@ export function phaseOf(facts: {
   if (
     facts.state === "BLOCKED"
     || facts.state === "COMPLETE"
+    || facts.state === "ARCHIVED"
     || facts.rowStatus === "COMPLETE"
   ) {
     return "ended";
+  }
+  if (facts.rowStatus === "APPROVED" || facts.rowStatus === "DRAFT") {
+    return "not-run";
   }
   const last = facts.lastAt ?? facts.rowStarted;
 
@@ -242,11 +249,10 @@ export function phaseOf(facts: {
     : "paused";
 }
 
-function parse(text: string): { value?: unknown; problem?: string; } {
+function parse(text: string): { value?: unknown; problem?: string } {
   try {
     return { value: JSON.parse(text) };
-  }
-  catch (error) {
+  } catch (error) {
     // The message may quote the bad input, control characters and all.
     return {
       problem: str(error instanceof Error ? error.message : String(error)),
@@ -264,11 +270,11 @@ function parse(text: string): { value?: unknown; problem?: string; } {
 export function unitForAgent(
   type: string,
   name: string | undefined,
-  units: { id: string; file: string; }[],
+  units: { id: string; file: string }[],
   text = "",
 ): string | undefined {
   const named = name?.match(UNIT_NAME)?.[1];
-  if (named && units.some(unit => unit.id === named)) {
+  if (named && units.some((unit) => unit.id === named)) {
     return named;
   }
   if (!type.startsWith(PREFIX) || type === RUNNER) {
@@ -278,10 +284,10 @@ export function unitForAgent(
   return unitOf(text, units, undefined, type);
 }
 
-/** The RUNNING rows of a docs/plans/index.json text. */
-export function runningRows(
+/** Every row of a docs/plans/index.json text. */
+export function indexRows(
   text: string,
-): { rows: PlanIndexRow[]; problem?: string; } {
+): { rows: PlanIndexRow[]; problem?: string } {
   const { value, problem } = parse(text);
   if (problem !== undefined) {
     return { rows: [], problem: `docs/plans/index.json: ${problem}` };
@@ -294,8 +300,7 @@ export function runningRows(
   }
   const rows = plans
     .filter(isObject)
-    .filter(row => row["status"] === "RUNNING")
-    .map(row => ({
+    .map((row) => ({
       id: str(row["id"]),
       folder: str(row["folder"]),
       kind: str(row["kind"]),
@@ -306,75 +311,179 @@ export function runningRows(
       target_repo: typeof row["target_repo"] === "string"
         ? str(row["target_repo"])
         : null,
+      priority: num(row["priority"]),
+      requires: (Array.isArray(row["requires"]) ? row["requires"] : [])
+        .map((one) => nameOf(str(one)))
+        .filter((one) => one !== ""),
     }))
-    .filter(row => row.folder !== "");
+    .filter((row) => row.folder !== "");
 
   return { rows };
 }
 
-/** True for the old markdown plan format. */
-export function isOldFormat(facts: {
-  /** docs/plans/index.md exists. */
-  indexMd: boolean;
-  /** The folder has an index.md. */
-  folderMd?: boolean;
-  /** The folder has an index.json. */
-  folderJson?: boolean;
-}): boolean {
-  return facts.indexMd || (facts.folderMd === true && !facts.folderJson);
+/** The RUNNING rows of a docs/plans/index.json text. */
+export function runningRows(
+  text: string,
+): { rows: PlanIndexRow[]; problem?: string } {
+  const { rows, problem } = indexRows(text);
+
+  return {
+    rows: rows.filter((row) => row.status === "RUNNING"),
+    ...(problem === undefined ? {} : { problem }),
+  };
+}
+
+/** The row that started or ended last; undefined when no row has a time. */
+export function latestRow(rows: PlanIndexRow[]): PlanIndexRow | undefined {
+  const at = (row: PlanIndexRow) => Math.max(time(row.ended) ?? -1, time(row.started) ?? -1);
+  const sorted = rows
+    .filter((row) => at(row) >= 0)
+    .sort((a, b) => at(b) - at(a));
+
+  return sorted[0];
+}
+
+/**
+ * The plan list: RUNNING rows; ready rows, numbered, in the order of the plan
+ * index's `next` (priority, then the folder's date prefix, then its name);
+ * rows that wait for a required plan, in that order; other rows, the latest
+ * first. A requirement is satisfied when its row reads COMPLETE or the index
+ * has no row for it: an archived plan has none.
+ */
+export function queueRows(rows: PlanIndexRow[]): QueueRow[] {
+  const status = new Map(rows.map((row) => [nameOf(row.folder), row.status]));
+  const waitsFor = (row: PlanIndexRow) =>
+    row.requires.filter((one) => {
+      const of = status.get(one);
+
+      return of !== undefined && of !== "COMPLETE";
+    });
+  const order = (a: QueueRow, b: QueueRow) => {
+    const left = nameOf(a.folder);
+    const right = nameOf(b.folder);
+
+    return a.priority - b.priority
+      || left.slice(0, 10).localeCompare(right.slice(0, 10))
+      || left.localeCompare(right);
+  };
+  const late = (row: QueueRow) => Math.max(time(row.ended) ?? -1, time(row.started) ?? -1);
+  const out: QueueRow[] = rows.map((row) => {
+    const wait = waitsFor(row);
+
+    return {
+      folder: row.folder,
+      title: row.title,
+      kind: row.kind,
+      priority: row.priority,
+      status: row.status,
+      started: row.started,
+      ended: row.ended,
+      waitsFor: wait,
+      group: row.status === "RUNNING"
+        ? "running"
+        : row.status !== "APPROVED"
+        ? "complete"
+        : wait.length > 0
+        ? "waiting"
+        : "ready",
+    };
+  });
+  const ready = out.filter((row) => row.group === "ready").sort(order);
+  ready.forEach((row, i) => {
+    row.number = i + 1;
+  });
+
+  return [
+    ...out.filter((row) => row.group === "running").sort(order),
+    ...ready,
+    ...out.filter((row) => row.group === "waiting").sort(order),
+    ...out
+      .filter((row) => row.group === "complete")
+      .sort((a, b) => late(b) - late(a)),
+  ];
+}
+
+/**
+ * The row of a plan the index does not hold: status from the folder, started
+ * from the earliest start of its units and waves, ended from the latest end.
+ */
+export function rowFromFolder(
+  folder: string,
+  plan: PlanFolder,
+): PlanIndexRow {
+  const dated = [...plan.units, ...plan.waves];
+  const starts = dated
+    .map((one) => one.started)
+    .filter((one) => time(one) !== undefined)
+    .sort((a, b) => (time(a) ?? 0) - (time(b) ?? 0));
+  const ends = dated
+    .map((one) => one.ended)
+    .filter((one) => time(one) !== undefined)
+    .sort((a, b) => (time(a) ?? 0) - (time(b) ?? 0));
+
+  return {
+    id: nameOf(folder),
+    folder,
+    kind: "",
+    title: plan.title,
+    status: plan.state,
+    started: starts[0] ?? "",
+    ended: ends[ends.length - 1] ?? "",
+    target_repo: null,
+    priority: 0,
+    requires: [],
+  };
 }
 
 /** What the pane shows of a plan folder's index.json text. */
 export function readFolder(
   text: string,
-): { folder?: PlanFolder; problem?: string; } {
+): { folder?: PlanFolder; problem?: string } {
   const { value, problem } = parse(text);
   if (problem !== undefined || !isObject(value)) {
     return { problem: `index.json: ${problem ?? "not an object"}` };
   }
   const status = isObject(value["status"]) ? value["status"] : {};
   const run = isObject(value["run"]) ? value["run"] : {};
-  const units: PlanUnit[] =
-    (Array.isArray(value["units"]) ? value["units"] : [])
-      .filter(isObject)
-      .map(unit => {
-        const out: PlanUnit = {
-          id: str(unit["id"]),
-          title: str(unit["title"]),
-          wave: num(unit["wave"]),
-          file: str(unit["file"]),
-          kind: str(unit["kind"]),
-          status: str(unit["status"]) || "pending",
-          commit: str(unit["commit"]),
-          rounds: num(unit["rounds"]),
-          started: str(unit["started"]),
-          ended: str(unit["ended"]),
-        };
-        const range = unit["range"];
-        if (isObject(range)) {
-          out.range = { from: str(range["from"]), to: str(range["to"]) };
-        }
+  const units: PlanUnit[] = (Array.isArray(value["units"]) ? value["units"] : [])
+    .filter(isObject)
+    .map((unit) => {
+      const out: PlanUnit = {
+        id: str(unit["id"]),
+        title: str(unit["title"]),
+        wave: num(unit["wave"]),
+        file: str(unit["file"]),
+        kind: str(unit["kind"]),
+        status: str(unit["status"]) || "pending",
+        commit: str(unit["commit"]),
+        rounds: num(unit["rounds"]),
+        started: str(unit["started"]),
+        ended: str(unit["ended"]),
+      };
+      const range = unit["range"];
+      if (isObject(range)) {
+        out.range = { from: str(range["from"]), to: str(range["to"]) };
+      }
 
-        return out;
-      });
+      return out;
+    });
   const gaps: PlanGap[] = (Array.isArray(value["gaps"]) ? value["gaps"] : [])
     .filter(isObject)
-    .map(gap => ({
+    .map((gap) => ({
       id: str(gap["id"]),
       unit: str(gap["unit"]),
       stage: str(gap["stage"]),
       text: str(gap["text"]),
       state: str(gap["state"]),
     }));
-  const waves: PlanWave[] =
-    (Array.isArray(value["waves"]) ? value["waves"] : [])
-      .filter(isObject)
-      .map(wave => ({
-        id: str(wave["id"]),
-        status: str(wave["status"]) || "pending",
-        started: str(wave["started"]),
-        ended: str(wave["ended"]),
-      }));
+  const waves: PlanWave[] = (Array.isArray(value["waves"]) ? value["waves"] : [])
+    .filter(isObject)
+    .map((wave) => ({
+      id: str(wave["id"]),
+      status: str(wave["status"]) || "pending",
+      started: str(wave["started"]),
+      ended: str(wave["ended"]),
+    }));
   const stages: PlanStage[] = Object
     .entries(isObject(value["stages"]) ? value["stages"] : {})
     .filter((entry): entry is [string, Json] => isObject(entry[1]))
@@ -415,7 +524,7 @@ export function expandHome(path: string, home: string): string {
  */
 function splitSummary(
   summary: string,
-): { type: string; name?: string; description: string; } {
+): { type: string; name?: string; description: string } {
   const parts = summary.replace(/ \[bg\]$/, "").split(" :: ");
   if (parts.length >= 3) {
     return {
@@ -439,12 +548,13 @@ function splitSummary(
 export function replay(
   lines: string[],
   folder: PlanFolder,
-  options: { partial?: boolean; } = {},
+  options: { partial?: boolean } = {},
 ): Replay {
   let skipped = 0;
   let lastSession: string | undefined;
   let runSession: string | undefined;
   let lastAt: number | undefined;
+  let lastTool: Replay["lastTool"];
   // The Agent calls, by tool_use_id; the agents, by id.
   const calls = new Map<
     string,
@@ -459,7 +569,7 @@ export function replay(
   const pending: string[] = [];
   const agents = new Map<
     string,
-    { call?: string; startedAt?: number; started: boolean; ended: boolean; }
+    { call?: string; startedAt?: number; started: boolean; ended: boolean }
   >();
   const agentOf = (id: string) => {
     let agent = agents.get(id);
@@ -479,8 +589,7 @@ export function replay(
     let e: unknown;
     try {
       e = JSON.parse(raw);
-    }
-    catch {
+    } catch {
       skipped++;
       continue;
     }
@@ -504,6 +613,12 @@ export function replay(
       case "tool.start": {
         const tool = str(e["tool"]);
         const id = str(e["tool_use_id"]);
+        if (tool !== "") {
+          lastTool = { tool, summary: str(e["summary"]) };
+          if (ts !== undefined) {
+            lastTool.at = ts;
+          }
+        }
         if ((tool === "Agent" || tool === "Task") && id !== "") {
           calls.set(id, { ...splitSummary(str(e["summary"])), at: ts });
           pending.push(id);
@@ -542,12 +657,12 @@ export function replay(
         // oldest open call of its type until tool.end names the child.
         if (agent.call === undefined) {
           const type = str(e["agent_type"]);
-          const index = pending.findIndex(call => {
+          const index = pending.findIndex((call) => {
             const one = calls.get(call);
 
             return one !== undefined
               && one.child === undefined
-              && ![...agents.values()].some(a => a.call === call)
+              && ![...agents.values()].some((a) => a.call === call)
               && (one.type === type || one.type === "");
           });
           if (index >= 0) {
@@ -613,8 +728,8 @@ export function replay(
     }
   }
 
-  const units: ReplayUnit[] = folder.units.map(unit => {
-    const mine = tied.filter(one => one.unit === unit.id).map(one => one.agent);
+  const units: ReplayUnit[] = folder.units.map((unit) => {
+    const mine = tied.filter((one) => one.unit === unit.id).map((one) => one.agent);
     const out: ReplayUnit = { ...unit };
     const latest = mine[mine.length - 1];
     if (latest !== undefined) {
@@ -631,7 +746,7 @@ export function replay(
     units,
     waves: folder.waves,
     stages: folder.stages,
-    gaps: folder.gaps.filter(gap => gap.state === "open"),
+    gaps: folder.gaps.filter((gap) => gap.state === "open"),
     reviews,
     live: [...agents]
       .filter(([, agent]) => agent.started && !agent.ended)
@@ -645,6 +760,9 @@ export function replay(
   }
   if (lastAt !== undefined) {
     state.lastAt = lastAt;
+  }
+  if (lastTool !== undefined) {
+    state.lastTool = lastTool;
   }
 
   return state;

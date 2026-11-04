@@ -39,7 +39,7 @@ describe("the generated stackgen inventory", () => {
   it("lists every pack.yaml in the tree, and nothing else", () => {
     const stacks = join(repoRoot, STACKS_DIR);
     const onDisk = readdirSync(stacks, { recursive: true, withFileTypes: true })
-      .filter(e => e.isFile() && e.name === "pack.yaml")
+      .filter((e) => e.isFile() && e.name === "pack.yaml")
       .length;
     expect(inventory.packs.length).toBe(onDisk);
     expect(generated).toContain(`**${onDisk} packs, `);
@@ -47,7 +47,7 @@ describe("the generated stackgen inventory", () => {
 
   it("lists every bundle file", () => {
     const onDisk = readdirSync(join(repoRoot, BUNDLES_DIR))
-      .filter(f => f.endsWith(".md"))
+      .filter((f) => f.endsWith(".md"))
       .length;
     expect(inventory.bundles.length).toBe(onDisk);
   });
@@ -58,8 +58,8 @@ describe("the generated stackgen inventory", () => {
     // is defined but never authored against is visible as a zero row, not
     // silently dropped.
     const used = new Set([
-      ...inventory.packs.map(p => p.kind),
-      ...inventory.bundles.map(b => b.kind),
+      ...inventory.packs.map((p) => p.kind),
+      ...inventory.bundles.map((b) => b.kind),
     ]);
     for (const kind of used) {
       expect(inventory.kinds).toContain(kind);
@@ -96,7 +96,7 @@ describe("component refs", () => {
   // into the real tree. The corpus itself resolves today, so the tests above
   // stay green.
   function root(options: {
-    readonly pack?: { readonly path: string; readonly version: string; };
+    readonly pack?: { readonly path: string; readonly version: string };
     readonly components: readonly string[];
   }): string {
     const dir = mkdtempSync(join(tmpdir(), "inventory-"));
@@ -125,7 +125,7 @@ describe("component refs", () => {
         "kind: cloud-provider",
         "axis: backing",
         "components:",
-        ...options.components.map(c => `- ${c}`),
+        ...options.components.map((c) => `- ${c}`),
         "---",
         "",
         "# A Bundle",

@@ -19,5 +19,5 @@ root=${VWF_LOG_ROOT:-$HOME/Library/Caches/vwf}
 set -- "$root"/active/*
 [ -e "$1" ] || exit 0
 
-node "$(dirname "$0")/action-log.mjs" >/dev/null 2>&1
+node "$(dirname "$0")/action-log.mjs" > /dev/null 2>&1
 exit 0

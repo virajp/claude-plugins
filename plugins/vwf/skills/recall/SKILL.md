@@ -72,16 +72,21 @@ do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 ### Shape check
 
 Beside the format check, and before `docs/memory/` is read in step 3, invoke
-`/vwf:doctor baseline` — the local baseline predicates (a)–(f) of the
-repo-shape check, evaluated per repo, file reads only; it never reads the forge
-and never runs doctor whole. When it reports drift, print **one line**: the
-drifted repos with their failing letters, and `/vwf:setup reshape` as the
-remedy — e.g. *shape drift: base (a) (e), api (c) — run `/vwf:setup reshape`*.
-When every repo is clean, or the base has no materializer lockfile (never
-shaped, `not shaped` in doctor's result), print **nothing**. This is an offer:
-recall never invokes `reshape` itself — the user runs it — and the line never
-stops the recall; it runs early so a change made outside vwf is seen before the
-session builds on it.
+`/vwf:doctor baseline` — the local baseline predicates of the repo-shape check,
+named by title and evaluated per repo, file reads only. Recall runs no mise task
+and no bootstrap code, never reads the forge and never runs doctor whole, so it
+does **not report config drift**: doctor's full mode is the place that does.
+When doctor reports drift, print **one line per remedy**, with the rows that led
+to it: `/stackgen:stackgen-sync` for Pack versions and Content drift;
+`/vwf:setup` for a missing pack lockfile and Project ids;
+`/vwf:setup reshape` for Branches, and a member not shaped or on the old layout;
+the fix in `.config/bootstrap.toml` for Merge model — e.g. *shape drift: base
+Pack versions, api Content drift — run `/stackgen:stackgen-sync`* and *shape drift: api
+Branches — run `/vwf:setup reshape`*. When every repo is clean, or the base has
+no `.config/bootstrap.toml` (`not shaped` or on the old layout in doctor's
+result), print **nothing**. This is an offer: recall never invokes a remedy
+itself — the user runs it — and no line ever stops the recall; it runs early so
+a change made outside vwf is seen before the session builds on it.
 
 ### 3. Rebuild context
 
@@ -117,8 +122,8 @@ the user whether to run it now**:
 
 - **Yes** → proceed to execute that prompt (route through the matching `/vwf:`
   command — `blueprint` / `plan` — when it names one). A prompt naming
-  `/vwf:execute <folder>` is the exception: `execute` is launched only by a
-  person in a fresh context — a fresh session, or a runner that
+  `/vwf:execute <folder>` is the exception: `execute` must start in a
+  fresh context — a fresh session, or a runner that
   `/vwf:execute all` dispatches — so print that launch line and stop — the
   run resumes from its row `RUNNING` in `docs/plans/index.json` and the unit
   fields of the folder's `index.json` (`status`, `commit`, `rounds`), which

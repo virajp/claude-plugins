@@ -6,17 +6,16 @@ with no plugin installed. There is no intermediate tree and no symlink
 wiring: what Claude Code discovers is what the repo owns.
 
 The output vocabulary is **closed to four artifact kinds** plus stackgen's
-own bookkeeping, one **tier-2 project file** — `.mcp.json` — a **fourth
-target**, the repo config files a pack declares (below), and one **tier-3
-target outside the repo entirely**: a generated local plugin on the
-developer's machine (below).
+own bookkeeping, a **fourth target**, the repo config files a pack declares
+(below), and one **tier-3 target outside the repo entirely**: a generated
+local plugin on the developer's machine (below).
 
-LSP server configuration stays **excluded from the repo**: a language server
+Server configuration stays **excluded from the repo**: a language server
 is a plugin-manifest feature no project file can express, so no `.claude/`
-artifact and no `.mcp.json` key can carry one. The need still travels as
+artifact and no project file can carry one. The need still travels as
 `language_facts` in the template payload for `/vwf:doctor` to read — that
 tells doctor *how* a server is provided and provides nothing itself. What
-actually provides one is the local plugin.
+actually provides one is the local plugin, which holds every MCP server too.
 
 The facts the template payload carries for its callers, all passed through
 from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
@@ -24,18 +23,16 @@ from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
 a bare name or a `{ name, probe }` map; and `package_manager` and, beside
 it, `lockfile`, the paths or globs doctor's resolve check reads.
 
-**`.mcp.json` was excluded and is not any more**, decided at Wave D. The
-reasoning that changed: an MCP server is genuinely a project file — this
-toolkit's own installer already treats `.mcp.json` as one of the user's
-project files — and the alternative was a curated registry of servers, which
-fails on **scaling** before it fails on charter. A list can only ever hold
-what someone curated, and stackgen exists for the tail nobody curated. So a
-pack that needs a server declares it, and the materializer writes it into the
-project's `.mcp.json` **behind its own separate consent line** (tier 2 below,
-the same treatment `.claude/settings.json` gets). It **merges, never owns**:
-the server keys stackgen added are recorded in the lockfile, so sync and
-removal touch only those. A declined wiring leaves the skills landed and says
-the tool will be unreachable — never a silent partial landing.
+**`.mcp.json` is no longer written.** It was the second target from Wave D
+until stackgen's next major retired it, and the numbers below keep their names.
+A pack that needs a server still declares it — a curated registry of servers
+fails on **scaling**, since a list can only ever hold what someone curated and
+stackgen exists for the tail nobody curated — but every MCP server now lands in
+the local plugin, at user scope, because the pick is what a product commits and
+each machine gets the servers when its owner runs `/vwf:setup`. The one thing
+stackgen still does to a repo's `.mcp.json` is remove the keys an older lockfile
+recorded and the migration moved, behind its own consent line. It never copies a
+declaration out of that file.
 
 ```text
 .claude/
@@ -58,23 +55,34 @@ constraint bound to a glob is a rule. The kind definitions
 ## The third target — the generated local plugin
 
 An LSP server can only be declared in a plugin manifest, so the one way to
-provide one is to **be** a plugin. stackgen generates a local plugin on the
-developer's machine and registers it with Claude:
+provide one is to **be** a plugin. stackgen generates `vwf-tools`, the one local
+plugin that holds every LSP server and every MCP server this machine's repos
+materialized, and registers it with Claude:
 
 ```text
-~/.claude/plugins/local/stackgen-lsp/
+~/.claude/plugins/local/vwf-tools/
 └── .claude-plugin/
     ├── plugin.json       # lspServers + mcpServers, union across the user's stacks
-    └── marketplace.json  # a single-plugin directory marketplace, also stackgen-lsp
+    ├── marketplace.json  # a single-plugin directory marketplace, also vwf-tools
+    └── claims.json       # server key -> the absolute repo paths that claim it
 ```
 
 Registration is two commands, and **stackgen prints them and asks — it never
 runs them unprompted**:
 
 ```sh
-claude plugin marketplace add ~/.claude/plugins/local/stackgen-lsp --scope user
-claude plugin install stackgen-lsp@stackgen-lsp --scope user
+claude plugin marketplace add ~/.claude/plugins/local/vwf-tools --scope user
+claude plugin install vwf-tools@vwf-tools --scope user
 ```
+
+A machine that still has the old `~/.claude/plugins/local/stackgen-lsp/` gets
+one tier-3 migration first: write `vwf-tools`, register it, uninstall
+`stackgen-lsp@stackgen-lsp`, remove the `stackgen-lsp` marketplace, delete the
+old directory. Declined, it writes nothing and comes back on the next run. The
+procedure is the stack-template skill's local-plugin reference.
+
+An `addon` pin is materialized only in the base repo, so its servers are claimed
+by the base repo's lockfile; they reach every repo on the machine anyway.
 
 The path and the plugin name are **fixed**, never constructed from the stack
 pin — one plugin per machine, holding the union.
@@ -83,7 +91,10 @@ pin — one plugin per machine, holding the union.
 nothing by pulling: a teammate's language server is their own machine's
 business, which is the same line every editor already draws. What user scope
 buys is one registration serving every repo, instead of a per-repo
-obligation nobody would maintain.
+obligation nobody would maintain. The manifest-write gate shows each server's
+full declaration and says the price: a server landing here, with any account
+grant it holds, is reachable from every repo on this machine, not only the one
+that picked it.
 
 **The extension map is what makes user scope safe.** A server declared with
 an `extensionToLanguage` map never starts in a repo with no matching files,
@@ -93,21 +104,25 @@ generated LSP declaration **without** one is forbidden
 unconditionally in every session in every repo, which is exactly the
 objection user scope would otherwise deserve.
 
-**MCP rides the same mechanism, and the two paths are not interchangeable.**
-`.mcp.json` stays the path for **project-scoped** servers the repo should
-own and collaborators should get; the local plugin is for **user-scoped**
-ones the repo should not own. Which a server is belongs to the component
-that declares it, not to the materializer.
+**MCP rides the same mechanism.** A component declares a server under
+`user_mcp_servers:`, the only MCP key; `.mcp.json` is no longer a path a server
+can take.
 
 **It merges, never owns.** The manifest is a union across every repo that
-materialized into it, so a landing adds its keys and leaves the rest;
-removal removes exactly the keys this repo's lockfile recorded, and takes
-the directory and the registration down only when the last key goes.
+materialized into it, so a landing adds its keys and leaves the rest. The claims
+file records which repos claim each key: a materialization adds this repo's
+path, and a removal drops only this repo's path and deletes the key from the
+manifest only when its list is empty. An absent claims file means every key is
+unclaimed and kept; any write drops a claimed repo path that no longer exists on
+disk; a key no repo claims is never deleted automatically. A key is this repo's
+to rewrite only when the claims file, which lives on the machine, lists this
+repo; the committed lockfile naming it does not make it so. The directory and
+the registration go down only when the last key goes.
 
 ## The fourth target — repo config files
 
-`.claude/`, `.mcp.json` and the local plugin are the three targets above, and
-a repo's own configuration is none of them. The toolchain of a repo — tool
+`.claude/` and the local plugin are the targets above, and
+a repo's own configuration is neither of them. The toolchain of a repo — tool
 pins, gates, gate configs, generic tasks, pre-commit hooks — is bootstrap's,
 and stackgen asks bootstrap for it (the stack-template skill's bootstrap
 handoff). What is left is the repo-specific part, which a component
@@ -153,18 +168,13 @@ these entries and only these — and it has four tiers:
   `.github/workflows/`**. This is the tier `p:plugins:check` enforces over a
   pack's `config/` root.
 - **What bootstrap's sync writes** — its own list, read from bootstrap,
-  never restated here. A pack never ships one of those files and adds no
-  line to one.
+  never restated here; `.github/ISSUE_TEMPLATE/` is its github tool's. A
+  pack never ships one of those files and adds no line to one.
 - **What `/vwf:init` writes from its own assets**: `CONTRIBUTING.md`,
-  `SECURITY.md`, `LICENSE` and `.github/ISSUE_TEMPLATE/`.
+  `SECURITY.md` and `LICENSE`.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
   it**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
   `p:plugins:check` refusing a pack that ships one at the root.
-
-The last tier is on the list because `/vwf:init`'s pass 1 reports any
-root file the list does not name, and a rule beats a judgment: without
-this entry, every shaped repo's own `CLAUDE.md` reads as a finding that a
-person has to know to wave through.
 
 A language's manifests and lockfiles are **not** on it: a manifest is
 fenced out below, as it always was, and a lockfile is the manifest's
@@ -200,8 +210,8 @@ The rules mirror the ones the other targets already have:
 - **Recorded in the lockfile per file**, with the **component** that supplied
   it — the same grain sync acts at everywhere else, and what makes a tree two
   components both write auditable.
-- **Its own consent line**, the same tier `.claude/settings.json` and
-  `.mcp.json` get (tier 2 below). A declined config write leaves the skills
+- **Its own consent line**, the same tier `.claude/settings.json`
+  gets (tier 2 below). A declined config write leaves the skills
   landed and says the tasks will be absent — never a silent partial landing.
 - **Mode is preserved.** `.config/mise/tasks/**` must land executable (755) or
   `mise run <task>` fails as an *unknown task* rather than as a permission
@@ -232,9 +242,9 @@ does, and is what put them on it.
 **Precedent, and its limit.** The `package-manager/pnpm` pack already ships
 a hook script copied into a target repo, so packs already write outside
 `.claude/`. This generalizes that from
-`hooks/` to a declared tree, the same move `.mcp.json` got at Wave D, and for
-the same reason: the alternative is that the one thing which writes a repo's
-config lives in a plugin that exists for no other reason.
+`hooks/` to a declared tree, for this reason: the alternative is that the one
+thing which writes a repo's config lives in a plugin that exists for no other
+reason.
 
 **The fence, and where it now runs.** The tier was opened on 2026-09-05 for
 gate and provider config files, and closed again for them on 2026-10-23, when
@@ -274,7 +284,7 @@ never meant stackgen put it there.
 
 1. **Files in the tree above** land through the materializer's ordinary
    dry-run consent gate — every path listed, nothing written unapproved.
-2. **`.claude/settings.json`, `.mcp.json` and a pack's `config/` tree are
+2. **`.claude/settings.json` and a pack's `config/` tree are
    NEVER modified without the
    user's explicit consent, as their own separate lines in the gate.** Hook *scripts* are files
    (tier 1); the settings entry that wires a hook to its event is a
@@ -311,12 +321,12 @@ entries:
     slug: generated/go # the template (bundle) it landed with
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
-    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
+    hash: <content hash — at landing>
   - path: .config/mise/tasks/test/golden # a `config/` tier file — outside .claude/
     slug: swift-swiftui
     component: app-framework/swiftui # which component's version won, per file
     source: pack/app-framework/swiftui@<version>
-    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
+    hash: <content hash — at landing>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 bootstrap: # what stackgen asked bootstrap for — absent when it asked for nothing
   tools:
@@ -324,21 +334,32 @@ bootstrap: # what stackgen asked bootstrap for — absent when it asked for noth
   plugins:
     <name>@<marketplace>: { scope: user, source: <marketplace source>, components: [ <component ref>, … ] }
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
-mcp_servers: [] # exact .mcp.json server keys stackgen added, with consent
 local_plugin: # the generated local plugin — absent when none was written
-  path: ~/.claude/plugins/local/stackgen-lsp # fixed; recorded so removal has a target
-  marketplace: stackgen-lsp # the name given to `claude plugin marketplace add`
-  plugin: stackgen-lsp@stackgen-lsp # what `claude plugin install` was given
+  path: ~/.claude/plugins/local/vwf-tools # fixed; a record only — removal uses the fixed path, never this value
+  marketplace: vwf-tools # the name given to `claude plugin marketplace add`
+  plugin: vwf-tools@vwf-tools # what `claude plugin install` was given
   scope: user
-  lsp_servers: [] # exact lspServers keys THIS repo contributed to the union
-  mcp_servers: [] # exact mcpServers keys THIS repo contributed to the union
+  lsp_servers: # exact lspServers keys THIS repo contributed to the union
+    - { name: <key>, packs: [ <component ref>, … ] }
+  mcp_servers: # exact mcpServers keys THIS repo contributed to the union
+    - { name: <key>, packs: [ <component ref>, … ] }
   registered: true # false when the manifest landed but registration was declined
 ```
 
-`local_plugin.mcp_servers` and the top-level `mcp_servers` are different
-lists and must not be conflated: the top-level one names project-scoped
-keys in the repo's own `.mcp.json`, the nested one names user-scoped keys in
-the generated manifest.
+**Every item records its owners as a list**: a `local_plugin` server its
+`packs:`, a `bootstrap.plugins` entry its `components:`, a skill entry its
+`component:`. A `local_plugin` list of bare names, the old shape, is read with
+owners unknown and rewritten on the next sync; `/vwf:doctor` reads the owners
+from here and skips an entry whose owners are unknown.
+
+**Lockfiles written earlier** may name `stackgen-lsp`, or carry a top-level
+`mcp_servers` list of `.mcp.json` keys. Both are rewritten by the migration
+(the stack-template skill's local-plugin reference); the sample above shows
+neither. With no `stackgen-lsp/` directory on the machine, the `local_plugin`
+names are rewritten with no prompt. A top-level key moves only when a shipped
+pack declares it, and with that pack's declaration; any other is reported and
+stays in `.mcp.json` and in the list. A declined `.mcp.json` key-removal line
+keeps the moved keys in that list, and the removal is offered again.
 
 Rules the lockfile enforces:
 
@@ -351,30 +372,31 @@ Rules the lockfile enforces:
   nothing lands and nothing is deleted. The sync report names every
   record it dropped. A path no longer shipped that is still present is
   not this rule's.
-- **`hash:` has three writers, and a differing hash is drift only when none
-  of them ran.** The materializer writes it at landing. The composing skill
-  (`/vwf:init`) **re-records** it after every change it makes to a landed
-  file, and its replace-or-keep offer re-records it on either answer, so a
-  file kept as the repo's own reads as current, not as drift, the next time
-  sync or the offer runs.
+- **`hash:` has two writers, and a differing hash means the file changed
+  after they ran.** The materializer writes it at landing, and sync rewrites
+  it for a component it lands again. `/vwf:init` calls no materializer and
+  records no hash.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.
-- **Removal removes exactly the listed entries**, `settings_keys` and
-  `mcp_servers`, nothing else — the same receipt invariant this repo's
-  installer CLI lives by. A tool or plugin under `bootstrap:` is removed
-  only when no remaining component needs it, through bootstrap's own
+- **Removal removes exactly the listed entries** and
+  `settings_keys`, nothing else — the same receipt invariant this repo's
+  installer CLI lives by. A recorded path that resolves outside the repo root
+  is refused and reported, never deleted: the lockfile is committed, so a path
+  is not trusted for being recorded. A tool or plugin under `bootstrap:` is
+  removed only when no remaining component needs it, through bootstrap's own
   `remove` instruction; one the repo selected itself has no record and is
   never removed.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
-  only the keys under `local_plugin.lsp_servers` and
-  `local_plugin.mcp_servers` from the generated manifest — another repo's
+  this repo's claim on the keys under `local_plugin.lsp_servers` and
+  `local_plugin.mcp_servers`, and a key leaves the generated manifest only when
+  no repo claims it — another repo's
   keys stay. Only when that leaves the manifest with no servers at all is the
   plugin uninstalled, the marketplace removed and the directory deleted:
 
   ```sh
-  claude plugin uninstall stackgen-lsp@stackgen-lsp --scope user
-  claude plugin marketplace remove stackgen-lsp
+  claude plugin uninstall vwf-tools@vwf-tools --scope user
+  claude plugin marketplace remove vwf-tools
   ```
 
   Those two are printed and confirmed, exactly as the registration pair is;

@@ -307,4 +307,5 @@ plugin and not a new vwf code path. vwf changes not at all.
 6. Auth is the pack's business — tools differ (OAuth, an API key, an MCP
    connection), and vwf deliberately knows nothing about it. Where the tool is
    reached over MCP, the pack declares the server and the materializer writes it
-   into the project's `.mcp.json` behind its own consent line.
+   into the `vwf-tools` local plugin, user scope, behind its tier-3 consent line
+   — not into the project's `.mcp.json`.

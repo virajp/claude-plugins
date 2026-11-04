@@ -51,7 +51,7 @@ let configDir: string;
 let repo: string;
 let receiptDir: string;
 let binDir: string;
-let ran: { command: string; args: readonly string[]; cwd?: string; }[];
+let ran: { command: string; args: readonly string[]; cwd?: string }[];
 let context: Context;
 let options: RunOptions;
 /** Overridden per test to make one command fail. */
@@ -97,8 +97,7 @@ beforeEach(() => {
 afterEach(() => {
   if (realPath === undefined) {
     delete process.env["PATH"];
-  }
-  else {
+  } else {
     process.env["PATH"] = realPath;
   }
   delete process.env["CLAUDE_CONFIG_DIR"];
@@ -151,7 +150,7 @@ function receipt(
   };
 }
 
-const ids = (items: readonly Item[]) => items.map(i => i.id);
+const ids = (items: readonly Item[]) => items.map((i) => i.id);
 
 /**
  * What the run drove another tool to do.
@@ -159,7 +158,7 @@ const ids = (items: readonly Item[]) => items.map(i => i.id);
  * `git` is filtered out: the enumeration asks it where the repo is and whether a
  * file is tracked, and those reads are not what any of these assertions are about.
  */
-const tools = () => ran.filter(r => r.command !== "git");
+const tools = () => ran.filter((r) => r.command !== "git");
 
 describe("installedPlugins", () => {
   it("takes only what came from our marketplace", () => {
@@ -269,7 +268,7 @@ describe("enumerate", () => {
     });
     writeReceiptFile("opencode.json", receipt([]));
 
-    expect(enumerate(options).map(i => i.level))
+    expect(enumerate(options).map((i) => i.level))
       .toEqual(["user", "repo", "legacy"]);
   });
 });
@@ -425,7 +424,7 @@ describe("removeItem", () => {
 
     expect(existsSync(path)).toBe(true);
     expect(tools()).toEqual([]);
-    expect(outcomes.flatMap(o => o.actions.map(a => a.summary))).toEqual([
+    expect(outcomes.flatMap((o) => o.actions.map((a) => a.summary))).toEqual([
       "claude plugin uninstall vwf --scope user",
       "revert an install recorded in opencode.json",
     ]);
@@ -528,7 +527,7 @@ describe("removeItems", () => {
       "opencode.json",
       receipt([{ kind: "tree", path: bundle }]),
     );
-    respond = command =>
+    respond = (command) =>
       command === "claude"
         ? { status: 1, stdout: "", stderr: "boom" }
         : { status: 1, stdout: "", stderr: "" };
@@ -557,7 +556,7 @@ describe("removeItems", () => {
     const kept = writeReceiptFile("opencode.json", receipt([]));
     const items = enumerate(options);
 
-    removeItems(items.filter(i => i.id === "legacy:cursor.json"), options);
+    removeItems(items.filter((i) => i.id === "legacy:cursor.json"), options);
 
     expect(existsSync(kept)).toBe(true);
     expect(existsSync(receiptDir)).toBe(true);
@@ -596,22 +595,22 @@ describe("the tracked default", () => {
 
   it("renders the tracked row unchecked", () => {
     const lines = renderItems(items).split("\n");
-    expect(lines.filter(l => l.includes("[x]"))).toHaveLength(2);
-    expect(lines.filter(l => l.includes("[ ]"))).toHaveLength(1);
+    expect(lines.filter((l) => l.includes("[x]"))).toHaveLength(2);
+    expect(lines.filter((l) => l.includes("[ ]"))).toHaveLength(1);
   });
 
   it("removes only the defaults when the answer is empty", () => {
-    expect(resolveSelection(items, new Set()).map(i => i.id))
+    expect(resolveSelection(items, new Set()).map((i) => i.id))
       .toEqual(["i1", "i3"]);
   });
 
   it("lets the user toggle a tracked row ON by naming it", () => {
-    expect(resolveSelection(items, new Set([2])).map(i => i.id))
+    expect(resolveSelection(items, new Set([2])).map((i) => i.id))
       .toEqual(["i1", "i2", "i3"]);
   });
 
   it("lets the user toggle a selected row OFF by naming it", () => {
-    expect(resolveSelection(items, new Set([1])).map(i => i.id))
+    expect(resolveSelection(items, new Set([1])).map((i) => i.id))
       .toEqual(["i3"]);
   });
 });

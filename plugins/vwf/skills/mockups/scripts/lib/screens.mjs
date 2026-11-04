@@ -53,13 +53,13 @@ function cells(line) {
   const body = line.trim().replace(/^\|/, "").replace(/\|$/, "");
   return body
     .split(/(?<!\\)\|/)
-    .map(cell => cell.replace(/\\\|/g, "|").replace(/`/g, "").trim());
+    .map((cell) => cell.replace(/\\\|/g, "|").replace(/`/g, "").trim());
 }
 
 // The rows of the first table under `## Screens`, as { code, screen, route }.
 function screensOf(text, file) {
   const lines = text.split("\n");
-  const heading = lines.findIndex(line => /^##\s+Screens\b/.test(line));
+  const heading = lines.findIndex((line) => /^##\s+Screens\b/.test(line));
   if (heading === -1) {
     return [];
   }
@@ -73,8 +73,8 @@ function screensOf(text, file) {
   if (at >= lines.length) {
     return [];
   }
-  const header = cells(lines[at]).map(cell => cell.toLowerCase());
-  const column = name => header.indexOf(name);
+  const header = cells(lines[at]).map((cell) => cell.toLowerCase());
+  const column = (name) => header.indexOf(name);
   const [code, screen, route] = ["code", "screen", "route"].map(column);
   if (code === -1 || screen === -1 || route === -1) {
     throw new Error(
@@ -134,7 +134,7 @@ export function buildRouteMap(flowsDir, platform) {
     throw new Error(`no flows directory: ${flowsDir}`);
   }
   const flows = readdirSync(flowsDir)
-    .filter(name => existsSync(join(flowsDir, name, `${platform}.md`)))
+    .filter((name) => existsSync(join(flowsDir, name, `${platform}.md`)))
     .sort();
   if (flows.length === 0) {
     throw new Error(`no ${platform}.md under ${flowsDir}/*/`);
@@ -151,12 +151,9 @@ export function buildRouteMap(flowsDir, platform) {
       const slug = slugify(row.screen) || slugify(row.code);
       if (byCode.has(row.code)) {
         errors.push(
-          `code ${row.code} is defined twice: ${
-            byCode.get(row.code)
-          } and ${flow}`,
+          `code ${row.code} is defined twice: ${byCode.get(row.code)} and ${flow}`,
         );
-      }
-      else {
+      } else {
         byCode.set(row.code, flow);
       }
       const token = routeToken(row.route);
@@ -193,25 +190,22 @@ export function buildRouteMap(flowsDir, platform) {
       }
       if (byPath.has(key)) {
         errors.push(
-          `route ${route} is held by two codes: ${
-            byPath.get(key)
-          } and ${row.code}`,
+          `route ${route} is held by two codes: ${byPath.get(key)} and ${row.code}`,
         );
-      }
-      else {
+      } else {
         byPath.set(key, row.code);
       }
       Object.assign(screen, { route, path, routed });
     }
   }
   const parents = new Map(
-    screens.filter(s => s.route !== undefined).map(s => [s.code, s]),
+    screens.filter((s) => s.route !== undefined).map((s) => [s.code, s]),
   );
   for (const { screen, parent, token } of overlays) {
     const home = parents.get(parent);
     if (!home) {
       errors.push(
-        overlays.some(o => o.screen.code === parent)
+        overlays.some((o) => o.screen.code === parent)
           ? `overlay ${screen.code} names the overlay ${parent} as its parent`
           : `overlay ${screen.code} names no screen ${parent} of the platform`,
       );

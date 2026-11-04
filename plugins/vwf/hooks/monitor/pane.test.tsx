@@ -207,7 +207,7 @@ test(
 );
 
 test(
-  "on the desktop the pane draws an Svg bar and box rows, with no padding or key hints",
+  "on the desktop the pane draws the timeline, with no padding or key hints",
   async ($, on) => {
     const opened: string[] = [];
     const closed: string[] = [];
@@ -217,17 +217,18 @@ test(
     expect((await ui.find({ key: "unit-U2" }))?.props).toMatchObject({
       label: "U2",
     });
-    expect(await ui.find({ type: "Text", text: /G1 · U2 · U2 has no owner/ }))
+    expect(await ui.find({ type: "Text", text: /^U2 has no owner$/ }))
       .toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^2\/3$/ })).toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^W1$/ })).toBeDefined();
+    expect(await ui.find({ key: "gap-toggle-G1" })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^2 of 3 units$/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^Wave 1$/ })).toBeDefined();
     expect(await ui.find({ type: "Text", text: /Started \d\d:\d\d/ }))
       .toBeDefined();
+    expect(await ui.find({ key: "plans" })).toBeDefined();
     const drawn = JSON.stringify(await ui.drawn());
-    // The bar is one Svg: U1 green, U2 pending, U3 skipped gray.
-    expect(drawn).toContain("2 of 3 units finished");
+    // One segment for each unit: U1 green, U2 pending, U3 skipped gray.
     expect(drawn).toContain("#3fa66a");
-    expect(drawn).toContain("#d0d4da");
+    expect(drawn).toContain("2 of 3 units finished");
     expect(drawn).toContain("#8a8f98");
     expect(drawn).not.toContain("█");
     expect(drawn).not.toContain("ctrl+x tab");
@@ -240,3 +241,76 @@ test(
     await ui.unmount();
   },
 );
+
+test(
+  "on the desktop a unit id opens its details, and a gap id unfolds its text",
+  async ($, on) => {
+    const opened: string[] = [];
+    const closed: string[] = [];
+    const ui = await openPane($, on, "desktop", opened, closed);
+    expect(await ui.find({ key: "transcript-U2" })).toBe(undefined);
+    await ui.press({ key: "unit-U2" });
+    expect(await ui.find({ key: "transcript-U2" })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^pending, 1 gap$/ })).toBeDefined();
+    await ui.press({ key: "unit-U2" });
+    expect(await ui.find({ key: "transcript-U2" })).toBe(undefined);
+    expect((await ui.find({ key: "gap-toggle-G1" }))?.props).toMatchObject({
+      label: "▸ G1",
+    });
+    await ui.press({ key: "gap-toggle-G1" });
+    expect((await ui.find({ key: "gap-toggle-G1" }))?.props).toMatchObject({
+      label: "▾ G1",
+    });
+    expect(await ui.find({ type: "Text", text: /^U2 has no owner$/ })).toBeDefined();
+    await ui.unmount();
+  },
+);
+
+const BAND = {
+  plugin: "vwf",
+  component: "AbovePrompt",
+  props: {
+    hasSurvey: false,
+    isWorking: false,
+    maxRows: 10,
+    bodyColumns: 100,
+    scroll: { offset: 0, bodyRows: 10 },
+  },
+};
+
+test(
+  "the chip above the prompt shows the units and opens the pane; a question takes the band",
+  async ($, on) => {
+    const opened: string[] = [];
+    const closed: string[] = [];
+    const ui = await openPane($, on, "desktop", opened, closed);
+    const band = await $.ui.mount({ ...BAND, surface: "desktop" } as Parameters<typeof $.ui.mount>[0]);
+    // The colored glyphs: U1 green, U2 pending, U3 skipped gray.
+    // One glyph shape, since the app draws the empty glyph at another size.
+    const glyphs = await band.findAll({ type: "Text", text: /^▰$/ });
+    expect(glyphs.map((one) => one.props?.color)).toEqual(["#3fa66a", undefined, "#8a8f98"]);
+    expect(glyphs[1]?.props?.dimColor).toBe(true);
+    expect(await band.find({ type: "Text", text: /^▱$/ })).toBe(undefined);
+    // The plan's name, its date dropped, and the counts.
+    expect(await band.find({ type: "Text", text: /^a-plan$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^2\/3 $/ })).toBeDefined();
+    expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({
+      label: "Monitor",
+    });
+    await band.press({ key: "vwf-chip" });
+    expect(opened).toEqual(["vwf-monitor", "vwf-monitor"]);
+    await band.unmount();
+    await ui.unmount();
+  },
+);
+
+test("in the terminal the chip is one Button", async ($, on) => {
+  const opened: string[] = [];
+  const closed: string[] = [];
+  const ui = await openPane($, on, "terminal", opened, closed);
+  const band = await $.ui.mount({ ...BAND, surface: "terminal" } as Parameters<typeof $.ui.mount>[0]);
+  await band.press({ key: "vwf-chip" });
+  expect(opened).toEqual(["vwf-monitor", "vwf-monitor"]);
+  await band.unmount();
+  await ui.unmount();
+});

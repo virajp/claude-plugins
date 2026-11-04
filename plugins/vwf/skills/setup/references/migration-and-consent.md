@@ -26,6 +26,16 @@ choice and the reason) and not re-proposed on later runs. It settles the
 proposal, not the finding: `/vwf:doctor` keeps reporting the
 `iac` own-repo case as a persistent warning.
 
+**`config_format` 24 → 25 takes one question and one consent line.** The
+question is the yes/no the [format lineage](format-lineage.md) row for 25
+states, about the MCP server vwf's manifest shipped, asked before the plan is
+shown, and its answer is part of what the plan lists. The consent line is one
+row of the plan: the `addons:` list and the `backing_template` entries it
+removes. A decline is not recorded under `enforcement:` and is offered again on
+the next migrate pass, because the stamp stays at 24. What the migration does to
+the lockfile and to `.mcp.json` is stackgen's, under stackgen's own consent, in
+the materialize pass that follows.
+
 **Idempotent re-run:** this governs the migrate pipeline's doc reconciliation,
 not structural change. Detect what already conforms and reconcile only what
 drifted; a conforming tree produces an empty plan.

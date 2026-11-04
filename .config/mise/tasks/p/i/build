@@ -17,7 +17,7 @@ if [[ ! -f bin/installer.mjs ]]; then
 fi
 
 print_header "Smoke-testing the bundle ..."
-node bin/installer.mjs --help >/dev/null
+node bin/installer.mjs --help > /dev/null
 
 print_header "Listing package contents (dry run) ..."
 pnpm pack --dry-run

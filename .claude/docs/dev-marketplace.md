@@ -19,10 +19,10 @@ plugin manifests, differing only in each entry's `source`.
 ## Setup, once per machine
 
 ```sh
-mise run p:plugins:marketplace                    # both manifests + the staging dir
+mise run p:plugins:marketplace                  # both manifests + the staging dir
 claude plugin marketplace remove virajp-plugins # if you have the published one
 claude plugin marketplace add ./.dev-marketplace
-mise run p:plugins:local                          # stage the plugins and install vwf
+mise run p:plugins:local # stage the plugins and install vwf
 ```
 
 `claude plugin list` should then read:
@@ -86,7 +86,7 @@ Restart Claude Code afterwards — a plugin's skills are read at session start.
 
 ```sh
 claude plugin marketplace remove virajp-plugins
-claude plugin marketplace add ./     # or: virajp/claude-plugins
+claude plugin marketplace add ./ # or: virajp/claude-plugins
 claude plugin install vwf@virajp-plugins --scope user
 ```
 

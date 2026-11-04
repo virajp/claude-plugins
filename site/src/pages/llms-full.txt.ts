@@ -13,7 +13,7 @@ export async function GET({ site }: APIContext): Promise<Response> {
     throw new Error("llms-full.txt: astro.config.ts has no `site`");
   }
   const entries = orderedEntries(await getCollection("docs"));
-  const body = entries.map(entry => mirrorOf(entry, site)).join("\n---\n\n");
+  const body = entries.map((entry) => mirrorOf(entry, site)).join("\n---\n\n");
 
   return new Response(body, {
     headers: { "Content-Type": "text/plain; charset=utf-8" },

@@ -8,14 +8,16 @@ import {
   folderIn,
   FRESH_MS,
   hostOf,
-  isOldFormat,
   joinPath,
+  latestRow,
   memberPaths,
   phaseOf,
+  queueRows,
   readFolder,
   replay,
   resolveBase,
   reviewName,
+  rowFromFolder,
   runningRows,
   time,
   unitForAgent,
@@ -45,8 +47,7 @@ test("maps a reviewer by its row, and a coder by its unit file", async () => {
     ),
   )
     .toBe("U3");
-  const prompt =
-    "Decisions: | 1 | Matching | … | U1 |\nDepends on U1.\nUnit file: docs/plans/x/03-review.md";
+  const prompt = "Decisions: | 1 | Matching | … | U1 |\nDepends on U1.\nUnit file: docs/plans/x/03-review.md";
   expect(unitForAgent("vwf:execute-coder", undefined, units, prompt))
     .toBe("U3");
   expect(
@@ -83,7 +84,7 @@ other:
     "/w/product/.config/vwf.yaml": "members: []\n",
   };
   const base = await resolveBase("/w/api/.worktrees/x", {
-    read: async path => files[path],
+    read: async (path) => files[path],
     git: async (cwd, args) =>
       args.includes("--show-toplevel")
         ? `${cwd}\n`
@@ -123,7 +124,7 @@ const PLANS = (statuses: string[]) =>
 test("reads the RUNNING rows of docs/plans/index.json", async () => {
   expect(runningRows(PLANS(["APPROVED", "COMPLETE"])).rows).toEqual([]);
   const one = runningRows(PLANS(["RUNNING", "APPROVED"]));
-  expect(one.rows.map(row => row.folder)).toEqual([
+  expect(one.rows.map((row) => row.folder)).toEqual([
     "docs/plans/2026-10-20-plan-0",
   ]);
   expect(one.rows[0]!.target_repo).toBe(null);
@@ -157,13 +158,103 @@ test("strips control characters from a malformed JSON's problem", async () => {
   expect(control.test(folder)).toBe(false);
 });
 
-test("tells the old markdown format apart", async () => {
-  expect(isOldFormat({ indexMd: true })).toBe(true);
-  expect(isOldFormat({ indexMd: false, folderMd: true, folderJson: false }))
-    .toBe(true);
-  expect(isOldFormat({ indexMd: false, folderMd: true, folderJson: true }))
-    .toBe(false);
-  expect(isOldFormat({ indexMd: false })).toBe(false);
+test("orders the queue as the plan index picks", async () => {
+  const row = (name: string, status: string, priority: number, extra = {}) => ({
+    id: name,
+    folder: `docs/plans/${name}`,
+    kind: "change",
+    title: name,
+    status,
+    started: "",
+    ended: "",
+    target_repo: null,
+    priority,
+    requires: [] as string[],
+    ...extra,
+  });
+  const out = queueRows([
+    row("2026-01-01-done", "COMPLETE", 10, { ended: "2026-01-02T00:00:00.000Z" }),
+    row("2026-01-03-later", "COMPLETE", 10, { ended: "2026-01-04T00:00:00.000Z" }),
+    row("2026-01-05-b", "APPROVED", 20),
+    row("2026-01-04-a", "APPROVED", 20),
+    row("2026-01-06-first", "APPROVED", 10),
+    row("2026-01-07-wait", "APPROVED", 5, { requires: ["2026-01-08-run"] }),
+    row("2026-01-09-gone", "APPROVED", 30, { requires: ["2025-01-01-archived"] }),
+    row("2026-01-08-run", "RUNNING", 10),
+  ]);
+  expect(out.map((one) => one.folder.slice(11))).toEqual([
+    "2026-01-08-run",
+    "2026-01-06-first",
+    "2026-01-04-a",
+    "2026-01-05-b",
+    "2026-01-09-gone",
+    "2026-01-07-wait",
+    "2026-01-03-later",
+    "2026-01-01-done",
+  ]);
+  expect(out.map((one) => one.number ?? 0)).toEqual([0, 1, 2, 3, 4, 0, 0, 0]);
+  expect(out[5]?.waitsFor).toEqual(["2026-01-08-run"]);
+});
+
+test("the latest row, and a row made from a folder", async () => {
+  const row = (name: string, started: string, ended: string) => ({
+    id: name,
+    folder: name,
+    kind: "",
+    title: name,
+    status: "",
+    started,
+    ended,
+    target_repo: null,
+    priority: 0,
+    requires: [],
+  });
+  expect(latestRow([row("a", "", "")])).toBe(undefined);
+  expect(
+    latestRow([
+      row("a", "2026-01-01T00:00:00.000Z", "2026-01-03T00:00:00.000Z"),
+      row("b", "2026-01-02T00:00:00.000Z", ""),
+    ])
+      ?.folder,
+  )
+    .toBe("a");
+  const folder = readFolder(JSON.stringify({
+    title: "T",
+    status: { state: "COMPLETE", detail: "" },
+    units: [
+      { id: "U1", started: "2026-01-02T00:00:00.000Z", ended: "2026-01-03T00:00:00.000Z" },
+      { id: "U2", started: "2026-01-01T00:00:00.000Z", ended: "2026-01-02T00:00:00.000Z" },
+    ],
+  }))
+    .folder;
+  const made = rowFromFolder("docs/plans/archived/x", folder!);
+  expect(made).toMatchObject({
+    status: "COMPLETE",
+    title: "T",
+    started: "2026-01-01T00:00:00.000Z",
+    ended: "2026-01-03T00:00:00.000Z",
+  });
+});
+
+test("a row that reads APPROVED did not run", async () => {
+  expect(phaseOf({ state: "APPROVED", rowStatus: "APPROVED", hasLiveAgent: false, now: 0 }))
+    .toBe("not-run");
+  expect(phaseOf({ state: "ARCHIVED", rowStatus: "ARCHIVED", hasLiveAgent: false, now: 0 }))
+    .toBe("ended");
+});
+
+test("the replay keeps the log's last tool call", async () => {
+  const folder = readFolder(JSON.stringify({ title: "T", units: [] })).folder!;
+  const state = replay([
+    JSON.stringify({ ts: "2026-01-01T00:00:00.000Z", event: "tool.start", tool: "Read", summary: "a" }),
+    JSON.stringify({ ts: "2026-01-01T00:01:00.000Z", event: "tool.start", tool: "Bash", summary: "b" }),
+    JSON.stringify({ ts: "2026-01-01T00:02:00.000Z", event: "tool.end", tool: "Bash" }),
+  ], folder);
+  expect(state.lastTool).toEqual({
+    tool: "Bash",
+    summary: "b",
+    at: Date.parse("2026-01-01T00:01:00.000Z"),
+  });
 });
 
 test("expands a leading ~/ only", async () => {
@@ -242,9 +333,9 @@ test("reads a folder's index.json, its units, waves and stages with their times"
   expect(f.title).toBe("The [31mpane");
   expect(f.state).toBe("RUNNING");
   expect(f.detail).toBe("wave [2");
-  expect(f.units.map(u => `${u.id}:${u.title}:${u.status}`))
+  expect(f.units.map((u) => `${u.id}:${u.title}:${u.status}`))
     .toEqual(["U1:The core:green", "U2:The pane:running", "U3:Review:pending"]);
-  expect(f.units.map(u => [u.started, u.ended])).toEqual([
+  expect(f.units.map((u) => [u.started, u.ended])).toEqual([
     [T0, T1],
     [T0, ""],
     ["", ""],
@@ -360,12 +451,12 @@ test("replays the agents, the session and the last line's ts; the times are the 
   expect(u1.agent!.live).toBe(false);
   expect(state.units[1]!.started).toBe(T0);
   expect(state.units[1]!.ended).toBe("");
-  expect(state.waves.map(wave => wave.status)).toEqual([
+  expect(state.waves.map((wave) => wave.status)).toEqual([
     "green",
     "running",
     "pending",
   ]);
-  expect(state.stages.map(stage => stage.name)).toEqual([
+  expect(state.stages.map((stage) => stage.name)).toEqual([
     "renders",
     "acceptance",
   ]);
@@ -416,13 +507,13 @@ test("takes status and gaps from the folder, never from row or gap events", asyn
     line("row", { unit: "U3", wave: 3, status: "green" }),
   ];
   const state = replay(lines, folder());
-  expect(state.units.map(u => u.status)).toEqual([
+  expect(state.units.map((u) => u.status)).toEqual([
     "green",
     "running",
     "pending",
   ]);
   expect(state.units[2]!.started).toBe("");
-  expect(state.gaps.map(gap => gap.id)).toEqual(["G1"]);
+  expect(state.gaps.map((gap) => gap.id)).toEqual(["G1"]);
 });
 
 test("ties a foreground agent before tool.end, and a reviewer by its row", async () => {
@@ -516,7 +607,7 @@ test("skips a bad line, and says no run data with no lines", async () => {
   expect(empty.lastAt).toBe(undefined);
   expect(empty.session).toBe(undefined);
   // D23: no log yet, the plan still shows from index.json, times included.
-  expect(empty.units.map(u => `${u.title}:${u.started}`)).toEqual([
+  expect(empty.units.map((u) => `${u.title}:${u.started}`)).toEqual([
     `The core:${T0}`,
     `The pane:${T0}`,
     "Review:",

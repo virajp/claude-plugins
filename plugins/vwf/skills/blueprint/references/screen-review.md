@@ -25,11 +25,11 @@ modal, dialog or sheet whose Route cell reads `modal of <code>`, `dialog of
    1. Ensure `docs/scratchpad/` is gitignored
       (`git check-ignore -q docs/scratchpad/x` — a child path, which matches the
       directory pattern before the directory exists; if not, stop and say so —
-      the line is tool-config's universal `.gitignore`'s, landed by
-      `/vwf:setup reshape`, and this pass never writes the file). Then check
+      the line is in the repo's `.gitignore`, synced by bootstrap's git tool,
+      and this pass never writes the file). Then check
       that `node` is on the path: the route map and the link check need it.
       With no `node`, render nothing for this flow; report that its review
-      waits for `node`, with the remedy `MISE_ENV=dev mise run setup:all`, and
+      waits for `node`, with the remedy `MISE_ENV=dev mise run setup`, and
       continue the rest of the pass — the review is not done, so record
       `screens/<project>/<NNN>-<flow>/<platform>` in `blueprint.remaining` as
       for a deferred review.

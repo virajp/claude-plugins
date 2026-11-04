@@ -142,8 +142,8 @@ made-up prompt is worse than one that admits it is done.
 Write the completed document verbatim to `docs/memory/handoff/<name>.md` under
 the root step 3 resolved, creating the folder if it is missing. A file of that
 name that already exists is **replaced in place** — never a second file, never
-a dated or suffixed variant. **Do not commit it** — the `.gitignore` entry
-tool-config's universal file carries keeps it out of every diff.
+a dated or suffixed variant. **Do not commit it** — the line in the repo's
+`.gitignore`, synced by bootstrap's git tool, keeps it out of every diff.
 
 The file is the whole deliverable: if it cannot be written, say so and stop —
 never report a handoff that is not on disk.

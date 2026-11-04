@@ -143,8 +143,7 @@ function ensureDir(base, segments) {
     const next = join(dir, segment);
     try {
       mkdirSync(next);
-    }
-    catch (error) {
+    } catch (error) {
       if (error.code !== "EEXIST") {
         throw error;
       }
@@ -164,8 +163,7 @@ function copyFresh(source, target) {
   let existing = null;
   try {
     existing = lstatSync(target);
-  }
-  catch {
+  } catch {
     // nothing there
   }
   if (existing?.isDirectory()) {
@@ -180,8 +178,7 @@ function copyFresh(source, target) {
 function readStdin() {
   try {
     return readFileSync(0, "utf8");
-  }
-  catch (error) {
+  } catch (error) {
     return fail(`cannot read stdin: ${error.message}`);
   }
 }
@@ -215,9 +212,7 @@ for (const [index, raw] of readStdin().split("\n").entries()) {
   const match = LINE_RE.exec(line);
   if (!match) {
     process.stderr.write(
-      `renders.mjs: line ${
-        index + 1
-      } is not a RENDER: line, ignored: ${line}\n`,
+      `renders.mjs: line ${index + 1} is not a RENDER: line, ignored: ${line}\n`,
     );
     continue;
   }
@@ -261,12 +256,10 @@ function routeMap(platform) {
         process.stderr.write(`renders.mjs: ${platform}: ${error}\n`);
       }
       map = { error: "the route map has errors" };
-    }
-    else {
+    } else {
       map = { screens: built.screens };
     }
-  }
-  catch (error) {
+  } catch (error) {
     map = { error: error.message };
   }
   maps.set(platform, map);
@@ -308,7 +301,7 @@ for (const item of items) {
     skip(item, `no route map: ${map.error}`);
     continue;
   }
-  const screen = map.screens.find(s => s.code === item.code);
+  const screen = map.screens.find((s) => s.code === item.code);
   if (!screen) {
     skip(item, `code ${item.code} is in no ${item.platform} Screens table`);
     continue;
@@ -337,8 +330,7 @@ for (const item of items) {
       continue;
     }
     copyFresh(source, join(realDir, name));
-  }
-  catch (error) {
+  } catch (error) {
     skip(item, `cannot copy: ${error.message}`);
     continue;
   }
@@ -356,13 +348,10 @@ for (const item of items) {
     plan,
     date,
   };
-  const at = entries.findIndex(e =>
-    e.code === entry.code && e.state === entry.state
-  );
+  const at = entries.findIndex((e) => e.code === entry.code && e.state === entry.state);
   if (at === -1) {
     entries.push(entry);
-  }
-  else {
+  } else {
     entries[at] = entry;
   }
 }
@@ -371,12 +360,9 @@ function readRenders(file) {
   try {
     const data = JSON.parse(readFileSync(file, "utf8"));
     return Array.isArray(data?.renders)
-      ? data.renders.filter(entry =>
-        entry !== null && typeof entry === "object"
-      )
+      ? data.renders.filter((entry) => entry !== null && typeof entry === "object")
       : [];
-  }
-  catch {
+  } catch {
     return [];
   }
 }
@@ -388,8 +374,7 @@ function foldsCase(dir) {
     const lower = statSync(join(dir, RENDERS));
     const upper = statSync(join(dir, RENDERS.toUpperCase()));
     return lower.ino === upper.ino && lower.dev === upper.dev;
-  }
-  catch {
+  } catch {
     return false;
   }
 }
@@ -406,7 +391,7 @@ function removeImage(realRoot, file) {
   const name = segments.pop();
   if (
     !isRenderName(name)
-    || segments.some(segment => ["", ".", ".."].includes(segment))
+    || segments.some((segment) => ["", ".", ".."].includes(segment))
   ) {
     return;
   }
@@ -419,8 +404,7 @@ function removeImage(realRoot, file) {
     if (!lstatSync(target).isDirectory()) {
       rmSync(target);
     }
-  }
-  catch {
+  } catch {
     // already gone
   }
 }
@@ -446,18 +430,18 @@ for (const [platform, entries] of copied) {
     }
     const file = join(reserved, "renders.json");
     const folded = foldsCase(realRoot);
-    const key = path => (folded ? String(path).toLowerCase() : String(path));
+    const key = (path) => (folded ? String(path).toLowerCase() : String(path));
     const old = readRenders(file);
     // The { code, state } pairs this run copied are replaced, an old entry
     // naming a file this run overwrote is dropped — it no longer describes
     // that file — and an old entry whose code left the route map or whose
     // route changed shape is pruned. Every other entry is kept as it is.
-    const kept = old.filter(entry => {
-      const screen = screens.find(s => s.code === entry.code);
+    const kept = old.filter((entry) => {
+      const screen = screens.find((s) => s.code === entry.code);
       return screen
         && typeof entry.route === "string"
         && routeShape(entry.route) === routeShape(screen.route)
-        && !entries.some(e =>
+        && !entries.some((e) =>
           (e.code === entry.code && e.state === entry.state)
           || key(e.file) === key(entry.file)
         );
@@ -469,7 +453,7 @@ for (const [platform, entries] of copied) {
     writeJson(file, { project: args.project, platform, renders });
     // The image of each entry that went is deleted once the json
     // holds the change, unless a kept entry names that file.
-    const named = new Set(renders.map(entry => key(entry.file)));
+    const named = new Set(renders.map((entry) => key(entry.file)));
     for (const entry of old) {
       if (!kept.includes(entry) && !named.has(key(entry.file))) {
         removeImage(realRoot, entry.file);
@@ -480,8 +464,7 @@ for (const [platform, entries] of copied) {
       platform,
       screens,
     });
-  }
-  catch (error) {
+  } catch (error) {
     process.stderr.write(
       `renders.mjs: ${platform}: cannot write ${RENDERS}/: ${error.message}\n`,
     );

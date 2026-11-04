@@ -5,8 +5,8 @@ This package has moved to `@virajp.dev/claude-plugins`, developed at
 everything else:
 
 ```sh
-pnpx @virajp.dev/claude-plugins --all      # install the plugins
-pnpx @virajp.dev/claude-plugins --help     # everything else
+pnpx @virajp.dev/claude-plugins --all  # install the plugins
+pnpx @virajp.dev/claude-plugins --help # everything else
 ```
 
 Running this package only prints that pointer to stderr and exits with status 1.

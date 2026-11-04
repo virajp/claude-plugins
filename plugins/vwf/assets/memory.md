@@ -72,8 +72,8 @@ what only one developer needs.**
 | `handoff`                       | gitignored | One developer's session state                       |
 
 The `.gitignore` entry (`docs/memory/handoff/`) and the `docs/scratchpad/` line
-are tool-config's: its universal `.gitignore` carries them inside the
-`tool-config` markers, and no vwf skill writes the file. It also ignores
+sit in the repo's `.gitignore`, which bootstrap's git tool syncs, and no vwf
+skill writes the file. It also ignores
 `docs/memory/doctor/` and `docs/memory/runs/`: folders left from
 config_format 23, until the config_format 24 migration removes them.
 
@@ -114,7 +114,7 @@ not delete it from history.
 
 **Neither `/vwf:setup` nor `/vwf:doctor` scans for actual secrets.** Detecting
 credentials in a repo is a dedicated scanner's job, and
-`/stackgen:tool-config all` lands its config in the repo's own `.config/`,
+bootstrap lands its config in the repo's own `.config/`,
 where it is present in the checkout itself rather than conditional on a plugin
 being installed — two tools scanning for credentials under different rules
 produces a false sense of coverage, not more of it.

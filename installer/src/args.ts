@@ -40,8 +40,7 @@ interface FlagDoc {
 const FLAGS: readonly FlagDoc[] = [
   {
     display: "--all",
-    description:
-      "Install the default plugin set (vwf, user scope) via claude plugin "
+    description: "Install the default plugin set (vwf, user scope) via claude plugin "
       + "install",
   },
   {
@@ -55,8 +54,7 @@ const FLAGS: readonly FlagDoc[] = [
   },
   {
     display: "--uninstall",
-    description:
-      "List everything this toolkit installed and remove what you do not "
+    description: "List everything this toolkit installed and remove what you do not "
       + "deselect",
   },
   {
@@ -71,15 +69,15 @@ const FLAGS: readonly FlagDoc[] = [
 ];
 
 const OPTIONS = {
-  all: { type: "boolean" },
-  user: { type: "string", multiple: true },
-  project: { type: "string", multiple: true },
-  uninstall: { type: "boolean" },
+  "all": { type: "boolean" },
+  "user": { type: "string", multiple: true },
+  "project": { type: "string", multiple: true },
+  "uninstall": { type: "boolean" },
   "dry-run": { type: "boolean" },
-  version: { type: "boolean", short: "v" },
+  "version": { type: "boolean", short: "v" },
   // Declared rather than special-cased: `strict` rejects anything undeclared,
   // so an undeclared `--help` would error instead of helping.
-  help: { type: "boolean", short: "h" },
+  "help": { type: "boolean", short: "h" },
 } as const;
 
 export interface Args {
@@ -121,7 +119,7 @@ export function parse(argv: readonly string[]): Args {
 
 /** The help text, printed on `--help` and on any run that does nothing. */
 export function renderUsage(): string {
-  const width = Math.max(...FLAGS.map(f => f.display.length));
+  const width = Math.max(...FLAGS.map((f) => f.display.length));
   const wrap = (text: string, indent: number): string => {
     const limit = 78 - indent;
     const lines: string[] = [];
@@ -130,8 +128,7 @@ export function renderUsage(): string {
       if (line.length > 0 && line.length + 1 + word.length > limit) {
         lines.push(line);
         line = word;
-      }
-      else {
+      } else {
         line = line.length === 0 ? word : `${line} ${word}`;
       }
     }
@@ -139,9 +136,7 @@ export function renderUsage(): string {
     return lines.join(`\n${" ".repeat(indent)}`);
   };
 
-  const rows = FLAGS.map(flag =>
-    `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`
-  );
+  const rows = FLAGS.map((flag) => `  ${flag.display.padEnd(width)}  ${wrap(flag.description, width + 4)}`);
   return [
     "Install the virajp-plugins plugins",
     "",

@@ -80,8 +80,7 @@ export const MANIFEST_PATH = ".claude-plugin/marketplace.json";
 export const DEV_MARKETPLACE_DIR = ".dev-marketplace";
 
 /** Where the local authoring manifest lands, relative to the repo root. */
-export const DEV_MANIFEST_PATH =
-  `${DEV_MARKETPLACE_DIR}/.claude-plugin/marketplace.json`;
+export const DEV_MANIFEST_PATH = `${DEV_MARKETPLACE_DIR}/.claude-plugin/marketplace.json`;
 
 /**
  * The directory a dev `source` resolves into, relative to `DEV_MARKETPLACE_DIR`.
@@ -164,8 +163,7 @@ const HEADER = {
  * dependency-resolution rule above. Anyone who opens the file, or lists the
  * marketplace after adding it, reads this line.
  */
-const DEV_DESCRIPTION =
-  "LOCAL AUTHORING ONLY — serves this working tree, never published. "
+const DEV_DESCRIPTION = "LOCAL AUTHORING ONLY — serves this working tree, never published. "
   + "Users read .claude-plugin/marketplace.json from main instead.";
 
 /**
@@ -227,7 +225,7 @@ export function buildManifest(
   const header = mode === "dev"
     ? { ...HEADER, description: DEV_DESCRIPTION }
     : HEADER;
-  return json({ ...header, plugins: plugins.map(p => entry(p, mode)) });
+  return json({ ...header, plugins: plugins.map((p) => entry(p, mode)) });
 }
 
 /**
@@ -337,8 +335,7 @@ if (import.meta.main) {
         process.exit(1);
       }
       console.log(`${path} is up to date.`);
-    }
-    else {
+    } else {
       mkdirSync(dirname(target), { recursive: true });
       writeFileSync(target, generated);
       console.log(`wrote ${path}`);
@@ -347,8 +344,7 @@ if (import.meta.main) {
 
   if (check) {
     checkDevPluginsDir(repoRoot);
-  }
-  else {
+  } else {
     writeDevPluginsDir(repoRoot);
   }
 }
@@ -405,8 +401,7 @@ function checkDevPluginsDir(repoRoot: string): void {
 function isSymlink(path: string): boolean {
   try {
     return lstatSync(path).isSymbolicLink();
-  }
-  catch {
+  } catch {
     return false;
   }
 }

@@ -1,5 +1,9 @@
 <p align="center">
-  <img src="https://claude-plugins.virajp.dev/brand/social-preview.png" width="640" alt="vwf">
+  <img
+    src="https://claude-plugins.virajp.dev/brand/social-preview.png"
+    width="640"
+    alt="vwf"
+  >
 </p>
 
 # vwf — Product → Blueprint → Plan → Execute for Claude Code
@@ -65,16 +69,19 @@ blocker rather than a preference. Know this before you install.
   non-negotiable TDD and a coverage gate; `plan` and `execute` map each slice to
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
-- **Two binaries must be on your `PATH`** — `mise` and `pnpm`. `pnpm` is only
-  the **default** Context7 runner; `CONTEXT7_RUNNER` overrides it, so a bun or
-  npm user needs no pnpm — see
-  [the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/). **Nothing
-  checks this at install time**, and `/vwf:doctor` does not cover both: it
-  blocks on a missing `mise` once any stack axis is pinned (and `/vwf:setup` and
-  `/vwf:execute` halt on it), reports a missing language server as an ordinary
-  finding, and says nothing at all about the Context7 runner. Run `/vwf:doctor`
-  first regardless, but install both rather than relying on it to tell you. A
-  third, `gh`, logged in, is needed by `/vwf:backlog`, which keeps the backlog
+- **`mise` and `node` must be on your `PATH`.** `node` runs vwf's own scripts.
+  `pnpm` matters only if the product picks the optional `context7` tool, as its
+  **default** runner; `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs
+  no pnpm — see
+  [the stackgen manual](https://claude-plugins.virajp.dev/plugins/stackgen/).
+  **Nothing checks these at install time**, and `/vwf:doctor` covers only part
+  of them: it blocks on a missing `mise` once any stack axis is pinned (and
+  `/vwf:setup` and `/vwf:execute` halt on it), reports a missing language server
+  as an ordinary finding, and says nothing at all about `node` or the Context7
+  runner. Run `/vwf:doctor` first regardless, but install what you use rather
+  than relying on it to tell you. Another, `gh`, logged in, is needed by
+  `/vwf:backlog`,
+  which keeps the backlog
   in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
   (the default branch and protection on `develop` and `main` on the `repo`
   scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
@@ -109,7 +116,7 @@ claude plugin marketplace add virajp/claude-plugins
 claude plugin install vwf@virajp-plugins
 ```
 
-Restart your agent afterward so the skills, hooks and MCP servers load, then run
+Restart your agent afterward so the skills and hooks load, then run
 `/vwf:doctor`. It is the closest thing to a preflight now that nothing is gated
 at install time — though see the [caveat](#caveats) on what it does and does not
 check. On a repo that has never been shaped — empty, or already carrying source
@@ -120,20 +127,25 @@ repo is offered, never overwritten. `/vwf:setup reshape` runs that pass alone �
 across every member — and is what `/vwf:doctor` prints when a shaped repo has
 fallen behind. You rarely have to remember it: `setup` re-checks the shape after
 its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
-`/vwf:recall` prints one drift line at session start — each offers the reshape,
-none runs it unasked. A repo is shaped when it carries `.config/stackgen.yaml`,
-the values file `init` writes through `stackgen:tool-config`; one still on the
-older mise layout (`.config/mise/conf.d/tools.toml` and its siblings) is named
-and left as it is until the reshape that moves it ships.
+`/vwf:recall` prints its drift lines at session start — each offers a remedy,
+none
+runs it unasked. A repo is shaped when it carries `.config/bootstrap.toml`,
+the values file [bootstrap](https://github.com/virajp/bootstrap) writes; one
+still
+on an older layout (`.config/stackgen.yaml`, or
+`.config/mise/conf.d/tools.toml` and its siblings) is named, and the reshape
+moves
+it onto bootstrap's. Those drift lines read files only and do not report config
+drift: `/vwf:doctor` run whole does, through an explicit
+`mise run setup:configs --dry-run`, which executes bootstrap's `main` branch
+with
+no pin.
 
-Once a repo **is** shaped, its own task library takes the plugin side over:
-`mise run setup:ai:all` checks that `vwf` is installed — at user scope, or at
-project or local scope for this repo — and only when it is not runs the command
-above to install it at **user** scope. Whether or not it installed anything, it
-then updates every registered marketplace and upgrades every plugin installed at
-a scope that serves the repo, at that scope. It never installs at project scope.
-The command above is the one-shot a person runs on a machine; that is what a
-checkout re-runs.
+Once a repo **is** shaped, bootstrap's `setup:ai` task takes the plugin side
+over. The
+command above is the one-shot a person runs on a machine; that is what a
+checkout
+re-runs.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
@@ -190,8 +202,8 @@ Paste one of these, adjusting the plugin name:
 > Install the `vwf` plugin from
 > `https://github.com/virajp/claude-plugins/tree/main/plugins/vwf` into this
 > project, adapted to the conventions of the agent you are running in. Read its
-> `.claude-plugin/plugin.json` first — it declares the MCP servers and
-> dependencies the plugin expects. Skills live in `skills/<name>/SKILL.md` with
+> `.claude-plugin/plugin.json` first — it declares the dependencies the
+> plugin expects. Skills live in `skills/<name>/SKILL.md` with
 > YAML frontmatter; hooks are declared in `hooks/hooks.json` with their scripts
 > beside them, plus one Claude Code hooks module (the `/vwf:execute` progress
 > pane) under `modules`. Port each of those to this tool's equivalent mechanism,
@@ -212,7 +224,8 @@ Paste one of these, adjusting the plugin name:
   expectation is that skills port well, hooks and MCP wiring port unevenly, and
   subagents port worst.
 - **MCP wiring varies most.** MCP transport support differs per tool; vwf
-  declares one server, Context7, over stdio.
+  declares no server, and each one stackgen lands, an optional tool's or a
+  design tool's, goes into a local plugin only Claude Code reads.
 - **Model-invocation restrictions may be approximated.** Some skills are marked
   so the model cannot invoke them itself and you own the timing
   (`disable-model-invocation: true`). If your tool has no equivalent, that
@@ -239,7 +252,7 @@ teaches you back to the document that fixes it. It carries
 [cross-session memory](https://claude-plugins.virajp.dev/plugins/vwf/#memory) as
 plain files under `docs/memory/`, session handoff and recall, the
 [Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
-and the Markdown and Context7 docs surfaces it absorbed. Both planners write the
+and the Markdown docs surface it absorbed. Both planners write the
 same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
 ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
 CI, docs, a refactor) — an `index.json` holding every structured fact, an
@@ -274,30 +287,42 @@ principles-driven stack materializer. A stack is a composition of **components**
 — the language, its package manager, each framework, the toolchain gates — and
 each one resolves on its own: a component a shipped **pack** covers is copied
 verbatim; an uncovered one is **generated** — researched via Context7 topic by
-topic, instantiated against vwf's principles catalog, gated by a reviewer agent
-and your explicit consent, so a covered language never regenerates because its
-framework is new. Every concrete third-party name a generated component emits —
-a package, a runner-invoked tool, a GitHub Action, a container image, a SwiftPM
-package, a Maven artifact or Gradle plugin, a mise tool on any backend — is
-vetted first by `stackgen-reputation` against public registry, advisory and
-scorecard data, one verdict per name (`pass`, `warn`, `block`); a `block` halts
-that component until you name a replacement, and the same skill is yours to run
-on any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. Both paths
+topic, which needs a Context7 server from some source and halts without one (the
+optional `context7` tool is the one stackgen offers), instantiated against vwf's
+principles catalog, gated by a reviewer agent and your explicit consent, so a
+covered language never regenerates because its framework is new. Every concrete
+third-party name a generated component emits — a package, a runner-invoked tool,
+a server's command and whatever its runner chain fetches, a GitHub Action, a
+container image, a SwiftPM package, a Maven artifact or Gradle plugin, a mise
+tool on any backend — is vetted first by `stackgen-reputation` against public
+registry, advisory and scorecard data, one verdict per name (`pass`, `warn`,
+`block`); a `block` halts that component until you name a replacement, and the
+same skill is yours to run on any name as
+`/stackgen:stackgen-reputation <ecosystem>:<name> …`. A generated server is
+vetted on what can be read from its declared command, and the consent gate shows
+the whole command and its env values, so you are the control for any form the
+vetting does not parse. Both paths
 land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
 rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
 fixes what the output must cover and how deep, recorded in a lockfile per
 component — so most of the result is plain files your collaborators get with a
-`git pull` and no plugin install. Two things cannot be repo files, and each
-carries its own consent line rather than riding the landing: an MCP server goes
-into the project's `.mcp.json`, and a **language server** is a plugin-manifest
-feature no project file can express at all, so stackgen writes one small local
-plugin on your machine — at the fixed path
-`~/.claude/plugins/local/stackgen-lsp/`, holding the union across the repos you
-have materialized from — and **prints the two registration commands for you to
-run rather than running them itself**. That one is user-scoped and your
-collaborators get none of it, which is the same line your editor already draws;
-what makes it safe is that every generated server declaration carries an
-extension map, so it never starts in a repo with no matching files. Re-syncing
+`git pull` and no plugin install. **Servers** are the exception, and they carry
+their own consent lines rather than riding the landing: a **language server** is
+a plugin-manifest feature no project file can express at all, and an **MCP
+server** travels the same way, so stackgen writes one small local plugin on your
+machine — at the fixed path `~/.claude/plugins/local/vwf-tools/`, holding the
+union across the repos you have materialized from — and **prints the two
+registration commands for you to run rather than running them itself**. That one
+is user-scoped and your collaborators get none of it, which is the same line
+your editor already draws: a product commits which tools it picked, and each
+person's machine gets the servers when they run `/vwf:setup`. Every generated
+language server declaration carries an extension map, so it never starts in a
+repo with no matching files; an MCP server has no such map, so the gate says
+plainly that it and any account grant it holds are reachable from every repo on
+your machine. A machine that still has the older `stackgen-lsp` plugin is
+offered
+one migration to `vwf-tools`, and a repo's `.mcp.json` entries are stackgen's to
+move or report at the same time. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
@@ -306,29 +331,14 @@ root config and the deploy task beside it, a project task a framework pack owns
 — the Astro pack's favicon rasterizer is the first — on the same
 merges-never-owns terms, behind their own consent line, and capped by a fixed
 allowlist of what may sit at a repo's root. The mise config, the file-based task
-library everything else runs through, the dprint, taplo, pre-commit, gitleaks,
-grype and house-linter configs, the ignore and attribute files, the editor
-settings and the statusline config belong to no pack: they are written by
-`/stackgen:tool-config`, a skill you can also run yourself
-(`/stackgen:tool-config preview all`). A shipped node script copies its
-`assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
-— the repo's values, which the script alone writes — in four calls: `all`,
-`pack`, `pack-remove` and `upgrade`. Each list a pack once appended to — the
-ignore set, the exclusion set, the formatter's plugins — ships as a universal
-superset, every stack's entries whether or not your repo uses that stack; six
-files carry one `# >>> tool-config` marker pair, and every line outside it is
-yours and survives every render. Dev-only mise files pin `latest`; a file CI
-loads gets exact versions, save node and pnpm — there is no mise lockfile. Every
-change is shown as a numbered row before it writes, so a new repo's gate config
-needs no model judgement; it runs each tool only as `mise x -- <tool>`, the
-version your config pins, formats every file it wrote with the shipped dprint
-config and validates the hook config. Its `all` ends in a set-up repo: it lands
-every file, then runs `MISE_ENV=dev mise run setup:all`. Trusting the repo's
-mise config is yours to do first — typically its path in `trusted_config_paths`
-in your global mise config; the script checks it and never grants it. It also
-lands a repo-local mise skill, and a tool is never added with a bare `mise use`.
+library everything else runs through, the gates and their configs, the ignore
+and
+attribute files, the editor settings and the hooks belong to no pack: they are
+[bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init` reaches
+through bootstrap's own readme prompt, and the `setup:*` and `code:*` tasks are
+bootstrap's with them.
 A pack ships no toolchain at all: its tool pins, its gates and their configs,
-and its generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s.
+and its generic tasks are bootstrap's.
 The materializer reads a fresh clone of bootstrap to choose the tools a stack
 needs, and asks for them through bootstrap's own entry point, behind its own
 consent line; it never edits `.config/bootstrap.toml` itself. A value only the
@@ -337,17 +347,23 @@ task, or set by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests
 and CI workflow files stay outside that fence: they declare what the project
 *is*, and no pack decides either. The packs, bundles and kinds that ship are
 inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
-generated from the tree itself; the newest kind is `stylesheet`, the one that
-answers vwf's seventh axis — how a web frontend's styles are authored, with
-`tailwindcss`, `stylex` and `plain-css` filling it and the design system's
-tokens staying the contract each of them realizes. The newest **category** is
-`workspace`, filled by `notion` — the place a team's docs, specs and tickets
-already live, wired for the agent to reach through one hosted MCP server the
-person authorises once, and nothing more: no part of the product runs against
-it. The newest **design tool** is the terminal itself — the `claude-code` pack,
-which vwf's architecture menu preselects on the design axis: the design system,
-the logo and a flow's screens are authored in session, through the `taste-skill`
-plugin a product pinning it declares, into a committed `docs/design/<project>/`
+generated from the tree itself; the newest kind is `addon`, vwf's eighth axis —
+**optional tools**, `context7`, `notion` and `taste-skill`, offered by a tools
+menu in `/vwf:architecture` with nothing preselected, recorded in the
+product-level `addons:` list of `.config/vwf.yaml`, and installed by
+`/vwf:setup`
+only while picked. Before it came `stylesheet`, the one that answers vwf's
+seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
+`stylex` and `plain-css` filling it and the design system's tokens staying the
+contract each of them realizes. The newest **category** is `workspace`, filled
+by the `notion` tool — the place a team's docs, specs and tickets already live,
+wired for the agent to reach through one hosted MCP server the person authorises
+once, and nothing more: no part of the product runs against it. The newest
+**design tool** is the terminal itself — the `claude-code` pack, which vwf's
+architecture menu preselects on the design axis: the design system, the logo and
+a flow's screens are authored in session, through the `taste-skill` plugin, the
+optional tool a product pinning it picks, into a committed
+`docs/design/<project>/`
 that vwf imports like any hosted canvas, and reviewed in a browser served from
 the repo on loopback — you click, comment, press Done, and the session applies
 the comments. stackgen is now the only stack plugin: its packs are the covered
@@ -470,7 +486,8 @@ maintainers. 🙏
   Karpathy's observations. Its `karpathy-guidelines` skill is vendored into
   `vwf`; see `plugins/vwf/vendor/andrej-karpathy-skills/`.
 - **[Context7](https://github.com/upstash/context7)** by
-  [Upstash](https://upstash.com) — the MCP docs server `vwf` declares.
+  [Upstash](https://upstash.com) — the MCP docs server behind `stackgen`'s
+  optional `context7` tool.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
   plugins and hooks depend on.
 - **[pnpm](https://pnpm.io/)** — the default package manager the normalizing

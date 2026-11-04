@@ -34,13 +34,13 @@ export interface NavSection {
 /** The shape of a docs collection entry this module reads. */
 export interface DocEntry {
   id: string;
-  data: { title: string; description: string; order: number; };
+  data: { title: string; description: string; order: number };
 }
 
 const SECTIONS: {
   key: string;
   label: string;
-  groups: { key: string; label: string; }[];
+  groups: { key: string; label: string }[];
 }[] = [
   { key: "plugins", label: "Plugins", groups: [] },
   {
@@ -58,23 +58,23 @@ const SECTIONS: {
 const byOrder = (a: NavEntry, b: NavEntry) => a.order - b.order;
 
 export function buildNav(entries: DocEntry[]): NavSection[] {
-  const sections: NavSection[] = SECTIONS.map(s => ({
+  const sections: NavSection[] = SECTIONS.map((s) => ({
     key: s.key,
     label: s.label,
     route: routeFor(`${s.key}/index`),
     index: null,
     entries: [],
-    groups: s.groups.map(g => ({ key: g.key, label: g.label, entries: [] })),
+    groups: s.groups.map((g) => ({ key: g.key, label: g.label, entries: [] })),
   }));
 
   for (const entry of entries) {
     const parts = entry.id.split("/");
-    const section = sections.find(s => s.key === parts[0]);
+    const section = sections.find((s) => s.key === parts[0]);
     if (!section) {
       throw new Error(
         `nav: "${entry.id}" is not under a known section (${
           SECTIONS
-            .map(s => s.key)
+            .map((s) => s.key)
             .join(", ")
         })`,
       );
@@ -88,20 +88,17 @@ export function buildNav(entries: DocEntry[]): NavSection[] {
     };
     if (parts.length === 2 && parts[1] === "index") {
       section.index = nav;
-    }
-    else if (parts.length === 2) {
+    } else if (parts.length === 2) {
       section.entries.push(nav);
-    }
-    else if (parts.length === 3) {
-      const group = section.groups.find(g => g.key === parts[1]);
+    } else if (parts.length === 3) {
+      const group = section.groups.find((g) => g.key === parts[1]);
       if (!group) {
         throw new Error(
           `nav: "${entry.id}" is under an unknown group of ${section.key}`,
         );
       }
       group.entries.push(nav);
-    }
-    else {
+    } else {
       throw new Error(
         `nav: "${entry.id}" nests deeper than section/group/page`,
       );
@@ -141,14 +138,14 @@ export interface Located {
 /** Where an id sits: its section, its group if any, and its entry. */
 export function locate(nav: NavSection[], id: string): Located | null {
   const [key, ...rest] = id.split("/");
-  const section = nav.find(s => s.key === key);
+  const section = nav.find((s) => s.key === key);
   if (!section) {
     return null;
   }
   const group = rest.length === 2
-    ? section.groups.find(g => g.key === rest[0]) ?? null
+    ? section.groups.find((g) => g.key === rest[0]) ?? null
     : null;
-  const entry = flatten([section]).find(e => e.id === id) ?? null;
+  const entry = flatten([section]).find((e) => e.id === id) ?? null;
   return { section, group, entry };
 }
 
@@ -156,9 +153,9 @@ export function locate(nav: NavSection[], id: string): Located | null {
 export function prevNext(
   nav: NavSection[],
   id: string,
-): { prev: NavEntry | null; next: NavEntry | null; } {
+): { prev: NavEntry | null; next: NavEntry | null } {
   const all = flatten(nav);
-  const i = all.findIndex(e => e.id === id);
+  const i = all.findIndex((e) => e.id === id);
   if (i === -1) {
     return { prev: null, next: null };
   }

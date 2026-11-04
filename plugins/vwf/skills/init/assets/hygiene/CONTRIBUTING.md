@@ -11,12 +11,12 @@ has not been told to trust:
 
 ```sh
 mise trust --all
-MISE_ENV=dev mise run setup:all
+MISE_ENV=dev mise run setup
 ```
 
 Listing the checkout's path, or a parent of it, under `trusted_config_paths`
 in your global mise config does the same for every checkout beneath it,
-linked worktrees included. Then `setup:all` is the whole of it: the toolchain
+linked worktrees included. Then `setup` is the whole of it: the toolchain
 manager installs the pinned tools, installs dependencies, and wires the commit
 hooks. Every task lives as a file under `.config/mise/tasks/`, and
 `mise tasks` lists them.
@@ -26,8 +26,7 @@ hooks. Every task lives as a file under `.config/mise/tasks/`, and
 Three lines, and they do not vary with which branch the forge calls default:
 
 - Work happens on a **feature branch or a worktree**, never on a long-lived
-  branch directly. The one exception is the shaping commit the repo starts with,
-  which lands on `develop`.
+  branch directly.
 - A feature branch lands on **`develop`**.
 - `develop` lands on **`main`**, and `main` takes nothing else. A commit hook
   refuses a direct commit to it.
@@ -35,16 +34,16 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is set **per branch** in `.config/stackgen.yaml`: `merge_model.develop`
-for the first move, `merge_model.main` for the second, each `direct` or `pr`,
-which the tasks read as `MERGE_MODEL_DEVELOP` and `MERGE_MODEL_MAIN`. That
-file is written by the toolkit, never by hand: change a value by re-running
-`/stackgen:tool-config all --merge-model-main pr`, say, which rewrites it and
-every file rendered from it. `direct` merges locally and pushes — your branch is on
-the destination the moment the task returns; `pr` pushes the branch and opens a
-pull request instead, merging nothing — your branch lands when a maintainer
-merges that request. The two can differ: a repo that lands features directly on
-`develop` and still requires a pull request for `main` is the usual shape.
+then do is set **per branch** in `.config/bootstrap.toml`:
+`[branch.develop].merge_model` for the first move, `[branch.main].merge_model`
+for the second, each `direct`, the default, or `pr`. That file is the repo's
+values file for bootstrap, the shared-files repo this one syncs from: change a
+value through bootstrap's `docs/sync`, then `mise run setup:configs`. `direct`
+merges locally and pushes — your branch is on the destination the moment the
+task returns; `pr` pushes the branch and opens a pull request instead, merging
+nothing — your branch lands when a maintainer merges that request. The two can
+differ: a repo that lands features directly on `develop` and still requires a
+pull request for `main` is the usual shape.
 
 The forge's own settings — the default branch, and protection on `develop` and
 `main` — are set by `/vwf:setup`'s forge pass on GitHub and GitLab, and no task
@@ -53,8 +52,7 @@ re-runs them. On any other forge a maintainer sets them **by hand, once**:
 - The default branch: `gh repo edit --default-branch <branch>`, or
   `glab repo update --defaultBranch <branch>` on GitLab.
 - Protection on both `develop` and `main`: no force-push and no deletion; and a
-  pull request required on each branch whose variable is `pr` —
-  `MERGE_MODEL_DEVELOP` for `develop`, `MERGE_MODEL_MAIN` for `main`.
+  pull request required on each branch whose `merge_model` is `pr`.
 
 ## Commits
 
@@ -69,11 +67,10 @@ The same checks run on every commit and in CI, so there is nothing to remember
 beyond running them before you push:
 
 ```sh
-mise run code:format:all  # every formatter, over what it owns
-mise run code:lint:all    # every linter, per language
-mise run code:check:all   # every check a stack adds — lockfiles, types
-mise run code:sec         # secret and vulnerability scanning
-mise run code:precommit   # every hook, over the whole tree
+mise run code:format     # every formatter, over what it owns
+mise run code:lint       # every linter, per language
+mise run code:sec        # secret and vulnerability scanning
+mise run code:precommit  # every hook, over the whole tree
 ```
 
 `code:precommit` is the one that matches what a merge will do. A hook that only

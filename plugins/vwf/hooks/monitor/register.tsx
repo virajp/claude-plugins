@@ -7,7 +7,6 @@ import type {
   AgentInfo,
   EngineInterface,
   Register,
-  RenderChildren,
   Timer,
 } from "claude-code";
 
@@ -16,22 +15,32 @@ import type {
   PlanFolder,
   PlanIndexRow,
   PlanRun,
+  QueueRow,
   Replay,
   Run,
 } from "../../types";
 import {
   expandHome,
   folderIn,
-  isOldFormat,
+  indexRows,
   joinPath,
+  latestRow,
   memberPaths,
+  nameOf,
   phaseOf,
+  queueRows,
   readFolder,
   replay,
   resolveBase,
-  runningRows,
+  rowFromFolder,
   time,
 } from "./plan";
+import {
+  chipProps,
+  drawChip,
+  drawList,
+  drawTimeline,
+} from "./view";
 
 const PANE = "vwf-monitor";
 const SKILL = "vwf:execute";
@@ -41,6 +50,8 @@ const FINISHED = ["green", "skipped"];
 const run = atom({ plugin: "vwf", key: "monitorRun" } as const, null);
 const isQuiet = atom({ plugin: "vwf", key: "monitorQuiet" } as const, true);
 const viewing = atom({ plugin: "vwf", key: "monitorViewing" } as const, null);
+const live = atom({ plugin: "vwf", key: "monitorLive" } as const, null);
+const hasPlans = atom({ plugin: "vwf", key: "monitorHasPlans" } as const, false);
 
 type $ = EngineInterface;
 
@@ -50,9 +61,7 @@ function clock(ms: number | undefined): string {
   }
   const d = new Date(ms);
 
-  return `${String(d.getHours()).padStart(2, "0")}:${
-    String(d.getMinutes()).padStart(2, "0")
-  }`;
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
 }
 
 function span(from: number | undefined, to: number | undefined): string {
@@ -71,8 +80,6 @@ function fit(text: string, width: number): string {
     ? text.padEnd(width)
     : text.slice(0, Math.max(0, width - 1)) + "…";
 }
-
-const nameOf = (path: string) => path.split("/").pop() ?? "";
 
 // The widest dock and the tallest inline block the engine grants: requests, which a
 // size the person dragged wins over. The dock reads `columns`, the inline block `rows`.
@@ -101,6 +108,118 @@ async function close($: $) {
   await $.ui.close({ id: PANE });
 }
 
+/** A press on Monitor: the pane opens on the row's plan, else as /vwf-monitor does. */
+async function openFromChip($: $) {
+  isOpen = true;
+  const chip = await read($, live);
+  const r = await read($, run);
+  if (chip !== null ? r?.plan === undefined || nameOf(r.plan.folder) !== chip.folder : !isLive(r)) {
+    await start($, chip?.folder ?? "attached", false);
+  }
+  await open($);
+  if (needsRefresh(await read($, run))) {
+    startTimer($);
+  }
+  await poke($, true);
+}
+
+/** The person closes the pane: the status line goes with it. */
+async function dismiss($: $) {
+  $.ui.status(undefined);
+  await close($);
+}
+
+/**
+ * Reads what the row above the prompt shows, whatever the pane shows: the plan
+ * that reads RUNNING and is live or paused, whoever runs it. Of several, this
+ * session's, then a live one, then the latest started. With none, the last one
+ * stays with its final status until a /clear, so that the row keeps the result.
+ */
+async function refreshLive($: $) {
+  const now = await $.clock.now();
+  const cwd = await $.session.cwd();
+  const base = (await baseOf($, cwd)) ?? cwd;
+  const text = (await stat($, `${base}/docs/plans/index.md`)) === undefined
+    ? await $.fs.read(`${base}/docs/plans/index.json`).catch(() => undefined)
+    : undefined;
+  const session = await $.session.id().catch(() => undefined);
+  const listed = await $.agent.list().catch(() => undefined);
+  const plans: PlanRun[] = [];
+  const rows = text === undefined ? [] : indexRows(text).rows;
+  if (text !== undefined) {
+    const running = rows.filter((row) => row.status === "RUNNING");
+    for (const row of running) {
+      const one = await loadPlan($, base, row);
+      if (one.kind === "plan") {
+        const plan = phased({
+          ...one.plan,
+          replay: settle(one.plan.replay, listed, now, session),
+        }, now);
+        if (plan.phase === "live" || plan.phase === "paused") {
+          plans.push(plan);
+        }
+      }
+    }
+  }
+  const rank = (plan: PlanRun) => (plan.replay.session === session ? 2 : 0) + (plan.phase === "live" ? 1 : 0);
+  const best = plans.sort((a, b) => rank(b) - rank(a) || (time(b.row.started) ?? 0) - (time(a.row.started) ?? 0))[0];
+  const last = await read($, live);
+  let chip = best === undefined ? last : chipProps(best, now);
+  if (best === undefined && last !== null && text !== undefined) {
+    const one = await loadNamed($, base, rows, last.folder);
+    if (one.kind === "plan") {
+      // Unclaimed: it did not end, and nothing is left to report.
+      chip = one.plan.phase === "not-run" ? null : chipProps(one.plan, now);
+    }
+  }
+  if (JSON.stringify(await read($, live)) !== JSON.stringify(chip)) {
+    await update($, live, () => chip);
+  }
+  if ((await read($, hasPlans)) !== (text !== undefined)) {
+    await update($, hasPlans, () => text !== undefined);
+  }
+}
+
+/**
+ * Says what a run needs when it changes: a toast at the change, and a status
+ * line while the plan is blocked or paused. Only a run seen going on does this,
+ * so that opening an old plan says nothing.
+ */
+function notify($: $, before: PlanRun | undefined, after: PlanRun | undefined) {
+  if (before === undefined || after === undefined || before.folder !== after.folder) {
+    return;
+  }
+  const wasGoing = before.phase === "live" || before.phase === "paused";
+  if (!wasGoing || before.phase === after.phase && before.replay.state === after.replay.state) {
+    return;
+  }
+  const title = after.replay.title || nameOf(after.folder);
+  const name = nameOf(after.folder);
+  const units = after.replay.units;
+  const done = units.filter((unit) => FINISHED.includes(unit.status)).length;
+  if (after.replay.state === "BLOCKED") {
+    $.ui.toast(`${title} is BLOCKED.`);
+    $.ui.status(`vwf · ${name} · BLOCKED · ${done} of ${units.length} units`);
+  } else if (after.phase === "paused") {
+    $.ui.toast(`${title} has no activity for 10 minutes.`);
+    $.ui.status(`vwf · ${name} · paused or stopped · ${done} of ${units.length} units`);
+  } else if (after.phase === "ended") {
+    $.ui.toast(`${title} is complete.`);
+    $.ui.status(undefined);
+  } else {
+    $.ui.status(undefined);
+  }
+}
+
+/** Puts the plan's resume command on the clipboard, or says that it cannot. */
+async function copyResume($: $, folder: string, surface: string) {
+  const copied = await $.ui.copy({
+    text: `/vwf:execute ${folder}`,
+    surface: surface as "terminal",
+  });
+  $.ui.toast(copied.isCopied ? "The resume command is copied." : `Cannot copy: ${copied.reason}`);
+}
+
 /** A unit's color: failed red, skipped gray, green green, or yellow with gaps. */
 function colorOf(state: string, gaps: number): string | undefined {
   if (/fail|unresolved/.test(state)) {
@@ -116,38 +235,12 @@ function colorOf(state: string, gaps: number): string | undefined {
   return undefined;
 }
 
-// The progress bar a graphical surface draws: one segment for each unit, in the
-// colors colorOf names, a pending unit light and a running one blue.
-const HEX: Record<string, string> = {
-  red: "#d9534f",
-  gray: "#8a8f98",
-  green: "#3fa66a",
-  yellow: "#d9a520",
-};
-
-function progressSvg(shown: string[], gapCounts: number[]): string {
-  const step = 24;
-  const segment = 20;
-  const rects = shown.map((one, i) => {
-    const fill = one === "pending"
-      ? "#d0d4da"
-      : HEX[colorOf(one, gapCounts[i] ?? 0) ?? ""] ?? "#4a90d9";
-
-    return `<rect x="${
-      i * step
-    }" y="0" width="${segment}" height="12" rx="2" fill="${fill}"/>`;
-  });
-  const total = Math.max(step, shown.length * step - (step - segment));
-
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${total}" height="12" viewBox="0 0 ${total} 12">${
-    rects.join("")
-  }</svg>`;
-}
-
-// How long the pane waits for a RUNNING row, and shows its closing message.
+// How long the pane waits for a claim or a next plan, and shows its closing message.
 const PATIENCE_MS = 10 * 60 * 1000;
 const CLOSE_MS = 10 * 1000;
 const THROTTLE_MS = 3000;
+// How often the row above the prompt reads the plan index.
+const LIVE_MS = 5000;
 // $.fs.read refuses a file over 4 MiB: a larger log is read from its tail.
 const READ_MAX = 4194304;
 const TAIL_BYTES = "4000000";
@@ -164,7 +257,7 @@ const bases = new Map<string, string | undefined>();
 // mtime it was read at: an unchanged file is not read again.
 const states = new Map<
   string,
-  { size: number; mtimeMs: number; folder?: PlanFolder; problem?: string; }
+  { size: number; mtimeMs: number; folder?: PlanFolder; problem?: string }
 >();
 const logs = new Map<
   string,
@@ -177,13 +270,24 @@ const logs = new Map<
   }
 >();
 
-/** True while the pane follows a live run, waits for a plan, or lists plans. */
+/** True while the pane waits for a claim or follows a run that did not end. */
 function isLive(r: Run | null): boolean {
   return r !== null
     && r.endedAt === undefined
     && (r.waiting !== undefined
-      || r.choices !== undefined
-      || (r.plan !== undefined && r.plan.phase !== "ended"));
+      || r.plan?.phase === "live"
+      || r.plan?.phase === "paused");
+}
+
+/** True while a read can change what the pane shows. */
+function needsRefresh(r: Run | null): boolean {
+  return r !== null
+    && r.endedAt === undefined
+    && (isLive(r)
+      || (isOpen
+        && (r.isListOpen === true
+          || r.plan === undefined
+          || r.plan.phase !== "ended")));
 }
 
 /** The plan's phase from its row, its folder, its live agents and its log (T8). */
@@ -211,12 +315,24 @@ function startTimer($: $) {
   timer = $.clock.every(THROTTLE_MS, () => void poke($));
 }
 
-/** Starts following: `isExecute` waits for the claim, /vwf-monitor does not. */
+/** The name that a /vwf-monitor argument gives with no date: its last path part. */
+function bareName(token: string): string | undefined {
+  return token === "" || token === "attached" || token === "next" || token === "all"
+    ? undefined
+    : nameOf(token);
+}
+
+/**
+ * Starts following. /vwf:execute <folder> waits for that plan's claim, and
+ * /vwf:execute next or all shows the plan list until the claim; /vwf-monitor
+ * shows the named plan, else the plan a read picks.
+ */
 async function start($: $, args: string, isExecute: boolean) {
   const now = await $.clock.now();
   const cwd = await $.session.cwd();
-  const named = folderIn(args);
-  const mode = args.trim().split(/\s+/)[0] || "next";
+  const token = args.trim().split(/\s+/)[0] ?? "";
+  const named = folderIn(args) ?? (isExecute ? undefined : bareName(token));
+  const mode = token || "next";
   closer?.cancel();
   closer = undefined;
   bases.clear();
@@ -230,6 +346,9 @@ async function start($: $, args: string, isExecute: boolean) {
     if (isExecute) {
       value.waiting = "claim";
       value.waitStartedAt = now;
+      if (named === undefined) {
+        value.isQueue = true;
+      }
     }
 
     return value;
@@ -242,7 +361,7 @@ async function start($: $, args: string, isExecute: boolean) {
 async function finish($: $, message: string) {
   stopTimer();
   const now = await $.clock.now();
-  await update($, run, value =>
+  await update($, run, (value) =>
     value
       ? {
         mode: value.mode,
@@ -279,7 +398,7 @@ async function baseOf($: $, cwd: string): Promise<string | undefined> {
     bases.set(
       cwd,
       await resolveBase(cwd, {
-        read: path => $.fs.read(path).catch(() => undefined),
+        read: (path) => $.fs.read(path).catch(() => undefined),
         git: (dir, args) => git($, dir, args),
       }),
     );
@@ -296,7 +415,7 @@ async function stat($: $, path: string) {
 async function readState(
   $: $,
   path: string,
-): Promise<{ folder?: PlanFolder; problem?: string; }> {
+): Promise<{ folder?: PlanFolder; problem?: string }> {
   const now = await stat($, path);
   if (now === undefined) {
     return { problem: `Cannot read ${path}.` };
@@ -322,7 +441,7 @@ async function readState(
 async function readLog(
   $: $,
   path: string,
-): Promise<{ lines: string[]; partial: boolean; problem?: string; }> {
+): Promise<{ lines: string[]; partial: boolean; problem?: string }> {
   const now = await stat($, path);
   if (now === undefined) {
     return { lines: [], partial: false };
@@ -331,7 +450,7 @@ async function readLog(
   if (last && last.size === now.size && last.mtimeMs === now.mtimeMs) {
     return last;
   }
-  let read: { lines: string[]; partial: boolean; problem?: string; };
+  let read: { lines: string[]; partial: boolean; problem?: string };
   if (now.size > READ_MAX) {
     const out = await $
       .process
@@ -350,8 +469,7 @@ async function readLog(
           : `exit ${out.exitCode}`
       }`;
     }
-  }
-  else {
+  } else {
     const text = await $.fs.read(path).catch(() => undefined);
     read = text === undefined
       ? { lines: [], partial: false, problem: `Cannot read ${path}.` }
@@ -364,20 +482,55 @@ async function readLog(
 
 const OLD_FORMAT =
   "This repo is on the old plan format (docs/plans/index.md): the pane reads docs/plans/index.json only.";
-const NO_RUNNING = "No plan reads RUNNING in docs/plans/index.json.";
 
 type Found =
-  | { kind: "plan"; plan: PlanRun; problem?: string; }
-  | { kind: "none"; message: string; }
-  | { kind: "final"; message: string; }
-  | { kind: "choice"; folders: string[]; }
-  | { kind: "problem"; problem: string; };
+  | { kind: "plan"; plan: PlanRun; problem?: string }
+  | { kind: "problem"; problem: string };
+
+/** The repos a plan can be in: the base, and each member for a `target_repo` row. */
+async function reposOf($: $, base: string, isMember: boolean): Promise<string[]> {
+  const repos = [base];
+  if (isMember) {
+    const yaml = await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => "");
+    memberPaths(yaml).forEach((path) => repos.push(joinPath(base, path)));
+  }
+
+  return repos;
+}
 
 /**
- * One RUNNING row's plan: its folder's index.json in the main checkout (the
- * base repo, or a member's for a `target_repo` row) for `run`; the state from
- * the run's worktree copy when it exists — live, else archived during the
- * landing — else the main or archived copy; then the log at `run.log`.
+ * A row's index.json in its main checkout: its folder, else the archived
+ * copy, in the base repo or a member's.
+ */
+async function mainCopy(
+  $: $,
+  repos: string[],
+  folder: string,
+): Promise<{ repo: string; path: string; hasMd: boolean } | { hasMd: boolean }> {
+  const name = nameOf(folder);
+  let hasMd = false;
+  for (const repo of repos) {
+    for (
+      const dir of [
+        `${repo}/${folder}`,
+        `${repo}/docs/plans/archived/${name}`,
+      ]
+    ) {
+      if ((await stat($, `${dir}/index.json`)) !== undefined) {
+        return { repo, path: `${dir}/index.json`, hasMd };
+      }
+      hasMd ||= (await stat($, `${dir}/index.md`)) !== undefined;
+    }
+  }
+
+  return { hasMd };
+}
+
+/**
+ * A row's plan: its folder's index.json in the main checkout (the base repo,
+ * or a member's for a `target_repo` row) for `run`; the state from the run's
+ * worktree copy when it exists — live, else archived during the landing — else
+ * the main or archived copy; then the log at `run.log`.
  */
 async function loadPlan(
   $: $,
@@ -385,35 +538,13 @@ async function loadPlan(
   row: PlanIndexRow,
 ): Promise<Found> {
   const name = nameOf(row.folder);
-  const repos = [base];
-  if (row.target_repo !== null) {
-    const yaml = await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => "");
-    memberPaths(yaml).forEach(path => repos.push(joinPath(base, path)));
-  }
-  let main: { repo: string; path: string; } | undefined;
-  let hasMd = false;
-  for (const repo of repos) {
-    for (
-      const dir of [
-        `${repo}/${row.folder}`,
-        `${repo}/docs/plans/archived/${name}`,
-      ]
-    ) {
-      if ((await stat($, `${dir}/index.json`)) !== undefined) {
-        main = { repo, path: `${dir}/index.json` };
-        break;
-      }
-      hasMd ||= (await stat($, `${dir}/index.md`)) !== undefined;
-    }
-    if (main) {
-      break;
-    }
-  }
-  if (main === undefined) {
+  const repos = await reposOf($, base, row.target_repo !== null);
+  const main = await mainCopy($, repos, row.folder);
+  if (!("path" in main)) {
     return {
-      kind: "final",
-      message: isOldFormat({ indexMd: false, folderMd: hasMd })
-        ? OLD_FORMAT
+      kind: "problem",
+      problem: main.hasMd
+        ? `${name}: old format, no details.`
         : `Cannot find ${row.folder}/index.json.`,
     };
   }
@@ -468,60 +599,87 @@ async function loadPlan(
   return found;
 }
 
+/** A folder's entries; none when it cannot be read. */
+async function dirs($: $, path: string): Promise<string[]> {
+  const entries = await $.fs.list(path).catch(() => []);
+
+  return entries
+    .filter((one) => one.kind === "dir")
+    .map((one) => one.name);
+}
+
+/** The folder a name means: an exact name, else one that ends in `-<name>`. */
+function matchName(names: string[], name: string): string | undefined {
+  return names.includes(name)
+    ? name
+    : names.filter((one) => one.endsWith(`-${name}`)).sort().pop();
+}
+
 /**
- * The plan to show: the RUNNING row of the base repo's docs/plans/index.json
- * — the named one, the only one, or the one whose log's last run.start is
- * this session's — else what to say.
+ * The named plan: its row, else a folder in docs/plans or docs/plans/archived
+ * that has no row, in the base repo or a member's.
  */
-async function find($: $, r: Run, base: string): Promise<Found> {
-  if ((await stat($, `${base}/docs/plans/index.md`)) !== undefined) {
-    return { kind: "final", message: OLD_FORMAT };
+async function loadNamed(
+  $: $,
+  base: string,
+  rows: PlanIndexRow[],
+  name: string,
+): Promise<Found> {
+  const hit = matchName(rows.map((row) => nameOf(row.folder)), name);
+  const row = rows.find((one) => nameOf(one.folder) === hit);
+  if (row !== undefined) {
+    return loadPlan($, base, row);
   }
-  const text = await $
-    .fs
-    .read(`${base}/docs/plans/index.json`)
-    .catch(() => undefined);
-  if (text === undefined) {
-    return { kind: "final", message: `No docs/plans/index.json in ${base}.` };
-  }
-  const { rows, problem } = runningRows(text);
-  if (problem !== undefined) {
-    return { kind: "problem", problem };
-  }
-  let candidates = rows;
-  if (r.named !== undefined) {
-    const hit = rows.filter(row => nameOf(row.folder) === r.named);
-    if (hit.length > 0) {
-      candidates = hit;
+  for (const repo of await reposOf($, base, true)) {
+    for (const parent of ["docs/plans", "docs/plans/archived"]) {
+      const folder = matchName(await dirs($, `${repo}/${parent}`), name) ?? name;
+      const path = `${repo}/${parent}/${folder}`;
+      const read = (await stat($, `${path}/index.json`)) === undefined
+        ? undefined
+        : await readState($, `${path}/index.json`);
+      if (read?.folder !== undefined) {
+        return loadPlan($, base, rowFromFolder(`${parent}/${folder}`, read.folder));
+      }
+      if ((await stat($, `${path}/index.md`)) !== undefined) {
+        return { kind: "problem", problem: `${folder}: old format, no details.` };
+      }
     }
-    else if (r.plan === undefined || nameOf(r.plan.folder) !== r.named) {
-      return {
-        kind: "none",
-        message: `${r.named} does not read RUNNING in docs/plans/index.json.`,
-      };
-    }
-  }
-  if (candidates.length === 0) {
-    return { kind: "none", message: NO_RUNNING };
-  }
-  const loaded: Found[] = [];
-  for (const row of candidates) {
-    loaded.push(await loadPlan($, base, row));
-  }
-  if (loaded.length === 1) {
-    return loaded[0] as Found;
-  }
-  const session = await $.session.id().catch(() => undefined);
-  const mine = loaded.filter(one =>
-    one.kind === "plan"
-    && session !== undefined
-    && one.plan.replay.session === session
-  );
-  if (mine.length === 1) {
-    return mine[0] as Found;
   }
 
-  return { kind: "choice", folders: candidates.map(row => row.folder) };
+  return { kind: "problem", problem: `No plan named ${name}.` };
+}
+
+/** The plan list's rows, with the units finished of each folder that can be read. */
+async function loadQueue(
+  $: $,
+  base: string,
+  rows: PlanIndexRow[],
+): Promise<QueueRow[]> {
+  const out = queueRows(rows);
+  for (const one of out) {
+    const row = rows.find((other) => other.folder === one.folder);
+    const main = await mainCopy(
+      $,
+      await reposOf($, base, row?.target_repo != null),
+      one.folder,
+    );
+    if (!("path" in main)) {
+      continue;
+    }
+    let folder = (await readState($, main.path)).folder;
+    if (folder?.run.worktree !== undefined) {
+      const path = `${joinPath(main.repo, folder.run.worktree)}/${one.folder}/index.json`;
+      if ((await stat($, path)) !== undefined) {
+        folder = (await readState($, path)).folder ?? folder;
+      }
+    }
+    if (folder !== undefined) {
+      one.total = folder.units.length;
+      one.done = folder.units.filter((unit) => FINISHED.includes(unit.status)).length;
+    }
+  }
+
+  return out;
 }
 
 /** Refreshes at most once each THROTTLE_MS, and never twice at the same time. */
@@ -561,7 +719,7 @@ function settle(
     return state;
   }
   const isOver = (id: string, startedAt?: number) => {
-    const info = listed.find(one => one.id === id);
+    const info = listed.find((one) => one.id === id);
 
     return info
       ? ENDED.includes(info.status)
@@ -572,12 +730,12 @@ function settle(
       ? { ...agent, live: false }
       : agent;
   const starts = new Map<string, number | undefined>();
-  state.units.forEach(unit => {
+  state.units.forEach((unit) => {
     if (unit.agent) {
       starts.set(unit.agent.id, unit.agent.startedAt);
     }
   });
-  Object.values(state.reviews).forEach(agent => {
+  Object.values(state.reviews).forEach((agent) => {
     starts.set(agent.id, agent.startedAt);
   });
   const reviews: Record<string, AgentRun> = {};
@@ -587,11 +745,9 @@ function settle(
 
   return {
     ...state,
-    units: state.units.map(unit =>
-      unit.agent ? { ...unit, agent: fix(unit.agent) } : unit
-    ),
+    units: state.units.map((unit) => unit.agent ? { ...unit, agent: fix(unit.agent) } : unit),
     reviews,
-    live: state.live.filter(id => !isOver(id, starts.get(id))),
+    live: state.live.filter((id) => !isOver(id, starts.get(id))),
   };
 }
 
@@ -606,102 +762,165 @@ async function refresh($: $) {
   const listed = await $.agent.list().catch(() => undefined);
   const cwd = await $.session.cwd();
   const base = (await baseOf($, cwd)) ?? (await baseOf($, r.cwd)) ?? r.cwd;
-  const found = await find($, r, base);
-
-  if (found.kind === "final") {
-    await finish($, found.message);
+  if ((await stat($, `${base}/docs/plans/index.md`)) !== undefined) {
+    await finish($, OLD_FORMAT);
     return;
   }
-  if (found.kind === "none") {
-    // A plan shown and gone, or an opening by /vwf:execute: wait.
-    const waiting = r.plan !== undefined ? "next" : r.waiting;
-    if (waiting === undefined) {
-      await finish($, found.message);
-      return;
-    }
-    const since = r.plan !== undefined ? now : r.waitStartedAt ?? now;
-    if (now - since >= PATIENCE_MS) {
-      await finish($, found.message);
-      return;
-    }
-    await update($, run, value => {
-      if (!value) {
-        return value;
-      }
-      const next: Run = {
-        ...value,
-        waiting,
-        waitStartedAt: since,
-        refreshedAt: now,
-      };
-      delete next.plan;
-      delete next.choices;
-      delete next.problem;
-      // The named plan has shown and gone: the next RUNNING row shows.
-      if (value.plan !== undefined) {
-        delete next.named;
-      }
-
-      return next;
-    });
+  const text = await $
+    .fs
+    .read(`${base}/docs/plans/index.json`)
+    .catch(() => undefined);
+  if (text === undefined) {
+    await finish($, `No docs/plans/index.json in ${base}.`);
+    return;
   }
-  else if (found.kind === "choice") {
-    await update($, run, value => {
-      if (!value) {
-        return value;
-      }
-      const next: Run = { ...value, choices: found.folders, refreshedAt: now };
-      delete next.plan;
-      delete next.waiting;
-      delete next.waitStartedAt;
-      delete next.problem;
-
-      return next;
-    });
-  }
-  else if (found.kind === "problem") {
+  const { rows, problem: indexProblem } = indexRows(text);
+  if (indexProblem !== undefined) {
     await update(
       $,
       run,
-      value =>
-        value ? { ...value, problem: found.problem, refreshedAt: now } : value,
+      (value) => value ? { ...value, problem: indexProblem, refreshedAt: now } : value,
     );
+    return;
   }
-  else {
-    const session = await $.session.id().catch(() => undefined);
-    const plan = phased({
-      ...found.plan,
-      replay: settle(found.plan.replay, listed, now, session),
-    }, now);
-    await update($, run, value => {
-      if (!value) {
-        return value;
+  const session = await $.session.id().catch(() => undefined);
+  const running = rows.filter((row) => row.status === "RUNNING");
+  const next: Run = { ...r, refreshedAt: now };
+  delete next.problem;
+
+  // /vwf:execute next or all: the first RUNNING row that this run did not find
+  // at its opening, or one its log says this session runs, is the claim.
+  const isAll = r.mode === "all";
+  if (next.isQueue || isAll) {
+    next.baseline ??= running.map((row) => row.folder);
+    let claimed = running.find((row) => !next.baseline?.includes(row.folder));
+    if (claimed === undefined && next.isQueue && session !== undefined) {
+      for (const row of running) {
+        const one = await loadPlan($, base, row);
+        if (one.kind === "plan" && one.plan.replay.session === session) {
+          claimed = row;
+          break;
+        }
       }
-      const next: Run = { ...value, plan, refreshedAt: now };
+    }
+    if (claimed !== undefined) {
+      next.named = nameOf(claimed.folder);
+      next.baseline = [
+        ...next.baseline.filter((one) => one !== claimed.folder),
+        claimed.folder,
+      ];
+      delete next.isQueue;
+      delete next.isListOpen;
       delete next.waiting;
       delete next.waitStartedAt;
-      delete next.choices;
-      delete next.problem;
+    }
+  }
+
+  // A bare /vwf-monitor: the running plan, this session's of several, else the
+  // latest; the plan list when none of them can be picked. The pick stays.
+  if (next.named === undefined && !next.isQueue && !next.isListOpen) {
+    let pick: PlanIndexRow | undefined = running.length === 1 ? running[0] : undefined;
+    if (running.length > 1 && session !== undefined) {
+      const mine: PlanIndexRow[] = [];
+      for (const row of running) {
+        const one = await loadPlan($, base, row);
+        if (one.kind === "plan" && one.plan.replay.session === session) {
+          mine.push(row);
+        }
+      }
+      pick = mine.length === 1 ? mine[0] : undefined;
+    }
+    pick ??= running.length === 0 ? latestRow(rows) : undefined;
+    if (pick !== undefined) {
+      next.named = nameOf(pick.folder);
+    } else {
+      next.isListOpen = true;
+    }
+  }
+
+  if (next.named === undefined) {
+    delete next.plan;
+  } else {
+    const found = await loadNamed($, base, rows, next.named);
+    if (found.kind === "problem") {
+      delete next.plan;
+      next.isListOpen = true;
+      next.problem = found.problem;
+    } else {
+      next.plan = phased({
+        ...found.plan,
+        replay: settle(found.plan.replay, listed, now, session),
+      }, now);
       if (found.problem !== undefined) {
         next.problem = found.problem;
       }
-
-      return next;
-    });
+      if (next.waiting === "claim" && found.plan.row.status !== "APPROVED") {
+        delete next.waiting;
+        delete next.waitStartedAt;
+      }
+    }
   }
 
+  // An `all` run with its plan landed polls for the next RUNNING row.
+  if (isAll && next.plan?.phase === "ended" && next.waiting === undefined) {
+    next.waiting = "next";
+    next.waitStartedAt = now;
+  }
+  // The wait ends; the pane stays.
+  if (
+    next.waiting !== undefined
+    && now - (next.waitStartedAt ?? now) >= PATIENCE_MS
+  ) {
+    delete next.waiting;
+    delete next.waitStartedAt;
+  }
+
+  if (next.plan === undefined || next.isListOpen) {
+    next.queue = await loadQueue($, base, rows);
+    const archived = await dirs($, `${base}/docs/plans/archived`);
+    next.archived = archived.sort().reverse();
+  }
+
+  await update($, run, (value) => {
+    if (!value) {
+      return next;
+    }
+    // A press during this read stays.
+    const merged: Run = { ...next };
+    const { openUnit, openGaps, isArchivedOpen } = value;
+    delete merged.openUnit;
+    delete merged.openGaps;
+    delete merged.isArchivedOpen;
+
+    return {
+      ...merged,
+      ...(openUnit === undefined ? {} : { openUnit }),
+      ...(openGaps === undefined ? {} : { openGaps }),
+      ...(isArchivedOpen === undefined ? {} : { isArchivedOpen }),
+    };
+  });
+  notify($, r.plan, next.plan);
+  await refreshLive($);
   const after = await read($, run);
-  if (isLive(after)) {
+  if (needsRefresh(after)) {
     if (timer === undefined) {
       startTimer($);
     }
-  }
-  else {
+  } else {
     stopTimer();
   }
 }
 
-export const register: Register = on => {
+export const register: Register = (on) => {
+  // A /clear starts the session over, with no session.start: the row forgets.
+  on("session.end", async ($, e, next) => {
+    if (e.reason === "clear") {
+      await update($, live, () => null);
+    }
+
+    return next(e);
+  });
+
   on("session.start", async ($, e, next) => {
     await $.command.register({
       name: "vwf-monitor",
@@ -709,25 +928,28 @@ export const register: Register = on => {
     });
     // After a reload: the pane may still be up, and a live run goes on.
     const panes = await $.ui.panes().catch(() => []);
-    isOpen = panes.some(pane => pane.id === PANE);
-    if (isLive(await read($, run))) {
+    isOpen = panes.some((pane) => pane.id === PANE);
+    if (needsRefresh(await read($, run))) {
       startTimer($);
     }
+    await refreshLive($);
+    $.clock.every(LIVE_MS, () => void refreshLive($));
 
     return next(e);
   });
 
-  // /vwf-monitor [folder]: also picks up a run that started before the mod loaded.
+  // /vwf-monitor [plan]: any plan by name, else the running or the latest plan.
   // /vwf-monitor close: closes the pane.
   on("command.run", { command: "vwf-monitor" }, async ($, e) => {
     if (e.args.trim() === "close") {
-      await close($);
+      await dismiss($);
 
       return { text: "The vwf:execute monitor is closed." };
     }
     const r = await read($, run);
-    // A named folder always starts over; a bare /vwf-monitor keeps a live run.
-    if (!r || r.endedAt !== undefined || folderIn(e.args)) {
+    // A named plan always starts over; a bare /vwf-monitor keeps a live run.
+    if (!isLive(r) || e.args.trim() !== "") {
+      isOpen = true;
       await start($, e.args || "attached", false);
     }
     await open($, e.presentation.columns);
@@ -787,6 +1009,9 @@ export const register: Register = on => {
     const closed = await next(e);
     if (e.id === PANE) {
       isOpen = false;
+      if (e.origin === "person") {
+        $.ui.status(undefined);
+      }
     }
 
     return closed;
@@ -830,6 +1055,16 @@ export const register: Register = on => {
     return <Text dimColor>· {e.props.tool}</Text>;
   });
 
+  // The row above the prompt: the live plan and Monitor, or Monitor alone. A
+  // question takes the band, and a repo with no plan index has no row.
+  on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+    if (e.props.hasSurvey || !(await read($, hasPlans))) {
+      return next(e);
+    }
+
+    return drawChip($.ui.resolve(e), await read($, live), () => openFromChip($));
+  });
+
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     isOpen = true;
     const { Box, Text, Button } = $.ui.resolve(e);
@@ -842,8 +1077,7 @@ export const register: Register = on => {
     // The terminal lays columns out in cells; a graphical surface draws a proportional
     // font, so its text is never padded and its tables are rows of sized boxes.
     const isTerminal = e.surface === "terminal";
-    const cut = (text: string, size: number) =>
-      isTerminal ? fit(text, size) : text;
+    const cut = (text: string, size: number) => isTerminal ? fit(text, size) : text;
 
     const back = async () => {
       await $.ui.view({});
@@ -856,7 +1090,7 @@ export const register: Register = on => {
           label="Close"
           hotkey="c"
           {...(isTerminal ? {} : { role: "dismiss" as const })}
-          onPress={() => close($)}
+          onPress={() => dismiss($)}
         />
         {!isMainView && <Text>{" "}</Text>}
         {!isMainView && (
@@ -873,23 +1107,19 @@ export const register: Register = on => {
             key="quiet"
             label={quiet ? "Show tool rows" : "Hide tool rows"}
             hotkey="t"
-            onPress={() => update($, isQuiet, value => !value)}
+            onPress={() => update($, isQuiet, (value) => !value)}
           />
         )}
-        {isTerminal && (
-          <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>
-        )}
+        {isTerminal && <Text dimColor>{"  Esc closes · ctrl+x tab, then a hotkey"}</Text>}
       </Box>
     );
-    const problem = r?.problem !== undefined && (
-      <Text color="red">{cut(r.problem, width)}</Text>
-    );
+    const problem = r?.problem !== undefined && <Text color="red">{cut(r.problem, width)}</Text>;
 
     if (!r) {
       return (
         <Box flexDirection="column">
           {buttons}
-          <Text dimColor>No /vwf:execute run in this session.</Text>
+          <Text dimColor>No plan is open. Run /vwf-monitor.</Text>
         </Box>
       );
     }
@@ -902,53 +1132,79 @@ export const register: Register = on => {
         </Box>
       );
     }
-    if (r.choices !== undefined) {
-      return (
-        <Box flexDirection="column">
-          {buttons}
-          <Text>
-            {`${r.choices.length} plans read RUNNING; none ran in this session:`}
-          </Text>
-          {r.choices.map(folder => (
-            <Text key={`choice-${folder}`}>{cut(`- ${folder}`, width)}</Text>
-          ))}
-          <Text dimColor>Run /vwf-monitor &lt;folder&gt; to show one.</Text>
-          {problem}
-        </Box>
-      );
-    }
-    if (!p) {
-      return (
-        <Box flexDirection="column">
-          {buttons}
-          <Text dimColor>
-            {r.waiting === "next"
-              ? "waiting for the next plan"
-              : "waiting for the claim"}
-          </Text>
-          {problem}
-        </Box>
-      );
+    const pick = async (folder: string) => {
+      await update($, run, (value) => {
+        if (!value) {
+          return value;
+        }
+        const next: Run = { ...value, named: nameOf(folder) };
+        delete next.isListOpen;
+        delete next.plan;
+
+        return next;
+      });
+      startTimer($);
+      await poke($, true);
+    };
+    const setList = async (isListOpen: boolean) => {
+      await update($, run, (value) => {
+        if (!value) {
+          return value;
+        }
+        const next: Run = { ...value };
+        if (isListOpen) {
+          next.isListOpen = true;
+        } else {
+          delete next.isListOpen;
+        }
+
+        return next;
+      });
+      startTimer($);
+      await poke($, true);
+    };
+    const toggleArchived = () =>
+      update($, run, (value) => value ? { ...value, isArchivedOpen: !value.isArchivedOpen } : value);
+    if (!p || r.isListOpen) {
+      const list = {
+        queue: r.queue ?? [],
+        archived: r.archived ?? [],
+        isArchivedOpen: r.isArchivedOpen === true,
+        isWaiting: r.isQueue === true && r.waiting !== undefined,
+        mode: r.mode,
+        problem: r.problem,
+        readAt: r.refreshedAt,
+        hasPlan: p !== undefined,
+        isTerminal,
+        width,
+        close: () => dismiss($),
+        back: () => setList(false),
+        pick,
+        toggleArchived,
+      };
+
+      return drawList($.ui.resolve(e), list);
     }
 
     const now = r.refreshedAt ?? Date.now();
     const state = p.replay;
     const isEnded = p.phase === "ended";
     const units = state.units;
-    const shown = units.map(unit =>
-      unit.agent?.live && unit.status === "pending" ? "running" : unit.status
-    );
-    const done = shown.filter(one => FINISHED.includes(one)).length;
-    const gapCounts = units.map(unit =>
-      state.gaps.filter(gap => gap.unit === unit.id).length
-    );
+    const shown = units.map((unit) => unit.agent?.live && unit.status === "pending" ? "running" : unit.status);
+    const done = shown.filter((one) => FINISHED.includes(one)).length;
+    const gapCounts = units.map((unit) => state.gaps.filter((gap) => gap.unit === unit.id).length);
+    const isClaiming = r.waiting === "claim" && r.isQueue !== true;
     const barWidth = Math.max(units.length * 2, width - 10);
     const segment = units.length === 0
       ? 0
       : Math.max(1, Math.floor((barWidth - (units.length - 1)) / units.length));
     const startedAt = time(p.row.started);
     const endedAt = time(p.row.ended);
-    const phase = p.phase === "paused"
+    const phase = isClaiming
+      ? "claim in progress"
+      : p.phase === "not-run"
+      ? "not run"
+      : p.phase === "paused"
       ? `paused or stopped${state.detail ? ` — ${state.detail}` : ""}`
       : p.phase;
     // A start and end, and the time between, or up to now while not ended.
@@ -975,8 +1231,7 @@ export const register: Register = on => {
       const moved = await $.ui.view({ agentId: agent.id });
       if (moved.deny) {
         $.ui.toast(`Cannot show ${label}: ${moved.deny}`);
-      }
-      else {
+      } else {
         await update($, viewing, () => agent.id);
       }
     };
@@ -994,180 +1249,70 @@ export const register: Register = on => {
     } · ${p.logPath ?? "no run.log yet"}`;
 
     if (e.surface !== "terminal") {
-      const { Svg } = $.ui.resolve(e);
-      // One row of sized cells: the share of the pane's width each column takes.
-      const COLUMNS = ["8%", "26%", "7%", "10%", "13%", "9%", "9%", "9%", "9%"];
-      const NAME = "41%";
-      const cell = (size: string, child: RenderChildren) => (
-        <Box width={size} flexShrink={0}>{child}</Box>
-      );
-      const timeCells = (started: string, ended: string) => {
-        const from = time(started);
-        const end = time(ended);
+      return drawTimeline($.ui.resolve(e), {
+        plan: p,
+        now,
+        shown,
+        gapCounts,
+        isClaiming,
+        readAt: r.refreshedAt,
+        problem: r.problem,
+        isLive: live,
+        isQuiet: quiet,
+        isMainView,
+        close: () => dismiss($),
+        back,
+        plans: () => setList(true),
+        toggleQuiet: () => update($, isQuiet, (value) => !value),
+        show,
+        ...(r.openUnit === undefined ? {} : { openUnit: r.openUnit }),
+        openGaps: r.openGaps ?? [],
+        toggleUnit: (id: string) =>
+          update($, run, (value) => {
+            if (!value) {
+              return value;
+            }
+            const next: Run = { ...value };
+            if (value.openUnit === id) {
+              delete next.openUnit;
+            } else {
+              next.openUnit = id;
+            }
 
-        return [
-          cell(COLUMNS[5]!, <Text>{clock(from)}</Text>),
-          cell(COLUMNS[6]!, <Text>{clock(end)}</Text>),
-          cell(
-            COLUMNS[7]!,
-            <Text>
-              {span(
-                from,
-                end ?? (from !== undefined && !isEnded ? now : undefined),
-              )}
-            </Text>,
-          ),
-        ];
-      };
-      const sideRow = (
-        key: string,
-        label: RenderChildren,
-        kind: string,
-        status: string,
-        color: string | undefined,
-        times: RenderChildren[],
-      ) => (
-        <Box key={key} flexDirection="row">
-          {cell(NAME, label)}
-          {cell(COLUMNS[3]!, <Text dimColor>{kind}</Text>)}
-          {cell(COLUMNS[4]!, <Text color={color}>{status}</Text>)}
-          {times}
-        </Box>
-      );
+            return next;
+          }),
+        toggleGap: (id: string) =>
+          update($, run, (value) => {
+            if (!value) {
+              return value;
+            }
+            const open = value.openGaps ?? [];
 
-      return (
-        <Box flexDirection="column" gap="sm">
-          {buttons}
-          <Box flexDirection="column">
-            <Text bold>{state.title || name}</Text>
-            <Text dimColor>
-              {`${name} · ${state.state || "…"} · ${phase} · ${r.mode}`}
-            </Text>
-            <Text>
-              Started {clock(startedAt)} · Ended {clock(endedAt)} · Elapsed{" "}
-              {span(startedAt, endedAt ?? (isEnded ? undefined : now))}
-            </Text>
-          </Box>
-          <Box flexDirection="row" alignItems="center" gap="sm">
-            <Svg
-              source={progressSvg(shown, gapCounts)}
-              alt={`${done} of ${units.length} units finished`}
-              height={12}
-            />
-            <Text>{`${done}/${units.length}`}</Text>
-          </Box>
-          {state.noData && <Text dimColor>no run data yet</Text>}
-          <Box flexDirection="column">
-            <Box flexDirection="row">
-              {[
-                "Unit",
-                "Title",
-                "Wave",
-                "Kind",
-                "Status",
-                "Start",
-                "End",
-                "Time",
-                "Gaps",
-              ]
-                .map((head, i) =>
-                  cell(COLUMNS[i]!, <Text dimColor>{head}</Text>)
-                )}
-            </Box>
-            {units.map((unit, i) => {
-              const one = shown[i] ?? "";
-              const gaps = gapCounts[i] ?? 0;
-
-              return (
-                <Box key={`row-${unit.id}`} flexDirection="row">
-                  {cell(
-                    COLUMNS[0]!,
-                    <Button
-                      key={`unit-${unit.id}`}
-                      plain
-                      label={unit.id}
-                      onPress={() => show(unit.id, unit.agent)}
-                    />,
-                  )}
-                  {cell(COLUMNS[1]!, <Text>{unit.title}</Text>)}
-                  {cell(COLUMNS[2]!, <Text>{String(unit.wave)}</Text>)}
-                  {cell(COLUMNS[3]!, <Text dimColor>{unit.kind}</Text>)}
-                  {cell(
-                    COLUMNS[4]!,
-                    <Text color={colorOf(one, gaps)}>{one}</Text>,
-                  )}
-                  {timeCells(unit.started, one === "running" ? "" : unit.ended)}
-                  {cell(
-                    COLUMNS[8]!,
-                    <Text color={gaps > 0 ? "yellow" : undefined}>
-                      {String(gaps)}
-                    </Text>,
-                  )}
-                </Box>
-              );
-            })}
-            {state.waves.map(wave =>
-              sideRow(
-                `wave-${wave.id}`,
-                <Text>{wave.id}</Text>,
-                "wave",
-                wave.status,
-                colorOf(wave.status, 0),
-                timeCells(wave.started, wave.ended),
-              )
-            )}
-            {reviews.map(([key, agent]) =>
-              sideRow(
-                `review-row-${key}`,
-                <Button
-                  key={`review-${key}`}
-                  plain
-                  label={key}
-                  onPress={() => show(key, agent)}
-                />,
-                "review",
-                agent.live ? "running" : "done",
-                undefined,
-                [],
-              )
-            )}
-            {state.stages.map(stage =>
-              sideRow(
-                `stage-${stage.name}`,
-                <Text>{stage.name}</Text>,
-                "stage",
-                stage.state,
-                colorOf(stage.state, 0),
-                timeCells(stage.started, stage.ended),
-              )
-            )}
-          </Box>
-          {state.gaps.length > 0 && (
-            <Box flexDirection="column">
-              <Text bold>Gaps</Text>
-              {state.gaps.map(gap => (
-                <Text key={`gap-${gap.id}`} color="yellow">
-                  {`- ${gap.id} · ${gap.unit || gap.stage} · ${gap.text}`}
-                </Text>
-              ))}
-            </Box>
-          )}
-          <Box flexDirection="column">
-            <Text dimColor>{footer}</Text>
-            {state.partial && (
-              <Text dimColor>
-                {`partial replay: the log is over 4 MiB, its last ${TAIL_BYTES} bytes read`}
-              </Text>
-            )}
-            {problem}
-          </Box>
-        </Box>
-      );
+            return {
+              ...value,
+              openGaps: open.includes(id) ? open.filter((one) => one !== id) : [...open, id],
+            };
+          }),
+        copyResume: (surface: string) => copyResume($, p.folder, surface),
+      });
     }
 
     return (
       <Box flexDirection="column">
-        {buttons}
+        <Box>
+          {buttons}
+          <Text>{" "}</Text>
+          <Button key="plans" label="Plans" hotkey="p" onPress={() => setList(true)} />
+          {(state.state === "BLOCKED" || p.phase === "paused") && <Text>{" "}</Text>}
+          {(state.state === "BLOCKED" || p.phase === "paused") && (
+            <Button
+              key="copy-resume"
+              label="Copy resume command"
+              hotkey="y"
+              onPress={(press) => copyResume($, p.folder, press.surface)}
+            />
+          )}
+        </Box>
         <Text bold>{fit(state.title || name, width)}</Text>
         <Text dimColor>
           {fit(
@@ -1223,7 +1368,7 @@ export const register: Register = on => {
             </Button>
           );
         })}
-        {state.waves.map(wave => (
+        {state.waves.map((wave) => (
           <Text key={`wave-${wave.id}`}>
             {fit(wave.id, 32)}
             {fit("wave", 8)}
@@ -1242,7 +1387,7 @@ export const register: Register = on => {
             <Text>{fit(agent.live ? "running" : "done", 12)}</Text>
           </Button>
         ))}
-        {state.stages.map(stage => (
+        {state.stages.map((stage) => (
           <Text key={`stage-${stage.name}`}>
             {fit(stage.name, 32)}
             {fit("stage", 8)}
@@ -1252,7 +1397,7 @@ export const register: Register = on => {
         ))}
         {state.gaps.length > 0 && <Text>{" "}</Text>}
         {state.gaps.length > 0 && <Text bold>Gaps</Text>}
-        {state.gaps.map(gap => (
+        {state.gaps.map((gap) => (
           <Text color="yellow">
             {fit(`- ${gap.id} · ${gap.unit || gap.stage} · ${gap.text}`, width)}
           </Text>

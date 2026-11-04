@@ -10,8 +10,7 @@ import {
 // /llms.txt, per llmstxt.org: the site in one page an agent can read first —
 // the same one-line pitch the landing carries, a pointer at the full text,
 // and every manual page as its markdown URL, in sidebar order.
-const DESCRIPTION =
-  "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. "
+const DESCRIPTION = "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. "
   + "Asks one question at a time, then builds unattended.";
 
 export async function GET({ site }: APIContext): Promise<Response> {
@@ -32,9 +31,7 @@ export async function GET({ site }: APIContext): Promise<Response> {
     lines.push("", `## ${section.label}`, "");
     for (const entry of flatten([section])) {
       lines.push(
-        `- [${entry.title}](${
-          markdownUrlFor(entry.id, site)
-        }): ${entry.description}`,
+        `- [${entry.title}](${markdownUrlFor(entry.id, site)}): ${entry.description}`,
       );
     }
   }

@@ -119,8 +119,7 @@ function fields(args) {
     const next = args[i + 1];
     if (next === undefined || next.startsWith("--")) {
       out[key] = true;
-    }
-    else {
+    } else {
       out[key] = value(next);
       i++;
     }
@@ -144,7 +143,7 @@ function repoName(dir, fallback = dir) {
 }
 
 function stamp(d) {
-  const p = n => String(n).padStart(2, "0");
+  const p = (n) => String(n).padStart(2, "0");
   return `${d.getFullYear()}${p(d.getMonth() + 1)}${p(d.getDate())}-`
     + `${p(d.getHours())}${p(d.getMinutes())}${p(d.getSeconds())}`;
 }
@@ -154,11 +153,10 @@ function active() {
   let text;
   try {
     text = readFileSync(marker, "utf8");
-  }
-  catch {
+  } catch {
     return undefined;
   }
-  const [file = "", run = ""] = text.split("\n").map(l => l.trim());
+  const [file = "", run = ""] = text.split("\n").map((l) => l.trim());
   if (!file) {
     return undefined;
   }
@@ -185,15 +183,15 @@ const noRun = () => warn(`no active run in session ${SESSION}`);
 
 // --- schemas -----------------------------------------------------------------
 
-const isStr = v => typeof v === "string";
-const isInt = v => Number.isInteger(v);
-const isObj = v => v !== null && typeof v === "object" && !Array.isArray(v);
+const isStr = (v) => typeof v === "string";
+const isInt = (v) => Number.isInteger(v);
+const isObj = (v) => v !== null && typeof v === "object" && !Array.isArray(v);
 
 function unknown(o, allowed) {
   return Object
     .keys(o)
-    .filter(k => !allowed.includes(k))
-    .map(k => `unknown key ${k}`);
+    .filter((k) => !allowed.includes(k))
+    .map((k) => `unknown key ${k}`);
 }
 
 const SCHEMAS = {
@@ -214,7 +212,7 @@ const SCHEMAS = {
     }
     return f;
   },
-  row(o) {
+  "row"(o) {
     const f = unknown(o, [
       "unit",
       "stage",
@@ -228,8 +226,7 @@ const SCHEMAS = {
     const isUnit = "unit" in o;
     if (isUnit === ("stage" in o)) {
       f.push("exactly one of unit or stage");
-    }
-    else if (isUnit) {
+    } else if (isUnit) {
       if (!isStr(o.unit) || !/^U\d+$/.test(o.unit)) {
         f.push("unit must be U<n>");
       }
@@ -239,8 +236,7 @@ const SCHEMAS = {
       if (!UNIT_STATUS.includes(o.status)) {
         f.push(`status must be one of ${UNIT_STATUS.join(", ")}`);
       }
-    }
-    else {
+    } else {
       if (!STAGES.includes(o.stage)) {
         f.push(`stage must be one of ${STAGES.join(", ")}`);
       }
@@ -273,7 +269,7 @@ const SCHEMAS = {
     }
     return f;
   },
-  gap(o) {
+  "gap"(o) {
     const f = unknown(o, [
       "id",
       "unit",
@@ -297,8 +293,7 @@ const SCHEMAS = {
     }
     if (!["open", "closed"].includes(o.state)) {
       f.push("state must be open or closed");
-    }
-    else if (!("id" in o) && o.state !== "open") {
+    } else if (!("id" in o) && o.state !== "open") {
       f.push("a gap with no id is open");
     }
     if ("class" in o && !GAP_CLASS.includes(o.class)) {
@@ -336,8 +331,7 @@ function sweep() {
   let names;
   try {
     names = readdirSync(dir);
-  }
-  catch {
+  } catch {
     return;
   }
   for (const name of names) {
@@ -350,8 +344,7 @@ function sweep() {
       try {
         const log = readFileSync(m, "utf8").split("\n")[0].trim();
         stale = !log || Date.now() - statSync(log).mtimeMs > DAY;
-      }
-      catch {
+      } catch {
         stale = true;
       }
     }
@@ -379,8 +372,7 @@ function start(args) {
   let units;
   try {
     units = JSON.parse(readFileSync(join(folder, "index.json"), "utf8")).units;
-  }
-  catch (e) {
+  } catch (e) {
     warn(`start cannot read ${join(folder, "index.json")}: ${e.message}`);
     process.exit(2);
   }
@@ -457,8 +449,7 @@ function event(args) {
   let o;
   try {
     o = JSON.parse(readFileSync(0, "utf8"));
-  }
-  catch (e) {
+  } catch (e) {
     warn(`${name} refused: stdin is not JSON: ${e.message}`);
     process.exit(1);
   }
@@ -497,8 +488,7 @@ function run(args) {
       extra.hash = git(["rev-parse", "--short", "HEAD"]);
     }
     append(ctx, name, extra);
-  }
-  else {
+  } else {
     noRun();
   }
   process.exit(code);
@@ -526,17 +516,15 @@ function prune(args) {
   let logs;
   let folders;
   try {
-    logs = readdirSync(dir).filter(n => n.endsWith(".jsonl"));
-  }
-  catch {
+    logs = readdirSync(dir).filter((n) => n.endsWith(".jsonl"));
+  } catch {
     return;
   }
   try {
     folders = readdirSync(archived, { withFileTypes: true })
-      .filter(d => d.isDirectory())
-      .map(d => d.name);
-  }
-  catch {
+      .filter((d) => d.isDirectory())
+      .map((d) => d.name);
+  } catch {
     return;
   }
   const cutoff = Date.now() - f.days * DAY;
@@ -545,7 +533,7 @@ function prune(args) {
     if (base === keep) {
       continue;
     }
-    const isArchived = folders.some(n =>
+    const isArchived = folders.some((n) =>
       n === base
       || (n.startsWith(`${base}-`) && /^\d+$/.test(n.slice(base.length + 1)))
     );
@@ -559,7 +547,7 @@ function prune(args) {
 
 // --- summary -----------------------------------------------------------------
 
-const ms = t => new Date(t).getTime();
+const ms = (t) => new Date(t).getTime();
 
 function fmt(d) {
   if (d === undefined) {
@@ -576,12 +564,9 @@ function fmt(d) {
 }
 
 function table(head, rows) {
-  const w = head.map((h, i) =>
-    Math.max(h.length, ...rows.map(r => String(r[i]).length))
-  );
-  const line = r =>
-    r.map((c, i) => String(c).padEnd(w[i])).join("  ").trimEnd();
-  return [line(head), line(w.map(n => "-".repeat(n))), ...rows.map(line)].join(
+  const w = head.map((h, i) => Math.max(h.length, ...rows.map((r) => String(r[i]).length)));
+  const line = (r) => r.map((c, i) => String(c).padEnd(w[i])).join("  ").trimEnd();
+  return [line(head), line(w.map((n) => "-".repeat(n))), ...rows.map(line)].join(
     "\n",
   );
 }
@@ -597,8 +582,7 @@ function covered(iv) {
         total += cur[1] - cur[0];
       }
       cur = [a, b];
-    }
-    else if (b > cur[1]) {
+    } else if (b > cur[1]) {
       cur[1] = b;
     }
   }
@@ -610,9 +594,7 @@ function covered(iv) {
 
 // The highest number of intervals open at one time.
 function peak(iv) {
-  const pts = iv.flatMap(([a, b]) => [[a, 1], [b, -1]]).sort((x, y) =>
-    x[0] - y[0] || x[1] - y[1]
-  );
+  const pts = iv.flatMap(([a, b]) => [[a, 1], [b, -1]]).sort((x, y) => x[0] - y[0] || x[1] - y[1]);
   let n = 0;
   let max = 0;
   for (const [, d] of pts) {
@@ -626,18 +608,16 @@ function read(file) {
   let text;
   try {
     text = readFileSync(file, "utf8");
-  }
-  catch {
+  } catch {
     return [];
   }
   return text
     .split("\n")
     .filter(Boolean)
-    .map(l => {
+    .map((l) => {
       try {
         return JSON.parse(l);
-      }
-      catch {
+      } catch {
         return undefined;
       }
     })
@@ -649,16 +629,14 @@ function read(file) {
 function report(ev, kinds) {
   const t0 = ms(ev[0].ts);
   const tEnd = ms(ev[ev.length - 1].ts);
-  const at = t => fmt(ms(t) - t0);
+  const at = (t) => fmt(ms(t) - t0);
   const out = [];
   const totals = { span: tEnd - t0, gates: 0, gateMs: 0, commits: 0 };
-  const head = ev.find(e => e.event === "run.start") ?? {};
-  const tail = [...ev].reverse().find(e => e.event === "run.end");
-  const gone = [...ev].reverse().find(e => e.event === "session.end");
+  const head = ev.find((e) => e.event === "run.start") ?? {};
+  const tail = [...ev].reverse().find((e) => e.event === "run.end");
+  const gone = [...ev].reverse().find((e) => e.event === "session.end");
   out.push(
-    `run ${head.run ?? ev[0].run ?? "?"} — ${head.folder ?? "?"} (${
-      head.mode ?? "?"
-    }), started ${head.ts ?? ev[0].ts}`,
+    `run ${head.run ?? ev[0].run ?? "?"} — ${head.folder ?? "?"} (${head.mode ?? "?"}), started ${head.ts ?? ev[0].ts}`,
   );
   out.push(
     `span ${fmt(totals.span)}, outcome ${
@@ -668,7 +646,7 @@ function report(ev, kinds) {
   );
 
   // Phases: each phase.start closed by the next phase.end with the same keys.
-  const key = e => [e.phase, e.wave, e.unit, e.loop, e.round].join("|");
+  const key = (e) => [e.phase, e.wave, e.unit, e.loop, e.round].join("|");
   const open = new Map();
   const phases = [];
   for (const e of ev) {
@@ -752,9 +730,7 @@ function report(ev, kinds) {
     out.push(
       "",
       `agents ran ${fmt(sum)} in total over ${fmt(union)} of wall time; `
-        + `peak ${peak(iv)} at once; parallel factor ${
-          (sum / Math.max(union, 1)).toFixed(2)
-        }`,
+        + `peak ${peak(iv)} at once; parallel factor ${(sum / Math.max(union, 1)).toFixed(2)}`,
     );
   }
 
@@ -785,7 +761,7 @@ function report(ev, kinds) {
   }
 
   // Gates and commits, from the run wrapper.
-  const gates = ev.filter(e => e.event === "gate");
+  const gates = ev.filter((e) => e.event === "gate");
   totals.gates = gates.length;
   totals.gateMs = gates.reduce((n, g) => n + (g.dur_ms ?? 0), 0);
   if (gates.length) {
@@ -794,7 +770,7 @@ function report(ev, kinds) {
       "GATES",
       table(
         ["at", "tier", "unit", "exit", "took", "line"],
-        gates.map(g => [
+        gates.map((g) => [
           at(g.ts),
           g.tier ?? "",
           g.unit ?? "",
@@ -810,14 +786,12 @@ function report(ev, kinds) {
     }
     out.push(Object.entries(by).map(([t, d]) => `${t} ${fmt(d)}`).join(", "));
   }
-  const commits = ev.filter(e => e.event === "commit");
+  const commits = ev.filter((e) => e.event === "commit");
   totals.commits = commits.length;
   if (commits.length) {
     out.push(
       "",
-      `COMMITS ${commits.length}, ${
-        fmt(commits.reduce((n, c) => n + c.dur_ms, 0))
-      } in total`,
+      `COMMITS ${commits.length}, ${fmt(commits.reduce((n, c) => n + c.dur_ms, 0))} in total`,
     );
   }
 
@@ -843,10 +817,10 @@ function report(ev, kinds) {
 
   // Gaps: the gap events, the last state of each id, and what agents returned.
   const byId = new Map();
-  for (const g of ev.filter(e => e.event === "gap")) {
+  for (const g of ev.filter((e) => e.event === "gap")) {
     byId.set(g.id ?? g.ts, { ...byId.get(g.id ?? g.ts), ...g });
   }
-  const gaps = [...byId.values()].map(g => [
+  const gaps = [...byId.values()].map((g) => [
     at(g.ts),
     g.id ?? "",
     g.class ?? "",
@@ -876,7 +850,7 @@ function report(ev, kinds) {
     );
   }
 
-  const stops = ev.filter(e => e.event === "stop");
+  const stops = ev.filter((e) => e.event === "stop");
   for (const s of stops) {
     out.push("", `STOP at ${at(s.ts)}: ${s.reason ?? ""} — ${s.resume ?? ""}`);
   }
@@ -906,7 +880,7 @@ function summary(args) {
   const out = [];
   const sum = { span: 0, gates: 0, gateMs: 0, commits: 0 };
   runs.forEach((r, i) => {
-    for (const s of r.filter(e => e.event === "plan.snapshot")) {
+    for (const s of r.filter((e) => e.event === "plan.snapshot")) {
       for (const u of s.units ?? []) {
         kinds.set(u.id, u.kind);
       }
@@ -926,9 +900,7 @@ function summary(args) {
     "",
     "",
     `TOTAL ${runs.length} run${runs.length === 1 ? "" : "s"}: `
-      + `active ${fmt(sum.span)} (paused ${
-        fmt(wall - sum.span)
-      }, not counted); `
+      + `active ${fmt(sum.span)} (paused ${fmt(wall - sum.span)}, not counted); `
       + `${sum.gates} gates, ${fmt(sum.gateMs)}; ${sum.commits} commits`,
   );
   process.stdout.write(out.join("\n") + "\n");
@@ -948,8 +920,7 @@ function main() {
 let entry;
 try {
   entry = realpathSync(process.argv[1] ?? "");
-}
-catch {
+} catch {
   entry = undefined;
 }
 if (entry === realpathSync(import.meta.filename)) {

@@ -123,7 +123,7 @@ export function appendToJsonArray(
 
   let changed = false;
   for (const value of values) {
-    if (!list.some(item => deepEqual(item, value))) {
+    if (!list.some((item) => deepEqual(item, value))) {
       list.push(value);
       changed = true;
     }
@@ -145,9 +145,7 @@ export function removeFromJsonArray(
   if (!Array.isArray(current)) {
     return text;
   }
-  const kept = current.filter(item =>
-    !values.some(value => deepEqual(item, value))
-  );
+  const kept = current.filter((item) => !values.some((value) => deepEqual(item, value)));
   return kept.length === current.length
     ? text
     : setJsonPath(text, path, kept, format);
@@ -164,8 +162,7 @@ export function hasComments(text: string): boolean {
   try {
     JSON.parse(text);
     return false;
-  }
-  catch {
+  } catch {
     return true;
   }
 }

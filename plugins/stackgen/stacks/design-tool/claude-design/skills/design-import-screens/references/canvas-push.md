@@ -25,11 +25,11 @@ Two equivalent surfaces expose the same operations (`get_project`,
    `"select:DesignSync"` and confirm the schema arrives.
 2. **The claude-design MCP server** — the portable fallback where the harness
    tool is unavailable: load the operations via `ToolSearch`. The server is
-   declared in the **project's own `.mcp.json`**, written by this pack's
-   materialization behind its own consent line, so its operations are scoped
-   `mcp__claude-design__`. It was a plugin-declared server until Wave D, which
-   is why older prose may show a `mcp__plugin_design-tools_…` prefix — that
-   plugin no longer exists.
+   declared in **`vwf-tools`**, the local plugin stackgen generates, at user
+   scope, written by this pack's materialization behind its own consent line,
+   so its operations are scoped `mcp__plugin_vwf-tools_claude-design__<op>`.
+   Older prose may show a `mcp__claude-design__` or
+   `mcp__plugin_design-tools_…` prefix — neither is current.
 
 Neither available, or the first read call fails authorization (no claude.ai
 login / design scopes — `/design-login`, or `/mcp` to connect the server) →

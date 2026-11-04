@@ -1,0 +1,5 @@
+/security-review, round 2 of loop U8, range 6dc8c89a..854e0c85, identification run as a subtask scoped to the range.
+
+No findings above confidence 8.
+
+Examined the 6 files in 6dc8c89a..854e0c85: all migration and manifest-write paths (.mcp.json/top-level mcp_servers, components naming generated packs, the relocation table, sync steps 2-6, reconcile-claims:, remove:), plus claims-based "ours", gate contents, path refusal and the fixed vwf-tools path.

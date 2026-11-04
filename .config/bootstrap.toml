@@ -1,0 +1,20 @@
+# The bootstrap commit of the last sync. repo-sync writes it.
+bootstrap_commit = "1b881a78deb4cc7aa22a77ccf93aaedb21685b86"
+environments = [ "dev", "ci" ]
+extensions = [ "astro-build.astro-vscode" ]
+repo_name = "claude-plugins"
+repo_url = "https://github.com/virajp/claude-plugins"
+
+[tools.claude]
+
+[tools.cloudflare]
+
+[tools.github]
+
+[tools.node]
+
+[branch.develop]
+direct_commit = true
+
+[overrides.gitignore]
+add = [ ".dev-marketplace/" ]

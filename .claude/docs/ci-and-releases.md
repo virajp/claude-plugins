@@ -2,45 +2,22 @@
 
 ## mise environments
 
-The mise config is split by `MISE_ENV`, all under `.config/`, in the folder
-layout `stackgen:tool-config` lands: a settings-only `.config/mise.toml`,
-`.config/miserc.toml` turning on `env_conf_d` so a `mise.<env>.toml` inside a
-`conf.d/` folder loads only under that environment, and one folder per owner
-under `.config/mise/conf.d/`. There is no root `mise.<env>.toml`.
+The mise config, its `MISE_ENV` split and the `setup:*` and `code:*` tasks are
+[bootstrap](https://github.com/virajp/bootstrap)'s, synced under `.config/` from
+the tools `.config/bootstrap.toml` selects: one folder per tool under
+`.config/mise/conf.d/`, and this repo's own values in `conf.d/zz-repo/` and
+`conf.d/cloudflare/`. Its reference is bootstrap's `docs/sync`.
 
-- `.config/mise.toml` — `min_version` and `[settings]` only
-  (`task.run_auto_install = true`, `all_compile = false`, `gpg_verify`).
-- `conf.d/_base/mise.toml` — loaded everywhere: the Node settings
-  (`node.compile = false`, `npm.package_manager = "pnpm"`), `node`, `pnpm` and
-  `osv-scanner`, which both dev and CI need, `node_modules/.bin` on the path,
-  and the repo's values (`REPO_NAME`, `MEMBERS`, the legacy `MERGE_MODEL`).
-- `conf.d/_base/mise.dev.toml` — loaded when `MISE_ENV=dev` (the maintainer's
-  machine has this exported): the Python, pipx and uv settings, the dev
-  toolchain (python, uv, pre-commit, grype, gitleaks, dprint, taplo),
-  `tasks.init` and the shell aliases.
-- `conf.d/ai/mise.dev.toml` — dev only: jq and yq in the shape tool-config
-  lands; this repo's own copy still carries `pipx:mempalace`, `pipx:graphifyy`
-  and the `MEMPALACE_*` values until it is edited by hand.
-- `conf.d/cloudflare/mise.toml` — this repo's own folder: `npm:cf`.
-- `conf.d/_base/mise.ci.toml` — loaded when `MISE_ENV=ci` (the workflows set
-  this). It sets one thing, `node.gpg_verify = false` to work around a
-  mise-on-Linux bug where its bundled Node release-key import fails on the CI
-  runner's gpg with "no valid OpenPGP data found" (the Node tarball is still
-  SHA256-checksum verified). Same mise version verifies fine on macOS; see
-  jdx/mise discussion #10553.
+Under `MISE_ENV=ci`, which the workflows set, `node.gpg_verify = false` works
+around a mise-on-Linux bug where its bundled Node release-key import fails on
+the
+CI runner's gpg with "no valid OpenPGP data found" (the Node tarball is still
+SHA256-checksum verified). Same mise version verifies fine on macOS; see
+jdx/mise
+discussion #10553.
 
 **There is no mise lockfile.** It was dropped on 2026-09-30 — it slowed every
-install and caused more failures than it prevented. The base
-`stackgen:tool-config` lands keeps dev-only files on `latest` and resolves every
-pin in a file CI loads to an exact version at render, save `node` and `pnpm`, so
-CI installs what the config names and moving a pin is a diff its `upgrade` call
-offers. This repo's own files, edited by hand, pin `latest` throughout.
-`setup:mise` here is `mise reshim`, `mise doctor`, `mise install` and
-`mise upgrade --local`; the landed base's `setup:mise` stops at the install and
-moves no pin.
-
-Pin each tool in one folder only: mise does not document which of two folders
-wins when both pin one tool.
+install and caused more failures than it prevented.
 
 ## The branch model, and the three tag families
 
@@ -58,17 +35,11 @@ same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
 `p:release`, `p:plugins:release`, `p:i:release`, `p:site:release` and
 `deps-update.yml` all still push directly.
 
-**The landing model is per branch in the skill, and legacy here.** The mise base
-`stackgen:tool-config` lands sets how a branch lands per destination —
-`MERGE_MODEL_DEVELOP` for `code:merge:develop`, `MERGE_MODEL_MAIN` for
-`code:merge:main`, each `direct` (merge locally and push) or `pr` (push and open
-a pull request); its defaults are `direct` and `pr`. This repo's own
-`.config/mise/conf.d/_base/mise.toml` still carries the single legacy
-`MERGE_MODEL`, which every reader takes as both values — the merge tasks with a
-warning naming it legacy, git-workflow's Step 4 silently as the shared fallback,
-and doctor's predicate (f) as one drift row — until the next
-`/vwf:setup reshape`, whose `/stackgen:tool-config all` rewrites it into the
-pair and lands the new merge scripts.
+**The landing model is per branch.** `[branch.<branch>].merge_model` in
+`.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
+push) or `pr` (push and open a pull request), read by `code:merge:develop` and
+`code:merge:main`. A missing file or key is `direct`, which is what this repo
+holds. `/vwf:doctor`'s Merge model predicate warns on any other value.
 
 **A release task bumps, commits and merges, then tags — and `main` stays
 merge-only.** No person and no plan bumps a version by hand: a landing plan
@@ -85,7 +56,9 @@ commit, one merge, then each `--tag-only` — and `/release` calls it. The bump 
 an ordinary `develop` commit that reaches `main` by merge, so the
 `no-commit-to-branch` hook is never skipped; under a `pr` merge model
 `code:merge:main` only opens a PR, so every full run, `--ci` and `p:release`
-refuse unless `MERGE_MODEL` and `MERGE_MODEL_MAIN` are both `direct` — the
+refuse unless `[branch.main].merge_model` in `.config/bootstrap.toml` is
+`direct`, a
+missing file or key reading `direct` — the
 fallback is `--no-commit`, the PR landed by hand, then `--tag-only`. The targets
 **skip past 13 and 17** rather than land on one — the bumped component stepped
 past the number, through the same guard `p:i:version` and `p:site:version` use,
@@ -301,7 +274,7 @@ with it.
 One ritual, on `develop` with a clean tree:
 
 ```sh
-mise run p:release -- --dry-run   # one line per project: tag, level, → version | skip | refused
+mise run p:release -- --dry-run # one line per project: tag, level, → version | skip | refused
 mise run p:release
 ```
 

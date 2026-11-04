@@ -109,10 +109,10 @@ belongs to `claude`, which is why it writes **no receipt**.
   from this same marketplace, at the same scope. That is Claude's own native
   behaviour (≥ 2.1.143), and it is what the CLI's `--all` leans on: the flag
   installs `DEFAULT_INSTALL` (`vwf`) alone and lets the edge bring `stackgen`.
-- **MCP and LSP declarations** ride in the plugin manifest. Confirm they appear
-  in the installed plugin. vwf declares one MCP server, Context7; a `mempalace`
-  server in an installed vwf manifest is a finding, since vwf no longer ships
-  one.
+- **MCP and LSP declarations** ride in the plugin manifest. vwf declares no MCP
+  server, so an `mcpServers` block in an installed vwf manifest is a finding, a
+  `context7` or `mempalace` server above all: Context7 is a stackgen `addon`
+  pack, landed by `/vwf:setup` only when a product picks it.
 
 ## Procedure
 
@@ -164,7 +164,7 @@ belongs to `claude`, which is why it writes **no receipt**.
 
    ```sh
    mkdir -p "$XDG_CONFIG_HOME/ai-plugins/receipts" "$HOME/.cursor"
-   printf 'ours\n'                      > "$HOME/.cursor/ours.txt"
+   printf 'ours\n' > "$HOME/.cursor/ours.txt"
    printf '{"editor":{"theme":"ours"}}' > "$HOME/.cursor/settings.json"
    ```
 

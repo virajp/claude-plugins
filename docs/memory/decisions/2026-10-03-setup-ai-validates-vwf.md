@@ -58,7 +58,8 @@ As it landed:
   `claude` on `PATH` still warns and exits 0.
 - **Pack plugins (D5).** A pack asks for a plugin with a structured
   `tool-config:` entry,
-  `{ tool: mise, verb: add-plugin, plugin: <name>@<marketplace>, source: <owner/repo> }`.
+  `{ tool: mise, verb: add-plugin, plugin: <name>@<marketplace>, source:
+  <owner/repo> }`.
   tool-config writes it into `setup/ai` inside that pack's block, and the task
   treats it the same as vwf: installed at a scope that counts, nothing; else add
   its marketplace when it is not registered, then install at user scope. The

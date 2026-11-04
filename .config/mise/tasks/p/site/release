@@ -43,11 +43,11 @@ fi
 
 # Never push a tag we cannot then watch.
 require_gh() {
-  if ! command -v gh >/dev/null 2>&1; then
+  if ! command -v gh > /dev/null 2>&1; then
     print_error "gh (GitHub CLI) is required to push and watch the release. Install: brew install gh"
     exit 1
   fi
-  if ! gh auth status >/dev/null 2>&1; then
+  if ! gh auth status > /dev/null 2>&1; then
     print_error "gh is not authenticated. Run: gh auth login"
     exit 1
   fi
@@ -82,7 +82,7 @@ tag_step() {
 
   # 4. The tag must not exist on the remote yet.
   git fetch --tags --quiet origin
-  if git rev-parse -q --verify "refs/tags/${TAG}" >/dev/null; then
+  if git rev-parse -q --verify "refs/tags/${TAG}" > /dev/null; then
     print_error "${TAG} already exists. Record a level for 'site' in ${RELEASES_FILE} and run 'mise run p:site:release' on ${BUMP_BRANCH}."
     exit 1
   fi
@@ -121,7 +121,7 @@ tag_step() {
   for _ in $(seq 1 30); do
     run_id="$(gh run list --workflow=site.yml --limit 20 \
       --json databaseId,headSha,headBranch \
-      --jq "[.[] | select(.headBranch==\"${TAG}\" and .headSha==\"${release_sha}\")][0].databaseId" 2>/dev/null || true)"
+      --jq "[.[] | select(.headBranch==\"${TAG}\" and .headSha==\"${release_sha}\")][0].databaseId" 2> /dev/null || true)"
     if [[ -n "${run_id}" && "${run_id}" != "null" ]]; then
       break
     fi
@@ -167,17 +167,20 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     [[ "${CI_MODE}" == "true" ]] || require_gh
   fi
   # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
-  # Either setting off direct refuses — empty or unset reads as direct.
-  if [[ "${NO_COMMIT}" != "true" ]]; then
-    for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
-      if [[ "${MERGE_MODE}" != "direct" ]]; then
-        print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
-        exit 1
-      fi
-    done
+  # merge_model of [branch.main] in .config/bootstrap.toml, read as bootstrap's
+  # _scripts/merge reads it: pr refuses; any other value, a missing key or a missing
+  # file means direct. A file yq cannot read stops the task.
+  MERGE_MODE=direct
+  if [[ -f .config/bootstrap.toml ]] && ! MERGE_MODE="$(yq -p toml -o yaml '.branch.main.merge_model // "direct"' .config/bootstrap.toml)"; then
+    print_error "cannot read the merge config of .config/bootstrap.toml."
+    exit 1
+  fi
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" == "pr" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
   fi
   git fetch --tags --quiet origin
-elif ! git fetch --tags --quiet origin 2>/dev/null; then
+elif ! git fetch --tags --quiet origin 2> /dev/null; then
   print_warn "Could not fetch tags — the last tag below is this checkout's."
 fi
 
@@ -191,11 +194,11 @@ BASE="${LAST_TAG#site-v}"
 LEVEL="?"
 RECORDED="?"
 TARGET="${MANIFEST}"
-if ! RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")" \
-  || { [[ -n "${LAST_TAG}" ]] && {
-    ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" \
-      || ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" \
-      || ! TARGET="$(release_target "${BASE}" "${LEVEL}" "${MANIFEST}")"
+if ! RECORDED="$(releases_level "${RELEASES_FILE}" "${KEY}")" ||
+  { [[ -n "${LAST_TAG}" ]] && {
+    ! IMPLIED="$(level_implied "${BASE}" "${MANIFEST}")" ||
+      ! LEVEL="$(level_max "${RECORDED}" "${IMPLIED}")" ||
+      ! TARGET="$(release_target "${BASE}" "${LEVEL}" "${MANIFEST}")"
   }; }; then
   if [[ "${DRY_RUN}" == "true" ]]; then
     printf '%-10s tag %-22s level %-6s → refused\n' "${KEY}" "${LAST_TAG:-none}" "${LEVEL:-?}"
@@ -224,9 +227,15 @@ fi
 if [[ "${TARGET}" != "${MANIFEST}" ]]; then
   if [[ "${MANIFEST}" == "${BASE}" && -z "$(git status --porcelain)" ]]; then
     case "${LEVEL}" in
-      MAJOR) mise run p:site:version -- --major ;;
-      MINOR) mise run p:site:version -- --minor ;;
-      *) mise run p:site:version ;;
+      MAJOR)
+        mise run p:site:version -- --major
+        ;;
+      MINOR)
+        mise run p:site:version -- --minor
+        ;;
+      *)
+        mise run p:site:version
+        ;;
     esac
   else
     (cd site && pnpm version "${TARGET}" --no-git-tag-version --no-git-checks)

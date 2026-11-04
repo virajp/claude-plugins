@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+#MISE description="Check or sort the keys of the package.json files"
+#MISE hide=true
+
+#USAGE flag "--debug" help="emit debug logs"
+#USAGE flag "--fix" help="apply fixes"
+#USAGE arg "[files]" var=#true help="the files to format; only the package.json files are used; the default is the whole tree"
+
+set -e
+source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
+
+cd "${MISE_PROJECT_ROOT}"
+
+# dprint owns the whitespace of package.json. This task adds the one thing
+# dprint cannot do: the key order, which is a convention, not a format.
+# code:format passes its files to each code:format:* task. Only the
+# package.json files are for the sorter. Given files without one: nothing to do.
+FILES=()
+[[ -n "${usage_files:-}" ]] && eval "FILES=(${usage_files})"
+TARGETS=()
+if ((${#FILES[@]})); then
+  for file in "${FILES[@]}"; do
+    [[ ("${file}" == package.json || "${file}" == */package.json) && -f "${file}" ]] && TARGETS+=("${file}")
+  done
+  ((${#TARGETS[@]})) || exit 0
+else
+  TARGETS=("**/package.json" --ignore "**/node_modules")
+fi
+
+# The sorter has no --fix: sorting is its default, and --check is the
+# read-only mode.
+ARGS=()
+[[ "${usage_fix:-false}" == "true" ]] || ARGS+=(--check)
+
+print_subheader "Sorting the package.json files ..."
+mise x -- pnpm dlx sort-package-json ${ARGS[@]+"${ARGS[@]}"} "${TARGETS[@]}"

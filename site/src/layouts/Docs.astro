@@ -46,14 +46,14 @@ const current = section
   ? (section.key as "plugins" | "how-to" | "installer")
   : undefined;
 
-const outline = headings.filter(h => h.depth === 2 || h.depth === 3);
-const inSidebar = headings.filter(h => h.depth === 2);
+const outline = headings.filter((h) => h.depth === 2 || h.depth === 3);
+const inSidebar = headings.filter((h) => h.depth === 2);
 
 // The markdown mirror exists for a page backed by a collection file, so the
 // generated Plugins index and the 404 page advertise none.
 const markdown = here?.entry ? markdownPathFor(id!) : undefined;
 const canonical = new URL(Astro.url.pathname, Astro.site).href;
-const website = { "@type": "WebSite", name: "vwf", url: Astro.site!.href };
+const website = { "@type": "WebSite", "name": "vwf", "url": Astro.site!.href };
 // The structured data every docs page carries: the article itself, and the
 // breadcrumb the crumb above the article renders. The group level is left out
 // because a group has no route of its own; a section root ends at position 2.
@@ -62,33 +62,33 @@ const jsonLd = id && section
     {
       "@context": "https://schema.org",
       "@type": "TechArticle",
-      headline: title,
+      "headline": title,
       description,
-      url: canonical,
-      inLanguage: "en",
-      isPartOf: website,
+      "url": canonical,
+      "inLanguage": "en",
+      "isPartOf": website,
     },
     {
       "@context": "https://schema.org",
       "@type": "BreadcrumbList",
-      itemListElement: [
+      "itemListElement": [
         {
           "@type": "ListItem",
-          position: 1,
-          name: "Docs",
-          item: new URL("/plugins/", Astro.site).href,
+          "position": 1,
+          "name": "Docs",
+          "item": new URL("/plugins/", Astro.site).href,
         },
         {
           "@type": "ListItem",
-          position: 2,
-          name: section.label,
-          item: new URL(section.route, Astro.site).href,
+          "position": 2,
+          "name": section.label,
+          "item": new URL(section.route, Astro.site).href,
         },
         ...isSectionRoot ? [] : [{
           "@type": "ListItem",
-          position: 3,
-          name: title,
-          item: canonical,
+          "position": 3,
+          "name": title,
+          "item": canonical,
         }],
       ],
     },
@@ -98,18 +98,24 @@ const jsonLd = id && section
 
 <Base
   title={`${title} · vwf`}
-  description={description}
-  markdown={markdown}
-  jsonLd={jsonLd}
+  {description}
+  {markdown}
+  {jsonLd}
 >
   <div class="page">
-    <Nav current={current} search />
+    <Nav
+      {current}
+      search
+    />
   </div>
   <div class="page layout">
-    <details class="side" open>
+    <details
+      class="side"
+      open
+    >
       <summary>Contents</summary>
       <div class="side-body">
-        {nav.map(s => (
+        {nav.map((s) => (
           <>
             <div class="grp">{s.label}</div>
             {s.index && (
@@ -120,23 +126,29 @@ const jsonLd = id && section
                 {s.index.title}
               </a>
             )}
-            {s.entries.map(e => (
+            {s.entries.map((e) => (
               <>
-                <a class:list={["item", { on: e.id === id }]} href={e.route}>
+                <a
+                  class:list={["item", { on: e.id === id }]}
+                  href={e.route}
+                >
                   {e.title}
                 </a>
                 {e.id === id
-                  && inSidebar.map(h => (
-                    <a class="item sub" href={`#${h.slug}`}>
+                  && inSidebar.map((h) => (
+                    <a
+                      class="item sub"
+                      href={`#${h.slug}`}
+                    >
                       {h.text}
                     </a>
                   ))}
               </>
             ))}
-            {s.groups.map(g => (
+            {s.groups.map((g) => (
               <>
                 <div class="sub-grp">{g.label}</div>
-                {g.entries.map(e => (
+                {g.entries.map((e) => (
                   <a
                     class:list={["item", "sub", { on: e.id === id }]}
                     href={e.route}
@@ -161,7 +173,10 @@ const jsonLd = id && section
         {!isSectionRoot && <span>/</span>}
         {!isSectionRoot && title}
       </div>
-      <article class="article" data-pagefind-body={searchable || undefined}>
+      <article
+        class="article"
+        data-pagefind-body={searchable || undefined}
+      >
         <h1>{title}</h1>
         <slot />
       </article>
@@ -174,7 +189,10 @@ const jsonLd = id && section
             </a>
           ) : <div />}
           {next && (
-            <a class="next" href={next.route}>
+            <a
+              class="next"
+              href={next.route}
+            >
               <span>Next</span>
               {next.title}
             </a>
@@ -186,8 +204,11 @@ const jsonLd = id && section
     {outline.length > 0 && (
       <div class="outline">
         <div class="t">On this page</div>
-        {outline.map(h => (
-          <a class:list={[{ sub: h.depth === 3 }]} href={`#${h.slug}`}>
+        {outline.map((h) => (
+          <a
+            class:list={[{ sub: h.depth === 3 }]}
+            href={`#${h.slug}`}
+          >
             {h.text}
           </a>
         ))}

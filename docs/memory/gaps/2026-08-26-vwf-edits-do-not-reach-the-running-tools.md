@@ -42,7 +42,7 @@ The repair:
 ```sh
 # commit first — the directory source resolves the committed tree
 claude plugin marketplace update virajp-plugins
-claude plugin update vwf@virajp-plugins     # bare `vwf` fails: Plugin "vwf" not found
+claude plugin update vwf@virajp-plugins # bare `vwf` fails: Plugin "vwf" not found
 # then RESTART the session — the CLI says so and means it
 ```
 

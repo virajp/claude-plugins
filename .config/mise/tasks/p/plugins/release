@@ -69,7 +69,7 @@ tag_step() {
 
   local to_tag=() forbidden=() ref tagged
   for ref in "${refs[@]}"; do
-    if ! git rev-parse -q --verify "refs/tags/${ref}" >/dev/null; then
+    if ! git rev-parse -q --verify "refs/tags/${ref}" > /dev/null; then
       # Only newly cut refs are checked; tags from before the 13/17 rule stand.
       if version_forbidden "${ref##*-v}"; then
         forbidden+=("${ref}")
@@ -140,15 +140,20 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     exit 1
   fi
   # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
-  # Either variable may be the one code:merge:main reads, so both must be direct.
-  for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
-    if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
-      print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
-      exit 1
-    fi
-  done
+  # merge_model of [branch.main] in .config/bootstrap.toml, read as bootstrap's
+  # _scripts/merge reads it: pr refuses; any other value, a missing key or a missing
+  # file means direct. A file yq cannot read stops the task.
+  MERGE_MODE=direct
+  if [[ -f .config/bootstrap.toml ]] && ! MERGE_MODE="$(yq -p toml -o yaml '.branch.main.merge_model // "direct"' .config/bootstrap.toml)"; then
+    print_error "cannot read the merge config of .config/bootstrap.toml."
+    exit 1
+  fi
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" == "pr" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
+  fi
   git fetch --tags --quiet origin
-elif ! git fetch --tags --quiet origin 2>/dev/null; then
+elif ! git fetch --tags --quiet origin 2> /dev/null; then
   print_warn "Could not fetch tags — the last tags below are this checkout's."
 fi
 
@@ -162,7 +167,9 @@ for file in plugins/*/.claude-plugin/plugin.json; do
   name="$(node -p "require('./${file}').name")"
   case " ${KEYS[*]} " in
     *" ${name} "*) ;;
-    *) continue ;;
+    *)
+      continue
+      ;;
   esac
   manifest="$(node -p "require('./${file}').version")"
   tag="$(git tag -l --sort=-v:refname "${name}-v*" | grep -E "^${name}-v[0-9]+\.[0-9]+\.[0-9]+\$" | head -n 1 || true)"
@@ -174,11 +181,11 @@ for file in plugins/*/.claude-plugin/plugin.json; do
   level="?"
   recorded="?"
   target="${manifest}"
-  if ! recorded="$(releases_level "${RELEASES_FILE}" "${name}")" \
-    || { [[ -n "${tag}" ]] && {
-      ! implied="$(level_implied "${base}" "${manifest}")" \
-        || ! level="$(level_max "${recorded}" "${implied}")" \
-        || ! target="$(release_target "${base}" "${level}" "${manifest}")"
+  if ! recorded="$(releases_level "${RELEASES_FILE}" "${name}")" ||
+    { [[ -n "${tag}" ]] && {
+      ! implied="$(level_implied "${base}" "${manifest}")" ||
+        ! level="$(level_max "${recorded}" "${implied}")" ||
+        ! target="$(release_target "${base}" "${level}" "${manifest}")"
     }; }; then
     if [[ "${DRY_RUN}" == "true" ]]; then
       printf '%-10s tag %-22s level %-6s → refused\n' "${name}" "${tag:-none}" "${level:-?}"

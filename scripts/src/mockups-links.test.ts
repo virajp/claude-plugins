@@ -77,7 +77,7 @@ function write(rel: string, text: string) {
 }
 
 function html(...hrefs: string[]): string {
-  const links = hrefs.map(href => `<a href="${href}">x</a>`).join("\n");
+  const links = hrefs.map((href) => `<a href="${href}">x</a>`).join("\n");
   return `<!doctype html><html><body>\n${links}\n</body></html>\n`;
 }
 
@@ -130,7 +130,7 @@ describe("links.mjs", () => {
     for (const line of lines) {
       expect(line).toMatch(/^BROKEN: orders\/index\.html -> \S+ — .+$/);
     }
-    expect(lines.map(line => line.split(" ")[3])).toEqual([
+    expect(lines.map((line) => line.split(" ")[3])).toEqual([
       "/nowhere",
       "signin",
       "http://example.com/",

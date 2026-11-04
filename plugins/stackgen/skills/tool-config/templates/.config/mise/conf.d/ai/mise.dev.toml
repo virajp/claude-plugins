@@ -1,6 +1,0 @@
-# AI Tools
-[tools.jq]
-version = "latest"
-
-[tools.yq]
-version = "latest"

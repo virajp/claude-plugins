@@ -1,7 +1,7 @@
 name: Claude Design
 summary: The canvas Anthropic hosts at claude.ai/design — designed pages live
   on a canvas project, reached over its own MCP server.
-version: 0.4.0
+version: 1.0.0
 type: design-tool
 kind: design-tool
 axis: design
@@ -9,7 +9,7 @@ axis: design
 # config key are one value rather than two that can disagree.
 # A design tool satisfies no harness capability: nothing is booted or probed.
 harness: n/a
-mcp_servers: # written into the project's .mcp.json behind tier-2 consent
+user_mcp_servers: # landed in vwf-tools behind tier-3 consent
   claude-design:
     type: http
     url: https://api.anthropic.com/v1/design/mcp

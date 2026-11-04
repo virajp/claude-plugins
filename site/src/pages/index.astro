@@ -133,9 +133,9 @@ const guides = [
   jsonLd={{
     "@context": "https://schema.org",
     "@type": "WebSite",
-    name: "vwf",
-    url: Astro.site!.href,
-    description:
+    "name": "vwf",
+    "url": Astro.site!.href,
+    "description":
       "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.",
   }}
 >
@@ -150,13 +150,21 @@ const guides = [
             Execute. Asks one question at a time, then builds unattended.
           </p>
           <div class="cta">
-            <a class="btn" href="/how-to/">Get started</a>
-            <a class="btn sec" href="https://github.com/virajp/claude-plugins"
+            <a
+              class="btn"
+              href="/how-to/"
+            >Get started</a>
+            <a
+              class="btn sec"
+              href="https://github.com/virajp/claude-plugins"
             >GitHub</a>
           </div>
         </div>
         <div class="draw">
-          <Mark size={400} class="mark" />
+          <Mark
+            size={400}
+            class="mark"
+          />
           <span class="note product">product</span>
           <span class="note blueprint">blueprint</span>
           <span class="note gate">merge gate</span>
@@ -178,7 +186,7 @@ const guides = [
             </p>
           </div>
           <div class="steps">
-            {phases.map(p => (
+            {phases.map((p) => (
               <div class="st">
                 <div class="dot" />
                 <div>
@@ -260,7 +268,7 @@ claude plugin install vwf@virajp-plugins</pre>
           adoption blocker rather than a preference.
         </p>
         <div class="cav">
-          {caveats.map(c => (
+          {caveats.map((c) => (
             <div>
               <h3>{c.title}</h3>
               <p>{c.text}</p>
@@ -277,11 +285,11 @@ claude plugin install vwf@virajp-plugins</pre>
           are about to type.
         </p>
         <div class="toc">
-          {guides.map(g => (
+          {guides.map((g) => (
             <div class="g">
               <h3>{g.label}</h3>
               <div>
-                {g.entries.map(e => (
+                {g.entries.map((e) => (
                   <a href={e.href}>
                     {e.title}
                     <span>{e.note}</span>

@@ -34,22 +34,17 @@ to read.
   axis: each `projects.<name>.stack.template`, `backing_template` and
   `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
-  (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
-- **Each repo's `.config/stackgen.yaml`** — the values file
-  `/stackgen:tool-config` renders from and alone writes. Read `forge`,
-  `secrets`, `node`, `external` and each `packs.<slug>` block; never edit it —
-  a value changes only through the call that sets it (`all` or `pack`). A
-  repo without one is a repo whose shape was deferred at Step 0: it is passed
-  the live forge and nothing else, and the `all` step below skips it, since
-  laying the shape down is `/vwf:init`'s.
+  (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"), and,
+  since `config_format` 25, the product-level `addons:` list.
 - **Each repo's adapter lockfile** — `.claude/stackgen/lock.yaml`, the
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. Two exceptions: the pack steps below read the
-  component packs the entries record (`pack/<type>/<slug>@<version>`), and
-  the `all` step reads whether any recorded path sits under
-  `.config/mise/tasks/setup/external/`.
+  repo is materialized. One exception: removing a dropped pack, below, reads
+  the component packs the entries record (`pack/<type>/<slug>@<version>`) and
+  the files recorded for them.
+
+The pass reads nothing from `.config/stackgen.yaml`, which is the old layout's.
 
 The axes live in the **base's** `.config/vwf.yaml` only. A member repo has no
 config of its own — it carries a back-link
@@ -63,6 +58,8 @@ member's `path` relative to the base root. A project no member lists is the
 **base's**. Under `topology: repo` and `topology: monorepo` there are no
 members and everything is the base's. The `repo.stack.template` axis describes
 a checkout rather than a project, so its target is the repo that declares it.
+Every `addons:` slug targets the **base**: in a multi-repo product members get
+no `addon` pin, and in a single repo the repo is the base.
 
 A member that is declared but **not on this machine** — an uncloned sibling, or
 an empty submodule directory — is a blind spot, never a finding. Report it
@@ -86,6 +83,14 @@ that slug, record one entry `(repo, slug)`. Then:
 - **`[]` on a list axis is a decision, not a landing** — the project ships
   through nothing / talks to no backing service, and that is complete.
 
+**`addons:` joins the list as one more list axis, with one difference: its
+slugs are fetched on every run.** Each element is an entry `(base, slug)`, in
+list order after the project axes. A slug the base's lockfile already names is
+still passed to the adapter's template skill below, because the pick is
+committed and the servers land per machine, so another person's first run has
+something to do. An absent `addons:` and `[]` both mean no tool: nothing is
+landed, and this pass never writes `unresolved` there.
+
 An empty landing list is the ordinary state of a re-run: say every pinned axis
 is materialized, and move on. That sentence is what makes the pass idempotent
 on a repo setup stamped minutes ago.
@@ -108,44 +113,17 @@ repo: <path>
 `<path>` is the member's `path` relative to the base repo root. Absent means
 the current repo, so a base-targeted landing carries no such line.
 
-Beside it — **always**, base-targeted or not — the conditional answers, in
-the same payload style:
-
-```text
-answers:
-  forge: <forge>
-  secrets: <provider>
-```
-
-and, when a component pack of the slug declares `values:`, the values
-gathered for it ([Gather the pack values](#gather-the-pack-values)):
-
-```text
-values:
-  <pack slug>:
-    <name, lowercased>: <value>
-```
-
-### The answers map
-
-Those are the axes a pack's `conditional:` entries are evaluated against,
-read from the **target** repo's `.config/stackgen.yaml`: `secrets` as that
-file records it, `forge` read **live** from the target repo's `origin` host
-— `github` or `gitlab`, else `none`, the mapping `/vwf:init` passes — so a
-repo whose `origin` appeared after init is evaluated against the forge it
-actually has. `none` is a legal value
-on both axes and is passed as it stands: it is an answer, not an absence. A
-repo with no values file passes `forge` alone. Where the live host differs
-from the recorded `forge`, the `all` step below writes it; this pass never
-edits the values file by hand.
+Any call may end in a `declined:` line, after what it returns. Pass each such
+line, as returned, into every later `-stack-template` call of this run, in the
+same payload style, whatever its target repo, `remove:` and `reconcile-claims:`
+calls included. The next run starts without the line, so the offer comes back.
 
 **Each landing is the adapter's own consent line; setup adds no consent of its
 own.** The adapter lands one set and takes one commit per slug — that rule is
 the adapter's and this pass does not change it. Setup does not batch two slugs
 into one gate, and does not present a plan of its own in front of the
-adapter's. The adapter copies each component's `config/` payload and runs the
-component's `pack` call with the `values:` above as `--set`, so the pack's
-templates render on the landing that copies its subtasks.
+adapter's. The adapter copies each component's `config/` payload and hands the
+tools the component needs to bootstrap, on that same consent gate.
 
 ## Record the payload's OS map
 
@@ -173,139 +151,43 @@ consent — so a repo materialized before the key existed gains its frames on it
 next `/vwf:setup`. The write is part of the pass's config write; the key is
 additive and moves no `config_format`.
 
-## Gather the pack values
-
-Some values a stack needs are facts about the **machine** that builds it, not
-decisions anyone makes — a tool's installed version, a device the tests run
-on. A pack declares each one its templates read as one entry of the
-`values:` list in its `pack.yaml`: `name` (the template's `@@NAME@@`),
-`detect` (a shell command that prints the value, exiting non-zero when it
-cannot tell) and `question`.
-
-**Which packs.** For an entry about to land, the component packs of its
-slug: read the bundle's `components:` list and each component's `pack.yaml`
-inside the installed adapter plugin's own tree, located from
-`claude plugin list` as `/vwf:doctor`'s pack-version check locates it — vwf's
-own plugin-root token names vwf and never another plugin's root. For the
-re-run below, every component pack the repo's lockfile records. A pack with
-no `values:` list is nothing to do.
-
-**Per entry, in the order the pack declares them** — one question each, per
-`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`'s one decision per round:
-
-1. **A value the repo already stores** under `packs.<slug>` in its
-   `.config/stackgen.yaml` is kept and passed again, unasked: the file is
-   committed, so once answered the value is the **repo's**, not the
-   machine's, and another machine running setup does not move it. A person
-   who wants another value re-runs `pack` with that `--set` themselves.
-2. Otherwise run `detect` from the target repo's root, inside its toolchain
-   environment, stopped after 30 seconds. The command is held in a variable
-   and passed to the shell as **one argument** — `mise x -- sh -c "$cmd"` —
-   never spliced into a quoted string, so the quotes and `$` references a
-   detect command carries reach the shell intact. A zero exit with output,
-   trimmed, is the value.
-3. A non-zero exit, a timeout or empty output asks `question`. An empty
-   answer is an answer — a platform the value does not apply to, say — and
-   the question is never skipped and never answered for the person.
-
-Every value is passed as `--set <name, lowercased>=<value>`. **The value is
-data, never syntax:** the script refuses one holding a quote, a backslash,
-`@@` or a control character, so setup refuses it first — a detected value
-that does is asked as though `detect` failed, and a typed one is asked
-again.
-
-## Answering the skill's rows
-
-Every call below reaches `/stackgen:tool-config` the same way, and this is
-the one place the form is stated. First the call prefixed with `preview`,
-which writes nothing and returns the rows the call would show, each with an
-id — `r1`, `r2`, … Setup shows those rows inside its own question and takes
-an answer to **every** row, spelled as the skill spells it: `ok` takes the
-render, `keep-existing` leaves the file as it stands for this run. The row
-for `.config/stackgen.yaml` takes `ok` alone — declining it declines the
-call. Then the real call, with the answers as its **last** argument:
-`--answers <id>:<answer>,…`. That is what keeps the skill from asking a
-second time. A call whose answers miss a row, misname one, or name one that
-changed since the preview is refused **whole** and its rows shown again — so
-no call is made with a row nobody answered, and a changed tree is asked
-about afresh rather than written over. A person who declines the call
-outright is reported, and nothing is written. A preview that returns no row
-needs no answers and makes no call.
-
-A call the script refuses because the repo's mise config is untrusted, or
-because a tool it runs is not installed, names its remedy — trust the path;
-run `MISE_ENV=dev mise run setup:all` — which is the person's to take before
-the call is re-run.
-
-## Re-run each landed pack
-
-A pack's templates render when it lands, once. A later adapter release that
-changes a template, and a value a person changed, would otherwise never
-reach a repo that landed the pack before it, so this step re-runs `pack` for
-every landed pack on **every** run, in every mode.
-
-**Which packs.** For each repo, every pack its adapter lockfile records as a
-component — an entry sourced `pack/<type>/<slug>@<version>` — minus any a
-landing above just ran, since that landing ran the call itself. Its directory
-is `stacks/<type>/<slug>/` inside the installed adapter plugin's tree,
-located as [Gather the pack values](#gather-the-pack-values) locates it.
-
-**Preview, then run**, as
-[Answering the skill's rows](#answering-the-skills-rows) states:
-`pack --slug <slug> --dir <pack dir>` with one `--set` per `values:` entry,
-gathered as above. The call is idempotent: a pack whose render matches the
-repo returns **no row**, and is not mentioned beyond the report's count. A
-changed template comes back as a `write` row carrying its diff, and those
-rows are shown together for the repo behind one consent of this step's;
-with no row, nothing is asked. A file the pack's version no longer renders is
-a `delete` row. Bringing a newer pack version's `config/` payload is the
-adapter's sync, not this step's.
-
-Commit what changed in the target repo, one commit per pack, its message
-naming the pack, the values filled and the files re-rendered.
-
 ## Remove a dropped pack
 
 A slug a repo's lockfile records that no axis targeting that repo names any
-more — `/vwf:architecture` replaced it — has been **dropped**. For each of
+more — `/vwf:architecture` replaced it — has been **dropped**. `addons:`
+counts as an axis targeting the base, so a slug removed from it is dropped
+there, and a slug still listed is not dropped by a move off another axis.
+
+**A slug dropped from `addons:` leaves through one call**, made for each such
+slug in the base: `/<plugin>:<plugin>-stack-template remove: <slug>`, the
+removal path for the `addon` axis in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Setup deletes no file for it.
+The call shows its own plan on its own consent, takes
+out everything the lockfile records for the slug and commits once, returning
+**removed** or **declined**. A declined slug stays recorded, so the next run
+offers it again.
+
+**After the `remove:` calls, one more call reconciles this machine's claims**,
+made once per run in the base on each plugin named in `stacks:`, whether or not
+a slug was dropped: `/<plugin>:<plugin>-stack-template reconcile-claims:`. It
+takes no slug and is not a landing-list entry. An addon dropped on another
+machine reaches this one by a pull, so no `remove:` call is made for it, and
+this call is what lets go of it. It asks on its own consent and returns one
+line, **removed**, **declined** or **unchanged**; setup wraps it in no consent
+and no commit. A decline changes nothing, and the next run offers it again.
+
+Every other dropped slug is setup's own. For each of
 its component packs that no slug still pinned in that repo also composes,
-preview `pack-remove --slug <slug>`: it deletes the pack's
-`conf.d/<slug>/` folder and every subtask named `<slug>`, drops
-`packs.<slug>` from the values file and re-renders the `…:all` tasks, so no
-gate calls a task that is gone. Show its rows beside the files the lockfile
-records for that component — its `config/` copies — as one consent per repo.
+show the files the lockfile records for that component — its `config/`
+copies — as one consent per repo.
 A **generated** component of the dropped slug — a `<type>/<name>@generated`
-ref that no slug still pinned in that repo also composes — has no pack and
-no `pack-remove` call: its recorded files are the `.claude/` copies the
-lockfile names for that ref (its skill, its citations), and they join the
-same consent. On a yes, run the call with its answers, then delete those
+ref that no slug still pinned in that repo also composes — has no pack: its
+recorded files are the `.claude/` copies the lockfile names for that ref (its
+skill, its citations), and they join the same consent. On a yes, delete those
 recorded files and their lockfile entries, and commit, one commit per slug.
 A decline leaves everything as it stands and is reported; `/vwf:setup`
-offers it again on the next run.
-
-## Re-derive the repo's values
-
-After the packs, three repo-wide values may have moved, each read against
-what the repo's `.config/stackgen.yaml` stores:
-
-- **`node`** — `true` when the repo's lockfile records a component that
-  runs on Node — the Node package manager pack, the TypeScript language
-  pack, the JavaScript lint gate pack — or a slug whose bundle composes that
-  package manager; else `false`;
-- **`external`** — `true` only when a path the lockfile records sits under
-  `.config/mise/tasks/setup/external/`; else `false`;
-- **`forge`** — read live from the `origin` host: `github` or `gitlab`,
-  else `none` — no remote, or a host that is neither.
-
-Any that differs from the stored value — and only those — goes to one call,
-`all --node <v> --external <v> --forge <v>`, each flag present only when its
-value changed: a key left out keeps what the file holds. Preview it and
-answer it as above. `all` re-renders every universal file the change
-reaches — `_base/`'s node tools, the `setup/external/*` tasks — and ends by
-running `MISE_ENV=dev mise run setup:all`, whose output tail the script
-returns: **relay it**. Nothing changed, no call. A repo with no values file
-is skipped, as its inputs say. Commit what the call changed in that repo as
-one commit naming the values moved.
+offers it again on the next run. A tool bootstrap selected for the pack leaves
+through the bootstrap delta of `/stackgen:stackgen-sync`.
 
 ## A declined landing
 
@@ -367,24 +249,12 @@ This is the one place setup writes `unresolved`, and it is narrow by design:
 
 One block, carried back to the spine:
 
-- one line per entry in the landing list — the repo, the slug, and one of
-  **landed**, **declined**, or **already materialized**;
-- **the skips the adapter returned**, under their own heading, one line each
-  — the path, the pack, and the `when:` that dropped it — listed exactly as
-  `/vwf:init`'s plan lists its **Skipped** rows, so a file an answer
-  dropped is visible rather than silently absent. A landing that skipped
-  nothing prints no heading;
-- one line per pack value filled — the repo, the pack, the name, the value,
-  and whether it was **kept** from the values file, **detected** or
-  **asked**;
-- one line per repo for the pack re-run — the packs re-run and how many
-  wrote nothing — and one line per row it showed, the pack, the file, and
-  **applied** or **kept**;
+- one line per entry in the landing list, `addons:` slugs included — the repo,
+  the slug, and one of **landed**, **declined**, or **already materialized**;
 - one line per dropped pack — the repo, the slug, and **removed** or
   **declined**;
-- one line per repo-wide value the `all` call moved — the repo, the key,
-  the value replaced and the value written — and the `setup:all` tail it
-  returned;
+- one line per plugin for the claims reconcile — the plugin, and **removed**,
+  **declined** or **unchanged**;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

@@ -1,0 +1,25 @@
+# osv-scanner config. A seed: the repo owns this file after the first sync.
+# `code:sec` passes `--config .config/osv-scanner.toml`, so this one file
+# applies to every lockfile, and osv-scanner ignores osv-scanner.toml files in
+# other folders. Any finding fails the run: osv-scanner has no severity limit.
+
+# **An ignore is a claim that a finding is wrong, not that it is
+# inconvenient.** Each entry must state, in `reason`, why it does not apply
+# here, and it must expire. Prefer upgrading; ignore only when there is
+# nothing to upgrade to.
+#
+# [[IgnoredVulns]]
+# id = "GHSA-xxxx-xxxx-xxxx"
+# ignoreUntil = 2026-12-31
+# reason = "Why it does not apply here, and what makes it expire."
+
+# Match a package by name, version, ecosystem or group, then ignore it,
+# only its vulnerabilities, or only its license. Use `effectiveUntil` and
+# `reason` as for an ignore.
+#
+# [[PackageOverrides]]
+# name = "example-package"
+# ecosystem = "npm"
+# vulnerability.ignore = true
+# effectiveUntil = 2026-12-31
+# reason = "Why it does not apply here, and what makes it expire."

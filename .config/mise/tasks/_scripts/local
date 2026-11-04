@@ -119,9 +119,15 @@ version_next() {
 
   while version_forbidden "${major}.${minor}.${patch}"; do
     case "${level}" in
-      major) major=$((major + 1)) ;;
-      minor) minor=$((minor + 1)) ;;
-      patch) patch=$((patch + 1)) ;;
+      major)
+        major=$((major + 1))
+        ;;
+      minor)
+        minor=$((minor + 1))
+        ;;
+      patch)
+        patch=$((patch + 1))
+        ;;
     esac
   done
 
@@ -136,10 +142,18 @@ version_skip_note() {
 # Print a level's rank, NONE < PATCH < MINOR < MAJOR; refuses anything else.
 level_rank() {
   case "${1:-}" in
-    NONE) echo 0 ;;
-    PATCH) echo 1 ;;
-    MINOR) echo 2 ;;
-    MAJOR) echo 3 ;;
+    NONE)
+      echo 0
+      ;;
+    PATCH)
+      echo 1
+      ;;
+    MINOR)
+      echo 2
+      ;;
+    MAJOR)
+      echo 3
+      ;;
     *)
       print_error "Unknown release level '${1:-}': expected NONE, PATCH, MINOR or MAJOR."
       return 1
@@ -180,7 +194,7 @@ releases_level() {
   fi
 
   value="${found#=}"
-  level_rank "${value}" >/dev/null || {
+  level_rank "${value}" > /dev/null || {
     print_error "Bad level for '${key}' in ${file}."
     return 1
   }
@@ -211,7 +225,7 @@ releases_raise() {
       index($0, k ":") == 1 { print k ": " l; done = 1; next }
       { print }
       END { if (!done) print k ": " l }
-    ' "${file}" >"${tmp}" || {
+    ' "${file}" > "${tmp}" || {
       rm -f "${tmp}"
       return 1
     }
@@ -220,7 +234,7 @@ releases_raise() {
       echo "# Pending release levels, one key per project: NONE, PATCH, MINOR or MAJOR."
       echo "# Written by /vwf:execute at landing (highest level wins); cleared by the release tasks."
       echo "${key}: ${level}"
-    } >"${tmp}"
+    } > "${tmp}"
   fi
 
   mv "${tmp}" "${file}"
@@ -238,7 +252,7 @@ releases_clear() {
   dir="$(dirname "${file}")"
   tmp="$(mktemp "${dir}/.releases.XXXXXX")" || return 1
   chmod 644 "${tmp}"
-  awk -v k="${key}" 'index($0, k ":") != 1' "${file}" >"${tmp}" || {
+  awk -v k="${key}" 'index($0, k ":") != 1' "${file}" > "${tmp}" || {
     rm -f "${tmp}"
     return 1
   }
@@ -263,8 +277,8 @@ level_implied() {
   local manifest="${2:-}"
 
   # version_bump validates each as a plain X.Y.Z.
-  version_bump patch "${tag}" >/dev/null || return 1
-  version_bump patch "${manifest}" >/dev/null || return 1
+  version_bump patch "${tag}" > /dev/null || return 1
+  version_bump patch "${manifest}" > /dev/null || return 1
 
   local t1 t2 t3 m1 m2 m3
   local IFS='.'
@@ -283,9 +297,15 @@ level_implied() {
   local name i tc mc
   for i in 1 2 3; do
     case "${i}" in
-      1) tc="${t1}" mc="${m1}" name=MAJOR ;;
-      2) tc="${t2}" mc="${m2}" name=MINOR ;;
-      3) tc="${t3}" mc="${m3}" name=PATCH ;;
+      1)
+        tc="${t1}" mc="${m1}" name=MAJOR
+        ;;
+      2)
+        tc="${t2}" mc="${m2}" name=MINOR
+        ;;
+      3)
+        tc="${t3}" mc="${m3}" name=PATCH
+        ;;
     esac
     if [ "${mc}" -gt "${tc}" ]; then
       echo "${name}"
@@ -306,7 +326,7 @@ release_target() {
   local level="${2:-}"
   local manifest="${3:-}"
 
-  level_rank "${level}" >/dev/null || return 1
+  level_rank "${level}" > /dev/null || return 1
   if [ "${level}" = "NONE" ]; then
     return 0
   fi
@@ -316,7 +336,7 @@ release_target() {
     echo "${target}"
     return 0
   fi
-  version_bump patch "${manifest}" >/dev/null || return 1
+  version_bump patch "${manifest}" > /dev/null || return 1
 
   local t1 t2 t3 m1 m2 m3
   local IFS='.'
@@ -332,9 +352,9 @@ release_target() {
   m3="$((10#${3%%[-+]*}))"
   IFS=' '
 
-  if [ "${m1}" -gt "${t1}" ] \
-    || { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -gt "${t2}" ]; } \
-    || { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -eq "${t2}" ] && [ "${m3}" -gt "${t3}" ]; }; then
+  if [ "${m1}" -gt "${t1}" ] ||
+    { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -gt "${t2}" ]; } ||
+    { [ "${m1}" -eq "${t1}" ] && [ "${m2}" -eq "${t2}" ] && [ "${m3}" -gt "${t3}" ]; }; then
     if version_forbidden "${manifest}"; then
       print_error "Manifest ${manifest} is above the target ${target} and carries a 13 or 17."
       return 1

@@ -13,7 +13,7 @@ import { mirrorOf } from "../lib/markdown.ts";
 // has no mirror.
 export async function getStaticPaths() {
   const entries = await getCollection("docs");
-  return entries.map(entry => ({
+  return entries.map((entry) => ({
     params: { path: entry.id },
     props: { entry },
   }));

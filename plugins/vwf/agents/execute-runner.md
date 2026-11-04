@@ -18,8 +18,9 @@ only your return block.
 
 You are given two paths, and at most the block below: the **plan folder**
 (`docs/plans/<folder>`, repo-relative) and the absolute path to the execute
-skill's **`SKILL.md`**. The execute skill cannot be invoked through `Skill` —
-it is not model-invocable — so you read the file.
+skill's **`SKILL.md`**. Do not invoke the execute skill through `Skill` — a
+model invocation asks the user where to run, and you ask nothing — so you
+read the file.
 
 The dispatch prompt may also carry an **`Overrides:`** block — the run-level
 answers the loop asked once, before its first plan, and applies to this run

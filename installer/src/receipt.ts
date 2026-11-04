@@ -66,7 +66,7 @@ export type Entry =
     readonly mode?: number;
   }
   /** A directory we created; removed on revert only if it is empty. */
-  | { readonly kind: "dir"; readonly path: string; }
+  | { readonly kind: "dir"; readonly path: string }
   /**
    * A directory this tool owns **outright**, removed recursively on revert.
    *
@@ -81,7 +81,7 @@ export type Entry =
    * that the list was complete — where removing the root cannot miss a file
    * a later version added.
    */
-  | { readonly kind: "tree"; readonly path: string; }
+  | { readonly kind: "tree"; readonly path: string }
   /**
    * A key we set inside someone else's config. `previous` is absent when the
    * key did not exist — that is the signal to delete rather than restore, and
@@ -159,8 +159,7 @@ export function readReceipt(path: string): Receipt | undefined {
   try {
     const parsed = JSON.parse(readFileSync(path, "utf8")) as Receipt;
     return parsed.version > RECEIPT_VERSION ? undefined : parsed;
-  }
-  catch {
+  } catch {
     return undefined;
   }
 }
@@ -199,8 +198,7 @@ export function revert(receipt: Receipt, hooks: RevertHooks): void {
       case "file": {
         if (entry.previous === undefined) {
           rmSync(entry.path, { force: true });
-        }
-        else {
+        } else {
           writeFileAtomic.sync(entry.path, entry.previous);
         }
         break;
@@ -211,8 +209,7 @@ export function revert(receipt: Receipt, hooks: RevertHooks): void {
           if (existsSync(entry.path) && readdirSync(entry.path).length === 0) {
             rmdirSync(entry.path);
           }
-        }
-        catch {
+        } catch {
           // A directory we cannot remove is not a failed uninstall.
         }
         break;

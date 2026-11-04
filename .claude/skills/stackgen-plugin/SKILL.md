@@ -29,49 +29,15 @@ emits, and a person can run `/stackgen:stackgen-reputation <ecosystem>:<name> �
 on a name before typing it anywhere; it returns `pass`, `warn` or `block` per
 name from public read APIs over `WebFetch`, and is the only network stackgen
 touches beyond Context7. Since `devtools` dissolved into it, stackgen also
-carries the repo's own gate doctrine as packs. `skills/tool-config` is invocable
-both ways too: `/stackgen:tool-config` owns every universal file a repo runs —
-the mise config and task library, dprint, taplo, pre-commit, gitleaks, grype,
-the house linter, git, `.vscode/settings.json` and `.config/claude-status.json`
-— rendered by a shipped node script,
-`skills/tool-config/scripts/tool-config.mjs` plus `scripts/lib/`
-(`template.mjs`, the `@@NAME@@`, `@@#if NAME@@` and `@@#each NAME@@` engine;
-`yaml.mjs`, the reader for the constrained `.config/stackgen.yaml` grammar;
-`values.mjs`, which turns that file plus the repo's `origin` into the names a
-template reads; `render.mjs`, `stackgen-file.mjs`, `paths.mjs`, `rows.mjs`,
-`run.mjs` and `cli.mjs`): zero dependencies, run as
-`MISE_ENV=dev mise x -- node` on the repo's own node pin (the `node` on `PATH`
-only for the first `all` on a repo with no mise config), JSON on stdout, exit 0,
-2 (refused) or 1 (fault). It copies `skills/tool-config/assets/` as it is and
-renders `skills/tool-config/templates/` from `.config/stackgen.yaml` — the
-repo's values, which **the script alone writes** — in four calls: `all` (the
-repo's values as flags, every asset and template),
-`pack --slug <s> --dir <pack dir>` (a pack's `templates/` and its `--set` values
-— no shipped pack has either since 2026-10-23, so the materializer no longer
-calls it), `pack-remove --slug <s>` and `upgrade` (the exact pins forward). Each
-list a pack once appended to ships as a **universal superset**, and six files
-carry one `# >>> tool-config` / `# <<< tool-config` marker pair whose outside
-lines are the repo's own; every other file is owned whole. Dev-only mise files
-pin `latest`; a file CI loads is rendered with exact versions from
-`mise latest`, save `node` and `pnpm` — there is no mise lockfile. It runs a
-tool only as `mise x -- <tool>`, only once installed; it reads mise trust and
-never grants it — **trust is the person's prerequisite**. **No lock record and
-no `check`**: each call compares a fresh render with the repo and shows every
-differing file as a numbered row (`create`, `write`, `delete`, `pin`), answered
-`ok` or `keep-existing` for that run alone. Any call may open with `preview`,
-which returns the rows and writes nothing; the real call carries
-`--answers <id>:<answer>,…` and asks nothing, so a caller with one consent of
-its own shows the skill's rows inside it. Drift is the session's to judge from
-`preview all`. A written call formats what it wrote with the shipped dprint
-config and validates the hook config, restoring the files byte for byte on a
-failure; `all` runs `MISE_ENV=dev mise run setup:all` between the landing and
-the formatter, so it ends in a set-up repo, and renders a repo-local
-`.claude/skills/mise/SKILL.md` whose task table lists every task. Its references
-are the why behind each file. vwf's callers are on the four calls since the plan
-`2026-10-05-vwf-callers-on-templates`: `/vwf:init` shapes through `all` with its
-answers as flags and `.config/stackgen.yaml`, `/vwf:setup` applies packs through
-`pack` with their values, and doctor previews drift from `preview all` and
-`preview pack` at `config_format` 23.
+carried the repo's own gate doctrine as packs, and those packs left in turn:
+every universal file a repo runs — the mise config and task library, dprint,
+taplo, pre-commit, gitleaks, grype, the house linter, git and the editor
+settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, the
+`setup:*` and `code:*` tasks with them, and `stackgen:tool-config`, which once
+rendered them, was removed on 2026-11-03. `/vwf:init` runs bootstrap's readme
+prompt, `/vwf:setup`'s materialize pass applies packs through the adapter, and
+`/vwf:doctor` judges drift through bootstrap's own
+`mise run setup:configs --dry-run`, in full mode and in setup's Step 0 only.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -81,7 +47,7 @@ restate a count or a rule that an asset below already owns.
 | `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | `assets/pack-format.md`       | the shape of a pack: `<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `assets/output-tree.md`       | where a materialization lands, the lockfile, the three targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `assets/output-tree.md`       | where a materialization lands, the lockfile, the two targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `assets/ids.md`               | one **slug rule**, two independent tokens: a project's **id** (`p:<id>/` and the commit scopes) and a repo's **name** (`REPO_NAME`, the checkout folder); flags name member **repos**                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `assets/contracts/`           | the provider-neutral doctrine per capability or kind that instance packs cite and stay thin; the newest is `contracts/workspace.md`, the `workspace` category's, which states how the agent **reaches** the team's knowledge workspace and what it may read and write, and is the third contract to realize no vwf token at all. Before it, `contracts/web-head.md`, what **any** web framework pack — shipped or generated — realizes for a project declaring `site`, or `webapp` with `seo`: the head set, the icon sizes, the manifest, robots and sitemap, and the icon task; and before that `contracts/audit.md`, the `audit` category's, realizing vwf's `audit-store` and deliberately beside `observability.md` rather than inside it |
@@ -104,15 +70,28 @@ pins, stackgen resolves its composition and dispatches **per component**:
 2. An uncovered component is **generated**: resolve the kind and its topic bar →
    detect the real stack → one Context7 research pass per topic → instantiate
    vwf's principles catalog with citations → at assemble, every concrete
-   third-party name the component emits (packages, runner-invoked tools,
-   actions, images, SwiftPM packages, Maven artifacts and Gradle plugins, mise
-   tools as `mise:<backend>:<path>@<version>`) through `stackgen-reputation` —
-   eight prefixes, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
+   third-party name the component emits (packages, runner-invoked tools, a
+   `user_mcp_servers:` or `lsp_servers:` entry's whole runner chain and every
+   URL or bare host in its `args` and `env` values, actions, images, SwiftPM
+   packages, Maven artifacts and Gradle plugins, mise tools as
+   `mise:<backend>:<path>@<version>`) through `stackgen-reputation` — nine
+   prefixes, `host:` the newest, which always blocks since no source vets a
+   remote host, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
    halting the component with the verdict table until the user names a
    replacement, never a silent swap → the `stackgen-skill-reviewer` gate, capped
    at **four rounds**, after which residuals are reported rather than looped;
    its tenth check reads the verdict table it is handed — every name has a row,
-   none reads `block` — and it stays offline. Context7 or a reputation source
+   none reads `block` — and it stays offline. A shell or inline code in a chain,
+   a `data:` or `file:` value and a code-loading variable each stop generation
+   as
+   `UNRESOLVED:`. The vetting ends at what it can read from the declared
+   command:
+   the consent gate shows the full command and its env values, and the person at
+   the gate is the control for any form it does not parse. **The generator's
+   context7 halt:** generation needs a Context7 server from some source — the
+   `context7` addon in `vwf-tools`, a user-level MCP, another plugin — and halts
+   without one, naming the remedy: add `context7` in `/vwf:architecture`'s tools
+   menu, run `/vwf:setup`, restart the session. Context7 or a reputation source
    unreachable → **halt, never guess**. The verdict table is shown whole beside
    the reviewer's verdict at the dry-run consent gate; a template read-back
    (`/vwf:plan`, `/vwf:execute`) never re-checks.
@@ -124,17 +103,16 @@ doctrine.
 
 No bundle is fetched for a repo's baseline any more. The hygiene kind, its pack,
 its bundle and the `unconditional:` bundle key retired on 2026-09-27: the
-hygiene **config files** — `.gitignore` and `.gitattributes` — are
-`stackgen:tool-config`'s universal files, and the **prose files** —
-`CONTRIBUTING.md`, `SECURITY.md`, the licence texts, the issue forms — are
-`/vwf:init`'s own assets. `init` runs `/stackgen:tool-config all` **per repo** —
-the base and every member repo it resolved — so a member is shaped on its own
-evidence; the only adapter fetch it makes is the secrets provider the user
-picked. tool-config records nothing in the lockfile for its own files, so a repo
-is shaped when it carries `.config/stackgen.yaml` with `format: 1` — the file
-the script alone writes; one with the old mise layout and no `stackgen.yaml` is
-**shaped on the old layout**, and vwf names it and stops until the reshape that
-moves it ships. What setup *does* fetch is every **pinned** axis — its
+hygiene **config files** — `.gitignore`, `.gitattributes` and the issue forms —
+are bootstrap's, and the **prose files** — `CONTRIBUTING.md`, `SECURITY.md` and
+the licence texts — are `/vwf:init`'s own assets. `init` runs bootstrap's readme
+prompt once, for the base, and the prompt reaches the members, so a member is
+shaped on its own evidence; it makes no adapter fetch. A repo is shaped when it
+carries `.config/bootstrap.toml`; one with `.config/stackgen.yaml` or the old
+mise
+layout and no such file is **shaped on the old layout**, and bootstrap's
+`docs/sync/migrate.md` moves it through the same step. What setup *does* fetch
+is every **pinned** axis — its
 materialize pass invokes `-stack-template` once per `(repo, slug)`, with the
 `repo:` line naming the member — which is the one landing path
 `/vwf:architecture` no longer takes. The `repo:` line is the whole of the
@@ -189,9 +167,20 @@ the canvas from the repo, waits for **Done**, then applies every open comment).
 The server is the skill's own `scripts/serve.mjs`, a single-file Node program
 with no dependencies: it binds `127.0.0.1` on an ephemeral port, serves only the
 canvas, carries no auth and no TLS, and appends each comment to a **committed**
-`comments/<flow>--<platform>.yaml`. It names `taste-skill@taste-skill`, at user
-scope, in the `## Claude plugins` section of its `conventions.md`, and the
-materializer asks bootstrap to install it.
+`comments/<flow>--<platform>.yaml`. It does not install `taste-skill`:
+`design-session` halts plainly when the plugin is absent, naming the tools menu,
+and the three import skills do not need it.
+
+**The `addon` axis holds the optional tools**, each a pack and a bundle of type,
+kind and axis `addon`, no bundle flagged `default: true`: `addon/context7` and
+`addon/notion` declare `user_mcp_servers:`, and `addon/taste-skill` names
+`taste-skill@taste-skill`, at user scope, in the `## Claude plugins` section of
+its `conventions.md`, which the materializer asks bootstrap to install. The menu
+carries them for `/vwf:architecture`'s tools round, with an optional `needed_by`
+note on an entry. `.config/vwf.yaml`'s product-level `addons:` list records the
+pick, and `/vwf:setup` materializes each slug in the base repo alone, on every
+run, and removes a dropped one. `addon` is the eighth axis and not a tool axis:
+"the three tool axes" stays `design`, `cicd` and `stylesheet`.
 
 A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,
 since 2026-10-10: its keys a subset of the bundle's `platforms:`, the first OS
@@ -206,15 +195,23 @@ it, reads as no OS known.
 
 Both paths land **directly in the repo's committed `.claude/` tree** — output
 closed to skills, agents, hooks and rules — recorded per component in
-`.claude/stackgen/lock.yaml`. Three targets sit outside it, each **merging,
-never owning**, removed only by subtraction of the keys the lockfile recorded:
+`.claude/stackgen/lock.yaml`. Two targets sit outside it, each **merging, never
+owning**, removed only by subtraction of the keys the lockfile recorded:
 
-- the project's own `.mcp.json`;
-- a generated **local plugin** at the fixed path
-  `~/.claude/plugins/local/stackgen-lsp/`, which exists because `lspServers` is
-  a manifest-only feature no project file can express — the one way to provide a
-  language server is to *be* a plugin. User scope is safe because every
-  generated `lspServers` entry **must** carry an `extensionToLanguage` map;
+- a generated **local plugin**, `vwf-tools`, at the fixed path
+  `~/.claude/plugins/local/vwf-tools/`, which exists because `lspServers` is a
+  manifest-only feature no project file can express — the one way to provide a
+  language server is to *be* a plugin — and which holds every MCP server too,
+  from a pack's `user_mcp_servers:`, the only MCP key. **The project-scoped
+  `mcp_servers:` key and the `.mcp.json` write path are retired**; a machine
+  with
+  the older `stackgen-lsp` plugin is offered one migration, and a declaration is
+  never copied out of a repo's `.mcp.json`, only taken from a shipped pack. A
+  `claims.json` beside the manifest maps each key to the repos claiming it, so a
+  removal drops a key only when no repo claims it. User scope is safe for a
+  language server because every generated `lspServers` entry **must** carry an
+  `extensionToLanguage` map; an MCP server has no such map, so the gate states
+  its reach across every repo on the machine;
 - a pack's own **`config/` tree**, mirroring the repo root, for the repo config
   a component genuinely owns — **mode preserved**, so a task file lands 755.
   Since 2026-10-23 the tier is an **allowlist**, and rule 11 refuses any other
@@ -247,12 +244,12 @@ never owning**, removed only by subtraction of the keys the lockfile recorded:
   **no pack may ship it**. The files bootstrap's sync writes are bootstrap's,
   and a pack ships none of their lines. The lockfile has no `rendered:` entries
   and no `skipped:` list. Its per-file `hash:` — on every copied entry — is the
-  landing hash **re-recorded by `/vwf:init`** after its replace-or-keep offer,
-  so a differing hash is drift only when no such writer ran —
-  `assets/output-tree.md` and the materializer reference both say so.
+  landing hash, and `/vwf:init` touches no file a pack landed, so a differing
+  hash
+  is what `/vwf:doctor`'s Content drift predicate judges.
 
 **Three consent tiers**: the `.claude/` files ride the ordinary dry-run gate;
-`settings.json`, `.mcp.json`, a pack's `config/` tree and the bootstrap
+`settings.json`, a pack's `config/` tree and the bootstrap
 instructions are never written or sent without their own separate consent lines;
 and the local plugin is two separately declinable items — the manifest write,
 and the user-scoped registration, whose two `claude plugin` commands are
@@ -276,10 +273,8 @@ recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 runs over each pack's `config/` tier and over
-  tool-config's `assets/` and `templates/` alike (those also admitting
-  `.vscode/` and `.claude/skills/mise/SKILL.md`, nothing else under `.claude/`):
-  the exec bit and a known shebang on every task file (mise reports a 644 task
+  `p:plugins:check` rule 11 runs over each pack's `config/` tier: the exec bit
+  and a known shebang on every task file (mise reports a 644 task
   as an *unknown* one rather than a permission error) and on every `hooks/*.sh`;
   the **landable** tier of the root allowlist over the tier's top level — the
   vwf-owned tier never reaches the checker, so a pack shipping `CLAUDE.md` there
@@ -288,28 +283,15 @@ recommends `/vwf:setup`.
   (`PACK_CONFIG_DOTCONFIG_ALLOWLIST`), which names no bootstrap tool; no pack
   `templates/` tier; that the pack's `binaries` and `lockfile` facts take the
   shapes doctor reads — a binary a bare name or `{ name, probe }`, a lockfile a
-  list of relative paths or globs with no `..`; that a `tool-config:`,
-  `machine_env:`, `values:` or `conditional:` key is refused outright; and that
-  every `@@` tag in tool-config's `templates/` is one the engine reads, limited
-  to the global names. The rule in full is the `plugin-authoring` skill's
-  `references/checks.md`. Rule 15 holds the skill's exclusion lists to one
-  invariant: `assets/.config/`'s `dprint.json` (JSONC, a `../X` entry and its
-  `**/X` twin one entry) and `taplo.toml` and the global `exclude` in
-  `pre-commit-config.yaml` (a `(?x)` block of anchored alternatives) state **one
-  set** after normalisation, and the gitleaks `[allowlist] paths` — every entry
-  anchored `(^|/)`, `.turbo/` among them since 2026-09-21 — is a **subset** of
-  it, never the reverse: the scanner extends upstream's default allowlist and
-  must still walk `.claude/`, which the formatters skip because in a shaped repo
-  it is machine-owned. A list missing from the skill's assets is a finding. A
-  pack widens no list: each is a universal superset, edited in tool-config's own
-  assets. The house linter's `linter.yaml` is not compared.
-- **The tool-config script ships with nothing beside it.** Rule 16 holds
-  `skills/tool-config/scripts/` to a `#!/usr/bin/env node` executable entry and
-  `node:` built-ins or relative modules only — no `require(`, no package; the
-  `scripts/` vitest suite spawns it in temp repos against a fake `mise`. Rule 17
-  fails any `mise use` the plugin ships unless the line forbids it: a tool is
-  entered into the owning `conf.d/<folder>/` file first, then installed with
-  `mise install`.
+  list of relative paths or globs with no `..`; and that a retired
+  `tool-config:`,
+  `machine_env:`, `values:` or `conditional:` key is refused outright. The rule
+  in
+  full is the `plugin-authoring` skill's `references/checks.md`. Rule 15 is
+  retired, with the exclusion lists it compared. Rule 17 fails any `mise use`
+  the
+  plugin ships unless the line forbids it: a tool is entered into the owning
+  `conf.d/<folder>/` file first, then installed with `mise install`.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose, and so are the template trees: the target repo
   formats these files with the *shipped* config, which omits settings this repo

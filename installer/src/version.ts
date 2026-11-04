@@ -29,8 +29,7 @@ import {
 } from "./github.ts";
 
 /** The published package, and the manifest on `main`. */
-export const NPM_LATEST_URL =
-  "https://registry.npmjs.org/@virajp.dev/claude-plugins/latest";
+export const NPM_LATEST_URL = "https://registry.npmjs.org/@virajp.dev/claude-plugins/latest";
 export const REMOTE_MARKETPLACE_URL =
   "https://raw.githubusercontent.com/virajp/claude-plugins/main/.claude-plugin/marketplace.json";
 
@@ -47,7 +46,7 @@ export function cmpVer(a: string, b: string): number {
   const parse = (v: string) => {
     const [core = "", pre = ""] = String(v).replace(/^v/, "").split("-");
     return {
-      nums: core.split(".").map(n => Number.parseInt(n, 10) || 0),
+      nums: core.split(".").map((n) => Number.parseInt(n, 10) || 0),
       pre,
     };
   };
@@ -96,8 +95,7 @@ export function cmpPre(a: string, b: string): number {
       if (d !== 0) {
         return d > 0 ? 1 : -1;
       }
-    }
-    else if (x !== y) {
+    } else if (x !== y) {
       return x > y ? 1 : -1;
     }
   }
@@ -125,17 +123,17 @@ export function readCliVersion(sourceRoot: string): string {
   if (!existsSync(path)) {
     throw new Error(`missing ${path}`);
   }
-  return (JSON.parse(readFileSync(path, "utf8")) as { version: string; })
+  return (JSON.parse(readFileSync(path, "utf8")) as { version: string })
     .version;
 }
 
 interface Manifest {
-  readonly plugins?: readonly { name: string; version?: string; }[];
+  readonly plugins?: readonly { name: string; version?: string }[];
 }
 
 /** Every plugin the manifest lists, in its own order. */
 export function manifestVersions(manifest: Manifest): PluginVersion[] {
-  return (manifest.plugins ?? []).map(p => ({
+  return (manifest.plugins ?? []).map((p) => ({
     name: p.name,
     ...(p.version === undefined ? {} : { version: p.version }),
   }));
@@ -165,7 +163,7 @@ export async function buildVersionReport(
   const github = inputs.fetchGithub ?? fetchGithubJson;
   try {
     const [latest, manifest] = await Promise.all([
-      npm<{ version: string; }>(NPM_LATEST_URL),
+      npm<{ version: string }>(NPM_LATEST_URL),
       github<Manifest>(REMOTE_MARKETPLACE_URL),
     ]);
     return {
@@ -173,8 +171,7 @@ export async function buildVersionReport(
       cliLatest: latest.version,
       plugins: manifestVersions(manifest),
     };
-  }
-  catch (error) {
+  } catch (error) {
     return { ...local, plugins: [], remoteError: (error as Error).message };
   }
 }
@@ -193,11 +190,9 @@ export function updateNote(current: string, latest?: string): string {
 export function renderVersionReport(report: VersionReport): string {
   // `0` guards the spread: with no plugins to measure — the offline path —
   // `Math.max()` of nothing is `-Infinity`, and `padEnd(-Infinity)` throws.
-  const width = Math.max(0, ...report.plugins.map(p => p.name.length));
+  const width = Math.max(0, ...report.plugins.map((p) => p.name.length));
   const lines = [
-    `@virajp.dev/claude-plugins  ${report.cli}${
-      updateNote(report.cli, report.cliLatest)
-    }`,
+    `@virajp.dev/claude-plugins  ${report.cli}${updateNote(report.cli, report.cliLatest)}`,
   ];
 
   if (report.remoteError !== undefined) {
@@ -211,9 +206,7 @@ export function renderVersionReport(report: VersionReport): string {
   lines.push(
     "",
     "Plugins available on main (virajp-plugins):",
-    ...report.plugins.map(plugin =>
-      `  ${plugin.name.padEnd(width)}  ${plugin.version ?? "unversioned"}`
-    ),
+    ...report.plugins.map((plugin) => `  ${plugin.name.padEnd(width)}  ${plugin.version ?? "unversioned"}`),
     "",
     "Installed with `claude plugin install <name>@virajp-plugins`; what you "
       + "have is `claude plugin list`.",

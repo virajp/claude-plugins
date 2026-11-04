@@ -31,8 +31,9 @@ changed.
    harvest produces duplicate remarks the user then has to confirm twice.
    No pin for this project → `harvested: n/a`, reason
    `no canvas project pinned for <project>`.
-2. **Load the tool.** `get_conversation`, via `ToolSearch` against this plugin's
-   own MCP server. Absent or unauthorized (the user may need `/mcp` to connect)
+2. **Load the tool.** `get_conversation`, via `ToolSearch`, from the server in
+   `vwf-tools`: `mcp__plugin_vwf-tools_claude-design__get_conversation`. Absent
+   or unauthorized (the user may need `/mcp` to connect)
    → that is an `ERROR:` line naming which of the two it was — the surface
    exists and could not be read, which is not `n/a`.
 3. **Read each conversation.** It may be **truncated at 256 KiB, mid-document**;

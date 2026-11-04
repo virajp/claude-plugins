@@ -74,7 +74,7 @@ Two limits, both worth stating rather than papering over:
 
 ```sh
 # on develop, clean
-mise run p:release -- --dry-run   # show the user, then ask
+mise run p:release -- --dry-run # show the user, then ask
 mise run p:release
 ```
 
@@ -138,7 +138,8 @@ skipped.
 
 **The merge model must be `direct`.** Under `pr`, `code:merge:main` only opens a
 pull request, and a tag would name a stale `main`. So full mode, `--ci` and
-`p:release` refuse when `MERGE_MODEL` or `MERGE_MODEL_MAIN` is anything else.
+`p:release` refuse when `[branch.main].merge_model` in `.config/bootstrap.toml`
+is `pr`; a missing file or key is `direct`.
 The fallback is the two halves: each task `--no-commit` on `develop`, commit,
 land the PR by hand, then each `--tag-only` on `main`.
 
@@ -211,7 +212,7 @@ missing Release means a missed step. Plugin tags get no Release.
 
 ```sh
 gh release create installer-vX.Y.Z --title installer-vX.Y.Z \
-  --notes-file <notes> --verify-tag
+  --notes-file < notes > --verify-tag
 ```
 
 - **Creating a Release never publishes.** `release.yml` triggers on
@@ -249,7 +250,7 @@ rule as the installer's.
 
 ```sh
 gh release create site-vX.Y.Z --title site-vX.Y.Z \
-  --notes-file <notes> --verify-tag
+  --notes-file < notes > --verify-tag
 ```
 
 `site.yml` triggers on `push: tags: site-v*`; creating a Release never deploys,
@@ -281,8 +282,8 @@ release.
 
 ## Facts that make a failed publish legible
 
-- **npm allows exactly one Trusted Publisher per package, and it validates the
-  entry-point workflow's *filename*** — so it is set to `release.yml` only.
+- __npm allows exactly one Trusted Publisher per package, and it validates the
+  entry-point workflow's *filename*__ — so it is set to `release.yml` only.
   `workflow_call` therefore does **not** work: the repo shipped it that way for
   two months and both monthly runs died at the publish step with `ENEEDAUTH`,
   because npm saw `deps-update.yml` and matched nothing. `deps-update.yml`

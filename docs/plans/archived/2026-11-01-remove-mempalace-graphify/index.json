@@ -1,0 +1,730 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Remove mempalace and graphify from every plugin",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-01 — ae5437b2 bd3ac1c9 d535550b 2ecf46fd 794e188c ab5f3b6a adc53ba1 bb872203 12d4f712 22a80847 30bc045d d0a45335 ccc43999"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit --all",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p installer",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:site:check",
+      "claude plugin test plugins/vwf"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "After the last wave, run: grep -rli -E 'mempalace|graphify|memory palace' plugins/",
+        "pass": "Every hit is a cleanup file of D1 and D17: plugins/vwf/skills/doctor/SKILL.md (the drift rule), plugins/vwf/assets/vwf-config.md (the 23 to 24 entry), plugins/vwf/skills/setup/SKILL.md (the latest-step line), plugins/vwf/skills/setup/references/format-lineage.md and migrate-pipeline.md. Any other hit is a finding for the unit that owns the file."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "Removes the mempalace MCP server, two hooks and two skills, drops the graph steps, and bumps config_format to 24."
+    },
+    {
+      "id": "stackgen",
+      "level": "MAJOR",
+      "reason": "tool-config stops landing code:graph, the graphify hook, .graphifyignore and the mempalace pins; repos that use them lose them."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual follows the change, and the mempalace page is deleted."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "Only a test file is deleted; the published CLI does not change."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "vwf hooks and vendored mempalace",
+      "wave": 1,
+      "file": "01-hooks-vendor.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/hooks/hooks.json",
+        "plugins/vwf/hooks/mempalace-checkpoint.sh",
+        "plugins/vwf/hooks/mempalace-precompact.sh",
+        "plugins/vwf/vendor/mempalace/**",
+        "plugins/vwf/skills/mempalace/**",
+        "plugins/vwf/skills/mempalace-recall/**",
+        "plugins/vwf/vendor/andrej-karpathy-skills/README.md",
+        "plugins/vwf/vendor/andrej-karpathy-skills/NOTICE.md",
+        "installer/src/mempalace-checkpoint-script.test.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.211Z",
+      "ended": "2026-11-01T12:18:09.267Z",
+      "commit": "adc53ba1",
+      "rounds": 1
+    },
+    {
+      "id": "U2",
+      "title": "Memory assets and templates",
+      "wave": 1,
+      "file": "02-assets.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/memory.md",
+        "plugins/vwf/assets/membership.md",
+        "plugins/vwf/assets/topologies/multi-repo.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/elicitation.md",
+        "plugins/vwf/assets/templates/entity.md",
+        "plugins/vwf/assets/templates/flow.md",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/assets/templates/handoff.md",
+        "plugins/vwf/assets/templates/project-claude.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.285Z",
+      "ended": "2026-11-01T12:32:06.175Z",
+      "commit": "22a80847",
+      "rounds": 2
+    },
+    {
+      "id": "U3",
+      "title": "handoff and recall from files only",
+      "wave": 1,
+      "file": "03-handoff-recall.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/handoff/**",
+        "plugins/vwf/skills/recall/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.359Z",
+      "ended": "2026-11-01T12:19:20.267Z",
+      "commit": "bd3ac1c9",
+      "rounds": 1
+    },
+    {
+      "id": "U4",
+      "title": "execute and its agents",
+      "wave": 1,
+      "file": "04-execute.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/**",
+        "plugins/vwf/agents/execute-coder.md",
+        "plugins/vwf/agents/execute-code-reviewer.md",
+        "plugins/vwf/agents/execute-security-reviewer.md",
+        "plugins/vwf/agents/execute-ux-reviewer.md",
+        "plugins/vwf/agents/execute-acceptance-verifier.md",
+        "plugins/vwf/agents/execute-runner.md",
+        "plugins/vwf/agents/blueprint-condenser.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.436Z",
+      "ended": "2026-11-01T12:32:40.321Z",
+      "commit": "d535550b",
+      "rounds": 2
+    },
+    {
+      "id": "U5",
+      "title": "Workflow skills and the surveyor agents",
+      "wave": 1,
+      "file": "05-workflow-skills.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/architecture/**",
+        "plugins/vwf/skills/blueprint/**",
+        "plugins/vwf/skills/blueprint-authoring/**",
+        "plugins/vwf/skills/change-plan/**",
+        "plugins/vwf/skills/design-system/**",
+        "plugins/vwf/skills/feedback/**",
+        "plugins/vwf/skills/mockups/**",
+        "plugins/vwf/skills/plan/**",
+        "plugins/vwf/skills/plan-management/**",
+        "plugins/vwf/skills/product/**",
+        "plugins/vwf/skills/screens/**",
+        "plugins/vwf/skills/verify/**",
+        "plugins/vwf/agents/plan-surveyor.md",
+        "plugins/vwf/agents/docs-sync-surveyor.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.511Z",
+      "ended": "2026-11-01T12:33:04.926Z",
+      "commit": "2ecf46fd",
+      "rounds": 2
+    },
+    {
+      "id": "U6",
+      "title": "setup, doctor, init and config_format 24",
+      "wave": 1,
+      "file": "06-setup-doctor-init.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/**",
+        "plugins/vwf/skills/doctor/**",
+        "plugins/vwf/skills/init/**",
+        "plugins/vwf/assets/vwf-config.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.586Z",
+      "ended": "2026-11-01T12:40:16.617Z",
+      "commit": "bb872203",
+      "rounds": 2
+    },
+    {
+      "id": "U7",
+      "title": "stackgen tool-config and the checker",
+      "wave": 1,
+      "file": "07-stackgen-checker.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/tool-config/**",
+        "plugins/stackgen/skills/stackgen-stack-template/references/generator.md",
+        "plugins/stackgen/assets/taxonomy.md",
+        "scripts/src/check.ts",
+        "scripts/src/check.test.ts",
+        "scripts/src/tool-config-render.test.ts",
+        "scripts/src/fixtures/tool-config/**",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/assets/contracts/secrets.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.662Z",
+      "ended": "2026-11-01T12:40:17.320Z",
+      "commit": "30bc045d",
+      "rounds": 2
+    },
+    {
+      "id": "U8",
+      "title": "Review: the removal in both plugins and the checker",
+      "wave": 2,
+      "file": "08-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:37:42.356Z",
+      "ended": "2026-11-01T12:41:38.821Z",
+      "commit": "",
+      "rounds": 2,
+      "range": {
+        "from": "804f32ff",
+        "to": "12d4f712"
+      }
+    },
+    {
+      "id": "U9",
+      "title": "Docs",
+      "wave": 3,
+      "file": "09-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "readme.md",
+        "CLAUDE.md",
+        "installer/CLAUDE.md",
+        ".claude/docs/**",
+        ".claude/agents/target-verifier.md",
+        ".claude/skills/vwf-plugin/**",
+        ".claude/skills/stackgen-plugin/**",
+        ".claude/skills/plugin-authoring/**",
+        "site/src/content/docs/**",
+        "site/src/pages/index.astro",
+        "docs/memory/decisions/**",
+        "package.json",
+        "docs/extras/mempalace-setup.md",
+        "docs/plans/migrate.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/stackgen/stacks/bundles/fnox.md",
+        "plugins/vwf/assets/docs-sync.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7",
+        "U8"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T12:45:22.167Z",
+      "ended": "2026-11-01T13:00:58.975Z",
+      "commit": "d0a45335",
+      "rounds": 2
+    },
+    {
+      "id": "U10",
+      "title": "Gates",
+      "wave": 4,
+      "file": "10-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/.claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json",
+        "plugins/vwf/assets/graphify.md"
+      ],
+      "depends_on": [
+        "U9"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-01T13:01:52.220Z",
+      "ended": "2026-11-01T13:03:02.057Z",
+      "commit": "ccc43999",
+      "rounds": 1
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-11-01T12:17:09.173Z",
+      "ended": "2026-11-01T12:37:26.228Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-11-01T12:37:42.321Z",
+      "ended": "2026-11-01T12:41:46.718Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-11-01T12:45:22.132Z",
+      "ended": "2026-11-01T13:01:42.140Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-11-01T13:01:52.185Z",
+      "ended": "2026-11-01T13:04:37.368Z"
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated from the manifests; the pre-commit freshness hook needs it in the same commit as plugin.json",
+      "owner": "U10"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/vwf/.claude-plugin/plugin.json",
+      "why": "its description feeds S1, so it changes in the commit that regenerates S1",
+      "owner": "U10"
+    },
+    {
+      "id": "S3",
+      "file": "every human-facing doc",
+      "why": "many units falsify one doc",
+      "owner": "U9"
+    },
+    {
+      "id": "S4",
+      "file": "plugins/vwf/assets/graphify.md",
+      "why": "cited by files of U4, U5 and U6 until they commit; deleting it earlier fails p:plugins:check (D13)",
+      "owner": "U10"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "What does remove mean?",
+      "ruling": "Remove completely: after the change no plugin names mempalace or graphify. The one exception is cleanup code: doctor's drift rule for leftovers and the config_format 24 migration in setup may name the old files and keys. Nothing else in any plugin names either tool.",
+      "rejected": "Make them optional; remove only the hard dependency; no cleanup naming at all",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7",
+        "U10"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "What happens to /vwf:handoff and /vwf:recall?",
+      "ruling": "Keep them, files only: handoff writes only docs/memory/handoff/<name>.md (named handoffs too, not just next); recall reads only that file.",
+      "rejected": "Delete both skills; keep handoff and delete recall",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "How do already-shaped repos lose the leftovers?",
+      "ruling": "vwf's own leftovers (the memory: key and memory.wing in .config/vwf.yaml, each per-tree mempalace.yaml) are removed by the setup migration to config_format 24, shown as numbered rows and applied on consent. stackgen tool-config stops shipping the graphify and mempalace files and has no removal code of its own; bootstrap's repo-sync owns that cleanup (a handoff prompt to bootstrap, written outside this plan). doctor reports each leftover as drift with its remedy: the setup migration for vwf's own, bootstrap M24 or a bootstrap remove tools instruction for the files.",
+      "rejected": "Removal rows in tool-config (a retired-paths list or empty tombstone assets)",
+      "units": [
+        "U6",
+        "U7"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "With the palace gone, what is vwf's memory store?",
+      "ruling": "docs/memory/ is the one store, with four folders: decisions/, gaps/ and problems/ (each <date>-<slug>.md) and handoff/ (<name>.md). The palace rooms planning, runs and doctor are dropped: the plan folder and docs/plans/index.json hold the planning record, index.json and the action log hold the run state, and doctor reports again on each run. The skills that filed to the palace write the same records as these files and read them at recall. The location rules are the ones memory.md gives the file mirror today (the base repo, in a multi-repo product).",
+      "rejected": "Keep all seven rooms as folders; decisions and handoff only; read docs/memory/ but never write it",
+      "units": [
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "What do the agents keep?",
+      "ruling": "Every agent loses its mempalace tool grants (both the plugin_vwf_ and plugin_mempalace_ prefixes) and every graphify query. An agent that filed a gap or a finding to the palace returns it as a line in its report instead; the orchestrator records it in the plan's index.json. The agents keep their file reads.",
+      "rejected": "none offered",
+      "units": [
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "What else of the graph goes?",
+      "ruling": "execute drops its halt on a missing graphify CLI or graph and the code:graph step after a landing; setup drops its graph offer; tool-config drops .graphifyignore, the code:graph task, the graphify-refresh hook with the post-commit and post-merge hook types it alone uses, the graphify strip code in the setup/precommit asset and its re-run in setup/all, every graphify-out/ exclude, and the pipx:graphifyy and pipx:mempalace pins and MEMPALACE_* variables. python and uv stay, because pre-commit depends on them; only the comment that names graphify as their reason changes.",
+      "rejected": "none offered",
+      "units": [
+        "U4",
+        "U6",
+        "U7"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "One plan or several, and is there a review unit?",
+      "ruling": "One plan, units split by file area. One review unit after wave 1, because shipped shell scripts (tool-config's mise tasks, the deleted hook scripts) and the checker source change.",
+      "rejected": "Two chained plans, mempalace first",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "What happens to the manual's mempalace page?",
+      "ruling": "site/src/content/docs/plugins/mempalace.md is deleted, and every link to it is removed or repointed so p:site:check stays green.",
+      "rejected": "none offered",
+      "units": [
+        "U9"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Which config_format does the removal take?",
+      "ruling": "config_format 24, with a row in setup's format-lineage.md and a step in migrate-pipeline.md that removes the memory: block and each per-tree mempalace.yaml.",
+      "rejected": "No bump, leaving the key as ignored",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Who edits the vwf manifest?",
+      "ruling": "The gates unit U10 owns plugins/vwf/.claude-plugin/plugin.json and .claude-plugin/marketplace.json: it removes mcpServers.mempalace and the words mempalace-backed memory from the description, then runs mise run p:plugins:marketplace, so the pre-commit freshness hook sees both in one commit.",
+      "rejected": "U1 edits plugin.json and regenerates the marketplace, which breaks the rule that a unit runs no generator",
+      "units": [
+        "U1",
+        "U10"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "What happens to docs/memory/planning/, runs/ and doctor/ in shaped repos?",
+      "ruling": "The config_format 24 migration removes them: one numbered row for each such folder that exists, deleted on consent.",
+      "rejected": "Leave them alone; doctor reports them as drift",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "A new record whose <date>-<slug>.md already exists?",
+      "ruling": "It gets a suffix, -2 then -3 and so on; no record is overwritten.",
+      "rejected": "Overwrite; append to the existing file",
+      "units": [
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Who deletes plugins/vwf/assets/graphify.md?",
+      "ruling": "U10, in wave 4: files of U4, U5 and U6 cite it, and p:plugins:check refuses a citation of a missing file, so it is deleted only after those units have committed.",
+      "rejected": "U2 deletes it in wave 1, which fails the pre-commit check of its commit",
+      "units": [
+        "U2",
+        "U10"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "What happens to docs/extras/mempalace-setup.md?",
+      "ruling": "U9 deletes it: it describes how vwf installs mempalace, which is no longer true.",
+      "rejected": "Keep it as an out-of-scope personal guide",
+      "units": [
+        "U9"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Where does a handoff go, and what if docs/memory/handoff/<name>.md exists?",
+      "ruling": "A handoff file follows the D4 location rule (the base repo in a multi-repo product). A handoff of a name that exists replaces it, as next.md is replaced today. D2 means recall takes the handoff from that file alone; its reads of decisions/ and gaps/ follow D4.",
+      "rejected": "The current repo always; a suffix as for D12 records",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "How much of a docs/memory/ folder does a recall read?",
+      "ruling": "It lists the file names, reads the files whose slug or title matches the topic at hand, newest first, at most ten, and reads no file in full that does not match.",
+      "rejected": "Read every file; read a fixed newest-N without matching",
+      "units": [
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Which path applies config_format 23 to 24, and which files describe it?",
+      "ruling": "The migrate pipeline: a plain /vwf:setup that reads stamp 23 offers the step. The 23 to 24 entry in assets/vwf-config.md, the row in format-lineage.md and the step in migrate-pipeline.md are part of the D1 cleanup exception and may name mempalace.yaml.",
+      "rejected": "/vwf:setup reshape, as the 22 to 23 step",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Where do the gaps a /vwf:execute run finds go?",
+      "ruling": "Into the plan index.json gaps list only. docs/memory/gaps/ holds the gaps found outside a run: blueprint, verify, feedback.",
+      "rejected": "Both index.json and a docs/memory/gaps/ file",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Does the stamp move to 24 when a removal row is declined, or nothing is found?",
+      "ruling": "Yes, always 24. A declined item stays, and doctor reports it as drift with its remedy; the step does not ask again on each setup.",
+      "rejected": "Keep the stamp at 23 until every row is applied",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Is the removal step tied to stamp 23, or based on state?",
+      "ruling": "Based on state: every /vwf:setup migrate pass offers the removal rows when the repo holds a memory: block, a mempalace.yaml or a docs/memory/planning/, runs/ or doctor/ folder, at any stamp. The stamp still moves one step at a time: a config held at 22 by its answers: block stays at 22, and moves to 24 once it is at 23. D19 applies from 23.",
+      "rejected": "Only a config at stamp 23 gets the rows",
+      "units": [
+        "U6"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
+      "started": "",
+      "ended": "2026-11-01T12:45:21.841Z"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
+      "started": "",
+      "ended": "2026-11-01T12:45:21.626Z"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria, no Screens contract)",
+      "started": "",
+      "ended": "2026-11-01T12:45:21.733Z"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps, registry or environment edit) and no code unit (nothing to persist); no Reconcile commit",
+      "started": "",
+      "ended": "2026-11-01T12:45:21.948Z"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The plan does not say where handoff and recall write when the base-repo walk ends at not a vwf repo · the unit took the repo main checkout as the root, so handoff still works in an unshaped repo · closed by the user's ruling 2026-11-05: accepted, the main checkout of that repo stays the root",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "D16 does not say how recall matches records to the topic at hand · the unit took the topic of the handoff itself, and applied the ten-file limit to decisions/ and gaps/ separately · closed by the user's ruling 2026-11-05: accepted, the handoff's topic and ten files per folder",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "The plan does not say whether the tool-config .gitignore asset keeps ignoring docs/memory/doctor/ and runs/, now that those folders are gone · left to the tool-config owner U7; the wave review checks it · closed: U7 removed docs/memory/doctor/ and runs/ from the .gitignore asset; R1 confirmed it matches memory.md",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "memory.md headings renamed or removed (Scope, Repo config, Run journal, Findings, Gaps) · no anchor cites them, only prose; settled, no ruling owed",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "The plan does not fix how a gaps/ record carries a tag such as parked · U5 wrote tag parked as a field, while U2 memory.md marks a parked point by a slug that ends in -parked; the wave review checks the drift · closed: R1 round 1 finding; U5 changed all six files to the -parked slug form",
+      "state": "closed"
+    },
+    {
+      "id": "G6",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "The plan does not say whether the doctor docs/memory/ check keeps blocking findings · assumed none; only the handoff/ ignore line is checked, as drift · closed by the user's ruling 2026-11-05: accepted, the ignore line stays drift and never blocks",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "The plan does not give the scope of the doctor Leftovers rule · assumed the repo-shape scope: the base and each locally-present member · closed by the user's ruling 2026-11-05: accepted, the base and each locally-present member",
+      "state": "closed"
+    },
+    {
+      "id": "G8",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "execute-stages.md (U2) and the execute files (U4) must agree on the fix loop and the per-node record · U4 assumed finding lines instead of tags, findings carry the fix inline, and row/review.round events instead of a journal; the wave review checks the drift · closed: R1 confirmed execute-stages.md and the execute files agree",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "verify (U5) dispatches the acceptance verifier, which now returns gaps on its SPEC/PLAN GAPS line · assumed verify writes them to docs/memory/gaps/; the wave review checks it · closed: R1 round 1 finding; U5 added the SPEC/PLAN GAPS route in verify",
+      "state": "closed"
+    },
+    {
+      "id": "G10",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "R1 rule-5 findings in files no unit owns: plugins/vwf/assets/plan-interview.md:46 (a recalled drawer) and plugins/stackgen/stacks/bundles/fnox.md:37 (mining edit) · U9 owns widened to both under the plan Goal; U9 fixes them in wave 3",
+      "state": "closed"
+    },
+    {
+      "id": "G11",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "U7 dropped OWN_HOOKS_DIR in tool-config setup/precommit although 07-stackgen-checker.md edit 3 said keep it · R1 found only the removed graphify code read it, so dropping it is correct and avoids a dead variable; recorded as a decision, no fix",
+      "state": "closed"
+    },
+    {
+      "id": "G12",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1 · round 2: the reviewer approved; residual low risk: a graphify-out/ directory stays unignored until doctor reports it, and the doctor row checks checkout roots only · closed by the user's ruling 2026-11-05: accepted; bootstrap's repo/tools/git/.gitignore ignores all three paths, and doctor Leftovers reports them",
+      "state": "closed"
+    },
+    {
+      "id": "G13",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "U9 changed one prose word in the bundle doc plugins/stackgen/stacks/bundles/fnox.md; the plan does not say whether a bundle prose edit owes a version · no version bumped (no unit bumps a version); the wave review and the plan gate p:plugins:check judge it · closed: U10 found nothing owed — a bundle carries no version, its pin capability-provider/fnox@3.0.0 is unchanged, p:plugins:check and p:plugins:inventory --check pass",
+      "state": "closed"
+    },
+    {
+      "id": "G14",
+      "unit": "U9",
+      "stage": "edit",
+      "text": "R3 rule-5 finding in a file no unit owns: plugins/vwf/assets/docs-sync.md:26 (docs-sync-surveyor scan (graph-first)) · U9 owns widened to it under the plan Goal; U9 fixes it in round 2",
+      "state": "closed"
+    }
+  ],
+  "overrides": [],
+  "run": {
+    "worktree": ".worktrees/remove-mempalace-graphify",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-01-remove-mempalace-graphify.jsonl"
+  }
+}

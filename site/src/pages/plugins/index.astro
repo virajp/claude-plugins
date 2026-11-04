@@ -7,7 +7,7 @@ import { routeFor } from "../../lib/routes.ts";
 // The Plugins section has no index.md, so its route is generated: the entries
 // under plugins/, in their frontmatter order, each with its description.
 const entries = (await getCollection("docs"))
-  .filter(e => e.id.startsWith("plugins/"))
+  .filter((e) => e.id.startsWith("plugins/"))
   .sort((a, b) => a.data.order - b.data.order);
 ---
 
@@ -21,7 +21,7 @@ const entries = (await getCollection("docs"))
     ships inside them. Each page is the reference for one of them.
   </p>
   <ul class="entries">
-    {entries.map(e => (
+    {entries.map((e) => (
       <li>
         <a href={routeFor(e.id)}>{e.data.title}</a>
         <p>{e.data.description}</p>

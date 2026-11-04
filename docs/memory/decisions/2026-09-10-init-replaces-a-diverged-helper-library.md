@@ -1,5 +1,10 @@
 # Decision — `init` replaces a diverged helper library, and rewrites the calls by the pack's table
 
+> **SUPERSEDED 2026-11-03** — the helper library is bootstrap's, and `init` no
+> longer replaces it. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-10 · **Branch** `init-helper-library-and-ci-shfmt` · **Plan**
 [`docs/plans/2026-09-10-init-helper-library-and-ci-shfmt/`](../../plans/2026-09-10-init-helper-library-and-ci-shfmt/index.md)
 · **Reverses**, for one file, two standing rules of `init`'s existing-repo

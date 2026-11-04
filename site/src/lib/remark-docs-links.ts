@@ -16,7 +16,7 @@ const BASE = fileURLToPath(new URL("../content/docs/", import.meta.url));
 interface LinkNode {
   type: "link";
   url: string;
-  position?: { start: { line: number; }; };
+  position?: { start: { line: number } };
 }
 
 interface Transformable {
@@ -52,9 +52,7 @@ export function remarkDocsLinks() {
           `remark-docs-links: no file path for a document linking to "${url}"`,
         );
       }
-      const where = `${path.relative(BASE, source)}:${
-        node.position?.start.line ?? "?"
-      }`;
+      const where = `${path.relative(BASE, source)}:${node.position?.start.line ?? "?"}`;
 
       const hash = url.indexOf("#");
       const target = hash === -1 ? url : url.slice(0, hash);
@@ -77,11 +75,9 @@ export function remarkDocsLinks() {
       let id: string;
       if (resolved.endsWith(".md")) {
         id = rel.slice(0, -".md".length);
-      }
-      else if (statSync(resolved).isDirectory()) {
+      } else if (statSync(resolved).isDirectory()) {
         id = rel === "" ? "index" : `${rel}/index`;
-      }
-      else {
+      } else {
         throw new Error(
           `remark-docs-links: ${where}: "${url}" is neither a .md file nor a directory`,
         );

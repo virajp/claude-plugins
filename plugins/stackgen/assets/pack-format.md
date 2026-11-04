@@ -111,8 +111,8 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo | design | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
+kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet | addon # the bundle kind it composes into (assets/kinds.md)
+axis: project | backing | deploy | repo | design | cicd | stylesheet | addon # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
 platforms: [ <platform> ] # language components only — the bundle root
 languages: # language and app-framework components only
   - token: <language token>
@@ -125,22 +125,24 @@ languages: # language and app-framework components only
 package_manager: <token> # package-manager components only
 lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
-mcp_servers: {} # design-tool and other components needing an MCP server — written into the project's .mcp.json behind tier-2 consent
-user_mcp_servers: {} # user-scoped — the generated local plugin's mcpServers, tier 3
+user_mcp_servers: {} # a component needing an MCP server — the generated local plugin's mcpServers, tier 3
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
 
-**Servers are three sibling keys, never one key with a scope field.**
-`mcp_servers:` is project-scoped and lands in the repo's own `.mcp.json`;
-`user_mcp_servers:` and `lsp_servers:` are user-scoped and land in the
-generated local plugin's manifest. Three keys make "a server belongs in
-exactly one place" structural — landing in both would mean writing the name
-twice, and a name appearing under both `mcp_servers:` and
-`user_mcp_servers:` halts the run. This changes no artifact: the landed set
-is still closed to skills, agents, hooks and rules, and these are payload
-the materializer writes elsewhere.
+**Servers are two sibling keys.** `user_mcp_servers:` and `lsp_servers:` are
+user-scoped and land in the generated local plugin's manifest. This changes no
+artifact: the landed set is still closed to skills, agents, hooks and rules,
+and these are payload the materializer writes elsewhere.
+
+### The `addon` type, kind and axis
+
+An `addon` pack is an optional tool. It is **never `default: true`**, it is
+picked only through the tools menu and recorded in `.config/vwf.yaml`'s
+`addons:` list, and it carries at least one of `user_mcp_servers:` or a
+`## Claude plugins` section. Its bundle is one `addon` component alone, with the
+same token for its type, kind and axis.
 
 ### `binaries:` — a name, or a name and its probe
 
@@ -193,7 +195,7 @@ is resolved by that CLI rather than by merging its lines.
 
 ### `## Claude plugins` — a plugin the component needs
 
-A component that needs a Claude Code plugin names it in its
+An `addon` pack, and only an `addon` pack, may name a Claude Code plugin, in its
 `conventions.md`, under a `## Claude plugins` heading, one line for each
 plugin: `<name>@<marketplace>`, the source of its marketplace for
 `claude plugin marketplace add`, and the scope, `user` or `project`.
@@ -222,13 +224,13 @@ decides alone.
 
 ```yaml
 name: <display name>
-axis: project | backing | deploy | repo | design | cicd | stylesheet
+axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 os: # optional, project axis only — the OS tokens each platform targets
   <platform>: [ <os> ] # a key in platforms:; first token is the primary
 artifact: <token> # deploy axis only
-default: true # optional — what vwf preselects; one per axis per platform
+default: true # optional — what vwf preselects; one per axis per platform; never on the addon axis
 components:
   - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
@@ -302,9 +304,11 @@ component; a Deploy-Bundle one `deploy-target` component alone; a
 Design-Bundle one `design-tool` component alone, a CI-Bundle one
 `ci-system`, and a Stylesheet-Bundle one `stylesheet` component — the three
 **tool axes**, whose bundle slug is the token the project config already
-holds. No bundle directory exists anywhere: the materializer folds the
-resolved composition into **one** `.claude/stackgen/templates/<slug>.md` —
-the vwf payload as frontmatter, including the `components:` refs
+holds. An Addon-Bundle is one `addon` component alone, and its slug is the
+token `addons:` holds. No bundle directory exists anywhere: the materializer
+folds the resolved composition into **one**
+`.claude/stackgen/templates/<slug>.md` — the vwf payload as frontmatter,
+including the `components:` refs
 (`<type>/<slug>@<version>`, or `@generated`), with the components'
 conventions as body — copies each component's artifact directories into
 `.claude/`, and records every landing in the lockfile **per component**,

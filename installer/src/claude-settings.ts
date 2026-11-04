@@ -69,8 +69,8 @@ export function installedPlugins(
   const suffix = `@${MARKETPLACE_NAME}`;
   return Object
     .keys(enabled as Record<string, unknown>)
-    .filter(key => key.endsWith(suffix))
-    .map(key => key.slice(0, -suffix.length))
+    .filter((key) => key.endsWith(suffix))
+    .map((key) => key.slice(0, -suffix.length))
     .sort();
 }
 

@@ -91,8 +91,8 @@ export function mirrorOf(entry: MirrorEntry, site: URL): string {
  * nav cannot place is a build failure, not a silently dropped page.
  */
 export function orderedEntries<T extends MirrorEntry>(entries: T[]): T[] {
-  const byId = new Map(entries.map(entry => [entry.id, entry]));
-  const ordered = flatten(buildNav(entries)).map(nav => {
+  const byId = new Map(entries.map((entry) => [entry.id, entry]));
+  const ordered = flatten(buildNav(entries)).map((nav) => {
     const entry = byId.get(nav.id);
     if (!entry) {
       throw new Error(`markdown: nav yielded an unknown id "${nav.id}"`);

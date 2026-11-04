@@ -17,7 +17,10 @@ const links = [
 ---
 
 <nav class="nav">
-  <a class="brand" href="/">
+  <a
+    class="brand"
+    href="/"
+  >
     <img
       src="/brand/vwf-mark-small-white.svg"
       width="20"
@@ -27,7 +30,7 @@ const links = [
   </a>
   <div class="links">
     {search && <Search />}
-    {links.map(l => (
+    {links.map((l) => (
       <a
         class:list={[{ on: l.key === current }]}
         href={l.href}
@@ -37,7 +40,12 @@ const links = [
       </a>
     ))}
     <a href="https://github.com/virajp/claude-plugins">GitHub</a>
-    {!search && <a class="btn sm" href="/how-to/">Get started</a>}
+    {!search && (
+      <a
+        class="btn sm"
+        href="/how-to/"
+      >Get started</a>
+    )}
   </div>
 </nav>
 

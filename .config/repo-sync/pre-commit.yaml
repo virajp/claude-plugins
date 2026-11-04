@@ -1,0 +1,58 @@
+# This repo's OWN hooks. repo-sync adds these entries after the hooks of the
+# bootstrap tools in .config/pre-commit-config.yaml.
+#
+# None of them is a gate tool — each runs a `p:plugins:*` task that validates
+# or regenerates something only this repo has — so none of them belongs in
+# `code:format`, `code:lint` or `code:sec`.
+- repo: local
+  hooks:
+    - id: npm-normalize-hook-test
+      name: npm→pnpm/bun hook tests
+      entry: mise x -- mise run p:plugins:npm-normalize-test
+      language: system
+      pass_filenames: false
+      files: ^plugins/stackgen/stacks/package-manager/pnpm/hooks/
+    # `.claude-plugin/marketplace.json` is a projection of the 2 plugin
+    # manifests AND committed, so nothing else notices when the two diverge. It
+    # fires on a manifest edit and on a hand-edit of the manifest itself, since
+    # either side moving is the drift.
+    - id: plugins-marketplace
+      name: Marketplace manifest matches the plugin manifests
+      entry: mise x -- mise run p:plugins:marketplace --check
+      language: system
+      pass_filenames: false
+      files: ^(plugins/|\.claude-plugin/)
+    # The second generated-and-committed file: the stackgen pack, bundle and
+    # kind inventory, rendered from the stacks tree so no count is ever typed
+    # by hand. Fires on any stacks or kinds edit, and on a hand-edit of the
+    # inventory itself.
+    - id: plugins-inventory
+      name: stackgen inventory matches the stacks tree
+      entry: mise x -- mise run p:plugins:inventory --check
+      language: system
+      pass_filenames: false
+      files: ^plugins/stackgen/(stacks/|assets/kinds\.md)
+    - id: plugins-check
+      name: Static validation of the authored plugins/ tree
+      entry: mise x -- mise run p:plugins:check
+      language: system
+      pass_filenames: false
+      files: ^plugins/
+
+# The config audit — deliberately `manual`, not a commit-stage gate. Run it
+# when a hook is added or a scope is changed:
+#
+#   pre-commit run --config .config/pre-commit-config.yaml \
+#     --hook-stage manual --all-files check-hooks-apply check-useless-excludes
+- repo: meta
+  hooks:
+    - id: check-hooks-apply
+      name: Audit — every hook matches at least one file
+      description: Catches a `files:` regex that stopped matching after a
+        rename, which is a gate that reports success while checking nothing.
+      stages: [ manual ]
+    - id: check-useless-excludes
+      name: Audit — every exclude matches at least one file
+      description: Catches an exclusion whose reason expired, which is the
+        failure mode nobody re-reads because it keeps working.
+      stages: [ manual ]

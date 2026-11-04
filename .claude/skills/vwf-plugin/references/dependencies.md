@@ -11,7 +11,7 @@ marketplace itself**, so installing `vwf` needs no other marketplace registered.
 It is authored here.
 
 **`stackgen` is a dependency because without it the stack menu is empty.** The
-seven stack axes are closed to what the installed stack plugins declare, and
+eight stack axes are closed to what the installed stack plugins declare, and
 since `config_format` 14 there is no *other (describe)* escape. Since 16 that is
 no longer a dead end — the user can defer the axis as `unresolved` and keep
 defining the product — but deferral only moves the wall: `plan` and `execute`
@@ -30,34 +30,30 @@ guidelines below. `mempalace` was on it too, was vendored the same way, and has
 since been removed outright — see Memory below.
 
 **stackgen is load-bearing at `init` and at `setup`, not only at
-`architecture`.** `/vwf:init` first calls `/stackgen:tool-config all`, which
-lands the toolchain manager's config and the repo gates the `devtools` plugin
-used to scaffold, with init's answers as its flags — the ignore and attribute
-files among them since 2026-09-27 — and records those answers in the repo's
-`.config/stackgen.yaml`, the file only its script writes; then writes its own
-hygiene assets and materializes the secrets provider the user picked, the only
-thing it fetches through the stack adapter; it fetches no bundle for its
-baseline. With no stack adapter installed, `init` **halts** with the install
-command rather than printing an empty plan that reads like an already-shaped
-repo. All of it lands **per repo** — the base and every member `init` resolved,
-each with its own `stackgen.yaml` — so a member is shaped on its own evidence.
-`/vwf:setup` no longer fetches any of them: it checks that **each repo** carries
-`.config/stackgen.yaml` with `format: 1` — and each repo's shape against
-doctor's seven baseline predicates — and offers `/vwf:init` once when any of
-them is missing or behind, which is why `init` is model-invocable and, being
-hidden from the `/` menu, reached no other way. Note that `mise` legitimately
-appears in two different meanings: the **tool** `stackgen:tool-config`
-configures, and the **binary** `mise`, which is a mandate `/vwf:doctor` blocks
-on once a stack axis is pinned.
+`architecture`.** It is load-bearing at `setup` alone now: `/vwf:init` runs
+bootstrap's readme prompt, which lands the toolchain manager's config, the repo
+gates and the ignore and attribute files, then writes its own hygiene assets; it
+fetches nothing through the stack adapter. All of it lands **per repo** — the
+base
+and every member `init` resolved, each with its own `.config/bootstrap.toml` —
+so
+a member is shaped on its own evidence. `/vwf:setup` no longer fetches any of
+them: it checks that **each repo** carries `.config/bootstrap.toml`, and each
+repo's shape against doctor's Bootstrap drift and Forge state predicates, and
+offers `/vwf:init` once when any of them is missing or behind, which is why
+`init`
+is model-invocable and, being hidden from the `/` menu, reached no other way.
+The
+**binary** `mise` is a mandate `/vwf:doctor` blocks on once a stack axis is
+pinned.
 
 Setup is the third site, and the one that grew: since the consumer-gaps work
 `/vwf:architecture` records a pin and materializes nothing, and **`/vwf:setup`'s
 materialize pass** is what invokes `-stack-template` for every pinned axis, once
-per `(repo, slug)`, in the repo the project belongs to, carrying the pack's
-`values:` it gathered (each entry's `detect`, else its `question`) for the
-materializer's `tool-config pack` call. So the adapter is reached from `init`
-(`tool-config all` and the secrets provider), from `setup` (every pinned axis)
-and from `plan`/`execute` (pure conventions reads) — `architecture` reaches only
+per `(repo, slug)`, in the repo the project belongs to. So the adapter is
+reached
+from `setup` (every pinned axis) and from `plan`/`execute` (pure conventions
+reads) — `architecture` reaches only
 `-stack-menu`.
 
 **Required binaries are no longer gated at install time.** A plugin used to
@@ -70,14 +66,15 @@ the binaries vwf shells out to, `/vwf:doctor` blocks on **`mise` conditionally**
 — since `config_format` 16 a missing `mise` is blocking only once some axis in
 the repo is pinned or some harness capability is claimed, and a degradation
 before that, since a repo with no stack has no toolchain to resolve. A missing
-language server is an ordinary finding; a **degradation** finding in §5 is,
+language server is an ordinary finding; a **degradation** finding in its Repo
+tooling checks is,
 since 2026-09-18, a forge CLI (`gh`) that is absent, not logged in, or without
 the `project` scope, which leaves `/vwf:backlog` with nothing to read and every
 planner's recall of it empty, since the backlog is a GitHub Project with no file
-fallback — and the **Context7 runner is not checked at all**, a missing one
-surfacing as a dead MCP server. That runner is `pnpm dlx` by default and
-`${CONTEXT7_RUNNER}` overrides it, so what a check would have to verify is
-whatever the user pinned, not `pnpm`.
+fallback — and where a product picks the `context7` tool, the **Context7 runner
+is not checked at all**, a missing one surfacing as a dead MCP server. That
+runner is `pnpm dlx` by default and `${CONTEXT7_RUNNER}` overrides it, so what a
+check would have to verify is whatever the user pinned, not `pnpm`.
 
 So the trade is slightly worse than "doctor already blocked on it": one blocks
 once a stack is pinned, one degrades, and one is silent. It was still worth
@@ -86,12 +83,22 @@ not ask about — but `readme.md`'s caveat states the gap rather than implying
 doctor covers it, and that is the honest version. **If a Context7-runner check
 is ever added to doctor, this paragraph is what should shrink.**
 
-`markdown` and `context7` used to be on that list and are gone as plugins: vwf
-**absorbed** them. Their two skills (`documentation-standards`, `readme`) are
-vwf skills now, and the Context7 docs server is vwf's one `mcpServers` entry.
-Both were authored here, required by the workflow, and useful only alongside it
-— a separate plugin bought nothing but a dependency edge. `/markdown:readme` is
-therefore `/vwf:readme`, and vwf-only; that is intended.
+`markdown` used to be on that list and is gone as a plugin: vwf **absorbed** it.
+Its two skills (`documentation-standards`, `readme`) are vwf skills now,
+authored
+here, required by the workflow, and useful only alongside it — a separate plugin
+bought nothing but a dependency edge. `/markdown:readme` is therefore
+`/vwf:readme`, and vwf-only; that is intended.
+
+`context7` went the same way and then left. **vwf declares no MCP server.** No
+vwf skill, agent or reference uses Context7 at run time, so its one `mcpServers`
+entry installed a server for everyone that vwf itself never called. It is now a
+stackgen `addon` pack, `addon/context7`, picked on `/vwf:architecture`'s tools
+round and landed in `vwf-tools` by `/vwf:setup`, and the one thing that needs
+it,
+the stackgen generator, halts with that remedy when no Context7 server is
+reachable from any source. This reverses the absorption; the record is
+[the optional-tools decision](../../../../docs/memory/decisions/2026-11-02-optional-tools-in-vwf-tools.md).
 
 The dependency list is declared in **one** place —
 `plugins/vwf/.claude-plugin/plugin.json` — and the marketplace entry is
@@ -120,7 +127,9 @@ retired, which is the intended direction whenever an entry stops feeling
 arguable. And **the guard's MCP rule was generalized**: it matched the
 plugin-scoped `mcp__plugin_design-tools_` prefix, which a project-scoped
 `.mcp.json` server never produces, so matching only that would have quietly
-stopped catching anything.
+stopped catching anything. It was widened once more when `.mcp.json` stopped
+being a target at all: a design tool's server now lands in `vwf-tools`, whose
+prefix is `mcp__plugin_vwf-tools_<token>__`.
 
 **There is no CI dependency edge at all any more.** vwf owns the
 delivery-pipeline **contract** (`assets/delivery-pipeline.md`), which states
@@ -156,7 +165,7 @@ two auto-save hooks reimplemented here, and the files as a mirror beside it. The
 absorbed into vwf" ruling, and graphify's code-intelligence layer went with it —
 see
 [the removal decision](../../../../docs/memory/decisions/2026-11-01-remove-mempalace-graphify.md).
-The only plugin text left naming either tool is cleanup: doctor §8's leftovers
+The only plugin text left naming either tool is cleanup: doctor's Leftovers
 table and setup's `config_format` 24 migration. The transport history and the
 palace-hygiene rulings stay in their own decision records under
 `docs/memory/decisions/`.

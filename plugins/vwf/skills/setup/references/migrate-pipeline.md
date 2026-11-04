@@ -26,13 +26,12 @@ Four sources define it, and none of them is a history:
    lacks `kept_files:` is one entry: it gains `kept_files: {}` and the
    stamp is rewritten with the rest, with no content to migrate, since
    nothing wrote that key before `config_format` 18.
-   **`config_format` 22 → 23** — the top-level `answers:` block leaving
-   for each repo's `.config/stackgen.yaml` — is **not** an entry here:
-   `/vwf:setup reshape` applies it
-   ([format lineage](format-lineage.md)), in the release that moves the old
-   layout. A config still carrying the block keeps it, and its stamp, and
-   the report names `/vwf:setup reshape` as the unlock; a config without the
-   block takes the 23 stamp with the rest.
+   **`config_format` 22 → 23** — the top-level `answers:` block retiring
+   ([format lineage](format-lineage.md)) — is **not** an entry here. Nothing
+   reads the block: a repo's answers live in its `.config/bootstrap.toml`,
+   written by bootstrap. A config still carrying the block keeps it, and its
+   stamp, and the report says the block can be removed by hand; a config
+   without the block takes the 23 stamp with the rest.
    **`config_format` 21 → 22** retires the editor axis, as entries of their
    own: a config carrying `answers.editor` or `enforcement.editor_keys` loses
    each key, with nothing to convert, since both only decided whether an
@@ -41,7 +40,7 @@ Four sources define it, and none of them is a history:
    one of the two kinds of delete this pass offers, because nothing reads
    those files any more; the other is the `23 → 24` removals below. This
    pass **never touches** `.vscode/` — its `settings.json` is
-   `/stackgen:tool-config`'s, and nothing else there is vwf's.
+   bootstrap's, and nothing else there is vwf's.
    **`config_format` 23 → 24** retires the palace. Offer one numbered removal
    row for each of these that exists: the `memory:` block (`memory.wing`) in
    `.config/vwf.yaml`; each `mempalace.yaml`, in the base or a member, at any
@@ -57,6 +56,23 @@ Four sources define it, and none of them is a history:
    24 setup is current, does not re-enter this step and does not ask again,
    and `/vwf:doctor` reports the item as drift with its remedy. The step reads,
    rewrites and deletes no palace data outside the repo.
+   **`config_format` 24 → 25** adds `addons:` and moves into it each optional
+   tool the repo already records. It runs once the stamp reads 24, including
+   when this pass just moved it there; a config held at 22 takes none of it
+   yet. Build the list as the
+   [format lineage](format-lineage.md) row for 25 states, reading the
+   `.claude/stackgen/lock.yaml` of every repo of the product cloned locally,
+   with one warning line per member that is not. Then ask the row's one yes/no
+   question, per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`; either answer
+   is complete. The result is **one numbered row** in the dry-run plan: the
+   `addons:` list it writes and each `backing_template` entry it removes, a list
+   it empties reading `[]`. On consent it is applied and the stamp moves to
+   **25**. A declined row leaves the config and the stamp at 24, since a 25 stamp
+   over an addon slug left in `backing_template` would claim a move that did
+   not happen, and the next migrate pass offers it again. The lockfile's
+   `local_plugin` rename and the recorded `.mcp.json` entries are stackgen's,
+   behind its own consent, run by the [materialize pass](materialize.md) that
+   follows.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

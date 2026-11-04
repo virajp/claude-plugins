@@ -74,8 +74,7 @@ const root = realpathSync(resolve(args.root));
 let routes;
 try {
   routes = readRoutes(root);
-}
-catch (error) {
+} catch (error) {
   fail(error.message);
 }
 
@@ -83,7 +82,7 @@ catch (error) {
 function pages(dir, at = "") {
   return readdirSync(dir, { withFileTypes: true })
     .sort((a, b) => a.name.localeCompare(b.name))
-    .flatMap(entry => {
+    .flatMap((entry) => {
       const rel = at ? `${at}/${entry.name}` : entry.name;
       if (entry.isDirectory()) {
         return at === "" && isReserved(entry.name)
@@ -96,8 +95,7 @@ function pages(dir, at = "") {
 
 // Text a browser never reads as a tag: a comment (to its end when it is never
 // closed), and the raw text of script, style, textarea and title.
-const SKIP_RE =
-  /<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi;
+const SKIP_RE = /<!--[\s\S]*?(?:-->|$)|<(script|style|textarea|title)\b[^>]*>[\s\S]*?(?:<\/\1\s*>|$)/gi;
 // One tag: an optional `/`, its name, and its attributes, quoted values kept
 // whole so a `>` inside one does not end the tag.
 const TAG_RE = /<(\/?)([A-Za-z][^\s/>]*)((?:[^>"']|"[^"]*"|'[^']*')*)>/g;
@@ -135,19 +133,17 @@ function linksOf(html) {
       continue;
     }
     const attrs = attributes(rest);
-    const isPost = value => String(value ?? "").trim().toLowerCase() === "post";
+    const isPost = (value) => String(value ?? "").trim().toLowerCase() === "post";
     let href = null;
     let post = false;
     if (name === "a" || name === "area") {
       href = attrs.get("href") ?? null;
-    }
-    else if (name === "form") {
+    } else if (name === "form") {
       formPost = isPost(attrs.get("method"));
       // A POST form with no action still submits, to the page itself.
       href = attrs.get("action") ?? (formPost ? "" : null);
       post = formPost;
-    }
-    else if (name === "button" || name === "input") {
+    } else if (name === "button" || name === "input") {
       href = attrs.get("formaction") ?? null;
       post = attrs.has("formmethod")
         ? isPost(attrs.get("formmethod"))
@@ -203,7 +199,7 @@ const LEGACY = Object.fromEntries(
     + "yacute:fd yen:a5 yuml:ff"
   )
     .split(" ")
-    .map(pair => {
+    .map((pair) => {
       const [name, hex] = pair.split(":");
       return [name, String.fromCodePoint(parseInt(hex, 16))];
     }),
@@ -219,10 +215,9 @@ const WINDOWS_1252 = Object.fromEntries(
     + "96:2013 97:2014 98:2dc 99:2122 9a:161 9b:203a 9c:153 9e:17e 9f:178"
   )
     .split(" ")
-    .map(pair => pair.split(":").map(hex => parseInt(hex, 16))),
+    .map((pair) => pair.split(":").map((hex) => parseInt(hex, 16))),
 );
-const REF_RE =
-  /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*)(;?))/g;
+const REF_RE = /&(?:#[xX]([0-9a-fA-F]+);?|#([0-9]+);?|([A-Za-z][A-Za-z0-9]*)(;?))/g;
 
 // The value a browser reads out of the attribute: every character reference
 // decoded, as the HTML parser does before the URL parser sees it. A legacy

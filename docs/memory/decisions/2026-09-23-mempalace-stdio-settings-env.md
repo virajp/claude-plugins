@@ -31,7 +31,8 @@ Code spawns the server once per session; there is no daemon to run, supervise or
 restart.
 
 **The launch line carries no flags.** The first stdio line was
-`mise x -- mempalace-mcp --palace $MEMPALACE_PALACE_PATH --backend $MEMPALACE_BACKEND --allow-insecure-no-token`.
+`mise x -- mempalace-mcp --palace $MEMPALACE_PALACE_PATH --backend
+$MEMPALACE_BACKEND --allow-insecure-no-token`.
 The shell substitutes the variable but never expands a `~` inside a substituted
 value, and mempalace 3.10.0 takes a `--palace` value verbatim — so
 `~/.local/share/mempalace` opened `<cwd>/~/.local/share/mempalace`, and a

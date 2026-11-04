@@ -1,5 +1,10 @@
 # Decision — init reads a brownfield repo's root configs, hooks and tasks before landing over them
 
+> **SUPERSEDED 2026-11-03** — `init` keeps only the existing-repo passes for its
+> own files; bootstrap's `docs/sync` owns the rest. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-21 · **Branch** `2026-09-20-init-brownfield-reads` · **Plan**
 [`docs/plans/2026-09-20-init-brownfield-reads/`](../../plans/2026-09-20-init-brownfield-reads/index.md)
 · **Backlog** B28, piece D2, plan 3 of 5 · **Problem**

@@ -78,7 +78,7 @@ An already-installed plugin is reported as satisfied, never auto-updated — see
 install and not for anything else this CLI does. Claude's own settings are the
 record for plugins, and `--uninstall` reads them live.
 
-Restart your agent afterwards so the skills, hooks and MCP servers load.
+Restart your agent afterwards so the skills and hooks load.
 
 ### Upgrading
 
@@ -120,8 +120,8 @@ So after installing, run:
 Doctor blocks on a missing **`mise`** once any stack axis is pinned; both
 `/vwf:setup` and `/vwf:execute` halt on it. It is not a complete substitute for
 the retired gate: a missing language server is an ordinary finding, and `pnpm`
-is not checked at all, surfacing only as the context7 MCP server failing to
-start. Install every prerequisite.
+is not checked at all, which matters only where a product picked the optional
+`context7` tool, whose server then fails to start. Install every prerequisite.
 
 ## The statusline has moved
 

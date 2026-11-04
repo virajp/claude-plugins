@@ -44,9 +44,9 @@ Never edit either by hand.
 A change under `plugins/` is not done until the gates pass:
 
 ```sh
-mise run p:plugins:check              # validates the authored tree
-mise run p:plugins:marketplace        # regenerate, if you touched a manifest
-mise run p:plugins:inventory          # regenerate, if you touched stackgen's stacks/ or kinds.md
+mise run p:plugins:check       # validates the authored tree
+mise run p:plugins:marketplace # regenerate, if you touched a manifest
+mise run p:plugins:inventory   # regenerate, if you touched stackgen's stacks/ or kinds.md
 ```
 
 No gate lints or formats the shell a pack ships.
@@ -66,19 +66,13 @@ the two files that still have the problem.
    `CLAUDE.md`, `readme.md` and `docs/` **are** formatted.
 2. **`plugins/*/stacks/*/*/config/` is excluded too, and for a different
    reason.** That tier is **payload** — copied byte-for-byte into a target repo,
-   where the dprint config *`stackgen:tool-config` lands* formats it. That
-   config deliberately omits the `bracketSpacing`/`braceSpacing` this repo sets,
-   so a payload file formatted here comes out different from what the shipped
-   config produces, and a freshly initialised repo fails its own first
-   `--all-files` hook run on a file nobody touched. It has happened. The
-   exclusion is on the **directory**, so a new payload file type cannot silently
-   re-acquire the defect; when a payload file genuinely needs formatting, run
-   the **shipped** config over it, never this repo's.
-   `plugins/stackgen/skills/tool-config/assets/` is excluded on the same terms:
-   it is the payload `stackgen:tool-config` lands. The template trees —
-   `skills/tool-config/templates/` and each pack's `templates/` — are excluded
-   from every gate here too, since a file holding `@@` tags is not yet the TOML,
-   JSON or YAML it renders to.
+   where the dprint config *bootstrap syncs there* formats it. A payload file
+   formatted here under a different config comes out different from what that
+   config produces, and a freshly shaped repo fails its own first `--all-files`
+   hook run on a file nobody touched. It has happened. The exclusion is on the
+   **directory**, so a new payload file type cannot silently re-acquire the
+   defect; when a payload file genuinely needs formatting, run bootstrap's
+   config over it, never this repo's overrides.
 3. **A dependency stays inside this marketplace.** Add the name to
    `dependencies` in `plugin.json` with `"marketplace": "virajp-plugins"`; the
    marketplace entry is generated from it, and `p:plugins:check` asserts it
@@ -122,59 +116,54 @@ will do. What the `stackgen-plugin` skill still owns is what those scripts are
 *for*. The host rules in full are stackgen's `assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its
-**prose**: no citation a pack or `stackgen:tool-config` lands may be
+**prose**: no citation a pack or `/vwf:init` lands may be
 plugin-relative, because the file is copied into a repo where no plugin is
 installed and the path resolves to nothing without a word. Rule 4 covers its
-**frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/`,
-and every repo-local skill a tool-config tree lands (mise's
-`.claude/skills/mise/SKILL.md`, a template), on the same strict terms as a
-plugin's own.
+**frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/`, on
+the same strict terms as a plugin's own.
 
 ## Skill scripts
 
 A skill may ship a node script for the mechanical half of its work —
-`stackgen:tool-config`'s `scripts/tool-config.mjs` plus `scripts/lib/` — the
-template engine, the values reader, the renderer, the rows — is the first — and
-the judgement stays with the session. Bash or node only, never python. Rule 16
+`vwf:plan-management`'s `scripts/plan.mjs` plus `scripts/lib/`, `vwf:execute`'s
+`scripts/log.mjs` — and the judgement stays with the session. Bash or node only,
+never python. Rule 16
 holds every `skills/*/scripts/**/*.mjs`: an entry directly under `scripts/`
 starts `#!/usr/bin/env node` and is executable, and no file calls `require(` or
 imports anything but a `node:` built-in or a relative module, since the
 installed plugin ships no `node_modules`. No formatter and no shell gate read
 `.mjs`; its gate is a vitest suite under `scripts/src/` that spawns the script
-in temp repos, as `tool-config-render.test.ts` and `tool-config-pack.test.ts`
-do. Only the owning plugin may cite the script's path — rule 6 refuses
-`${CLAUDE_PLUGIN_ROOT}` across plugins — so vwf invokes `/stackgen:tool-config`,
-never the file.
+in temp repos, as `execute-log.test.ts` does. Only the owning plugin may cite
+the
+script's path — rule 6 refuses `${CLAUDE_PLUGIN_ROOT}` across plugins.
 
 Rule 17 fails any `mise use` a plugin ships, dot directories included, unless
 the line forbids it (`never` or `bare` right before it, `is never` or `— never`
 right after). A tool is entered into the `mise.toml` of the `conf.d/` folder
-that owns it first — `_base/`, `ai/` or a pack's own `<slug>/` — then installed
+that owns it first — `zz-repo/` for a repo's own — then installed
 with `mise install`.
 
 ## Comments in shipped config and task files
 
-Anything under `stackgen:tool-config`'s `assets/` or `templates/`, or a pack's
-`config/`, `templates/` or `hooks/`, lands in a repo as its own file, so its
+Anything under a pack's `config/` or `hooks/` lands in a repo as its own file,
+so its
 comments are read by every person who opens it. Keep only the comments something
 reads:
 
 - `#MISE` and `#USAGE` lines, and shebangs
 - `# shellcheck` directives
-- the tool-config marker pair, `# >>> tool-config` / `# <<< tool-config` (`//`
-  in dprint's JSONC), in the six files that carry it
 - `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
   value
 - grype ignore-reason comments, one unit with their entry
 - commented-out templates a skill fills in and uncomments
 - any comment the owning reference names as load-bearing — grep that reference
-  before removing a comment from a tool-config asset or template
+  before removing a comment
 
 Beyond those, a comment is at most **one line**, and only as a warning where a
 reader would otherwise break something non-obvious. Every longer explanation
 goes: dropped when the owning reference already says it, moved into it when it
-does not — tool-config's `references/<tool>.md` for an asset, the pack's
-`conventions.md` for a payload. Boilerplate repeated across files goes; a
+does not — the pack's `conventions.md` for a payload. Boilerplate repeated
+across files goes; a
 directive it sat above stays. A comment-only payload change still bumps its
 pack. `stackgen`'s `assets/pack-format.md` states the same rule for pack
 authors.
