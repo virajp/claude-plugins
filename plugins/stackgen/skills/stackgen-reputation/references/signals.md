@@ -127,3 +127,14 @@ path as the package name. The rest:
 | unpinned or mutable version | every backend                                                                                                           | syntactic — the version given                                     | —                              | no `@<version>`, or `latest` | a floating version moves under the pin, whatever the backend                                                               |
 | no checksum                 | `http`, `s3`                                                                                                            | syntactic — the name grammar carries no checksum                  | —                              | always                       | a URL download with no checksum is whatever the server returns that day                                                    |
 | short name                  | none                                                                                                                    | —                                                                 | —                              | —                            | a `mise:` name with no backend is not a signal but a row `UNRESOLVED: no backend for <name>`, per `SKILL.md`               |
+
+## Remote hosts — `host:` (hostname)
+
+The one signal that blocks with nothing fetched. It is not `unavailable`, which
+would contribute nothing and let the row pass: a host that cannot be vetted is
+blocked. With no source to reach, the row is never `UNRESOLVED`, and its
+`source` is empty.
+
+| Signal        | Source                                      | `block` | `warn` | Why                                                                                                                  |
+| ------------- | ------------------------------------------- | ------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| host unvetted | none — `sources.md` carries no host source  | always  | —      | no registry, advisory or scorecard read covers a remote host, and a server there can change what it serves at any time |

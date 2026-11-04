@@ -34,7 +34,8 @@ to read.
   axis: each `projects.<name>.stack.template`, `backing_template` and
   `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
-  (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states").
+  (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"), and,
+  since `config_format` 25, the product-level `addons:` list.
 - **Each repo's `.config/stackgen.yaml`** — the values file
   `/stackgen:tool-config` renders from and alone writes. Read `forge`,
   `secrets`, `node`, `external` and each `packs.<slug>` block; never edit it —
@@ -63,6 +64,8 @@ member's `path` relative to the base root. A project no member lists is the
 **base's**. Under `topology: repo` and `topology: monorepo` there are no
 members and everything is the base's. The `repo.stack.template` axis describes
 a checkout rather than a project, so its target is the repo that declares it.
+Every `addons:` slug targets the **base**: in a multi-repo product members get
+no `addon` pin, and in a single repo the repo is the base.
 
 A member that is declared but **not on this machine** — an uncloned sibling, or
 an empty submodule directory — is a blind spot, never a finding. Report it
@@ -85,6 +88,14 @@ that slug, record one entry `(repo, slug)`. Then:
   happen;
 - **`[]` on a list axis is a decision, not a landing** — the project ships
   through nothing / talks to no backing service, and that is complete.
+
+**`addons:` joins the list as one more list axis, with one difference: its
+slugs are fetched on every run.** Each element is an entry `(base, slug)`, in
+list order after the project axes. A slug the base's lockfile already names is
+still passed to the adapter's template skill below, because the pick is
+committed and the servers land per machine, so another person's first run has
+something to do. An absent `addons:` and `[]` both mean no tool: nothing is
+landed, and this pass never writes `unresolved` there.
 
 An empty landing list is the ordinary state of a re-run: say every pinned axis
 is materialized, and move on. That sentence is what makes the pass idempotent
@@ -125,6 +136,11 @@ values:
   <pack slug>:
     <name, lowercased>: <value>
 ```
+
+Any call may end in a `declined:` line, after what it returns. Pass each such
+line, as returned, into every later `-stack-template` call of this run, in the
+same payload style, whatever its target repo, `remove:` and `reconcile-claims:`
+calls included. The next run starts without the line, so the offer comes back.
 
 ### The answers map
 
@@ -267,7 +283,29 @@ naming the pack, the values filled and the files re-rendered.
 ## Remove a dropped pack
 
 A slug a repo's lockfile records that no axis targeting that repo names any
-more — `/vwf:architecture` replaced it — has been **dropped**. For each of
+more — `/vwf:architecture` replaced it — has been **dropped**. `addons:`
+counts as an axis targeting the base, so a slug removed from it is dropped
+there, and a slug still listed is not dropped by a move off another axis.
+
+**A slug dropped from `addons:` leaves through one call**, made for each such
+slug in the base: `/<plugin>:<plugin>-stack-template remove: <slug>`, the
+removal path for the `addon` axis in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Setup runs no `pack-remove` and
+deletes no file for it. The call shows its own plan on its own consent, takes
+out everything the lockfile records for the slug and commits once, returning
+**removed** or **declined**. A declined slug stays recorded, so the next run
+offers it again.
+
+**After the `remove:` calls, one more call reconciles this machine's claims**,
+made once per run in the base on each plugin named in `stacks:`, whether or not
+a slug was dropped: `/<plugin>:<plugin>-stack-template reconcile-claims:`. It
+takes no slug and is not a landing-list entry. An addon dropped on another
+machine reaches this one by a pull, so no `remove:` call is made for it, and
+this call is what lets go of it. It asks on its own consent and returns one
+line, **removed**, **declined** or **unchanged**; setup wraps it in no consent
+and no commit. A decline changes nothing, and the next run offers it again.
+
+Every other dropped slug is setup's own. For each of
 its component packs that no slug still pinned in that repo also composes,
 preview `pack-remove --slug <slug>`: it deletes the pack's
 `conf.d/<slug>/` folder and every subtask named `<slug>`, drops
@@ -367,8 +405,8 @@ This is the one place setup writes `unresolved`, and it is narrow by design:
 
 One block, carried back to the spine:
 
-- one line per entry in the landing list — the repo, the slug, and one of
-  **landed**, **declined**, or **already materialized**;
+- one line per entry in the landing list, `addons:` slugs included — the repo,
+  the slug, and one of **landed**, **declined**, or **already materialized**;
 - **the skips the adapter returned**, under their own heading, one line each
   — the path, the pack, and the `when:` that dropped it — listed exactly as
   `/vwf:init`'s plan lists its **Skipped** rows, so a file an answer
@@ -382,6 +420,8 @@ One block, carried back to the spine:
   **applied** or **kept**;
 - one line per dropped pack — the repo, the slug, and **removed** or
   **declined**;
+- one line per plugin for the claims reconcile — the plugin, and **removed**,
+  **declined** or **unchanged**;
 - one line per repo-wide value the `all` call moved — the repo, the key,
   the value replaced and the value written — and the `setup:all` tail it
   returned;

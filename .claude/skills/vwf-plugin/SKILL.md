@@ -16,9 +16,11 @@ paths:
 `vwf` is the flagship plugin — a full Product → Blueprint → Plan → Execute
 workflow: slash-invocable workflow skills, auto-applying doctrine skills, the
 subagents they delegate to, the shared doctrine in `assets/` (the `docs/memory/`
-file store's protocol among it), the five `/vwf:execute` action-log hooks, the
-`/vwf:execute` progress pane (one TypeScript hooks module), and one MCP server,
-Context7. It names **no** technology — no stack templates, no language list;
+file store's protocol among it), the five `/vwf:execute` action-log hooks and
+the `/vwf:execute` progress pane (one TypeScript hooks module). It declares
+**no**
+MCP server: Context7 is a stackgen `addon` pack. It names **no** technology — no
+stack templates, no language list;
 what each axis offers comes from a stack plugin behind the stack-adapter
 contract, and `p:plugins:check`'s technology-free guard enforces it.
 
@@ -51,8 +53,8 @@ declared in `plugin.json` with `"marketplace": "virajp-plugins"`, which
 `p:plugins:check` asserts resolves. `devtools` was the other until it dissolved
 into stackgen. `andrej-karpathy-skills` is **vendored** rather than depended on,
 with provenance under `vendor/`; `mempalace` was vendored too and is now
-removed; `markdown` and `context7` were **absorbed**. The reasoning is
-[`dependencies.md`][de].
+removed; `markdown` was **absorbed**, and `context7` was too until it left vwf's
+manifest for a stackgen `addon` pack. The reasoning is [`dependencies.md`][de].
 
 ## Foundations & ordering
 

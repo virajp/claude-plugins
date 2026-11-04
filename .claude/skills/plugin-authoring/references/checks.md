@@ -331,23 +331,28 @@ at the tail is not (`pnpm-workspace` is not an `npm` mention). The symmetric
 form this started as let every compound head through — two escapes shipped in
 vwf before it was tightened.
 
-The MCP-server rule was **generalized at Wave D**. It used to match only
-`mcp__plugin_design-tools_<token>`, the plugin-scoped prefix — but a design tool
-now lands in the project's own `.mcp.json`, which scopes its server
-`mcp__<token>__` instead, so matching the old prefix alone would have quietly
-stopped catching anything. Both spellings are banned in vwf prose, which covers
-a fourth design tool the day one is added.
+The MCP-server rule was **generalized twice**. It used to match only
+`mcp__plugin_design-tools_<token>`, the plugin-scoped prefix. Wave D landed a
+design tool in the project's own `.mcp.json`, which scoped its server
+`mcp__<token>__`, and matching the old prefix alone would have quietly stopped
+catching anything. A design tool now lands in the generated `vwf-tools` local
+plugin, whose prefix is `mcp__plugin_vwf-tools_<token>__`. All three spellings
+are banned in vwf prose, which covers another design tool the day one is added.
 
 **The manifest half is a different bar, on purpose.** The guard also reads vwf's
-`mcpServers` `command`/`args` as one string per stdio server (an `http` server
-has no runner in it to hardcode). A manifest has to name something executable —
-`sh` is a tool name too — so the bar is not "names no tool" but **"the name is
-overridable"**: `${VAR}` and `${VAR:-default}` expansions are elided before the
-token scan, so a runner behind one passes and a fixed one is a finding. It was
-added after `"command": "pnpm"` sat unnoticed in the context7 entry, which a bun
-user cannot satisfy and which fails as a dead MCP server rather than as a
-missing prerequisite; `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the
-recommendation while letting another runner answer.
+`mcpServers` `command`/`args`, and every stackgen pack's `user_mcp_servers:`
+stdio entries, as one string per stdio server (an `http` server has no runner in
+it to hardcode). A declaration has to name something executable — `sh` is a tool
+name too — so the bar is not "names no tool" but **"the name is overridable"**:
+`${VAR}` and `${VAR:-default}` expansions are elided before the token scan, so a
+runner behind one passes and a fixed one is a finding. It was added after
+`"command": "pnpm"` sat unnoticed in the context7 entry, which a bun user cannot
+satisfy and which fails as a dead MCP server rather than as a missing
+prerequisite; `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the recommendation
+while letting another runner answer. That entry is `addon/context7`'s now, and
+vwf's manifest declares no server, so the manifest path has nothing to read
+today
+and stays for the day one is added.
 
 **Two design tokens are deliberately unbannable** and live in
 `ENUMERATION_PEERS` instead — `stitch` (an ordinary English word the screens

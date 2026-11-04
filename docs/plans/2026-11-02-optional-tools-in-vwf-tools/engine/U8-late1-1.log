@@ -1,0 +1,2 @@
+FINDINGS: 0
+Examined: `git diff f34534ec..287be704 -- plugins`: one hunk in `plugins/stackgen/assets/artifact-doctrine.md` (~line 211). It only refolds one line; the word diff shows no word added, dropped or changed, so no rule changes.

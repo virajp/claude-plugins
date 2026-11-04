@@ -50,7 +50,8 @@ is not a folder of the clone's `tools/` is never sent.
 4. **Collect the plugins.** A component's `conventions.md` may hold a
    `## Claude plugins` section, one line for each plugin:
    `<name>@<marketplace>`, the source of its marketplace, and the scope
-   (`user` or `project`). Collect them.
+   (`user` or `project`). Collect them. A plugin always goes through this
+   handoff: the local plugin `vwf-tools` holds servers only.
 
 5. **Subtract what the repo has.** A tool that `.config/bootstrap.toml`
    already selects — its own `[tools.<tool>]` table, or through a pack —
@@ -97,3 +98,15 @@ pack's components. Send `bootstrap: remove tools […]` and
 and 10, then drop their records. A tool or plugin that another component
 still needs keeps its record, without the removed components. A tool with
 no record is never removed: stackgen did not add it.
+
+A dropped addon's removal is this section, called by
+[the materializer](materializer.md#removing-a-dropped-addon). Its instructions
+are shown inside that call's one consent rather than on a line of their own,
+and step 8's files join its one commit.
+
+**A plugin that another repo of the product claims through an `addon` pack
+is not removed** — `taste-skill@taste-skill` through the base repo's
+`addon/taste-skill` is the case. A member repo reads the base repo's lockfile
+for that claim. The plugin keeps its record, and no `remove` is sent; where the
+base repo is not cloned locally the claim cannot be read, so nothing is sent
+and the plan says so.

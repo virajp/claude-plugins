@@ -177,31 +177,24 @@ What the generated wiring must respect:
   session in every repo — and since the generated declaration is user-scoped
   (below), that is every repo on the machine. An entry with no map is invalid
   output; the reviewer fails it.
-- **A generated installer writes the user's own project files.** `.mcp.json` is
-  an ordinary repo file and is a permitted target under the tier-2 consent
-  model; it is still a separate, skippable consent line.
 
 ### The local-plugin form
 
 `lspServers` exists only in a plugin manifest, so the installer pattern above
 takes one further form: stackgen **generates a plugin** at the fixed path
-`~/.claude/plugins/local/stackgen-lsp/` — a `.claude-plugin/plugin.json`
+`~/.claude/plugins/local/vwf-tools/` — a `.claude-plugin/plugin.json`
 carrying `lspServers` and `mcpServers` as a union across the user's stacks,
 beside a single-plugin `marketplace.json` — and prints the two `claude plugin`
 commands that register it at **user** scope. The full contract, the consent
 tier and the lockfile key are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`.
 
-Three rules bind the generated manifest:
+Two rules bind the generated manifest:
 
 - **The path and the plugin name are fixed**, never assembled from the stack
   pin — §3 applies to a plugin name exactly as it does to a skill name.
 - **Every `lspServers` entry carries `extensionToLanguage`**, per the rule
   above. User scope is safe only because of it.
-- **A server belongs in exactly one place.** Project-scoped servers go to the
-  repo's `.mcp.json`; user-scoped ones go to this manifest. Declaring the same
-  server in both gives the store two writers, which the concurrency rule above
-  already forbids.
 
 ## 6. A name stackgen emits is vetted before it is landed
 
@@ -209,21 +202,28 @@ Three rules bind the generated manifest:
 emits instead. A **concrete name** is any third-party thing a generated
 component would have a repo fetch or run: a package a `mise_tool` entry or a
 runner-invoked harness task names (`dlx`, `npx`, `uv run --with`, `uvx`), a
-command an `mcp_servers:` / `user_mcp_servers:` entry spawns, a GitHub Action,
-a container image, a dependency in a `Package.swift`, a Maven dependency or a
-Gradle plugin in a build file. Every one of them gets a verdict before the
-dry-run gate shows it, from the `stackgen-reputation` skill — a skill anyone
-can call, the user by hand on a name they are about to type and the generator
-over the list it assembled. A name is passed with its ecosystem prefix —
-`npm:`, `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:` or `mise:`. A
-mise tool is always passed as `mise:<backend>:<path>@<version>` — its toml
-key, a short name expanded with `mise registry <name>` first, and the version
-its toml value pins, with no `@` when that is `latest` or absent; a SwiftPM
-dependency as `spm:<host>/<owner>/<repo>@<version>`; a Maven dependency as
+command a `user_mcp_servers:` or `lsp_servers:` entry spawns, every package a
+server's runner chain fetches, the host a `user_mcp_servers:` `url` names, the
+host of any URL or bare host in either kind of entry's `args` or `env` values,
+a GitHub Action, a container image, a dependency in a `Package.swift`, a Maven
+dependency or a Gradle plugin in a build file. Every
+one of them gets a verdict before the dry-run gate shows it, from the
+`stackgen-reputation` skill — a skill anyone can call, the user by hand on a
+name they are about to type
+and the generator over the list it assembled. A name is passed with its
+ecosystem prefix — `npm:`, `pypi:`, `pub:`, `action:`, `image:`, `spm:`,
+`maven:`, `mise:` or `host:`. A mise tool is always passed as
+`mise:<backend>:<path>@<version>` — its toml key, a short name expanded with
+`mise registry <name>` first, and the version its toml value pins, with no `@`
+when that is `latest` or absent; a SwiftPM dependency as
+`spm:<host>/<owner>/<repo>@<version>`; a Maven dependency as
 `maven:<group>:<artifact>@<version>`, and a Gradle plugin as its marker
-coordinate, `maven:<id>:<id>.gradle.plugin@<version>`. Go, Cargo, Ruby and
-.NET tools are reached through `mise:` alone. Each name comes back as one of
-three verdicts:
+coordinate, `maven:<id>:<id>.gradle.plugin@<version>`; a remote MCP server as
+`host:<hostname>`, its `url`'s host alone, and a URL or bare host in a
+server's `args` or `env` value the same way, each of which always reads
+`block` because no source vets a remote host. Go, Cargo, Ruby and .NET tools
+are reached through `mise:` alone. Each name comes back as one of three
+verdicts:
 
 - **`pass`** — nothing found against it.
 - **`warn`** — a signal worth reading before consenting; the row travels to
@@ -234,7 +234,17 @@ three verdicts:
   recommendation, and it is the user's to make.
 
 A source the skill cannot reach yields `UNRESOLVED`, never an inferred
-verdict, and halts generation the way an unreachable Context7 does.
+verdict, and halts generation the way it does when no Context7 server is
+reachable from any source — the remedy for that one being to add `context7` in
+`/vwf:architecture`'s tools menu, run `/vwf:setup`, then restart the session.
+
+Three forms name no one thing to vet, so each stops generation as
+`UNRESOLVED`, whatever the verdict table says: a shell, or an interpreter's
+inline code (`sh`, `node -e`, `python -c`, `npx -c`, `node --import`), as a
+server's command or anywhere in its chain; a `data:` or `file:` value in
+`args` or `env`; and a code-loading variable (`NODE_OPTIONS`, `PYTHONPATH`,
+`LD_PRELOAD`, `PATH`), whatever its value, set as an `env` key or as a
+`VAR=value` element of `args`.
 
 **Shipped packs are outside the check.** The names a pack carries were
 curated by hand and are reviewed as the pack is; the check covers what
@@ -253,7 +263,7 @@ Beyond its per-kind structural checklist, the `stackgen-skill-reviewer` fails
 an artifact for any of: frontmatter that does not parse strictly; an invocation
 state contradicting its kind's ruling; a skill or plugin name assembled from
 configuration; a hook verdict shape that does not match its event; a
-`settings.json` or `.mcp.json` edit not behind its own consent line; an
+`settings.json` edit not behind its own consent line; an
 `lspServers` entry with no `extensionToLanguage` map; and a local-plugin write
 or registration not behind its own tier-3 consent line. It also fails an
 artifact for a concrete name (§6) with no row in the verdict table it is

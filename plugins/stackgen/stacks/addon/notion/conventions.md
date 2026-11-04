@@ -6,15 +6,20 @@ repo are in a workspace, and this pack does one thing — it gives the agent a
 door into it. Nothing the product runs goes through that door.
 
 **The server is the only reach, and it lands behind its own consent line.**
-One `notion` entry in the repo's `.mcp.json`, written when the person says yes
-to that write specifically — separately from saying yes to these skills.
+One `notion` entry in `vwf-tools`, the local plugin stackgen generates, at user
+scope, written when the person says yes to that write specifically — separately
+from saying yes to these skills.
 Landing a pack's judgment and granting an agent access to the team's documents
 are two decisions, and a person who wants the first must be able to decline the
 second. That is the workspace contract's rule that outranks every other, and
 this pack has nothing to add to it.
+User scope means the authorised server is reachable from every repo on this
+machine, not only the one that picked it, so a prompt injection in a later
+session on an untrusted repo can read the workspace and carry it out. The person
+says yes knowing that, and authorises the narrowest grant the work allows.
 
 **A decline leaves the skills landed and the workspace unreachable, and the
-agent says so.** No entry in `.mcp.json` means the answer to "what does the
+agent says so.** No entry in `vwf-tools` means the answer to "what does the
 spec say" is *the workspace is not wired*, never *the workspace has nothing*.
 The contract's degrade-legibly clause exists because the silent version of that
 failure is indistinguishable from a workspace nobody wrote in — and the reader
@@ -53,12 +58,13 @@ is where the team's reasoning happens to be written down.
 
 ## What this pack writes
 
-| Lands at    | Is                                             |
-| ----------- | ---------------------------------------------- |
-| `.mcp.json` | one `notion` server entry, behind its own line |
+| Lands at          | Is                                             |
+| ----------------- | ---------------------------------------------- |
+| `vwf-tools`       | one `notion` server entry, behind its own line |
+| `.claude/skills/` | the `notion` skill and its references          |
 
 Nothing else. There is no config file, no CLI to pin and no task to overlay:
-the server is hosted, the authorisation is the person's, and the repo carries
+the server is hosted, the authorisation is the person's, and `vwf-tools` carries
 one key that removing the provider deletes.
 
 Full judgment: the `notion` skill's references. The contract it cites is

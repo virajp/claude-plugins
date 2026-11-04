@@ -6,20 +6,21 @@ does not restate.
 ## The rule that outranks every other
 
 **Satisfied by construction.** The agent reaches Notion over an MCP server the
-pack lands in the repo's `.mcp.json`, and there is no other path: no client
+pack lands in `vwf-tools`, at user scope, and there is no other path: no client
 library enters a manifest, no credential enters a config the build reads, and
 the application never learns that Notion exists. Removing the provider is
 deleting one key.
 
 The consent half is satisfied by the materializer rather than by this pack —
-the `.mcp.json` write is its own declinable line, separate from landing these
+the `vwf-tools` write is its own declinable line, separate from landing these
 skills. What the pack contributes is having nothing else to land, so a decline
 costs exactly the reach and nothing else.
 
-## Clause 1 — reached by one project-scoped server
+## Clause 1 — reached by one server in `vwf-tools`
 
-**Satisfied.** One entry, keyed `notion`, in the repo's own `.mcp.json`, so the
-wiring travels with the checkout and shows up in a diff.
+**Satisfied.** One entry, keyed `notion`, in `vwf-tools`, at user scope. The
+product's pick travels with the checkout in `.config/vwf.yaml`'s `addons:` and
+shows up in a diff; the wiring is on each person's machine.
 
 **One server per provider is a rule this pack can break and must not.** Notion
 publishes the same hosted server on two transports — the modern streamable HTTP
@@ -51,7 +52,7 @@ The failure to guard against is specific: the server is absent, a search
 therefore returns nothing, and the agent reports *the workspace does not
 mention it* instead of *the workspace is not wired*. Those two sentences send a
 reader to opposite conclusions, and only one of them is true. If the `notion`
-entry is not in `.mcp.json`, say that, and stop — do not substitute the repo's
+entry is not in `vwf-tools`, say that, and stop — do not substitute the repo's
 own docs and present the result as though the workspace had been searched.
 
 ## Clause 4 — authenticate the person, not the repository
@@ -115,7 +116,7 @@ the way to get there, and extending it would be the reversal, not a feature.
 
 ## Absence
 
-**Satisfied.** A project with no workspace pinned works: every vwf step reads
+**Satisfied.** A product with no workspace picked works: every vwf step reads
 the repo's own docs, which is where the durable contracts live. This pack adds
 reach to what the team wrote elsewhere and removes no obligation to write
 things down here — see [local stack](local-stack.md), where absence and the

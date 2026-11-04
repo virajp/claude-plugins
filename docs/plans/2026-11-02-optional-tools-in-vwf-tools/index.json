@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-02 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-04 — c1031514..eccbf62c on all-2026-11-04-0903; 16 open gaps, folder left live; K1 passed, its temp home /tmp/k1-hermetic.j6EOT5 stays on disk"
   },
   "consent": {
     "merge": true,
@@ -75,11 +75,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T03:36:39.079Z",
+      "ended": "2026-11-04T14:04:11.796Z",
+      "commit": "287be704",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -91,16 +91,16 @@
       "owns": [
         "plugins/stackgen/skills/stackgen-stack-template/references/generator.md",
         "plugins/stackgen/skills/stackgen-stack-menu/SKILL.md",
-        "plugins/stackgen/skills/stackgen-reputation/SKILL.md",
+        "plugins/stackgen/skills/stackgen-reputation/**",
         "plugins/stackgen/agents/stackgen-skill-reviewer.md"
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T03:36:39.159Z",
+      "ended": "2026-11-04T13:57:25.735Z",
+      "commit": "f34534ec",
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -128,11 +128,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T03:36:39.236Z",
+      "ended": "2026-11-04T03:43:26.163Z",
+      "commit": "854e0c85",
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -149,11 +149,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T03:36:39.312Z",
+      "ended": "2026-11-04T03:43:26.280Z",
+      "commit": "a80e807a",
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -170,11 +170,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T03:36:39.392Z",
+      "ended": "2026-11-04T03:43:26.396Z",
+      "commit": "9c988319",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -202,11 +202,11 @@
         "U8"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T14:06:59.753Z",
+      "ended": "2026-11-04T14:16:42.463Z",
+      "commit": "ce5e3442",
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -223,11 +223,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T14:22:28.448Z",
+      "ended": "2026-11-04T14:23:29.943Z",
+      "commit": "eccbf62c",
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -245,41 +245,41 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T04:03:33.851Z",
+      "ended": "2026-11-04T13:58:39.031Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 5,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "76a529ca",
+        "to": "f34534ec"
       }
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T03:36:39.042Z",
+      "ended": "2026-11-04T04:03:24.694Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T04:03:33.814Z",
+      "ended": "2026-11-04T14:05:27.721Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T14:06:59.708Z",
+      "ended": "2026-11-04T14:22:18.690Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T14:22:28.413Z",
+      "ended": "2026-11-04T14:24:51.008Z"
     }
   ],
   "shared_files": [
@@ -612,36 +612,230 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D32",
+      "decision": "G18: the U8 security loop did not converge on the vetting of generated servers. Fix the two open findings, or rule where the vetting ends?",
+      "ruling": "The user ruled: fix both on U2 and extend the vetting in generator.md to them. (1) URLs in env values are vetted, and the consent gate shows the env values, not only the key names. (2) lsp_servers: entries take the same command, args and wrapper rules as the other generated servers.",
+      "rejected": "Rule a limit where the vetting of generated servers ends",
+      "units": [
+        "U2",
+        "U8"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "G21: the U8 security loop did not converge after D32. Fix the open forms, or rule where the vetting of generated servers ends?",
+      "ruling": "The user ruled: fix and limit, both on U2. (1) generator.md and reviewer check 10 cover pipx run --spec, so the name that --spec gives is the name that is vetted, and they cover env sh -c, so a shell that env starts counts as a shell. (2) A limit, written in generator.md: the generator vets the names that it can read from the declared command. The consent gate shows the full command and its env values. The person at the gate is the control for any form that the vetting does not parse. U8 reviews against this limit: a further command form that the vetting does not parse, and that the gate shows in full, is not a finding. The closing fix counts as the last of U8.",
+      "rejected": "Fix and finish with no limit; a limit only, with no fix of the two open forms",
+      "units": [
+        "U2",
+        "U8"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers list: a plan without a blueprint slice skips this stage",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T14:06:43.089Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers list: a plan without a blueprint slice skips this stage",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T14:06:42.872Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers list: a plan without a blueprint slice skips this stage",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T14:06:42.985Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers list: a plan without a blueprint slice skips this stage",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T14:06:43.200Z"
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a claims.json key emptied by path pruning is not ruled · assumed unclaimed and kept",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a union conflict between stackgen-lsp and vwf-tools manifests at migration is not ruled · assumed the merge table applies",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a member repo's sync when the base is not cloned is not ruled · assumed no remove is sent and the record is kept",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a sync in a repo with no lockfile is not ruled · assumed the migration offer runs before the stop",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a recorded key already missing from .mcp.json is not ruled · no rule written; a ruling or follow-up line is needed",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "reviewer check 9 in stackgen-skill-reviewer.md still names project-scoped declarations and .mcp.json, outside the plan's edit list · lines left as they are · closed: wave review round 1 looped it back; check 9 aligned with D4",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U3 verification grep for mcp_servers: hits plugins/stackgen/stacks/readme.md:265, U6's · left for U6",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "no stackgen path lands an addon's servers on a second machine (D2, D8): stack-template step 1 stops on a materialized slug and sync is user-only; dropped-slug removal has the same hole · contract written in stack-adapter.md, assuming U1 or U2 add it · closed: wave review round 1; stack-template step 1 addon exception and remove: <slug> entry, setup invokes them",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "edit 8 cites stack-checks.md:386, whose seven counts sub-checks (a)-(g), not axes · left at seven; the plan's citation was wrong, settled",
+      "state": "closed"
+    },
+    {
+      "id": "G10",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "a D27 unlanded design-tool server may have no lockfile item to compare · assumed the stackgen-lsp drift row states that cost",
+      "state": "open"
+    },
+    {
+      "id": "G11",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a dropped addon's claim on other machines has no removal, since their lockfile no longer records it · assumed doctor's not-picked drift covers it · closed: reconcile-claims: removes this repo's claim on every setup run",
+      "state": "closed"
+    },
+    {
+      "id": "G12",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "contested (wave review closing check, cap and guard): fold 81 wide at setup/references/migrate-pipeline.md:71 and assets/stack-adapter.md:470 · left",
+      "state": "open"
+    },
+    {
+      "id": "G13",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D12/U1 never required a provenance check on migrated .mcp.json declarations · the fix takes declarations only from a shipped pack or the relocation table",
+      "state": "open"
+    },
+    {
+      "id": "G14",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D2 never stated the cross-repo reach of an authenticated server or its disclosure · the fix states it at the gate and in the notion conventions",
+      "state": "open"
+    },
+    {
+      "id": "G15",
+      "unit": "U1",
+      "stage": "security",
+      "text": "D12 says recorded entries move to vwf-tools; a recorded .mcp.json key no shipped pack declares now stays and is reported, by the U8 security finding · shipped-pack keys only",
+      "state": "open"
+    },
+    {
+      "id": "G16",
+      "unit": "U2",
+      "stage": "security",
+      "text": "U8 round 2 url-vetting fix falsified stackgen-reputation/references/signals.md and sources.md, outside U2's owns · owns widened to stackgen-reputation/** under the plan's Goal and the fix applied",
+      "state": "closed"
+    },
+    {
+      "id": "G17",
+      "unit": "U2",
+      "stage": "security",
+      "text": "U8 round 2: no reputation source vets a remote MCP host, so every generated host: row blocks and a generated http MCP server cannot land · taken as the block rule; a ruling may want a vetted path",
+      "state": "open"
+    },
+    {
+      "id": "G18",
+      "unit": "U8",
+      "stage": "security",
+      "text": "\"U8 convergence guard tripped on cap-exempt security findings: rounds 1-4 returned 3, 2, 1, 2 findings, each round a new layer on generated-server vetting. Open, unfixed, both generator.md (U2): env-value URLs are not vetted and the gate shows env key names only; lsp_servers: entries skip the command, args and wrapper rules · no assumption taken; a ruling is needed\" · closed by the user's ruling D32: fix both on U2",
+      "state": "closed"
+    },
+    {
+      "id": "G19",
+      "unit": "U8",
+      "stage": "security",
+      "text": "the /security-review skill in a runner read the main checkout's develop..main delta, not the worktree range · each round's identification ran as a subtask scoped to the round's range, saved under engine/",
+      "state": "open"
+    },
+    {
+      "id": "G20",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "a bare-binary command in a generated server names no runner, so no reputation prefix applies · U2 assumed no row is written and the reviewer raises a gap, which fails closed",
+      "state": "open"
+    },
+    {
+      "id": "G21",
+      "unit": "U8",
+      "stage": "security",
+      "text": "U8 closing pass after the guard tripped on cap-exempt findings (rounds 1-5 returned 3, 2, 1, 2, 3): round 5 findings 2 and 3 RESOLVED; finding 1 OPEN on generator.md:152 and reviewer check 10, pipx run is named without --spec, so pipx run --spec evil ok lists pypi:ok and evil goes unvetted; the check also notes env sh -c is not literally covered, since a chain counts only runners · no assumption taken; the closing pass never loops and a security finding cannot be contested, so a ruling is needed · closed by the user's ruling D33: fix and limit on U2",
+      "state": "closed"
+    },
+    {
+      "id": "G22",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D30 seeds every key the lockfile claims; a U8 security fix narrowed local-plugin.md:301-307 to keys whose old-manifest declaration matches the shipped pack or a same-run generator emission, since a committed lockfile cannot earn a claim · the narrowing stands; a generated or stale key stays unclaimed and kept, and a ruling may widen it",
+      "state": "open"
+    },
+    {
+      "id": "G23",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "07-docs.md ties node and pnpm to the context7 tool alone, yet vwf scripts still need node · split it: node stays required, pnpm is needed when context7 is picked",
+      "state": "open"
+    },
+    {
+      "id": "G24",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "U7 generator also wrote the gitignored .dev-marketplace manifest in the worktree, outside Owns · left as written, nothing is committed from it · closed: the path is gitignored and the generator always writes it, no ruling owed",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-04-0903; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-04-0903",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-02-optional-tools-in-vwf-tools.jsonl"

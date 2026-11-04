@@ -16,10 +16,16 @@ the composition's single consent gate and landing. Generation is
   catalog in the invocation → halt and name what is missing. Never
   substitute general knowledge for the catalog — the catalog is the trust
   anchor the reviewer gate checks against.
-- **Context7 must be reachable.** It is the **primary and preferred
-  research channel**: resolve the technology's library IDs and fetch
-  current documentation before writing a word. Unreachable → **halt**; a
-  generated skill written from training knowledge is exactly the
+- **Context7 must be reachable, from some source** — the `context7` addon
+  in `vwf-tools`, a user-level MCP server, another plugin. It is the
+  **primary and preferred research channel**: resolve the technology's
+  library IDs and fetch current documentation before writing a word. When
+  none is reachable, generation **halts** with exactly this sentence:
+
+  > Generation needs the context7 tool. Add `context7` in `/vwf:architecture`'s
+  > tools menu, run `/vwf:setup`, then restart the session.
+
+  A generated skill written from training knowledge is exactly the
   plausible-but-stale artifact this pipeline exists to prevent.
   Supplementary sources are allowed only where Context7's coverage of a
   topic is thin — and both the thinness and every supplement are disclosed,
@@ -63,7 +69,12 @@ the composition's single consent gate and landing. Generation is
      Supplementary sources only where Context7's coverage of *this topic*
      is thin — and the thinness itself is recorded for the topic, which
      is what lets the reviewer accept a thin topic honestly instead of
-     flagging it as a coverage gap.
+     flagging it as a coverage gap. A declaration bound for `vwf-tools` is
+     researched from fresh sources alone, resolved from the technology's
+     name by this research channel, at first generation and at every
+     regeneration alike: its `command`, `args`, `env` and `url` never come
+     from a citations file or any other text the repo holds, because a repo
+     can plant them, and this declaration runs in every repo on the machine.
    - **Write** — the topic's artifact, per the kind's structure and per
      the host rules in `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md`,
      which decide whether the artifact is valid at all: strict-YAML
@@ -94,8 +105,8 @@ the composition's single consent gate and landing. Generation is
    skills, agents, rules, within the output vocabulary. **Never an
    executable** (hook scripts are pack-only), and **no artifact ever
    contains MCP or LSP configuration** — where wiring is genuinely needed
-   the component *declares* it, as `mcp_servers:` / `user_mcp_servers:` /
-   `lsp_servers:` in its pack shape, and the materializer lands each
+   the component *declares* it, as `user_mcp_servers:` / `lsp_servers:` in
+   its pack shape, and the materializer lands each
    behind its own consent line
    ([the materializer](materializer.md), [the local plugin](local-plugin.md));
    generation never writes a config file or a manifest itself, and
@@ -105,14 +116,17 @@ the composition's single consent gate and landing. Generation is
    **Then vet every name, once the declared names are final.** List every
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
-   `uv run --with`, `uvx`), every `mcp_servers:` / `user_mcp_servers:`
-   command, every action reference, every image reference, every
+   `uv run --with`, `uvx`), every `user_mcp_servers:` and `lsp_servers:`
+   command, every package a server's runner chain fetches, every
+   `user_mcp_servers:` `url`, every URL or bare host in either kind of
+   entry's `args` or `env` values,
+   every action reference, every image reference, every
    dependency in a `Package.swift`, and every Maven dependency and Gradle
    plugin in a build file (`build.gradle.kts`, `settings.gradle.kts`,
-   `gradle/libs.versions.toml`) — each written with one of the eight
+   `gradle/libs.versions.toml`) — each written with one of the nine
    ecosystem prefixes, `npm:`, `pypi:`, `pub:`, `action:`, `image:`,
-   `spm:`, `maven:` or `mise:`; the generator always writes the prefix,
-   never a bare name. Which name takes which prefix:
+   `spm:`, `maven:`, `mise:` or `host:`; the generator always writes the
+   prefix, never a bare name. Which name takes which prefix:
 
    | The name                                     | Is written as                               |
    | -------------------------------------------- | ------------------------------------------- |
@@ -125,10 +139,65 @@ the composition's single consent gate and landing. Generation is
    | a `Package.swift` dependency                 | `spm:<host>/<owner>/<repo>@<version>`       |
    | a Maven dependency                           | `maven:<group>:<artifact>@<version>`        |
    | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
+   | a `user_mcp_servers:` entry's `url`          | `host:<hostname>`                           |
+   | any URL in a server's `args` or `env` value  | `host:<hostname>`                           |
+   | a bare host in a server's `args` or `env`    | `host:<hostname>`                           |
 
-   An MCP command takes the prefix of the registry its runner fetches
-   from — `npm:` for `npx`, `pypi:` for `uvx`. A SwiftPM name is read from
-   the dependency's package URL, the host kept (`github.com` included). A
+   A server is a `user_mcp_servers:` or an `lsp_servers:` entry, and the two
+   take the same rules. A server's **chain** is its command and every runner
+   nested in its `args`, however deep, and every package the chain fetches is
+   listed, with the prefix of the registry the runner that fetches it reads:
+   `mise:` for `mise x` (the tool it starts after `--`, and each tool named
+   before the `--`), `npm:` for `npx`, `pnpx`, `bunx`, `bun x`, `npm exec`,
+   `pnpm dlx` and `yarn dlx`, `pypi:` for `uvx`, `uv run` and `pipx run`. With
+   no package flag the package is the runner's first positional. `--package`,
+   `-p`, `--from` and `--spec` name the package, each time they appear and on
+   either side of a subcommand, and the positional is then a bin of it, not a
+   package; `--with` adds a package beside the positional.
+   `mise x -- pnpm --package=a --package=b dlx b` lists pnpm's `mise:` name,
+   `npm:a` and `npm:b`; `npx -p evil ok` lists `npm:evil`;
+   `pipx run --spec evil ok` lists `pypi:evil`. A chain that cannot
+   be read this way — a runner that fetches and is not named here, a package
+   spec that is no registry name (`github:…`, `git+…`, a path) — stops
+   generation as `UNRESOLVED:`.
+
+   An MCP `url` is vetted by its
+   host alone, never its path, query or credentials, and so is a URL in
+   `args` or in an `env` value: `npx mcp-remote <url>` lists the runner's
+   package and the `host:` name both, `env: { API_URL: <url> }` lists the
+   `host:` name beside the command's, and the `host:` row blocks either. A
+   **bare host** takes the same row: an `args` element or `env` value that
+   reads as a hostname or an IP address, with no scheme, with or without a
+   port or path (`API_HOST: evil.example.com`, `10.0.0.1:9000`), `localhost`
+   among them. A dotted value that could be a file or a host is a host, a
+   `${VAR}` reference names none, and the default it carries is read as a value.
+
+   Three forms name no one thing to vet, so each stops generation as
+   `UNRESOLVED:`, whatever the verdict table says:
+
+   - **A shell, or an interpreter's inline code,** as a server's command or
+     anywhere in its chain, by any path: every shell, with or without `-c`
+     (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`), and a shell that `env`
+     starts counts as a shell (`env sh -c`); every inline-code form of
+     every interpreter (`node -e`, `node -p`, `python -c`, `perl -e`,
+     `ruby -e`, `php -r`, `bun -e`, `deno eval`, `npx -c`); and a flag that
+     loads code beside the tool named (`node --import`, `node --require`).
+   - **A `data:` or `file:` value:** an `args` element or `env` value that is
+     such a URL or embeds one.
+   - **A code-loading variable,** whatever its value, set as an `env` key or
+     as a `VAR=value` element of `args`: one that makes a runtime, a loader or
+     a shell load or run something (`NODE_OPTIONS`, `NODE_PATH`, `PYTHONPATH`,
+     `PYTHONSTARTUP`, `PERL5OPT`, `RUBYOPT`, `JAVA_TOOL_OPTIONS`, `BASH_ENV`,
+     `ENV`, `ZDOTDIR`, `LD_PRELOAD`, `DYLD_*`, `PATH`).
+
+   **Where the vetting ends.** The generator vets the names that it can read
+   from the declared command. The consent gate shows the full command and its
+   env values: `command`, `args`, the `env` keys and their values, and `url`,
+   per [the local plugin](local-plugin.md). The person at the gate is the
+   control for any form that the vetting does not parse.
+
+   A SwiftPM name is read
+   from the dependency's package URL, the host kept (`github.com` included). A
    Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
    Ruby and .NET tools have no prefix of their own: they are mise tools,
    reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or
@@ -150,7 +219,10 @@ the composition's single consent gate and landing. Generation is
    `block`. **A `block` row halts this component here**: report the
    table, ask the user to name the replacement, and check the replacement
    before the step resumes. The generator never swaps a name silently — a
-   swap is a new recommendation, and it is the user's. `warn` rows travel
+   swap is a new recommendation, and it is the user's. No source vets a
+   remote host, so a `host:` row always reads `block`, and only a stdio
+   command that clears the check, with no URL or bare host in its `args` or
+   `env` values, can replace it. `warn` rows travel
    with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
    the same way a Context7 outage does (the preconditions above): a name
    whose sources could not be reached is never landed on an inferred

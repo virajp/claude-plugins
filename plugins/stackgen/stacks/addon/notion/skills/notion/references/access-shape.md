@@ -13,8 +13,8 @@ reach through it and how to reach it well.
 
 ## The wiring
 
-One entry in the repo's own `.mcp.json`, landed by the materializer behind its
-own consent line:
+One entry in `vwf-tools`, the local plugin stackgen generates, at user scope,
+landed by the materializer behind its own consent line. Its manifest carries:
 
 ```json
 {
@@ -100,5 +100,5 @@ When one is asked for:
 
 No variable is injected, so there is no name and no issuer for the environment
 catalogue to record. That is the one place this provider differs from every
-other backing pin, and it is a consequence of clause 4's first path rather than
+backing pin, and it is a consequence of clause 4's first path rather than
 an omission.

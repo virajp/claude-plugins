@@ -1750,11 +1750,23 @@ describe("the technology-free vwf guard", () => {
   });
 
   it("flags the project-scoped MCP spelling too", () => {
-    // Servers land in the project's own `.mcp.json` now, which scopes them
-    // `mcp__<server>__` — matching only the retired plugin prefix would have
-    // quietly stopped catching anything.
+    // Servers used to land in the project's own `.mcp.json`, which scopes them
+    // `mcp__<server>__`, and a repo upgrading can still carry that prose.
     const root = tree(
       vwf({ "assets/feedback.md": "Call mcp__claude-design__get_page.\n" }),
+    );
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("reaches the \"claude-design\" MCP server"),
+    ]);
+  });
+
+  it("flags the vwf-tools MCP spelling too", () => {
+    // Servers land in the generated `vwf-tools` plugin now, which scopes them
+    // `mcp__plugin_vwf-tools_<server>__`.
+    const root = tree(
+      vwf({
+        "assets/feedback.md": "Call mcp__plugin_vwf-tools_claude-design__get_page.\n",
+      }),
     );
     expect(messages(check(root))).toEqual([
       expect.stringContaining("reaches the \"claude-design\" MCP server"),
@@ -1832,6 +1844,50 @@ describe("the technology-free vwf guard", () => {
     }));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("hardcodes \"bun\""),
+    ]);
+  });
+
+  // The same bar over a pack, where the context7 entry lives now.
+  const addonPack = (yaml: string) => ({
+    stackgen: {
+      manifest: { name: "stackgen", version: "1.0.0", description: "x" },
+      files: { "stacks/addon/context7/pack.yaml": yaml },
+    },
+  });
+
+  it("accepts a pack's runner behind a ${VAR:-default} expansion", () => {
+    const root = tree(addonPack(
+      [
+        "name: Context7",
+        "user_mcp_servers:",
+        "  context7:",
+        "    command: sh",
+        "    args:",
+        "      - -c",
+        "      - \"${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp\"",
+        "",
+      ]
+        .join("\n"),
+    ));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags a pack's bare runner", () => {
+    const root = tree(addonPack(
+      [
+        "name: Context7",
+        "user_mcp_servers:",
+        "  context7:",
+        "    command: pnpm",
+        "    args:",
+        "      - dlx",
+        "      - \"@upstash/context7-mcp\"",
+        "",
+      ]
+        .join("\n"),
+    ));
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("hardcodes \"pnpm\""),
     ]);
   });
 

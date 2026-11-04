@@ -65,8 +65,8 @@ Confirm the `taste-skill` plugin is installed — its skills appear as
 `taste-skill:<name>` in the session's skill list. If none do, halt with
 exactly:
 
-> `taste-skill` is not installed. Run `mise run setup`, which installs
-> `taste-skill@taste-skill` at user scope, then restart the session.
+> `taste-skill` is not installed. Add `taste-skill` in `/vwf:architecture`'s
+> tools menu, run `/vwf:setup`, then restart the session.
 
 The `review` mode needs no plugin for the server; it needs it for applying
 comments, which is authoring. Check it in every mode.

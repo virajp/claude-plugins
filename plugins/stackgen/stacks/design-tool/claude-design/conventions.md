@@ -14,9 +14,9 @@ code is returned with `code: null` and a note — never a guessed code, because
 the code is the join key and a wrong one silently maps a design onto the wrong
 contract row.
 
-**Reach is over MCP**, wired into the project's own `.mcp.json` at
-materialization behind its own consent line. Nothing about the server is held
-in a plugin manifest any more.
+**Reach is over MCP**, wired into `vwf-tools`, the local plugin stackgen
+generates, at user scope, at materialization behind its own consent line. The
+server comes with this pack: there is no separate pick for it.
 
 The three import skills land at **fixed names** in the repo's own
 `.claude/skills/` — `design-import-screens`, `design-import-design-system`

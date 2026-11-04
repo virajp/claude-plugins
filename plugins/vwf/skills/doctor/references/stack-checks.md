@@ -80,13 +80,14 @@ whole section reports `not checked — no stack resolved` for it:
   `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the **target
   repo's** own `.claude/` tree, resolved as the gate above → the language is
   **known**: verify against those facts instead — the LSP per how the facts say
-  it is provided, the mise tool and manifest per the fact values, `n/a`
-  accepted silently as an answer. **A token declared only under a template's
-  `optional_languages:` counts as declared** — the template admits it, which is
-  what this test asks. Say so in the report, though: an optional token carries
-  no language facts of its own, so its LSP/toolchain/manifest rows read
-  **unverified** rather than passing. Known-but-unverified is an honest third
-  answer, and quietly reporting it as a pass would be the drift this check
+  it is provided, which for a stack stackgen materialized is a server in its
+  generated `vwf-tools` local plugin, the mise tool and manifest per the fact
+  values, `n/a` accepted silently as an answer. **A token declared only under
+  a template's `optional_languages:` counts as declared** — the template admits
+  it, which is what this test asks. Say so in the report, though: an optional
+  token carries no language facts of its own, so its LSP/toolchain/manifest rows
+  read **unverified** rather than passing. Known-but-unverified is an honest
+  third answer, and quietly reporting it as a pass would be the drift this check
   exists to catch. **No installed plugin declares the
   token and no materialized facts cover it** → report **unknown language**.
   **Blocking once this project's `template` is pinned**: nothing else can be
@@ -164,11 +165,12 @@ the truth and the config is what needs updating.
 
 ## 5. Repo tooling
 
-**The seven stack axes.** Since format 19 a stack is composed from independent
-axes — `project`, `backing`, `deploy`, `repo`, `design`, `cicd` and, since
-`config_format` 19, `stylesheet`
-(`assets/stack-adapter.md` holds the enum) — and every one but `repo` is **per
-project** (the three technology axes since format 13). Check each pin resolves
+**The eight stack axes.** Since format 19 a stack is composed from independent
+axes — `project`, `backing`, `deploy`, `repo`, `design`, `cicd`, since
+`config_format` 19 `stylesheet`, and since `config_format` 25 `addon`
+(`assets/stack-adapter.md` holds the enum) — and every one but `repo` and `addon`
+is **per project** (the three technology axes since format 13); `addon` is per
+product, and has its own check, **Addons**, below. Check each pin resolves
 to a template an installed stack plugin actually offers:
 `projects.<name>.stack.template` (project axis), each entry of
 `projects.<name>.stack.backing_template`, `projects.<name>.stack.deploy_template`,
@@ -176,7 +178,8 @@ to a template an installed stack plugin actually offers:
 `projects.<name>.cicd` pins, whose slug is the config value itself, and
 `projects.<name>.stylesheet`, whose slug is likewise the config value and which
 is **required only for a project declaring a `site` or a `webapp` platform** —
-on any other project the key's absence is correct and is not a finding. A pin naming
+on any other project the key's absence is correct and is not a finding — and
+each slug of the top-level `addons:` list. A pin naming
 a template that isn't there is **drift** — usually a template renamed under the
 user's feet, or a stack plugin that was never installed. An axis reading
 `unresolved` is not a pin: report the degradation above and resolve nothing. A
@@ -208,6 +211,43 @@ guess a value, and never copy one project's answer onto another, which is
 exactly the product-wide assumption format 13 removed. A config still carrying a
 product-wide `backing:`, `deploy:` or `design.tool` key is `12` drift: report it
 and nudge `/vwf:setup`.
+
+**Addons.** `addons:` is the top-level list of optional tools the product picked
+in `.config/vwf.yaml`; absent or `[]` means no optional tool. `[]` is a completed
+answer, **never a pending decision**, and the list never holds `unresolved`, so
+neither is a finding. Every mismatch below is **drift**, remedied by
+`/vwf:setup`, and **never blocking**: a missing tool blocks no `execute`, since
+what needs a tool halts on its own when it does.
+
+Read the **base repo's** `.claude/stackgen/lock.yaml` for this check, never a
+member's: addon pins materialize in the base repo alone. **Read every owner from
+that lockfile**, and never match keys against pack declarations. Each item
+carries its owners as a list:
+
+- a server under `local_plugin.mcp_servers` is `{name, packs: [...]}`;
+- a `bootstrap.plugins` map entry lists its owners in `components: [...]`;
+- a skill entry names its owner by its component.
+
+An item is **owned by `addon/<slug>`** when that owner is a ref to that pack, at
+whatever version the ref carries. An entry with no owners — the old shape — reads
+as **owners unknown** and is skipped; the next sync rewrites it.
+
+- **Forward** — for each slug in `addons:`: no lockfile item is owned by
+  `addon/<slug>`; or an owned server is missing from the `vwf-tools` manifest,
+  `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json`; or an owned
+  bootstrap plugin is not installed (`claude plugin list`).
+- **Reverse** — any lockfile item (server, skill entry, bootstrap plugin) owned
+  by `addon/<slug>` whose slug is not in `addons:`.
+- **Unclaimed keys** — a server key in the `vwf-tools` manifest that
+  `~/.claude/plugins/local/vwf-tools/.claude-plugin/claims.json` lists for no
+  repo; an absent `claims.json` lists none, so that is one row naming every key.
+  Nothing deletes such a key automatically: `/vwf:setup` in a repo that uses it
+  adds that repo's claim.
+- **The old plugin** — a `~/.claude/plugins/local/stackgen-lsp/` directory, read
+  whatever the lockfile says, stays drift until its migration is accepted, and
+  `/vwf:setup` is what offers it again (stackgen migrates it). The row says what
+  the wait costs: until then a picked tool's server and a design tool's server
+  land nowhere, and the repo's `.mcp.json` entries stay.
 
 **A declared backing capability should have a provider.** For each registry
 project, read its `capabilities:` and classify each token by the **kind** marked

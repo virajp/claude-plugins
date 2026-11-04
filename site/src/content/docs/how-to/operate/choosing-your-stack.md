@@ -1,6 +1,6 @@
 ---
 title: "Decide which stack your product pins"
-description: "Decide which stackgen bundle each of your product's seven axes pins, and why, before it reaches /vwf:architecture."
+description: "Decide which stackgen bundle each of your product's eight axes pins, and why, before it reaches /vwf:architecture."
 order: 1
 ---
 
@@ -9,7 +9,7 @@ technology: vwf names no language, no framework and no cloud, so every concrete
 option you are ever offered comes from `stackgen`. That plugin arrives as vwf's
 dependency, so there is no install decision left to make — but there is still a
 decision, and it is now one axis at a time rather than one plugin at a time.
-This guide is that decision: which **bundle** each of your product's seven axes
+This guide is that decision: which **bundle** each of your product's eight axes
 pins, and why, **before** it reaches `/vwf:architecture`. At the end you have a
 pin list you can defend.
 
@@ -141,10 +141,7 @@ and production are a backing pin of their own, Cloudflare's being
 capability whose providers ride the datastore you already pinned rather than
 composing an engine of their own — `audit-store-postgres` on Postgres,
 `audit-store-d1` on D1 — so it is a pin you make beside the datastore, never
-instead of it. The **workspace** is the odd one on this axis: `notion` pins the
-place your team's docs, specs and tickets already live, and what it lands is the
-wiring that lets the agent reach them — no part of the product runs against it,
-which is why the category realizes no capability at all. Managed: a cloud's own
+instead of it. Managed: a cloud's own
 services — `gcp` bringing Firestore, Cloud SQL and the Firebase services, and
 `cloudflare` bringing Workers KV, R2, D1, Hyperdrive, Vectorize, Pipelines,
 Analytics Engine, Durable Objects, Workflows, Queues, Workers AI, AI Gateway, AI
@@ -198,6 +195,18 @@ or an `iac` project is never asked and records no key.
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is
 the kind's edge, not a gap — and a Flutter checkout's `pub` is a pack inside the
 `dart-flutter` project bundle, not a repo bundle of its own.
+
+**The addon axis is the optional tools**, shown as a tools menu after the other
+rounds, once per product, with **nothing preselected**: only what you pick is
+ever installed, and picking nothing is a complete answer. It holds what serves
+the agent rather than the product. `context7` is current library documentation,
+and stackgen's generator halts without a Context7 server, so a product that will
+generate anything wants it. `taste-skill` is the plugin the `claude-code` design
+tool's `design-session` authors through, and that skill halts without it.
+`notion` is the place your team's docs, specs and tickets already live, and what
+it lands is the wiring that lets the agent reach them — no part of the product
+runs against it. Its server lands at user scope, so once authorised it is
+reachable from every repo on your machine: grant it narrowly.
 
 ## The closed menu, and the one door out of it
 
@@ -303,8 +312,9 @@ pins, gates and their tasks — is not a pack's: stackgen asks
 [bootstrap](https://github.com/virajp/bootstrap) for those tools, behind its own
 consent line, and bootstrap's `mise run setup:configs` writes them. A **language
 server** cannot be — it is a plugin-manifest feature no project file can express
-— so stackgen writes one small local plugin on your machine and prints the two
-commands that register it, rather than running them. It is user-scoped, so it
+— so stackgen writes one small local plugin on your machine, `vwf-tools`, which
+holds any MCP server your picks need too, and prints the two commands that
+register it, rather than running them. It is user-scoped, so it
 serves every repo you work in and **your collaborators get none of it**: their
 editor tooling is their own machine's business. Expect to do that once, and to
 be asked before it happens.

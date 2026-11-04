@@ -49,7 +49,6 @@ import {
 } from "./plugins.ts";
 import type {
   Dependency,
-  Manifest,
   Plugin,
   PluginFile,
 } from "./plugins.ts";
@@ -106,6 +105,7 @@ export function check(repoRoot: string): Finding[] {
   findings.push(...checkBundleDefaults(plugins));
   findings.push(...checkExclusionSets(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
+  findings.push(...checkPackRunners(plugins));
   return findings;
 }
 
@@ -2187,13 +2187,13 @@ export function prescribes(body: string, token: string): boolean {
 const EXPANSION_RE = /\$\{[^}]*\}/g;
 
 /**
- * Every stdio invocation vwf's manifest declares, as one string per server.
+ * Every stdio invocation a server map declares — a manifest's `mcpServers` or a
+ * pack's `user_mcp_servers:` — as one string per server.
  *
  * `type: http` servers have no `command` and contribute nothing: an http entry
  * carries no runner for the guard to read.
  */
-function invocations(manifest: Manifest): string[] {
-  const servers = manifest.mcpServers;
+function invocations(servers: unknown): string[] {
   if (typeof servers !== "object" || servers === null) {
     return [];
   }
@@ -2225,21 +2225,63 @@ function invocations(manifest: Manifest): string[] {
  * So expansions are elided before the token scan. A token surviving that is one
  * no environment variable can displace, which is the actual defect.
  */
-function checkManifestRunners(vwf: Plugin): Finding[] {
+function runnerFindings(servers: unknown, scope: string, owner: string): Finding[] {
   const findings: Finding[] = [];
-  for (const invocation of invocations(vwf.manifest)) {
+  for (const invocation of invocations(servers)) {
     const fixed = invocation.toLowerCase().replaceAll(EXPANSION_RE, " ");
     const hits = TOOL_TOKENS.filter((token) => anchored(token).test(fixed));
     if (hits.length > 0) {
       findings.push({
-        scope: "vwf:.claude-plugin/plugin.json",
+        scope,
         message: `hardcodes ${hits.map((h) => `"${h}"`).join(", ")} in the `
-          + `"${invocation}" MCP server invocation — the dependency is vwf's, `
+          + `"${invocation}" MCP server invocation — the dependency is ${owner}'s, `
           + `the runner is the user's. Put it behind a \${VAR:-default} `
           + `expansion so the recommendation stays and another runner still `
           + `works; a fixed one fails as a dead server, not as a missing `
           + `prerequisite.`,
       });
+    }
+  }
+  return findings;
+}
+
+function checkManifestRunners(vwf: Plugin): Finding[] {
+  return runnerFindings(
+    vwf.manifest.mcpServers,
+    "vwf:.claude-plugin/plugin.json",
+    "vwf",
+  );
+}
+
+/**
+ * The same bar over every stackgen pack's `user_mcp_servers:`, which is where
+ * the context7 entry lives since it left vwf's manifest. A pack that does not
+ * parse is reported by `checkPackConfigTier`, so it is skipped here.
+ */
+function checkPackRunners(plugins: readonly Plugin[]): Finding[] {
+  const findings: Finding[] = [];
+  const stackgen = plugins.find((p) => p.dir === "stackgen");
+  if (stackgen === undefined) {
+    return findings;
+  }
+  for (const file of stackgen.files) {
+    if (!/^stacks\/.+\/pack\.yaml$/.test(file.path)) {
+      continue;
+    }
+    let document: unknown;
+    try {
+      document = parseYaml(readText(file.absolute));
+    } catch {
+      continue;
+    }
+    if (isPlainObject(document)) {
+      findings.push(
+        ...runnerFindings(
+          document.user_mcp_servers,
+          `stackgen:${file.path}`,
+          "the pack",
+        ),
+      );
     }
   }
   return findings;
@@ -2294,15 +2336,16 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     // how `feedback canvas` came to work for `claude-design` and silently do
     // nothing for the other two tokens the menu advertises.
     //
-    // Generalized at Wave D. It used to match `mcp__plugin_design-tools_`, the
+    // Generalized twice. It used to match `mcp__plugin_design-tools_`, the
     // prefix a plugin-declared server got. That plugin is gone and servers now
-    // land in the project's own `.mcp.json`, which scopes them `mcp__<server>__`
-    // — so matching the old prefix alone would have quietly stopped catching
-    // anything. Both spellings are matched: a repo upgrading from an earlier
-    // version can still carry the old one in its prose.
+    // land in the generated `vwf-tools` local plugin, which scopes them
+    // `mcp__plugin_vwf-tools_<server>__`. All three spellings are matched: a
+    // repo upgrading from an earlier version can still carry an old one in its
+    // prose, `mcp__<server>__` among them.
     const designMcp = TOOL_TOKENS
       .filter((token) =>
         body.includes(`mcp__plugin_design-tools_${token}`)
+        || body.includes(`mcp__plugin_vwf-tools_${token}__`)
         || new RegExp(`mcp__${token}__`).test(body)
       );
     if (designMcp.length > 0) {

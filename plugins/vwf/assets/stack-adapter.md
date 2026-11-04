@@ -12,7 +12,7 @@ This is the same shape as the design-adapter contract
 
 | vwf owns (abstract)                                                 | A stack plugin owns (concrete)                              |
 | ------------------------------------------------------------------- | ----------------------------------------------------------- |
-| The **seven axes** (`project` / `backing` / `deploy` / `design` / `cicd` / `stylesheet` per project, `repo` per repo) | Which templates exist on each axis |
+| The **eight axes** (`project` / `backing` / `deploy` / `design` / `cicd` / `stylesheet` per project, `repo` per repo, `addon` per product) | Which templates exist on each axis |
 | The **template frontmatter contract** (`stack-vocabulary.md`)       | The templates themselves                                    |
 | The **platform** vocabulary a project template declares             | Which platforms it offers a template for                    |
 | Harness **capability names** (`dev`, `e2e_local`, `screenshots`, …) | What *satisfies* each one — the tool, the task, the command |
@@ -105,6 +105,10 @@ never sees the value and needs no handling for it.
 The `repo` axis stays per repo (`repo.stack.template`) — it describes the
 checkout, not a project.
 
+The `addon` axis is per product (`addons:`, since **config_format 25**) — it
+records the optional tools the product picked, not anything about one project
+or one checkout. See [The `addon` axis](#the-addon-axis).
+
 ## The delegation protocol
 
 vwf invokes skills on each configured plugin, at **exactly** these names:
@@ -180,11 +184,12 @@ Returned by `-stack-menu`. One entry per template the plugin offers:
 plugin: <name>
 templates:
   - slug: <kebab> # unique within the plugin
-    axis: project | backing | deploy | repo | design | cicd | stylesheet
+    axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
     platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
-    default: true # OPTIONAL — at most one entry per axis per platform; vwf preselects the one it offers
+    default: true # OPTIONAL — at most one entry per axis per platform; vwf preselects the one it offers. Never on the addon axis
+    needed_by: <string> # OPTIONAL, ADDON AXIS ONLY — names the shipped pack that needs this tool
 ```
 
 vwf renders the union of every configured plugin's menu, grouped by axis and
@@ -238,9 +243,9 @@ it is invisible, which is why it shipped unnoticed. `stylesheet` joined them at
 written is a per-project choice, not a property of the framework template, and
 a menu is the only way to offer it.
 
-These three axes close that door, making seven axes in all. They differ from
-the other four in one respect worth stating, because it is what keeps them
-cheap:
+These three axes close that door; with the `addon` axis below, that makes eight
+axes in all. They differ from the `project`, `backing`, `deploy` and `repo` axes
+in one respect worth stating, because it is what keeps them cheap:
 
 **The slug *is* the config value.** `projects.<name>.design`,
 `projects.<name>.cicd` and `projects.<name>.stylesheet` already hold a tool
@@ -270,6 +275,71 @@ vwf still names no tool: the adapter contract
 three fixed skill names, and the pinned template materializes the resolved
 tool's implementation of them into the repo's own `.claude/`.
 
+### The `addon` axis
+
+The optional tools a product may pick, recorded in `.config/vwf.yaml`'s
+top-level `addons:` list. The menu calls them optional tools; the axis and the
+key are `addon` so neither reads as `repo.stack.tools` or as the three tool axes
+above.
+
+**The `addon` round differs from every other round:**
+
+- **product-level** — asked once, never per project and never filtered by
+  platform;
+- **multi-select** — any of the entries, or none;
+- **no default** — no entry carries `default: true`, and nothing is preselected;
+- **no generate entry** — the open entry never appears on this round;
+- **no defer** — `addons:` is always a list, `[]` when none, so the round never
+  returns `unresolved`;
+- **`needed_by`** — an entry a shipped pack needs may name that pack in this
+  optional string, which the round shows beside the entry. It selects nothing.
+
+**vwf passes each `addons:` slug as an `addon`-axis pin**, one call per slug
+through `/<plugin>:<plugin>-stack-template <slug>`, **to the base repo only**:
+the call carries no `repo:` line, and in a multi-repo product members get none.
+In a single repo, the repo is the base. **The call is made on every
+`/vwf:setup` run**, including for a slug the lockfile already names, because a
+pick is committed while its servers land per machine, in each person's user
+scope.
+
+**A slug dropped from `addons:` leaves through one call of its own**,
+`/<plugin>:<plugin>-stack-template remove: <slug>`, made once per slug by
+`/vwf:setup` in the base repo, never through `pack-remove`, which would leave
+the slug's server claim, skill files and bootstrap records behind. The call
+takes one `addon` slug and an entry on any other axis is an error; it returns
+no payload, one line, **removed** or **declined**. The plugin takes out
+everything its lockfile records for the slug on one plan and one consent of its
+own, and commits once; vwf wraps it in no consent and no commit. A slug the
+lockfile does not record has nothing to remove, and the call says so. A declined
+slug removes nothing and `/vwf:setup` offers it again on the next run.
+
+**After its `remove:` calls, `/vwf:setup` makes one more call**,
+`/<plugin>:<plugin>-stack-template reconcile-claims:`, once per run in the base
+repo on each plugin named in `stacks:`, whether or not a slug was dropped. It
+takes no slug and returns no payload, one line, **removed**, **declined** or
+**unchanged**. An addon dropped on another machine reaches this one by a pull,
+so no `remove:` call is made for it, while this machine still holds this repo's
+claim on its tools; the plugin drops each claim its lockfile no longer records,
+on one consent of its own. A plugin holding no such claim returns **unchanged**
+and asks nothing. vwf wraps it in no consent and no commit. A decline changes
+nothing and `/vwf:setup` offers it again on the next run.
+
+**A call `/vwf:setup` makes may end in a `declined:` line**, after what it
+returns, naming an offer the plugin makes once per run:
+
+```yaml
+declined: <offer> # OPTIONAL — returned by a plugin, passed back as returned
+```
+
+vwf passes each such line, unread, into every later `-stack-template` call of
+that run, beside the `repo:` line, and a call carrying one treats that offer as
+declined without asking. The next run starts without the line, so the offer
+comes back.
+
+`/vwf:plan` and `/vwf:execute` collect no `addon` pin when they resolve the
+conventions: an optional tool sizes no step, and a missing one halts nothing
+there. What needs a tool halts on its own terms.
+
 ## The template payload
 
 Returned by `-stack-template <slug>` once the user picks. Carries what
@@ -277,7 +347,7 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 
 ```yaml
 slug: <kebab>
-axis: project | backing | deploy | repo | design | cicd | stylesheet
+axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
 languages: [ <token> ] # open; the plugin owning the language defines its facts
 optional_languages: []
 frameworks: [] # open, lowercase-kebab
@@ -395,7 +465,11 @@ side of the contract is three rules:
   `/vwf:architecture` has recorded the pin. Architecture decides; setup lands
   the decision, in the repo the pin belongs to. A pin whose materialization was
   declined is **unmaterialized**, and the fetch says so rather than generating
-  silently — `/vwf:setup` offers it again on its next run.
+  silently — `/vwf:setup` offers it again on its next run. The one call that
+  may do more is `/vwf:setup`'s every-run call for an `addon` pin
+  ([The `addon` axis](#the-addon-axis)): the entry is read as above, and a server
+  of that pin this machine's local plugin lacks is the adapter's to offer behind
+  its own consent.
   That is not the `unresolved` axis state above and must not be recorded as one:
   the axis *was* answered, and what is missing is the artifact, not the decision.
 - **The menu may carry one open entry.** A materializing adapter's menu may

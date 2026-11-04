@@ -53,12 +53,13 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 `vwf` shells out to a few external tools. Install them first — nothing checks
 them at install time, and the table below gives the command for each.
 
-| Tool            | Required?    | Why                                                   | Install                                                                  |
-| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
-| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                      |
-| node + pnpm     | **required** | runs vwf's Context7 MCP server and the mockup scripts | `node` and `pnpm` in your global mise config, then `mise install`        |
-| Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`            |
-| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
+| Tool            | Required?    | Why                                                                                              | Install                                                                  |
+| --------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
+| mise            | **required** | task runner + resolves the toolchain                                                             | `brew install mise`                                                      |
+| node            | **required** | runs vwf's own scripts, the mockup scripts among them, and the context7 tool when picked         | `node` in your global mise config, then `mise install`                   |
+| pnpm            | when picked  | the default runner of the context7 tool, when a product picks it; `CONTEXT7_RUNNER` overrides it | `pnpm` in your global mise config, then `mise install`                   |
+| Claude Code CLI | **required** | hosts the commands                                                                               | `claude-code` in your global mise config, then `mise install`            |
+| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`)                                            | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
 
 Your global mise config is `~/.config/mise/config.toml`: add each tool to its
 `[tools]` table at an exact version, then run `mise install`. Never a bare
@@ -96,14 +97,15 @@ dependency until it dissolved into `stackgen`; if your machine still has it,
 enabled, shadowing the stackgen packs its skills moved into.
 
 `stackgen` is a dependency because vwf's stack menu is the union of what the
-installed stack plugins declare, and the seven axes carry no *other (describe)*
+installed stack plugins declare, and the eight axes carry no *other (describe)*
 option — so with no stack plugin present, `/vwf:architecture` asks a question
 you cannot answer. Having it installed costs nothing if you are not ready to
 choose a stack: stackgen acts only when an axis is pinned.
 
-The Markdown/documentation skills and the Context7 docs server used to be two
-more dependencies. They are **part of `vwf` now**: `documentation-standards` and
-`/vwf:readme` are vwf skills, and Context7 is vwf's one MCP server. The
+The Markdown/documentation skills used to be another dependency. They are **part
+of `vwf` now**: `documentation-standards` and `/vwf:readme` are vwf skills.
+Context7 was one too, then part of vwf, and is now an
+[optional tool](#mcp-servers) you pick, since nothing in vwf calls it. The
 Karpathy coding guidelines were a third, and are now a **vendored** skill —
 `karpathy-guidelines` — because as a url-sourced
 dependency it was silently absent for most installs, and vendoring puts the
@@ -541,7 +543,7 @@ postponement rather than a dead end: vwf names the three ways forward (install
 the plugin that has one, write it, or **defer the axis** as `unresolved`) rather
 than coming back quietly short.
 
-A stack is composed from **seven independent axes** — you answer each one, and
+A stack is composed from **eight independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
 template; `backing` and `deploy` take a **list**, one entry per capability and
 one per delivery mechanism (`deploy_template` became a list in `config_format`
@@ -557,15 +559,17 @@ a container image):
 | **design**     | per project | one design tool — the slug *is* the config value                                                               |
 | **cicd**       | per project | one CI system — the slug *is* the config value                                                                 |
 | **stylesheet** | per project | one stylesheet approach — the slug *is* the config value; asked only of a project declaring `site` or `webapp` |
+| **addon**      | per product | a list — the optional tools the product picks, written as the top-level `addons:`; nothing preselected         |
 
 **No slug appears in that table on purpose.** The roster is not vwf's to state:
 the menu is the union of what your **installed** stack plugins declare, so it
 changes with what you install, and `/vwf:architecture` is what enumerates it for
 your repo. Today [stackgen](./stackgen.md) is the only stack plugin, and it
-carries all seven axes — the general-purpose set, the managed backing and deploy
+carries all eight axes — the general-purpose set, the managed backing and deploy
 services of each cloud it packs, and a generator for whatever no pack covers.
 
-Since `config_format` **13** every axis but `repo` is pinned **per project**, so
+Since `config_format` **13** every technology and tool axis but `repo` is pinned
+**per project**, so
 a product can host its site on Cloudflare, its API on GCP and its worker
 somewhere else again — and design its app in one tool while its website is
 designed in another. On the `design`, `cicd` and `stylesheet` axes — the three
@@ -596,8 +600,24 @@ system's semantic tokens are the contract and the stylesheet is how they are
 realized, so the order is the dependency rather than a preference. A project
 declaring neither platform is never asked and records no key at all.
 
-**An axis can also be left unanswered.** Since `config_format` **16** any of the
-seven may read `unresolved` — deferred, not decided — which is the line between
+**The `addon` axis is the optional tools, and it follows its own rules.** Added
+in `config_format` **25**, it is one multi-select round per product, the **tools
+round**, shown after the last other round, with **nothing preselected**: only
+what you pick is ever installed. The answer is the top-level `addons:` list in
+`.config/vwf.yaml`, always a list, `[]` when none, and `[]` is a completed
+answer
+rather than a pending decision. A re-run shows the current pick and asks only
+whether to change it. `/vwf:setup` materializes each slug in the base repo
+alone,
+on every run, and removes a dropped one; a difference from what is installed is
+drift `/vwf:doctor` reports, never blocking, since whatever needs a tool halts
+on
+its own. Today's tools, and what needs each, are
+[stackgen's](./stackgen.md#optional-tools--the-addon-kind).
+
+**An axis can also be left unanswered.** Since `config_format` **16** any axis
+but `addon` may read `unresolved` — deferred, not decided — which is the line
+between
 *defining* a product and *building* one. `/vwf:product`, `/vwf:architecture`,
 `/vwf:blueprint`, `/vwf:design-system` and every other doc surface run to
 completion with no stack chosen at all; `/vwf:doctor` reports the deferral as a
@@ -620,7 +640,7 @@ role meant. **Your pin must cover every platform your project declares**, which
 stack plugin's answer — [stackgen](./stackgen.md) states the set it ships.
 
 **Templates ship in a stack plugin, never in vwf.** vwf has no `stacks/` tree at
-all: it owns the seven axes, the platform vocabulary a template declares
+all: it owns the eight axes, the platform vocabulary a template declares
 against, and the two adapter skill names it reaches a plugin through. So a
 product gets whichever menu its installed plugins add up to, and one that
 installs nothing sees an empty one.
@@ -1733,6 +1753,19 @@ files — `.graphifyignore`, the `graphify-refresh` hook, the `pipx` pins, the
 bootstrap's migration M24 or its `remove tools` instruction does, and doctor
 names that remedy.
 
+**`config_format` 25 adds `addons:`** and keeps what the repo has: `notion`
+leaves every `backing_template` and joins the list when any such list names it
+or any locally cloned repo's stackgen lockfile records it, `taste-skill` joins
+when a lockfile records it, and one yes/no question asks whether to keep
+Context7,
+the server vwf's manifest used to ship. A member not cloned locally is skipped
+with a warning. The result is one numbered row; declined, the config and the
+stamp stay at 24 and the next pass offers it again. The lockfile's
+`stackgen-lsp`
+block and any recorded `.mcp.json` entries are
+[stackgen's to migrate](./stackgen.md#the-output--claude-first-and-two-targets-beside-it),
+behind its own consent, in the materialize pass that follows.
+
 Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
 linkage; project roles and platforms — `watch`, `tv` and `spatial` from an Xcode
 target's SDK or an `AndroidManifest.xml` feature, Wear OS from
@@ -1894,7 +1927,9 @@ by presenting the [stack templates](#stack-templates) for its type as a menu
 that project's design round and only for a project declaring `site` or `webapp`
 — and the menu is the whole vocabulary: nothing fitting leaves three ways
 forward, none of them a free-text pin; the answer lands as a structured block in
-`.config/vwf.yaml`), walks the **product-foundations checklist** (see
+`.config/vwf.yaml`; the last round is the product's **tools round**, the
+[`addon` axis](#stack-templates), written as `addons:`), walks the
+**product-foundations checklist** (see
 [vwf skills](#vwf-skills) — one accept/adapt/skip question per elective
 foundation and accept/adapt/defer per core one, recorded as cross-cutting
 tokens), and writes **both** `docs/blueprint/registry.yaml` — the
@@ -4285,39 +4320,13 @@ rules:
 
 ## MCP servers
 
-`vwf` declares one, and it is the only MCP server the workflow needs.
-
-### Context7 — current library docs
-
-[Context7](https://github.com/upstash/context7) fetches up-to-date documentation
-and code examples for libraries, frameworks, and SDKs on demand, so Claude looks
-up current library docs instead of relying on training knowledge. It used to be
-its own plugin and a vwf dependency; vwf now declares the server itself.
-
-It runs over stdio through `sh -c`, launched via
-`${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp` — the dependency is vwf's,
-the runner is yours. `pnpm dlx` is the default and the recommendation (always
-the latest published server); export `CONTEXT7_RUNNER` to run it with `bunx`,
-`npx -y`, `deno run -A npm:` or an absolute path to a globally installed binary.
-Nothing checks the runner, so a wrong one surfaces as a dead MCP server rather
-than as a missing prerequisite. The manifest also passes a `CONTEXT7_API_KEY`
-env var through (defaulting to empty), so exporting one authenticates past
-Upstash's anonymous rate limits:
-
-```yaml
-context7:
-  transport: stdio
-  command: sh
-  args:
-    - -c
-    - "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"
-  env:
-    CONTEXT7_API_KEY: ${CONTEXT7_API_KEY:-}
-```
-
-You don't call it directly. Claude resolves a library to its Context7 ID and
-queries that library's documentation when a question is about a specific library
-— API syntax, configuration, version migrations, CLI usage.
+`vwf` declares none, and nothing in the workflow calls one. Context7 and Notion
+are optional tools you pick on [the `addon` axis](#stack-templates), and a
+design
+tool brings its own server; each lands in `vwf-tools`, the local plugin stackgen
+generates on your machine. The one thing that needs Context7, stackgen's
+generator, halts when none is reachable and says how to add it. See
+[stackgen's optional tools](./stackgen.md#optional-tools--the-addon-kind).
 
 ## See also
 

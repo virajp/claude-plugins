@@ -65,15 +65,15 @@ serves only the canvas directory, carries no auth and no TLS — a surface for
 one person on one machine, never a deployment. It needs `node` on `PATH`,
 which the repo's toolchain provides: `mise run setup` installs it.
 
-**The plugin this pack requires.** Authoring runs through the `taste-skill`
-plugin's design skills, so this pack lists it under `## Claude plugins`
-below, and `mise run setup` installs it. The pack vendors none of that
-doctrine and vwf depends on none of it. Every skill here that needs the
-plugin checks for it first and halts with the one sentence below when it is
-absent:
+**The plugin this pack needs.** Authoring runs through the `taste-skill`
+plugin's design skills, and this pack does not install it: `taste-skill` is an
+optional tool, picked on the tools round of `/vwf:architecture`. The pack
+vendors none of that doctrine and vwf depends on none of it. `design-session`
+checks for the plugin first and halts with the one sentence below when it is
+absent; the three import skills do not need it and keep working:
 
-> `taste-skill` is not installed. Run `mise run setup`, which installs
-> `taste-skill@taste-skill` at user scope, then restart the session.
+> `taste-skill` is not installed. Add `taste-skill` in `/vwf:architecture`'s
+> tools menu, run `/vwf:setup`, then restart the session.
 
 **The `design_system_id` is the canvas path** —
 `docs/design/<project>/design-system.md` — rather than a hash of its content.
@@ -88,7 +88,3 @@ constructs one from configuration, and it never learns which tool answered.
 The fourth skill, `design-session`, is the tool's authoring surface — the one
 a user invokes — and vwf never calls it. Its `scripts/serve.mjs` lands beside
 it, a single-file Node program with no dependencies.
-
-## Claude plugins
-
-- `taste-skill@taste-skill` — marketplace `Leonxlnx/taste-skill`, user scope.

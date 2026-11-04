@@ -22,7 +22,7 @@ the hosted server inherits it. Nothing about wiring the agent widens anyone's
 access — the review of who may read what stays where the team already does it.
 
 **When you want the wiring to be one key and one grant.** The whole
-materialization is an entry in `.mcp.json`. There is no client library, no
+reach is an entry in `vwf-tools`. There is no client library, no
 config file, no CLI to pin, nothing in the repo to keep in sync, and removing
 the provider is deleting the entry.
 
@@ -32,7 +32,7 @@ the provider is deleting the entry.
 markdown, or in a different hosted workspace is better served by no pin at all
 than by one pointing at a mostly-empty Notion. See
 [contract satisfaction](contract-satisfaction.md) on the absence clause: a
-project with nothing pinned loses nothing.
+product with nothing picked loses nothing.
 
 **When a third party holding the team's documents is not acceptable.** This is
 the same objection a hosted secrets manager faces, and it has the same answer:
@@ -56,7 +56,7 @@ there.
 **Not the product, and not any code.** The contract's rule that outranks the
 rest — the agent reaches the workspace through a server, never through a key in
 the tree or a file the application reads — means the whole integration is one
-`.mcp.json` key. No manifest gains a dependency, no build reads a credential,
+`vwf-tools` key. No manifest gains a dependency, no build reads a credential,
 and swapping to another workspace provider changes that key and nothing else.
 
 **Not writing anything into the workspace.** The default is read-only by

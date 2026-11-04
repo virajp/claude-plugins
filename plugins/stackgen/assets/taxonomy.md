@@ -60,8 +60,8 @@ The closed list. A component is exactly one of:
 - **`queue`** — a standalone queue or event bus.
 - **`capability-provider`** — the flavour half of a vwf capability that
   belongs to no cloud and is not a datastore: an identity issuer, a
-  telemetry sink, a workflow engine, a secrets manager, an audit store, a
-  knowledge workspace. Its **category** says which.
+  telemetry sink, a workflow engine, a secrets manager, an audit store. Its
+  **category** says which.
 - **`ci-system`** — one continuous-integration system: where its workflows
   live, how it is triggered, and how it installs a toolchain. One component
   per system, never per workflow.
@@ -86,6 +86,10 @@ The closed list. A component is exactly one of:
   pack must not decide it for them. Pinned per project, and asked only of
   a project declaring a `site` or `webapp` platform. Composes into a
   Stylesheet-Bundle.
+- **`addon`** — an optional tool the user picks for the whole product: an MCP
+  server or a Claude plugin the agent uses, which nothing the product runs
+  depends on. Never a default. An `addon` pack realizes no capability token,
+  and its `capability` stays unset. Composes into an Addon-Bundle.
 
 ## Categories
 
@@ -105,9 +109,11 @@ and its components leave `category` unset.
 - **`datastore`**: `sql` / `document` / `graph` / `vector` / `key-value` /
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
-  `secrets-manager` / `audit` / `workspace` — the last being the team's
-  knowledge workspace, where the docs, specs and tickets live and which the
-  agent reads, searches and writes.
+  `secrets-manager` / `audit`
+- **`addon`**: `workspace` — the team's knowledge workspace, where the docs,
+  specs and tickets live and which the agent reads, searches and writes; the
+  `addon/notion` pack serves it. An `addon` pack whose tool is no such thing,
+  like `addon/context7` or `addon/taste-skill`, leaves `category` unset.
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 - **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
   the token mapping can be paid for. `utility` generates classes from a
@@ -150,8 +156,9 @@ taxonomy classifies what a component *is*, never whether it is required.
 `workspace` is on that list for a reason of its own rather than a pending
 vwf decision. The workspace is the **agent's** knowledge source, not the
 product's runtime — no blueprint capability is waiting on it, so there is
-no seam for architecture to elicit and nothing here asks for a token. Its
-neutral contract is `contracts/workspace.md`.
+no seam for architecture to elicit and nothing here asks for a token. The
+`addon/notion` pack serves it, and like every `addon` pack it realizes no
+capability token. Its neutral contract is `contracts/workspace.md`.
 
 Fourteen `cloud-service` tokens and one `framework` token (`agent-sdk`)
 were minted on 2026-09-06 for the Cloudflare developer platform.
@@ -222,6 +229,10 @@ which is how a CI-system pack shipped that nothing could ever materialize.
   `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and
   the multi-member half here, so its own `kind:` naming `language-bundle`
   is the seam working rather than a mis-declared pack.
+- An **Addon-Bundle** is exactly one `addon` component, standing alone, on the
+  **`addon`** axis. It is not one of the tool axes above: its slug is an entry
+  in the product-level `addons:` list of `.config/vwf.yaml`, not a project's
+  config token, and no bundle on the axis carries `default: true`.
 
 ## Category-level doctrine
 
