@@ -69,7 +69,12 @@ the composition's single consent gate and landing. Generation is
      Supplementary sources only where Context7's coverage of *this topic*
      is thin — and the thinness itself is recorded for the topic, which
      is what lets the reviewer accept a thin topic honestly instead of
-     flagging it as a coverage gap.
+     flagging it as a coverage gap. A declaration bound for `vwf-tools` is
+     researched from fresh sources alone, resolved from the technology's
+     name by this research channel, at first generation and at every
+     regeneration alike: its `command`, `args`, `env` and `url` never come
+     from a citations file or any other text the repo holds, because a repo
+     can plant them, and this declaration runs in every repo on the machine.
    - **Write** — the topic's artifact, per the kind's structure and per
      the host rules in `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md`,
      which decide whether the artifact is valid at all: strict-YAML
@@ -111,14 +116,14 @@ the composition's single consent gate and landing. Generation is
    **Then vet every name, once the declared names are final.** List every
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
-   `uv run --with`, `uvx`), every `user_mcp_servers:` command, every action
-   reference, every image reference, every
+   `uv run --with`, `uvx`), every `user_mcp_servers:` command and `url`,
+   every action reference, every image reference, every
    dependency in a `Package.swift`, and every Maven dependency and Gradle
    plugin in a build file (`build.gradle.kts`, `settings.gradle.kts`,
-   `gradle/libs.versions.toml`) — each written with one of the eight
+   `gradle/libs.versions.toml`) — each written with one of the nine
    ecosystem prefixes, `npm:`, `pypi:`, `pub:`, `action:`, `image:`,
-   `spm:`, `maven:` or `mise:`; the generator always writes the prefix,
-   never a bare name. Which name takes which prefix:
+   `spm:`, `maven:`, `mise:` or `host:`; the generator always writes the
+   prefix, never a bare name. Which name takes which prefix:
 
    | The name                                     | Is written as                               |
    | -------------------------------------------- | ------------------------------------------- |
@@ -131,10 +136,12 @@ the composition's single consent gate and landing. Generation is
    | a `Package.swift` dependency                 | `spm:<host>/<owner>/<repo>@<version>`       |
    | a Maven dependency                           | `maven:<group>:<artifact>@<version>`        |
    | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
+   | a `user_mcp_servers:` entry's `url`          | `host:<hostname>`                           |
 
    An MCP command takes the prefix of the registry its runner fetches
-   from — `npm:` for `npx`, `pypi:` for `uvx`. A SwiftPM name is read from
-   the dependency's package URL, the host kept (`github.com` included). A
+   from — `npm:` for `npx`, `pypi:` for `uvx`. An MCP `url` is vetted by its
+   host alone, never its path, query or credentials. A SwiftPM name is read
+   from the dependency's package URL, the host kept (`github.com` included). A
    Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
    Ruby and .NET tools have no prefix of their own: they are mise tools,
    reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or
@@ -156,7 +163,9 @@ the composition's single consent gate and landing. Generation is
    `block`. **A `block` row halts this component here**: report the
    table, ask the user to name the replacement, and check the replacement
    before the step resumes. The generator never swaps a name silently — a
-   swap is a new recommendation, and it is the user's. `warn` rows travel
+   swap is a new recommendation, and it is the user's. No source vets a
+   remote host, so a `host:` row always reads `block`, and only a stdio
+   command that clears the check can replace it. `warn` rows travel
    with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
    the same way a Context7 outage does (the preconditions above): a name
    whose sources could not be reached is never landed on an inferred

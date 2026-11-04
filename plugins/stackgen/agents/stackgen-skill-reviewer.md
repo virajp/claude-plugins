@@ -99,7 +99,8 @@ edits. You never write files.
 10. **Every name has a verdict.** Grep the generated component for every
     concrete third-party name it emits — `mise_tool` entries, runner-invoked
     tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
-    `user_mcp_servers:` commands, action references, image references — and
+    `user_mcp_servers:` commands and `url` hosts, action references, image
+    references — and
     look each one up in the verdict table you were handed.
     A name with no row is a gap; a row reading `block` is a gap. You do
     **no lookup of your own** — no registry, no network, nothing beyond the

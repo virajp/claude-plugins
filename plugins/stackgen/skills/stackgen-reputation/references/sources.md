@@ -6,7 +6,8 @@ the row was verified against. **No row here was typed from memory** — each
 path and field was read back from Context7 (`resolve-library-id` →
 `query-docs`) before it was written, and a source Context7 could not confirm
 is not here; the signal it would have carried is `unavailable` in
-`signals.md`. Where a first-party source did not document a field and a
+`signals.md`, save a `host:` name's, which blocks (*Not verified*, below).
+Where a first-party source did not document a field and a
 third-party client's documentation did, the row says so, and names the
 third-party id.
 
@@ -281,3 +282,6 @@ For an image's existence, on the `docker.io` host only. Verified against
   reads GitHub, not it.
 - **Google Maven and the Gradle Plugin Portal as sources of their own.**
   Not needed while deps.dev indexes both; not verified.
+- **Any source that vets a remote host.** None is here, so a `host:` name
+  fetches nothing and has nothing to be unreachable: its row reads `block`,
+  never `UNRESOLVED`, by the *host unvetted* signal in `signals.md`.

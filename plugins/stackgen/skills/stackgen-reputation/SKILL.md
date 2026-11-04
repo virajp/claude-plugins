@@ -2,9 +2,10 @@
 name: stackgen-reputation
 description: Vet a third-party name — an npm, PyPI or pub.dev package, a
   GitHub Action, a container image, a SwiftPM package, a Maven artifact or
-  Gradle plugin, a mise tool on any backend — against public registry,
-  advisory and scorecard data, and return one verdict per name, pass, warn
-  or block, with the signals that decided it. Invoked by the stackgen
+  Gradle plugin, a mise tool on any backend, a remote MCP server host —
+  against public registry, advisory and scorecard data, and return one
+  verdict per name, pass, warn or block, with the signals that decided it.
+  Invoked by the stackgen
   generator over every concrete name a generated component would emit, and
   by anyone who wants to check a package before typing it into anything.
 argument-hint: "<ecosystem>:<name> …"
@@ -21,8 +22,8 @@ APIs, with thresholds written down rather than judged on the spot. It is
 called two ways: the generator in `/stackgen:stackgen-stack-template` calls
 it at its assemble step over every package, runner-invoked tool, action and
 image a generated component would name — every SwiftPM dependency, every
-Maven dependency and Gradle plugin, and every mise tool by its backend
-among them — and a person calls it as
+Maven dependency and Gradle plugin, every mise tool by its backend, and every
+remote MCP server host among them — and a person calls it as
 `/stackgen:stackgen-reputation npm:left-pad npm:lodahs` to see a `pass`
 and a `block` side by side, or as
 `/stackgen:stackgen-reputation mise:aqua:realm/SwiftLint` to vet a mise
@@ -38,15 +39,15 @@ tool.
 
 One row per name given:
 
-| Column       | Is                                                                    |
-| ------------ | --------------------------------------------------------------------- |
-| `name`       | the name as given, prefix stripped, version or ref as resolved        |
-| `ecosystem`  | `npm`, `pypi`, `pub`, `action`, `image`, `spm`, `maven` or `mise`     |
-| `backend`    | for a `mise` row only: the backend, and the checks it routed to       |
-| `verdict`    | `pass`, `warn` or `block`                                             |
-| `signals`    | the signals that decided it — every `block` and `warn` that fired     |
-| `source`     | the APIs the deciding signals came from, by the short names below     |
-| `checked_at` | ISO 8601 UTC timestamp of the fetch                                   |
+| Column       | Is                                                                       |
+| ------------ | ------------------------------------------------------------------------ |
+| `name`       | the name as given, prefix stripped, version or ref as resolved           |
+| `ecosystem`  | `npm`, `pypi`, `pub`, `action`, `image`, `spm`, `maven`, `mise` or `host` |
+| `backend`    | for a `mise` row only: the backend, and the checks it routed to          |
+| `verdict`    | `pass`, `warn` or `block`                                                |
+| `signals`    | the signals that decided it — every `block` and `warn` that fired        |
+| `source`     | the APIs the deciding signals came from, by the short names below        |
+| `checked_at` | ISO 8601 UTC timestamp of the fetch                                      |
 
 The verdict is data about the name, not advice about what to use instead.
 
@@ -54,9 +55,9 @@ The verdict is data about the name, not advice about what to use instead.
 
 One argument per name, `<ecosystem>:<name>` — `npm:`, `pypi:`, `pub:`,
 `action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo),
-`maven:` (group:artifact), `mise:` (backend:path). A bare name defaults to
-the ecosystem of the component's language; the generator always writes the
-prefix.
+`maven:` (group:artifact), `mise:` (backend:path), `host:` (hostname). A bare
+name defaults to the ecosystem of the component's language; the generator
+always writes the prefix.
 
 - A **version or ref** may follow the name and pins what the advisory check
   runs against: `npm:left-pad@1.3.0`, `pypi:jinja2@3.1.4`,
@@ -98,6 +99,10 @@ prefix.
   `UNRESOLVED: no backend for <name>` — the caller expands it first, with
   `mise registry <name>`. Which checks each backend takes is the backend
   table under Procedure.
+- A **remote MCP server host** is `host:<hostname>` — `host:mcp.example.com`
+  — the host of the server's `url` alone: no scheme, path, query or
+  credentials, so nothing secret a URL carries reaches the table. Its verdict
+  is the Parse step's, below.
 - The **bare-name default** needs the component's language. The generator
   passes it as a leading `lang=<language>` token —
   `lang=python requests httpx` — and the mapping is `typescript` and
@@ -109,12 +114,17 @@ prefix.
 ## Procedure
 
 1. **Parse.** Split the arguments into names; apply the prefix rule and the
-   `lang=` default above. The top-level prefixes are eight: `npm:`,
-   `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:` and `mise:`.
-   Reject a prefix outside the eight with an `UNRESOLVED` row for that name
-   alone. There is no top-level `cargo:`, `go:`, `gem:` or `nuget:` — those
-   ecosystems are reached through `mise:` alone, by the backend table
-   below. For a `mise:` name, route it by its backend:
+   `lang=` default above. The top-level prefixes are nine: `npm:`,
+   `pypi:`, `pub:`, `action:`, `image:`, `spm:`, `maven:`, `mise:` and
+   `host:`. Reject a prefix outside the nine with an `UNRESOLVED` row for
+   that name alone. There is no top-level `cargo:`, `go:`, `gem:` or `nuget:`
+   — those ecosystems are reached through `mise:` alone, by the backend table
+   below. A `host:` name skips steps 2 to 4 and fetches nothing: no source in
+   `sources.md` vets a host, and a host that cannot be vetted is blocked, not
+   passed — so its row reads `block`, with the signal
+   `host unvetted: no source vets a remote host — block` and an empty
+   `source`; with nothing fetched, the row is never `UNRESOLVED`.
+   For a `mise:` name, route it by its backend:
 
    | Backend                                                          | The checks it takes                                                                                                        |
    | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
@@ -184,7 +194,7 @@ skill: stackgen-reputation
 checked_at: <ISO 8601 UTC>
 verdicts:
   - name: <name, prefix stripped, with the resolved version or ref>
-    ecosystem: <npm | pypi | pub | action | image | spm | maven | mise>
+    ecosystem: <npm | pypi | pub | action | image | spm | maven | mise | host>
     backend: <for mise only: the backend> — <the checks it routed to>
     verdict: <pass | warn | block>
     signals:
