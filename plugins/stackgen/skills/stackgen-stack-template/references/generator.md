@@ -16,10 +16,16 @@ the composition's single consent gate and landing. Generation is
   catalog in the invocation → halt and name what is missing. Never
   substitute general knowledge for the catalog — the catalog is the trust
   anchor the reviewer gate checks against.
-- **Context7 must be reachable.** It is the **primary and preferred
-  research channel**: resolve the technology's library IDs and fetch
-  current documentation before writing a word. Unreachable → **halt**; a
-  generated skill written from training knowledge is exactly the
+- **Context7 must be reachable, from some source** — the `context7` addon
+  in `vwf-tools`, a user-level MCP server, another plugin. It is the
+  **primary and preferred research channel**: resolve the technology's
+  library IDs and fetch current documentation before writing a word. When
+  none is reachable, generation **halts** with exactly this sentence:
+
+  > Generation needs the context7 tool. Add `context7` in `/vwf:architecture`'s
+  > tools menu, run `/vwf:setup`, then restart the session.
+
+  A generated skill written from training knowledge is exactly the
   plausible-but-stale artifact this pipeline exists to prevent.
   Supplementary sources are allowed only where Context7's coverage of a
   topic is thin — and both the thinness and every supplement are disclosed,
@@ -94,8 +100,8 @@ the composition's single consent gate and landing. Generation is
    skills, agents, rules, within the output vocabulary. **Never an
    executable** (hook scripts are pack-only), and **no artifact ever
    contains MCP or LSP configuration** — where wiring is genuinely needed
-   the component *declares* it, as `mcp_servers:` / `user_mcp_servers:` /
-   `lsp_servers:` in its pack shape, and the materializer lands each
+   the component *declares* it, as `user_mcp_servers:` / `lsp_servers:` in
+   its pack shape, and the materializer lands each
    behind its own consent line
    ([the materializer](materializer.md), [the local plugin](local-plugin.md));
    generation never writes a config file or a manifest itself, and
@@ -105,8 +111,8 @@ the composition's single consent gate and landing. Generation is
    **Then vet every name, once the declared names are final.** List every
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
-   `uv run --with`, `uvx`), every `mcp_servers:` / `user_mcp_servers:`
-   command, every action reference, every image reference, every
+   `uv run --with`, `uvx`), every `user_mcp_servers:` command, every action
+   reference, every image reference, every
    dependency in a `Package.swift`, and every Maven dependency and Gradle
    plugin in a build file (`build.gradle.kts`, `settings.gradle.kts`,
    `gradle/libs.versions.toml`) — each written with one of the eight

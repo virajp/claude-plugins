@@ -153,7 +153,8 @@ prefix.
 **Offline rule.** A source that cannot be reached — a network error, a 5xx, a
 rate-limit response, a body that does not parse — yields
 `UNRESOLVED: <source> unreachable for <name>` in that name's row, never an
-inferred verdict; the same posture as the generator's Context7 precondition.
+inferred verdict; the same posture as the generator's Context7 precondition,
+which is met when a Context7 server is reachable from any source.
 That row carries no verdict at all — not `warn`, not `pass` — and the other
 names still get rows. The exception is the one response that *is* the
 signal: a 404 from the registry on the name itself is the *exists* signal
