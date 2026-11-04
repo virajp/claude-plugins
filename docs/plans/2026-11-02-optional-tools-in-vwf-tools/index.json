@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-02 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-04T03:35:56Z in .worktrees/all-2026-11-04-0903"
   },
   "consent": {
     "merge": true,
@@ -75,11 +75,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T03:36:39.079Z",
+      "ended": "2026-11-04T03:43:25.935Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -96,11 +96,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T03:36:39.159Z",
+      "ended": "2026-11-04T03:43:26.050Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -128,11 +128,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T03:36:39.236Z",
+      "ended": "2026-11-04T03:43:26.163Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -149,11 +149,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T03:36:39.312Z",
+      "ended": "2026-11-04T03:43:26.280Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -170,11 +170,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T03:36:39.392Z",
+      "ended": "2026-11-04T03:43:26.396Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -259,8 +259,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T03:36:39.042Z",
       "ended": ""
     },
     {
@@ -640,8 +640,98 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a claims.json key emptied by path pruning is not ruled · assumed unclaimed and kept",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a union conflict between stackgen-lsp and vwf-tools manifests at migration is not ruled · assumed the merge table applies",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a member repo's sync when the base is not cloned is not ruled · assumed no remove is sent and the record is kept",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a sync in a repo with no lockfile is not ruled · assumed the migration offer runs before the stop",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a recorded key already missing from .mcp.json is not ruled · no rule written; a ruling or follow-up line is needed",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "reviewer check 9 in stackgen-skill-reviewer.md still names project-scoped declarations and .mcp.json, outside the plan's edit list · lines left as they are · closed: wave review round 1 looped it back; check 9 aligned with D4",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U3 verification grep for mcp_servers: hits plugins/stackgen/stacks/readme.md:265, U6's · left for U6",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "no stackgen path lands an addon's servers on a second machine (D2, D8): stack-template step 1 stops on a materialized slug and sync is user-only; dropped-slug removal has the same hole · contract written in stack-adapter.md, assuming U1 or U2 add it · closed: wave review round 1; stack-template step 1 addon exception and remove: <slug> entry, setup invokes them",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "edit 8 cites stack-checks.md:386, whose seven counts sub-checks (a)-(g), not axes · left at seven; the plan's citation was wrong, settled",
+      "state": "closed"
+    },
+    {
+      "id": "G10",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "a D27 unlanded design-tool server may have no lockfile item to compare · assumed the stackgen-lsp drift row states that cost",
+      "state": "open"
+    },
+    {
+      "id": "G11",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "a dropped addon's claim on other machines has no removal, since their lockfile no longer records it · assumed doctor's not-picked drift covers it · closed: reconcile-claims: removes this repo's claim on every setup run",
+      "state": "closed"
+    },
+    {
+      "id": "G12",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "contested (wave review closing check, cap and guard): fold 81 wide at setup/references/migrate-pipeline.md:71 and assets/stack-adapter.md:470 · left",
+      "state": "open"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-04-0903; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-04-0903",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-02-optional-tools-in-vwf-tools.jsonl"

@@ -25,12 +25,15 @@ user's clock.
 
 1. **Inventory, from the lockfile.** Read `.claude/stackgen/lock.yaml`
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). No lockfile → report
-   "nothing materialized" and stop. The lockfile is the whole inventory:
+   "nothing materialized" and stop, after step 4's migration offer when the
+   old plugin's directory exists. The lockfile is the whole inventory:
    a path it does not list is the repo's own and is invisible to this
    skill. Partition entries by **component** (every landing carries its
    component ref) and by source: pack-sourced vs `generated`. Read the
-   `settings_keys`, `mcp_servers` and `local_plugin` blocks too — those
-   name state outside `.claude/`, and each diffs on its own terms below.
+   `settings_keys` and `local_plugin` blocks too — those
+   name state outside `.claude/`, and each diffs on its own terms below — and
+   any top-level `mcp_servers` list, the retired `.mcp.json` record step 4
+   handles.
 
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a `test:*` task, a
@@ -58,6 +61,28 @@ user's clock.
    longer matches its landing hash — whether or not the pack also moved).
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
+
+   **The relocation table.** Two items moved to a new pack, and this fixed
+   table is the whole of it — there is no general diff across pins:
+
+   | From                                                               | To                  |
+   | ------------------------------------------------------------------ | ------------------- |
+   | `capability-provider/notion`                                       | `addon/notion`      |
+   | the `taste-skill@taste-skill` claim of `design-tool/claude-code@1` | `addon/taste-skill` |
+
+   **In the base repo**, where the new pack is pinned, a relocated item is
+   **re-attributed in the lockfile, never removed and re-added**, before the
+   diff above runs against it, and the report names it. A change of place (a
+   `.mcp.json` entry to `vwf-tools`) or of content is a normal update behind
+   its normal consent.
+
+   **In a member repo of a multi-repo product** — one carrying
+   `.config/vwf-membership.yaml` — the table does not apply: the old notion
+   skill files and `.mcp.json` entry are removed by that member's own sync,
+   behind consent, and a claim on `taste-skill@taste-skill` goes by the
+   bootstrap handoff's Removal section. A sync in the base repo names each
+   member not cloned locally in a one-line warning; its old items wait for a
+   sync there.
 
    **A retired record whose file is gone is dropped.** A recorded path
    that its recording component — the `component:` ref — no longer
@@ -104,23 +129,43 @@ user's clock.
    user declines — regeneration costs research and review; it is an
    offer, not a default, and taking one component never forces another.
 
-4. **Diff the local plugin, if the lockfile has one.** No `local_plugin`
-   block → skip this step entirely; this repo has never written to the
-   machine and a sync must not start. Otherwise read
-   `~/.claude/plugins/local/stackgen-lsp/.claude-plugin/plugin.json` and
-   compare, **key by key and only for the keys this repo claims** under
-   `local_plugin.lsp_servers` / `local_plugin.mcp_servers`
-   (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/local-plugin.md`
-   is the procedure — the merge classification, the version bump and the
-   removal path):
+4. **The local plugin: the old names first, then the diff.**
+   `${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/local-plugin.md`
+   is the procedure — the merge classification, the claims file, the version
+   bump, the removal path and the migration.
 
+   - **`~/.claude/plugins/local/stackgen-lsp/` exists** — whatever the
+     lockfile holds, even no `local_plugin` block — the migration is offered
+     on step 5's tier-3 line. Declined → nothing is written and it comes back
+     on the next sync, and every other offer of this step that writes to the
+     manifest waits for it.
+   - **The lockfile names `stackgen-lsp` and that directory does not exist**
+     — its `local_plugin` block is rewritten to the `vwf-tools` names at step
+     6 with no prompt, and the report names the rewrite. The repo's servers
+     then merge behind the normal tier-3 line, as a first write when
+     `vwf-tools` does not exist.
+   - **The lockfile has a top-level `mcp_servers` list** — it is moved into
+     `local_plugin.mcp_servers`, with its own `.mcp.json` key-removal line at
+     step 5.
+
+   Then the diff. No `local_plugin` block and no key the composition declares
+   → skip the rest of this step; this repo has never written to the
+   machine and a sync must not start. Otherwise read
+   `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json` and
+   compare, **key by key and only for the keys this repo claims** under
+   `local_plugin.lsp_servers` / `local_plugin.mcp_servers`, and the keys the
+   current composition declares:
+
+   - a key the current composition declares that this repo does not claim yet
+     — **offer** it, classified by the merge table;
    - a claimed key whose declaration the current pack has changed —
      **offer** the update;
    - a claimed key the manifest no longer holds — report it; the user
      removed it by hand and re-adding it uninvited is exactly the silent
      write this skill exists to prevent;
    - a claimed key whose component is no longer in the composition —
-     offer **removal by subtraction**, which drops that key alone and
+     offer **removal by subtraction**, which drops this repo's claim on that
+     key alone, deletes the key only when no repo claims it, and
      touches no other repo's;
    - a key the manifest holds that this repo does not claim — invisible
      here, always. It is another repo's, or the user's.
@@ -139,8 +184,11 @@ user's clock.
    - any change to entries under `settings_keys` — a
      `.claude/settings.json` edit, and **settings.json is never modified
      without explicit consent**;
-   - any change to entries under the top-level `mcp_servers` — a
-     `.mcp.json` edit, on the same terms;
+   - the removal of recorded keys from the repo's `.mcp.json` — on the same
+     terms, only keys the lockfile recorded, deleting the file only if it is
+     then empty, and not offered while the migration is declined. Declined →
+     the lockfile keeps its top-level `mcp_servers` list and the removal is
+     offered again on the next run;
    - any change to a `config/`-tier entry — a write **outside
      `.claude/`**, into files the repo's collaborators own and read, so it
      is its own **tier-2** line listing every path, on the same
@@ -156,9 +204,17 @@ user's clock.
 
    Nothing selected → done, nothing written.
 
-6. **Apply and commit.** Write only what was selected, update the changed
+6. **Apply and commit.** A consented migration runs first, in its fixed
+   order: write `vwf-tools`, register it, uninstall
+   `stackgen-lsp@stackgen-lsp`, remove the `stackgen-lsp` marketplace, delete
+   the old directory, each step skipped when already done, and a failed or
+   declined step stopping the run with a report so the next run continues
+   from the first incomplete step. It rewrites a `local_plugin` block that
+   names `stackgen-lsp` to the `vwf-tools` names. Then write only what was
+   selected, update the changed
    components' lockfile hashes, the `bootstrap:` block and the
-   `local_plugin` block, and commit as
+   `local_plugin` block — every entry rewritten to the owners shape, with the
+   re-attributions of step 2 and the no-prompt rewrite of step 4 — and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit. A consented bootstrap delta is
    sent first — steps 8 to 10 of the bootstrap handoff — and the files
@@ -178,7 +234,8 @@ user's clock.
 ## Rules
 
 - **Visible, never silent** — every write traces to a line the user saw in
-  the delta, save a retired record whose file is already gone (step 2),
+  the delta, save a retired record whose file is already gone (step 2), a
+  re-attribution (step 2) and the rewrite to the `vwf-tools` names (step 4),
   which the report names instead.
 - **The component is the grain.** A framework's major bump regenerates that
   framework component alone; the language baseline beside it is untouched
@@ -195,6 +252,7 @@ user's clock.
 - **The local plugin is the one thing subtracted rather than left.** It is
   the machine's shared file, not a repo copy, so a stale key there is
   another repo's problem rather than a note the user can ignore. Removal
-  drops only the keys this repo's lockfile claims; the directory and the
+  drops only this repo's claims, and a key leaves the manifest only when no
+  repo claims it; the directory and the
   registration go only when subtracting leaves no servers at all, and only
   after the user confirms the two printed commands.
