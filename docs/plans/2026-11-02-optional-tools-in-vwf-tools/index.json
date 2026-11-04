@@ -622,6 +622,16 @@
         "U2",
         "U8"
       ]
+    },
+    {
+      "id": "D33",
+      "decision": "G21: the U8 security loop did not converge after D32. Fix the open forms, or rule where the vetting of generated servers ends?",
+      "ruling": "The user ruled: fix and limit, both on U2. (1) generator.md and reviewer check 10 cover pipx run --spec, so the name that --spec gives is the name that is vetted, and they cover env sh -c, so a shell that env starts counts as a shell. (2) A limit, written in generator.md: the generator vets the names that it can read from the declared command. The consent gate shows the full command and its env values. The person at the gate is the control for any form that the vetting does not parse. U8 reviews against this limit: a further command form that the vetting does not parse, and that the gate shows in full, is not a finding. The closing fix counts as the last of U8.",
+      "rejected": "Fix and finish with no limit; a limit only, with no fix of the two open forms",
+      "units": [
+        "U2",
+        "U8"
+      ]
     }
   ],
   "stages": {
@@ -795,8 +805,8 @@
       "id": "G21",
       "unit": "U8",
       "stage": "security",
-      "text": "U8 closing pass after the guard tripped on cap-exempt findings (rounds 1-5 returned 3, 2, 1, 2, 3): round 5 findings 2 and 3 RESOLVED; finding 1 OPEN on generator.md:152 and reviewer check 10, pipx run is named without --spec, so pipx run --spec evil ok lists pypi:ok and evil goes unvetted; the check also notes env sh -c is not literally covered, since a chain counts only runners · no assumption taken; the closing pass never loops and a security finding cannot be contested, so a ruling is needed",
-      "state": "open"
+      "text": "U8 closing pass after the guard tripped on cap-exempt findings (rounds 1-5 returned 3, 2, 1, 2, 3): round 5 findings 2 and 3 RESOLVED; finding 1 OPEN on generator.md:152 and reviewer check 10, pipx run is named without --spec, so pipx run --spec evil ok lists pypi:ok and evil goes unvetted; the check also notes env sh -c is not literally covered, since a chain counts only runners · no assumption taken; the closing pass never loops and a security finding cannot be contested, so a ruling is needed · closed by the user's ruling D33: fix and limit on U2",
+      "state": "closed"
     }
   ],
   "overrides": [
