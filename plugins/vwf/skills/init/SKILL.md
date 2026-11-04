@@ -406,7 +406,10 @@ reads which it was.
 
 **Green, per repo, once the step ends.** Green means the repository has
 `.config/bootstrap.toml` and `mise run setup:configs --dry-run` shows no change.
-Read that command by its exit code and its **stderr**, where it prints each line
+Here, once the step ends, that dry-run runs code inside `init`'s one consent, the
+repo's own `setup:configs` task and the `main` branch of bootstrap with no pin,
+and the trust gate of mise is not tied to file content, so it does not vouch for
+either. Read that command by its exit code and its **stderr**, where it prints each line
 with the prefix `repo-sync:`:
 
 - After that prefix, a line that starts with `would` — `would update`,
@@ -432,7 +435,11 @@ that still holds that file is not empty: its section carries the delete line, th
 one question is asked, and the deletion rides `init`'s own commit there. Where
 every repo reads green, the bootstrap step still does not run, and the survey's
 read is the green the deletion goes on. A repo that reads drift, or drift unknown,
-takes the step in the plan like any other.
+takes the step in the plan like any other. This survey read runs before the one
+consent, and no consent follows it where the plan comes out empty, as part of the
+explicit `/vwf:setup` run the user started: it executes the repo's own
+`setup:configs` task and the `main` branch of bootstrap with no pin, and the trust
+gate of mise is not tied to file content.
 
 ### The record of a keep
 

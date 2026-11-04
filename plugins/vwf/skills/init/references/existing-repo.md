@@ -32,8 +32,10 @@ the same one consent; nothing about the set changes which pipeline a repo reads.
 Read-only, and exhaustive before anything is printed. It starts with one read
 per `shaped` repo, whether it is green, by the read SKILL.md's bootstrap step
 states: where it is not, the bootstrap step is a row of that repo's section, and
-an `old layout` repo always carries that row. Two passes then run **per repo**:
-each reads, and reports on, the repo it is running in and no other.
+an `old layout` repo always carries that row. That read executes code before the
+one consent, as SKILL.md's *The same read is what a survey does* states. Two
+passes then run **per repo**: each reads, and reports on, the repo it is running
+in and no other.
 
 **An absent member is surveyed once its clone has run.** A member the resolution
 found and this machine does not have has nothing on disk to read, so its section
