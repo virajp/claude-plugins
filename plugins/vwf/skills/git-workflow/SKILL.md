@@ -33,14 +33,15 @@ disable-model-invocation: false
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
 - **How a branch lands is the repo's choice, not this skill's.** The repo sets
-  it **per destination**: `MERGE_MODEL_DEVELOP` for a branch landing on
-  `develop`, `MERGE_MODEL_MAIN` for `develop` landing on `main`, each `direct`
+  it **per destination**, in the repository's `.config/bootstrap.toml`:
+  `merge_model` of `[branch.develop]` for a branch landing on `develop`, of
+  `[branch.main]` for `develop` landing on `main`, each `direct` (the default)
   or `pr`. `direct` merges the branch to the destination and pushes, as it
   always has; `pr` pushes the branch and opens a pull request instead, merging
   nothing locally. The two task names are the same in both modes —
-  `mise x -- mise run code:merge:develop <branch>` reads the first variable,
-  `mise x -- mise run code:merge:main` the second. Step 4 reads the mode for
-  the destination it is about to land on before it offers its options
+  `mise x -- mise run code:merge:develop <branch>` reads the first key when it
+  runs, `mise x -- mise run code:merge:main` the second. Step 4 reads the mode
+  for the destination it is about to land on before it offers its options
 - **The merge tasks refuse a dirty tree** — untracked files, uncommitted
   changes, or unpushed commits on the branch each stop the merge before it
   touches git. That is not a nuisance: whatever is uncommitted at merge time is
@@ -199,22 +200,27 @@ it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 
 **Read the landing mode before you ask.** What the merge tasks do is the repo's
-setting, held **per destination** — `MERGE_MODEL_DEVELOP` for a branch landing
-on `develop`, `MERGE_MODEL_MAIN` for `code:merge:main` — so resolve the one
-for the destination you are about to land on. A repo still carrying the legacy
-single `MERGE_MODEL` is read as **both** values until its next reshape writes
-the pair; with neither set, an absent or empty value means `direct` for either
-destination — the same fallback the merge tasks take:
+setting, held **per destination** — `merge_model` of `[branch.develop]` for a
+branch landing on `develop`, of `[branch.main]` for `code:merge:main`, in
+`.config/bootstrap.toml` — so resolve the one for the destination you are about
+to land on, from the root of the repository that lands; the base repo and each
+member have their own file. `pr` means `pr`; any other value, a missing key or
+a missing file means `direct` — the same reading the merge tasks take:
 
 ```bash
-env=$(mise env -s bash 2>/dev/null)
-read_env() { printf '%s\n' "$env" | sed -n "s/^export $1=//p" | tr -d '"'; }
-legacy=$(read_env MERGE_MODEL)                  # legacy single key, if any
-MERGE_MODEL_DEVELOP=$(read_env MERGE_MODEL_DEVELOP)
-MERGE_MODEL_MAIN=$(read_env MERGE_MODEL_MAIN)
-MERGE_MODEL_DEVELOP=${MERGE_MODEL_DEVELOP:-${legacy:-direct}}
-MERGE_MODEL_MAIN=${MERGE_MODEL_MAIN:-${legacy:-direct}}
+read_merge_model() {   # $1 is the destination: develop or main
+  local model
+  if [ ! -f .config/bootstrap.toml ]; then echo direct; return 0; fi
+  model=$(B="$1" mise x -- yq -p toml -o yaml '.branch[strenv(B)].merge_model // "direct"' .config/bootstrap.toml) || return 1
+  if [ "$model" = pr ]; then echo pr; else echo direct; fi
+}
+read_merge_model develop
+read_merge_model main
 ```
+
+When the file exists and yq exits non-zero, stop with "cannot read the merge
+config of .config/bootstrap.toml." and offer no landing option: a merge model
+that cannot be read must not become `direct`.
 
 Otherwise, after a successful commit, ask the user to choose what to do next via
 `AskUserQuestion` with these three options — the first is the same in both

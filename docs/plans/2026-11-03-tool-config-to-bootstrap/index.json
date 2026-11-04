@@ -16,8 +16,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-03 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-04 — U1 43d9be72, U2 c22b5007, U3 11d11424, U4 43693017, U5 57f06046, U7 67166e0a; 12 gaps open, folder left live"
   },
   "consent": {
     "merge": true,
@@ -79,11 +79,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T15:35:27.978Z",
+      "ended": "2026-11-04T17:42:24.945Z",
+      "commit": "43d9be72",
+      "rounds": 4
     },
     {
       "id": "U2",
@@ -101,11 +101,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T15:35:28.058Z",
+      "ended": "2026-11-04T17:34:36.437Z",
+      "commit": "c22b5007",
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -120,11 +120,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T15:35:28.135Z",
+      "ended": "2026-11-04T17:32:47.197Z",
+      "commit": "11d11424",
+      "rounds": 3
     },
     {
       "id": "U4",
@@ -146,11 +146,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T15:35:28.216Z",
+      "ended": "2026-11-04T15:44:17.905Z",
+      "commit": "43693017",
+      "rounds": 1
     },
     {
       "id": "U5",
@@ -173,11 +173,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T15:35:28.297Z",
+      "ended": "2026-11-04T15:44:17.997Z",
+      "commit": "57f06046",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -195,14 +195,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:59:19.213Z",
+      "ended": "2026-11-04T17:42:55.860Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 4,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "61d46c84",
+        "to": "43d9be72"
       }
     },
     {
@@ -220,7 +220,9 @@
         ".claude/skills/**",
         "site/src/content/docs/**",
         "plugins/stackgen/stacks/readme.md",
-        "docs/memory/decisions/**"
+        "docs/memory/decisions/**",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/vwf/skills/architecture/SKILL.md"
       ],
       "depends_on": [
         "U1",
@@ -231,11 +233,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T17:46:58.944Z",
+      "ended": "2026-11-04T17:59:04.309Z",
+      "commit": "67166e0a",
+      "rounds": 2
     },
     {
       "id": "U8",
@@ -252,37 +254,37 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T18:06:43.267Z",
+      "ended": "2026-11-04T18:07:44.288Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T15:35:27.897Z",
+      "ended": "2026-11-04T15:58:38.204Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T15:59:19.088Z",
+      "ended": "2026-11-04T17:46:34.735Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T17:46:58.896Z",
+      "ended": "2026-11-04T18:06:24.762Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T18:06:43.227Z",
+      "ended": "2026-11-04T18:08:25.839Z"
     }
   ],
   "shared_files": [
@@ -721,35 +723,166 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D46",
+      "decision": "G10: U6 security findings did not converge. Keep the bootstrap dry-run in doctor baseline and recall, return it to explicit runs, or require content-tied trust; and how to treat the unpinned bootstrap?",
+      "ruling": "The user ruled: explicit runs and a handoff item. This reverses D17 and changes D20. (1) doctor baseline stays file reads only, and recall runs no mise task and no bootstrap code. The dry-run mise run setup:configs --dry-run runs only in doctor full mode and in setup Step 0. Recall and baseline say that they do not report config drift, and name doctor full mode as the place that does; recall keeps its not-shaped test of no .config/bootstrap.toml. D20 stays for the forge read; the refresh of the bootstrap clone cache now occurs only on these explicit runs. (2) This plan does not edit bootstrap. Doctor and setup state that an explicit dry-run executes the main branch of bootstrap with no pin, and that the trust gate of mise is not tied to file content. A request to bootstrap for a reviewed-commit pin is recorded as an open gap of this plan, for the user to hand to bootstrap. U6 reviews against this ruling: unpinned execution on an explicit run that discloses it is not a finding.",
+      "rejected": "Keep the dry-run in baseline and recall; require content-tied trust, which mise does not supply",
+      "units": [
+        "U2",
+        "U3",
+        "U6"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.411Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.535Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.655Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.777Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D5, D24 and D41 keep enforcement.kept_files but name no writer for it · assumed a struck create row in init's plan is the keep",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "No init file uses the project ids, so D42's kept question 2 is never asked · the section stays for doctor's reference",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D7 allows no format step, so nothing removes a leftover answers: block in .config/vwf.yaml · assumed the report says to remove it by hand, then setup stamps 23; format-lineage row 128 still says reshape applies it",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D45 says setup's materialize pass re-copies packs, but it lands only unnamed slugs and pack updates remain stackgen-sync's · text left that way",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "Forge state reads the base's merge_model per U3's Edit 2 and U1, though it runs per repo and D3 reads each repo's file · followed Edit 2",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The Branches predicate flags main-only or develop-only repos, which bootstrap supports · kept per D43",
+      "state": "open"
+    },
+    {
+      "id": "G7",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "landingRootOf never treated a pack's config/ tier as a landing root, though the unit says it stays one · behaviour kept unchanged",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "Wave 1 review rule 5: stackgen-stack-template/references/materializer.md:118-121 (init re-records, replace-or-keep) and architecture/SKILL.md:166 (re-run of init reports the id source) are falsified and owned by no unit · U7's owns widened to both, under the plan's Goal",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U6",
+      "stage": "security",
+      "text": "D17 and D20 accept the networked dry-run and a clone-cache refresh, but never state that it executes repo-task code and fetched code · they should rule on a trust precondition and on pinning · closed by the user's ruling D46",
+      "state": "closed"
+    },
+    {
+      "id": "G10",
+      "unit": "U6",
+      "stage": "security",
+      "text": "Security findings at U6, cap-exempt, round 1 count 2, round 2 count 2, so the convergence guard paused the row. (1) stack-checks.md:505 and setup/SKILL.md:119: the mise trust gate stops a never-run clone only; mise auto-trusts on first run and trust is not content-tied (probed on 2026.10.25), so a hostile branch in a trusted repo runs its setup:configs task unprompted from recall. (2) doctor/SKILL.md:46: bootstrap's main, unpinned, is executed from a routine check; round 1's fix disclosed it and could not mitigate it, since D17 keeps the dry-run in baseline and bootstrap edits are out of scope. Ruling needed in D17 and D20 · no assumption taken, the run stops · closed by the user's ruling D46: explicit runs and a handoff item",
+      "state": "closed"
+    },
+    {
+      "id": "G11",
+      "unit": "U6",
+      "stage": "security",
+      "text": "bootstrap runs from its main branch with no pin, on explicit dry-runs, and this plan cannot edit bootstrap · ruling D46: the user hands bootstrap a request for a reviewed-commit pin, per docs/prompts in the bootstrap repo",
+      "state": "open"
+    },
+    {
+      "id": "G12",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "D46 calls doctor full mode an explicit run, but /vwf:plan and /vwf:execute run it too, so bootstrap main can run unpinned from an unattended pipeline · doctor discloses this; behaviour unchanged, the pin request of G11 covers it",
+      "state": "open"
+    },
+    {
+      "id": "G13",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U3 verification grep -i MERGE_MODEL hits the lowercase [branch.*].merge_model that D22 requires · read as expected, the check meant the env names",
+      "state": "closed"
+    },
+    {
+      "id": "G14",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but setup second shape check after the materialize pass repeats Step 0 · taken as the same explicit setup run, under Step 0 disclosure; init adoption check (D15) is the same case",
+      "state": "open"
+    },
+    {
+      "id": "G15",
+      "unit": "U1",
+      "stage": "security",
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but init runs it twice more: its green check inside the consent, and its survey on a shaped repo before the consent · both kept as parts of the explicit /vwf:setup run; disclosed at each place in init; the user may rule the survey read moves behind the consent",
+      "state": "open"
+    },
+    {
+      "id": "G16",
+      "unit": "U6",
+      "stage": "security",
+      "text": "D46 requires disclosure of the dry-run in doctor and setup only, never at run time and never in init, and names no trust check in init · the closing pass applies setup trust check and a printed line in init; D46 and 01-init.md would state it",
+      "state": "open"
+    },
+    {
+      "id": "G17",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "07-docs.md cites tools/mise/...; in the bootstrap clone the path is repo/tools/mise/... · facts confirmed there",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/tool-config-to-bootstrap",

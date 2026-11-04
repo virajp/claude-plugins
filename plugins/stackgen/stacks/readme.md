@@ -6,8 +6,8 @@ shape `../assets/pack-format.md` defines (`<type>/<slug>/pack.yaml` + prose
 + optional skills/agents).
 
 **Wave A — `toolchain-gate/`, kind `repo-gate`:** `dprint`, `gitleaks`,
-`grype`, `pre-commit`. Moved into `stackgen:tool-config` on 2026-09-26, with
-the `repo-gate` kind retired; no pack or bundle carries them now.
+`grype`, `pre-commit`. Left the packs on 2026-09-26, with the `repo-gate` kind
+retired, and are bootstrap's now; no pack or bundle carries them.
 
 **Wave B — `datastore/`, kind `database`:** `postgres`. And
 `capability-provider/`, kind `capability-provider`: `oidc` (identity),
@@ -50,7 +50,7 @@ directories: `language/typescript`, `package-manager/pnpm`,
 
 Note `toolchain-gate` composes into its toolchain's bundle, never into a
 repo-wide one: `eslint` and `tsconfig` are meaningful for exactly one
-toolchain. The gates that run over any repo are `stackgen:tool-config`'s.
+toolchain. The gates that run over any repo are bootstrap's.
 
 **The Swift package stack made Swift the fourth language root on 2026-09-23**,
 after TypeScript and the Markdown and Bash pair the `claude-code-plugin` bundle

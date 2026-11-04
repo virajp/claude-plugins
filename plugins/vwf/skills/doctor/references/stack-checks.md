@@ -101,12 +101,12 @@ whole section reports `not checked — no stack resolved` for it:
   drop the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
   tool pins (`.config/mise/conf.d/*/mise*.toml`, `.local` variants excluded) or
-  resolves on `PATH`. Missing → finding; the remedy pins it in the pack's
-  `templates/` mise file, landed by `/vwf:setup reshape`, or by hand in the
-  repo's own `conf.d/<project>/` — then runs `mise install`.
+  resolves on `PATH`. Missing → finding; the pins are bootstrap's, so the
+  remedy is `/vwf:setup reshape`, which brings the repo to bootstrap's config
+  — then `mise install`.
   Never a bare `mise use`, which writes a pin outside the layout.
-  A tool found only in `.config/mise.toml` or a `.config/mise.<env>.toml` is
-  **the tool outside `conf.d`** row under the baseline check below, not a miss.
+  A tool pinned only in `.config/mise.toml` or a `.config/mise.<env>.toml`
+  counts as pinned, not a miss.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
 - **Binaries** — only where the language is known through materialized
   `language_facts` that carry a `binaries` list (absent means none; a language
@@ -344,20 +344,19 @@ manage and no harness task to run, so halting `setup` and `execute` over it
 would block a product on day one for a stack nobody has chosen yet. A repo with
 neither `.config/mise.toml` nor `.config/mise/conf.d/` is the same finding one
 level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
-one repo-shape remedy, naming `/stackgen:tool-config all` as what it runs.
-Setup materializes no tooling itself — `/vwf:init` does, calling
-`/stackgen:tool-config all` for every universal tool the skill owns, the
-gates and `git` included, and fetches no bundle.
-**A repo is shaped when `.config/stackgen.yaml` exists with `format: 1`** —
-the values file only that skill's script writes; the skill records nothing in
-the lockfile. A repo carrying old-layout files —
+repo-shape remedy, since bootstrap is what installs the mise config.
+Setup materializes no tooling itself — `/vwf:init` does, by running
+bootstrap's readme prompt, and fetches no bundle.
+**A repo is shaped when `.config/bootstrap.toml` exists** — the values file
+bootstrap writes and a plugin never edits. A repo without it, carrying
+`.config/stackgen.yaml` or the older files —
 `.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml`, or a
-root `.config/mise.dev.toml` — and no `stackgen.yaml` is **shaped on the old
-layout**: one drift row naming the files found, remedy `/vwf:setup reshape`,
-which says it cannot reshape that layout yet and stops rather than writing
-over it. On that row the predicates below that read `stackgen.yaml` are not
-raised. A leftover `repo-hygiene/repo-hygiene` or `tool-config/<tool>`
-lockfile record is the same old-layout row. That is
+root `.config/mise.dev.toml` — is **shaped on the old layout**: one drift row
+naming the files found, remedy `/vwf:setup reshape`, whose init adopts
+bootstrap. A repo without it and carrying none of those is **not shaped**: one
+row, the same remedy. On either row no predicate below is evaluated in that
+repo. A leftover `repo-hygiene/repo-hygiene` lockfile record is the same
+old-layout row. That is
 the coarsest form of one question — is this repo still shaped the way
 `/vwf:init` shapes one — and the section at the end of this file is the
 fuller version of the same check: this one fires when the shape is absent,
@@ -412,16 +411,21 @@ reports as its skip reason.
 
 Part of §5, and the one check that reads the **shape** `/vwf:init` lays down
 rather than what `.config/vwf.yaml` declares. A repo drifts from that baseline
-by standing still: the adapter's packs move, `/vwf:architecture` names projects
-that did not exist when the repo was shaped, and a fresh clone arrives with one
-branch. It drifts by moving, too — a pack-owned file the repo edited in place
-is no longer the file the pack ships. None of that stops the repo working, so
-**every finding here is `drift`, and none is blocking** — a repo behind its
-baseline is out of date, not broken. All seven sub-checks carry the **same
-remedy, `/vwf:setup reshape`**, which is why §9 prints that line once with the
-rows that led to it — with two exceptions in (f)'s layout rows: a duplicate
-tool pin is fixed by hand, and a tool outside `conf.d` is moved by doctor
-itself, on the user's consent.
+by standing still: the adapter's packs move, bootstrap moves, `/vwf:architecture`
+names projects that did not exist when the repo was shaped, and a fresh clone
+arrives with one branch. It drifts by moving, too — a pack-owned file the repo
+edited in place is no longer the file the pack ships. None of that stops the
+repo working, so **every finding here is `drift` or a `warning`, and none is
+blocking** — a repo behind its baseline is out of date, not broken.
+
+**Each row carries the remedy of whoever owns what it read**, and §9 prints each
+remedy once with the rows that led to it:
+
+| Remedy | Rows |
+| --- | --- |
+| `/vwf:setup` — the packs | Pack versions, a missing pack lockfile, Project ids, Content drift |
+| `/vwf:setup reshape` — bootstrap and the forge | not shaped, shaped on the old layout, Branches, Bootstrap drift, Forge state |
+| fix the value in `.config/bootstrap.toml` | Merge model |
 
 **The seven run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
@@ -430,9 +434,14 @@ on realpath. That step owns the rule and it is not restated here; a path only
 one of the two sources names where both exist is the disagreement `init`
 refuses to shape, and this check does not walk into it either. Every finding
 is printed **under the repo it was found in**, so a row says which repo before
-it says what drifted, and the remedy stays one line for the whole product —
-`reshape` walks the members too, so one re-run covers every row under every
-heading.
+it says what drifted, and each remedy stays one line for the whole product —
+both doors walk the members too, so one re-run covers that remedy's rows under
+every heading.
+
+**The local baseline predicates are every one but two**: (a) Pack versions, (b)
+Project ids, (c) Branches, (e) Content drift and (f) Merge model, which are what
+`/vwf:doctor baseline` evaluates. (d) Bootstrap drift, which executes code, and
+(g) Forge state, which reads the remote, run in full mode only.
 
 **An absent member is a blind spot, not a finding.** A member this machine
 does not carry is said in §5's output as `<member> — not present, not checked`
@@ -454,108 +463,94 @@ off the payload. A component no pinned template names is read from
 `stacks/<type>/<slug>/pack.yaml` inside the installed adapter plugin's own
 tree, located from `claude plugin list` the way this section locates `mise` —
 vwf's own plugin-root token names vwf and can never spell another plugin's
-root. An entry carrying `rendered: true` — a file the `tool-config` skill's
-`pack` call rendered from the pack's `templates/` — is a pack record like any
-other and compared the same way. An entry sourced `tool-config/<tool>@…` is
-the old layout's, reported by the baseline row above and nothing here. For a
+root. For a
 **pack** record — and only a pack record — a recorded version **older** than
 the shipped one is one drift row naming the component and both versions. A
 **newer** recorded version is not a finding here: the adapter went
 backwards, which is the sync skill's conversation, not doctor's. **No
-lockfile at all** on the base is `missing` rather than drift, with the same
-remedy — the shape was never laid down here.
+lockfile at all** on the base is `missing` rather than drift, remedy
+`/vwf:setup` — no pack was ever materialized here.
 A **member** with no lockfile is not a second `missing` row: it reads `not
 checked — no lockfile` under that member, which says the same thing once, and
-the product's one `reshape` is what lands it there.
+the product's one `/vwf:setup` is what lands it there.
 
-**(b) Project ids.** Every project has an id, and two surfaces in the repo
-that owns it are generated from it. Take **the ids that repo owns** — the base
+**(b) Project ids.** Every project has an id, and a project whose pinned pack
+ships `p/_project/` tasks gets a task group named for it, which setup's
+materialize pass creates. Take **the ids that repo owns** — the base
 its own, a member the `projects:` list on its entry where the base's config
-declares one, and otherwise what init's own **§7** resolves, in
-`${CLAUDE_PLUGIN_ROOT}/skills/init/references/new-repo.md` — that section owns
-the source order and this one does not restate it. Slugify each id per the
+declares one, and otherwise what init's section **"The project ids"** resolves,
+in `${CLAUDE_PLUGIN_ROOT}/skills/init/references/new-repo.md` — that section
+owns the source order and this one does not restate it. Slugify each id per the
 adapter's `assets/ids.md` — that rule lives there and is not restated here
-either — and check, **in the repo the id belongs to**, that:
+either — and check, **in the repo the id belongs to**, for each project whose
+pinned pack ships `p/_project/` tasks — read from the pack's tree as (a) locates
+it — that a task directory `.config/mise/tasks/p/<slug>/` exists. A project with
+no such pack is not a finding. Commit scopes are not checked here: they are
+bootstrap's `commit_scopes`, and (d) covers them.
 
-- a task directory `.config/mise/tasks/p/<slug>/` exists;
-- the slug appears in `.config/git-conventional-commits.yaml`'s `commitScopes`.
-  An **empty** list is not a miss: a single-project repo is meant to leave it
-  empty and use no scope, and the shipped config says so.
-
-Each miss is one drift row naming the repo, the project, the surface, and the
-slug that was expected. The reverse direction is a row too: a sub-directory of
+Each miss is one drift row naming the repo, the project and the slug that was
+expected, remedy `/vwf:setup`. The reverse direction is a row too: a
+sub-directory of
 `.config/mise/tasks/p/` whose segment matches no registry slug is drift worded
 **"id source changed: `<dir>` is not a registry id"** — the expected state once
 `/vwf:architecture` first writes ids into a repo that was shaped before it, and
 a rename a re-run performs. It is never "a pack moved", and never a reason to
 suspect the adapter.
 
-**The member list is a different list, and it is not this one.** The base's
-`.config/stackgen.yaml` `members` is what the `tool-config` skill renders the
-aggregator's member flags (`.config/mise/tasks/setup/all`) and the
-`setup-<member>` aliases (`conf.d/_base/mise.dev.toml`) from — named for the
-member repos, never for a project id, which is why a member holding three
-projects is still one flag. Compare it on the **base** with the `members:`
-list `.config/vwf.yaml` carries, by path: a member in one and not the other is
-one drift row naming the member and the file that lacks it, and an entry
-named for a **project id** on a product that has members is a drift row
-worded **"named from project ids"**; reshape re-passes `--members` from
-`vwf.yaml` and the render follows. Whether the rendered flags and aliases
-still match that list is (e)'s preview, not this row.
-
 **(c) Branches.** In **each** repo, ask that repo for `refs/heads/develop` —
 `git show-ref --verify --quiet` — and the same for `refs/heads/main`. Either
 one missing is a drift row: work flows from a feature branch or a worktree to
 `develop`, and from `develop` to `main`, and the repo's own merge tasks refuse
-a destination branch that does not exist locally. Remedy `/vwf:setup reshape`,
-which creates the missing branch. A repo with no commit yet has neither branch
+a destination branch that does not exist locally. The remedy is bootstrap's
+`docs/sync`, reached through `/vwf:setup reshape`. A repo with no commit yet has
+neither branch
 and reports one row saying that, not two — and a member is its own repository,
 so a base carrying both branches says nothing about the member beside it.
 
-**(d) The repo name.** In each repo, that repo's own
-`.config/stackgen.yaml` sets `repo_name` — rendered into `REPO_NAME` in
-`conf.d/_base/mise.toml` — and its value is **that repo's folder name,
-slugified** — the basename of that repo's **main
-checkout** directory, run through the adapter's `assets/ids.md`. It is not a
-project id and never has to match one: the `p/<slug>/` groups (b) reads are
-named for the projects, this key for the folder they sit in. A member names its
-**own** folder, never the base's.
+**(d) Bootstrap drift.** Full mode only: `baseline`, and so `/vwf:recall`, never
+runs it. First, from the repo's root, run `mise trust --show`. Run the dry-run
+only when it lists a config of that repo and every one it lists there reads
+`trusted`; a line for a parent directory does not count, and a repo with no
+config listed is not trusted. Otherwise the dry-run does not run: drift is
+**unknown**, one `warning` naming the repo with the reason
+`repo not trusted by mise`.
 
-Read the folder from the **main checkout**, not from the working directory: a
-linked worktree's directory is named for its branch, so resolve the common
-git dir — `git rev-parse --path-format=absolute --git-common-dir` — and take
-the basename of the directory holding it. Absent is a drift row; so is a
-value that is not that folder's slug. Both carry the same remedy,
-`/vwf:setup reshape`, which re-passes `--repo-name` and shows the script's
-rows on the one consent. That key is what the user's own shell aliases
-read, so a wrong one is quietly wrong everywhere it is used.
+That check is a limit, not a safeguard. It stops only a clone mise has never
+run: `mise run` runs a repo's task with no trust prompt and trusts the repo's
+config as it does, and the trust gate of mise is not tied to file content, so a
+repo trusted once runs whatever its `setup:configs` task holds on the branch
+checked out now.
 
-**(e) Content drift.** A file is landed once and then lives in the repo,
+In a trusted repo, from its root, run `mise run setup:configs --dry-run`,
+bootstrap's own done-check. This explicit dry-run writes nothing in the
+repository, but it does run code: the repo's own `setup:configs` task, which
+refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and executes
+the `main` branch of bootstrap from that clone, with no pin. It is the only
+bootstrap command doctor runs. Judge it by
+its exit code and its stderr, where it prints its lines, each with the prefix
+`repo-sync:`. After that prefix, a line that starts with `would` — `would
+update`, `would remove`, `would chmod`, `would set bootstrap_commit` — is a
+change; a line that reads `unchanged`, `kept seed` or `skip` is not:
+
+- **Exit 0 and no `would` line** — no drift, and no row.
+- **Exit 0 and a `would` line** — one drift row naming the repo, with those
+  lines under it, remedy `/vwf:setup reshape`.
+- **Exit 5, or any other failure** — drift **unknown**: one `warning` naming the
+  repo and the reason, the exit status and the last line on stderr. It is never
+  a drift row and never a guessed one.
+
+This covers every file bootstrap syncs, so none of them is hashed here.
+
+**(e) Content drift.** A file a pack landed lives in the repo,
 where anything may edit it; what it holds *today* is the question (a) does
-not ask. It is asked two ways, by who wrote the file.
+not ask.
 
-**What the `tool-config` skill renders is judged by a preview.** In each repo
-carrying a `.config/stackgen.yaml`, invoke `/stackgen:tool-config` — the
-skill, never a path inside the adapter plugin — for `preview all`, then for
-`preview pack --slug <slug> --dir <pack dir>` once per pack the lockfile
-records, the pack directory read from the installed adapter plugin's tree as
-(a) locates it. A preview writes nothing; its JSON `rows` are every file that
-would change, each `create`, `write` or `delete` carrying its diff. **Each row
-is one (e) drift row**, the diff beside it, and doctor says for each whether
-it reads as a deliberate local edit (a line the repo added, a value it
-changed) or a stale file (a newer release's render, a value `stackgen.yaml`
-has moved past) — judgement, said as such. No row means the repo is as the
-skill would shape it. Lines outside a `tool-config` marker pair are the
-repo's own and never a row, and neither is a filled slot. A refused call —
-exit 2, an `error` — is one row naming that error, never a guessed drift.
-This covers every universal file and every `rendered: true` record, so
-neither is hashed.
-
-**What a pack copied is judged by its hash.** Every other `entries:` record
+**What a pack copied is judged by its hash.** Every `entries:` record
 carries a `hash:` — the content at the version this repo locked — so the
 check is a hash comparison against the file on disk. Take every such record
 whose `path` lands **outside `.claude/`**, which is the `config/` tier: the
-tree `/vwf:init` shapes, and the one this section is about. A file whose
+tree setup's materialize pass lands, and the one this section is about. A file
+whose
 content no longer matches its recorded hash is one drift row naming the
 path, once the second test below confirms it; a recorded path that no longer
 exists at all is the same row, worded **removed**, and takes no second test.
@@ -563,18 +558,12 @@ A path the lockfile lists under `skipped:` has no `entries:` record — the two
 lists never share a path, and `skipped:` holds only what was never landed. It
 is intentionally absent — its pack declared a condition the repo's answer did
 not meet — and is **never** reported as missing; a later run whose answer
-changed re-evaluates it, which is the reshape landing it. Present on disk, a
+changed re-evaluates it, which is `/vwf:setup` landing it. Present on disk, a
 file at a skipped path is the repo's own — unread, unlisted, and never a row
-here, since no reshape could clear it while the answer stands. A path that
+here, since no re-run could clear it while the answer stands. A path that
 **has** an `entries:` record — landed on an earlier run whose answer has since
 flipped, or never conditional — is checked by hash like any landed file,
-whatever its condition reads today. One row is read from `stackgen.yaml`
-rather than the lockfile: a repo whose `forge` differs from the host its live
-`origin` remote names is one drift row naming both, remedy
-`/vwf:setup reshape` — and so is a `skipped:` row whose `when: forge` names a
-host the live one contradicts, since the files that axis skipped are waiting
-for that reshape to land them. A repo with **no** remote at all is neither
-row: there is nothing live to contradict, and the recorded value stands.
+whatever its condition reads today.
 
 The hash comparison stays the first and cheapest test, and a match ends it: a
 file matching its record raises nothing and nothing further is read. **A
@@ -590,38 +579,31 @@ to the file on disk, and the whole divergence lies inside those positions:
 repo edit, which is the whole reason for the second test.
 
 **A marked position is where a repo-specific value lives, so a value sitting
-in one is never (e)'s finding**, and nothing reports it at all — the
-`_default` slot, a Worker's name, any other a pack ships. Splicing every
-position the pack **marks**, rather than a chosen few, is what makes a mixed
-file tractable: splicing only some would leave the rest diverging and report
-the whole file as content drift. The values the repo's own tasks read —
-`REPO_NAME`, the merge models, `MEMBERS` — are not marked positions: they
-are rendered from `stackgen.yaml`, read by (d) and (f) there, and judged by
-the preview above.
+in one is never (e)'s finding**, and nothing reports it at all — a Worker's
+name, any other a pack ships. Splicing every position the pack **marks**,
+rather than a chosen few, is what makes a mixed file tractable: splicing only
+some would leave the rest diverging and report the whole file as content
+drift.
 
 **A record whose `source:` is `generated` has no pack payload** to reconstruct
 from, so there is nothing to splice: the second test is skipped, and test 1's
 mismatch is (e)'s row exactly as it was before this test existed.
 
 For a pack-copied file, (e) runs two tests: the hash, then the
-marked-position splice. `/vwf:init`'s existing-repo pass 6 runs the hash test
-alone over the same record, so a file that pass leaves alone is one this
-predicate reports clean; a file pass 6 offers whose divergence lies wholly
-inside marked positions is one (e) reports clean while pass 6 still shows
-it. Nothing is reported here that a reshape would not offer to fix.
+marked-position splice. Nothing is reported here that `/vwf:setup` would not
+offer to fix.
 
 That comparison isolates exactly one thing — content drift is the **repo**
 having edited a file the pack owns. A pack that merely moved leaves the file
 still matching its landing hash and is (a)'s row instead, so the two never
 double-count; a path appearing under both is a repo edit *and* a version
-behind, which one reshape resolves together. Say which it is in the row,
+behind, which one `/vwf:setup` resolves together. Say which it is in the row,
 because the fixes differ in kind: (a) is picked up by re-landing, (e) is a
 file somebody meant to change.
 
-**A file the user chose to keep is skipped.** A diverged pack-owned file that
-`/vwf:init` offered as replace-or-keep and the user kept is recorded under
-`enforcement.kept_files.<path>` — the same record `init` writes when it takes
-that answer, read here rather than a second one — and that record settles it.
+**A file the user chose to keep is skipped.** A file recorded under
+`enforcement.kept_files.<path>` is skipped by every check, a pack file included,
+and that record settles it.
 **The record lives in the base's `.config/vwf.yaml`, for every repo.** A
 member carries only its back-link and no config of its own, so a keep taken
 inside a member is keyed by the **base-relative** path: the member's path as
@@ -643,65 +625,20 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) The values beside `repo_name`.** The base's and each member's
-`.config/stackgen.yaml` carries the values the repo's own tasks read, which
-the `tool-config` skill renders into `conf.d/_base/mise.toml`'s `[env]` —
-`merge_model.develop` and `merge_model.main` as `MERGE_MODEL_DEVELOP` and
-`MERGE_MODEL_MAIN`, `members` as `MEMBERS`. The two landing-model values are
-read in **each** repo, from that repo's own file; `members` is read on the
-**base alone**, since a member declares no members of its own unless it
-carries its own `.gitmodules`, in which case it is a base in its turn and
-this check reaches it as one. Each is read by a task rather than by vwf, so a
-wrong one is wrong only where it is used — which is why it goes unnoticed
-until the day that task runs:
-
-- **`merge_model.develop` and `merge_model.main`** — one per branch, each
-  checked on its own: holding anything other than `direct` or `pr` is one
-  drift row naming the key. An absent key renders the skill's default
-  (`direct` for `develop`, `pr` for `main`) and is no row. What breaks
-  quietly is the repo that meant `pr` and has been landing that branch
-  locally ever since, so the row names the value the render carries.
-- **`members`** — absent **or empty** on a product whose config reads
-  `topology: multi-repo` with `linkage: siblings` is one drift row. Under that
-  linkage the list is the only place the task library learns the member set,
-  so an empty one leaves `setup:all --all` and `code:worktrees` walking
-  nothing. Empty is **correct** everywhere else — submodule linkage reads
-  `.gitmodules`, and a single-project repo has no members — so this row is
-  never raised outside siblings linkage. It is not the §1 membership check and
-  does not replace it: that one compares `members:` against each member repo's
-  own file and is blocking; this one asks only whether the repo's own tasks
-  can see the same list. (b) compares the list's entries with `vwf.yaml`'s.
-
-A repo shaped on the old layout is the baseline row above, already printed —
-(f) adds nothing to it.
-
-**The mise layout is (f)'s too**, read in **each** repo, three rows:
-
-- **Old layout.** Any one of three is one drift row, **mise config on the old
-  layout**: a `.config/mise.toml` or `.config/mise.<env>.toml` carrying a
-  table other than `[settings]` (top-level keys are fine); a mise lock
-  present — a `.config/mise*.lock`, or a lock file or `locks/` directory
-  under `.config/mise/` — since mise keeps no lock any more and pins are
-  exact; or `.config/miserc.toml` absent or lacking `env_conf_d = true`. The
-  reshape migrates it. On that row the two rows below are not raised — the
-  migration moves every table at once.
-- **One tool, two pins.** A tool pinned in more than one `conf.d/` folder —
-  `_base/`, `ai/`, a pack's `<slug>/`, the repo's own `<project>/` — is one
-  drift row naming the tool and the files. A tool is pinned in exactly one
-  folder: two exact pins drift apart, so the environments install different
-  versions. The fix is one pin — kept in the folder that owns the tool, a
-  pack's or `_base/`'s, and dropped from the repo's own — made by hand; doctor
-  names it and moves nothing.
-- **A tool outside `conf.d`.** A `[tools]` entry in `.config/mise.toml` or a
-  `.config/mise.<env>.toml` is one drift row naming the tool and the file.
-  Doctor offers the move — into the repo's own `conf.d/<project>/`, the same
-  file name, `mise.toml` from `mise.toml` and `mise.<env>.toml` from
-  `mise.<env>.toml` — and makes it only on the user's consent, per tool.
+**(f) Merge model.** In **each** repo, read `merge_model` of every `[branch.*]`
+table in that repo's own `.config/bootstrap.toml`. A value other than `direct`
+or `pr` is one `warning` naming the repo, the table and the value, remedy: fix
+the value in `.config/bootstrap.toml`. The repo's merge tasks read any such value
+as `direct`, so what breaks quietly is the repo that meant `pr` and has been
+landing that branch locally ever since. An absent key means `direct`, bootstrap's
+own default, and is no row.
 
 **(g) Forge state.** The one sub-check that reads the **remote** rather than
-the checkout. `/vwf:init`'s **forge pass** — the last step of its git pass,
-run for a repo whose answer was *commit + push* — sets the repo's default
-branch on the forge, protects `develop` and `main` there, and hands the base's
+the checkout. `/vwf:init`'s **forge pass** — run once for the product, after
+the base lands, for a repo `/vwf:git-workflow` landed with a push that run, or
+one with nothing to land whose core branches are already on `origin` — sets
+the repo's default branch on the forge, protects `develop` and `main` there,
+and hands the base's
 backlog project over to the user; the forge is the record for all three, and
 nothing in the tree says what it chose. So this predicate asks the forge, in
 **each** repo — the base and every locally-present member — through the same
@@ -738,9 +675,10 @@ allowed to read. Otherwise, three checks:
   `develop` or `main` is the one drift row here, naming the repo and the
   branch. Where protection exists but lacks one of the rules the pass would
   have set — **no force-push and no deletion**, always; **a pull request
-  required** when that branch's own value reads `pr` — `MERGE_MODEL_DEVELOP`
-  for `develop`, `MERGE_MODEL_MAIN` for `main` — read from the same
-  `stackgen.yaml` values (f) reads (on
+  required** when that branch's own value reads `pr` —
+  `[branch.develop].merge_model` for `develop`, `[branch.main].merge_model` for
+  `main`, in the base's `.config/bootstrap.toml`, a missing file or key reading
+  `direct` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and
   `required_pull_request_reviews`; on GitLab `allow_force_push` and a
@@ -752,8 +690,8 @@ allowed to read. Otherwise, three checks:
   `direct` the require-PR rule is neither expected nor noted when present. A
   branch the
   forge does not carry reports `not on the forge — not checked` for that
-  branch: pushing it is the git pass's, and (c) already says whether it exists
-  locally.
+  branch: pushing it is `/vwf:git-workflow`'s, and (c) already says whether it
+  exists locally.
 - **Backlog project.** **Base only, once per product**, and printed under the
   base's section. Resolve it exactly as the backlog skill's GitHub reference
   does — owner and name from `gh repo view --json owner,name`, then
@@ -766,8 +704,8 @@ allowed to read. Otherwise, three checks:
   remote print the skill's "not yet supported" line as information and check
   nothing; on any other host the skip rule already applies.
 
-**Every row is `drift`, none is blocking**, and the remedy is the same one
-line as (a)–(f): `/vwf:setup reshape`, whose forge pass re-offers what is
+**Every row is `drift`, none is blocking**, and the remedy is
+`/vwf:setup reshape`, whose forge pass re-offers what is
 absent — the default branch and a protection for an unprotected branch through
 the CLI on one consent, the backlog project through the backlog skill's browser
 hand-over — and leaves what is already set untouched, which is why an existing
@@ -776,7 +714,6 @@ never writes to it; every command above is a read, and a network miss is the
 skip note, not a finding.
 
 Doctor **writes none of this** — no branch, no directory, no key, no scope, no
-pack-owned file, and no forge setting. It reports the rows, gives
-`/vwf:setup reshape` once as the remedy, and stops there, as it does with every
-other structural change in this file. The one exception is (f)'s tool move,
-made on the user's consent; a duplicate pin is fixed by hand.
+pack-owned file, and no forge setting. It reports the rows, gives each remedy
+once, and stops there, as it does with every other structural change in this
+file.

@@ -1,5 +1,10 @@
 # Decision — stackgen:tool-config owns the gates
 
+> **SUPERSEDED 2026-11-03** — the skill, its script and its trees are gone, and
+> the repo shape is bootstrap's. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-26 · **Branch** `2026-09-26-tool-config-gates` · **Plan**
 [`docs/plans/2026-09-26-tool-config-gates/`](../../plans/2026-09-26-tool-config-gates/index.md)
 · **Backlog** B66 (second piece of three), B72 (the gates side)

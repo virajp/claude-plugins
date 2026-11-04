@@ -19,10 +19,9 @@ Bring any repo — new, existing, or written against an older vwf format — int
 the shape the rest of the workflow reads. `setup` is the Phase-0 bootstrapper of
 `setup → product → architecture → design-system → blueprint → plan → execute`,
 and the only vwf command that onboards. It is also where a **pinned** stack is
-materialized: `/vwf:architecture` decides the slug, setup lands it — asking the
-values the landed pack declares — and **the materialize pass runs in
-every mode** — which is why `/vwf:architecture` comes back here when it is
-done.
+materialized: `/vwf:architecture` decides the slug, setup lands it, and **the
+materialize pass runs in every mode** — which is why `/vwf:architecture` comes
+back here when it is done.
 
 **The mode is resolved once, in Step 0, and never re-derived.** Everything after
 it branches on the named mode. There is no progress key and no resume state:
@@ -60,9 +59,10 @@ Read the one the step needs, not all of them.
 - **Never move source.** setup writes and moves documentation only. Layout
   drift is a written recommendation — see Recommendations, never moves.
 - **Don't write repo tooling.** The repo shape — the toolchain manager's config
-  and task library, the repo gates, the hygiene files — is `/vwf:init`'s and
-  `/stackgen:tool-config`'s. Setup checks for it and offers init; it never
-  writes any of it itself. Setup
+  and task library, the repo gates, the secrets provider — belongs to
+  [bootstrap](https://github.com/virajp/bootstrap), reached through
+  `/vwf:init`, which also writes its own hygiene files. Setup checks for it and
+  offers init; it never writes any of it itself. Setup
   is also the **only** way init is reached — Step 0's offer, or `reshape` —
   since init is hidden from the `/` menu. On a multi-repo product the shape is
   **per repo**, and one init run reaches them all, so setup checks every repo
@@ -75,11 +75,10 @@ Read the one the step needs, not all of them.
 
 `$ARGUMENTS` carries at most one word. With `reshape`, setup **skips the
 detection below entirely**: invoke `/vwf:init` — which surveys **the base and
-every member**, decides each repo's mode from its tree (`blank`, `source` or
-`shaped` — a source-bearing repo is shaped as `source`, its existing files
-offered, never overwritten), shows its one plan and takes its own consents —
-print init's report verbatim, and **stop**. No mode fork, no validation, no
-stamp, no doctor, no commit; a re-shape never touches `.config/vwf.yaml`,
+every member**, shows its one plan, takes its own consents and runs its
+bootstrap step, which adopts a repo and also brings an adopted repo up to
+date — print init's report verbatim, and **stop**. No mode fork, no validation,
+no stamp, no doctor, no commit; a re-shape never touches `.config/vwf.yaml`,
 because the spine below is a setup run's, and a user who wants both runs
 `/vwf:setup` again afterwards.
 
@@ -89,10 +88,11 @@ that member alone. init resolves the base per the membership asset
 gets reshaped is the product — the base and every member — whichever repo the
 user happened to be standing in.
 
-`/vwf:setup reshape` is the line `/vwf:doctor` prints for every repo-shape
-finding, so most runs of it arrive from a drift row and should act on exactly
-what that row named. The shape pass includes init's **forge pass** — the
-default branch, the protection on `develop` and `main`, the base's backlog
+`/vwf:setup reshape` is the line `/vwf:doctor` prints for a row about bootstrap
+or the forge state, so most runs of it arrive from a drift row and should act
+on exactly what that row named. A row about a pack names `/vwf:setup` instead:
+a reshape runs no materialize pass. The shape pass includes init's **forge
+pass** — the default branch, the protection on `develop` and `main`, the base's backlog
 project — which is idempotent on a repo already set, so a reshape that arrives
 from a forge-state row sets only what drifted.
 
@@ -108,41 +108,49 @@ a blind spot, never a finding. On a single-repo product the set is one repo and
 everything below reads as it always did.
 
 First, is the shape **there**: in **each** repo of that set,
-`.config/stackgen.yaml` exists with `format: 1` — the values file
-`/stackgen:tool-config all` writes, and nothing else writes. No pack slug is
-checked: a repo is shaped when that file is there. A repo **without** it that
-still carries the older layout — `.config/mise/conf.d/tools.toml`,
-`.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` — is **shaped
-on the old layout**: its move onto the renderer is a reshape this release does
-not ship yet, so setup names the repo and the files that marked it, says that
-`/vwf:setup reshape` will move it in a later release, and **stops** — no init
-offer, no mode fork, nothing written. Second, is it **current**: the
-predicates under **"The repo shape against its baseline"** in `/vwf:doctor`'s
-stack-checks reference, evaluated **per repo** on that repo's own artifacts —
-among them the pack versions the adapter lockfile records against what the
-adapter ships now, every row a `preview all` and a `preview pack` per landed
-pack would show, and the forge state — the default branch as chosen, both
-branches protected, and the base's backlog project present, read from the
-forge when its CLI is on `PATH` and logged in. Read the artifacts that
-section reads and evaluate them **by it**: the predicates are doctor's and
-are deliberately not restated here, so the two can never drift apart. Every
-repo shaped and holding every predicate — say so in one line, naming the
-repos checked, and read on.
+`.config/bootstrap.toml` exists — the values file bootstrap writes. No pack
+slug is checked: a repo is shaped when that file is there. A repo **without**
+it that carries `.config/stackgen.yaml` or an older layout —
+`.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root
+`.config/mise.dev.toml` — is **on the old layout**: name the repo and the files
+that marked it. Second, is it **current**, evaluated **per repo** on that repo's
+own artifacts by two predicates under **"The repo shape against its baseline"**
+in `/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
+drift**: `mise run setup:configs --dry-run`, run in that repo, shows no change.
+This explicit dry-run writes nothing in the repository, but it runs code: the
+repo's own `setup:configs` task, which refreshes bootstrap's clone under
+`~/.cache/bootstrap` and executes the `main` branch of bootstrap from that clone
+with no pin. Run it only when mise lists this repo as trusted:
+`mise trust --show`, run in that repo, lists a path inside the repo, and every
+such line reads `trusted`. A parent's line does not count. Otherwise drift is
+unknown, with the reason `repo not trusted by mise`. That check is a limit, not
+a safeguard: it stops only a clone mise has never run, and the trust gate of
+mise is not tied to file content, so a repo trusted once runs whatever its task
+holds now. The dry-run prints on
+stderr, each line prefixed `repo-sync:`; after the prefix, a line
+starting `would` is a change, and `unchanged`, `kept seed` or `skip` are not.
+No `would` line and exit 0 is no drift. A listed change is drift. Exit 5 or any
+other failure is unknown too. **Unknown**, either way: say setup could not check
+drift in that repo, with the reason, and continue as current. **Forge state**:
+the default branch as chosen, both branches protected, and the base's backlog project present,
+read from the forge when its CLI is on `PATH` and logged in, else not checked.
+Doctor owns both predicates. Its Pack versions, Project ids, Branches and
+Content drift rows are not part of this check. Every repo shaped and holding
+both predicates — say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
-product.** A repo with no `.config/stackgen.yaml` and no old-layout file is
-**unshaped**: say what is absent. Any predicate failing in a repo, that repo
+product.** A repo with no `.config/bootstrap.toml` and no old-layout file is
+**unshaped**: say what is absent. Either predicate failing in a repo, that repo
 is **behind its baseline**: name which, in the words doctor's rows use. The
-offer fires when **any** repo in the set is unshaped or behind, and it names
-**which repos** and what each of them showed — a base that is current while
-one member is behind is still an offer, because the shape is per repo and
-the product is shaped only when all of them are. Both causes reach the same
-offer — init is what lays the shape down and what brings it forward — and on
-a yes invoke `/vwf:init`, which surveys the base and every member and shapes
-them in one run of its own, and continue once it returns. init decides each
-repo's mode from what its tree contains — `blank`, `source` or `shaped` — so
-a repo that already carries source is shaped as `source`: its existing files
-are offered, never overwritten. init is **skill-invoked**: hidden from the
+offer fires when **any** repo in the set is unshaped, on the old layout or
+behind, and it names **which repos** and what each of them showed — a base that
+is current while one member is behind is still an offer, because the shape is
+per repo and the product is shaped only when all of them are. All three causes
+reach the same offer — init is what runs bootstrap, which lays the shape down
+and brings it forward, and bootstrap's `docs/sync/migrate.md` maps an old
+layout's keys — and on a yes invoke `/vwf:init`, which surveys the base and
+every member and shapes them in one run of its own, and continue once it
+returns. init is **skill-invoked**: hidden from the
 `/` menu and called from here alone, so this offer and `reshape` above are the
 only two ways it is reached. A **decline** is a recorded deferral on the terms
 in [the onboard pipeline](references/onboard-pipeline.md), named with its
@@ -150,8 +158,8 @@ unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
 table. setup never materializes a bundle itself and never halts on an unshaped
 or drifted repo: the repo shape and the vwf format are two different things,
 and a repo can be onboarded into one without the other. The check **repeats
-after the materialize pass**, once per run, so a pack version that pass moves
-in this run is caught in this run — see [the second shape
+after the materialize pass**, once per run, so a change that pass's bootstrap
+handoff makes in this run is caught in this run — see [the second shape
 check](#the-second-shape-check) under the pass.
 
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
@@ -184,16 +192,13 @@ decisions nothing else does, and overwriting it discards them silently.
 **`onboard` forks once more — on evidence, not on a second mode.** A **blank**
 repo has no package or language manifest, no source directories, and no
 `docs/blueprint/` tree. A README, LICENSE, `.gitignore` and `.gitattributes`
-(`/stackgen:tool-config`'s git tool), and
+(bootstrap's git tool), and
 tooling-only configs (mise, formatter, linter, pre-commit — at the root or under
 `.config/`) are **not** code: a repo holding only those is blank. Anything else
 takes the code sub-path. Both are in the onboard pipeline. This fork chooses
-setup's onboard sub-path only: `/vwf:init` runs its **own** mode test per repo
-— `blank`, `source` or `shaped`, the table in
-`${CLAUDE_PLUGIN_ROOT}/skills/init/SKILL.md` — and nothing is handed down,
-since init takes no argument. The two tests differ on exactly one item: a
-root tool config is not code here, but it is `source` evidence there, because
-init has to read it before a pack lands beside it.
+setup's onboard sub-path only: `/vwf:init` runs its **own** mode test per repo,
+the table in `${CLAUDE_PLUGIN_ROOT}/skills/init/SKILL.md`, and nothing is
+handed down, since init takes no argument.
 
 **An old `docs/blueprint/` tree found under `onboard`** is handed to the migrate
 pipeline once detection is confirmed. The two are one reconciliation at
@@ -211,19 +216,8 @@ the whole report.
 **Architecture decides; setup pins.** A slug on a stack axis is a decision
 `/vwf:architecture` made and wrote; landing it is setup's, and the pass that
 does it is [materialize](references/materialize.md) — read it there, in full,
-rather than reconstructing it here. It is also where a pack's **values** are
-asked: each entry the pack's `values:` list declares is detected on this
-machine with its `detect` command, else asked with its `question`, and handed
-to `/stackgen:tool-config pack --slug <slug> --dir <pack dir> --set …`,
-which renders the pack's templates and stores the value in the repo's
-`.config/stackgen.yaml`. Setup asks them, never `init`. Every call is
-previewed first, its rows shown inside setup's question, and run with the
-answers as `--answers <id>:<answer>`. And every run re-runs `pack` for each
-already-landed pack, so a template a newer pack changed reaches the repo as a
-`write` row; an unchanged pack writes nothing and shows nothing. A pack
-dropped from a composition goes through `pack-remove`. After the packs,
-setup re-derives the repo's `node`, `external` and `forge` values and calls
-`all` with the ones that changed.
+rather than reconstructing it here. The stackgen materializer, which hands the
+tools a pack needs to bootstrap, is the one thing the pass calls.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3
@@ -236,11 +230,8 @@ In one paragraph, so a reader knows what the reference will say: setup groups
 the axes holding a slug the target repo's adapter lockfile does not name,
 dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
 each landing behind the **adapter's own** consent line; the adapter copies
-each pack's `config/` and runs its `pack` call, with the values setup
-gathered, as part of it. Every landing carries the forge — read live from
-that repo's `origin` — and the secrets provider that repo's
-`.config/stackgen.yaml` records, so a template pinned months after
-`/vwf:init` ran lands what that repo's answers allow, not everything. A
+each pack's `config/` as part of it. Setup reads nothing from
+`.config/stackgen.yaml`, and a repo's secrets provider is bootstrap's. A
 declined landing leaves the pin untouched and is reported. An `unresolved`
 axis is skipped silently. An **absent** axis is written `unresolved` and the
 run continues — a slug is never rewritten. The pass also reads `addons:` and
@@ -253,11 +244,11 @@ written `unresolved`.
 
 The pass ends with **a second shape check** — the same two questions Step 0
 asked, is the shape *there* and is it *current*, over the same set of repos,
-evaluated against the adapter lockfile the pass has just written. It exists
-because Step 0 runs before the pass: a pack version the pass moved is drift
-Step 0 could not see, and without this check it would wait for the next run —
-the pass edits the lockfile Step 0 read. Read the artifacts Step 0
-names and evaluate them by the same doctor predicates; on any repo unshaped or
+after everything the pass wrote. It exists because Step 0 runs before the pass:
+a change the pass's bootstrap handoff made to `.config/bootstrap.toml` is drift
+Step 0 could not see, and without this check it would wait for the next run.
+Evaluate the repos by the same doctor predicates; on any repo unshaped, on the
+old layout or
 behind, make the offer exactly as Step 0's paragraph makes it — the drifted
 repos, what each showed, the one question, `/vwf:init` on a yes, a recorded
 deferral on a decline — and continue. Every repo clean, print nothing: a clean

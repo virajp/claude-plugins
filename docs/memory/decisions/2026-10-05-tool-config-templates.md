@@ -1,5 +1,10 @@
 # Decision — tool-config renders from `assets/` and `templates/`, one marker pair, no lock
 
+> **SUPERSEDED 2026-11-03** — the skill, its script and its trees are gone, and
+> the repo shape is bootstrap's. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
 [`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
 · **Supersedes**

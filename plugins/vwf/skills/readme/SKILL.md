@@ -70,7 +70,7 @@ Gather the facts before writing:
   `serverless.yml`), and cloud SDKs/services in dependencies or config (AWS,
   GCP, Azure, Firebase, Supabase, Vercel, Cloudflare, Neon, PlanetScale, …).
 - **Local development.** The toolchain manager (this marketplace standardizes on
-  **mise** — `MISE_ENV=dev mise run setup:all` alone, the single bootstrap
+  **mise** — `MISE_ENV=dev mise run setup` alone, the single bootstrap
   entrypoint, which installs the pinned tools itself, over the `setup:*` steps
   it already orders), env setup (`.env.example`, mise `[env]`), and
   prerequisites. Note `MISE_ENV=dev mise run setup:worktree` too where the
@@ -107,7 +107,7 @@ Write/update the README with the eight sections above, per the
 - **List of projects** as a table: `| Project | Path | Stack | Purpose |`.
 - **Infrastructure** as a table: `| Tool / Service | Used for |`.
 - **Local Development** as ordered, copy-pasteable steps — clone, env setup,
-  `MISE_ENV=dev mise run setup:all` with no `mise install` before it, and how
+  `MISE_ENV=dev mise run setup` with no `mise install` before it, and how
   to run it; plus `MISE_ENV=dev mise run setup:worktree` for a fresh worktree
   when the repo defines it.
 - **Projects** — per project: what it is, its stack, how to run/test it, and its

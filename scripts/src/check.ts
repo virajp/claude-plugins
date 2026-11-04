@@ -26,7 +26,6 @@ import {
   statSync,
 } from "node:fs";
 import {
-  basename,
   isAbsolute,
   join,
   relative,
@@ -34,11 +33,6 @@ import {
   sep,
 } from "node:path";
 import { parse as parseYaml } from "yaml";
-// Plain zero-dependency `.mjs` modules with no declaration file beside them,
-// so the exports used here are typed by hand below — the checker reads the
-// script's own vocabulary rather than a copy of it.
-// @ts-expect-error TS7016 — no declaration file for a shipped .mjs module
-import * as toolConfigRender from "../../plugins/stackgen/skills/tool-config/scripts/lib/render.mjs";
 import {
   agentName,
   bodyOf,
@@ -103,7 +97,6 @@ export function check(repoRoot: string): Finding[] {
   findings.push(...checkDesignAdapters(plugins));
   findings.push(...checkStackAdapters(plugins));
   findings.push(...checkBundleDefaults(plugins));
-  findings.push(...checkExclusionSets(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   findings.push(...checkPackRunners(plugins));
   return findings;
@@ -319,30 +312,19 @@ function* hookCommands(
 
 /** Where a landed tree puts the file-based mise task library. */
 const PACK_MISE_TASKS = join(".config", "mise", "tasks");
-/** Where `stackgen:tool-config` keeps the files it copies, as the repo root. */
-const TOOL_CONFIG_ASSETS = "skills/tool-config/assets";
-/** Where `stackgen:tool-config` keeps the files it renders, flat as assets. */
-const TOOL_CONFIG_TEMPLATES = "skills/tool-config/templates";
 /** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
 const INIT_ASSETS = "skills/init/assets";
 /**
  * The only paths an init asset tree may land, relative to the tree: two root
- * files and two directories, `/`-terminated. init writes the hygiene files and
- * nothing else; every tool config is tool-config's.
+ * files and one directory, `/`-terminated. init writes the hygiene files and
+ * nothing else; every tool config and the issue forms are bootstrap's.
  */
 const INIT_ROOT_ALLOWLIST = [
   "CONTRIBUTING.md",
   "SECURITY.md",
   "licenses/",
-  ".github/ISSUE_TEMPLATE/",
 ];
-/** What the tool-config script exports and this checker reads. */
-const { SUBTASK_DIRS } = toolConfigRender as {
-  SUBTASK_DIRS: Readonly<Record<string, string>>;
-};
-/** The skill file that marks a plugin as the owner of those trees. */
-const TOOL_CONFIG_SKILL = "skills/tool-config/SKILL.md";
-/** The retired pack tier of the files tool-config rendered; now refused. */
+/** The retired pack tier of rendered files; now refused. */
 const PACK_TEMPLATES = "templates";
 /** Where a pack keeps the hook scripts that land in `.claude/hooks/`. */
 const PACK_HOOKS = "hooks";
@@ -388,8 +370,8 @@ const PACK_HOOK_SHEBANGS = new Set([
  * of every repo it materializes into.
  *
  * This is the **landable** tier of the doctrine's root allowlist
- * (`stackgen/assets/output-tree.md`). The files `stackgen:tool-config`, init
- * and vwf write there — the ignore files, `CONTRIBUTING.md`, `CLAUDE.md` and
+ * (`stackgen/assets/output-tree.md`). The files bootstrap, init and vwf write
+ * there — the ignore files, `CONTRIBUTING.md`, `CLAUDE.md` and
  * the rest — are deliberately absent: they may sit at a shaped root, and no
  * pack may land them.
  */
@@ -400,76 +382,6 @@ const PACK_CONFIG_ROOT_FILES = new Set([
   // pack shipping a deploy target has nowhere else to put it.
   "wrangler.jsonc",
 ]);
-
-/**
- * The files a `stackgen:tool-config` tree may land at the root beyond a pack's:
- * the git files every repo carries and no pack ships — git reads them from the
- * root only.
- */
-const TOOL_CONFIG_ROOT_FILES = [
-  // dprint's config discovery is root-only and `--config` is the CLI's only
-  // override, so tool-config's dprint tree ships a root shim extending it.
-  "dprint.json",
-  ".gitattributes",
-  ".gitignore",
-];
-
-/** Where a landed repo-local skill sits, relative to the tree's root. */
-const LANDED_SKILLS_DIR = ".claude";
-
-/**
- * The directories a `stackgen:tool-config` tree may land at the root beyond a
- * pack's: the repo-local skill tree and the editor settings the universal
- * `.vscode/settings.json` sits in.
- */
-const TOOL_CONFIG_ROOT_DIRS = [LANDED_SKILLS_DIR, ".vscode"];
-
-/** A template's opening `@@#if NAME@@` guard line. */
-const TEMPLATE_GUARD = /^@@#if [A-Za-z_][\w.]*@@$/;
-
-/**
- * The repo-local skills a `stackgen:tool-config` tree may land: the skill that
- * tells a session how to run the repo's tasks and edit its mise config.
- * Nothing else under `.claude/` lands.
- */
-const TOOL_CONFIG_LANDED_SKILLS = new Set([
-  join(LANDED_SKILLS_DIR, "skills", "mise", "SKILL.md"),
-]);
-
-/**
- * The names every template may read — the stored values of
- * `.config/stackgen.yaml` and the names the tool-config script derives on each
- * render. A `stackgen:tool-config` template reads these alone; a pack's
- * template reads these and its own `packs.<slug>` keys, which the script
- * refuses when one takes a global name.
- */
-const TEMPLATE_GLOBAL_NAMES: ReadonlySet<string> = new Set([
-  "REPO_NAME",
-  "FORGE",
-  "SECRETS",
-  "MERGE_MODEL_DEVELOP",
-  "MERGE_MODEL_MAIN",
-  "MEMBERS",
-  "SCOPES",
-  "NODE",
-  "EXTERNAL",
-  "REPO_URL",
-  "PROJECT_NAME",
-  "MEMBERS_SPACED",
-  "MEMBER_ENTRIES",
-  ...Object.keys(SUBTASK_DIRS),
-  "TASKS",
-]);
-
-/** Anything a template spells between two `@@` on one line. */
-const TEMPLATE_TAG = /@@([^@\n]*)@@/g;
-/**
- * The tags the template engine reads: a name, an `#if`/`#each` block on one,
- * the block closers, and the `.`/`.key` reads of an `#each` item. The name
- * is captured; an item read is not a name.
- */
-const TEMPLATE_TAG_GRAMMAR =
-  /^(?:(?:#if|#each) (?:([A-Z][A-Z0-9_]*)|\.(?:[A-Za-z_]\w*)?)|#else|\/if|\/each|([A-Z][A-Z0-9_]*)|\.(?:[A-Za-z_]\w*)?)$/;
 
 /**
  * The directories a pack may ship at the top of its `config/` tier.
@@ -534,14 +446,10 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   toolchain is bootstrap's, so any other path is a second copy of a
  *   bootstrap file, and a pack `templates/` tier is refused outright;
  * - the pack's **`binaries` and `lockfile` facts** take the shapes
- *   `/vwf:doctor` reads, and the retired `tool-config:`, `machine_env:`,
- *   `values:` and `conditional:` keys are refused (`packFactFaults`).
+ *   `/vwf:doctor` reads, and the retired keys are refused (`packFactFaults`).
  *
- * `stackgen:tool-config`'s `assets/` and `templates/` are walked as landed
- * trees too, as is each `/vwf:init` asset tree — which lands only its hygiene
- * allowlist — and every `@@` tag in tool-config's templates is held to the
- * engine's grammar and its names to {@link TEMPLATE_GLOBAL_NAMES}
- * (`templateNameFaults`).
+ * Each `/vwf:init` asset tree is walked as a landed tree too, and lands only
+ * its hygiene allowlist.
  *
  * The walk is its own rather than `plugin.files`: most of these paths run
  * through `.config/`, and the reader's glob does not descend into a dot
@@ -556,17 +464,12 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     tree: string,
     label: string,
     rootFiles: ReadonlySet<string> | null,
-    rootDirs: ReadonlySet<string> = PACK_CONFIG_ROOT_DIRS,
   ) => {
     for (const absolute of filesUnder(join(tree, PACK_MISE_TASKS))) {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
       }
-      // A template wrapped whole in `@@#if NAME@@` renders empty or starting
-      // at the shebang beneath it, so that guard line is not the first line.
-      const shebang = readText(absolute)
-        .split("\n")
-        .find((line) => !TEMPLATE_GUARD.test(line)) ?? "";
+      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
       if (!PACK_TASK_SHEBANGS.has(shebang)) {
         at(
           `mise task file does not start with one of `
@@ -578,7 +481,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     if (existsSync(tree) && rootFiles !== null) {
       for (const entry of readdirSync(tree, { withFileTypes: true })) {
         const allowed = entry.isDirectory()
-          ? rootDirs.has(entry.name) || entry.name.startsWith("_")
+          ? PACK_CONFIG_ROOT_DIRS.has(entry.name) || entry.name.startsWith("_")
           : rootFiles.has(entry.name);
         if (!allowed) {
           at(
@@ -597,30 +500,6 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
   };
 
-  // Each tool-config tree mirrors the repo root whole.
-  for (const tree of toolConfigTrees(plugin)) {
-    const landed = join(plugin.root, tree);
-    landedTree(
-      landed,
-      `tool-config ${basename(tree)}/ tree`,
-      new Set([...PACK_CONFIG_ROOT_FILES, ...TOOL_CONFIG_ROOT_FILES]),
-      new Set([...PACK_CONFIG_ROOT_DIRS, ...TOOL_CONFIG_ROOT_DIRS]),
-    );
-    for (const absolute of filesUnder(join(landed, LANDED_SKILLS_DIR))) {
-      if (!TOOL_CONFIG_LANDED_SKILLS.has(relative(landed, absolute))) {
-        at(
-          `tool-config ${basename(tree)}/ tree lands an unallowlisted file `
-            + `under ${LANDED_SKILLS_DIR}/ — only `
-            + `${[...TOOL_CONFIG_LANDED_SKILLS].join(", ")}: ${path(absolute)}`,
-        );
-      }
-    }
-    if (tree === TOOL_CONFIG_TEMPLATES) {
-      for (const fault of templateNameFaults(landed, null)) {
-        at(`${path(fault.absolute)}:${fault.line}: ${fault.message}`);
-      }
-    }
-  }
   // init picks one licence from its tree, so its root holds more than lands.
   for (const tree of assetTrees(plugin, INIT_ASSETS)) {
     const landed = join(plugin.root, tree);
@@ -671,7 +550,7 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         );
       }
     }
-    // The tier tool-config rendered is retired with the key that fed it.
+    // The tier of rendered files is retired with the key that fed it.
     const templates = join(plugin.root, pack, PACK_TEMPLATES);
     if (existsSync(templates)) {
       at(
@@ -708,9 +587,8 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
  *   up on PATH, or a map of exactly `name` and an optional `probe` it runs;
  * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
  *   any match passing doctor's package-manager check;
- * - a `tool-config:` list or a `machine_env:` list is refused — nothing reads
- *   either any more, so a pack still carrying one is asking for lines and
- *   values that never land.
+ * - a key in {@link RETIRED_PACK_KEYS} is refused — nothing reads one any more,
+ *   so a pack still carrying one is asking for lines and values that never land.
  *
  * Each is read by a caller that trusts its shape: a probe that is not a string
  * is never run, and a lockfile glob that climbs out of the repo matches
@@ -805,83 +683,10 @@ const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
   ["conditional", "no pack used it; every config/ path lands"],
 ]);
 
-/** A template file's tag fault, by where it sits. */
-interface TemplateFault {
-  readonly absolute: string;
-  readonly line: number;
-  readonly message: string;
-}
-
-/**
- * Every `@@` tag in a template tree the engine would not read as written.
- *
- * A tag outside the engine's grammar — a lowercase name, a stray block word —
- * is left in the rendered file verbatim, and nothing downstream reports it.
- * In `stackgen:tool-config`'s own templates (`declared` null) every name is
- * one of {@link TEMPLATE_GLOBAL_NAMES}, since no pack keys are in scope there;
- * a name outside it renders as a missing value. In a pack's templates a name
- * outside that set is one its `values:` declares, or it renders as a missing
- * value too. Every name the tree reads is added to `read`.
- */
-function templateNameFaults(
-  tree: string,
-  declared: ReadonlySet<string> | null,
-  read: Set<string> = new Set(),
-): TemplateFault[] {
-  const faults: TemplateFault[] = [];
-  for (const absolute of filesUnder(tree)) {
-    readText(absolute).split("\n").forEach((text, index) => {
-      for (const [tag, inner = ""] of text.matchAll(TEMPLATE_TAG)) {
-        const at = (message: string) => faults.push({ absolute, line: index + 1, message });
-        const parsed = TEMPLATE_TAG_GRAMMAR.exec(inner);
-        if (parsed === null) {
-          at(
-            `\`${tag}\` is not a template tag — a name is upper snake case, `
-              + `read as @@NAME@@, @@#if NAME@@ or @@#each NAME@@`,
-          );
-          continue;
-        }
-        const name = parsed[1] ?? parsed[2];
-        if (name === undefined || TEMPLATE_GLOBAL_NAMES.has(name)) {
-          continue;
-        }
-        read.add(name);
-        if (declared === null) {
-          at(
-            `\`${tag}\` names ${name}, which is not a template name — `
-              + `tool-config's templates read the stored and derived names `
-              + `alone`,
-          );
-        } else if (!declared.has(name)) {
-          at(
-            `\`${tag}\` names ${name}, which is neither a global template `
-              + `name nor declared in the pack's \`values:\``,
-          );
-        }
-      }
-    });
-  }
-  return faults;
-}
-
-/**
- * The two `stackgen:tool-config` landed trees, plugin-relative: `assets/`
- * (copied) and `templates/` (rendered), each mirroring the repo root.
- */
-function toolConfigTrees(plugin: Plugin): string[] {
-  return [TOOL_CONFIG_ASSETS, TOOL_CONFIG_TEMPLATES]
-    .filter((tree) => existsSync(join(plugin.root, tree)));
-}
-
 /** Every landed tree directly under `assets`, plugin-relative. */
 function assetTrees(plugin: Plugin, assets: string): string[] {
   return globSync(`${assets}/*`, { cwd: plugin.root })
     .filter((tree) => statSync(join(plugin.root, tree)).isDirectory());
-}
-
-/** A list whose every item is a string. */
-function isStringList(value: unknown): boolean {
-  return Array.isArray(value) && value.every((item) => typeof item === "string");
 }
 
 /** A JSON object — not an array, not `null`. */
@@ -946,22 +751,13 @@ function checkFrontmatterYaml(plugin: Plugin): Finding[] {
 const PACK_SKILL_RE = /^stacks\/[^/]+\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
 const PACK_AGENT_RE = /^stacks\/[^/]+\/[^/]+\/agents\/[^/]+\.md$/;
 
-/**
- * Every document in a plugin whose frontmatter a host parses. An asset tree's
- * repo-local skills are walked, since they sit under a dot segment the reader's
- * glob does not enter.
- */
+/** Every document in a plugin whose frontmatter a host parses. */
 function frontmatteredDocs(plugin: Plugin): string[] {
   const packs = plugin
     .files
     .map((f) => f.path)
     .filter((path) => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
-  const landedSkills = toolConfigTrees(plugin).flatMap((tree) =>
-    [...filesUnder(join(plugin.root, tree, LANDED_SKILLS_DIR, "skills"))]
-      .filter((absolute) => basename(absolute) === "SKILL.md")
-      .map((absolute) => relative(plugin.root, absolute))
-  );
-  return [...plugin.skills, ...plugin.agents, ...packs, ...landedSkills];
+  return [...plugin.skills, ...plugin.agents, ...packs];
 }
 
 /** Relative links inside the worked example bundle must resolve. */
@@ -1191,11 +987,7 @@ function checkLandedCitations(plugin: Plugin): Finding[] {
 
 /** Is this plugin-relative path one of the files a pack lands? */
 function isLandedPath(path: string): boolean {
-  if (
-    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
-    || path.startsWith(`${TOOL_CONFIG_TEMPLATES}/`)
-    || path.startsWith(`${INIT_ASSETS}/`)
-  ) {
+  if (path.startsWith(`${INIT_ASSETS}/`)) {
     return true;
   }
   const parts = path.split("/");
@@ -1220,12 +1012,7 @@ function isLandedPath(path: string): boolean {
  * {@link checkPackConfigTier} walks its own way.
  */
 function* landedFiles(plugin: Plugin): Generator<LandedFile> {
-  for (
-    const tree of [
-      ...toolConfigTrees(plugin),
-      ...assetTrees(plugin, INIT_ASSETS),
-    ]
-  ) {
+  for (const tree of assetTrees(plugin, INIT_ASSETS)) {
     for (const found of filesUnder(join(plugin.root, tree))) {
       yield { path: relative(plugin.root, found), absolute: found };
     }
@@ -1305,13 +1092,7 @@ function blankFences(body: string): string {
  */
 function landingRootOf(path: string): string | null {
   const parts = path.split("/");
-  // A tool-config or init asset tree lands whole as the repo root.
-  if (
-    path.startsWith(`${TOOL_CONFIG_ASSETS}/`)
-    || path.startsWith(`${TOOL_CONFIG_TEMPLATES}/`)
-  ) {
-    return parts.slice(0, 3).join("/");
-  }
+  // An init asset tree lands whole as the repo root.
   if (path.startsWith(`${INIT_ASSETS}/`)) {
     return parts.slice(0, 4).join("/");
   }
@@ -1656,375 +1437,8 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
   return findings;
 }
 
-/**
- * The four exclusion lists tool-config's gate assets ship, each in its tool's
- * own syntax, and the reader that lifts the entries out of each.
- *
- * dprint and taplo take globs; gitleaks and pre-commit take regexes — the
- * pre-commit one a single pattern, so its alternatives are the entries. The two
- * TOML readers are deliberately narrow: `scripts/` carries no TOML parser, and
- * a bracketed list of string literals is all either file holds.
- *
- * Three of the lists are the **formatters'** and must agree; the gitleaks
- * allowlist is the **scanner's** and is held to a subset of them instead — see
- * {@link checkExclusionSets}.
- */
-const EXCLUSION_LISTS: readonly {
-  /** Where the list sits, plugin-relative. */
-  readonly path: string;
-  readonly syntax: "glob" | "regex";
-  readonly role: "formatter" | "scanner";
-  readonly entries: (source: string) => string[] | null;
-}[] = [
-  {
-    path: `${TOOL_CONFIG_ASSETS}/.config/dprint.json`,
-    syntax: "glob",
-    role: "formatter",
-    entries: (source) => {
-      // JSONC: the tool-config markers are `//` comments inside the list.
-      const excludes = (JSON.parse(stripJsonComments(source)) as {
-        excludes?: unknown;
-      })
-        .excludes;
-      return isStringList(excludes) ? excludes as string[] : null;
-    },
-  },
-  {
-    path: `${TOOL_CONFIG_ASSETS}/.config/taplo.toml`,
-    syntax: "glob",
-    role: "formatter",
-    entries: (source) => tomlStringList(source, "exclude"),
-  },
-  {
-    path: `${TOOL_CONFIG_ASSETS}/.config/gitleaks.toml`,
-    syntax: "regex",
-    role: "scanner",
-    entries: (source) => tomlStringList(source, "paths"),
-  },
-  {
-    path: `${TOOL_CONFIG_ASSETS}/.config/pre-commit-config.yaml`,
-    syntax: "regex",
-    role: "formatter",
-    entries: (source) => {
-      const exclude = (parseYaml(source) as { exclude?: unknown } | null)
-        ?.exclude;
-      // No global exclude is a legitimate config that excludes nothing.
-      if (exclude === undefined) {
-        return [];
-      }
-      return typeof exclude === "string" ? regexAlternatives(exclude) : null;
-    },
-  },
-];
-
-/**
- * JSONC as JSON: every `//` line comment and `/* … *\/` block comment
- * outside a string removed, then every trailing comma before a `]` or `}` —
- * the formatter writes one. A string is walked whole, so a plugin URL's `//`
- * survives.
- */
-function stripJsonComments(source: string): string {
-  return walkJson(
-    walkJson(source, (text, index) => {
-      if (text.startsWith("//", index)) {
-        const newline = text.indexOf("\n", index);
-        return newline === -1 ? text.length : newline;
-      }
-      if (text.startsWith("/*", index)) {
-        const close = text.indexOf("*/", index + 2);
-        return close === -1 ? text.length : close + 2;
-      }
-      return index;
-    }),
-    (text, index) =>
-      text[index] === "," && /^\s*[\]}]/.test(text.slice(index + 1))
-        ? index + 1
-        : index,
-  );
-}
-
-/**
- * Copy JSON text, each string whole, dropping what `skip` reports: given a
- * position outside a string, it returns where copying resumes.
- */
-function walkJson(
-  source: string,
-  skip: (text: string, index: number) => number,
-): string {
-  let out = "";
-  let index = 0;
-  while (index < source.length) {
-    if (source[index] === "\"") {
-      const end = /"(?:\\.|[^"\\])*"/y;
-      end.lastIndex = index;
-      const string = end.exec(source)?.[0] ?? source.slice(index);
-      out += string;
-      index += string.length;
-      continue;
-    }
-    const resume = skip(source, index);
-    if (resume > index) {
-      index = resume;
-      continue;
-    }
-    out += source[index];
-    index++;
-  }
-  return out;
-}
-
-/**
- * The string literals inside a TOML array assigned to `key`, or `null` when
- * no such assignment exists. Reads `'''…'''`, `'…'` and `"…"` alike, since
- * gitleaks spells its regexes as literal strings and taplo its globs as basic
- * ones.
- */
-function tomlStringList(source: string, key: string): string[] | null {
-  // The array body is every literal up to the first `]` outside a literal, so
-  // a `]` inside a quoted entry (a regex character class) does not end it.
-  const match = new RegExp(
-    `^${key}\\s*=\\s*\\[((?:'''.*?'''|'[^']*'|"[^"]*"|[^\\]])*)\\]`,
-    "ms",
-  )
-    .exec(source);
-  if (match === null) {
-    return null;
-  }
-  return [...(match[1] ?? "").matchAll(/'''(.*?)'''|'([^']*)'|"([^"]*)"/gs)]
-    .map((m) => m[1] ?? m[2] ?? m[3])
-    .filter((s): s is string => s !== undefined);
-}
-
-/**
- * The alternatives of pre-commit's global `exclude` regex, as entries.
- *
- * `^(a/|b/)` and `^a/|^b/` both read as two entries; a `(?x)` verbose pattern
- * has its whitespace and comments removed first, and the `(^|/)` anchor —
- * "at the root or under any directory", a glob's two stars — reads as `^` before
- * the grouping is looked at, so it never counts as a group of its own. A
- * prefix or suffix outside a top-level group applies to every alternative
- * inside it. An alternative carrying two top-level groups has no one reading
- * as entries, so it is refused — the reader throws, and rule 15 reports the
- * file as unreadable with this reason.
- */
-function regexAlternatives(pattern: string): string[] {
-  let source = pattern;
-  if (source.startsWith("(?x)")) {
-    source = source.slice(4).replace(/#[^\n]*/g, "").replace(/\s+/g, "");
-  }
-  source = source.replace(REGEX_ANYWHERE_ANCHOR, "^");
-  const parts = splitTopLevel(source);
-  if (parts.length > 1) {
-    return parts.flatMap(regexAlternatives);
-  }
-  if (topLevelGroups(source) > 1) {
-    throw new Error(
-      "more than one alternation group — spell one entry per line",
-    );
-  }
-  const group = /^([^()]*)\((?:\?:)?(.*)\)([^()]*)$/s.exec(source);
-  if (group === null) {
-    return [source];
-  }
-  const [, prefix = "", inner = "", suffix = ""] = group;
-  return splitTopLevel(inner).map((alt) => `${prefix}${alt}${suffix}`);
-}
-
-/** A regex's `(^|/)` or `(?:^|/)` — the anchor a glob spells with two stars. */
-const REGEX_ANYWHERE_ANCHOR = /\((?:\?:)?\^\|\/\)/g;
-
-/**
- * Walk a regex's characters with the nesting depth and whether the cursor is
- * inside a bracket class — where `(`, `)` and `|` are literals.
- */
-function* regexChars(
-  source: string,
-): Generator<{ char: string; depth: number; inClass: boolean }> {
-  let depth = 0;
-  let inClass = false;
-  for (let index = 0; index < source.length; index++) {
-    let char = source[index]!;
-    if (char === "\\") {
-      char += source[index + 1] ?? "";
-      index++;
-      yield { char, depth, inClass };
-      continue;
-    }
-    if (inClass) {
-      inClass = char !== "]";
-      yield { char, depth, inClass: true };
-      continue;
-    }
-    if (char === "[") {
-      inClass = true;
-    } else if (char === "(") {
-      depth++;
-    } else if (char === ")") {
-      depth--;
-    }
-    yield { char, depth, inClass };
-  }
-}
-
-/** Split a regex on `|` at nesting depth zero, outside any bracket class. */
-function splitTopLevel(source: string): string[] {
-  const parts: string[] = [];
-  let current = "";
-  for (const { char, depth, inClass } of regexChars(source)) {
-    if (char === "|" && depth === 0 && !inClass) {
-      parts.push(current);
-      current = "";
-      continue;
-    }
-    current += char;
-  }
-  parts.push(current);
-  return parts;
-}
-
-/** How many `(` open at depth zero, outside any bracket class. */
-function topLevelGroups(source: string): number {
-  let count = 0;
-  for (const { char, depth, inClass } of regexChars(source)) {
-    if (char === "(" && depth === 1 && !inClass) {
-      count++;
-    }
-  }
-  return count;
-}
-
-/**
- * One entry in the shape every syntax reduces to.
- *
- * A regex loses its anchors — `^`, `$`, and the `(^|/)` that spells "anywhere"
- * — its `\.` escapes and its `[^/]*` or `.*` (a glob's `*`); every
- * entry then loses a leading slash or `**` segment and a trailing slash, with
- * or without the one or two stars after it — the spellings of "this directory,
- * wherever it sits" that the four tools take. What survives is the name the
- * sets are compared on.
- */
-function normalizeExclusion(entry: string, syntax: "glob" | "regex"): string {
-  let value = entry.trim();
-  if (syntax === "regex") {
-    value = value
-      .replace(REGEX_ANYWHERE_ANCHOR, "^")
-      .replace(/^\^/, "")
-      .replace(/\$$/, "")
-      .replace(/\[\^\/\]\*|\.\*/g, "*")
-      .replace(/\\([./])/g, "$1");
-  }
-  // dprint's `../X` twin of `**/X` reaches past its config's directory to
-  // the repo root; the pair is one entry.
-  value = value.replace(/^(?:\.\.\/)+/, "").replace(/^\/+/, "");
-  while (value.startsWith("**/")) {
-    value = value.slice(3);
-  }
-  return value.replace(/(?:\/\*{1,2}|\/)$/, "");
-}
-
-/**
- * Rule 15: the formatters' exclusion lists state one set, and the scanner's
- * allowlist is a subset of it.
- *
- * A generated tree — `node_modules/`, `dist/`, `build/` — is excluded
- * from formatting, from TOML formatting and from every pre-commit hook, and
- * each tool reads its own list in its own syntax. The convention is stated
- * once and copied three times, so the drift is the usual kind: a tree added to
- * one list and not the others, which no tool reports — the formatter simply
- * formats it. Compared as sets after normalisation; an entry in some of the
- * three and not the rest is the finding, naming the files on each side.
- *
- * The gitleaks allowlist is held the other way round. The pack extends
- * upstream's default config, whose built-in allowlist already skips `.git`,
- * `node_modules` and the named lockfiles, and `.claude/` is authored source a
- * scanner must scan — so the formatters' set is wider than the scanner's by
- * design, and a formatter-excluded tree the scanner still reads is no finding.
- * A tree the scanner skips that no formatter excludes is: an allowlist entry
- * with no generated tree behind it is a scanner quietly not scanning.
- *
- * The plugin carrying the tool-config skill must carry all four lists: a list
- * missing there is a finding, since a moved file would otherwise end the check
- * silently. In any other plugin the rule has nothing to compare.
- */
-function checkExclusionSets(plugins: readonly Plugin[]): Finding[] {
-  const findings: Finding[] = [];
-
-  for (const plugin of plugins) {
-    const owner = existsSync(join(plugin.root, TOOL_CONFIG_SKILL));
-    const present = new Map<string, Set<string>>();
-    let scanner: { path: string; set: Set<string> } | null = null;
-    for (const list of EXCLUSION_LISTS) {
-      const absolute = join(plugin.root, list.path);
-      if (!existsSync(absolute)) {
-        if (owner) {
-          findings.push({
-            scope: plugin.dir,
-            message: `${list.path}: exclusion list is missing — the tool-config `
-              + `skill ships all four lists`,
-          });
-        }
-        continue;
-      }
-      let entries: string[] | null;
-      try {
-        entries = list.entries(readText(absolute));
-      } catch (error) {
-        findings.push({
-          scope: plugin.dir,
-          message: `${list.path}: exclusion list could not be read — ${firstLine(error)}`,
-        });
-        continue;
-      }
-      if (entries === null) {
-        findings.push({
-          scope: plugin.dir,
-          message: `${list.path}: declares no exclusion list to compare`,
-        });
-        continue;
-      }
-      const set = new Set(entries.map((e) => normalizeExclusion(e, list.syntax)));
-      if (list.role === "scanner") {
-        scanner = { path: list.path, set };
-      } else {
-        present.set(list.path, set);
-      }
-    }
-
-    const union = new Set([...present.values()].flatMap((s) => [...s]));
-    if (present.size >= 2) {
-      for (const entry of [...union].sort()) {
-        const has = [...present].filter(([, set]) => set.has(entry)).map(
-          ([path]) => path,
-        );
-        const lacks = [...present.keys()].filter((path) => !has.includes(path));
-        if (lacks.length === 0) {
-          continue;
-        }
-        findings.push({
-          scope: plugin.dir,
-          message: `exclusion \`${entry}\` is in ${has.join(", ")} and not in ${
-            lacks.join(", ")
-          } — the formatters' exclusion lists state one set`,
-        });
-      }
-    }
-
-    if (scanner !== null && present.size > 0) {
-      for (const entry of [...scanner.set].sort()) {
-        if (union.has(entry)) {
-          continue;
-        }
-        findings.push({
-          scope: plugin.dir,
-          message: `${scanner.path}: allowlists \`${entry}\`, which no `
-            + `formatter list excludes — the scanner's allowlist is a subset `
-            + `of the formatters' set`,
-        });
-      }
-    }
-  }
-  return findings;
-}
+// Rule 15 (one formatter exclusion set) is retired: the formatters' lists are
+// bootstrap's now. Rules 16 and 17 keep their numbers.
 
 // ---------------------------------------------------------------------------
 // The technology-free vwf guard

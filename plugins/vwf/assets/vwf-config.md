@@ -30,14 +30,14 @@ or are plain siblings. Since **format 16** an axis has a third state,
 `unresolved` — *not answered yet* — which is what lets a product be **defined**
 before a stack is chosen, and the deploy axis is a **list**, because a project
 may ship through more than one delivery mechanism. Since **format 18**
-`enforcement:` also records a **kept file** — a pack-owned file a reshape
-offered to replace and the user kept — so the decision is settled once and
+`enforcement:` also records a **kept file** — a hygiene file `/vwf:init`'s plan
+offered to create and the user struck — so the decision is settled once and
 neither `/vwf:init` nor `/vwf:doctor` raises it again. **Formats 21 and 22**
-carried a top-level `answers:` block — the secrets provider, and the forge
-and the dependency bot per repo; **format 23 retired it**: the secrets
-provider and each repo's forge now live in that repo's own
-`.config/stackgen.yaml`, which only stackgen's `tool-config` script writes,
-and the dependency-bot key retired with the bot config it chose. Format 22
+carried a
+top-level `answers:` block — the secrets provider, and the forge and the
+dependency bot per repo; **format 23 retired it**: a repo's answers live in its
+own `.config/bootstrap.toml`, written by bootstrap, and the dependency-bot key
+retired with the bot config it chose. Format 22
 also retired the editor axis and the editor-key record format 20 added: vwf
 ships, asks about and composes no editor configuration. Since
 **blueprint-format 6** this file replaces the old stamp at
@@ -66,7 +66,7 @@ linkage: siblings # MULTI-REPO ONLY: submodule (recommended) | siblings. How the
 ui: true # a SCREEN platform exists on some project → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
-stacks: [ stackgen ] # the ADAPTER ROSTER — stack-plugin names, verbatim, in menu order (`[stackgen]` today; assets/stack-adapter.md). Product-wide: it names WHICH plugins are asked for a menu, never what any project picked. Written by `setup` (confirmed with the user); read by `init` (skills/init/SKILL.md, "Which plugin the adapter resolves to" — the roster where the config has one, else discovery), by setup's topology-detection and workspace-structure references, and by each adapter's menu skill (stackgen's `stackgen-stack-menu`), which is invoked only when its plugin is listed here. Present since format 10 as the roster — the retired `stacks:` the `enforcement:` note below names was `enforcement.stacks`, a different key. Every name must be an installed plugin: a missing one is a halt, never an empty menu
+stacks: [ stackgen ] # the ADAPTER ROSTER — stack-plugin names, verbatim, in menu order (`[stackgen]` today; assets/stack-adapter.md). Product-wide: it names WHICH plugins are asked for a menu, never what any project picked. Written by `setup` (confirmed with the user); read by setup's topology-detection and workspace-structure references, and by each adapter's menu skill (stackgen's `stackgen-stack-menu`), which is invoked only when its plugin is listed here. Present since format 10 as the roster — the retired `stacks:` the `enforcement:` note below names was `enforcement.stacks`, a different key. Every name must be an installed plugin: a missing one is a halt, never an empty menu
 
 addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a slug of the installed stack plugin's `addon` axis. Written by /vwf:architecture's tools round, where nothing is ever preselected; materialized by /vwf:setup on every run, in the base repo only, and a slug dropped from the list is removed. Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision. Not `repo.stack.tools`, which is repo tooling a repo template names
 
@@ -125,9 +125,9 @@ harness: # workspace-level capability inventory (see the harness contract)
 enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `enforcement.stacks` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `enforcement.stacks` block reads as drift — structure migrates into `topology` + `topology_reason`, `enforcement.stacks` into projects.<name>.stack (its reason into `note`). The TOP-LEVEL `stacks:` above is a different key — the adapter roster — and is current.
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
-  kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a file the landed packs OWN that this repo kept over the pack's, written by `/vwf:init` (consented, in its single plan) when a reshape offered that file as replace-or-keep and the answer was keep. The path is BASE-RELATIVE: a file the base owns is spelled exactly as its lockfile names it, and a file inside a member repo takes that member's path as prefix followed by the path the member's own lockfile names — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
+  kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a hygiene file this repo chose not to land, written by `/vwf:init` (consented, in its single plan) when the user struck that file's create row from the plan; a pack file recorded earlier stays recorded and is still skipped; a file bootstrap writes is never recorded. The path is BASE-RELATIVE: a file in the base is spelled from the base root, and a file inside a member repo takes that member's path as prefix — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
-# NO `answers:` block since FORMAT 23. The secrets provider and each repo's forge live in that repo's `.config/stackgen.yaml` (`secrets`, `forge`), passed to `/stackgen:tool-config all` by `/vwf:init`; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, migrated by `22 → 23` below
+# NO `answers:` block since FORMAT 23. A repo's answers live in its `.config/bootstrap.toml`, written by bootstrap; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, see `22 → 23` below
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -234,7 +234,7 @@ at answering the question, never at installing something.
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
 | `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) |
 | `product`            | `setup` (confirmed with the user)                                                                                                         | every command that names the product                                                                            |
-| `stacks`             | `setup` (confirmed with the user) — never `init`, which reads it or discovers                                                            | `init` (the adapter plugin), `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
+| `stacks`             | `setup` (confirmed with the user)                                                                                                        | `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
 | `addons`             | `architecture` (the tools round, elicited); `setup` (the `24 → 25` migration)                                                            | `setup` (the materialize pass), `doctor` (drift, never blocking), `architecture` (the current pick on a re-run) |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
@@ -722,21 +722,18 @@ earlier than 65/90/80), never loosen.
   sixth config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20` and `21`.
 
-- **`22 → 23` migration** (performed by `/vwf:setup reshape`): **the
-  `answers:` block is retired, and nothing else in this file moves.** Its two
-  live values move into each repo's own `.config/stackgen.yaml`, which only
-  stackgen's `tool-config` script writes: `answers.secrets` becomes every
-  repo's `secrets`, and `answers.repos.<path>.forge` that repo's `forge`,
-  each passed to `/stackgen:tool-config all` (`--secrets`, `--forge`) rather
-  than written by hand. the per-repo dependency-bot key is dropped with
-  nothing to replace it: the bot config it chose is no longer shipped. Remove
-  the block and rewrite the stamp. `members:` and `linkage:` stay here — the
-  base's `stackgen.yaml` `members` is rendered from them, and `/vwf:doctor`
-  checks the two agree.
+- **`22 → 23` migration**: **the `answers:` block is retired, and nothing else
+  in this file moves.** When this format shipped, its two live values moved into
+  each repo's own `.config/stackgen.yaml`, written by the renderer that has
+  since been deleted. A repo's answers now live in its `.config/bootstrap.toml`,
+  written by bootstrap, whose `docs/sync/migrate.md` maps the old keys. The
+  per-repo dependency-bot key is dropped with nothing to replace it: the bot
+  config it chose is no longer shipped. `members:` and `linkage:` stay here.
 
   A config still reading **22** is not broken for a reader: the block is
   ignored wherever it would have been read, and `/vwf:doctor`'s stamp check
-  reports 22 against 23 until the reshape performs this pass.
+  reports 22 against 23 until the block is removed by hand and the next
+  `/vwf:setup` rewrites the stamp.
 
   **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the

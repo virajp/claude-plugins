@@ -51,10 +51,9 @@ manifest), plus one only a materializer carries, the optional `binaries` —
 executables the stack needs on `PATH` that mise does not manage, absent
 meaning none, each a bare name or a `{ name, probe }` map whose probe must
 exit 0 — four language facts in all, emitted into the template when it was
-materialized. Beside them the payload may carry two facts that are not per
-language: `lockfile:`, where the package manager's lockfile may sit, and
-`values:`, the template values `/vwf:setup` detects or asks for — six facts
-in all.
+materialized. Beside them the payload may carry one fact that is not per
+language: `lockfile:`, where the package manager's lockfile may sit — five
+facts in all.
 `/vwf:doctor` then verifies the repo against those facts instead of against a
 language plugin, and `n/a` in a fact is an answer, not an absence. The escape
 changes nothing about the closed menu: the facts entered the config through a

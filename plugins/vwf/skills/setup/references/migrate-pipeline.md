@@ -26,13 +26,12 @@ Four sources define it, and none of them is a history:
    lacks `kept_files:` is one entry: it gains `kept_files: {}` and the
    stamp is rewritten with the rest, with no content to migrate, since
    nothing wrote that key before `config_format` 18.
-   **`config_format` 22 → 23** — the top-level `answers:` block leaving
-   for each repo's `.config/stackgen.yaml` — is **not** an entry here:
-   `/vwf:setup reshape` applies it
-   ([format lineage](format-lineage.md)), in the release that moves the old
-   layout. A config still carrying the block keeps it, and its stamp, and
-   the report names `/vwf:setup reshape` as the unlock; a config without the
-   block takes the 23 stamp with the rest.
+   **`config_format` 22 → 23** — the top-level `answers:` block retiring
+   ([format lineage](format-lineage.md)) — is **not** an entry here. Nothing
+   reads the block: a repo's answers live in its `.config/bootstrap.toml`,
+   written by bootstrap. A config still carrying the block keeps it, and its
+   stamp, and the report says the block can be removed by hand; a config
+   without the block takes the 23 stamp with the rest.
    **`config_format` 21 → 22** retires the editor axis, as entries of their
    own: a config carrying `answers.editor` or `enforcement.editor_keys` loses
    each key, with nothing to convert, since both only decided whether an
@@ -41,7 +40,7 @@ Four sources define it, and none of them is a history:
    one of the two kinds of delete this pass offers, because nothing reads
    those files any more; the other is the `23 → 24` removals below. This
    pass **never touches** `.vscode/` — its `settings.json` is
-   `/stackgen:tool-config`'s, and nothing else there is vwf's.
+   bootstrap's, and nothing else there is vwf's.
    **`config_format` 23 → 24** retires the palace. Offer one numbered removal
    row for each of these that exists: the `memory:` block (`memory.wing`) in
    `.config/vwf.yaml`; each `mempalace.yaml`, in the base or a member, at any

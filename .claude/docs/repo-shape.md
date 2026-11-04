@@ -66,7 +66,7 @@ repo's own skills, docs, agents and worktrees. None of them is `plugins/`.
 Setup and the refresh loop — `mise run p:plugins:local`, and the three measured
 CLI facts that shape it — are [`dev-marketplace.md`](dev-marketplace.md).
 
-> **Authoring one:** the seventeen checker rules, the invocation frontmatter,
+> **Authoring one:** the sixteen checker rules, the invocation frontmatter,
 > the plugin-root trap and the dprint exclusion live in
 > `.claude/skills/plugin-authoring/`, which auto-applies while you edit
 > `plugins/`.
@@ -122,13 +122,9 @@ on this list because none is a `p:` task: `format` and `lint` call
 `mise run code:format --fix` and `mise run code:lint --fix` with the staged
 files, `sec` calls `mise run code:sec --staged`. Every gate tool is inside those
 tasks and nowhere else — dprint in `code:format`, the house linter in
-`code:lint`, gitleaks in `code:sec`; no gate lints or formats shell. That is
-this repo's own, hand-edited config; the shape `stackgen:tool-config` lands has
-four such hooks calling `code:format:all --fix`, `code:lint:all --fix`,
-`code:check:all` and `code:sec --staged`, each `…:all` task calling every
-subtask beside it — dprint and shfmt under `code/format/`, the house linter,
-shellcheck and actionlint under `code/lint/`. No pack adds one: a stack's own
-gates are bootstrap's.
+`code:lint`, gitleaks in `code:sec`; no gate lints or formats shell. Those
+hooks and tasks are bootstrap's, synced here like any other repo's. No pack adds
+one: a stack's own gates are bootstrap's.
 
 - **`p:plugins:marketplace`** — generates **both** marketplace manifests from
   the 2 `plugins/*/.claude-plugin/plugin.json` manifests, mapping `keywords` →
@@ -158,19 +154,17 @@ gates are bootstrap's.
   design and are skipped. **`--check`** is the same byte compare the marketplace
   task makes, run by pre-commit and `plugins.yml`, and `inventory.test.ts` pins
   it in vitest too.
-- **`p:plugins:check`** — validates the authored tree. Seventeen rules: manifest
+- **`p:plugins:check`** — validates the authored tree. Sixteen rules, rule 15
+  retired and the rest keeping
+  their numbers: manifest
   name↔dir **plus the two things the version itself must be** — plain semver,
   and free of a 13 or 17 component, those two integers never being issued on any
   version line this repo maintains; dependencies resolving within the
   marketplace; hook scripts existing and executable; **a pack's `config/`
-  payload tier being materializable as-is** (six assertions in one rule, the
-  landed-tree ones also run over `stackgen:tool-config`'s
-  `skills/tool-config/assets/` and `skills/tool-config/templates/` trees, each
-  landed whole at the repo root and admitting the git ignore and attribute
-  files, `.vscode/` and the repo-local mise skill —
-  `.claude/skills/mise/SKILL.md`, nothing else under `.claude/` — and over
-  `/vwf:init`'s `skills/init/assets/<name>/` trees against init's own allowlist
-  (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`, `.github/ISSUE_TEMPLATE/`):
+  payload tier being materializable as-is** (assertions in one rule, the
+  landed-tree ones also run over `/vwf:init`'s
+  `skills/init/assets/<name>/` trees against init's own allowlist
+  (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`):
   exec bit *and* a known shebang on every file under
   `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the
@@ -184,11 +178,10 @@ gates are bootstrap's.
   `templates/` tier; the pack's two doctor-read facts in the shapes their
   readers trust — every `binaries` entry a bare name or a map of exactly `name`
   and an optional non-empty `probe`, and `lockfile` a non-empty list of relative
-  paths or globs with no `..` — and a `tool-config:`, `machine_env:`, `values:`
-  or `conditional:` key refused outright, since nothing reads any of them; and
-  every `@@` tag in tool-config's `templates/` one the engine reads, held to the
-  global names); **strict-YAML frontmatter** (every skill and agent a plugin
-  ships, every repo-local skill a tool-config asset tree lands, and every
+  paths or globs with no `..` — and a retired `tool-config:`, `machine_env:`,
+  `values:` or `conditional:` key refused outright, since nothing reads any of
+  them); **strict-YAML frontmatter** (every skill and agent a plugin
+  ships, and every
   `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
   larger half, and the half that actually lands in a user's repo; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under
@@ -223,22 +216,9 @@ gates are bootstrap's.
   preselects on a round — conflict when either declares no `platforms:` list or
   their lists intersect, and the value is boolean; a conflict is a preselection
   decided by file order, and the finding names both files plus the platform they
-  share, or the one that declares no list); and **the formatters' exclusion
-  lists state one set, and the scanner's allowlist is a subset of it** (the
-  `dprint.json` `excludes` — JSONC, a `../X` entry and its `**/X` twin read as
-  one — and `taplo.toml` `exclude` under `skills/tool-config/assets/.config/`,
-  both globs, and the global `exclude` beside them in `pre-commit-config.yaml`,
-  one regex whose top-level alternatives are the entries, a `(?x)` block
-  stripped of its whitespace and comments first, are the **formatters'** three
-  and are held equal after normalisation — anchors, `**/`, `\.` escapes, `[^/]*`
-  and a trailing `/`, `/*` or `/**` stripped, so `**/dist/`, `dist/*` and
-  `(^|/)dist/` are one entry; the gitleaks `[allowlist] paths` is the
-  **scanner's** and is held to a subset of their union instead, since the asset
-  extends upstream's default allowlist and `.claude/` is authored source a
-  scanner must scan — a finding names the entry and the files that carry it and
-  do not; in the plugin carrying the skill a missing list is a finding, and a
-  file present but unparseable is its own finding); **a skill's node script runs
-  with nothing installed** (every `skills/*/scripts/**/*.mjs`: an entry directly
+  share, or the one that declares no list); rule 15 is retired; **a skill's node
+  script runs with nothing installed** (every `skills/*/scripts/**/*.mjs`: an
+  entry directly
   under `scripts/` starts `#!/usr/bin/env node` and is executable, and no file
   calls `require(` or imports anything but a `node:` built-in or a relative
   module); and **no bare `mise use`** anywhere a plugin ships, dot directories
@@ -270,12 +250,7 @@ gates are bootstrap's.
 - **`vitest run`** — the `scripts/` and `installer/` suites. The `scripts/`
   suite also runs `/vwf:execute`'s action log for real — `execute-log.test.ts`
   spawns `log.mjs` and the `action-log.sh` hook over a temp `$VWF_LOG_ROOT` —
-  and is the gate on `stackgen:tool-config`'s shipped node script:
-  `tool-config-render.test.ts` spawns it in temp repos against a fake `mise`,
-  through the shared harness and the golden greenfield render under
-  `scripts/src/fixtures/tool-config/`, and `tool-config-template.test.ts` and
-  `tool-config-values.test.ts` unit-test the template engine and the values
-  reader.
+  and is the gate on the node scripts a skill ships.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
   Nothing emits, so `tsc` is only ever a checker, and there are no project
   references to walk.
@@ -316,7 +291,7 @@ gates are bootstrap's.
 The 13/17 guard itself is four functions — `version_forbidden`,
 `version_skip_note`, `version_bump` and `version_next` — in
 **`.config/mise/tasks/_scripts/local`**, this repo's own sidecar beside the
-pack-owned `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
+bootstrap's `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
 result of the level; `version_next LEVEL CURRENT` prints that same result
 stepped past a forbidden component, and exits 1 without printing when the level
 it was given can never reach one. Beside the guard sit the release-level
@@ -330,9 +305,9 @@ sidecar on the line after they source `helpers`: `p:i:version` and
 `p:site:version` to skip, `p:i:release`, `p:site:release` and
 `p:plugins:release` to compute and refuse, and `p:releases:test` to test it —
 `p:release` reaches it only through the three; `deps-update.yml` sources it too,
-to raise the installer's level. The split is the same one `/vwf:init` writes
-into a shaped repo — `helpers` is the pack's and is replaced on every reshape,
-the sidecar is the repo's and never is — and nothing a pack lands may source it.
+to raise the installer's level. `helpers` is bootstrap's and is replaced on
+every sync, the sidecar is the repo's
+and never is — and nothing a pack lands may source it.
 It carries a shebang and the exec bit, or the repo's own shell gate does not see
 it.
 

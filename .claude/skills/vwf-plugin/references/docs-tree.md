@@ -138,7 +138,7 @@ copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
 describes throughout; the paired `config_format` (currently **23**, the bump
 that retired the top-level `answers:` block, its values moving to each repo's
-`.config/stackgen.yaml`) is described under `assets/vwf-config.md`, and its own
+`.config/bootstrap.toml`) is described under `assets/vwf-config.md`, and its own
 `N → N+1` deltas do still live there — state-based reconciliation replaced the
 **blueprint** ladder only. **Neither line issues 13 or 17.** From
 `config_format` 18 and `blueprint_format` 24 onward a bump steps past both

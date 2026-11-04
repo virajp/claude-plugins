@@ -1,13 +1,11 @@
 # Project ids and repo names
 
-A repo names its projects, and it has a name of its own. Both reach
-places that are not prose: a task group, a flag, a shell alias, an
-environment variable. Each of those has a grammar, and a name that reads
-fine in a registry can be silently mangled by one of them. This file is
-the single **slug rule** that turns a name into a token those surfaces
-accept — and it has two applications: a project's **id**, and a repo's
-**name**. One rule, two things it is applied to, and the two are
-independent of each other.
+A repo names its projects, and it has a name of its own. A project's name
+reaches a place that is not prose: a task group. That has a grammar, and a
+name that reads fine in a registry can be silently mangled by it. This file
+is the single **slug rule** that turns a project's name into a token a task
+group accepts: the project's **id**. The repo's own name is not slugged
+here: bootstrap derives it, and the two are independent of each other.
 
 ## The rule
 
@@ -42,63 +40,36 @@ The rule is not stylistic. It was measured, on **mise 2026.9.1**:
   last segment. `.dev` is gone, and with it the project the group was for.
 
 So the defect is not that mise dislikes dots; it is that `_default` moves
-the directory name into the position where the extension rule applies, and
-that is exactly the file `/vwf:init` authors for every project group. A
+the directory name into the position where the extension rule applies. A
+pack's `p/_project/` tree lands under the id whatever it ships, so one
+`_default` in it would lose the project unless the id carries no dot. A
 task nobody can name is indistinguishable from a task nobody wrote.
 
-Two more grammars the id reaches, neither of which tolerates the same
-characters:
-
-- **A `#USAGE` flag name.** `#USAGE flag "--virajp.dev"` is not a flag
-  name a caller can type as written, and the flag is how `setup`
-  reaches one member.
-- **A shell alias key.** `[shell_alias]` entries become ordinary shell
-  aliases, and `setup-virajp.dev` is not a name every shell will accept as
-  one.
-
-One rule ahead of all three is cheaper than three escapes, and it is why
-the id is derived once and then carried, never re-derived per surface.
+The rule is written down only here: a reader that needs an id cites this
+file and restates nothing.
 
 ## Where the two tokens land
 
-| Token              | Slugged from               | Lands in                                            |
-| ------------------ | -------------------------- | --------------------------------------------------- |
-| The **project id** | the project's name         | `p/<id>/`, run as `p:<id>:…`, and the commit scopes |
-| The **repo name**  | the main checkout's folder | `REPO_NAME = "<slug>"`                              |
+| Token              | Comes from                  | Lands in                                                        |
+| ------------------ | --------------------------- | --------------------------------------------------------------- |
+| The **project id** | the project's name, slugged | `p/<id>/`, run as `p:<id>:…`                                    |
+| The **repo name**  | bootstrap's own derivation  | `repo_name` in `.config/bootstrap.toml`, which bootstrap writes |
 
-Two, and no more. The bootstrap aggregator's **member flags** and the
-`setup-<slug>` **aliases** beside them look like a third and a fourth and
-are not: they are one per **member repo**, named for the member, because
-what they widen a run to is another repository. A member holding three
-projects is still one flag. So a project id never reaches them, and this
-rule is not what names them.
-
-Both carry the **slug**, never the raw name, and the two are
-**independent**. `REPO_NAME` is the toolchain manager pack's marked
-position and takes the repo's folder name, slugified — never a project
-id; the `p:<id>:*` group takes the project id. A single-project repo
-whose folder happens to spell its project id is a coincidence, not a
+The two are **independent**. `repo_name` is the repo's own and never a
+project id; the `p:<id>:*` group takes the project id. A single-project
+repo whose name happens to spell its project id is a coincidence, not a
 rule, and nothing may read one to infer the other.
 
-The folder is the **main checkout's**, and the value is written
-literally. A linked worktree's directory is named after the branch, so a
-`REPO_NAME` derived at load time would address a different repo depending
-on where you were standing — and everything reading it, a launcher alias
-among them, would follow it there. A member repo names its own folder,
-never the base's.
+The commit scopes are bootstrap's `commit_scopes`, in the same file. A
+plugin writes neither value.
 
 ## Who applies it
 
-Two, and only two:
-
-- **The orchestrator that shapes the repo** — it derives each project's
-  id from that project's name and writes it into the task group and the
-  commit-scope list, derives the repo's slug from its main checkout's
-  folder name and writes it into `REPO_NAME`, and reports both tokens it
-  used.
-- **The materializer**, when it renames a pack's `p/_project/` marked
-  position to the project this stack is being pinned for
-  (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/materializer.md`).
+**The materializer** alone, when it renames a pack's `p/_project/` marked
+position to the id of the project this stack is being pinned for
+(`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/materializer.md`).
+The orchestrator that shapes the repo writes no `repo_name` and no
+commit-scope list.
 
 A pack never applies the rule: a pack ships `_project`, and the rename is
 the landing's.
@@ -107,7 +78,6 @@ the landing's.
 
 An id is **not a display name**. The repo's `readme.md`, its manifests,
 its remote and its domain keep the real name — `virajp.dev` is the
-project, `virajp-dev` is only how a task, a flag, an alias and an
-environment variable spell it. Nothing renames a directory, a package or a
-repository to match an id, and a report that shows one should show the
-name beside it.
+project, `virajp-dev` is only how a task group spells it. Nothing renames
+a directory, a package or a repository to match an id, and a report that
+shows one should show the name beside it.

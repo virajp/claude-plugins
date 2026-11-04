@@ -163,8 +163,8 @@ a time, gathering for each:
 token — `service`, `worker`, `webapp`, `site`, `cli`, `iac`, … — is unique
 within the repo the project lives in, offer it as the id; on a repo already
 shaped, seed the ids instead from the `p/<id>/` groups that repo already
-carries under `.config/mise/tasks/`, so a re-run of `/vwf:init` reports no
-"id source changed".
+carries under `.config/mise/tasks/`, so `/vwf:doctor`'s Project ids
+predicate reports no "id source changed".
 
 Since format 16 the registry has **no `stack` field**: the concrete technology
 is realization, recorded in `.config/vwf.yaml` (see the stack menu below). The

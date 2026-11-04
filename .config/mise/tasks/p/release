@@ -44,11 +44,15 @@ if [[ -n "$(git status --porcelain)" ]]; then
   exit 1
 fi
 # Under pr, code:merge:main only opens a PR, and every tag would name a stale main.
-# code:merge:main reads MERGE_MODEL alone today; MERGE_MODEL_MAIN is checked too
-# so either one set to anything but direct refuses.
-MERGE_MODE="${MERGE_MODEL:-direct}"
-[[ "${MERGE_MODE}" == "direct" ]] && MERGE_MODE="${MERGE_MODEL_MAIN:-direct}"
-if [[ "${MERGE_MODE}" != "direct" ]]; then
+# merge_model of [branch.main] in .config/bootstrap.toml, read as bootstrap's
+# _scripts/merge reads it: pr refuses; any other value, a missing key or a missing
+# file means direct. A file yq cannot read stops the task.
+MERGE_MODE=direct
+if [[ -f .config/bootstrap.toml ]] && ! MERGE_MODE="$(yq -p toml -o yaml '.branch.main.merge_model // "direct"' .config/bootstrap.toml)"; then
+  print_error "cannot read the merge config of .config/bootstrap.toml."
+  exit 1
+fi
+if [[ "${MERGE_MODE}" == "pr" ]]; then
   print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run each task with --no-commit, land the PR, then each with --tag-only on ${RELEASE_BRANCH}."
   exit 1
 fi

@@ -168,18 +168,13 @@ these entries and only these — and it has four tiers:
   `.github/workflows/`**. This is the tier `p:plugins:check` enforces over a
   pack's `config/` root.
 - **What bootstrap's sync writes** — its own list, read from bootstrap,
-  never restated here. A pack never ships one of those files and adds no
-  line to one.
+  never restated here; `.github/ISSUE_TEMPLATE/` is its github tool's. A
+  pack never ships one of those files and adds no line to one.
 - **What `/vwf:init` writes from its own assets**: `CONTRIBUTING.md`,
-  `SECURITY.md`, `LICENSE` and `.github/ISSUE_TEMPLATE/`.
+  `SECURITY.md` and `LICENSE`.
 - **What sits there because vwf writes it** — **vwf's — no pack lands
   it**: `CLAUDE.md`, fenced out below as `/vwf:setup`'s, with
   `p:plugins:check` refusing a pack that ships one at the root.
-
-The last tier is on the list because `/vwf:init`'s pass 1 reports any
-root file the list does not name, and a rule beats a judgment: without
-this entry, every shaped repo's own `CLAUDE.md` reads as a finding that a
-person has to know to wave through.
 
 A language's manifests and lockfiles are **not** on it: a manifest is
 fenced out below, as it always was, and a lockfile is the manifest's
@@ -326,12 +321,12 @@ entries:
     slug: generated/go # the template (bundle) it landed with
     component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
-    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
+    hash: <content hash — at landing>
   - path: .config/mise/tasks/test/golden # a `config/` tier file — outside .claude/
     slug: swift-swiftui
     component: app-framework/swiftui # which component's version won, per file
     source: pack/app-framework/swiftui@<version>
-    hash: <content hash — at landing, re-recorded by the composing skill after its fills>
+    hash: <content hash — at landing>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 bootstrap: # what stackgen asked bootstrap for — absent when it asked for nothing
   tools:
@@ -377,12 +372,10 @@ Rules the lockfile enforces:
   nothing lands and nothing is deleted. The sync report names every
   record it dropped. A path no longer shipped that is still present is
   not this rule's.
-- **`hash:` has three writers, and a differing hash is drift only when none
-  of them ran.** The materializer writes it at landing. The composing skill
-  (`/vwf:init`) **re-records** it after every change it makes to a landed
-  file, and its replace-or-keep offer re-records it on either answer, so a
-  file kept as the repo's own reads as current, not as drift, the next time
-  sync or the offer runs.
+- **`hash:` has two writers, and a differing hash means the file changed
+  after they ran.** The materializer writes it at landing, and sync rewrites
+  it for a component it lands again. `/vwf:init` calls no materializer and
+  records no hash.
 - **Anything not in the lockfile is not stackgen's** — never diffed, never
   overwritten, never removed. A landing set that collides with an unlisted
   path is a conflict for the user, not a write.

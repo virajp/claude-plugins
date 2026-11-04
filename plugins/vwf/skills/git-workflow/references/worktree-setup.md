@@ -34,9 +34,8 @@ directory exists, so the bare name reads "not ignored" on a first worktree.
 git check-ignore -q .worktrees/x 2>/dev/null || git check-ignore -q worktrees/x 2>/dev/null
 ```
 
-If NOT ignored: stop and say so. `.worktrees/` is a line in tool-config's
-universal `.gitignore`, landed by `/vwf:setup reshape`; this skill never writes
-the file.
+If NOT ignored: stop and say so. `.worktrees/` is a line in the repo's
+`.gitignore`, synced by bootstrap's git tool; this skill never writes the file.
 
 ### Branch name
 
@@ -101,36 +100,33 @@ user how to proceed — do not leave a partially-initialized worktree silently.
 
 A fresh worktree has no installed dependencies. After submodules are populated,
 bootstrap it so it can build and run — prefer the dedicated `setup:worktree`
-task, falling back to the full bootstrap entrypoint `setup:all`:
+task, falling back to the full bootstrap entrypoint `setup`:
 
 ```bash
 have_task() { mise x -- mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
 if have_task setup:worktree; then
   MISE_ENV=dev mise x -- mise run setup:worktree
-elif have_task setup:all; then
-  MISE_ENV=dev mise x -- mise run setup:all
+elif have_task setup; then
+  MISE_ENV=dev mise x -- mise run setup
 fi
 ```
 
-**Why the probe prefers it.** `setup:worktree` is the lighter sibling of
-`setup:all`: members checked out, tools installed, secrets set up, dependencies
-installed **from the lockfile** and nothing else. A worktree shares the
-machine's tools, hooks and running services with the checkout it was cut from,
-so re-doing the hook installation, the external services and the plugin
-reconciliation costs minutes and changes nothing. The frozen install is the part
-that matters most — a worktree is a place to work on a branch, not a place to
-move a lockfile. Both tasks refuse an unset `MISE_ENV`, since it decides which
-tools install — hence the `dev` on each. Either installs the tools from the
-config's exact pins with `mise install`; mise keeps no lock, and an exact pin
-gives an upgrade nothing to move. The fallback to `setup:all` costs more in its
-dependency step, which runs the package manager's upgrade verb — what quietly
-resolves the dependency lockfile.
+**Why the probe prefers it.** Both tasks run `setup:mise`, the repo's own
+`setup:secrets` and `setup:deps` tasks and `setup:precommit`, and neither passes
+`--upgrade` here, so each installs only what the lockfiles and configs already
+pin. `setup:worktree` also checks out the submodules
+(`git submodule update --init --recursive`), which `setup` does not, and it
+leaves out the `setup:vscode` that `setup` runs when the repo has that task. The
+`dev` on each is there because bootstrap loads no `conf.d` file without
+`MISE_ENV`. Only `setup --upgrade` upgrades anything, and this probe never
+passes it: a worktree is a place to work on a branch, not a place to move a
+lockfile.
 
 The name is probed, never constructed. A repo carrying an older spelling of the
 task is not broken, but this probe will not find it and the run silently takes
-the slower path — the toolchain manager's own task library is where the older
-spellings are recorded and mapped forward.
+the fallback or skips the step — the toolchain manager's own task library is
+where the older spellings are recorded and mapped forward.
 
 Run it from the worktree root. **Skip silently** if neither task exists. If the
 task fails, report it and ask the user how to proceed rather than working in a
