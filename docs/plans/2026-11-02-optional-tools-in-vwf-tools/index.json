@@ -226,7 +226,7 @@
       "status": "green",
       "started": "2026-11-04T14:22:28.448Z",
       "ended": "2026-11-04T14:23:29.943Z",
-      "commit": "",
+      "commit": "eccbf62c",
       "rounds": 1
     },
     {
@@ -277,9 +277,9 @@
     },
     {
       "id": "W4",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-04T14:22:28.413Z",
-      "ended": ""
+      "ended": "2026-11-04T14:24:51.008Z"
     }
   ],
   "shared_files": [
