@@ -48,6 +48,12 @@ export type Run = {
   /** The archived folder names, the latest first, read while the list shows. */
   archived?: string[];
   isArchivedOpen?: boolean;
+  /** The person closed the pane on an ended plan: the chip above the prompt hides. */
+  isChipHidden?: boolean;
+  /** The unit whose details show on the timeline. */
+  openUnit?: string;
+  /** The gaps whose full text shows on the timeline. */
+  openGaps?: string[];
   /** The message shown for 10 s before the pane closes. */
   message?: string;
   /** When the mod last read the plan files. */
@@ -182,6 +188,8 @@ export type Replay = {
   live: string[];
   /** The ts of the log's last line, for the freshness check. */
   lastAt?: number;
+  /** The log's last tool call: what the run does now, and since when. */
+  lastTool?: { tool: string; summary: string; at?: number };
   /** The log was read from a tail (over 4 MiB). */
   partial: boolean;
   /** No log line yet. */

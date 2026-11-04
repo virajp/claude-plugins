@@ -554,6 +554,7 @@ export function replay(
   let lastSession: string | undefined;
   let runSession: string | undefined;
   let lastAt: number | undefined;
+  let lastTool: Replay["lastTool"];
   // The Agent calls, by tool_use_id; the agents, by id.
   const calls = new Map<
     string,
@@ -612,6 +613,12 @@ export function replay(
       case "tool.start": {
         const tool = str(e["tool"]);
         const id = str(e["tool_use_id"]);
+        if (tool !== "") {
+          lastTool = { tool, summary: str(e["summary"]) };
+          if (ts !== undefined) {
+            lastTool.at = ts;
+          }
+        }
         if ((tool === "Agent" || tool === "Task") && id !== "") {
           calls.set(id, { ...splitSummary(str(e["summary"])), at: ts });
           pending.push(id);
@@ -753,6 +760,9 @@ export function replay(
   }
   if (lastAt !== undefined) {
     state.lastAt = lastAt;
+  }
+  if (lastTool !== undefined) {
+    state.lastTool = lastTool;
   }
 
   return state;

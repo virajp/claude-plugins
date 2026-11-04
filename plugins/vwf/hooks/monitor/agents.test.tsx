@@ -643,6 +643,57 @@ test(
 );
 
 test(
+  "a plan that goes BLOCKED says so, and an old plan says nothing; the resume command is copied",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const toasts: string[] = [];
+    const statuses: (string | undefined)[] = [];
+    const copies: string[] = [];
+    on("ui.toast", (_, e) => {
+      toasts.push(e.text);
+      return { value: undefined as never };
+    });
+    on("ui.status", (_, e) => {
+      statuses.push(e.text);
+      return { value: undefined as never };
+    });
+    on("ui.copy", (_, e) => {
+      copies.push(e.text);
+      return { value: { isCopied: true } };
+    });
+    const live = line("run.start", { mode: "fresh" });
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [B, "COMPLETE"]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["running"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["green"], {}, {
+          state: "COMPLETE",
+          detail: "",
+        }),
+        [logOf(A)]: live,
+      },
+    });
+    await $.prompt.submit(execute(`docs/plans/${B}`));
+    await clock.advance(3500);
+    expect(toasts).toEqual([]);
+    await $.prompt.submit(execute(`docs/plans/${A}`));
+    const ui = await $.ui.mount(PANE);
+    w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(A, ["failed"], undefined, {
+      state: "BLOCKED",
+      detail: "stopped",
+    });
+    await clock.advance(3500);
+    expect(toasts).toEqual([`${A} is BLOCKED.`]);
+    expect(statuses.at(-1)).toContain("BLOCKED");
+    await ui.press({ key: "copy-resume" });
+    expect(copies).toEqual([`/vwf:execute docs/plans/${A}`]);
+    await ui.press({ key: "close" });
+    expect(statuses.at(-1)).toBe(undefined);
+    await ui.unmount();
+  },
+);
+
+test(
   "an `all` run stays on a landed plan, then changes to the next RUNNING plan",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });

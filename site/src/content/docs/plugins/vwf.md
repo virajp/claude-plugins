@@ -3212,10 +3212,28 @@ per stage with its status and times, and one line per wave review with its
 status. The status says whether the run is live, paused or stopped, ended, or
 not run. Before a run has written its log, the pane shows the plan with every
 unit pending and the line `no run data yet`. Plan text and log text are stripped
-of terminal control characters before they render. Select a unit id or a
-wave-review name to open that subagent's transcript; the **Main transcript**
+of terminal control characters before they render. In the terminal, select a
+unit row or a wave-review line to open that subagent's
+transcript; the **Main transcript**
 button goes back. The **Plans** button opens the plan list, and **Back to plan**
-returns.
+returns. The **Now** card also shows the log's last tool call and its age, so a
+stuck command is easy to find.
+
+**When it tells you.** A run that the pane follows shows a toast when it goes
+blocked, paused or complete. A blocked or paused plan also keeps a status line
+under the prompt until the run moves on or you close the pane. Opening an old
+plan says nothing. A blocked or paused plan shows its resume command with a
+**Copy
+resume command** button. If the surface cannot copy, a toast says so, and you
+can
+read the command in the pane.
+
+**The chip above the prompt.** In the terminal and the desktop app, a small chip
+sits directly above the prompt: one glyph per unit, the units finished, the
+current wave or the state, and the elapsed time. Press it to open the pane. It
+shows while the plan waits for its claim or runs, whether the pane is open or
+closed. After the plan ends, it shows until you close the pane. A question takes
+that band, and the chip returns after your answer.
 
 **The plan list.** One row per row of the plan index: running plans; then the
 plans ready to run, numbered, in the order `/vwf:execute next` picks them; then
@@ -3229,8 +3247,10 @@ format shows `old format, no details`.
 draws. In the terminal, the bar is a row of block characters and the tables are
 columns of fixed-width text. In the Claude desktop app, the VS Code extension
 and the mobile app, the plan is a timeline: each unit has a bar on one time axis
-with a line at the current time, grouped by wave, and the unit id or the review
-name is the button that opens the transcript. Close is the surface's own close
+with a line at the current time, grouped by wave. The unit id opens the unit's
+status, rounds, times and commit, with an **Open transcript** button. The review
+name opens its transcript. A gap shows one line, and its id unfolds the full
+text. Close is the surface's own close
 control there, and the pane shows no key hints.
 
 **Where it reads.** Three files, and nothing else:

@@ -243,6 +243,20 @@ test("a row that reads APPROVED did not run", async () => {
     .toBe("ended");
 });
 
+test("the replay keeps the log's last tool call", async () => {
+  const folder = readFolder(JSON.stringify({ title: "T", units: [] })).folder!;
+  const state = replay([
+    JSON.stringify({ ts: "2026-01-01T00:00:00.000Z", event: "tool.start", tool: "Read", summary: "a" }),
+    JSON.stringify({ ts: "2026-01-01T00:01:00.000Z", event: "tool.start", tool: "Bash", summary: "b" }),
+    JSON.stringify({ ts: "2026-01-01T00:02:00.000Z", event: "tool.end", tool: "Bash" }),
+  ], folder);
+  expect(state.lastTool).toEqual({
+    tool: "Bash",
+    summary: "b",
+    at: Date.parse("2026-01-01T00:01:00.000Z"),
+  });
+});
+
 test("expands a leading ~/ only", async () => {
   expect(expandHome("~/Library/Caches/vwf/r/p.jsonl", "/Users/me")).toBe(
     "/Users/me/Library/Caches/vwf/r/p.jsonl",

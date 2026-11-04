@@ -219,7 +219,7 @@ test(
     });
     expect(await ui.find({ type: "Text", text: /^U2 has no owner$/ }))
       .toBeDefined();
-    expect(await ui.find({ type: "Text", text: /^G1$/ })).toBeDefined();
+    expect(await ui.find({ key: "gap-toggle-G1" })).toBeDefined();
     expect(await ui.find({ type: "Text", text: /^2 of 3 units$/ })).toBeDefined();
     expect(await ui.find({ type: "Text", text: /^Wave 1$/ })).toBeDefined();
     expect(await ui.find({ type: "Text", text: /Started \d\d:\d\d/ }))
@@ -241,3 +241,71 @@ test(
     await ui.unmount();
   },
 );
+
+test(
+  "on the desktop a unit id opens its details, and a gap id unfolds its text",
+  async ($, on) => {
+    const opened: string[] = [];
+    const closed: string[] = [];
+    const ui = await openPane($, on, "desktop", opened, closed);
+    expect(await ui.find({ key: "transcript-U2" })).toBe(undefined);
+    await ui.press({ key: "unit-U2" });
+    expect(await ui.find({ key: "transcript-U2" })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /^pending, 1 gap$/ })).toBeDefined();
+    await ui.press({ key: "unit-U2" });
+    expect(await ui.find({ key: "transcript-U2" })).toBe(undefined);
+    expect((await ui.find({ key: "gap-toggle-G1" }))?.props).toMatchObject({
+      label: "▸ G1",
+    });
+    await ui.press({ key: "gap-toggle-G1" });
+    expect((await ui.find({ key: "gap-toggle-G1" }))?.props).toMatchObject({
+      label: "▾ G1",
+    });
+    expect(await ui.find({ type: "Text", text: /^U2 has no owner$/ })).toBeDefined();
+    await ui.unmount();
+  },
+);
+
+const BAND = {
+  plugin: "vwf",
+  component: "AbovePrompt",
+  props: {
+    hasSurvey: false,
+    isWorking: false,
+    maxRows: 10,
+    bodyColumns: 100,
+    scroll: { offset: 0, bodyRows: 10 },
+  },
+};
+
+test(
+  "the chip above the prompt shows the units and opens the pane; a question takes the band",
+  async ($, on) => {
+    const opened: string[] = [];
+    const closed: string[] = [];
+    const ui = await openPane($, on, "desktop", opened, closed);
+    const band = await $.ui.mount({ ...BAND, surface: "desktop" } as Parameters<typeof $.ui.mount>[0]);
+    // The colored glyphs: U1 green, U2 pending, U3 skipped gray.
+    const glyphs = await band.findAll({ type: "Text", text: /^▰$/, in: "vwf-chip" });
+    expect(glyphs.map((one) => one.props?.color)).toEqual(["#3fa66a", "#8a8f98"]);
+    expect(await band.find({ type: "Text", text: /^▱$/, in: "vwf-chip" })).toBeDefined();
+    expect(await band.find({ type: "Text", text: / 2\/3 /, in: "vwf-chip" })).toBeDefined();
+    // A press anywhere on the chip opens the pane.
+    await band.pointer({ type: "down", x: 1, y: 0, button: "left" });
+    await band.pointer({ type: "up", x: 1, y: 0, button: "left" });
+    expect(opened).toEqual(["vwf-monitor", "vwf-monitor"]);
+    await band.unmount();
+    await ui.unmount();
+  },
+);
+
+test("in the terminal the chip is one Button", async ($, on) => {
+  const opened: string[] = [];
+  const closed: string[] = [];
+  const ui = await openPane($, on, "terminal", opened, closed);
+  const band = await $.ui.mount({ ...BAND, surface: "terminal" } as Parameters<typeof $.ui.mount>[0]);
+  await band.press({ key: "vwf-chip" });
+  expect(opened).toEqual(["vwf-monitor", "vwf-monitor"]);
+  await band.unmount();
+  await ui.unmount();
+});

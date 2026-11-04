@@ -36,6 +36,8 @@ import {
   time,
 } from "./plan";
 import {
+  chipProps,
+  drawChipButton,
   drawList,
   drawTimeline,
 } from "./view";
@@ -102,6 +104,83 @@ async function open($: $, columns = WIDEST) {
 async function close($: $) {
   isOpen = false;
   await $.ui.close({ id: PANE });
+}
+
+// The chip's Client failed on this surface.
+let chipFailed = false;
+
+/** A press on the chip above the prompt: the pane opens. */
+async function openFromChip($: $) {
+  isOpen = true;
+  await open($);
+  if (needsRefresh(await read($, run))) {
+    startTimer($);
+  }
+  await poke($, true);
+}
+
+/** The person closed the pane: an ended plan's chip goes with it. */
+async function hideChip($: $) {
+  await update($, run, (value) => value?.plan?.phase === "ended" ? { ...value, isChipHidden: true } : value);
+}
+
+/** The person closes the pane: the status line goes with it. */
+async function dismiss($: $) {
+  $.ui.status(undefined);
+  await hideChip($);
+  await close($);
+}
+
+/** True while the chip above the prompt shows: a claim, a run, or an ended plan not closed. */
+function showsChip(r: Run | null): boolean {
+  if (r === null || r.endedAt !== undefined || r.plan === undefined) {
+    return false;
+  }
+  if (r.plan.phase === "not-run") {
+    return r.waiting === "claim" && r.isQueue !== true;
+  }
+
+  return r.plan.phase !== "ended" || r.isChipHidden !== true;
+}
+
+/**
+ * Says what a run needs when it changes: a toast at the change, and a status
+ * line while the plan is blocked or paused. Only a run seen going on does this,
+ * so that opening an old plan says nothing.
+ */
+function notify($: $, before: PlanRun | undefined, after: PlanRun | undefined) {
+  if (before === undefined || after === undefined || before.folder !== after.folder) {
+    return;
+  }
+  const wasGoing = before.phase === "live" || before.phase === "paused";
+  if (!wasGoing || before.phase === after.phase && before.replay.state === after.replay.state) {
+    return;
+  }
+  const title = after.replay.title || nameOf(after.folder);
+  const name = nameOf(after.folder);
+  const units = after.replay.units;
+  const done = units.filter((unit) => FINISHED.includes(unit.status)).length;
+  if (after.replay.state === "BLOCKED") {
+    $.ui.toast(`${title} is BLOCKED.`);
+    $.ui.status(`vwf · ${name} · BLOCKED · ${done} of ${units.length} units`);
+  } else if (after.phase === "paused") {
+    $.ui.toast(`${title} has no activity for 10 minutes.`);
+    $.ui.status(`vwf · ${name} · paused or stopped · ${done} of ${units.length} units`);
+  } else if (after.phase === "ended") {
+    $.ui.toast(`${title} is complete.`);
+    $.ui.status(undefined);
+  } else {
+    $.ui.status(undefined);
+  }
+}
+
+/** Puts the plan's resume command on the clipboard, or says that it cannot. */
+async function copyResume($: $, folder: string, surface: string) {
+  const copied = await $.ui.copy({
+    text: `/vwf:execute ${folder}`,
+    surface: surface as "terminal",
+  });
+  $.ui.toast(copied.isCopied ? "The resume command is copied." : `Cannot copy: ${copied.reason}`);
 }
 
 /** A unit's color: failed red, skipped gray, green green, or yellow with gaps. */
@@ -763,7 +842,27 @@ async function refresh($: $) {
     next.archived = archived.sort().reverse();
   }
 
-  await update($, run, () => next);
+  await update($, run, (value) => {
+    if (!value) {
+      return next;
+    }
+    // A press during this read stays.
+    const merged: Run = { ...next };
+    const { openUnit, openGaps, isArchivedOpen, isChipHidden } = value;
+    delete merged.openUnit;
+    delete merged.openGaps;
+    delete merged.isArchivedOpen;
+    delete merged.isChipHidden;
+
+    return {
+      ...merged,
+      ...(openUnit === undefined ? {} : { openUnit }),
+      ...(openGaps === undefined ? {} : { openGaps }),
+      ...(isArchivedOpen === undefined ? {} : { isArchivedOpen }),
+      ...(isChipHidden === undefined ? {} : { isChipHidden }),
+    };
+  });
+  notify($, r.plan, next.plan);
   const after = await read($, run);
   if (needsRefresh(after)) {
     if (timer === undefined) {
@@ -794,7 +893,7 @@ export const register: Register = (on) => {
   // /vwf-monitor close: closes the pane.
   on("command.run", { command: "vwf-monitor" }, async ($, e) => {
     if (e.args.trim() === "close") {
-      await close($);
+      await dismiss($);
 
       return { text: "The vwf:execute monitor is closed." };
     }
@@ -861,6 +960,10 @@ export const register: Register = (on) => {
     const closed = await next(e);
     if (e.id === PANE) {
       isOpen = false;
+      if (e.origin === "person") {
+        $.ui.status(undefined);
+        await hideChip($);
+      }
     }
 
     return closed;
@@ -904,6 +1007,49 @@ export const register: Register = (on) => {
     return <Text dimColor>· {e.props.tool}</Text>;
   });
 
+  // The chip above the prompt: one press opens the pane. A question takes the band.
+  on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
+    const r = await read($, run);
+    if (e.props.hasSurvey || !showsChip(r) || !r?.plan) {
+      return next(e);
+    }
+    const chip = chipProps(
+      r.plan,
+      r.refreshedAt ?? Date.now(),
+      r.waiting === "claim" && r.isQueue !== true,
+    );
+    if (e.surface === "desktop" && !chipFailed) {
+      const { Box, Client } = $.ui.resolve(e);
+
+      return (
+        <Box flexDirection="row" alignSelf="flex-start" borderStyle="round" paddingX="sm">
+          <Client key="vwf-chip" module="./chip.tsx" props={chip} />
+        </Box>
+      );
+    }
+
+    return drawChipButton($.ui.resolve(e), chip, () => openFromChip($));
+  });
+
+  // A press on the desktop chip.
+  on("ui.message", async ($, e, next) => {
+    if (e.element === "vwf-chip") {
+      await openFromChip($);
+    }
+
+    return next(e);
+  });
+
+  // The chip's Client failed: the next draw is the plain Button.
+  on("ui.fault", async ($, e, next) => {
+    if (e.element === "vwf-chip") {
+      chipFailed = true;
+      $.ui.invalidate("ui.render");
+    }
+
+    return next(e);
+  });
+
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {
     isOpen = true;
     const { Box, Text, Button } = $.ui.resolve(e);
@@ -929,7 +1075,7 @@ export const register: Register = (on) => {
           label="Close"
           hotkey="c"
           {...(isTerminal ? {} : { role: "dismiss" as const })}
-          onPress={() => close($)}
+          onPress={() => dismiss($)}
         />
         {!isMainView && <Text>{" "}</Text>}
         {!isMainView && (
@@ -1016,7 +1162,7 @@ export const register: Register = (on) => {
         hasPlan: p !== undefined,
         isTerminal,
         width,
-        close: () => close($),
+        close: () => dismiss($),
         back: () => setList(false),
         pick,
         toggleArchived,
@@ -1099,11 +1245,40 @@ export const register: Register = (on) => {
         isLive: live,
         isQuiet: quiet,
         isMainView,
-        close: () => close($),
+        close: () => dismiss($),
         back,
         plans: () => setList(true),
         toggleQuiet: () => update($, isQuiet, (value) => !value),
         show,
+        ...(r.openUnit === undefined ? {} : { openUnit: r.openUnit }),
+        openGaps: r.openGaps ?? [],
+        toggleUnit: (id: string) =>
+          update($, run, (value) => {
+            if (!value) {
+              return value;
+            }
+            const next: Run = { ...value };
+            if (value.openUnit === id) {
+              delete next.openUnit;
+            } else {
+              next.openUnit = id;
+            }
+
+            return next;
+          }),
+        toggleGap: (id: string) =>
+          update($, run, (value) => {
+            if (!value) {
+              return value;
+            }
+            const open = value.openGaps ?? [];
+
+            return {
+              ...value,
+              openGaps: open.includes(id) ? open.filter((one) => one !== id) : [...open, id],
+            };
+          }),
+        copyResume: (surface: string) => copyResume($, p.folder, surface),
       });
     }
 
@@ -1113,6 +1288,15 @@ export const register: Register = (on) => {
           {buttons}
           <Text>{" "}</Text>
           <Button key="plans" label="Plans" hotkey="p" onPress={() => setList(true)} />
+          {(state.state === "BLOCKED" || p.phase === "paused") && <Text>{" "}</Text>}
+          {(state.state === "BLOCKED" || p.phase === "paused") && (
+            <Button
+              key="copy-resume"
+              label="Copy resume command"
+              hotkey="y"
+              onPress={(press) => copyResume($, p.folder, press.surface)}
+            />
+          )}
         </Box>
         <Text bold>{fit(state.title || name, width)}</Text>
         <Text dimColor>

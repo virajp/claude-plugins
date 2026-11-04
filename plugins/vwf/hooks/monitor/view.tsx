@@ -9,6 +9,7 @@ import type {
   QueueRow,
   ReplayUnit,
 } from "../../types";
+import type { ChipProps } from "./chip";
 import {
   nameOf,
   time,
@@ -180,7 +181,15 @@ export type Timeline = {
   plans: () => unknown;
   toggleQuiet: () => unknown;
   show: (label: string, agent: AgentRun | undefined) => unknown;
+  openUnit?: string | undefined;
+  openGaps: string[];
+  toggleUnit: (id: string) => unknown;
+  toggleGap: (id: string) => unknown;
+  copyResume: (surface: string) => unknown;
 };
+
+/** A log line older than this reads as a warning in the Now card. */
+const QUIET_MS = 3 * 60 * 1000;
 
 /** The badge of a plan: its words and its color. */
 function badgeOf(plan: PlanRun, isClaiming: boolean): { text: string; color: string } {
@@ -334,22 +343,63 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
     const gaps = gapCounts[i] ?? 0;
     const took = duration(unit.started, one === "running" ? "" : unit.ended);
 
-    return row(
-      `row-${unit.id}`,
-      [
-        <Button
-          key={`unit-${unit.id}`}
-          plain
-          label={unit.id}
-          onPress={() => p.show(unit.id, unit.agent)}
-        />,
-        <Text key="title" wrap="truncate" size="footnote" dimColor={one === "pending"}>
-          {unit.title}
-        </Text>,
-      ],
-      barOf(unit.started, one === "running" ? "" : unit.ended, one, gaps),
-      took,
-      `${unit.id} ${one}, ${took}`,
+    const isOpen = p.openUnit === unit.id;
+    const detail = (label: string, value: string, isMono = false) => (
+      <Box
+        key={`detail-${unit.id}-${label}`}
+        width="24%"
+        flexDirection="column"
+        borderStyle="round"
+        borderColor={TINT(PENDING)}
+        paddingX="sm"
+      >
+        <Text dimColor size="caption">{label}</Text>
+        <Text size="caption" mono={isMono}>{value}</Text>
+      </Box>
+    );
+    const until = time(unit.ended);
+    const gapWord = gaps === 1 ? "1 gap" : `${gaps} gaps`;
+
+    return (
+      <Box key={`unit-block-${unit.id}`} flexDirection="column" gap="xs">
+        {row(
+          `row-${unit.id}`,
+          [
+            <Button
+              key={`unit-${unit.id}`}
+              plain
+              label={unit.id}
+              onPress={() => p.toggleUnit(unit.id)}
+            />,
+            <Text key="title" wrap="truncate" size="footnote" dimColor={one === "pending"}>
+              {unit.title}
+            </Text>,
+          ],
+          barOf(unit.started, one === "running" ? "" : unit.ended, one, gaps),
+          took,
+          `${unit.id} ${one}, ${took}`,
+        )}
+        {isOpen && (
+          <Box key={`details-${unit.id}`} flexDirection="column" gap="xs">
+            <Box flexDirection="row" justifyContent="space-between" flexWrap="wrap">
+              {detail("Status", gaps > 0 ? `${one}, ${gapWord}` : one)}
+              {detail("Rounds", String(unit.rounds))}
+              {detail(
+                "Start to end",
+                `${clock(time(unit.started))} to ${clock(one === "running" ? undefined : until)}`,
+              )}
+              {detail("Commit", unit.commit || "—", true)}
+            </Box>
+            <Box flexDirection="row" justifyContent="flex-end">
+              <Button
+                key={`transcript-${unit.id}`}
+                label="Open transcript"
+                onPress={() => p.show(unit.id, unit.agent)}
+              />
+            </Box>
+          </Box>
+        )}
+      </Box>
     );
   };
   const waves = [...new Set(units.map((unit) => unit.wave))].sort((a, b) => a - b);
@@ -359,6 +409,10 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
   const activeWave = plan.phase === "live" && running.length === 0
     ? state.waves.find((wave) => wave.status === "running")
     : undefined;
+  const activity = state.lastTool;
+  const activityAge = activity?.at === undefined ? undefined : now - activity.at;
+  const isResumable = state.state === "BLOCKED" || plan.phase === "paused";
+  const resume = `/vwf:execute ${plan.folder}`;
   const isWaveReview = (key: string, wave: number) => key === `R${wave}` || key === `R${wave}-late`;
   const card = (key: string, children: RenderChildren, color: string) => (
     <Box
@@ -438,6 +492,26 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
                 </Text>
               </Box>,
             ]),
+            ...(activity === undefined ? [] : [
+              <Box key="now-activity" flexDirection="row" justifyContent="space-between" gap="sm">
+                <Box flexShrink={1} overflow="hidden">
+                  <Text mono dimColor size="caption" wrap="truncate">
+                    {/\w/.test(activity.summary) ? `${activity.tool} · ${activity.summary}` : activity.tool}
+                  </Text>
+                </Box>
+                {activityAge !== undefined && (
+                  <Box flexShrink={0}>
+                    <Text
+                      mono
+                      size="caption"
+                      {...(activityAge >= QUIET_MS ? { color: FILL["yellow"]! } : { dimColor: true })}
+                    >
+                      {`last activity ${span(0, activityAge)} ago`}
+                    </Text>
+                  </Box>
+                )}
+              </Box>,
+            ]),
           ],
           FILL["blue"]!,
         )}
@@ -501,18 +575,26 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
         <Box flexDirection="column" gap="xs">
           <Text size="caption" weight="medium">Open gaps</Text>
           {state.gaps.map((gap) => (
-            <Box key={`gap-${gap.id}`} flexDirection="row" gap="xs">
-              <Box flexShrink={0}>
-                <Text mono size="caption" color={FILL["yellow"]!}>{gap.id}</Text>
+            <Box key={`gap-${gap.id}`} flexDirection="column">
+              <Box flexDirection="row" gap="xs" alignItems="center">
+                <Button
+                  key={`gap-toggle-${gap.id}`}
+                  plain
+                  label={`${p.openGaps.includes(gap.id) ? "▾" : "▸"} ${gap.id}`}
+                  onPress={() => p.toggleGap(gap.id)}
+                />
+                {(gap.unit || gap.stage) !== "" && (
+                  <Box flexShrink={0}>
+                    <Text mono dimColor size="caption">{gap.unit || gap.stage}</Text>
+                  </Box>
+                )}
+                {!p.openGaps.includes(gap.id) && (
+                  <Box flexShrink={1} overflow="hidden">
+                    <Text size="footnote" wrap="truncate">{gap.text}</Text>
+                  </Box>
+                )}
               </Box>
-              {(gap.unit || gap.stage) !== "" && (
-                <Box flexShrink={0}>
-                  <Text mono dimColor size="caption">{gap.unit || gap.stage}</Text>
-                </Box>
-              )}
-              <Box flexShrink={1}>
-                <Text size="footnote">{gap.text}</Text>
-              </Box>
+              {p.openGaps.includes(gap.id) && <Text size="footnote">{gap.text}</Text>}
             </Box>
           ))}
         </Box>
@@ -520,6 +602,21 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
 
       {state.partial && <Text dimColor size="caption">The log is over 4 MiB: the pane read its tail only.</Text>}
       {p.problem !== undefined && <Text size="footnote" color={FILL["red"]!}>{p.problem}</Text>}
+
+      {isResumable && (
+        <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap="sm">
+          <Box flexShrink={1} overflow="hidden">
+            <Text mono dimColor size="caption">{resume}</Text>
+          </Box>
+          <Box flexShrink={0}>
+            <Button
+              key="copy-resume"
+              label="Copy resume command"
+              onPress={(press) => p.copyResume(press.surface)}
+            />
+          </Box>
+        </Box>
+      )}
 
       <Box flexDirection="row" justifyContent="space-between" alignItems="center" gap="sm">
         <Box flexShrink={1} overflow="hidden">
@@ -540,6 +637,67 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
           <Button key="close" label="Close" role="dismiss" onPress={p.close} />
         </Box>
       </Box>
+    </Box>
+  );
+}
+
+/** What the chip shows of a plan, as plain data. */
+export function chipProps(plan: PlanRun, now: number, isClaiming: boolean): ChipProps {
+  const state = plan.replay;
+  const units = state.units;
+  const shown = units.map((unit) => unit.agent?.live && unit.status === "pending" ? "running" : unit.status);
+  const done = shown.filter((one) => FINISHED.includes(one)).length;
+  const startedAt = time(plan.row.started);
+  const endedAt = time(plan.row.ended);
+  const isEnded = plan.phase === "ended";
+  const wave = state.waves.find((one) => one.status === "running")?.id.replace(/^W/, "")
+    ?? units.find((_, i) => shown[i] === "running")?.wave;
+  const word = isClaiming
+    ? "Claim"
+    : state.state === "BLOCKED"
+    ? "Blocked"
+    : plan.phase === "paused"
+    ? "Paused"
+    : isEnded
+    ? "Complete"
+    : wave === undefined
+    ? "Running"
+    : `Wave ${wave}`;
+
+  return {
+    glyphs: units.map((unit, i) => {
+      const one = shown[i] ?? "pending";
+      const gaps = state.gaps.filter((gap) => gap.unit === unit.id).length;
+
+      return one === "pending" ? null : fillOf(one, gaps);
+    }),
+    count: `${done}/${units.length}`,
+    word,
+    color: FILL[badgeOf(plan, isClaiming).color]!,
+    took: span(startedAt, endedAt ?? (isEnded || startedAt === undefined ? undefined : now)),
+  };
+}
+
+/**
+ * The chip as one Button, one press anywhere on it: the terminal's, and the
+ * desktop's when its Client fails. A desktop Button draws one plain label, so
+ * the glyphs lose their colors there.
+ */
+export function drawChipButton(ui: Ui, chip: ChipProps, open: () => unknown) {
+  const { Box, Text, Button } = ui;
+
+  return (
+    <Box flexDirection="row" alignSelf="flex-start">
+      <Button key="vwf-chip" plain onPress={open}>
+        {chip.glyphs.map((color, i) =>
+          color === null
+            ? <Text key={`glyph-${i}`} dimColor>▱</Text>
+            : <Text key={`glyph-${i}`} color={color}>▰</Text>
+        )}
+        <Text key="count">{` ${chip.count} `}</Text>
+        <Text key="word" color={chip.color}>{chip.word}</Text>
+        <Text key="took" dimColor>{` ${chip.took}`}</Text>
+      </Button>
     </Box>
   );
 }

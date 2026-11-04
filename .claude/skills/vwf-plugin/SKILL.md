@@ -484,7 +484,14 @@ whole-percent
 `Box` parts on one axis (the engine refuses a fractional percent) with the unit
 id as the `Button`, and a `role: "dismiss"` Close; `drawList` draws the plan
 list
-on all surfaces, and
+on all surfaces, the `AbovePrompt` band draws the chip: on the desktop a
+`Client` (`chip.tsx`),
+since a desktop `Button` draws one plain label, and its press reaches
+`ui.message`; on the terminal, or after a `ui.fault`, one `Button`
+(`drawChipButton`), a
+`notify` in `register.tsx` raises the toast and the status
+line
+when a followed run changes, and
 `pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers, the
 queue order and the
 replay, and strips terminal control characters from plan and log text before it
