@@ -174,7 +174,8 @@ adopting it.
 **Dependencies**
 
 - **External prerequisites, checked at run time rather than install time.**
-  `mise` and `pnpm` must be on your `PATH`. Nothing refuses the install any
+  `mise` and `node` must be on your `PATH`, and `pnpm` too when a product picks
+  the `context7` tool. Nothing refuses the install any
   more; `/vwf:setup` and `/vwf:execute` halt on a missing `mise` once a stack is
   pinned, and `pnpm` fails later in its own way. `gh`, logged in, is needed by
   [`/vwf:backlog`](#vwfbacklog) (the `project` scope), by
@@ -1246,7 +1247,9 @@ resolves them — with every row printed under the repo it was found in:
 Every one of these is `drift` or a warning and none is blocking — a repo behind
 its baseline is out of date, not broken. Each row carries its owner's remedy,
 each
-printed once: `/vwf:setup` for the packs, `/vwf:setup reshape` for bootstrap and
+printed once: `/stackgen:stackgen-sync` for Pack versions and Content drift,
+`/vwf:setup` for a missing pack lockfile and Project ids, `/vwf:setup reshape`
+for bootstrap and
 the forge, and the fix in `.config/bootstrap.toml` for a merge model value. A
 repo
 with no `.config/bootstrap.toml` is one row of its own, `not shaped` or **shaped
