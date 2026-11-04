@@ -751,5 +751,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/tool-config-to-bootstrap",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-03-tool-config-to-bootstrap.jsonl"
+  }
 }
