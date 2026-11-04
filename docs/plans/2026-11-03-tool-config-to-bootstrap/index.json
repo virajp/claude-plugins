@@ -16,8 +16,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "BLOCKED",
-    "detail": "BLOCKED at landing — every unit and gate is green and K1 passed, nothing merged. The main checkout on develop holds 9 uncommitted files from other work (edited 23:09-23:28, plugins/vwf/hooks/monitor/*, types/index.d.ts, .claude/skills/vwf-plugin/SKILL.md, site/src/content/docs/plugins/vwf.md) and an unpushed commit 307ac947 that this plan did not make; code:merge:develop refuses a dirty tree, stashing could race a live session, and consent.merge does not cover pushing 307ac947. Needed: commit or clear those files and push or rule on 307ac947, then re-run. A probe shows the branch merges cleanly with both. 12 gaps open. Worktree /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/tool-config-to-bootstrap"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-04 — U1 43d9be72, U2 c22b5007, U3 11d11424, U4 43693017, U5 57f06046, U7 67166e0a; 12 gaps open, folder left live"
   },
   "consent": {
     "merge": true,
