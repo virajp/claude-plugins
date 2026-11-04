@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-04T03:35:56Z in .worktrees/all-2026-11-04-0903"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at wave 2 — U8 UNRESOLVED: security loop did not converge (3, 2, 1, 2 findings over four rounds). Open on generator.md: env-value URLs unvetted with the gate showing env key names only; lsp_servers: entries skip the command, args and wrapper rules. Ruling needed: fix both on U2 and extend the vetting to them, or rule where vetting of generated servers ends; see G18. U6, U7 skipped (depend on U8). Worktree .worktrees/all-2026-11-04-0903"
   },
   "consent": {
     "merge": true,
@@ -99,7 +99,7 @@
       "status": "green",
       "started": "2026-11-04T03:36:39.159Z",
       "ended": "2026-11-04T03:43:26.050Z",
-      "commit": "2f12755b",
+      "commit": "5fbed6c3",
       "rounds": 2
     },
     {
@@ -202,9 +202,9 @@
         "U8"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-04T09:35:43.703Z",
       "commit": "",
       "rounds": 0
     },
@@ -223,9 +223,9 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-04T09:35:43.779Z",
       "commit": "",
       "rounds": 0
     },
@@ -245,14 +245,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "running",
+      "status": "unresolved",
       "started": "2026-11-04T04:03:33.851Z",
-      "ended": "",
+      "ended": "2026-11-04T09:35:43.630Z",
       "commit": "",
-      "rounds": 3,
+      "rounds": 4,
       "range": {
-        "from": "854e0c85",
-        "to": "2f12755b"
+        "from": "2f12755b",
+        "to": "5fbed6c3"
       }
     }
   ],
@@ -265,9 +265,9 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "failed",
       "started": "2026-11-04T04:03:33.814Z",
-      "ended": ""
+      "ended": "2026-11-04T09:35:43.850Z"
     },
     {
       "id": "W3",
@@ -758,6 +758,20 @@
       "unit": "U2",
       "stage": "security",
       "text": "U8 round 2: no reputation source vets a remote MCP host, so every generated host: row blocks and a generated http MCP server cannot land · taken as the block rule; a ruling may want a vetted path",
+      "state": "open"
+    },
+    {
+      "id": "G18",
+      "unit": "U8",
+      "stage": "security",
+      "text": "U8 convergence guard tripped on cap-exempt security findings: rounds 1-4 returned 3, 2, 1, 2 findings, each round a new layer on generated-server vetting. Open, unfixed, both generator.md (U2): env-value URLs are not vetted and the gate shows env key names only; lsp_servers: entries skip the command, args and wrapper rules · no assumption taken; a ruling is needed",
+      "state": "open"
+    },
+    {
+      "id": "G19",
+      "unit": "U8",
+      "stage": "security",
+      "text": "the /security-review skill in a runner read the main checkout's develop..main delta, not the worktree range · each round's identification ran as a subtask scoped to the round's range, saved under engine/",
       "state": "open"
     }
   ],
