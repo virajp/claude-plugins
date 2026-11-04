@@ -26,10 +26,13 @@
       "title": "Optional tools in vwf-tools: context7, notion and taste-skill on explicit pick",
       "target_repo": null,
       "priority": 10,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-11-04T03:34:59.416Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-11-04T14:28:29.797Z",
+      "gaps": {
+        "open": 16,
+        "moved_to": []
+      },
       "requires": [],
       "backlog": [],
       "backlog_pieces": []
