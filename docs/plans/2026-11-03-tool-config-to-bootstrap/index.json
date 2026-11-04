@@ -233,11 +233,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-04T16:10:28.313Z",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-04T17:46:58.944Z",
+      "ended": "2026-11-04T17:59:04.309Z",
+      "commit": "67166e0a",
+      "rounds": 2
     },
     {
       "id": "U8",
@@ -276,9 +276,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-04T17:46:58.896Z",
+      "ended": "2026-11-04T18:06:24.762Z"
     },
     {
       "id": "W4",
@@ -874,6 +874,13 @@
       "stage": "security",
       "text": "D46 requires disclosure of the dry-run in doctor and setup only, never at run time and never in init, and names no trust check in init · the closing pass applies setup trust check and a printed line in init; D46 and 01-init.md would state it",
       "state": "open"
+    },
+    {
+      "id": "G17",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "07-docs.md cites tools/mise/...; in the bootstrap clone the path is repo/tools/mise/... · facts confirmed there",
+      "state": "closed"
     }
   ],
   "overrides": [],
