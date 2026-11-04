@@ -1,5 +1,10 @@
 # Decision — `/vwf:doctor` finds drift by previewing, not with `check`
 
+> **SUPERSEDED 2026-11-03** — drift is now `mise run setup:configs --dry-run`.
+> See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
 [`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)

@@ -74,16 +74,17 @@ a repo's stackgen lockfile names it, `taste-skill` joins when a lockfile records
 it, and one yes/no question asks whether to keep Context7, the server vwf's
 manifest used to ship. It is one numbered row; declined, the stamp stays at 24
 and the next pass offers it again. `config_format` **23** retires the top-level
-`answers:` block: the secrets provider and each
-repo's forge now live in that repo's own `.config/stackgen.yaml`, and the
-dependency-bot key goes with the bot config it chose. That move is **not shipped
-yet** — it arrives with a later `/vwf:setup reshape`, together with the move of
-a repo shaped on the old mise layout onto `.config/stackgen.yaml`. Until then a
-repo still stamped 22 stays exactly as it is: its `answers:` block is ignored
-wherever it would have been read, `/vwf:doctor` reports 22 against 25, and a
-repo still carrying `.config/mise/conf.d/tools.toml`,
-`.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` makes setup and
-`init` name it as **shaped on the old layout** and stop rather than reshape it.
+`answers:` block: a repo's secrets provider is bootstrap's now, the forge is
+read
+live, and the dependency-bot key goes with the bot config it chose. Its step is
+applied by `/vwf:setup reshape`, and until then a repo still stamped 22 stays as
+it is: its `answers:` block is ignored wherever it would have been read, and
+`/vwf:doctor` reports 22 against 25. A repo carrying `.config/stackgen.yaml`,
+`.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root
+`.config/mise.dev.toml` and no `.config/bootstrap.toml` is **shaped on the old
+layout**: setup and `init` name it, and `/vwf:setup reshape` runs bootstrap's
+`docs/sync`, whose `docs/sync/migrate.md` maps the old keys, then deletes
+`.config/stackgen.yaml` once the repo reads green.
 `config_format` **22** retired the editor axis: vwf no longer ships, asks about
 or composes any editor configuration, so the editor answer and the editor-key
 record an earlier run wrote are removed with nothing to convert, each per-pack

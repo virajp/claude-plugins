@@ -1,5 +1,10 @@
 # Decision — `/vwf:init` owns the first commit and the branch model
 
+> **SUPERSEDED 2026-11-03** — bootstrap makes the first commit and the core
+> branches, and `init` lands through `/vwf:git-workflow`. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
 [`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
 · **Reverses** `new-repo.md:20`, *"Nothing else in this pipeline touches git

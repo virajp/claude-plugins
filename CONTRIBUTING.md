@@ -7,7 +7,7 @@ out of it and put it here instead.
 ## Setup
 
 ```sh
-mise run setup:all
+mise run setup
 ```
 
 That is the whole of it: the toolchain manager installs the pinned tools,
@@ -27,9 +27,10 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is `MERGE_MODEL` in `.config/mise.toml`: `direct` — this repo's value —
-merges locally and pushes, and `pr` pushes the branch and opens a pull request
-instead, merging nothing.
+then do is `[branch.<branch>].merge_model` in `.config/bootstrap.toml`:
+`direct` — this repo's value, and what a missing file or key means — merges
+locally and pushes, and `pr` pushes the branch and opens a pull request instead,
+merging nothing.
 
 The forge's own default branch is set **by hand, once**, and no task re-runs it:
 `gh repo edit --default-branch main`, or `glab repo update --defaultBranch main`

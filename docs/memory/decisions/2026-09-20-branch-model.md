@@ -1,5 +1,11 @@
 # Decision — the landing model is set per branch, and init's git pass reads where each repo stands
 
+> **SUPERSEDED 2026-11-03** — the `MERGE_MODEL_*` env reads are gone;
+> `git-workflow` reads `[branch.*].merge_model` from `.config/bootstrap.toml`.
+> See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-09-21 · **Branch** `2026-09-20-branch-model` · **Plan**
 [`docs/plans/2026-09-20-branch-model/`](../../plans/2026-09-20-branch-model/index.md)
 · **Backlog** B53; B28, piece D2, plan 4 of 5 · **Problem**

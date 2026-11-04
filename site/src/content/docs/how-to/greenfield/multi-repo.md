@@ -45,15 +45,17 @@ stack live, and it holds no product code — now or ever.
 
 Step 0 finds the empty repo unshaped and offers `init`; accept it. `init` shapes
 the base repo the same way it shapes any other
-([`/vwf:init`](../../plugins/vwf.md#vwfinit)), git pass included — so the base
-repo leaves that run with a first commit, both branches and a landing model. The
+([`/vwf:init`](../../plugins/vwf.md#vwfinit)), bootstrap step and commit step
+included — so the base repo leaves that run with a first commit, both branches
+and a landing model. The
 base has no members yet, so this run shapes one repo. The **shape** is per repo
 — each member carries its own `.config/`, its own task library and its own gates
 — but the **run** is per product: once the members exist, one `init` from the
 base surveys and shapes all of them in one plan and on one yes, and a member
 added later is picked up by the next `/vwf:setup reshape` — which you no longer
-have to remember: `/vwf:recall` prints one drift line at session start when a
-repo has fallen behind, and setup and `/stackgen:stackgen-sync` re-check the
+have to remember: `/vwf:recall` prints its drift lines at session start when a
+repo has fallen behind, from file reads only, and setup and
+`/stackgen:stackgen-sync` re-check the
 shape as they finish.
 
 The setup run is the spine's blank-repo bootstrap unchanged
@@ -331,15 +333,11 @@ first of these surfaces at `/vwf:execute`:
   working tree, and the two commit separately with the base last.
 - **The back-link file stops being belt-and-braces and becomes load-bearing**,
   since there is no superproject walk to fall back on.
-- **The member paths go in `MEMBERS`.** The base repo's task library finds its
-  members through one helper, which reads `.gitmodules` where there is one and
-  the `MEMBERS` value in `.config/mise/conf.d/_base/mise.toml` otherwise — so
-  under `siblings` that value is what `setup:all --all` and `code:worktrees`
-  walk. It is rendered from `members` in the base's `.config/stackgen.yaml`,
-  which `init` passes to `/stackgen:tool-config all` as `--members` from the
-  members it resolved. The **flags** beside it — `setup:all --api`, and the
-  `setup-api` alias — are one per member repo under either linkage, named for
-  the member and never for a project id.
+- **Each member adopts bootstrap on its own.** Under `siblings` each member is
+  its own repository, and bootstrap's `docs/sync` takes the paths from
+  `members:`
+  in `.config/vwf.yaml`, per its Siblings section. Bootstrap's member flags, on
+  `setup` and `code:worktrees`, cover git submodules only.
 
 Neither answer is permanent — both are written uniformly enough that switching
 is a config edit rather than a second migration.

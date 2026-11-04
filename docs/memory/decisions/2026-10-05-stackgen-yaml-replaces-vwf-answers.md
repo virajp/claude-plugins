@@ -1,5 +1,10 @@
 # Decision — a repo's forge and secrets provider live in its `.config/stackgen.yaml`; vwf.yaml loses `answers:`
 
+> **SUPERSEDED 2026-11-03** — a repo's values now live in
+> `.config/bootstrap.toml`. See
+> [`2026-11-03-tool-config-to-bootstrap.md`](2026-11-03-tool-config-to-bootstrap.md).
+> The body is left exactly as written.
+
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
 [`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)

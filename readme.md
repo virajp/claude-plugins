@@ -127,20 +127,25 @@ repo is offered, never overwritten. `/vwf:setup reshape` runs that pass alone �
 across every member — and is what `/vwf:doctor` prints when a shaped repo has
 fallen behind. You rarely have to remember it: `setup` re-checks the shape after
 its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
-`/vwf:recall` prints one drift line at session start — each offers the reshape,
-none runs it unasked. A repo is shaped when it carries `.config/stackgen.yaml`,
-the values file `init` writes through `stackgen:tool-config`; one still on the
-older mise layout (`.config/mise/conf.d/tools.toml` and its siblings) is named
-and left as it is until the reshape that moves it ships.
+`/vwf:recall` prints its drift lines at session start — each offers a remedy,
+none
+runs it unasked. A repo is shaped when it carries `.config/bootstrap.toml`,
+the values file [bootstrap](https://github.com/virajp/bootstrap) writes; one
+still
+on an older layout (`.config/stackgen.yaml`, or
+`.config/mise/conf.d/tools.toml` and its siblings) is named, and the reshape
+moves
+it onto bootstrap's. Those drift lines read files only and do not report config
+drift: `/vwf:doctor` run whole does, through an explicit
+`mise run setup:configs --dry-run`, which executes bootstrap's `main` branch
+with
+no pin.
 
-Once a repo **is** shaped, its own task library takes the plugin side over:
-`mise run setup:ai:all` checks that `vwf` is installed — at user scope, or at
-project or local scope for this repo — and only when it is not runs the command
-above to install it at **user** scope. Whether or not it installed anything, it
-then updates every registered marketplace and upgrades every plugin installed at
-a scope that serves the repo, at that scope. It never installs at project scope.
-The command above is the one-shot a person runs on a machine; that is what a
-checkout re-runs.
+Once a repo **is** shaped, bootstrap's `setup:ai` task takes the plugin side
+over. The
+command above is the one-shot a person runs on a machine; that is what a
+checkout
+re-runs.
 
 Scope is yours to choose: `--user` / `--project` on the wrapper, or
 `--scope project` on Claude's commands, keep a plugin to one repo instead of
@@ -326,29 +331,14 @@ root config and the deploy task beside it, a project task a framework pack owns
 — the Astro pack's favicon rasterizer is the first — on the same
 merges-never-owns terms, behind their own consent line, and capped by a fixed
 allowlist of what may sit at a repo's root. The mise config, the file-based task
-library everything else runs through, the dprint, taplo, pre-commit, gitleaks,
-grype and house-linter configs, the ignore and attribute files, the editor
-settings and the statusline config belong to no pack: they are written by
-`/stackgen:tool-config`, a skill you can also run yourself
-(`/stackgen:tool-config preview all`). A shipped node script copies its
-`assets/` as they are and renders its `templates/` from `.config/stackgen.yaml`
-— the repo's values, which the script alone writes — in four calls: `all`,
-`pack`, `pack-remove` and `upgrade`. Each list a pack once appended to — the
-ignore set, the exclusion set, the formatter's plugins — ships as a universal
-superset, every stack's entries whether or not your repo uses that stack; six
-files carry one `# >>> tool-config` marker pair, and every line outside it is
-yours and survives every render. Dev-only mise files pin `latest`; a file CI
-loads gets exact versions, save node and pnpm — there is no mise lockfile. Every
-change is shown as a numbered row before it writes, so a new repo's gate config
-needs no model judgement; it runs each tool only as `mise x -- <tool>`, the
-version your config pins, formats every file it wrote with the shipped dprint
-config and validates the hook config. Its `all` ends in a set-up repo: it lands
-every file, then runs `MISE_ENV=dev mise run setup:all`. Trusting the repo's
-mise config is yours to do first — typically its path in `trusted_config_paths`
-in your global mise config; the script checks it and never grants it. It also
-lands a repo-local mise skill, and a tool is never added with a bare `mise use`.
+library everything else runs through, the gates and their configs, the ignore
+and
+attribute files, the editor settings and the hooks belong to no pack: they are
+[bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init` reaches
+through bootstrap's own readme prompt, and the `setup:*` and `code:*` tasks are
+bootstrap's with them.
 A pack ships no toolchain at all: its tool pins, its gates and their configs,
-and its generic tasks are [bootstrap](https://github.com/virajp/bootstrap)'s.
+and its generic tasks are bootstrap's.
 The materializer reads a fresh clone of bootstrap to choose the tools a stack
 needs, and asks for them through bootstrap's own entry point, behind its own
 consent line; it never edits `.config/bootstrap.toml` itself. A value only the

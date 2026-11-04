@@ -138,7 +138,8 @@ skipped.
 
 **The merge model must be `direct`.** Under `pr`, `code:merge:main` only opens a
 pull request, and a tag would name a stale `main`. So full mode, `--ci` and
-`p:release` refuse when `MERGE_MODEL` or `MERGE_MODEL_MAIN` is anything else.
+`p:release` refuse when `[branch.main].merge_model` in `.config/bootstrap.toml`
+is `pr`; a missing file or key is `direct`.
 The fallback is the two halves: each task `--no-commit` on `develop`, commit,
 land the PR by hand, then each `--tag-only` on `main`.
 

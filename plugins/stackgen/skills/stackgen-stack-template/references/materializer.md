@@ -115,10 +115,9 @@ writes to a repo, and every write it makes is consent-gated and committed once.
      per-component record is what lets sync act on one component alone,
      and per file it is what makes `config/` precedence auditable: it
      names which component supplied the version that actually landed.
-     The hash written here is the landing hash, not the last word:
-     `/vwf:init` **re-records** the hash of every landed file it changes
-     after landing, and on either answer of its replace-or-keep offer, so a
-     differing hash is content drift only when no such writer ran.
+     The hash written here is the landing hash, and no later writer
+     re-records it: `/vwf:init` touches no file a pack landed, so a
+     differing hash is what `/vwf:doctor`'s Content drift predicate judges.
      The files bootstrap's sync writes have no record here: they are
      bootstrap's.
 
