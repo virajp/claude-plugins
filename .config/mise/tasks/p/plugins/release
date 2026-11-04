@@ -140,13 +140,18 @@ if [[ "${DRY_RUN}" != "true" ]]; then
     exit 1
   fi
   # Under pr, code:merge:main only opens a PR, and the tag would name a stale main.
-  # Either variable may be the one code:merge:main reads, so both must be direct.
-  for MERGE_MODE in "${MERGE_MODEL:-direct}" "${MERGE_MODEL_MAIN:-direct}"; do
-    if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" != "direct" ]]; then
-      print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
-      exit 1
-    fi
-  done
+  # merge_model of [branch.main] in .config/bootstrap.toml, read as bootstrap's
+  # _scripts/merge reads it: pr refuses; any other value, a missing key or a missing
+  # file means direct. A file yq cannot read stops the task.
+  MERGE_MODE=direct
+  if [[ -f .config/bootstrap.toml ]] && ! MERGE_MODE="$(yq -p toml -o yaml '.branch.main.merge_model // "direct"' .config/bootstrap.toml)"; then
+    print_error "cannot read the merge config of .config/bootstrap.toml."
+    exit 1
+  fi
+  if [[ "${NO_COMMIT}" != "true" && "${MERGE_MODE}" == "pr" ]]; then
+    print_error "The merge model into ${RELEASE_BRANCH} is '${MERGE_MODE}', not 'direct'. Run --no-commit, land the PR, then --tag-only on ${RELEASE_BRANCH}."
+    exit 1
+  fi
   git fetch --tags --quiet origin
 elif ! git fetch --tags --quiet origin 2> /dev/null; then
   print_warn "Could not fetch tags — the last tags below are this checkout's."

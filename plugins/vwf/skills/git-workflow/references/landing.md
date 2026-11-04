@@ -15,8 +15,9 @@ pointers current — then remove it. Order matters:
 
 1. **Land each changed submodule.** For every submodule with work on this
    branch, run its own merge task from the submodule directory (this commits and
-   pushes the submodule's branch, under that member's own `MERGE_MODEL_DEVELOP`
-   — the destination is `develop`). Repeat per changed submodule:
+   pushes the submodule's branch, under `merge_model` of `[branch.develop]` in
+   that member's own `.config/bootstrap.toml` — the destination is `develop`).
+   Repeat per changed submodule:
 
    ```bash
    mise x --cd <submodule> -- mise run code:merge:develop <branch>
@@ -34,10 +35,10 @@ pointers current — then remove it. Order matters:
 3. **Land the outer repo.** Merge this branch to the destination — its own
    `code:merge:` task if the outer repo defines one, else merge the branch in
    the main worktree and `git push`. The task pushes for you; only the manual
-   path needs the push spelled out. The task reads the variable for its
-   destination: `code:merge:develop` reads `MERGE_MODEL_DEVELOP`,
-   `code:merge:main` reads `MERGE_MODEL_MAIN` — a legacy single `MERGE_MODEL`
-   stands in for both.
+   path needs the push spelled out. The task reads the key for its destination
+   from the outer repo's own `.config/bootstrap.toml`: `code:merge:develop`
+   reads `merge_model` of `[branch.develop]`, `code:merge:main` reads
+   `merge_model` of `[branch.main]`.
 
 4. **Remove the worktree.** From the main checkout — where step 3 already ran
    the outer merge — run `git worktree remove <path>`.
@@ -67,8 +68,8 @@ branch and **opens a pull request** against the destination — nothing merges
 locally, and the branch lands only when someone merges that request.
 
 - **Step 1 is unchanged.** Each submodule member is its own repo with its own
-  config, so it lands under its **own** `MERGE_MODEL_DEVELOP` (or its legacy
-  `MERGE_MODEL`) — a member set to `direct` merges and pushes as before even
+  `.config/bootstrap.toml`, so it lands under its **own** `merge_model` of
+  `[branch.develop]` — a member set to `direct` merges and pushes as before even
   when the outer repo is `pr` for `develop`, and a member set to `pr` opens its
   own request and stops, which means the outer pointer cannot advance until it
   is merged. Report that and stop rather than working around it.

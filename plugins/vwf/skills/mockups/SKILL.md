@@ -168,15 +168,15 @@ command consumes are missing — then tell the user to run `/vwf:setup` and stop
 Before any write, verify `docs/scratchpad/` is gitignored:
 `git check-ignore -q docs/scratchpad/x` — a child path, since the directory
 pattern does not match the bare name until it exists. If it is not, stop and
-say so: the line is tool-config's universal `.gitignore`'s, landed by
-`/vwf:setup reshape`, and this skill never writes the file. Rendered mockups
-must never become committable.
+say so: the line is in the repo's `.gitignore`, synced by bootstrap's git tool,
+and this skill never writes the file. Rendered mockups must never become
+committable.
 
 ### 2. Check `node`
 
 The route map, the link check and the review server are single-file Node
 programs with no dependencies. If `node` is not on the path, say so with the
-remedy — `MISE_ENV=dev mise run setup:all`, which installs the `node` every
+remedy — `MISE_ENV=dev mise run setup`, which installs the `node` every
 shaped repo pins — and stop. Nothing is rendered: without `node` there is no
 route map to link against and no link check to pass.
 
