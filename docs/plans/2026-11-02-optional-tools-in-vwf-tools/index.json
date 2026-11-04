@@ -8,8 +8,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-04T13:55:17Z in .worktrees/all-2026-11-04-0903 — resume at U8 under D33"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-04 — c1031514..eccbf62c on all-2026-11-04-0903; 16 open gaps, folder left live; K1 passed, its temp home /tmp/k1-hermetic.j6EOT5 stays on disk"
   },
   "consent": {
     "merge": true,
