@@ -15,7 +15,7 @@ what such a fact consists of:
 | Field        | Means                                                                    |
 | ------------ | ------------------------------------------------------------------------ |
 | token        | The lowercase-kebab name the template's `languages:` frontmatter carries |
-| LSP plugin   | The `virajp-plugins` plugin whose `lspServers` block covers the language |
+| LSP plugin   | The plugin whose `lspServers` covers the language — for a materialized stack, stackgen's generated `vwf-tools` |
 | manifest     | The file whose presence identifies a project of that language           |
 | toolchain    | The mise tool that installs it, where mise manages one                   |
 
@@ -71,13 +71,14 @@ exactly what has not been chosen yet. The moment the project axis is pinned, the
 rule reverts: unknown is **blocking**, and `setup` and `execute` halt on it. The
 severity follows the pin, never the calendar.
 
-## The seven axes
+## The eight axes
 
-A stack is **composed from seven independent templates** — `project | backing |
-deploy | repo | design | cicd | stylesheet` — not one monolith. Each axis answers
-a different question, and a project's `.config/vwf.yaml` answers each one (the
-first four in its `stack` block, the three tool axes as `design`, `cicd` and
-`stylesheet` pins):
+A stack is **composed from eight independent templates** — `project | backing |
+deploy | repo | design | cicd | stylesheet | addon` — not one monolith. Each axis
+answers a different question, and a project's `.config/vwf.yaml` answers each one
+(the first four in its `stack` block, the three tool axes as `design`, `cicd` and
+`stylesheet` pins, and `addon` as the top-level `addons:` list, one per product,
+absent or `[]` meaning no optional tool):
 
 | Axis           | Scope       | Cardinality           | Owns                                                    |
 | -------------- | ----------- | --------------------- | ------------------------------------------------------- |
@@ -88,15 +89,18 @@ first four in its `stack` block, the three tool axes as `design`, `cicd` and
 | **design**     | per project | one                   | The design tool and its adapter, for screen platforms   |
 | **cicd**       | per project | one                   | The CI system that builds and releases the project      |
 | **stylesheet** | per project | one                   | The stylesheet approach and how the design-system tokens are realized, for `site` and `webapp` platforms |
+| **addon**      | per product | a list (any number, or none) | The optional tools the product picked, none preselected |
 
 The templates themselves live in the **stack plugins**, never in vwf
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). Since config_format 13 every
 axis but `repo` is pinned **per project** — a product may run its site on one
-cloud and its API on another.
+cloud and its API on another — and `addon`, added in `config_format` 25, is the
+product's.
 
-**An axis may also be unanswered.** Since `config_format` 16 any of the seven may
-read `unresolved` — deferred rather than decided
-(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"). The
+**An axis may also be unanswered.** Since `config_format` 16 any of the seven
+other than `addon` may read `unresolved` — deferred rather than decided
+(`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"); `addons:`
+is always a list and never holds it. The
 axes stay independent under deferral too: one may be pinned while the other
 three are not, and nothing infers one from another. Deferral costs the doc
 surfaces nothing and costs `plan` and `execute` everything — they have no

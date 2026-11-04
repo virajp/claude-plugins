@@ -2,13 +2,15 @@
 
 Read this at step 3b, once the registry rows are settled and the stack,
 `design`, `cicd` and `stylesheet` keys are the next thing to elicit. An update
-run that touches no project's technology never needs it.
+run that touches no project's technology needs only its Tools round, which
+shows the current pick on every run.
 
 ## The stack is a menu — elicited, and it lives in config, not the registry
 
 A stack is composed from **independent axes** — six of them since **format 19**,
-the format that introduced axes at all, and **seven since `config_format` 19**,
-which added `stylesheet`. The two nineteens are **different version lines**, not
+the format that introduced axes at all, **seven since `config_format` 19**,
+which added `stylesheet`, and **eight since `config_format` 25**, which added
+`addon`. The two nineteens are **different version lines**, not
 one number: the first is the blueprint-side format this file has always cited,
 the second is `.config/vwf.yaml`'s own stamp. The enum lives in
 `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Each axis is its own menu:
@@ -22,6 +24,7 @@ the second is `.config/vwf.yaml`'s own stamp. The enum lives in
 | **design**     | per project | design-axis entries     | `projects.<name>.design`                 |
 | **cicd**       | per project | cicd-axis entries       | `projects.<name>.cicd`                   |
 | **stylesheet** | per project | stylesheet-axis entries | `projects.<name>.stylesheet`             |
+| **addon**      | per product | addon-axis entries      | the top-level `addons:` list             |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
@@ -55,8 +58,12 @@ the product — it is a question about `api`, or about `website`:
 - **stylesheet** — once per project, for a project declaring a `site` or a
   `webapp` platform, and **after** that project's design round. A project
   declaring neither is not asked and records no key.
+- **addon** — once per product, after the last of the rounds above. It decides
+  the product rather than a project, and it follows its own rules: see The Tools
+  round below.
 
-**What is preselected, in order.** On every round the highlighted option is:
+**What is preselected, in order.** On every round but the Tools round, which
+preselects nothing, the highlighted option is:
 the menu entry carrying **`default: true`** among the entries the round offers
 — after the axis's filter above — when one does; the flag is the adapter's,
 passed through in its menu payload, at most one per axis per platform
@@ -160,6 +167,35 @@ what is being chosen is how an already-settled contract gets written down.
 **Record the slug, or `unresolved` when deferred.** A deferred stylesheet axis
 costs the doc surfaces nothing and stops `/vwf:plan` and `/vwf:execute` on that
 project's web surface, the same as any other deferred axis.
+
+## The Tools round
+
+The `addon` axis, shown to the user as **optional tools**, runs after the last
+axis round. It is one multi-select `AskUserQuestion` over the menu's `addon`
+entries, **nothing preselected**: no entry is highlighted, whatever the adapter
+or a previous answer says, and only what the user picks is ever installed. Each
+option's description is the entry's summary plus its `needed_by` note where it
+carries one, so the user sees what would halt without the tool.
+
+**Write the answer as `addons:`**, a top-level list in `.config/vwf.yaml`, one
+per product — `[]` when nothing is picked. Installing a picked tool and removing
+a dropped one are `/vwf:setup`'s, which Step 7 hands off to. This file names no
+tool: the options come from the menu.
+
+**The round offers no *defer this axis*, and it never writes `unresolved`.**
+`addons:` is always a list, and `[]` is a completed answer, never a pending
+decision.
+
+**A re-run shows the current pick and asks only whether to change it.** Where
+`addons:` is present, `[]` included, show it as the current pick and ask that one
+question, on an update run as well, since this is the one round that is
+re-asked once settled. Keeping it writes nothing. Changing it opens the
+multi-select above, still with nothing preselected, and its answer replaces the
+list. Where the key is absent, run the round as a first pick.
+
+**When the stack menu returns no `addon` entries, skip the round and write
+nothing**: no installed plugin offers an optional tool, and an `addons:` key
+already there is left as it is.
 
 ## Recording it
 

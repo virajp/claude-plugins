@@ -43,7 +43,7 @@ they describe every project.
 | -------------------------------------- | ------------------------------------------------------------------------- |
 | [derive from product](references/derive-from-product.md) | the registry is absent and `docs/blueprint/product.md` exists (Step 2) |
 | [platforms](references/platforms.md)   | the project being walked is a UI one, or the CLI/TUI question comes up (3b) |
-| [stack-menu](references/stack-menu.md) | eliciting any stack axis, or the `design` / `cicd` keys (3b)              |
+| [stack-menu](references/stack-menu.md) | eliciting any stack axis, the `design` / `cicd` keys, or the tools round (3b) |
 
 ---
 
@@ -234,15 +234,15 @@ CLI/TUI question are in
 step, for every project.
 
 **The stack is a menu — elicited, and it lives in config, not the registry.** It
-is composed from **seven independent axes** (project / backing / deploy /
-design / cicd / stylesheet per project, repo per repo), each elicited as its own
-round; the `design`, `cicd` and `stylesheet` pins are the per-project keys of
-the same name, since on those three axes the slug *is* the config value. The
-stylesheet round runs **only for a project whose registry entry declares a
-`site` or a `webapp` platform**, and it runs **after** the design round — the
-tokens are the contract and the stylesheet is how they are realized, so the
-order is not arbitrary. The menus, what each axis records, and the
-recording rules are in [the stack menu](references/stack-menu.md) — read it
+is composed from **eight independent axes** (project / backing / deploy /
+design / cicd / stylesheet per project, repo per repo, addon per product), each
+elicited as its own round; the `design`, `cicd` and `stylesheet` pins are the
+per-project keys of the same name, since on those three axes the slug *is* the
+config value. The stylesheet round runs **only for a project whose registry
+entry declares a `site` or a `webapp` platform**, and it runs **after** the
+design round — the tokens are the contract and the stylesheet is how they are
+realized, so the order is not arbitrary. The menus, what each axis records, and
+the recording rules are in [the stack menu](references/stack-menu.md) — read it
 before eliciting any of them. Two rules hold whatever the answers are: vwf
 ships **no default and no recommended template** — the one preselection it
 honours is an entry the adapter's menu payload flags `default: true`, among the
@@ -250,6 +250,12 @@ entries offered on that round, which is highlighted, never assumed — and
 **every project gets a written `stack` block**, because that block is what
 `/vwf:doctor` checks the repo against and it cannot check what was never
 recorded.
+
+**The tools round comes last.** After the last axis round, the `addon` axis is
+shown as one multi-select list of optional tools, the stack menu's **Tools
+round**. `addons:` is **never preselected** and is written only from the user's
+pick — `[]` when nothing is picked, never `unresolved` — and a re-run shows the
+current pick and asks only whether to change it.
 
 **You record the decision, and only the decision.** What this step writes is a
 slug — or `unresolved` where the user defers — into
@@ -358,9 +364,9 @@ not pass either file back through this session.
 **Write the stack yourself**, not through the writer: set the structured
 `projects.<name>.stack` block in `.config/vwf.yaml` for **every** project — all
 three axes, `template`, `backing_template` and `deploy_template` — plus the
-per-project `design` (screen-platform projects) and `cicd` keys and the repo-level
-`repo.stack`. The writer never touches config, and never sees a stack — that
-separation is what keeps the blueprint vendor-free.
+per-project `design` (screen-platform projects) and `cicd` keys, the repo-level
+`repo.stack` and the top-level `addons:`. The writer never touches config, and
+never sees a stack — that separation is what keeps the blueprint vendor-free.
 
 Writing those keys is the **whole** of what this command does about the stack.
 Materialization is `/vwf:setup`'s, per Step 3b; Step 7 invokes it.
