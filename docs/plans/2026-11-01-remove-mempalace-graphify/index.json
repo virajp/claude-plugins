@@ -627,15 +627,15 @@
       "id": "G1",
       "unit": "U3",
       "stage": "edit",
-      "text": "The plan does not say where handoff and recall write when the base-repo walk ends at not a vwf repo · the unit took the repo main checkout as the root, so handoff still works in an unshaped repo",
-      "state": "open"
+      "text": "The plan does not say where handoff and recall write when the base-repo walk ends at not a vwf repo · the unit took the repo main checkout as the root, so handoff still works in an unshaped repo · closed by the user's ruling 2026-11-05: accepted, the main checkout of that repo stays the root",
+      "state": "closed"
     },
     {
       "id": "G2",
       "unit": "U3",
       "stage": "edit",
-      "text": "D16 does not say how recall matches records to the topic at hand · the unit took the topic of the handoff itself, and applied the ten-file limit to decisions/ and gaps/ separately",
-      "state": "open"
+      "text": "D16 does not say how recall matches records to the topic at hand · the unit took the topic of the handoff itself, and applied the ten-file limit to decisions/ and gaps/ separately · closed by the user's ruling 2026-11-05: accepted, the handoff's topic and ten files per folder",
+      "state": "closed"
     },
     {
       "id": "G3",
@@ -662,15 +662,15 @@
       "id": "G6",
       "unit": "U6",
       "stage": "edit",
-      "text": "The plan does not say whether the doctor docs/memory/ check keeps blocking findings · assumed none; only the handoff/ ignore line is checked, as drift",
-      "state": "open"
+      "text": "The plan does not say whether the doctor docs/memory/ check keeps blocking findings · assumed none; only the handoff/ ignore line is checked, as drift · closed by the user's ruling 2026-11-05: accepted, the ignore line stays drift and never blocks",
+      "state": "closed"
     },
     {
       "id": "G7",
       "unit": "U6",
       "stage": "edit",
-      "text": "The plan does not give the scope of the doctor Leftovers rule · assumed the repo-shape scope: the base and each locally-present member",
-      "state": "open"
+      "text": "The plan does not give the scope of the doctor Leftovers rule · assumed the repo-shape scope: the base and each locally-present member · closed by the user's ruling 2026-11-05: accepted, the base and each locally-present member",
+      "state": "closed"
     },
     {
       "id": "G8",
@@ -704,8 +704,8 @@
       "id": "G12",
       "unit": "U8",
       "stage": "security",
-      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1 · round 2: the reviewer approved; residual low risk: a graphify-out/ directory stays unignored until doctor reports it, and the doctor row checks checkout roots only",
-      "state": "open"
+      "text": "D11/D19/D20 let a user decline the removal of leftover docs/memory/runs/, doctor/ folders and graphify-out/, but no ruling keeps them ignored while they remain · the run kept the two docs/memory ignore lines in the tool-config .gitignore as config_format 23 leftovers (U7) and added a doctor Leftovers row for a graphify-out/ directory (U6), because an ignore line naming graphify would break D1 · round 2: the reviewer approved; residual low risk: a graphify-out/ directory stays unignored until doctor reports it, and the doctor row checks checkout roots only · closed by the user's ruling 2026-11-05: accepted; bootstrap's repo/tools/git/.gitignore ignores all three paths, and doctor Leftovers reports them",
+      "state": "closed"
     },
     {
       "id": "G13",

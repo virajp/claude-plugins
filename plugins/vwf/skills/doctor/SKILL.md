@@ -57,8 +57,9 @@ it carries none — since neither has the baseline these predicates read. An
 absent member is `not present, not checked`, exactly as §5
 reports it. Whether any of that is shown, and how, is the caller's: this is
 what **`/vwf:recall`** calls to print its shape-drift lines. Each row keeps the
-remedy the full run prints under §9: `/vwf:setup` for Pack versions, Project ids
-and Content drift; `/vwf:setup reshape` for Branches, not shaped and the old
+remedy the full run prints under §9: `/stackgen:stackgen-sync` for Pack versions
+and Content drift; `/vwf:setup` for a missing pack lockfile and Project ids;
+`/vwf:setup reshape` for Branches, not shaped and the old
 layout; a fixed value in `.config/bootstrap.toml` for Merge model.
 
 `$ARGUMENTS` is either project names or `baseline`, never both — `baseline`

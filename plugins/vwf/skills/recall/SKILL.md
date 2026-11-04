@@ -77,10 +77,11 @@ named by title and evaluated per repo, file reads only. Recall runs no mise task
 and no bootstrap code, never reads the forge and never runs doctor whole, so it
 does **not report config drift**: doctor's full mode is the place that does.
 When doctor reports drift, print **one line per remedy**, with the rows that led
-to it: `/vwf:setup` for Pack versions, Project ids and Content drift;
+to it: `/stackgen:stackgen-sync` for Pack versions and Content drift;
+`/vwf:setup` for a missing pack lockfile and Project ids;
 `/vwf:setup reshape` for Branches, and a member not shaped or on the old layout;
 the fix in `.config/bootstrap.toml` for Merge model — e.g. *shape drift: base
-Pack versions, api Content drift — run `/vwf:setup`* and *shape drift: api
+Pack versions, api Content drift — run `/stackgen:stackgen-sync`* and *shape drift: api
 Branches — run `/vwf:setup reshape`*. When every repo is clean, or the base has
 no `.config/bootstrap.toml` (`not shaped` or on the old layout in doctor's
 result), print **nothing**. This is an offer: recall never invokes a remedy

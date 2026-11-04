@@ -334,6 +334,9 @@ takes one of two paths:
   [fresh sources](#what-a-component-declares), through the generator's own
   review and reputation check.
 
+A recorded key already absent from `.mcp.json` takes the same two paths; there
+is simply nothing to remove for it.
+
 The removal from the repo's `.mcp.json` is its own consent line, which removes
 only keys the move landed in the manifest, never a key the user wrote, and
 deletes `.mcp.json` only if it is then empty. Declined → the lockfile keeps

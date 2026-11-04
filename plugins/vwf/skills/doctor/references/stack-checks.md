@@ -423,7 +423,8 @@ remedy once with the rows that led to it:
 
 | Remedy | Rows |
 | --- | --- |
-| `/vwf:setup` — the packs | Pack versions, a missing pack lockfile, Project ids, Content drift |
+| `/stackgen:stackgen-sync` — a landed pack's delta, shown for consent | Pack versions, Content drift |
+| `/vwf:setup` — the packs not landed | a missing pack lockfile, Project ids |
 | `/vwf:setup reshape` — bootstrap and the forge | not shaped, shaped on the old layout, Branches, Bootstrap drift, Forge state |
 | fix the value in `.config/bootstrap.toml` | Merge model |
 
@@ -677,7 +678,7 @@ allowed to read. Otherwise, three checks:
   have set — **no force-push and no deletion**, always; **a pull request
   required** when that branch's own value reads `pr` —
   `[branch.develop].merge_model` for `develop`, `[branch.main].merge_model` for
-  `main`, in the base's `.config/bootstrap.toml`, a missing file or key reading
+  `main`, in that repo's `.config/bootstrap.toml`, a missing file or key reading
   `direct` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and

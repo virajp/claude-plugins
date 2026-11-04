@@ -3544,9 +3544,9 @@ failed, and a repo with no `.config/bootstrap.toml` on its own line instead —
 `shaped on the old layout` where it carries `.config/stackgen.yaml` or the older
 mise files, `not shaped` where it carries none — and `recall` prints **one line
 per
-remedy**, with the rows that led to it: `/vwf:setup` for Pack versions, Project
-ids
-and Content drift, `/vwf:setup reshape` for Branches and a member not shaped or
+remedy**, with the rows that led to it: `/stackgen:stackgen-sync` for Pack
+versions and Content drift, `/vwf:setup` for a missing pack lockfile and Project
+ids, `/vwf:setup reshape` for Branches and a member not shaped or
 on
 the old layout, the fix in `.config/bootstrap.toml` for Merge model. It prints
 **nothing** when every repo is clean or the base has no

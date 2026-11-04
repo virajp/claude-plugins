@@ -767,50 +767,50 @@
       "id": "G1",
       "unit": "U1",
       "stage": "edit",
-      "text": "D5, D24 and D41 keep enforcement.kept_files but name no writer for it · assumed a struck create row in init's plan is the keep",
-      "state": "open"
+      "text": "D5, D24 and D41 keep enforcement.kept_files but name no writer for it · assumed a struck create row in init's plan is the keep · closed by the user's ruling 2026-11-05: accepted, a struck create row in init's plan is the keep",
+      "state": "closed"
     },
     {
       "id": "G2",
       "unit": "U1",
       "stage": "edit",
-      "text": "No init file uses the project ids, so D42's kept question 2 is never asked · the section stays for doctor's reference",
-      "state": "open"
+      "text": "No init file uses the project ids, so D42's kept question 2 is never asked · the section stays for doctor's reference · closed by the user's ruling 2026-11-05: accepted, the section stays for doctor's reference",
+      "state": "closed"
     },
     {
       "id": "G3",
       "unit": "U2",
       "stage": "edit",
-      "text": "D7 allows no format step, so nothing removes a leftover answers: block in .config/vwf.yaml · assumed the report says to remove it by hand, then setup stamps 23; format-lineage row 128 still says reshape applies it",
-      "state": "open"
+      "text": "D7 allows no format step, so nothing removes a leftover answers: block in .config/vwf.yaml · assumed the report says to remove it by hand, then setup stamps 23; format-lineage row 128 still says reshape applies it · closed by the user's ruling 2026-11-05: accepted, and format-lineage rows 127 and 128 now state bootstrap's ownership and the removal by hand",
+      "state": "closed"
     },
     {
       "id": "G4",
       "unit": "U2",
       "stage": "edit",
-      "text": "D45 says setup's materialize pass re-copies packs, but it lands only unnamed slugs and pack updates remain stackgen-sync's · text left that way",
-      "state": "open"
+      "text": "D45 says setup's materialize pass re-copies packs, but it lands only unnamed slugs and pack updates remain stackgen-sync's · text left that way · closed by the user's ruling 2026-11-05: the remedy of Pack versions and Content drift is now /stackgen:stackgen-sync, which changes D45, and doctor, recall and the manual say so",
+      "state": "closed"
     },
     {
       "id": "G5",
       "unit": "U3",
       "stage": "edit",
-      "text": "Forge state reads the base's merge_model per U3's Edit 2 and U1, though it runs per repo and D3 reads each repo's file · followed Edit 2",
-      "state": "open"
+      "text": "Forge state reads the base's merge_model per U3's Edit 2 and U1, though it runs per repo and D3 reads each repo's file · followed Edit 2 · closed by the user's ruling 2026-11-05: doctor's Forge state now reads that repo's bootstrap.toml, the same as init's forge pass and D3",
+      "state": "closed"
     },
     {
       "id": "G6",
       "unit": "U3",
       "stage": "edit",
-      "text": "The Branches predicate flags main-only or develop-only repos, which bootstrap supports · kept per D43",
-      "state": "open"
+      "text": "The Branches predicate flags main-only or develop-only repos, which bootstrap supports · kept per D43 · closed by the user's ruling 2026-11-05: accepted, kept per D43",
+      "state": "closed"
     },
     {
       "id": "G7",
       "unit": "U5",
       "stage": "edit",
-      "text": "landingRootOf never treated a pack's config/ tier as a landing root, though the unit says it stays one · behaviour kept unchanged",
-      "state": "open"
+      "text": "landingRootOf never treated a pack's config/ tier as a landing root, though the unit says it stays one · behaviour kept unchanged · closed by the user's ruling 2026-11-05: accepted, behaviour kept unchanged",
+      "state": "closed"
     },
     {
       "id": "G8",
@@ -837,15 +837,15 @@
       "id": "G11",
       "unit": "U6",
       "stage": "security",
-      "text": "bootstrap runs from its main branch with no pin, on explicit dry-runs, and this plan cannot edit bootstrap · ruling D46: the user hands bootstrap a request for a reviewed-commit pin, per docs/prompts in the bootstrap repo",
-      "state": "open"
+      "text": "bootstrap runs from its main branch with no pin, on explicit dry-runs, and this plan cannot edit bootstrap · ruling D46: the user hands bootstrap a request for a reviewed-commit pin, per docs/prompts in the bootstrap repo · closed by the user's ruling 2026-11-05: the request is written at bootstrap docs/prompts/2026-11-05-reviewed-commit-pin.md for the user to run there",
+      "state": "closed"
     },
     {
       "id": "G12",
       "unit": "U3",
       "stage": "edit",
-      "text": "D46 calls doctor full mode an explicit run, but /vwf:plan and /vwf:execute run it too, so bootstrap main can run unpinned from an unattended pipeline · doctor discloses this; behaviour unchanged, the pin request of G11 covers it",
-      "state": "open"
+      "text": "D46 calls doctor full mode an explicit run, but /vwf:plan and /vwf:execute run it too, so bootstrap main can run unpinned from an unattended pipeline · doctor discloses this; behaviour unchanged, the pin request of G11 covers it · closed by the user's ruling 2026-11-05: accepted, doctor discloses it, and G11's pin request is the fix",
+      "state": "closed"
     },
     {
       "id": "G13",
@@ -858,22 +858,22 @@
       "id": "G14",
       "unit": "U2",
       "stage": "edit",
-      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but setup second shape check after the materialize pass repeats Step 0 · taken as the same explicit setup run, under Step 0 disclosure; init adoption check (D15) is the same case",
-      "state": "open"
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but setup second shape check after the materialize pass repeats Step 0 · taken as the same explicit setup run, under Step 0 disclosure; init adoption check (D15) is the same case · closed by the user's ruling 2026-11-05: accepted, the same explicit setup run",
+      "state": "closed"
     },
     {
       "id": "G15",
       "unit": "U1",
       "stage": "security",
-      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but init runs it twice more: its green check inside the consent, and its survey on a shaped repo before the consent · both kept as parts of the explicit /vwf:setup run; disclosed at each place in init; the user may rule the survey read moves behind the consent",
-      "state": "open"
+      "text": "D46 limits the dry-run to doctor full mode and setup Step 0, but init runs it twice more: its green check inside the consent, and its survey on a shaped repo before the consent · both kept as parts of the explicit /vwf:setup run; disclosed at each place in init; the user may rule the survey read moves behind the consent · closed by the user's ruling 2026-11-05: accepted, both stay parts of the explicit /vwf:setup run; the survey is trust-gated and disclosed before it runs",
+      "state": "closed"
     },
     {
       "id": "G16",
       "unit": "U6",
       "stage": "security",
-      "text": "D46 requires disclosure of the dry-run in doctor and setup only, never at run time and never in init, and names no trust check in init · the closing pass applies setup trust check and a printed line in init; D46 and 01-init.md would state it",
-      "state": "open"
+      "text": "D46 requires disclosure of the dry-run in doctor and setup only, never at run time and never in init, and names no trust check in init · the closing pass applies setup trust check and a printed line in init; D46 and 01-init.md would state it · closed by the user's ruling 2026-11-05: accepted, setup's trust check and a printed line in init stand beside D46",
+      "state": "closed"
     },
     {
       "id": "G17",

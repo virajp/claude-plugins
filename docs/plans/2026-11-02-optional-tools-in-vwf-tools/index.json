@@ -665,36 +665,36 @@
       "id": "G1",
       "unit": "U1",
       "stage": "edit",
-      "text": "a claims.json key emptied by path pruning is not ruled · assumed unclaimed and kept",
-      "state": "open"
+      "text": "a claims.json key emptied by path pruning is not ruled · assumed unclaimed and kept · closed by the user's ruling 2026-11-05: accepted, the key stays in the manifest, unclaimed, and doctor reports it",
+      "state": "closed"
     },
     {
       "id": "G2",
       "unit": "U1",
       "stage": "edit",
-      "text": "a union conflict between stackgen-lsp and vwf-tools manifests at migration is not ruled · assumed the merge table applies",
-      "state": "open"
+      "text": "a union conflict between stackgen-lsp and vwf-tools manifests at migration is not ruled · assumed the merge table applies · closed by the user's ruling 2026-11-05: accepted, the merge table applies",
+      "state": "closed"
     },
     {
       "id": "G3",
       "unit": "U1",
       "stage": "edit",
-      "text": "a member repo's sync when the base is not cloned is not ruled · assumed no remove is sent and the record is kept",
-      "state": "open"
+      "text": "a member repo's sync when the base is not cloned is not ruled · assumed no remove is sent and the record is kept · closed by the user's ruling 2026-11-05: accepted, no remove is sent and the record is kept",
+      "state": "closed"
     },
     {
       "id": "G4",
       "unit": "U1",
       "stage": "edit",
-      "text": "a sync in a repo with no lockfile is not ruled · assumed the migration offer runs before the stop",
-      "state": "open"
+      "text": "a sync in a repo with no lockfile is not ruled · assumed the migration offer runs before the stop · closed by the user's ruling 2026-11-05: accepted, the migration offer runs before the stop",
+      "state": "closed"
     },
     {
       "id": "G5",
       "unit": "U1",
       "stage": "edit",
-      "text": "a recorded key already missing from .mcp.json is not ruled · no rule written; a ruling or follow-up line is needed",
-      "state": "open"
+      "text": "a recorded key already missing from .mcp.json is not ruled · no rule written; a ruling or follow-up line is needed · closed by the user's ruling 2026-11-05: a recorded key already absent from .mcp.json takes the same two paths, written in local-plugin.md",
+      "state": "closed"
     },
     {
       "id": "G6",
@@ -707,8 +707,8 @@
       "id": "G7",
       "unit": "U3",
       "stage": "edit",
-      "text": "U3 verification grep for mcp_servers: hits plugins/stackgen/stacks/readme.md:265, U6's · left for U6",
-      "state": "open"
+      "text": "U3 verification grep for mcp_servers: hits plugins/stackgen/stacks/readme.md:265, U6's · left for U6 · closed by the user's ruling 2026-11-05: resolved, stacks/readme.md now names user_mcp_servers:, and its one bare mcp_servers: states the key's retirement",
+      "state": "closed"
     },
     {
       "id": "G8",
@@ -728,8 +728,8 @@
       "id": "G10",
       "unit": "U5",
       "stage": "edit",
-      "text": "a D27 unlanded design-tool server may have no lockfile item to compare · assumed the stackgen-lsp drift row states that cost",
-      "state": "open"
+      "text": "a D27 unlanded design-tool server may have no lockfile item to compare · assumed the stackgen-lsp drift row states that cost · closed by the user's ruling 2026-11-05: accepted, the drift row states that cost",
+      "state": "closed"
     },
     {
       "id": "G11",
@@ -742,29 +742,29 @@
       "id": "G12",
       "unit": "U4",
       "stage": "edit",
-      "text": "contested (wave review closing check, cap and guard): fold 81 wide at setup/references/migrate-pipeline.md:71 and assets/stack-adapter.md:470 · left",
-      "state": "open"
+      "text": "contested (wave review closing check, cap and guard): fold 81 wide at setup/references/migrate-pipeline.md:71 and assets/stack-adapter.md:470 · left · closed by the user's ruling 2026-11-05: accepted, a cosmetic fold of one column left as it is; no gate reads it",
+      "state": "closed"
     },
     {
       "id": "G13",
       "unit": "U8",
       "stage": "security",
-      "text": "D12/U1 never required a provenance check on migrated .mcp.json declarations · the fix takes declarations only from a shipped pack or the relocation table",
-      "state": "open"
+      "text": "D12/U1 never required a provenance check on migrated .mcp.json declarations · the fix takes declarations only from a shipped pack or the relocation table · closed by the user's ruling 2026-11-05: accepted, declarations come only from a shipped pack or the relocation table",
+      "state": "closed"
     },
     {
       "id": "G14",
       "unit": "U8",
       "stage": "security",
-      "text": "D2 never stated the cross-repo reach of an authenticated server or its disclosure · the fix states it at the gate and in the notion conventions",
-      "state": "open"
+      "text": "D2 never stated the cross-repo reach of an authenticated server or its disclosure · the fix states it at the gate and in the notion conventions · closed by the user's ruling 2026-11-05: accepted, the gate and the notion conventions state the reach",
+      "state": "closed"
     },
     {
       "id": "G15",
       "unit": "U1",
       "stage": "security",
-      "text": "D12 says recorded entries move to vwf-tools; a recorded .mcp.json key no shipped pack declares now stays and is reported, by the U8 security finding · shipped-pack keys only",
-      "state": "open"
+      "text": "D12 says recorded entries move to vwf-tools; a recorded .mcp.json key no shipped pack declares now stays and is reported, by the U8 security finding · shipped-pack keys only · closed by the user's ruling 2026-11-05: accepted, shipped-pack keys only",
+      "state": "closed"
     },
     {
       "id": "G16",
@@ -777,8 +777,8 @@
       "id": "G17",
       "unit": "U2",
       "stage": "security",
-      "text": "U8 round 2: no reputation source vets a remote MCP host, so every generated host: row blocks and a generated http MCP server cannot land · taken as the block rule; a ruling may want a vetted path",
-      "state": "open"
+      "text": "U8 round 2: no reputation source vets a remote MCP host, so every generated host: row blocks and a generated http MCP server cannot land · taken as the block rule; a ruling may want a vetted path · closed by the user's ruling 2026-11-05: accepted, the block rule stands and fails closed; a shipped pack can still declare a remote server",
+      "state": "closed"
     },
     {
       "id": "G18",
@@ -791,15 +791,15 @@
       "id": "G19",
       "unit": "U8",
       "stage": "security",
-      "text": "the /security-review skill in a runner read the main checkout's develop..main delta, not the worktree range · each round's identification ran as a subtask scoped to the round's range, saved under engine/",
-      "state": "open"
+      "text": "the /security-review skill in a runner read the main checkout's develop..main delta, not the worktree range · each round's identification ran as a subtask scoped to the round's range, saved under engine/ · closed by the user's ruling 2026-11-05: accepted, a record of how each round was scoped; no ruling owed",
+      "state": "closed"
     },
     {
       "id": "G20",
       "unit": "U2",
       "stage": "edit",
-      "text": "a bare-binary command in a generated server names no runner, so no reputation prefix applies · U2 assumed no row is written and the reviewer raises a gap, which fails closed",
-      "state": "open"
+      "text": "a bare-binary command in a generated server names no runner, so no reputation prefix applies · U2 assumed no row is written and the reviewer raises a gap, which fails closed · closed by the user's ruling 2026-11-05: accepted, no row is written and the reviewer raises a gap, which fails closed",
+      "state": "closed"
     },
     {
       "id": "G21",
@@ -812,15 +812,15 @@
       "id": "G22",
       "unit": "U1",
       "stage": "edit",
-      "text": "D30 seeds every key the lockfile claims; a U8 security fix narrowed local-plugin.md:301-307 to keys whose old-manifest declaration matches the shipped pack or a same-run generator emission, since a committed lockfile cannot earn a claim · the narrowing stands; a generated or stale key stays unclaimed and kept, and a ruling may widen it",
-      "state": "open"
+      "text": "D30 seeds every key the lockfile claims; a U8 security fix narrowed local-plugin.md:301-307 to keys whose old-manifest declaration matches the shipped pack or a same-run generator emission, since a committed lockfile cannot earn a claim · the narrowing stands; a generated or stale key stays unclaimed and kept, and a ruling may widen it · closed by the user's ruling 2026-11-05: accepted, the narrowing stands",
+      "state": "closed"
     },
     {
       "id": "G23",
       "unit": "U6",
       "stage": "edit",
-      "text": "07-docs.md ties node and pnpm to the context7 tool alone, yet vwf scripts still need node · split it: node stays required, pnpm is needed when context7 is picked",
-      "state": "open"
+      "text": "07-docs.md ties node and pnpm to the context7 tool alone, yet vwf scripts still need node · split it: node stays required, pnpm is needed when context7 is picked · closed by the user's ruling 2026-11-05: resolved, site plugins/vwf.md lists node as required and pnpm as needed when context7 is picked",
+      "state": "closed"
     },
     {
       "id": "G24",
