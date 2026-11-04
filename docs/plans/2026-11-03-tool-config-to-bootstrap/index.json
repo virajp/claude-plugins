@@ -195,14 +195,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T15:59:19.213Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "a376b34d",
+        "to": "2dcdb710"
       }
     },
     {
@@ -270,8 +270,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T15:59:19.088Z",
       "ended": ""
     },
     {
@@ -807,6 +807,13 @@
       "stage": "edit",
       "text": "Wave 1 review rule 5: stackgen-stack-template/references/materializer.md:118-121 (init re-records, replace-or-keep) and architecture/SKILL.md:166 (re-run of init reports the id source) are falsified and owned by no unit · U7's owns widened to both, under the plan's Goal",
       "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U6",
+      "stage": "security",
+      "text": "D17 and D20 accept the networked dry-run and a clone-cache refresh, but never state that it executes repo-task code and fetched code · they should rule on a trust precondition and on pinning",
+      "state": "open"
     }
   ],
   "overrides": [],

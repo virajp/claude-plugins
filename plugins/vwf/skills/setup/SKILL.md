@@ -117,12 +117,17 @@ that marked it. Second, is it **current**, evaluated **per repo** on that repo's
 own artifacts by two predicates under **"The repo shape against its baseline"**
 in `/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
 drift**: `mise run setup:configs --dry-run`, run in that repo, shows no change.
-It prints on stderr, each line prefixed `repo-sync:`; after the prefix, a line
+A clone's own task can sit behind that name and mise runs it with no trust
+prompt, so run the dry-run only when mise lists this repo as trusted:
+`mise trust --show`, run in that repo, lists a path inside the repo, and every
+such line reads `trusted`. A parent's line does not count. Otherwise drift is
+unknown, with the reason `repo not trusted by mise`. The dry-run prints on
+stderr, each line prefixed `repo-sync:`; after the prefix, a line
 starting `would` is a change, and `unchanged`, `kept seed` or `skip` are not.
 No `would` line and exit 0 is no drift. A listed change is drift. Exit 5 or any
-other failure is **unknown**: say setup could not check drift in that repo,
-with the reason, and continue as current. **Forge state**: the default branch
-as chosen, both branches protected, and the base's backlog project present,
+other failure is unknown too. **Unknown**, either way: say setup could not check
+drift in that repo, with the reason, and continue as current. **Forge state**:
+the default branch as chosen, both branches protected, and the base's backlog project present,
 read from the forge when its CLI is on `PATH` and logged in, else not checked.
 Doctor owns both predicates. Its Pack versions, Project ids, Branches and
 Content drift rows are not part of this check. Every repo shaped and holding
