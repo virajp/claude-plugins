@@ -723,6 +723,17 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D46",
+      "decision": "G10: U6 security findings did not converge. Keep the bootstrap dry-run in doctor baseline and recall, return it to explicit runs, or require content-tied trust; and how to treat the unpinned bootstrap?",
+      "ruling": "The user ruled: explicit runs and a handoff item. This reverses D17 and changes D20. (1) doctor baseline stays file reads only, and recall runs no mise task and no bootstrap code. The dry-run mise run setup:configs --dry-run runs only in doctor full mode and in setup Step 0. Recall and baseline say that they do not report config drift, and name doctor full mode as the place that does; recall keeps its not-shaped test of no .config/bootstrap.toml. D20 stays for the forge read; the refresh of the bootstrap clone cache now occurs only on these explicit runs. (2) This plan does not edit bootstrap. Doctor and setup state that an explicit dry-run executes the main branch of bootstrap with no pin, and that the trust gate of mise is not tied to file content. A request to bootstrap for a reviewed-commit pin is recorded as an open gap of this plan, for the user to hand to bootstrap. U6 reviews against this ruling: unpinned execution on an explicit run that discloses it is not a finding.",
+      "rejected": "Keep the dry-run in baseline and recall; require content-tied trust, which mise does not supply",
+      "units": [
+        "U2",
+        "U3",
+        "U6"
+      ]
     }
   ],
   "stages": {
@@ -819,7 +830,14 @@
       "id": "G10",
       "unit": "U6",
       "stage": "security",
-      "text": "Security findings at U6, cap-exempt, round 1 count 2, round 2 count 2, so the convergence guard paused the row. (1) stack-checks.md:505 and setup/SKILL.md:119: the mise trust gate stops a never-run clone only; mise auto-trusts on first run and trust is not content-tied (probed on 2026.10.25), so a hostile branch in a trusted repo runs its setup:configs task unprompted from recall. (2) doctor/SKILL.md:46: bootstrap's main, unpinned, is executed from a routine check; round 1's fix disclosed it and could not mitigate it, since D17 keeps the dry-run in baseline and bootstrap edits are out of scope. Ruling needed in D17 and D20 · no assumption taken, the run stops",
+      "text": "Security findings at U6, cap-exempt, round 1 count 2, round 2 count 2, so the convergence guard paused the row. (1) stack-checks.md:505 and setup/SKILL.md:119: the mise trust gate stops a never-run clone only; mise auto-trusts on first run and trust is not content-tied (probed on 2026.10.25), so a hostile branch in a trusted repo runs its setup:configs task unprompted from recall. (2) doctor/SKILL.md:46: bootstrap's main, unpinned, is executed from a routine check; round 1's fix disclosed it and could not mitigate it, since D17 keeps the dry-run in baseline and bootstrap edits are out of scope. Ruling needed in D17 and D20 · no assumption taken, the run stops · closed by the user's ruling D46: explicit runs and a handoff item",
+      "state": "closed"
+    },
+    {
+      "id": "G11",
+      "unit": "U6",
+      "stage": "security",
+      "text": "bootstrap runs from its main branch with no pin, on explicit dry-runs, and this plan cannot edit bootstrap · ruling D46: the user hands bootstrap a request for a reviewed-commit pin, per docs/prompts in the bootstrap repo",
       "state": "open"
     }
   ],
