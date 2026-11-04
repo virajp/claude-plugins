@@ -117,6 +117,7 @@ the composition's single consent gate and landing. Generation is
    concrete third-party name the component emits — its `mise_tool`
    entries, every runner-invoked tool in its harness tasks (`dlx`, `npx`,
    `uv run --with`, `uvx`), every `user_mcp_servers:` command and `url`,
+   every URL in such an entry's `args`,
    every action reference, every image reference, every
    dependency in a `Package.swift`, and every Maven dependency and Gradle
    plugin in a build file (`build.gradle.kts`, `settings.gradle.kts`,
@@ -137,10 +138,15 @@ the composition's single consent gate and landing. Generation is
    | a Maven dependency                           | `maven:<group>:<artifact>@<version>`        |
    | a Gradle plugin id                           | `maven:<id>:<id>.gradle.plugin@<version>`   |
    | a `user_mcp_servers:` entry's `url`          | `host:<hostname>`                           |
+   | any URL in a `user_mcp_servers:` `args` item | `host:<hostname>`                           |
 
    An MCP command takes the prefix of the registry its runner fetches
    from — `npm:` for `npx`, `pypi:` for `uvx`. An MCP `url` is vetted by its
-   host alone, never its path, query or credentials. A SwiftPM name is read
+   host alone, never its path, query or credentials, and so is a URL in
+   `args`: `npx mcp-remote <url>` lists the runner's package and the
+   `host:` name both, and the `host:` row blocks it. A generated shell
+   wrapper as an MCP command (`sh`, `bash`, `sh -c …`) names no one thing
+   to vet, so it stops generation as `UNRESOLVED:`. A SwiftPM name is read
    from the dependency's package URL, the host kept (`github.com` included). A
    Gradle plugin is vetted as its plugin marker coordinate. Go, Cargo,
    Ruby and .NET tools have no prefix of their own: they are mise tools,
@@ -165,7 +171,8 @@ the composition's single consent gate and landing. Generation is
    before the step resumes. The generator never swaps a name silently — a
    swap is a new recommendation, and it is the user's. No source vets a
    remote host, so a `host:` row always reads `block`, and only a stdio
-   command that clears the check can replace it. `warn` rows travel
+   command that clears the check, with no URL in its `args`, can replace
+   it. `warn` rows travel
    with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
    the same way a Context7 outage does (the preconditions above): a name
    whose sources could not be reached is never landed on an inferred

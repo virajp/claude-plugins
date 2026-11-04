@@ -100,7 +100,8 @@ always writes the prefix.
   `mise registry <name>`. Which checks each backend takes is the backend
   table under Procedure.
 - A **remote MCP server host** is `host:<hostname>` — `host:mcp.example.com`
-  — the host of the server's `url` alone: no scheme, path, query or
+  — the host of the server's `url`, or of a URL in its `args`, alone: no
+  scheme, path, query or
   credentials, so nothing secret a URL carries reaches the table. Its verdict
   is the Parse step's, below.
 - The **bare-name default** needs the component's language. The generator
