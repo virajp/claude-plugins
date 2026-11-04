@@ -13,6 +13,10 @@ Landing a pack's judgment and granting an agent access to the team's documents
 are two decisions, and a person who wants the first must be able to decline the
 second. That is the workspace contract's rule that outranks every other, and
 this pack has nothing to add to it.
+User scope means the authorised server is reachable from every repo on this
+machine, not only the one that picked it, so a prompt injection in a later
+session on an untrusted repo can read the workspace and carry it out. The person
+says yes knowing that, and authorises the narrowest grant the work allows.
 
 **A decline leaves the skills landed and the workspace unreachable, and the
 agent says so.** No entry in `vwf-tools` means the answer to "what does the
