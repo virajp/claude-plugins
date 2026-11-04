@@ -3,15 +3,15 @@ name: Claude Design
 axis: design
 kind: design-tool
 components:
-- design-tool/claude-design@0.4.0
+- design-tool/claude-design@1.0.0
 ---
 
 # Design — Claude Design
 
 The canvas Anthropic hosts at claude.ai/design. Designed pages live in a canvas
 project — one per registry project and platform — and are read back over the
-tool's own MCP server, which this bundle wires into the repo's `.mcp.json`
-behind its own consent line.
+tool's own MCP server, which this bundle wires into `vwf-tools`, the local plugin
+stackgen generates, at user scope, behind its own consent line.
 
 **All three import surfaces are real here**, which is why none of them may
 answer `n/a`: screens, design system and review conversations each have

@@ -19,7 +19,8 @@ model: sonnet
 
 The project's design tool resolved to `claude-design`: designed pages live on
 the claude.ai/design canvas, reachable through the DesignSync harness tool or
-this plugin's MCP server.
+the server in `vwf-tools`, whose tools are
+`mcp__plugin_vwf-tools_claude-design__<op>`.
 
 ## What to do
 

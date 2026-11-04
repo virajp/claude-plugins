@@ -8,13 +8,10 @@ description: Notion as this product's knowledge workspace — read this before
   it as empty. Covers when Notion is the right pin, how it satisfies the
   workspace contract, the authorisation flow that stands in place of an
   integration token, what the agent may reach and may write, cost shape, and
-  why there is no local stack to compose. Also auto-applies when editing the
-  repo's MCP wiring.
+  why there is no local stack to compose.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write Bash
-paths:
-  - "**/.mcp.json"
 ---
 
 # Notion

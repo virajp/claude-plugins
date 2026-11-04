@@ -4,7 +4,7 @@ axis: design
 kind: design-tool
 default: true
 components:
-- design-tool/claude-code@1.0.0
+- design-tool/claude-code@2.0.0
 ---
 
 # Design — Claude Code
@@ -12,17 +12,16 @@ components:
 The terminal you already work in. There is no hosted canvas: the design system,
 the logo and a flow's screens are authored in session and land as a
 **committed directory**, `docs/design/<project>/`, which the three import
-skills read as files. No hosted server, no key, nothing written into
-`.mcp.json`.
+skills read as files. No hosted server, no key.
 
 **This bundle is the axis default.** A product with no opinion on its design
 tool lands here — the architecture menu preselects it — and one with an
 opinion picks another.
 
-**It requires one plugin.** Authoring runs through `taste-skill`, so a product
-pinning this tool lists it in the component's `## Claude plugins` section,
-and `mise run setup` installs it at user scope when absent. Every
-skill that needs it halts plainly when it is absent.
+**It needs the `taste-skill` tool.** Authoring runs through that plugin, which
+this bundle does not install: a product using this tool picks `taste-skill` on
+the tools round of `/vwf:architecture`. `design-session` halts plainly when it
+is absent; the three import skills do not need it and keep working.
 
 **The pack now designs and reviews screens.** `/design-session screens <flow>`
 authors a flow's pages from the brief `/vwf:screens prompt` wrote, and

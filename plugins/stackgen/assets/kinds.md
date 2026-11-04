@@ -834,6 +834,46 @@ silently absent.
    approach shipping no checker of its own, where the repo's gate bundle
    covers it)*
 
+## `addon` — an optional tool the user picks
+
+The output is an **Addon-Bundle**
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): one `addon` component, standing
+alone.
+
+This kind exists because some tools serve the agent rather than the product,
+and installing them for everyone is a decision nobody made. An `addon` pack is
+**never a default**. It is picked on the tools round of `/vwf:architecture`,
+recorded in `.config/vwf.yaml`'s `addons:`, and materialized by `/vwf:setup`
+only while it is picked.
+
+- **Axis**: `addon`. The bundle slug **is** the entry in the product-level
+  `addons:` list. No bundle on the axis carries `default: true`.
+- **Structure**: the pack lands no repo file of its own beyond its skills. It
+  declares `user_mcp_servers:`, landed in `vwf-tools`, or a `## Claude plugins`
+  section, handed to bootstrap. A pack with judgment to carry hangs it per the
+  kind-general rule, one artifact per topic behind a lean router skill.
+- **Scope**: what the tool serves and who needs it, where it lands, and what the
+  person must have on `PATH`. **Never** a client library, a credential or
+  anything the product's own code reads.
+- **Facts & harness**: `n/a` unless the tool has something to say about being
+  absent. An `addon` satisfies no harness capability, and realizes no capability
+  token.
+- **Invocation**: a skill the pack ships is `user-invocable: false` with no
+  `paths:` key, triggered by its description, because the moment it applies is a
+  question put to the tool rather than a file being edited.
+
+### The topic bar
+
+A closed list of three topics, each short, all of them in `conventions.md`
+unless the pack ships a skill that carries one.
+
+1. **What it serves** — the tool, the steps that use it, and which of them halt
+   without it.
+2. **Where it lands** — `vwf-tools` at user scope, or the bootstrap handoff, and
+   the consent line in front of it.
+3. **What it needs** — the executables, the overridable runner, any optional
+   variable. *(conditional — `n/a` for a hosted server or a Claude plugin)*
+
 ## Reserved kinds (defined at their merge wave, not before)
 
 **None outstanding.** Both reservations have been redeemed —
@@ -863,7 +903,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all ten kinds the structural checklist **is the
+the kind's ruling. For all eleven kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -900,4 +940,7 @@ and two checks carry the kind: **topic 1 answering for every token class the
 design-system contract defines** — a mapping that covers colour and spacing and
 goes quiet on elevation or motion is a gap, not a shorter answer — and any
 **token value** appearing in the pack at all, which is the design system's to
-hold and a default here would quietly become the product's.
+hold and a default here would quietly become the product's. For `addon` the
+composition is the one component alone, and two checks carry the kind: a
+`default: true` on its bundle is a gap, and so is a repo file the pack lands
+beyond its skills.

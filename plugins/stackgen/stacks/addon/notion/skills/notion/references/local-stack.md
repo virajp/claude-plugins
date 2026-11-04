@@ -37,7 +37,7 @@ here is allowed to be a prerequisite for anything.
 Where a question has to be answerable without the workspace, the answer lives
 in the repo. That is not a workaround: every vwf step already works from the
 repo's own docs, which is where the durable contracts are written, and the
-contract's absence clause says plainly that a project with no workspace pinned
+contract's absence clause says plainly that a product with no workspace picked
 loses nothing.
 
 So the fake needs no fixtures and no recorded responses. The degraded mode is

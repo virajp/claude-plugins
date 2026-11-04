@@ -23,7 +23,9 @@ source rather than a reconstruction.
 
 ## What to do
 
-1. **Resolve the design system.** `list_design_systems` to find it; the pinned
+1. **Resolve the design system.** `list_design_systems` to find it — every
+   operation here is the server's in `vwf-tools`, named
+   `mcp__plugin_vwf-tools_claude-design__<op>`; the pinned
    `design.design_system_id` wins when present. If the canvas surface is
    unreachable, stop and say so — do not return a half payload.
 2. **Read it.** `read_design_skill` for the system's own documentation, plus

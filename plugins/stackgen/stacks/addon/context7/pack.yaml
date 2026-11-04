@@ -1,0 +1,17 @@
+name: Context7
+summary: Current library documentation for the agent and for the stackgen
+  generator, reached over one MCP server the product picks.
+version: 1.0.0
+type: addon
+kind: addon
+axis: addon
+# An optional tool satisfies no harness capability: nothing is booted or probed.
+harness: n/a
+user_mcp_servers:
+  context7:
+    command: sh
+    args:
+      - -c
+      - "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"
+    env:
+      CONTEXT7_API_KEY: "${CONTEXT7_API_KEY:-}"

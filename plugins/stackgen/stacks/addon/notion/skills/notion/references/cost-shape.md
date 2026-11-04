@@ -8,8 +8,8 @@ is the **shape** of the bill and which decisions move it.
 **Wiring this pack adds no line item.** The workspace plan exists because the
 team writes in it; the hosted server is reached with a person's own account, so
 there is no per-repo charge, no metered call, and no new vendor relationship to
-open. Pinning `notion` on a project is a configuration decision, not a
-purchasing one — which is unusual for a backing pin and is most of the case for
+open. Picking `notion` for a product is a configuration decision, not a
+purchasing one — which is unusual for a provider and is most of the case for
 this provider.
 
 **Cost scales with people, as it already did.** Notion bills per member, and

@@ -1,12 +1,12 @@
 ---
 name: Notion
-axis: backing
-kind: capability-provider
+axis: addon
+kind: addon
 components:
-- capability-provider/notion@0.1.0
+- addon/notion@1.0.0
 ---
 
-# Backing — Notion
+# Add-on — Notion
 
 The team's prose — docs, specs, tickets, the decisions nobody wrote into the
 repo — lives in a Notion workspace, and the agent reads it there. Pinning this
@@ -15,8 +15,8 @@ product gains.
 
 **The composition is stackgen's neutral workspace contract plus this one
 provider.** The contract leads with the rule that outranks the rest — the agent
-reaches the workspace through an MCP server the pack lands in the repo's
-`.mcp.json`, never through a key in the tree and never through a file the
+reaches the workspace through an MCP server the pack lands in `vwf-tools`, at
+user scope, never through a key in the tree and never through a file the
 application reads — which is what makes the provider replaceable, and what
 keeps this bundle one entry rather than a client library in every service.
 
@@ -33,12 +33,14 @@ reaches. The cost of that shape is stated rather than hidden: nothing headless �
 CI, a scheduled job, a fresh clone — can read the workspace at all, so nothing
 automated may depend on it and anything durable belongs in the repo.
 
-**What it lands in the repo.** One thing: a `notion` server entry in the
-project's `.mcp.json`, which this bundle wires in behind its own consent line —
-landing the pack's skills is one decision and granting an agent a door into the
-team's documents is another, and declining the second leaves the first intact.
-There is no config file, no CLI pin and no task, so removing the provider is
-deleting one key.
+**What it lands.** The pack's skills in the repo, and a `notion` server entry in
+`vwf-tools`, the local plugin stackgen generates, at user scope, which this
+bundle wires in behind its own consent line — landing the pack's skills is one
+decision and granting an agent a door into the team's documents is another, and
+declining the second leaves the first intact. The pick is the product's, recorded
+in `.config/vwf.yaml`'s `addons:`; each person's machine gets the server when
+they run `/vwf:setup`. There is no config file, no CLI pin and no task, so
+removing the provider is deleting one key.
 
 Full judgment: the component's own skill and its references. The contract it
 cites is stackgen's workspace contract.
