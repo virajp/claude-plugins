@@ -304,8 +304,8 @@ scope.
 
 **A slug dropped from `addons:` leaves through one call of its own**,
 `/<plugin>:<plugin>-stack-template remove: <slug>`, made once per slug by
-`/vwf:setup` in the base repo, never through `pack-remove`, which would leave
-the slug's server claim, skill files and bootstrap records behind. The call
+`/vwf:setup` in the base repo, never by setup deleting its files, which would
+leave the slug's server claim, skill files and bootstrap records behind. The call
 takes one `addon` slug and an entry on any other axis is an error; it returns
 no payload, one line, **removed** or **declined**. The plugin takes out
 everything its lockfile records for the slug on one plan and one consent of its
@@ -358,8 +358,6 @@ capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
 package_manager: <token> # any axis composing a package manager
 lockfile: [ <path | glob> ] # optional, any axis composing a package manager — where its lockfile may sit; any match passes
-values: # optional — the pack's template values /vwf:setup detects or asks for
-  - { name: <NAME>, detect: "<command>", question: "<prompt>" }
 harness: # HOW this stack satisfies each capability
   <capability>: { task: <name>, mechanism: <one line> } # or `n/a`
 conventions: <prose> # layout, testing, placement — read by plan/execute
@@ -438,24 +436,11 @@ side of the contract is three rules:
   run otherwise. That is the **materialized
   escape** in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token
   those facts cover is *known* to `/vwf:doctor` without a claiming language
-  plugin. Two more facts ride the payload outside `language_facts`:
+  plugin. One more fact rides the payload outside `language_facts`:
   **`lockfile:`**, on whichever payload composes a package manager — the
   repo axis's or a project template's alike — the repo-relative paths or
   globs where that package manager's lockfile may sit, any match passing
-  `/vwf:doctor`'s lockfile check; and **`values:`**, a list of
-  `{ name, detect, question }` — the values the pack's `templates/` read as
-  `@@<name>@@`. `/vwf:setup`'s materialize pass gathers each one (what
-  `detect` prints, else the answer to `question`) and passes them in the
-  landing payload as a `values:` map, keyed by pack slug, each name
-  lowercased. The adapter's materializer, not setup, runs
-  `/stackgen:tool-config pack --slug <slug> --dir <pack dir>` with one
-  `--set <name>=<value>` per entry, so the script renders the pack's files and
-  records the values under `packs.<slug>` in `.config/stackgen.yaml`, and the
-  materializer records each rendered path in its lockfile. Every
-  already-landed pack is re-rendered on each run, so a template a newer pack
-  changed reaches the repo, and the skill's rows — `ok` takes the render,
-  `keep-existing` keeps the repo's file — are relayed inside setup's own
-  consent; a dropped pack is `pack-remove`.
+  `/vwf:doctor`'s lockfile check.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
@@ -485,12 +470,11 @@ side of the contract is three rules:
   nothing on any menu fits *and* no installed adapter offers generation.
 
 **The adapter supplies bundles; the universal tools are
-`stackgen:tool-config`'s.** The repo's toolchain manager and the tools every
-repo carries are not a bundle any more: `/vwf:init` calls
-`/stackgen:tool-config all` with its values, and a pack's `templates/` are
-rendered by the same skill's `pack` call. The skill records nothing in the
-lockfile: a repo is shaped when `.config/stackgen.yaml` exists with
-`format: 1`, and `/vwf:doctor` finds drift by previewing the same calls.
+[bootstrap](https://github.com/virajp/bootstrap)'s.** The repo's toolchain
+manager and the tools every repo carries are not a bundle any more: `/vwf:init`
+runs bootstrap's prompt, and a pack hands the tools it needs to bootstrap
+through the adapter. A repo is shaped when `.config/bootstrap.toml` exists, and
+`/vwf:doctor` finds drift with `mise run setup:configs --dry-run`.
 
 ## The UX gate
 

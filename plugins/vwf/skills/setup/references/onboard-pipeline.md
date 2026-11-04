@@ -48,13 +48,11 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 ## The shape check defers rather than halting
 
 The repo shape — the toolchain manager's config and task library, the repo
-gates, the hygiene files — is `/vwf:init`'s and `/stackgen:tool-config`'s,
-not setup's. Step 0 only **checks** for it — `.config/stackgen.yaml` with
-`format: 1`, the values file `/stackgen:tool-config all` writes — and offers
-init when it is missing, and makes the same offer when it is there but the
-repo has fallen **behind its baseline**, on doctor's predicates. A repo
-still on the older layout is the one case that stops instead (Step 0 names
-it).
+gates, the hygiene files — belongs to bootstrap and `/vwf:init`, not setup.
+Step 0 only **checks** for it — `.config/bootstrap.toml`, the values file
+bootstrap writes — and offers init when it is missing, when the repo is on the
+old layout, and when it is there but the repo has fallen **behind its
+baseline**, on doctor's predicates.
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back
 unshaped or behind.
