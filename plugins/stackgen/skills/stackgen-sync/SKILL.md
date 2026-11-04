@@ -73,8 +73,8 @@ user's clock.
    **In the base repo**, where the new pack is pinned, a relocated item is
    **re-attributed in the lockfile, never removed and re-added**, before the
    diff above runs against it, and the report names it. A change of place (a
-   `.mcp.json` entry to `vwf-tools`) or of content is a normal update behind
-   its normal consent.
+   `.mcp.json` entry to `vwf-tools`, which takes the new pack's declaration and
+   never the repo's) or of content is a normal update behind its normal consent.
 
    **In a member repo of a multi-repo product** — one carrying
    `.config/vwf-membership.yaml` — the table does not apply: the old notion
@@ -144,9 +144,14 @@ user's clock.
      6 with no prompt, and the report names the rewrite. The repo's servers
      then merge behind the normal tier-3 line, as a first write when
      `vwf-tools` does not exist.
-   - **The lockfile has a top-level `mcp_servers` list** — it is moved into
-     `local_plugin.mcp_servers`, with its own `.mcp.json` key-removal line at
-     step 5.
+   - **The lockfile has a top-level `mcp_servers` list** — a key a shipped pack
+     declares, the pack a lockfile component names or the relocation table maps
+     it to, is moved into `local_plugin.mcp_servers` with **that pack's**
+     declaration, with its own `.mcp.json` key-removal line at step 5. No
+     `command`, `args`, `env` or `url` is ever copied from `.mcp.json` or the
+     lockfile. Any other key, a generated component's included, and any
+     `.mcp.json` key the lockfile does not record, is reported and left in
+     place; a generated component's server arrives through step 3.
 
    Then the diff. No `local_plugin` block and no key the composition declares
    → skip the rest of this step; this repo has never written to the
@@ -159,7 +164,9 @@ user's clock.
    - a key the current composition declares that this repo does not claim yet
      — **offer** it, classified by the merge table;
    - a claimed key whose declaration the current pack has changed —
-     **offer** the update;
+     **offer** the update, classified by the merge table too: it is ours only
+     when `claims.json` lists this repo's path, never because the committed
+     lockfile names the key, and is otherwise a conflict;
    - a claimed key the manifest no longer holds — report it; the user
      removed it by hand and re-adding it uninvited is exactly the silent
      write this skill exists to prevent;
@@ -185,10 +192,11 @@ user's clock.
      `.claude/settings.json` edit, and **settings.json is never modified
      without explicit consent**;
    - the removal of recorded keys from the repo's `.mcp.json` — on the same
-     terms, only keys the lockfile recorded, deleting the file only if it is
-     then empty, and not offered while the migration is declined. Declined →
-     the lockfile keeps its top-level `mcp_servers` list and the removal is
-     offered again on the next run;
+     terms, only keys the lockfile recorded and step 4 moved into the manifest,
+     deleting the file only if it is then empty, and not offered while the
+     migration is declined. Declined → the lockfile keeps those keys in its
+     top-level `mcp_servers` list and the removal is offered again on the next
+     run;
    - any change to a `config/`-tier entry — a write **outside
      `.claude/`**, into files the repo's collaborators own and read, so it
      is its own **tier-2** line listing every path, on the same
@@ -197,8 +205,12 @@ user's clock.
      landed and says the tasks stay as they are;
    - the bootstrap delta of step 2 — each instruction as it will be sent,
      on the terms of step 7 of the bootstrap handoff;
-   - anything from step 4 — the **tier-3** line, which says plainly that
-     it writes to this machine outside the repo, and where a
+   - anything from step 4 — the **tier-3** line, which shows each server's
+     full declaration (`command`, `args`, the names of its `env` keys, `url`),
+     says plainly that it writes to this machine outside the repo and that a
+     server landing in `vwf-tools`, with any account grant it holds, is
+     reachable from every repo on this machine, not only the one that picked
+     it, and where a
      registration or de-registration is involved **prints the `claude`
      commands and asks; it never runs them unprompted**.
 
@@ -245,7 +257,8 @@ user's clock.
   repo's own and is never diffed, updated or removed, however exactly its
   path matches something a pack ships. Nothing in the repo is ever
   deleted without a line the user picked — a retired pack's copies stay
-  until the user removes them.
+  until the user removes them. The lockfile is committed, so a recorded path
+  that resolves outside the repo root is refused and reported, never deleted.
 - **Mode travels with a `config/` file.** Write back the recorded mode
   when a task file is taken; a `.config/mise/tasks/**` file restored 644
   is a task that has disappeared as far as mise is concerned.

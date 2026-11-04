@@ -31,7 +31,8 @@ stackgen exists for the tail nobody curated — but every MCP server now lands i
 the local plugin, at user scope, because the pick is what a product commits and
 each machine gets the servers when its owner runs `/vwf:setup`. The one thing
 stackgen still does to a repo's `.mcp.json` is remove the keys an older lockfile
-recorded, behind its own consent line.
+recorded and the migration moved, behind its own consent line. It never copies a
+declaration out of that file.
 
 ```text
 .claude/
@@ -90,7 +91,10 @@ pin — one plugin per machine, holding the union.
 nothing by pulling: a teammate's language server is their own machine's
 business, which is the same line every editor already draws. What user scope
 buys is one registration serving every repo, instead of a per-repo
-obligation nobody would maintain.
+obligation nobody would maintain. The manifest-write gate shows each server's
+full declaration and says the price: a server landing here, with any account
+grant it holds, is reachable from every repo on this machine, not only the one
+that picked it.
 
 **The extension map is what makes user scope safe.** A server declared with
 an `extensionToLanguage` map never starts in a repo with no matching files,
@@ -110,7 +114,9 @@ file records which repos claim each key: a materialization adds this repo's
 path, and a removal drops only this repo's path and deletes the key from the
 manifest only when its list is empty. An absent claims file means every key is
 unclaimed and kept; any write drops a claimed repo path that no longer exists on
-disk; a key no repo claims is never deleted automatically. The directory and
+disk; a key no repo claims is never deleted automatically. A key is this repo's
+to rewrite only when the claims file, which lives on the machine, lists this
+repo; the committed lockfile naming it does not make it so. The directory and
 the registration go down only when the last key goes.
 
 ## The fourth target — repo config files
@@ -334,7 +340,7 @@ bootstrap: # what stackgen asked bootstrap for — absent when it asked for noth
     <name>@<marketplace>: { scope: user, source: <marketplace source>, components: [ <component ref>, … ] }
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 local_plugin: # the generated local plugin — absent when none was written
-  path: ~/.claude/plugins/local/vwf-tools # fixed; recorded so removal has a target
+  path: ~/.claude/plugins/local/vwf-tools # fixed; a record only — removal uses the fixed path, never this value
   marketplace: vwf-tools # the name given to `claude plugin marketplace add`
   plugin: vwf-tools@vwf-tools # what `claude plugin install` was given
   scope: user
@@ -355,8 +361,10 @@ from here and skips an entry whose owners are unknown.
 `mcp_servers` list of `.mcp.json` keys. Both are rewritten by the migration
 (the stack-template skill's local-plugin reference); the sample above shows
 neither. With no `stackgen-lsp/` directory on the machine, the `local_plugin`
-names are rewritten with no prompt. A declined `.mcp.json` key-removal line keeps
-that top-level list, and the removal is offered again.
+names are rewritten with no prompt. A top-level key moves only when a shipped
+pack declares it, and with that pack's declaration; any other is reported and
+stays in `.mcp.json` and in the list. A declined `.mcp.json` key-removal line
+keeps the moved keys in that list, and the removal is offered again.
 
 Rules the lockfile enforces:
 
@@ -380,8 +388,10 @@ Rules the lockfile enforces:
   path is a conflict for the user, not a write.
 - **Removal removes exactly the listed entries** and
   `settings_keys`, nothing else — the same receipt invariant this repo's
-  installer CLI lives by. A tool or plugin under `bootstrap:` is removed
-  only when no remaining component needs it, through bootstrap's own
+  installer CLI lives by. A recorded path that resolves outside the repo root
+  is refused and reported, never deleted: the lockfile is committed, so a path
+  is not trusted for being recorded. A tool or plugin under `bootstrap:` is
+  removed only when no remaining component needs it, through bootstrap's own
   `remove` instruction; one the repo selected itself has no record and is
   never removed.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops

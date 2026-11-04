@@ -283,9 +283,11 @@ writes to a repo, and every write it makes is consent-gated and committed once.
    everything above and as **two** separately declinable items:
 
    - **The manifest write.** Show the exact `lspServers` and `mcpServers`
-     keys being added and whether each is new or already present from
-     another repo. It **merges, never owns** — existing keys the lockfile
-     does not claim are left untouched, and a key another repo already
+     keys being added, each with its full declaration (`command`, `args`, the
+     names of its `env` keys, `url`) and whether it is new or already present
+     from another repo. It **merges, never owns** — an existing key the claims
+     file does not list for this repo is left untouched, whatever the committed
+     lockfile names, and a key another repo already
      contributed is reported, not rewritten. This repo's path joins each key
      in the claims file beside the manifest, in the same step.
    - **The registration.** Print the two commands and ask; **never run
@@ -305,7 +307,9 @@ writes to a repo, and every write it makes is consent-gated and committed once.
    lockfile's `local_plugin` block, `registered:` following the answer.
 
    **Say plainly that this is the developer's machine, not the repo.**
-   Collaborators pulling the commit get none of it.
+   Collaborators pulling the commit get none of it, and a server landing in
+   `vwf-tools`, with any account grant it holds, is reachable from every repo
+   on this machine, not only the one that picked it.
 
 5. **Write and commit.** On approval: write the set, then, when the
    bootstrap line was consented, send its instructions — steps 8 to 10 of
@@ -410,7 +414,11 @@ the current repo, the base. `/vwf:setup` is the caller, since
    [the handoff's removal](bootstrap-handoff.md#removal) selects for this
    component. Every `local_plugin` key
    [a pack leaving](local-plugin.md#removal--by-subtraction) subtracts. Nothing
-   outside the lockfile is ever in the set.
+   outside the lockfile is ever in the set. The lockfile is committed, so a
+   recorded path is not trusted for being recorded: one that is absolute, climbs
+   out with `..`, or whose parent directory resolves outside the repo root once
+   symlinks are followed is **refused** — never deleted, named in the plan and
+   the report, its record dropped with the others at step 5.
 2. **The migration comes first**, when a key is in the set and
    `~/.claude/plugins/local/stackgen-lsp/` exists. Declined or stopped, now or
    by a carried `declined: migration` line → nothing is removed, and the call
@@ -422,7 +430,8 @@ the current repo, the base. `/vwf:setup` is the caller, since
    server part is this machine's, and that collaborators' machines are not
    touched. Declined → nothing is removed, the caller says so, and
    `/vwf:setup` offers it again on the next run.
-4. **Apply.** Delete the recorded files, send the bootstrap instructions, and
+4. **Apply.** Delete the recorded files step 1 did not refuse, send the
+   bootstrap instructions, and
    subtract the keys, printing the pair
    [the removal](local-plugin.md#removal--by-subtraction) or
    [the bumped manifest](local-plugin.md#the-two-files) calls for and asking
@@ -460,7 +469,9 @@ claim. It returns no payload: one line, **removed**, **declined** or
    [the removal's steps](local-plugin.md#removal--by-subtraction), a key leaving
    the manifest only when no repo claims it, printing the pair the removal or
    [the bumped manifest](local-plugin.md#the-two-files) calls for and asking on
-   its own terms. The lockfile already lacks these keys, so nothing is
+   its own terms. It deletes no repo path, and the one directory the removal can
+   delete is the fixed `vwf-tools` one, never a path a lockfile records. The
+   lockfile already lacks these keys, so nothing is
    committed. Return **removed**.
 
 ## Rules
@@ -486,9 +497,10 @@ claim. It returns no payload: one line, **removed**, **declined** or
   gate. **Server configuration never lands in the repo** whatever the
   source ships; it goes to the local plugin, and an LSP need still travels as
   `language_facts` in the payload for `/vwf:doctor` to read. A repo's
-  `.mcp.json` is no longer written, only cleared of recorded keys by
-  [the migration](local-plugin.md#migrating-from-stackgen-lsp), which also
-  deletes the old plugin's directory.
+  `.mcp.json` is no longer written, only cleared of the recorded keys
+  [the migration](local-plugin.md#migrating-from-stackgen-lsp) moved, which also
+  deletes the old plugin's directory. No declaration is ever copied out of it:
+  a moved key takes a shipped pack's.
 - **The `config/` tier is what a pack declares, and no more.** The
   toolchain, its gates and their configs are bootstrap's; the
   repo's manifests, its CI workflows, its editor settings and its CLAUDE.md

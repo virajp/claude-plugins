@@ -99,7 +99,8 @@ nothing to remove, and the call says so. On one plan and one consent it
 applies the removal rules of
 [the local plugin](references/local-plugin.md#removal--by-subtraction) and
 [the bootstrap handoff](references/bootstrap-handoff.md#removal), deletes
-the slug's recorded files, updates the lockfile and commits once. The procedure
+the slug's recorded files, refusing and reporting a recorded path that resolves
+outside the repo root, updates the lockfile and commits once. The procedure
 is [the materializer](references/materializer.md#removing-a-dropped-addon).
 
 ## Reconciling claims

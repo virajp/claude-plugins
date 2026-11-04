@@ -151,8 +151,14 @@ the classification at the gate:
 | ----------------------- | ------------------------------------------------------------- | --------------------------- |
 | **new**                 | the key is absent                                             | add it                      |
 | **already present**     | the key exists, identical declaration                        | leave it; claim it in the lockfile |
-| **ours, changed**       | the key exists and this repo's lockfile already claims it     | rewrite it                  |
+| **ours, changed**       | the key exists and `claims.json` lists this repo's path       | rewrite it                  |
 | **conflict**            | the key exists with a different declaration, unclaimed by us  | **do not write**; report it |
+
+**"Ours" is read from `claims.json`, never from the lockfile.** The claims file
+lives on this machine; the lockfile is committed, so whoever wrote the repo
+wrote it, and a key it merely names is unclaimed by us. A rewrite only ever
+writes what a shipped pack declares or a generator run on this machine emitted,
+never a declaration read from a repo file.
 
 A conflict is a real outcome, not an error to route around: another repo
 pinned a different spelling of the same server name. Say which key, say
@@ -169,9 +175,13 @@ Gated apart from the repo landing set, and **separately declinable from
 each other**. Declining either leaves everything else landed.
 
 **1 — the manifest write.** Show the exact `lspServers` and `mcpServers`
-keys, each with its state from the table above, and say plainly that this
-writes outside the repo, onto this machine, at user scope, and that
-collaborators get none of it. The claims file is written in this step.
+keys, each with its state from the table above and its full declaration as it
+would be written: `command`, `args`, the names of its `env` keys, `url`. A key
+and a state alone are not consent to a process. Say plainly that this writes
+outside the repo, onto this machine, at user scope, that collaborators get none
+of it, and that a server landing in `vwf-tools`, with any account grant it
+holds, is reachable from every repo on this machine, not only the one that
+picked it. The claims file is written in this step.
 Declined → the servers are simply absent;
 the plan says so and no `local_plugin` block is written.
 
@@ -234,7 +244,8 @@ No `local_plugin` block → nothing to do. Otherwise:
    ```
 
    Both name the marketplace's own `name`, not the directory. On
-   success the directory is stackgen's own and is deleted outright.
+   success the directory is stackgen's own and is deleted outright: the
+   fixed path above, never the lockfile's `local_plugin.path`.
    Declined → leave the empty manifest and the registration in place and
    say so; an empty manifest starts nothing, so the cost of stopping
    here is zero.
@@ -276,10 +287,14 @@ Each step checks its own result first and is skipped when already done. Every
 `claude` command is printed and asked for, never run unprompted. **When a step
 fails or its printed command is declined, stackgen stops and reports**;
 `/vwf:doctor` shows the drift, and the next run continues from the first
-incomplete step. Both plugins may serve a server in that window.
+incomplete step. Both plugins may serve a server in that window. Step 1 is the
+manifest write of item 1 above: every server of the union is shown with its
+full declaration and the reach of user scope.
 
 **The seed.** The migration writes the current repo's path into the claims
-file for each key this repo's lockfile claims. Other repos add theirs on their
+file for each key this repo's lockfile claims and the old manifest holds, and
+the gate lists each seeded claim. A seed is a claim and carries no declaration;
+a conflict key gets none. Other repos add theirs on their
 next sync. An inherited key no repo claims is never deleted automatically;
 `/vwf:doctor` reports it as drift.
 
@@ -289,14 +304,31 @@ step 2.
 
 **A recorded top-level `mcp_servers` list** names the retired `.mcp.json`
 entries, and it is handled whenever a lockfile still has one, the old directory
-or no. Its keys are moved into `local_plugin.mcp_servers` and their declarations
-into the manifest, behind the manifest write's consent. Their removal from the
-repo's `.mcp.json` is its own consent line, which removes only keys the lockfile
-recorded, never a key the user wrote, and deletes `.mcp.json` only if it is then
-empty. Declined → the lockfile keeps its top-level `mcp_servers` list and the
-removal is offered again on the next run. In a member repo, an entry the
-relocation table of `/stackgen:stackgen-sync` covers is removed rather than
-moved.
+or no. **A declaration is never copied out of the repo.** `.mcp.json` and the
+lockfile are files whoever wrote the repo wrote, and a `command`, `args`, `env`
+or `url` taken from them would be a process in every session in every repo on
+this machine, past the project approval `.mcp.json` itself gets. So each key
+takes one of two paths:
+
+- **A shipped pack declares it** — the pack a lockfile component names, or the
+  relocation table of `/stackgen:stackgen-sync` maps that component to, has the
+  key under `user_mcp_servers:`. The key moves into `local_plugin.mcp_servers`
+  and **that pack's** declaration goes into the manifest, by
+  [the merge table](#the-merge--it-merges-never-owns), behind the manifest
+  write's consent.
+- **Anything else** — a generated component's key, whose declaration lives only
+  in the repo, included, and every `.mcp.json` key the lockfile does not record.
+  It is reported by name and left in place, in `.mcp.json` and in the top-level
+  list. A generated component's server reaches `vwf-tools` when
+  `/stackgen:stackgen-sync` regenerates it, through the generator's own review
+  and reputation check.
+
+The removal from the repo's `.mcp.json` is its own consent line, which removes
+only keys the move landed in the manifest, never a key the user wrote, and
+deletes `.mcp.json` only if it is then empty. Declined → the lockfile keeps
+those keys in its top-level `mcp_servers` list and the removal is offered again
+on the next run. In a member repo, an entry the relocation table covers is
+removed rather than moved.
 
 **Declining the whole offer writes nothing.** `vwf-tools` is not written or
 registered and `stackgen-lsp` stays as it is, so no server is served twice.

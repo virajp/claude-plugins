@@ -245,14 +245,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T04:03:33.851Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "c1031514",
+        "to": "6dc8c89a"
       }
     }
   ],
@@ -265,8 +265,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T04:03:33.814Z",
       "ended": ""
     },
     {
@@ -723,6 +723,27 @@
       "unit": "U4",
       "stage": "edit",
       "text": "contested (wave review closing check, cap and guard): fold 81 wide at setup/references/migrate-pipeline.md:71 and assets/stack-adapter.md:470 · left",
+      "state": "open"
+    },
+    {
+      "id": "G13",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D12/U1 never required a provenance check on migrated .mcp.json declarations · the fix takes declarations only from a shipped pack or the relocation table",
+      "state": "open"
+    },
+    {
+      "id": "G14",
+      "unit": "U8",
+      "stage": "security",
+      "text": "D2 never stated the cross-repo reach of an authenticated server or its disclosure · the fix states it at the gate and in the notion conventions",
+      "state": "open"
+    },
+    {
+      "id": "G15",
+      "unit": "U1",
+      "stage": "security",
+      "text": "D12 says recorded entries move to vwf-tools; a recorded .mcp.json key no shipped pack declares now stays and is reported, by the U8 security finding · shipped-pack keys only",
       "state": "open"
     }
   ],
