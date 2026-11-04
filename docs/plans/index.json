@@ -44,10 +44,13 @@
       "title": "vwf callers move onto bootstrap; stackgen:tool-config is deleted",
       "target_repo": null,
       "priority": 20,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-11-04T15:33:47.453Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-11-04T18:30:08.283Z",
+      "gaps": {
+        "open": 12,
+        "moved_to": []
+      },
       "requires": [
         "2026-11-02-optional-tools-in-vwf-tools"
       ],
