@@ -208,7 +208,8 @@ host of any URL or bare host in either kind of entry's `args` or `env` values,
 a GitHub Action, a container image, a dependency in a `Package.swift`, a Maven
 dependency or a Gradle plugin in a build file. Every
 one of them gets a verdict before the dry-run gate shows it, from the
-`stackgen-reputation` skill — a skill anyone can call, the user by hand on a name they are about to type
+`stackgen-reputation` skill — a skill anyone can call, the user by hand on a
+name they are about to type
 and the generator over the list it assembled. A name is passed with its
 ecosystem prefix — `npm:`, `pypi:`, `pub:`, `action:`, `image:`, `spm:`,
 `maven:`, `mise:` or `host:`. A mise tool is always passed as

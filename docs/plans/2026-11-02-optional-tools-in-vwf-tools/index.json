@@ -77,7 +77,7 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-04T03:36:39.079Z",
-      "ended": "2026-11-04T12:39:56.528Z",
+      "ended": "2026-11-04T14:04:11.796Z",
       "commit": "2f2498b4",
       "rounds": 2
     },
@@ -99,7 +99,7 @@
       "status": "green",
       "started": "2026-11-04T03:36:39.159Z",
       "ended": "2026-11-04T13:57:25.735Z",
-      "commit": "196760ef",
+      "commit": "f34534ec",
       "rounds": 2
     },
     {
@@ -245,14 +245,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-04T04:03:33.851Z",
-      "ended": "",
+      "ended": "2026-11-04T13:58:39.031Z",
       "commit": "",
       "rounds": 5,
       "range": {
-        "from": "5fbed6c3",
-        "to": "76a529ca"
+        "from": "76a529ca",
+        "to": "f34534ec"
       }
     }
   ],
@@ -807,6 +807,13 @@
       "stage": "security",
       "text": "U8 closing pass after the guard tripped on cap-exempt findings (rounds 1-5 returned 3, 2, 1, 2, 3): round 5 findings 2 and 3 RESOLVED; finding 1 OPEN on generator.md:152 and reviewer check 10, pipx run is named without --spec, so pipx run --spec evil ok lists pypi:ok and evil goes unvetted; the check also notes env sh -c is not literally covered, since a chain counts only runners · no assumption taken; the closing pass never loops and a security finding cannot be contested, so a ruling is needed · closed by the user's ruling D33: fix and limit on U2",
       "state": "closed"
+    },
+    {
+      "id": "G22",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D30 seeds every key the lockfile claims; a U8 security fix narrowed local-plugin.md:301-307 to keys whose old-manifest declaration matches the shipped pack or a same-run generator emission, since a committed lockfile cannot earn a claim · the narrowing stands; a generated or stale key stays unclaimed and kept, and a ruling may widen it",
+      "state": "open"
     }
   ],
   "overrides": [
