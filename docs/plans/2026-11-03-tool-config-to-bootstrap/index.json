@@ -16,8 +16,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-03 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-04T15:34:45Z in /Users/virajpatel/Projects/github.com/virajp/claude-plugins/.worktrees/tool-config-to-bootstrap"
   },
   "consent": {
     "merge": true,
@@ -79,11 +79,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:35:27.978Z",
+      "ended": "2026-11-04T15:44:17.612Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -101,11 +101,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:35:28.058Z",
+      "ended": "2026-11-04T15:44:17.713Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -120,11 +120,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:35:28.135Z",
+      "ended": "2026-11-04T15:44:17.809Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -146,11 +146,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:35:28.216Z",
+      "ended": "2026-11-04T15:44:17.905Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U5",
@@ -173,11 +173,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-04T15:35:28.297Z",
+      "ended": "2026-11-04T15:44:17.997Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -220,7 +220,9 @@
         ".claude/skills/**",
         "site/src/content/docs/**",
         "plugins/stackgen/stacks/readme.md",
-        "docs/memory/decisions/**"
+        "docs/memory/decisions/**",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/vwf/skills/architecture/SKILL.md"
       ],
       "depends_on": [
         "U1",
@@ -262,8 +264,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-04T15:35:27.897Z",
       "ended": ""
     },
     {
@@ -725,31 +727,88 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.411Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.535Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.655Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped — the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-04T15:35:27.777Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "D5, D24 and D41 keep enforcement.kept_files but name no writer for it · assumed a struck create row in init's plan is the keep",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "No init file uses the project ids, so D42's kept question 2 is never asked · the section stays for doctor's reference",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D7 allows no format step, so nothing removes a leftover answers: block in .config/vwf.yaml · assumed the report says to remove it by hand, then setup stamps 23; format-lineage row 128 still says reshape applies it",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "D45 says setup's materialize pass re-copies packs, but it lands only unnamed slugs and pack updates remain stackgen-sync's · text left that way",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "Forge state reads the base's merge_model per U3's Edit 2 and U1, though it runs per repo and D3 reads each repo's file · followed Edit 2",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The Branches predicate flags main-only or develop-only repos, which bootstrap supports · kept per D43",
+      "state": "open"
+    },
+    {
+      "id": "G7",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "landingRootOf never treated a pack's config/ tier as a landing root, though the unit says it stays one · behaviour kept unchanged",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U7",
+      "stage": "edit",
+      "text": "Wave 1 review rule 5: stackgen-stack-template/references/materializer.md:118-121 (init re-records, replace-or-keep) and architecture/SKILL.md:166 (re-run of init reports the id source) are falsified and owned by no unit · U7's owns widened to both, under the plan's Goal",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/tool-config-to-bootstrap",
