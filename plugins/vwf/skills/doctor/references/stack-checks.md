@@ -502,10 +502,20 @@ neither branch
 and reports one row saying that, not two — and a member is its own repository,
 so a base carrying both branches says nothing about the member beside it.
 
-**(d) Bootstrap drift.** In each repo, from its root, run
-`mise run setup:configs --dry-run`, bootstrap's own done-check. It writes
-nothing in the repository; it refreshes bootstrap's clone cache under
-`~/.cache/bootstrap`. It is the only bootstrap command doctor runs. Judge it by
+**(d) Bootstrap drift.** First, from the repo's root, run `mise trust --show`.
+Run the dry-run only when it lists a config of that repo and every one it lists
+there reads `trusted`; a line for a parent directory does not count, and a repo
+with no config listed is not trusted. `mise run` runs a repo's task with no
+trust prompt, and trusts the repo's config as it does, so this is the one check
+before a cloned repo's code runs. Otherwise the dry-run does not run: drift is
+**unknown**, one `warning` naming the repo with the reason
+`repo not trusted by mise`.
+
+In a trusted repo, from its root, run `mise run setup:configs --dry-run`,
+bootstrap's own done-check. It writes nothing in the repository, but it does run
+code: the repo's own `setup:configs` task, which refreshes bootstrap's clone of
+its `main` under `~/.cache/bootstrap` and executes bootstrap's task code from
+that clone, unpinned. It is the only bootstrap command doctor runs. Judge it by
 its exit code and its stderr, where it prints its lines, each with the prefix
 `repo-sync:`. After that prefix, a line that starts with `would` — `would
 update`, `would remove`, `would chmod`, `would set bootstrap_commit` — is a

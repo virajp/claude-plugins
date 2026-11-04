@@ -38,13 +38,19 @@ repo-shape check — **(a) through (f)** in the stack-checks reference, Pack
 versions, Project ids, Branches, Bootstrap drift, Content drift and Merge model
 — **per repo**, the base and every locally-present member, and returns that
 result and **nothing else**. Bootstrap drift runs
-`mise run setup:configs --dry-run` in each repo.
+`mise run setup:configs --dry-run` in each repo whose configs mise trusts: only
+when `mise trust --show`, run in that repo, lists a config of that repo and
+every one it lists there reads `trusted`. Otherwise the dry-run does not run and
+drift is unknown, with the reason `repo not trusted by mise`.
 No stack, manifest, health, memory, leftovers or format-stamp check runs, §§1–4
 and §§6–8 are skipped entirely, and predicate **(g)** — Forge state — is
 never read: this invocation reads no forge, and is meant to be cheap
-enough to run at every session start. It writes nothing in the repository — the
-dry-run refreshes only bootstrap's clone cache under `~/.cache/bootstrap` — and
-offers no remedy: the caller decides what to print.
+enough to run at every session start. It writes nothing in the repository, but
+it does run code: the dry-run executes the repo's own `setup:configs` task,
+which refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and
+executes bootstrap's task code from that clone, unpinned, so what runs is
+whatever `main` holds at that moment. It offers no remedy: the caller decides
+what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the titles of
 the predicates that failed — `<repo>: Pack versions, Branches` — and no line for
@@ -245,8 +251,9 @@ forge at all, or no backlog project for the base. Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a
 row. A repo behind its baseline still works, so none of those is ever blocking),
 **warning** (the repo-shape check could not judge a row, or read a value it cannot
-use: a `setup:configs --dry-run` that failed, so drift is unknown, with the
-reason; a `merge_model` in `.config/bootstrap.toml` other than `direct` or `pr`,
+use: a `setup:configs --dry-run` that failed, or did not run because the repo is
+not trusted by mise, so drift is unknown, with the reason; a `merge_model` in
+`.config/bootstrap.toml` other than `direct` or `pr`,
 with the remedy to fix the value; never blocking),
 **missing** (something declared has no install — including a **`B`**-kind
 capability a project declares that none of its `backing_template` pins provides,

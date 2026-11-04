@@ -73,11 +73,14 @@ do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 
 Beside the format check, and before `docs/memory/` is read in step 3, invoke
 `/vwf:doctor baseline` — the local baseline predicates of the repo-shape check,
-named by title and evaluated per repo; it runs
-`mise run setup:configs --dry-run` in each repo, which clones bootstrap into its
-cache and writes nothing in the repo; it never reads the forge and never runs
-doctor whole. When it reports drift, print **one line per remedy**, with the
-rows that led to it: `/vwf:setup` for Pack versions, Project ids and Content
+named by title and evaluated per repo; in each repo whose configs
+`mise trust --show` lists as `trusted` it runs
+`mise run setup:configs --dry-run`, which writes nothing in the repo but
+executes bootstrap's task code from its clone of `main`, refreshing that clone;
+a repo mise does not trust runs nothing and reads drift unknown,
+`repo not trusted by mise`; it never reads the forge and never runs doctor
+whole. When it reports drift, print **one line per remedy**, with the rows that
+led to it: `/vwf:setup` for Pack versions, Project ids and Content
 drift; `/vwf:setup reshape` for Branches, Bootstrap drift, and a member not
 shaped or on the old layout; the fix in `.config/bootstrap.toml` for Merge model
 — e.g. *shape drift: base Pack versions, api Content drift — run `/vwf:setup`*
