@@ -8,6 +8,13 @@
     ".claude/skills/*",
     "plugins/*/skills/*"
   ],
+  "exclude": [
+    "plugins/vwf/skills/karpathy-guidelines"
+  ],
+  "hostSkills": [
+    "code-review",
+    "security-review"
+  ],
   "descriptionBudget": 8000,
   "contractPath": "plugins/{host}/assets/contracts/{name}.md"
 }

@@ -1,10 +1,11 @@
 # Doctrine
 
-Examples: `typescript`, `astro`, `eslint`, `blueprint-authoring`. Use
-`user-invocable: false` with `paths`.
+Examples: `typescript`, `astro`, `eslint`, `blueprint-authoring`.
 
 A doctrine with a `references/` folder is a router. A doctrine with no such
-folder is a single file.
+folder is a single file. A single file that describes a lint gate uses the
+single-file sections, and has a Run section. Other single files are prose, and
+have no required section.
 
 | Router section        | Holds                                         |
 | --------------------- | --------------------------------------------- |

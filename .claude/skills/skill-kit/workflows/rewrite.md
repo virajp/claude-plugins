@@ -18,16 +18,15 @@ A move to a reference that each run loads saves nothing, so mark it `always`.
 ## Steps
 
 1. Run `node <skill-kit>/scripts/lint.mjs --words <skill>`, and record the
-   counts.
+   counts. A table with no `Loads` column adds no file to the always count.
+   Say so in the report if the old skill has one.
 2. Copy `<skill>` to `<scratch>/old`.
 3. Run the extract:
-
-   ```sh
-   node < skill-kit > /scripts/ledger.mjs extract < scratch > /old < scratch > /ledger
-   ```
-
+   `node <skill-kit>/scripts/ledger.mjs extract <scratch>/old <scratch>/ledger`
 4. Set `metadata.archetype`, and rewrite the skill in place. Follow the
-   archetype's sections.
+   archetype's sections. Write an absent invocation key with its default value.
+   The defaults are `user-invocable: true` and `disable-model-invocation:
+   false`.
 5. Run the check. A file with unchanged bytes settles by itself, so only changed
    files stay open.
 
@@ -47,7 +46,8 @@ A move to a reference that each run loads saves nothing, so mark it `always`.
 10. Stop after two rounds, and show the open entries to the user.
 11. If an entry must go, ask the user. Record `dropped`, the reason and
     `approved: true` only after a yes.
-12. Run lint on the skill, and fix each error.
+12. Run lint on the skill. Fix each error, and each ST101 warning in a file that
+    the rewrite changed.
 13. Dispatch a fresh reviewer with
     [the judgment prompt](../templates/judgment-reviewer-prompt.md).
 14. Run `--words` again, and report the words before and after, the ledger
@@ -62,6 +62,9 @@ A move to a reference that each run loads saves nothing, so mark it `always`.
 | `no-rule` | `reason`                                                | The block holds no rule, fact or example |
 | `missing` | nothing                                                 | The new text has no match                |
 | `dropped` | `reason`, and `approved: true`                          | The user approved the removal            |
+
+A block of fewer than 3 words, such as a frontmatter line, needs a quote of all
+its words.
 
 `extract` refuses a folder that is not empty, so a settled ledger survives.
 `check` refuses a ledger that differs from its manifest.

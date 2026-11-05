@@ -15,9 +15,11 @@ through this whole procedure. One plan never swallows another.
 ## Parking
 
 An answer mid-interview that raises something outside this plan's scope is
-parked durably. Acknowledge it, and write it to the *Parked* list of the plan's
-`index.md` with enough to pick it up later. Do not widen the plan. Parked items
-are the first thing the next plan's recall reads.
+parked durably. Acknowledge it, and write a `docs/memory/gaps/` record at once,
+per the parked-scope rule in `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, with enough
+to pick it up later. Do not widen the plan. §6 also writes it to the *Parked*
+list of the plan's `index.md`. Parked items are the first thing the next plan's
+recall reads.
 
 A Parked entry that belongs to a backlog item begins with its id:
 `- Bnn: <piece>`. A plan that lands one piece of an item writes what remains

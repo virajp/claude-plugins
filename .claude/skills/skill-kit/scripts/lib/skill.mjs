@@ -216,12 +216,6 @@ export function readSkill(dir) {
   return skill;
 }
 
-export function invocationState(fm) {
-  if (fm["user-invocable"] === "false") { return "model"; }
-  if (fm["disable-model-invocation"] === "true") { return "user"; }
-  return "both";
-}
-
 export function meta(skill) {
   return typeof skill.fm.metadata === "object" && !Array.isArray(skill.fm.metadata) ? skill.fm.metadata : {};
 }

@@ -21,7 +21,6 @@ import {
   skillRules,
 } from "./lib/rules.mjs";
 import {
-  dependencies,
   loadedWords,
   readSkill,
 } from "./lib/skill.mjs";
@@ -54,14 +53,6 @@ function load(root, config) {
   }));
 }
 
-function dependents(skills) {
-  const map = new Map();
-  for (const s of skills) {
-    for (const name of dependencies(s)) { map.set(name, [...(map.get(name) ?? []), s.fm.name]); }
-  }
-  return map;
-}
-
 function main(argv) {
   const args = [...argv];
   const take = (flag) => {
@@ -92,8 +83,10 @@ function main(argv) {
   const config = readJson("config.json");
   const archetypes = readJson("archetypes.json");
   const collection = load(root, config);
-  const ctx = { config, archetypes, root, dependents: dependents(collection) };
-  const targets = all ? collection : args.map((dir) => readSkill(dir));
+  const ctx = { config, archetypes, root };
+  const excluded = new Set(config.exclude.map((p) => join(root, p)));
+  // An excluded skill stays in the collection, because other skills can depend on it.
+  const targets = (all ? collection : args.map((dir) => readSkill(dir))).filter((s) => !excluded.has(resolve(s.dir)));
 
   const findings = targets.flatMap((s) => skillRules(s, ctx));
   if (all) { findings.push(...collectionRules(collection, ctx)); }

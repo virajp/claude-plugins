@@ -2,7 +2,8 @@
 name: SKILL_NAME
 description: >-
   TODO: the scope. Auto-applies when editing TODO: the files.
-user-invocable: false
+user-invocable: TODO
+disable-model-invocation: TODO
 paths:
   - "TODO"
 metadata:

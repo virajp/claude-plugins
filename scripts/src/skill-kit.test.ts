@@ -190,37 +190,77 @@ describe("lint: style", () => {
   });
 });
 
+describe("lint: invocation", () => {
+  const BOTH = (u: string, d: string) => `user-invocable: ${u}\ndisable-model-invocation: ${d}`;
+
+  it("reports each absent key, on a skill with no archetype too", () => {
+    skill("a", GOOD);
+    const out = run("lint.mjs", `${SKILLS}/a`).out;
+    expect(out).toContain("ERROR SK012");
+    expect(out).toContain("no user-invocable key");
+    expect(out).toContain("no disable-model-invocation key");
+  });
+
+  it("reports a value that is not a boolean", () => {
+    skill("a", `${GOOD}\n${BOTH("TODO", "false")}`);
+    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("user-invocable is not true or false");
+  });
+
+  it.each([
+    ["workflow", "true", "true"],
+    ["doctrine", "false", "false"],
+    ["adapter", "false", "true"],
+    ["adapter", "true", "false"],
+    ["runbook", "true", "false"],
+    ["reference", "false", "true"],
+  ])("accepts a %s with user-invocable %s and disable-model-invocation %s", (archetype, u, d) => {
+    skill("a", `${GOOD}\n${BOTH(u, d)}\nmetadata:\n  archetype: ${archetype}\n  implements: h/a@1`);
+    const found = ids(run("lint.mjs", `${SKILLS}/a`).out);
+    expect(found).not.toEqual(expect.arrayContaining(["SK012"]));
+    for (const retired of ["DC401", "AD601", "RB101"]) { expect(found).not.toContain(retired); }
+  });
+});
+
 describe("lint: archetypes", () => {
-  it("requires a linked Phases row and a halt table in a workflow", () => {
+  it("requires a linked Phases row and a halt table in a workflow with a depth folder", () => {
+    skill(
+      "a",
+      `${GOOD}\nmetadata:\n  archetype: workflow`,
+      "\n## Phases\n\n| Phase | Gate |\n| --- | --- |\n| one | auto |\n",
+    );
+    write(`${SKILLS}/a/references/x.md`, "x");
+    const found = ids(run("lint.mjs", `${SKILLS}/a`).out);
+    expect(found).toEqual(expect.arrayContaining(["WF301", "WF303", "SK015"]));
+  });
+
+  it("lets a workflow with no depth folder keep its steps in SKILL.md", () => {
     skill(
       "a",
       `${GOOD}\nmetadata:\n  archetype: workflow`,
       "\n## Phases\n\n| Phase | Gate |\n| --- | --- |\n| one | auto |\n",
     );
     const found = ids(run("lint.mjs", `${SKILLS}/a`).out);
-    expect(found).toEqual(expect.arrayContaining(["WF301", "WF303", "SK015", "SK016"]));
+    expect(found).not.toContain("WF301");
+    expect(found).not.toContain("SK016");
   });
 
-  it("requires paths on a model-only doctrine", () => {
-    skill(
-      "a",
-      "description: Scope. Auto-applies when editing x.\nuser-invocable: false\nmetadata:\n  archetype: doctrine",
-    );
-    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("DC401");
+  it("still requires a Phases section in a workflow", () => {
+    skill("a", `${GOOD}\nmetadata:\n  archetype: workflow`);
+    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("no Phases section");
   });
 
-  it("refuses a user-only adapter and an unresolved contract", () => {
-    skill(
-      "a",
-      `${GOOD}\ndisable-model-invocation: true\nmetadata:\n  archetype: adapter\n  implements: host/other@1`,
-    );
+  it("needs the single-file sections only on a doctrine with a Run section", () => {
+    const fm = "description: Scope. Auto-applies when editing x.\nmetadata:\n  archetype: doctrine";
+    skill("a", fm, "\n# a\n\nProse rules.\n");
+    expect(run("lint.mjs", `${SKILLS}/a`).out).not.toContain("SK015");
+    skill("a", fm, "\n## Run\n\nx\n");
+    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("missing section: Owns");
+  });
+
+  it("refuses an unresolved contract and a name that differs from it", () => {
+    skill("a", `${GOOD}\nmetadata:\n  archetype: adapter\n  implements: host/other@1`);
     const found = ids(run("lint.mjs", `${SKILLS}/a`).out);
-    expect(found).toEqual(expect.arrayContaining(["AD601", "AD602", "AD603"]));
-  });
-
-  it("refuses a model-only adapter", () => {
-    skill("a", `${GOOD}\nuser-invocable: false\nmetadata:\n  archetype: adapter\n  implements: h/a@1`);
-    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("AD601");
+    expect(found).toEqual(expect.arrayContaining(["AD602", "AD603"]));
   });
 
   it("requires Preview before Write in a generator", () => {
@@ -247,13 +287,6 @@ describe("lint: archetypes", () => {
     skill("a", `${GOOD}\nmetadata:\n  archetype: reference\n  subtype: cloud-provider`);
     expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("references/identity-and-iam.md");
   });
-
-  it("warns when the invocation differs from the default, unless a reason exists", () => {
-    skill("a", `${GOOD}\nmetadata:\n  archetype: audit`);
-    expect(run("lint.mjs", `${SKILLS}/a`).out).toContain("SK012");
-    skill("a", `${GOOD}\nmetadata:\n  archetype: audit\n  invocation-reason: a gate calls it`);
-    expect(run("lint.mjs", `${SKILLS}/a`).out).not.toContain("SK012");
-  });
 });
 
 describe("lint --all: the collection", () => {
@@ -275,11 +308,27 @@ describe("lint --all: the collection", () => {
     expect(run("lint.mjs", "--all").out).toContain("CL205");
   });
 
-  it("clears the invocation warning when another skill depends on the target", () => {
+  it("reports a target that nothing can invoke, because the model cannot see it", () => {
     skill("a", `${GOOD}\nmetadata:\n  archetype: audit\n  depends-on: [b]`);
-    skill("b", `${GOOD}\nmetadata:\n  archetype: audit`);
-    const lines = run("lint.mjs", "--all").out.split("\n");
-    expect(lines.filter((l) => l.includes("SK012") && l.includes("skills/b/"))).toEqual([]);
+    skill("b", `${GOOD}\nuser-invocable: false\ndisable-model-invocation: true\nmetadata:\n  archetype: audit`);
+    expect(run("lint.mjs", "--all").out).toContain("CL205");
+  });
+
+  it("accepts a host skill as a depends-on target", () => {
+    skill("a", `${GOOD}\nmetadata:\n  archetype: audit\n  depends-on: [code-review, security-review]`);
+    expect(run("lint.mjs", "--all").out).not.toContain("CL203");
+  });
+
+  it("skips an excluded skill, and still reads it as a target", () => {
+    write(
+      "plugins/vwf/skills/karpathy-guidelines/SKILL.md",
+      "---\nname: karpathy-guidelines\ndescription: Vendored text.\n---\n\n# x\n",
+    );
+    skill("a", `${GOOD}\nmetadata:\n  archetype: audit\n  depends-on: [karpathy-guidelines]`);
+    const out = run("lint.mjs", "--all").out;
+    expect(out).not.toContain("karpathy-guidelines/SKILL.md");
+    expect(out).not.toContain("CL203");
+    expect(run("lint.mjs", "plugins/vwf/skills/karpathy-guidelines").out).toContain("0 skills, 0 errors");
   });
 
   it("reports a description budget overrun and adapter section drift", () => {
@@ -322,6 +371,13 @@ describe("new", () => {
     ) {
       expect(out, `${archetype} ${id}`).not.toContain(id);
     }
+  });
+
+  it("makes the author decide both invocation values", () => {
+    run("new.mjs", "audit", "x", "out");
+    const out = run("lint.mjs", "out/x").out;
+    expect(out).toContain("user-invocable is not true or false");
+    expect(out).toContain("disable-model-invocation is not true or false");
   });
 
   it("creates the topic files of a subtype", () => {
@@ -418,6 +474,15 @@ describe("ledger", () => {
     expect(run("ledger.mjs", "check", "ledger", "new").out).toContain("quote is not in");
     fill({ status: "kept", where: "none.md", quote: "x y z" });
     expect(run("ledger.mjs", "check", "ledger", "new").out).toContain("where does not exist");
+  });
+
+  it("accepts a quote of all the words of a block with fewer than 3 words", () => {
+    run("ledger.mjs", "extract", "old", "ledger");
+    const data = fill({ status: "no-rule", reason: "x" });
+    data.entries[0] = { ...data.entries[0], status: "kept", where: "SKILL.md", quote: "name: a" };
+    writeFileSync(join(root, "ledger/SKILL.json"), JSON.stringify(data));
+    write("new/SKILL.md", "---\nname: a\n---\n");
+    expect(run("ledger.mjs", "check", "ledger", "new").out).not.toContain("under");
   });
 
   it("refuses a short quote, and a where that leaves the new skill", () => {
