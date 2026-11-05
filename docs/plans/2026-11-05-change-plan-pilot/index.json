@@ -12,8 +12,8 @@
   ],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-05 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-05 — dcc7e3aa 9798798d 53ba3bb8 30c6d676 1f856867 04b6ba64 ff63f65b; seven gaps open, folder left live"
   },
   "consent": {
     "merge": true,
@@ -61,11 +61,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T08:51:55.553Z",
+      "ended": "2026-11-05T08:56:38.229Z",
+      "commit": "dcc7e3aa",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -82,11 +82,11 @@
         "U1"
       ],
       "waits": "It compares the ledger with the rewritten text that U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T09:03:06.999Z",
+      "ended": "2026-11-05T09:06:56.389Z",
+      "commit": "9798798d",
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -102,11 +102,11 @@
         "U1"
       ],
       "waits": "It reviews the rewritten text that U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T09:03:07.034Z",
+      "ended": "2026-11-05T09:05:27.025Z",
+      "commit": "53ba3bb8",
+      "rounds": 1
     },
     {
       "id": "U4",
@@ -125,11 +125,11 @@
         "U3"
       ],
       "waits": "It acts on the ledger of U2 and the findings of U3.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T09:13:10.584Z",
+      "ended": "2026-11-05T09:14:35.202Z",
+      "commit": "1f856867",
+      "rounds": 3
     },
     {
       "id": "U5",
@@ -146,11 +146,11 @@
         "U4"
       ],
       "waits": "It compares the entries that U4 reopened with the text that U4 changed.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T09:19:15.733Z",
+      "ended": "2026-11-05T09:23:52.585Z",
+      "commit": "04b6ba64",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -166,11 +166,11 @@
         "U5"
       ],
       "waits": "It reports on the ledger that U5 settles.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-05T09:28:39.340Z",
+      "ended": "2026-11-05T09:29:54.538Z",
+      "commit": "ff63f65b",
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -195,11 +195,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:34:04.711Z",
+      "ended": "2026-11-05T09:35:32.075Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -215,55 +215,55 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:37:34.641Z",
+      "ended": "2026-11-05T09:38:12.888Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T08:51:55.442Z",
+      "ended": "2026-11-05T09:02:15.083Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:03:06.928Z",
+      "ended": "2026-11-05T09:12:24.188Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:13:10.514Z",
+      "ended": "2026-11-05T09:18:29.567Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:19:15.657Z",
+      "ended": "2026-11-05T09:27:52.173Z"
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:28:39.270Z",
+      "ended": "2026-11-05T09:33:16.999Z"
     },
     {
       "id": "W6",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:34:04.601Z",
+      "ended": "2026-11-05T09:36:46.685Z"
     },
     {
       "id": "W7",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-05T09:37:34.571Z",
+      "ended": "2026-11-05T09:38:52.603Z"
     }
   ],
   "shared_files": [
@@ -468,31 +468,95 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-05T09:34:04.387Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-05T09:34:04.167Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-05T09:34:04.280Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "the plan has no covers list",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-05T09:34:04.493Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "Always-loaded words are 4,486 (before 4,912; total 4,786), lower but over the 1,500 budget, so SK003 warns · D8 accepts this, and U6 records it",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "scope-check.md:18 and interview checklist section F write Parked lines to index.md during the interview, but no folder exists before §6, and SKILL.md:111 and shape-gate.md:3 forbid disk writes before §5 · a fix changes behavior and plan-interview.md is out of scope, so U4 leaves it; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "plan-interview.md item 19 wants a later explicit yes after self-review before APPROVED, and says the hand-off commits and pushes; §8 is auto and hand-off.md:29 treats the §5 approve as enough, so that yes has no declared gate (WF304) · the asset is out of scope and a fix can change behavior, so the skill text stands; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52)",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "SKILL.md:120 says add is the one verb that writes them, but the claim, status and complete verbs of plan-management also write; the old text said the one verb this skill calls · U5 took this as overbroad wording and not a changed rule, since SKILL.md:47 and the next clause narrow it; closed: the wave 4 review ruled the wording false, and U4 corrected SKILL.md:120",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "Freshness (D10): U5 read round.md, the record of U4, before it compared, and the unit file does not forbid this · the six verdicts stand, since the check verified the quote of each; U5 did not read 01-rewrite.md, judgment.md or the git history of the skill",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "U5, re-dispatched on SKILL-123, ran git diff on SKILL.md against the guardrail of its unit file, so it saw the old and new wording of line 120 · D10 forbids a writer reasoning and a diff holds none, so the verdict stands, and round 2 of the wave 4 review judges SKILL-123 apart; closed: round 2 of the wave 4 review judged SKILL-123 apart and raised nothing",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "ledger check prints line numbers from the old SKILL.md (SKILL.md:509, and the file now has 122 lines), and 06-stats.md does not say how to show them · U6 kept them as printed, with a sentence in stats.md that explains this",
+      "state": "open"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/change-plan-pilot",
