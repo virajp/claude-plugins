@@ -70,8 +70,8 @@ These rules come from the plans that came before.
 - **The two last units are fixed** — the docs unit and the gates unit,
   `NN-gates.md`, each per the template's *The two fixed final units*. Nothing
   else touches docs, and no unit bumps a version.
-- **Assumed decisions are the `decisions` list** — write one entry per ruling
-  you made. It is the review surface.
+- **Every ruling is a `decisions` entry** — write one entry per ruling you made.
+  It is the review surface.
 - **Out of scope and Parked are explicit `index.md` sections** — they hold what
   the user declined, with the reason, and what was raised and deferred, so
   `/vwf:execute` never "helpfully" picks either up. What remains of a

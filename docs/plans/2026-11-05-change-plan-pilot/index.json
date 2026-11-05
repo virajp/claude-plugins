@@ -125,11 +125,11 @@
         "U3"
       ],
       "waits": "It acts on the ledger of U2 and the findings of U3.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:13:10.584Z",
+      "ended": "2026-11-05T09:14:35.202Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -237,8 +237,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-05T09:13:10.514Z",
       "ended": ""
     },
     {

@@ -247,9 +247,7 @@
       "line": 55,
       "kind": "list-item",
       "text": "- the backlog, read through `/vwf:backlog list` — the product's backlog, the prioritised list of work that cannot be picked up now, a project on the base repo's forge that the `backlog` skill alone writes. It is product-level: a session in a member repo reads the base's project, resolved from the base's remote, never one of its own. When the verb reports the backlog unreadable — `gh` absent, unauthenticated or without the `project` scope, or no project yet — record that with its reason in the facts and continue with nothing. The request is often one of its items; note every id it covers, and for each whether this plan finishes the item or lands one piece of it — interview item 2a settles it — so the plan's `index.json` can carry them on the right list. A `Bnn` id in `$ARGUMENTS` — `/vwf:backlog next` prints the launch line with it — is always one of them, and is never dropped for a weaker match. Every id noted here is a **source** id, recorded on the `index.json` `source` list, so the executor can tell a plan made for an item from one made for none. The same read tells the interview which items share the plan's priority — what §8's check counts before it recommends `/vwf:execute`. Reading the backlog is this skill's business; editing it never is — `/vwf:backlog` is its sole writer",
-      "status": "kept",
-      "where": "references/recall-survey.md",
-      "quote": "The backlog, through `/vwf:backlog list`"
+      "status": "pending"
     },
     {
       "id": "SKILL-29",
@@ -517,9 +515,7 @@
       "line": 240,
       "kind": "list-item",
       "text": "2. the assumed decisions — every ruling, its rejected alternatives",
-      "status": "kept",
-      "where": "references/shape-gate.md",
-      "quote": "The assumed decisions: every ruling and its rejected alternatives."
+      "status": "pending"
     },
     {
       "id": "SKILL-59",
@@ -715,9 +711,7 @@
       "line": 371,
       "kind": "list-item",
       "text": "- **Assumed decisions are the `decisions` list**, one entry per ruling you made — `decision`, `ruling`, the alternative `rejected`, and the `units` it changes. It is the review surface.",
-      "status": "kept",
-      "where": "references/write-folder.md",
-      "quote": "**Assumed decisions are the `decisions` list**"
+      "status": "pending"
     },
     {
       "id": "SKILL-81",
@@ -1021,9 +1015,7 @@
       "line": 506,
       "kind": "paragraph",
       "text": "Do not start executing. The fresh context is the point — this session's context is the survey and the interview, and the run should carry none of it.",
-      "status": "kept",
-      "where": "SKILL.md",
-      "quote": "the fresh context is the point"
+      "status": "pending"
     },
     {
       "id": "SKILL-115",
@@ -1047,9 +1039,7 @@
       "line": 512,
       "kind": "list-item",
       "text": "- Executes a unit, edits a file the plan names, or bumps a version",
-      "status": "kept",
-      "where": "SKILL.md",
-      "quote": "Execute a unit, edit a file the plan names, or bump a version"
+      "status": "pending"
     },
     {
       "id": "SKILL-118",
@@ -1101,9 +1091,7 @@
       "line": 518,
       "kind": "list-item",
       "text": "- Edits the plan index, `docs/plans/index.json`, or a folder's `status` key itself — `add` is the one `plan-management` verb it calls on them; every later status is `/vwf:execute`'s to call, and the archive move is the same skill's",
-      "status": "kept",
-      "where": "SKILL.md",
-      "quote": "Edit `docs/plans/index.json` or a folder's `status` key"
+      "status": "pending"
     }
   ]
 }

@@ -34,7 +34,7 @@ reads mechanically, `index.md` the prose a reader needs, and the unit files what
 each subagent reads. Nothing lives in conversation.
 
 **The request** is `$ARGUMENTS`. A `Bnn` id in it is always a source id —
-`/vwf:backlog next` prints the launch line with it — and is never dropped for a
+`/vwf:backlog next` prints that command with it — and is never dropped for a
 weaker match.
 
 ## State
@@ -110,13 +110,12 @@ or run every runnable plan, highest priority first:
 
 - Write to disk before §5's approve; present the shape first — the gate is the
   user's review.
-- Execute a unit, edit a file the plan names, or bump a version; end at the
-  launch block — the fresh context is the point, and it carries none of this
-  session's survey or interview.
+- Execute a unit, edit a file the plan names, or bump a version; end as Output
+  says — the fresh context is the point, and it carries none of this session's
+  survey or interview.
 - Write a unit prompt that depends on this conversation; put it in the unit file
   — a unit inherits no context.
 - Edit the backlog; call `/vwf:backlog` — it owns the project.
 - Edit `docs/plans/index.json` or a folder's `status` key; call
-  `plan-management add`, the one verb this skill calls on them — every later
-  status is `/vwf:execute`'s to call, and the archive move is
-  `plan-management`'s.
+  `plan-management add`, the one verb that writes them — every later status is
+  `/vwf:execute`'s to call, and the archive move is `plan-management`'s.

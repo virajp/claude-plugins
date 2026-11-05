@@ -4,7 +4,7 @@ Write nothing to disk before this gate. Present these sections, scaled to their
 weight and confirmed one at a time:
 
 1. The goal and the reversals, if any.
-2. The assumed decisions: every ruling and its rejected alternatives.
+2. The decisions: every ruling and its rejected alternatives.
 3. The unit map: id, wave, owned paths, depends-on. State why each wave is safe
    to run concurrently, and the named reason each unit in a later wave waits.
 4. Every new third-party dependency any unit introduces: package, what for,
