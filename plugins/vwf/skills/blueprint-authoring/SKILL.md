@@ -3,11 +3,9 @@ name: blueprint-authoring
 version: 0.1.0
 category: development
 description: Authoring discipline for vwf blueprints — the code-independence
-  line
-  that keeps a blueprint a durable technical contract, plus the per-entity,
+  line that keeps a blueprint a durable technical contract, plus the per-entity,
   cross-entity/integration, and UI/UX completeness bars. Auto-applies when
-  editing any docs/blueprint file. Read the reference matching the surface you
-  are pinning down.
+  editing any docs/blueprint file.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write
@@ -15,53 +13,49 @@ paths:
   - "docs/blueprint/**/*.md"
   - "docs/plans/**/*.md"
   - "docs/plans/**/index.json"
+metadata:
+  archetype: doctrine
 ---
 
 # Blueprint Authoring
 
-A blueprint is the **whole product's desired end state as a technical contract**
-— detailed enough that `plan` and `execute` *decide* instead of asking or
-assuming. It is organized around **flows** (the primary unit, under
-`docs/blueprint/flows/`), which carry the process — steps, screens, jobs, and
-acceptance. Entities (`docs/blueprint/entities/`) are supporting data contracts
-(an `index.md` + an authoritative `schema.yaml`), and each service's API is one
-authoritative OpenAPI file under `docs/blueprint/apis/`. The traceability spine
-runs product goal → flow (`Serves:`) → entity (`Used by:`, transitively).
+A blueprint is the **whole product's desired end state as a technical contract**.
+It is detailed enough that `plan` and `execute` *decide* instead of asking or
+assuming. Read the reference matching the surface you are pinning down.
 
-The bar: a blueprint records every decision that has **more than one reasonable
-answer** AND is **true regardless of how the code is written today**. Everything
-else belongs to `plan` (code-aware realization) or `execute` (mechanical). Read
-**Contract vs realization** first — it is the line the whole skill turns on.
+## Routing
 
-Two bars, not one. Completeness asks *"is this decided?"* and can only ask for
-more; **Density** asks *"does this line change what gets built?"* and is the
-only thing that asks for less. A doc fails review for being long exactly as it
-fails for being thin. Every audience for these docs is an agent that re-reads
-them on every turn — write for that reader, not for a human skimming a spec.
+| Doing                                                                                                      | Read                                                                                      | Loads     |
+| ---------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------- |
+| Sorting any decision into blueprint, plan or execute. **Read first**                                       | [Contract vs realization](references/contract-vs-realization.md)                          | always    |
+| Fitting a doc to its line budget, the delete test and the anti-patterns. **Read with the sort**            | [Density](references/density.md)                                                          | always    |
+| Writing a flow: sections, screen home rule, jobs, sequence diagram, acceptance, `flows/index.md`           | [Flow contract](references/flow-contract.md)                                              | sometimes |
+| Writing a `plugin` flow: host, invocation surface, what the host supplies, gates, artifacts                | [Plugin contract](references/plugin-contract.md)                                          | sometimes |
+| Writing an entity: lifecycle, invariants, relationships, `Used by:`, the schema link                       | [Entity contract](references/entity-contract.md)                                          | sometimes |
+| Writing `schema.yaml` or `apis/<project>.openapi.yaml`: path-typing, released-snapshot additive rule       | [API & schema contracts](references/api-and-schema-contracts.md)                          | sometimes |
+| Deciding a screen on its flow: navigation, interaction patterns, state UX, forms                           | [UI / UX contract](references/ui-ux-contract.md)                                          | sometimes |
+| Writing `environment.md`: inventory, classification, no values, the config-mechanism line                  | [Environment & secrets](references/environment-catalog.md)                                | sometimes |
+| Writing frontmatter or links: the OKF profile, the `type` vocabulary, `implementation:`, typed links       | [Frontmatter & links](references/frontmatter-and-links.md)                                | sometimes |
+| Checking a surface against the sort test and its completeness bar (also the reviewer's bar)                | [Quick reference](references/quick-reference.md)                                          | sometimes |
+| Copying the shape of a format-valid bundle: flows, entities, apis, conventions, design-system, environment | [Worked example](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/entities/order/index.md) | sometimes |
 
-| Topic                                                                                                             | When to read                                                                                                            |
-| ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| [Contract vs realization](references/contract-vs-realization.md) | **Read first.** Sorting any decision into blueprint / plan / execute; the code-independence test                        |
-| [Density](references/density.md)                                 | **Read with it.** Per-doc line budgets, the delete test, and the anti-patterns that inflate a contract                  |
-| [Flow contract](references/flow-contract.md)                     | The primary unit: per-flow sections, the screen home rule, jobs, the sequence diagram, acceptance, and `flows/index.md` |
-| [Plugin contract](references/plugin-contract.md)                 | The `plugin` platform's flows — extension points: host, invocation surface, what the host supplies, gates, artifacts     |
-| [Entity contract](references/entity-contract.md)                 | The slimmed entity: lifecycle, invariants, relationships, `Used by:`, the schema link — and what moved to flows         |
-| [API & schema contracts](references/api-and-schema-contracts.md) | The YAML artifacts: `schema.yaml` and `apis/<project>.openapi.yaml` bars, path-typing, released-snapshot additive rule  |
-| [UI / UX contract](references/ui-ux-contract.md)                 | Per-screen decisions (on the owning flow): navigation, interaction patterns, state UX, forms                            |
-| [Environment & secrets](references/environment-catalog.md)       | The `environment.md` catalog: env-var/secret inventory, classification, no values, the config-mechanism line            |
-| [Frontmatter & links](references/frontmatter-and-links.md)       | The OKF profile: mandatory frontmatter, the `type` vocabulary, the `implementation:` key, YAML path-typing, typed links |
-| [Quick reference](references/quick-reference.md)                 | The sort test + per-surface completeness checklist (also the reviewer's bar)                                            |
-| [Worked example](${CLAUDE_PLUGIN_ROOT}/assets/examples/blueprint/entities/order/index.md)                         | A format-valid conformance bundle (flows + entities + apis + conventions + design-system + environment)                 |
+## Rules that don't wait
 
-For API contract depth (resources, methods, errors, pagination, idempotency,
-versioning), use the **rest-api-design** skill — do not restate it here.
+- Record each decision that has **more than one reasonable answer** AND is **true
+  regardless of how the code is written today**. Everything else belongs to
+  `plan` (code-aware realization) or `execute` (mechanical) — this line governs
+  the whole skill.
+- To a plan folder under `docs/plans/**`, apply only
+  [Frontmatter & links](references/frontmatter-and-links.md) (the `type`
+  vocabulary and resolving typed links) — none of the entity doctrine applies.
+- Do not apply the entity completeness bars to `design-system.md` — the
+  `docs/blueprint/**` glob matches it, but `design-system-authoring` governs it.
 
-**Scope.** This skill's `docs/blueprint/**` glob also matches
-`design-system.md`, but that doc is governed by the **design-system-authoring**
-skill — the entity completeness bars here do not apply to it. Plan folders
-under `docs/plans/**` — an `index.json` whose `type` is `vwf-plan` or
-`vwf-change-plan`, not an `index.md` with frontmatter, plus its prose
-`index.md` and unit files — are in scope for **only** the
-[Frontmatter & links](references/frontmatter-and-links.md)
-reference (the `type` vocabulary + resolving typed links) — none of the entity
-doctrine applies to them.
+A plan folder is an `index.json` whose `type` is `vwf-plan` or `vwf-change-plan`,
+not an `index.md` with frontmatter, plus its prose `index.md` and unit files.
+
+## Neighbours
+
+- For API contract depth (resources, methods, errors, pagination, idempotency,
+  versioning), use the `rest-api-design` skill. Do not restate it here.
+- For `design-system.md`, use the `design-system-authoring` skill.

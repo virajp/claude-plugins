@@ -1,6 +1,13 @@
 # Contract vs Realization
 
-The blueprint holds the **contract**. `plan` holds the **realization**. A
+A blueprint is organized around **flows** (the primary unit, under
+`docs/blueprint/flows/`), which carry the process: steps, screens, jobs, and
+acceptance. Entities (`docs/blueprint/entities/`) are supporting data contracts:
+an `index.md` + an authoritative `schema.yaml`. Each service's API is one
+authoritative OpenAPI file under `docs/blueprint/apis/`. The traceability spine
+runs product goal → flow (`Serves:`) → entity (`Used by:`, transitively).
+
+This sort is the line the whole skill turns on. The blueprint holds the **contract**. `plan` holds the **realization**. A
 decision belongs in the blueprint only if it passes **both** tests:
 
 1. **Two-reasonable-answers test** — does the decision have more than one

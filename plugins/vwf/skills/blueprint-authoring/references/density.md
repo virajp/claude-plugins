@@ -3,12 +3,13 @@
 A blueprint doc's audience is `plan`, `execute`, and their subagents. Every line
 is re-read on every later turn of whatever loaded it, so length is not free: a
 600-line flow doc costs the same attention whether or not the extra 450 lines
-carry a decision.
+carry a decision. Write for that reader, not for a human skimming a spec.
 
 The completeness bars ask *"is this decided?"* and can only ever ask for more.
 This reference is the counter-pressure: **a doc that specifies its contract in
 fewer lines is better, and one that is long without deciding more is wrong.**
-Both directions are reviewer failures.
+Both directions are reviewer failures: a doc fails review for being long exactly
+as it fails for being thin.
 
 ## The test
 
