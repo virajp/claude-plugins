@@ -166,11 +166,11 @@
         "U5"
       ],
       "waits": "It reports on the ledger that U5 settles.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:28:39.340Z",
+      "ended": "2026-11-05T09:29:54.538Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -249,8 +249,8 @@
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-05T09:28:39.270Z",
       "ended": ""
     },
     {
@@ -548,6 +548,13 @@
       "stage": "edit",
       "text": "U5, re-dispatched on SKILL-123, ran git diff on SKILL.md against the guardrail of its unit file, so it saw the old and new wording of line 120 · D10 forbids a writer reasoning and a diff holds none, so the verdict stands, and round 2 of the wave 4 review judges SKILL-123 apart; closed: round 2 of the wave 4 review judged SKILL-123 apart and raised nothing",
       "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "ledger check prints line numbers from the old SKILL.md (SKILL.md:509, and the file now has 122 lines), and 06-stats.md does not say how to show them · U6 kept them as printed, with a sentence in stats.md that explains this",
+      "state": "open"
     }
   ],
   "overrides": [],
