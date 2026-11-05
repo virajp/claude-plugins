@@ -497,36 +497,36 @@
       "id": "G1",
       "unit": "U1",
       "stage": "edit",
-      "text": "Always-loaded words are 4,486 (before 4,912; total 4,786), lower but over the 1,500 budget, so SK003 warns · D8 accepts this, and U6 records it",
-      "state": "open"
+      "text": "Always-loaded words are 4,486 (before 4,912; total 4,786), lower but over the 1,500 budget, so SK003 warns · D8 accepts this, and U6 records it; closed: the user accepted this on 2026-11-05 under D8",
+      "state": "closed"
     },
     {
       "id": "G2",
       "unit": "U1",
       "stage": "edit",
-      "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them",
-      "state": "open"
+      "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them; closed: the user accepted this on 2026-11-05 under D12",
+      "state": "closed"
     },
     {
       "id": "G3",
       "unit": "U3",
       "stage": "edit",
-      "text": "scope-check.md:18 and interview checklist section F write Parked lines to index.md during the interview, but no folder exists before §6, and SKILL.md:111 and shape-gate.md:3 forbid disk writes before §5 · a fix changes behavior and plan-interview.md is out of scope, so U4 leaves it; a later plan must rule",
-      "state": "open"
+      "text": "scope-check.md:18 and interview checklist section F write Parked lines to index.md during the interview, but no folder exists before §6, and SKILL.md:111 and shape-gate.md:3 forbid disk writes before §5 · a fix changes behavior and plan-interview.md is out of scope, so U4 leaves it; a later plan must rule; closed: the planners now record parked points at once, in f08364c6",
+      "state": "closed"
     },
     {
       "id": "G4",
       "unit": "U3",
       "stage": "edit",
-      "text": "plan-interview.md item 19 wants a later explicit yes after self-review before APPROVED, and says the hand-off commits and pushes; §8 is auto and hand-off.md:29 treats the §5 approve as enough, so that yes has no declared gate (WF304) · the asset is out of scope and a fix can change behavior, so the skill text stands; a later plan must rule",
-      "state": "open"
+      "text": "plan-interview.md item 19 wants a later explicit yes after self-review before APPROVED, and says the hand-off commits and pushes; §8 is auto and hand-off.md:29 treats the §5 approve as enough, so that yes has no declared gate (WF304) · the asset is out of scope and a fix can change behavior, so the skill text stands; a later plan must rule; closed: the planners now ask one approval, in f08364c6",
+      "state": "closed"
     },
     {
       "id": "G5",
       "unit": "U2",
       "stage": "edit",
-      "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52)",
-      "state": "open"
+      "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52); closed: the user accepted U2's reading on 2026-11-05",
+      "state": "closed"
     },
     {
       "id": "G6",
@@ -539,8 +539,8 @@
       "id": "G7",
       "unit": "U5",
       "stage": "edit",
-      "text": "Freshness (D10): U5 read round.md, the record of U4, before it compared, and the unit file does not forbid this · the six verdicts stand, since the check verified the quote of each; U5 did not read 01-rewrite.md, judgment.md or the git history of the skill",
-      "state": "open"
+      "text": "Freshness (D10): U5 read round.md, the record of U4, before it compared, and the unit file does not forbid this · the six verdicts stand, since the check verified the quote of each; U5 did not read 01-rewrite.md, judgment.md or the git history of the skill; closed: the user accepted the six verdicts on 2026-11-05",
+      "state": "closed"
     },
     {
       "id": "G8",
@@ -553,8 +553,8 @@
       "id": "G9",
       "unit": "U6",
       "stage": "edit",
-      "text": "ledger check prints line numbers from the old SKILL.md (SKILL.md:509, and the file now has 122 lines), and 06-stats.md does not say how to show them · U6 kept them as printed, with a sentence in stats.md that explains this",
-      "state": "open"
+      "text": "ledger check prints line numbers from the old SKILL.md (SKILL.md:509, and the file now has 122 lines), and 06-stats.md does not say how to show them · U6 kept them as printed, with a sentence in stats.md that explains this; closed: the user accepted the explaining sentence in stats.md on 2026-11-05",
+      "state": "closed"
     }
   ],
   "overrides": [],
