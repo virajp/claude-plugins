@@ -1,0 +1,498 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "skill-kit pilot: rewrite change-plan with the rule ledger",
+  "requires": [],
+  "source": [
+    "B108"
+  ],
+  "backlog": [],
+  "backlog_pieces": [
+    "B108"
+  ],
+  "gaps_of": [],
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-05 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "node .claude/skills/skill-kit/scripts/ledger.mjs check docs/plans/2026-11-05-change-plan-pilot/ledger plugins/vwf/skills/change-plan",
+      "node .claude/skills/skill-kit/scripts/lint.mjs plugins/vwf/skills/change-plan"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "The shipped skill text changes with no new behavior, and it must reach users at the next release."
+    },
+    {
+      "id": "site",
+      "level": "NONE",
+      "reason": "Behavior does not change. If U7 edits the manual, it returns a GAP, so the user can raise the level by hand."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Extract the ledger and rewrite change-plan",
+      "wave": 1,
+      "file": "01-rewrite.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Fill the ledger as a fresh reviewer",
+      "wave": 2,
+      "file": "02-ledger-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger-review.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "It compares the ledger with the rewritten text that U1 creates.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Answer the judgment list as a fresh reviewer",
+      "wave": 2,
+      "file": "03-judgment-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/judgment.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "It reviews the rewritten text that U1 creates.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Restore missing rules and apply the judgment findings",
+      "wave": 3,
+      "file": "04-restore.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/round.md"
+      ],
+      "depends_on": [
+        "U2",
+        "U3"
+      ],
+      "waits": "It acts on the ledger of U2 and the findings of U3.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Settle the open ledger entries as a fresh reviewer",
+      "wave": 4,
+      "file": "05-re-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/re-review.md"
+      ],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "It compares the entries that U4 reopened with the text that U4 changed.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Run the proof and write the before and after stats",
+      "wave": 5,
+      "file": "06-stats.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/stats.md"
+      ],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "It reports on the ledger that U5 settles.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Docs",
+      "wave": 6,
+      "file": "07-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "readme.md",
+        "CLAUDE.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/skills-and-agents.md",
+        "site/src/content/docs/plugins/vwf.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U8",
+      "title": "Gates",
+      "wave": 7,
+      "file": "08-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U7"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W5",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W6",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W7",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "docs/plans/2026-11-05-change-plan-pilot/ledger",
+      "why": "U1, U2, U4 and U5 write it in different waves, with one writer per wave (D11)",
+      "owner": "U1"
+    },
+    {
+      "id": "S2",
+      "file": "readme.md, CLAUDE.md, the manual",
+      "why": "every human-facing doc belongs to the docs unit",
+      "owner": "U7"
+    },
+    {
+      "id": "S3",
+      "file": "plugins/vwf/skills/change-plan",
+      "why": "U1 and U4 write it in different waves, with one writer per wave (D11)",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How must the ledger proof run under /vwf:execute?",
+      "ruling": "Separate units for rewrite, ledger review, and restore, so each reviewer is fresh.",
+      "rejected": "One unit does all; run in the planning session with no plan.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Where does the ledger live?",
+      "ruling": "The ledger lives in docs/plans/2026-11-05-change-plan-pilot/ledger/ and is committed.",
+      "rejected": "A cache folder; a gitignored path in the worktree.",
+      "units": [
+        "U1",
+        "U2",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "What happens at a defect in skill-kit itself?",
+      "ruling": "A skill-kit defect becomes a gap, and no unit changes the tool. A blocking defect stops the run.",
+      "rejected": "Fix the tool during the run.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How far does the rewrite compress?",
+      "ruling": "Link to owners, plus plain style. A rule that only the skill holds stays.",
+      "rejected": "Plain style only; merge with /vwf:plan.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How many restore rounds, and who can drop a rule?",
+      "ruling": "One restore round. A missing entry after the re-review stops the run, and no unit can set dropped, because the run is unattended.",
+      "rejected": "Two rounds; let the run drop rules.",
+      "units": [
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Do the phases keep their numbers?",
+      "ruling": "Phases keep the numbers §1 to §8, so that existing citations stay valid.",
+      "rejected": "Renumber.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Where does the argument placeholder go?",
+      "ruling": "The argument placeholder stays in SKILL.md, because the host is expected to expand it only in that file, so a reference must not depend on it.",
+      "rejected": "Move it with §1 into a reference.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "How are files marked, and what if the budget is exceeded?",
+      "ruling": "Mark always and sometimes honestly. If the always-loaded words exceed 1,500, record the warning and do not hide it.",
+      "rejected": "Mark files sometimes to pass the budget.",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Does this plan need a review unit?",
+      "ruling": "No. The change lands no runnable code, so the wave review is the check.",
+      "rejected": "A review unit that runs the security engines over prose.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7",
+        "U8"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "What does fresh mean for a reviewer?",
+      "ruling": "Fresh means a new subagent that saw no writer's reasoning. The overlap list moves from Facts into the U1 unit file, so Facts stays neutral.",
+      "rejected": "Accept Facts as it is, with a hint that restated text was linked away.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "May several units write one path?",
+      "ruling": "Yes, in different waves, with one writer per wave. The skill folder and the ledger folder take this exception.",
+      "rejected": "Split the work so that each path has one writer in the whole run, which removes the restore round.",
+      "units": [
+        "U1",
+        "U2",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "May lint warnings remain?",
+      "ruling": "Errors block, and warnings do not. U1 rewrites to the style guide, and stats.md lists each warning that remains. A sentence is never split in a way that loses a condition.",
+      "rejected": "Clear all ST101, which pushes units to split sentences mechanically.",
+      "units": [
+        "U1",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "What if the rewrite does not lower the always-loaded words?",
+      "ruling": "U6 returns UNRESOLVED when the final always-loaded words are not below 4,912, so the run stops before the merge. The user then accepts the number with a ruling in decisions, or rewrites by hand. After a hand rewrite, the user reopens the affected entries and resets U5 to pending, and the run resumes at U5. On resume, U6 reads the ruling.",
+      "rejected": "Land on a green proof, and report the number.",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Who acts after a stop on an open ledger entry?",
+      "ruling": "The user decides each open entry by hand in the run's worktree: restore the rule and set its entry to pending, or record dropped with approved true. The user writes the ruling in decisions and commits. Then the run resumes at U5.",
+      "rejected": "A unit restores or drops with no one present.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Do the rulings override skill-kit workflows/rewrite.md?",
+      "ruling": "Yes, wherever they differ. U1 adds no script, because D9 depends on no runnable code landing.",
+      "rejected": "Follow rewrite.md first, and add a script.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "May a re-dispatched reviewer change a settled entry?",
+      "ruling": "Yes. A re-dispatched U2 or U5 may change the entry that a wave-review finding names, and nothing else.",
+      "rejected": "Leave the finding contested, with the entry unchanged.",
+      "units": [
+        "U2",
+        "U5"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
