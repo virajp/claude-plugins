@@ -7,14 +7,14 @@ an `index.md` + an authoritative `schema.yaml`. Each service's API is one
 authoritative OpenAPI file under `docs/blueprint/apis/`. The traceability spine
 runs product goal → flow (`Serves:`) → entity (`Used by:`, transitively).
 
-This sort is the line the whole skill turns on. The blueprint holds the **contract**. `plan` holds the **realization**. A
-decision belongs in the blueprint only if it passes **both** tests:
+This sort is the line the whole skill turns on. The blueprint holds the
+**contract**. `plan` holds the **realization**. A decision belongs in the blueprint only if it passes **both** tests:
 
 1. **Two-reasonable-answers test** — does the decision have more than one
    defensible answer? If exactly one idiomatic answer follows from the blueprint
    - conventions, it is mechanical → leave it to `execute`.
-2. **Code-independence test** — would this fact still be true if the codebase
-   were rewritten from scratch in a different language or framework? If it
+2. **Code-independence test** — would this fact stay true if the codebase were
+   rewritten from scratch in another language or framework? If it
    depends on what the code looks like today, it is realization → leave it to
    `plan`.
 
@@ -29,10 +29,10 @@ decision belongs in the blueprint only if it passes **both** tests:
 | NFR          | a list page returns ≤50 items by default             | the pagination helper           |
 
 **The YAML artifacts split the same way.** In an OpenAPI file, the paths,
-methods, request/response schemas, error cases, and auth roles are **contract**;
-the `servers:` blocks, hostnames, and generated-client / framework choices are
+methods, request/response schemas, error cases, and auth roles are **contract**.
+The `servers:` blocks, hostnames, and generated-client / framework choices are
 **realization** and stay out. In a `schema.yaml`, the logical types, enums,
-`required:`/nullability, and FK relationships are **contract**; storage types,
+`required:`/nullability, and FK relationships are **contract**. Storage types,
 indexes, and ORM/column mapping are **realization** — left to `plan`/`execute`.
 
 **Never put in a blueprint (drift bait):** file paths, class/function names,
