@@ -2,7 +2,13 @@
 
 A vwf design system is the product's **UX/visual contract**, not its
 implementation. It sits beside `architecture.md` as a foundation and is
-**required once the registry has a frontend/app project**.
+**required once the registry has a frontend/app project**. Every blueprint
+Screens section references it, and does not re-decide color, type, spacing or
+component behavior.
+
+It records decisions that are **true regardless of framework**. These are
+semantic token *values*, type and spacing *scales*, and motion *principles*. The
+*accessibility standard* that the product commits to is one too.
 
 **Contract vs realization (for design):**
 
@@ -23,3 +29,6 @@ does not fork the design system.
 
 Keep it minimal: define the tokens, scales, and behaviors the product actually
 uses. Do not enumerate a catalog of styles "just in case."
+
+Read the Routing row of the layer you are defining, then the checklist when the
+doc is complete.

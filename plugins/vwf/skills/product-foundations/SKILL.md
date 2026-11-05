@@ -1,85 +1,47 @@
 ---
 name: product-foundations
-description: The foundational concerns every product must decide — users &
-  operators, observability, audit logs, change logs, background processes, data
-  retention & PII, notifications, runtime settings, rate limiting, reliability
-  targets, disaster recovery & backup, cost guardrails, incident response.
-  Elicited defaults distilled from the 95octane reference implementation. Used by
-  /vwf:architecture (the foundations checklist) and /vwf:blueprint (expanding
-  accepted foundations into contracts); read the reference matching the
-  foundation being decided or expanded.
+description: Thirteen foundations with elicited defaults (users, observability,
+  audit, change logs, jobs, retention, notifications, settings, rate limits,
+  reliability, DR, cost, incidents). Auto-applies when editing
+  docs/blueprint/architecture.md or conventions.md.
 user-invocable: false
+disable-model-invocation: false
 paths:
   - "docs/blueprint/architecture.md"
   - "docs/blueprint/conventions.md"
+metadata:
+  archetype: doctrine
 ---
 
 # Product Foundations
 
-Thirteen concerns every product hits sooner or later. Each has a **default
-contract** distilled from the 95octane reference implementation — proposed per
-product, never silently assumed: `/vwf:architecture` walks this checklist as
-part of its cross-cutting elicitation, records the selection as a
-`cross_cutting` token, and `/vwf:blueprint` expands accepted ones into the
-canonical contract in `conventions.md` plus the per-entity surfaces each
-reference names.
+Thirteen foundations every product hits sooner or later. `/vwf:architecture` and
+`/vwf:blueprint` use them. Read the reference for the foundation you decide or
+expand.
 
-Five of the thirteen are **core** — users & operators, observability,
-reliability targets, DR & backup, incident response — the concerns a
-production-bound product cannot skip without a recorded, expiring exception.
-The other eight are **elective**:
-declining one is a recorded decision (the registry simply omits the token), not
-an `enforcement:` opt-out. The contract layer here is code-independent; each
-reference points at the reference-stack docs for the 95octane realization.
+## Routing
 
-## The checklist
+| Doing                                               | Read                                                       | Loads     |
+| --------------------------------------------------- | ---------------------------------------------------------- | --------- |
+| Walking the checklist in `/vwf:architecture`        | [checklist](references/checklist.md)                       | sometimes |
+| Finding what a command does with a foundation token | [consumption](references/consumption.md)                   | sometimes |
+| Deciding or expanding users & operators             | [users](references/users.md)                               | sometimes |
+| Deciding or expanding observability                 | [observability](references/observability.md)               | sometimes |
+| Deciding or expanding audit logs                    | [audit-logs](references/audit-logs.md)                     | sometimes |
+| Deciding or expanding change logs                   | [change-logs](references/change-logs.md)                   | sometimes |
+| Deciding or expanding background processes          | [background-processes](references/background-processes.md) | sometimes |
+| Deciding or expanding data retention & PII          | [data-retention](references/data-retention.md)             | sometimes |
+| Deciding or expanding notifications                 | [notifications](references/notifications.md)               | sometimes |
+| Deciding or expanding runtime settings              | [runtime-settings](references/runtime-settings.md)         | sometimes |
+| Deciding or expanding rate limiting                 | [rate-limiting](references/rate-limiting.md)               | sometimes |
+| Deciding or expanding reliability targets           | [reliability-targets](references/reliability-targets.md)   | sometimes |
+| Deciding or expanding DR & backup                   | [disaster-recovery](references/disaster-recovery.md)       | sometimes |
+| Deciding or expanding cost guardrails               | [cost-guardrails](references/cost-guardrails.md)           | sometimes |
+| Deciding or expanding incident response             | [incident-response](references/incident-response.md)       | sometimes |
 
-| Foundation           | Default (one line)                                                         | Reference                                                  |
-| -------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| Users & operators (Core) | Two user classes; document-based RBAC; claims for account-status only  | [users](references/users.md)                               |
-| Observability (Core) | Vendor-neutral telemetry, all three signals, trace-correlated logs        | [observability](references/observability.md)               |
-| Audit logs           | Privileged + destructive → `audit-store`, `audit-event`, `audit-history`   | [audit-logs](references/audit-logs.md)                     |
-| Change logs          | Keep-a-Changelog source of truth → fastlane store metadata                 | [change-logs](references/change-logs.md)                   |
-| Background processes | Sync/async per action; durable → worker, ephemeral → service               | [background-processes](references/background-processes.md) |
-| Data retention & PII | Delete by default; pseudonymised legal-basis retention; no PII in logs     | [data-retention](references/data-retention.md)             |
-| Notifications        | Per-channel contracts (push/email/SMS); triggers live on entities          | [notifications](references/notifications.md)               |
-| Runtime settings     | One cached, schema-typed settings document; flags are settings             | [runtime-settings](references/runtime-settings.md)         |
-| Rate limiting        | Endpoint-class limits with a uniform 429 contract                          | [rate-limiting](references/rate-limiting.md)               |
-| Reliability targets (Core) | Per-service availability + latency SLOs with an error-budget stance  | [reliability-targets](references/reliability-targets.md)   |
-| DR & backup (Core)   | RPO/RTO per datastore; automated backups; restore drills on a cadence      | [disaster-recovery](references/disaster-recovery.md)       |
-| Cost guardrails      | One budget with 50/90/100% alerts; per-service scaling caps; metered ops   | [cost-guardrails](references/cost-guardrails.md)           |
-| Incident response (Core) | Alert-condition table in conventions; runbooks per project; postmortem stubs | [incident-response](references/incident-response.md)   |
+## Rules that don't wait
 
-## How the workflow consumes this
-
-- **`/vwf:architecture` (step 3c)** — walks the checklist. For each
-  **elective** foundation: present the default in one line, ask via MCQ
-  **accept the default / adapt it / not applicable**, record the selection as a
-  `cross_cutting` token (e.g. `audit: privileged-destructive`,
-  `notifications: [push, email]`); a not-applicable answer is omitted from the
-  registry — that omission *is* the record. For each **core** foundation the
-  MCQ instead offers **accept the default / adapt it / defer — not
-  production-bound**: a core foundation has no "not applicable" — a product
-  with no reliability target or no DR posture is not a claim vwf lets stand
-  silently. A deferral records a registry token `<foundation>: deferred-preprod`
-  (e.g. `reliability: deferred-preprod`), never an omission — omission stays
-  the record only for electives.
-- **`/vwf:plan` (production-bound slice) / `/vwf:verify production`** — treat
-  any `deferred-preprod` core token still on the registry as a **blocking**
-  finding: the product is shipping to customers on a foundation it explicitly
-  said was not ready.
-- **`/vwf:blueprint`** — for each accepted (or deferred) foundation, expand the
-  contract into `conventions.md` under its anchor (the reference names it) on
-  first touch, and elicit the per-flow surface as flows are authored: audit
-  markers on the flow's Trigger & Actors rows and steps for
-  privileged/destructive actions, notification triggers, sync/async
-  classification and placement (the flow's Background Jobs table), settings
-  reads. Flow and entity docs link the anchors; they never restate the
-  contract.
-- **`/vwf:plan` / `execute`** — consume the contracts like any other conventions
-  anchor; the change-logs reference additionally hooks execute's docs-sync step.
-
-Foundations expand into **existing** blueprint structures (conventions anchors,
-flow Trigger & Actors, Background Jobs, flow steps) — no new mandatory doc
-sections, so a product that defers or skips a foundation is not in format
-drift.
+- Propose each default per product, and never assume one silently — the product
+  decides.
+- Keep the contract layer code-independent — each reference points at the
+  reference-stack docs for the 95octane realization.
