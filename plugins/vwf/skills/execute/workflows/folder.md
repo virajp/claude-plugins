@@ -1,7 +1,7 @@
 # `<plan-folder>` — resolve and refuse early
 
-This runs after the format test in `SKILL.md`. `next` and a runner reach it with
-the folder they hold. `/vwf:execute all` does not: when the argument is `all`,
+This runs after the format test in `SKILL.md`. The `next` form and a runner reach it with
+the folder they hold. The `/vwf:execute all` form does not: when the argument is `all`,
 this session is the loop, not an orchestrator. It follows
 [`all` and runner mode](all.md) and nothing here. A runner reads `SKILL.md` and
 runs it for its one folder, in the *Runner mode* of all.md, as if that folder
@@ -15,13 +15,13 @@ one with its target repo (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). The
 file's shape is `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`,
 and `plan-management` is its one writer.
 
-Read the index; do not walk the members — under `multi-repo` most are not on this
+Read the index; do not walk the members. Under `multi-repo` most are not on this
 machine, so a walk reports what happens to be cloned.
 
 Halt if no approved plan exists: "No approved plan found. Run `/vwf:plan` or
 `/vwf:change-plan` first."
 
-**Halt if the target repo is absent.** Report the missing repo and the command
+**Halt if the target repo is absent**. Report the missing repo and the command
 that fetches it, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`:
 `git submodule update --init <path>` under submodule linkage,
 `git clone <url> <path>` under siblings. Then stop; the run clones nothing. The
@@ -53,7 +53,7 @@ the release that wrote it, or re-plan it.
    - **has `covers`**: a cycle plan, whose blueprint-bound steps run.
    - **has a `code` unit**: one or more `units` entries whose `kind` is `code`.
 4. Read the folder's **row** in the base repo's `docs/plans/index.json`, at the
-   integration branch's tip, the way `plan-index.md`'s *Reading the queue* reads it:
+   integration branch's tip. Read it as `plan-index.md`'s *Reading the queue* does:
    `git show <remote>/<integration branch>:docs/plans/index.json` piped into
    `plan.mjs get - plans.<basename>`. A `get` that finds no such id, or an origin
    tree with no `docs/plans/index.json`, means no row.
@@ -84,16 +84,18 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
     Reconcile commit, so an executed-but-unmerged prerequisite correctly halts
     too.
   - For a **change** entry whose row is `APPROVED`, say "run /vwf:execute <that
-    folder> first". When it is `RUNNING`, say "another session is running <that
-    folder>; re-run this plan once it lands — or, when that run is gone, make the
-    `plan-management unclaim <that folder>` request yourself".
+    folder> first". When it is `RUNNING`, say this:
+
+    > "another session is running <that folder>; re-run this plan once it lands — or,
+    > when that run is gone, make the `plan-management unclaim <that folder>` request
+    > yourself"
   - For an entry the verb names as unresolvable, say "<entry> is neither in the
     plan index nor archived; fix the folder's `requires` list".
 - **Status `APPROVED` with no row at all** → stop: "not in the plan index; re-run
   the planner's hand-off, or add the row by hand".
 - **Status `APPROVED` with a `RUNNING` row** → a claim another session holds. Stop
   and name it. Only the session that holds the row resumes it. It is claimed
-  afresh only once the user has asked the session to unclaim it —
+  afresh only once the user has asked the session to unclaim it. That is
   `plan-management`'s `unclaim <folder>`, which refuses while the run's worktree
   still exists. Execute stops here, and never invokes the verb from this refusal.
 - **Status `BLOCKED` or `RUNNING`** → a **resume**, per the Resume check in
@@ -107,7 +109,7 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
     `APPROVED` was unclaimed, and the run claims it again in
     [claim.md](../references/claim.md).
   - A resume runs what its folder says and takes none of the fresh-run refusals
-    below — a folder written before review rows existed was reviewed per unit, and
+    below. A folder written before review rows existed was reviewed per unit, and
     cannot be re-approved mid-run.
   - It refuses one thing beyond `validate`: a non-green `code` unit with no
     `review` row ahead that covers it, since it would land with no review. The
@@ -143,12 +145,12 @@ refused above with the finding's path:
 
 A landing turns `backlog` into `Done` and `backlog_pieces` into `Partially done`,
 and checks nothing else. The fix for each is to re-run the planner named by the
-folder's `type`, `/vwf:plan` or `/vwf:change-plan`, and correct the entry, or move
+folder's `type`, `/vwf:plan` or `/vwf:change-plan`. Then correct the entry, or move
 the id to the list its Parked lines say it belongs on.
 
 ## The folder is already committed
 
-The folder arrives committed on the integration branch: the planner commits and
+The folder arrives committed on the integration branch. The planner commits and
 pushes it at hand-off, so the worktree Setup step 1 cuts sees it from its first
 commit. Refuse a folder that is not on that branch; do not sweep it into a unit
 commit. Stop and say to run the planner again on it, or to commit and push it by

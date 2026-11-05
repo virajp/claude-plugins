@@ -5,7 +5,7 @@
 Reconcile runs **before** the docs unit's wave, so that unit's delta is complete. The
 human docs are the docs unit's, not this step's; this skill runs no docs-sync of its own.
 
-1. **Architecture, environment, harness and implementation stamps — with `covers`.**
+1. **Architecture, environment, harness and implementation stamps — with `covers`**.
    Reconcile per the Reconcile section of `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`:
    - the registry block for any topology change;
    - `environment.md` for any new secret or env var;
@@ -15,10 +15,10 @@ human docs are the docs unit's, not this step's; this skill runs no docs-sync of
 
    Commit it in the worktree like every other unit. A plan without `covers` skips this step
    whole, said in `stages.reconcile`'s `detail`.
-2. **Persist — when the plan has a `code` unit.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`
-   and its run exception, write the run's durable decisions as `docs/memory/decisions/` files,
-   one record per file, in the worktree — the base checkout under `linkage: siblings` — and
-   nothing else. File no finding, and keep the run's gaps in the folder's `gaps` list alone.
+2. **Persist — when the plan has a `code` unit**. Follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`
+   and its run exception. Write the run's durable decisions as `docs/memory/decisions/` files,
+   one record per file, and nothing else. Write them in the worktree, or the base checkout under
+   `linkage: siblings`. File no finding, and keep the run's gaps in the folder's `gaps` list alone.
    Skip anything a doc already captures. The `code` pipeline already wrote most per-unit
    decisions, so fill only what is missing here.
 
@@ -42,8 +42,8 @@ skipped**:
    `${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`. It applies its findings, plus every
    `DOCS FALSIFIED:` line the units returned.
 2. **The gates unit** runs the generators the plan names, and passes the full wave gate. It bumps
-   no version: a release level is recorded at the landing, in `.config/releases.yaml`, and the
-   version is bumped by the release step a person runs.
+   no version. A release level is recorded at the landing, in `.config/releases.yaml`. The release
+   step a person runs bumps the version.
 
 Each runs the wave loop in full: dispatch, wave review, unit gate, wave gate, commit.
 

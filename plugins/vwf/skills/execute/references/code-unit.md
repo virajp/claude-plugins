@@ -15,7 +15,7 @@ Every write to the folder's `index.json` below is one call in the worktree,
 
 `plan.mjs set` for short (`--json` for a number), or one `plan.mjs append` to a list. Every read is one
 `plan.mjs get`. Follow each `set` of the unit's `status`, `commit` or `rounds` below with one
-`log.mjs event row`, and each `append` to `gaps` with one `log.mjs event gap`, per
+`log.mjs event row`. Follow each `append` to `gaps` with one `log.mjs event gap`, per
 [the plan files](plan-files.md).
 
 For the unit (skip it when its `status` in `index.json` already reads `green` with a `commit` set):
@@ -35,26 +35,27 @@ For the unit (skip it when its `status` in `index.json` already reads `green` wi
    Set the unit's `status` to `running`; `plan.mjs` stamps its times, per [the plan files](plan-files.md).
    Document a sub-100% coverage result against the configured target (`.config/vwf.yaml`
    `pipeline.coverage_target`, default 100) as a gap, never a silent pass.
-3. **gaps** — each line of the coder's `GAPS:` → one `plan.mjs append` to the `gaps` list of `index.json`
-   (`{id, unit, stage: "code", text, state: "open"}`, the next `G<n>`), the one place a run's gap goes. Decide
+3. **gaps** — each line of the coder's `GAPS:` → one `plan.mjs append` to the `gaps` list of `index.json`.
+   The entry is `{id, unit, stage: "code", text, state: "open"}`, the next `G<n>`. That list is the one place
+   a run's gap goes. Decide
    blocking or non-blocking, and act per the rules.
 4. **commit** — run every line of the folder's *Unit gate*, its `gates.unit` list, once. A red line is the
    unit's failure, per [waves.md](waves.md) step 5. Then commit the unit's work through `/vwf:git-workflow`,
-   **per the commit-only preference**, with the unit file's Commit line. The folder's edits — the unit fields
-   and the `gaps` entries of `index.json` — ride the same commit: the folder is edited in the worktree, never in
+   **per the commit-only preference**, with the unit file's Commit line. The folder's edits ride the same commit: the unit fields
+   and the `gaps` entries of `index.json`. The folder is edited in the worktree, never in
    the main checkout.
-5. **record** — set the unit's fields: `status` `green` (or `skipped`, `failed`, `unresolved` per the gap rules),
-   `commit` the short commit hash, and `rounds` the round reached.
-   - Write the unit's durable decisions as `docs/memory/decisions/` files in the run's worktree — in the base
-     checkout under multi-repo `linkage: siblings`, as Reconcile writes its stamps — per the run exception in
-     `memory.md`. Leave them unstaged: no unit's Owns holds `docs/memory/`, so they ride the Reconcile commit.
+5. **record** — set the unit's fields. Its `status` is `green` (or `skipped`, `failed`, `unresolved` per the gap rules).
+   Its `commit` is the short commit hash, and its `rounds` is the round reached.
+   - Write the unit's durable decisions as `docs/memory/decisions/` files, per the run exception in `memory.md`.
+     Write them in the run's worktree, or in the base checkout under multi-repo `linkage: siblings`, as Reconcile
+     writes its stamps. Leave them unstaged: no unit's Owns holds `docs/memory/`, so they ride the Reconcile commit.
    - Write no other record, and file no finding.
-   - Set each field, and log its `row` event, **as the node returns** (step 2), not batched here: one `row` event
-     per execution — wave, unit, status, and the outcome and model in its `detail`, the commit once it has one —
-     before the next dispatch. So a re-dispatch is a further event, and a skip carries its `why`. Batching it to the
+   - Set each field, and log its `row` event, **as the node returns** (step 2), not batched here. Write one `row`
+     event per execution before the next dispatch. It holds the wave, the unit, the status, the outcome and model
+     in its `detail`, and the commit once it has one. So a re-dispatch is a further event, and a skip carries its `why`. Batching it to the
      end of the unit makes a resumed run repeat work, and the report render from memory.
 
-A fix loop-back — from the covering review row, from the wave review, or from the acceptance and UX pass — re-enters
+A fix loop-back comes from the covering review row, the wave review, or the acceptance and UX pass. It re-enters
 this pipeline from step 2 with the finding lines appended, then steps 3-5. Its `row` event carries the next round
 number, which the unit's `rounds` then holds, and its fix commit becomes the unit's `commit`.
 

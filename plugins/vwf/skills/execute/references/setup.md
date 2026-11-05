@@ -19,23 +19,23 @@ plan reads no blueprint artifact.
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before the first unit:
 
 1. List the file names of `docs/memory/decisions/` and `docs/memory/gaps/`.
-2. Read the files whose slug or title matches this plan — its slice, its name, the
-   projects it changes — newest first, at most ten per folder.
+2. Read the files whose slug or title matches this plan, newest first, at most ten per folder.
+   A match is on its slice, its name, or the projects it changes.
 3. Read no file in full that does not match.
 
 The plan rationale is the folder itself. Per-unit recall continues inside the `code`
 pipeline, for `code` units only. A `docs/memory/` folder that is absent or empty
 recalls nothing, silently.
 
-**Resume check.** On a `BLOCKED` or `RUNNING` folder, the resumed run reads the
+**Resume check**. On a `BLOCKED` or `RUNNING` folder, the resumed run reads the
 folder's `index.json` and the branch's `git log`:
 
 - Each unit's `status`, `commit` and `rounds`: which units are already `green` and
   their commits, and which unit is the first that is not.
 - For a `review` row: which round last returned, and whether a late re-run is pending.
   It is pending when a covered unit's `commit` is not an ancestor of the row's
-  `range.to` — by ancestry, not recency, each covered unit tested once — per
-  [blocking.md](blocking.md) step 4.
+  `range.to`, per [blocking.md](blocking.md) step 4. The test is by ancestry, not recency,
+  with each covered unit tested once.
 - The `gaps` list.
 - The `stages`, which say whether a plan-level stage already passed.
 
@@ -43,7 +43,7 @@ Then follow the Resume steps of [blocking and resume](blocking.md):
 
 - The worktree in the status line must exist.
 - The rulings a block asked for must now be in the plan.
-- **The worktree is authoritative.** Re-run a unit whose `commit` is absent from the
+- **The worktree is authoritative**. Re-run a unit whose `commit` is absent from the
   branch — the committed code is ground truth.
 - Resume at the first non-`green` unit. Never re-implement a finished one.
 - The earlier attempt's fields stay. A unit run again continues its `rounds`.
@@ -56,7 +56,7 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
 
 ## Setup
 
-1. **Worktree.** Invoke `/vwf:git-workflow` to create the dedicated worktree, passing
+1. **Worktree**. Invoke `/vwf:git-workflow` to create the dedicated worktree, passing
    the declared preferences:
    - isolate without prompting;
    - branch from the repo's integration branch, named with the plan's name: the
@@ -71,8 +71,8 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
    `isolation: "worktree"`** — units in a wave own disjoint paths. Record the worktree
    path in the folder's status line.
 
-   **Under an `all` override** — the dispatch prompt's overrides block names a
-   `shared worktree: <branch>`, per [`all` and runner mode](../workflows/all.md) — cut
+   **Under an `all` override**, the dispatch prompt's overrides block names a
+   `shared worktree: <branch>`, per [`all` and runner mode](../workflows/all.md). Then cut
    no worktree of the plan's name.
    - When a worktree on that branch exists, reuse it. Stop when it is not clean. Then
      bring it up to date with a plain `git merge <integration branch>` run inside it,
@@ -85,24 +85,23 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
    Record that path in the status line. Once the preflight below is green, append the
    one `overrides` entry the reference describes.
 
-   **In a `multi-repo` product, the linkage decides which repo the worktree is of.**
+   **In a `multi-repo` product, the linkage decides which repo the worktree is of**.
    `/vwf:git-workflow` resolves it:
 
    - **`linkage: submodule`** — unchanged from every previous release. The worktree is
-     of the **base** repo (the outermost superproject), and the members are populated
+     of the **base** repo (the outermost superproject). The members are populated
      inside it, so one tree holds both the code and the blueprint. Nothing here is
      cross-repo. The member's pointer commit is part of landing the branch.
    - **`linkage: siblings`** — the base repo's tree does **not** contain the members,
-     so the worktree is of the **target member**. The base's writes — Reconcile's
-     `implementation:` stamps, and the docs unit's edits to the base's own docs — go to
-     the base checkout as a second working tree. Commit the two separately, **base repo
+     so the worktree is of the **target member**. The base's writes go to the base checkout as a second working tree. These are Reconcile's
+     `implementation:` stamps, and the docs unit's edits to the base's own docs. Commit the two separately, **base repo
      last** — a half-finished run never leaves a doc claiming work that has not landed.
-2. **Preflight (unattended — nothing here asks).** Doctor already ran before the claim,
-   per [claim.md](claim.md), and its blocking findings already halted the run. This step
+2. **Preflight (unattended — nothing here asks)**. Doctor already ran before the claim,
+   per [claim.md](claim.md). Its blocking findings already halted the run. This step
    reads the rest of its report.
 
    **When the plan has a `code` unit, read the LSP findings against the plan's
-   `consent.lsp`.** Note everything else doctor reports, and carry it into the run's gap
+   `consent.lsp`**. Note everything else doctor reports, and carry it into the run's gap
    list; do not block on it. A missing LSP server was a question at `/vwf:plan`'s stack
    gate, and its answer is `consent.lsp.<language>`. This run reads it and never asks:
    follow the LSP rule in [the `code`-unit preflight](preflight.md) when doctor reports
@@ -110,7 +109,7 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
    report and nothing more.
 
    Then run every line of the folder's `gates.unit` and `gates.wave`, in that order,
-   once, from the worktree root. Run what is written and infer nothing: a gate the plan
+   once, from the worktree root. Run what is written and infer nothing. A gate the plan
    does not name is not this run's to invent, however obvious it looks in the tree.
    `gates.plan` does not run here; it runs once, at the end.
 
@@ -120,13 +119,13 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
    A red line here is the integration branch's, not the plan's. Stop and report it as
    such — never start a run that would be blamed for a failure it inherited. The green
    preflight is in the action log, each line a `run --tier preflight` call.
-3. **Stack conventions — only when the plan has a `code` unit.** Fetch the
-   `conventions:` prose for every template this plan's projects pin, per the *Stack
+3. **Stack conventions — only when the plan has a `code` unit**. Fetch the
+   `conventions:` prose for every template this plan's projects pin. Follow the *Stack
    conventions* section of [the `code`-unit preflight](preflight.md). Fetch once for the
    whole run, deduped per (repo, slug), with its two distinguishable halts. A plan of
    `edit` units alone skips this step, said in the final report.
-4. **Wave order.** Read the folder's `units`, build the sequence from each entry's
-   `wave`, `depends_on` and `kind`, and record the sequence you will execute. Every unit
+4. **Wave order**. Read the folder's `units`, and build the sequence from each entry's
+   `wave`, `depends_on` and `kind`. Record the sequence you will execute. Every unit
    reads `pending` at approval, and no field is written ahead of its unit. The action
    log's `plan.snapshot` already holds the `units` list the sequence is built from. The
    orchestrator sets the unit fields and logs a `row` event per node or report, per

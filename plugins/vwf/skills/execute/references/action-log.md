@@ -5,8 +5,8 @@ repo, so nothing is committed and no worktree removal or branch cleanup touches 
 
     ~/Library/Caches/vwf/<repo>/<plan folder basename>.jsonl
 
-`<repo>` is the name of the repo that holds the folder, derived from its git common dir, so the main
-checkout and a worktree name the same file. `$VWF_LOG_ROOT`, when set, replaces `~/Library/Caches/vwf`;
+The name `<repo>` is the repo that holds the folder, derived from its git common dir. So the main
+checkout and a worktree name the same file. When set, `$VWF_LOG_ROOT` replaces `~/Library/Caches/vwf`;
 the tests use it. The claim writes the path, with a literal `~`, into the folder's `run.log`, and
 `run.worktree` beside it. That is how a reader finds both.
 
@@ -24,16 +24,20 @@ The log is the run's real-time feed, for debugging and timing statistics. It ans
 - which agent ran each unit;
 - where a gap came from: the agent that raised it and the tool calls it made first.
 
-The start and end of each unit, wave and stage, and of the plan, live in `index.json` and the plan's row, stamped
-by `plan.mjs` ([the plan files](plan-files.md)). The progress pane takes those from the JSON. From the log it takes
+The start and end of each unit, wave and stage, and of the plan, live in `index.json` and the plan's row. The script
+`plan.mjs` stamps them ([the plan files](plan-files.md)). The progress pane takes those from the JSON. From the log it takes
 only each unit's agent, whether it is live, and how recent the last line is. The `row` and `gap` events stay, for
 `log.mjs summary` and a later reader.
 
-Two writers append to it. The **hooks** in `hooks/hooks.json` write every tool call and subagent — start, end,
-duration, agent id — on the machine's clock, with nothing for you to do. **You** write what only the orchestrator
-knows, through the script:
+Two writers append to it:
 
-    node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs <verb> …
+- The **hooks** in `hooks/hooks.json` write every tool call and subagent: start, end, duration, agent id. They write
+  on the machine's clock, with nothing for you to do.
+- **You** write what only the orchestrator knows, through the script below.
+
+```sh
+node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs <verb> …
+```
 
 Call it from the directory the step runs in: the main checkout before the worktree exists, the worktree after. A log
 call never stops a run, and is never a reason to pause: skip a call that fails, and go on. The log is a record of the
@@ -43,11 +47,12 @@ run, never an input to it. The unit fields of `index.json` and the worktree stay
 
 Each item is one point in the run and the call made there. Fill the names in angle brackets from the run.
 
-- **Once the folder is read and not refused:** `start --folder <folder> --mode fresh`, `<folder>` the copy the run read;
-  or, on a resume, `start --folder <the worktree copy of the folder> --mode resume`. `--mode` is `fresh` or `resume` only;
-  another value exits 2 and writes nothing. `start` reads `<folder>/index.json` and appends one `plan.snapshot` event,
-  `{folder, units}`, right after `run.start`. `units` is that file's `units` list, which is where a unit's `kind` comes
-  from.
+- **Once the folder is read and not refused:** `start --folder <folder> --mode fresh`, `<folder>` the copy the run read.
+  On a resume, the call is `start --folder <the worktree copy of the folder> --mode resume`.
+  - The value of `--mode` is `fresh` or `resume` only. Another value exits 2 and writes nothing.
+  - The `start` call reads `<folder>/index.json`. It appends one `plan.snapshot` event, `{folder, units}`, right after
+    `run.start`.
+  - The `units` value is that file's `units` list, which is where a unit's `kind` comes from.
 - **Each phase, before and after:** `event phase.start --phase <phase>` and `event phase.end --phase <phase>`, with the
   same keys on both.
 - **Every gate line:** `run --tier <tier> --unit <id> --wave <n> -- <the gate line>`, the tier one of `unit`, `wave`,
@@ -56,10 +61,10 @@ Each item is one point in the run and the call made there. Fill the names in ang
 - **Each `review` row round, as it returns:** `event review.round --row <id> --loop <loop id> --round <n>` plus
   `--from <sha> --to <sha> --files <n> --review <n> --security <n> --routed <n>`, the last the count of findings routed to
   an uncovered unit.
-- **Each gap recorded** — a `GAP:`, an `UNRESOLVED:`, a `contested` finding, an oscillation — and each `append` to the
-  folder's `gaps` and each `set` of a gap's `state`: `event gap`, its JSON on stdin (below).
-- **Each run fact set in `index.json`** — a unit's `status`, `commit`, `rounds` or `range`, or a stage: `event row`, its
-  JSON on stdin (below), right after the `plan.mjs set`. A wave's `status` set has no event: the wave's `phase.start` and
+- **Each gap recorded, and each `append` to the folder's `gaps`, and each `set` of a gap's `state`:** `event gap`, its JSON
+  on stdin (below). A recorded gap is a `GAP:`, an `UNRESOLVED:`, a `contested` finding or an oscillation.
+- **Each run fact set in `index.json`:** `event row`, its JSON on stdin (below), right after the `plan.mjs set`. A run
+  fact is a unit's `status`, `commit`, `rounds` or `range`, or a stage. A wave's `status` set has no event: the wave's `phase.start` and
   `phase.end` carry it.
 - **A stop** — a pause, a block, a refusal after `start`: `event stop --reason "<why>" --resume "/vwf:execute <folder>"`,
   then `end --outcome paused` or `end --outcome blocked`.
@@ -71,7 +76,7 @@ The phases, in run order: `doctor`, `claim`, `worktree`, `preflight`, `wave` (wi
 logged by its rounds.
 
 `run` runs the command with its output where it would have gone. It then logs the command line, its exit code and its
-duration, and exits with the command's own code, so wrapping a gate line changes nothing about how its result is read. Put
+duration, and exits with the command's own code. So wrapping a gate line changes nothing about how its result is read. Put
 the shell's redirection outside the wrapper:
 `log.mjs run --tier wave -- mise x -- mise run code:lint > /tmp/g.log 2>&1`.
 
@@ -91,7 +96,7 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event gap <<'EOF'
 EOF
 ```
 
-Both are strict, like `plan.snapshot` and `session.end`: a missing required key, a wrong type, a wrong enum value or an unknown
+Both are strict, like `plan.snapshot` and `session.end`. A missing required key, a wrong type, a wrong enum value or an unknown
 key exits non-zero and writes nothing. Like every log call, it never stops the run.
 
 - **`row`**: exactly one of `unit` (`"U<n>"`) or `stage` (a `stages` key). `status`, always: the unit's or the stage's status after
@@ -101,8 +106,8 @@ key exits non-zero and writes nothing. Like every log call, it never stops the r
 - **`gap`**: `unit`, `stage` (each `""` when not known), `text` (not empty) and `state` (`open` or `closed`), all required. `class`
   (`GAP`, `UNRESOLVED`, `contested`, `oscillation`) and `source` (`unit`, `wave-review`, `review-row`, `gate`, `acceptance`, `ux`),
   optional. `id` is the `G<n>` of the folder's `gaps` entry when the gap is one. Leave it out for a recorded line that is not an
-  `index.json` gap, and `log.mjs` writes the next `L<n>` — one past the highest `L` id in the log, `L1` when none — with `state`
-  `open`. Never read the log for an id.
+  `index.json` gap. Then `log.mjs` writes the next `L<n>`, with `state` `open`. That id is one past the highest `L` id in the log,
+  or `L1` when none. Never read the log for an id.
 
 ### No active run
 
@@ -112,26 +117,29 @@ appends to the same file, then repeat the call.
 
 ## Clean-up
 
-- **Old logs — `prune`.** `log.mjs prune --repo <root> --days 30 --keep <folder basename>` deletes a log under `<log root>/<repo>/` only
-  when its plan folder is archived — `<root>/docs/plans/archived/<basename>` or `<basename>-<n>` is a directory — and the log has not
-  changed for more than 30 days. It never deletes the log `--keep` names, so a live plan paused for a month keeps its log.
-  `plan-management archive` calls it as its last step, after each move into `docs/plans/archived/`, with `--keep` the folder it archived
-  and `--repo` the root of the checkout it ran in. `/vwf:execute` never calls it itself.
-- **Dead markers — at `start`.** `start` deletes the marker of every other session whose log has not changed for 24 hours, and always the
+- **Old logs — `prune`**. `log.mjs prune --repo <root> --days 30 --keep <folder basename>` deletes a log under `<log root>/<repo>/`
+  only when both of these hold:
+  - Its plan folder is archived: `<root>/docs/plans/archived/<basename>` or `<basename>-<n>` is a directory.
+  - The log has not changed for more than 30 days.
+
+  It never deletes the log `--keep` names, so a live plan paused for a month keeps its log. The verb `plan-management archive` calls it
+  as its last step, after each move into `docs/plans/archived/`. It passes `--keep` the folder it archived, and `--repo` the root of the
+  checkout it ran in. The `/vwf:execute` skill never calls it itself.
+- **Dead markers — at `start`**. `start` deletes the marker of every other session whose log has not changed for 24 hours, and always the
   `nosession` marker. It never touches a log.
-- **A session's end — the `SessionEnd` hook.** When a session ends — `/clear`, a normal exit, `/resume` — the hook appends
+- **A session's end — the `SessionEnd` hook**. A session ends on `/clear`, a normal exit or `/resume`. The hook then appends
   `session.end {reason}` to that session's log and deletes its marker. A crash fires no hook; the next `start`'s sweep takes that marker.
 
 ## Reading it
 
     node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs summary <file>
 
-This reports each run of the plan — one `run.start` to the next; the pause from a run's last line to the next `run.start` is not counted —
-and the totals. For each, it prints:
+This reports each run of the plan, one `run.start` to the next, and the totals. The pause from a run's last line to the next `run.start` is
+not counted. For each, it prints:
 
 - the phases with their durations;
-- every agent with its start, duration and what spawned it, with the total agent time, the wall time they covered, the peak number at once
-  and the parallel factor;
+- every agent with its start, duration and what spawned it;
+- the total agent time, the wall time the agents covered, the peak number at once and the parallel factor;
 - the gates by tier and the commits;
 - the tool time of the orchestrator apart from the agents;
 - the units from their `row` events, every gap from its `gap` events, and every stop.

@@ -20,8 +20,8 @@ metadata:
 
 Implement an approved plan to completion, autonomously. The plan folder is the
 contract, and its `index.json` is the input. `/vwf:plan` or `/vwf:change-plan`
-wrote every consent, unit scope and gate line there, beside the prose in
-`index.md` and the rulings in the unit files. Read them; do not re-ask them.
+wrote every consent, unit scope and gate line there. The prose is beside them in
+`index.md`, and the rulings are in the unit files. Read them; do not re-ask them.
 
 **The argument** is `$ARGUMENTS`.
 
@@ -36,9 +36,9 @@ the reports. Each unit's `kind` is the switch:
 | `review` | The planner placed it, by default once after the last code unit. Runs the two review engines and two reviewers over the branch delta since the previous review row, the security half alone when it covers `edit` units alone. Findings loop back to the owning units before it counts as done. Each later round covers the previous round's fixes alone. |
 
 Acceptance and UX conformance run once after all units when the plan has
-`covers`. You own the orchestration, and dispatch the five stage subagents:
+`covers`. You own the orchestration, and dispatch the five stage subagents. These are
 `execute-coder` for `code` units, `execute-code-reviewer` and
-`execute-security-reviewer` at `review` rows, `execute-acceptance-verifier` and
+`execute-security-reviewer` at `review` rows, and `execute-acceptance-verifier` and
 `execute-ux-reviewer` once per plan. You also dispatch the unit agents for
 `edit` units, and the wave reviewer for every wave.
 
@@ -47,25 +47,25 @@ There are no per-stage human gates. Decisions come from
 stop: a Pause Condition, or the final report when something stands in the way
 of the landing. Each stop is reported with its resume command.
 
-**Execute asks the user nothing.** The planner asked every question a run needs,
+**Execute asks the user nothing**. The planner asked every question a run needs,
 and recorded the answer in the folder. Where the folder is silent and the rules
 do not decide, report what is missing and stop. Never offer a choice, wait for a
 yes, or ask how to proceed. A fix goes into the folder, and the person re-runs
 `/vwf:execute <folder>`. Two exceptions come before the run starts and never
-from a run: the run-level questions of `all`, asked once by the loop before its
-first plan, and the session question below.
+from a run. One is the run-level questions of `all`, asked once by the loop before its
+first plan. The other is the session question below.
 
 Run in a fresh context: a fresh session, or a runner that `all` dispatches. The
 skill cannot check that. When the person typed `/vwf:execute`, the launch line
 said it, and this skill trusts it.
 
-Adopt the **Autonomous delivery driver** persona: keep moving, decide from the
-rules, isolate all work in one worktree, document what you cannot resolve, and
-land only what the plan's `consent` already authorised.
+Adopt the **Autonomous delivery driver** persona. Keep moving, and decide from the
+rules. Isolate all work in one worktree, and document what you cannot resolve. Land
+only what the plan's `consent` already authorised.
 
 ## First, on every run
 
-**The session question.** Ask it when the model invoked this skill itself,
+**The session question**. Ask it when the model invoked this skill itself,
 through the `Skill` tool. Do not ask it on a command the person typed, or as an
 `execute-runner` — a runner reads this file rather than invoking the skill. Ask
 it before the format test and before anything else: run in a **new session**, or
@@ -78,7 +78,7 @@ context window, and this session has already used part of it.
   claim nothing, cut no worktree, start no log.
 - **Continue in this session** → run here, from the format test on.
 
-**The format test.** Whatever the argument is — a folder, `next` or `all` — look
+**The format test**. Whatever the argument is — a folder, `next` or `all` — look
 at the base repo's local checkout before any other step.
 
 - The repo is in the **old format** whenever `docs/plans/index.md` exists, with
@@ -208,5 +208,5 @@ The full list is [*What this skill never does*](references/rules.md).
   `consent`; commit in the worktree — the plan holds the only authorisation.
 - Bump a version; record a release level at the landing — a person runs the
   release step that bumps it.
-- Run a gate that the plan's gate lists do not name, or skip one they do; run
-  what is written — a gate the plan does not name is not this run's to invent.
+- Run a gate the plan does not name, or skip a named one; run the written
+  gates — the run invents no gate.

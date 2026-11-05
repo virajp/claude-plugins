@@ -20,10 +20,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   `plan.mjs set <folder>/index.json <path> <value>`, or one
   `plan.mjs append <folder>/index.json <list> --json <entry>`. Pass `--json` to
   `set` for any value not a string: a number, boolean, list, object or null.
-- Never rewrite the file whole, and never edit it with Write, Edit or `sed`; use
-  one `set` or `append` per change — the script validates each write.
+- Never rewrite the file whole, or edit it with Write, Edit or `sed`. Use one
+  `set` or `append` per change — the script validates each write.
 - Never call `plan.mjs rewave <file> <unit>=<wave>...`; report a wrong order as
-  a stop — that is a planner write, run after a `set` of a moved unit's `waits`
+  a stop. That call is a planner write, run after a `set` of a moved unit's `waits`
   when the unit moves above wave 1. A run never renumbers waves.
 - A write that exits non-zero wrote nothing. It is a blocking-gap stop per the
   Pause Conditions, with its stderr as the detail.
@@ -45,9 +45,9 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
 Never set the plan's own `status.state` and `status.detail` here — they are the
 `plan-management status` verb's, and the plan index is `plan-management`'s.
 
-**The run writes no time.** Every unit, wave and stage carries `started` and
-`ended`. `plan.mjs` stamps them itself on each `set` of a unit's or wave's
-`status` or a stage's `state`, in the same validated write. A first `running`
+**The run writes no time**. Every unit, wave and stage carries `started` and
+`ended`. The script `plan.mjs` stamps them itself, in the same validated write. It
+stamps on each `set` of a unit's or wave's `status` or a stage's `state`. A first `running`
 sets `started`, a later `running` clears `ended`, and a final status sets
 `ended`. `plan-management`'s `claim` and `complete` stamp the plan's row in
 `docs/plans/index.json` the same way.

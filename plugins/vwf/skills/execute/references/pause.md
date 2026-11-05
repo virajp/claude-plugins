@@ -13,25 +13,25 @@ and pause table in `SKILL.md`. Do not guess past one.
 
 The resume command is always `/vwf:execute <folder>`, run by a person in a fresh
 session. This holds after a **resource-cap** pause too. There, a bare `/vwf:handoff`
-wrote the reserved `next` handoff first, and `/vwf:recall next` may point the person at
+wrote the reserved `next` handoff first. `/vwf:recall next` may point the person at
 that command but never launches it — the run must start in a fresh context. The resume
 reads the folder's `index.json` and `git log`, per the Resume check in
 [setup.md](setup.md).
 
 ## Detail of the conditions
 
-**Subagent death (H4).** Commit what is safe. Record the unit as **blocked**: its
+**Subagent death (H4)**. Commit what is safe. Record the unit as **blocked**: its
 `status` set `failed`, its `why` in its `row` event's `detail` and in one `gaps` entry.
 Then pause, and never proceed on a dead stage.
 
-**Resource caps (H5).** A repo may **tighten** the caps, never loosen them, through
+**Resource caps (H5)**. A repo may **tighten** the caps, never loosen them, through
 `.config/vwf.yaml` `pipeline.execute_caps`; the hook honors the lower value.
 
-**Non-converging cap-exempt finding (H7).** The fix is not holding, or keeps trading
+**Non-converging cap-exempt finding (H7)**. The fix is not holding, or keeps trading
 against another finding. These can never be downgraded to gaps, so the loop has nowhere to
 exit to. Pause with the finding, the rounds tried, and what each round changed.
 
-**Uncovered decision (H8).** Commit what is safe, append the gap, report the ruling the
+**Uncovered decision (H8)**. Commit what is safe, append the gap, report the ruling the
 folder needs, and give the resume command. Never ask.
 
 ### The resource-cap signal
