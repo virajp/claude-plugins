@@ -41,7 +41,7 @@ weaker match.
 
 | File                                      | Access                          | Owner              |
 | ----------------------------------------- | ------------------------------- | ------------------ |
-| `docs/memory/decisions/`, `gaps/`         | read                            | the memory rule    |
+| `docs/memory/decisions/`, `gaps/`         | read; `gaps/` written if parked | the memory rule    |
 | `docs/plans/archived/`                    | read                            | `plan-management`  |
 | the backlog, a project on the forge       | read; written through its verb  | `/vwf:backlog`     |
 | `docs/plans/index.json`                   | read; written through `add`     | `plan-management`  |
@@ -70,7 +70,7 @@ weaker match.
 
 | ID  | Condition                                                                                            | Action                                                                                                                                                |
 | --- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| H1  | §5 answer is revise or abandon                                                                       | Revise loops back to the section named. Abandon ends with nothing on disk and a one-line note of what was decided, so the next attempt can recall it. |
+| H1  | §5 answer is revise or abandon                                                                       | Revise loops back to the section named. Abandon leaves no folder, any parked record, and a one-line note of what was decided, for the next attempt.   |
 | H2  | §8 `plan-management add` refuses: `docs/plans/index.md` of the base repo exists, the old plan format | Stop. The folder stays `DRAFT` and uncommitted, and no later step runs. The output is the refusal as `add` printed it.                                |
 | H3  | §8 finds something unplanned at the check priority                                                   | Print no launch block. End with the second ending under Output.                                                                                       |
 | H4  | §7 rulings review still returns gaps after round four                                                | Follow item 20 of the interview checklist. Hand off with no unread list.                                                                              |
@@ -108,8 +108,8 @@ or run every runnable plan, highest priority first:
 
 ## Never
 
-- Write to disk before §5's approve; present the shape first — the gate is the
-  user's review.
+- Write to disk before §5's approve, save a parked record; present the shape
+  first — the gate is the user's review.
 - Execute a unit, edit a file the plan names, or bump a version; end as Output
   says — the fresh context is the point, and it carries none of this session's
   survey or interview.

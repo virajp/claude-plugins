@@ -2184,7 +2184,8 @@ no item is planned twice. A slice re-derived to close the gaps of a landed plan
 names that folder in `gaps_of`, and the hand-off sets that folder's row in the
 plan index to `gaps.open` `0`, with this plan added to `gaps.moved_to`.
 
-Nothing reaches disk before the **approval gate**: the goal and the chain
+Nothing but a parked point's `docs/memory/gaps/` record reaches disk before the
+**approval gate**: the goal and the chain
 position, the assumed-decisions table, the unit map, every new dependency, the
 gates and the derived priority, the consent block, the acceptance criteria the
 units cover, and the parked list — presented for *Approve & plan next*
@@ -3366,7 +3367,9 @@ A request that is really **several independent pieces** is decomposed before
 anything is refined — one folder per piece, in an agreed order, each later
 folder naming the earlier one in its `requires` list. One plan never swallows
 another, and an answer that raises something outside the plan's scope is parked
-durably rather than absorbed.
+durably rather than absorbed: a `docs/memory/gaps/` record at once, and a line
+under *Parked* when the folder is written. The hand-off commits each record with
+the folder.
 
 The interview is one question per turn, worked down the checklist it shares with
 [`/vwf:plan`](#vwfplan) and never batched. It asks only what has more than one
@@ -3418,12 +3421,14 @@ things are always agreed before anything is written:
   "restart, then `/vwf:execute all`" — recorded as `consent.end_all_run`.
   Every other plan records `false`, unasked. `/vwf:plan` writes the same key.
 
-Nothing reaches disk before a **hard gate**: the goal and any reversal, the
+Nothing but a parked point's record reaches disk before a **hard gate**: the
+goal and any reversal, the
 assumed-decisions table, the unit map, every new third-party dependency a unit
 would introduce, the gates, the consent block, the release levels and the parked
 list — presented for approve / revise / abandon. Only *approve* writes the
-folder; *abandon* ends with nothing on disk and a one-line note the next attempt
-can recall.
+folder; *abandon* ends with no folder, any parked record, and a one-line note
+the next
+attempt can recall.
 
 What it writes is `docs/plans/<date>-<name>/` — the **same folder shape**
 [`/vwf:plan`](#vwfplan) writes, from one template: an `index.json` with
