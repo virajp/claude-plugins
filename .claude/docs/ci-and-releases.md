@@ -84,7 +84,7 @@ each plan `all` runs — runs it as the plan folder's after-landing step, record
 `run` at the interview: it runs on a green landing without a prompt — except
 that under `all`, when the run's deduped-steps question is answered yes, an
 identical step runs once, from the main checkout, after the last plan that
-landed (`references/all.md` in the execute skill) — and the author's next
+landed (`workflows/all.md` in the execute skill) — and the author's next
 **restarted** session is on the plugin that just landed — which is why a plan
 editing a plugin the session running `/vwf:execute all` loads is asked, at its
 interview, whether to end an `all` run after landing — recorded as

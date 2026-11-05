@@ -54,7 +54,7 @@ alone decides.
 5. **Apply each override over the folder's `consent`** as that file
    describes for an `all` override, and record the block as one entry
    appended to the folder's `overrides` list in its `index.json`, with
-   `plan.mjs append`, as that file's `all` reference shows. Never change the
+   `plan.mjs append`, as that file's `all` workflow shows. Never change the
    folder's `consent`. Name every skipped step in your `DETAIL:` line.
 6. Take no other plan. When the folder lands or stops, you are done.
 
