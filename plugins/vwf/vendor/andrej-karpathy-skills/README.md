@@ -40,10 +40,14 @@ read by the model as doctrine, and invocable by hand as
 
 ## Local edits
 
-**One, and it is five characters.** The fenced block under *Goal-Driven
+**Two, and neither changes the prose.** The fenced block under *Goal-Driven
 Execution* was opened bare; it is now opened as `text`. This repo's lint gate
 requires a language on every fence (`markdown/fenced-code-language`), and a
 vendored file is linted like any other. Nothing inside the fence changed.
+
+The frontmatter gained a `metadata` block, which the skill-kit lint reads: the
+archetype and the reason for the invocation state. By user ruling, the skill
+stays verbatim and takes no skill-kit rewrite.
 
 Nothing else needed touching: the vendored copy is used as-is by
 `skills/karpathy-guidelines/`, its frontmatter is already strict-YAML valid,
@@ -52,7 +56,7 @@ and `plugins/**/*.md` is excluded from dprint, so nothing reflows it. The
 frontmatter's `name`, `description` and `license` keys are the upstream ones
 byte for byte.
 
-Re-apply the fence language on any resync — everything else is a straight copy,
+Re-apply the fence language and the `metadata` block on any resync — everything else is a straight copy,
 so a resync is a diff rather than a merge.
 
 ## Resync policy
