@@ -8,7 +8,10 @@ description: Technology-agnostic principles for designing REST APIs. Use when
   rate limits, auth or OpenAPI, even with no mention of "REST API".
 license: MIT
 user-invocable: false
+disable-model-invocation: false
 allowed-tools: Read Grep Glob Edit Write
+metadata:
+  archetype: doctrine
 ---
 
 # REST API Design Principles

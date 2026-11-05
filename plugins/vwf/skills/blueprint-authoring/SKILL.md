@@ -8,6 +8,7 @@ description: Authoring discipline for vwf blueprints — the code-independence
   editing any docs/blueprint file.
 license: MIT
 user-invocable: false
+disable-model-invocation: false
 allowed-tools: Read Grep Glob Edit Write
 paths:
   - "docs/blueprint/**/*.md"

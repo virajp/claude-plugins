@@ -9,6 +9,7 @@ description: Authoring discipline for a product's design system — the
   docs/blueprint/design-system.
 license: MIT
 user-invocable: false
+disable-model-invocation: false
 allowed-tools: Read Grep Glob Edit Write
 paths:
   - "docs/blueprint/design-system.md"

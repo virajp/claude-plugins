@@ -5,6 +5,7 @@ description: Thirteen foundations with elicited defaults (users, observability,
   reliability, DR, cost, incidents). Auto-applies when editing
   docs/blueprint/architecture.md or conventions.md.
 user-invocable: false
+disable-model-invocation: false
 paths:
   - "docs/blueprint/architecture.md"
   - "docs/blueprint/conventions.md"

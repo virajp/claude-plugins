@@ -7,6 +7,7 @@ description: Opinionated standards for writing and maintaining Markdown
   Auto-applies when editing any Markdown file.
 license: MIT
 user-invocable: false
+disable-model-invocation: false
 allowed-tools: Read Grep Glob Edit Write
 paths:
   - "**/*.md"
