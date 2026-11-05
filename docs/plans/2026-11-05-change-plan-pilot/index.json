@@ -82,11 +82,11 @@
         "U1"
       ],
       "waits": "It compares the ledger with the rewritten text that U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:03:06.999Z",
+      "ended": "2026-11-05T09:06:56.389Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -102,11 +102,11 @@
         "U1"
       ],
       "waits": "It reviews the rewritten text that U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:03:07.034Z",
+      "ended": "2026-11-05T09:05:27.025Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U4",
@@ -231,8 +231,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-05T09:03:06.928Z",
       "ended": ""
     },
     {
@@ -505,6 +505,27 @@
       "unit": "U1",
       "stage": "edit",
       "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "scope-check.md:18 and interview checklist section F write Parked lines to index.md during the interview, but no folder exists before §6, and SKILL.md:111 and shape-gate.md:3 forbid disk writes before §5 · a fix changes behavior and plan-interview.md is out of scope, so U4 leaves it; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "plan-interview.md item 19 wants a later explicit yes after self-review before APPROVED, and says the hand-off commits and pushes; §8 is auto and hand-off.md:29 treats the §5 approve as enough, so that yes has no declared gate (WF304) · the asset is out of scope and a fix can change behavior, so the skill text stands; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52)",
       "state": "open"
     }
   ],
