@@ -22,9 +22,10 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   `set` for any value not a string: a number, boolean, list, object or null.
 - Never rewrite the file whole, or edit it with Write, Edit or `sed`. Use one
   `set` or `append` per change — the script validates each write.
-- Never call `plan.mjs rewave <file> <unit>=<wave>...`; report a wrong order as
-  a stop. That call is a planner write, run after a `set` of a moved unit's `waits`
-  when the unit moves above wave 1. A run never renumbers waves.
+- Never call `plan.mjs rewave <file> <unit>=<wave>...`; the wave order is in
+  [the rules](rules.md).
+  That call is a planner write, run after a `set` of a moved unit's `waits` when
+  the unit moves above wave 1. A run never renumbers waves.
 - A write that exits non-zero wrote nothing. It is a blocking-gap stop per the
   Pause Conditions, with its stderr as the detail.
 

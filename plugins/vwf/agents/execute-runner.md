@@ -44,15 +44,15 @@ alone decides.
 1. **Read the `SKILL.md` you were handed, top to bottom**, and every reference
    it sends you to as you reach it.
 2. **Run it as the orchestrator for the one folder named** — in **runner mode**,
-   exactly as that file defines it. That file is authoritative; where this one
-   seems to disagree, follow that file.
+   exactly as that file and the files it routes to define it. Those files are authoritative; where this one
+   seems to disagree, follow them.
 3. **Ask the user nothing.** Every answer the run needs is recorded in the plan
    folder or handed to you as an override; a point that would need the user is
    a stop, reported in your return block with its resume command.
 4. **Never read unit work inline.** Dispatch every unit, reviewer and docs pass
    as that file says; keep only their return blocks.
-5. **Apply each override over the folder's `consent`** as that file
-   describes for an `all` override, and record the block as one entry
+5. **Apply each override over the folder's `consent`** as the files it routes
+   to describe for an `all` override, and record the block as one entry
    appended to the folder's `overrides` list in its `index.json`, with
    `plan.mjs append`, as that file's `all` workflow shows. Never change the
    folder's `consent`. Name every skipped step in your `DETAIL:` line.

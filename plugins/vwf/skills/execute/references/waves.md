@@ -71,6 +71,10 @@ folder commit, per [the plan files](plan-files.md).
       wave review's cap, with one loop-back. A second is recorded `contested`, as that reference states.
    3. Every line of the wave gate again, and a closing folder commit as in step 6.
 
+With `covers`, run the pass in [acceptance-and-ux.md](acceptance-and-ux.md). Without `covers`, skip both stages. Set `stages.acceptance`,
+`stages.ux` and `stages.renders` each `skipped` with that `why`, each logged. A plan with no blueprint slice has no
+acceptance criteria and no Screens contract to verify against.
+
 The two fixed final units are the docs unit and the gates unit. They run as their own waves after every other
 wave, after the Acceptance & UX pass and after Reconcile; see [reconcile.md](reconcile.md).
 

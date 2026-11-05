@@ -22,9 +22,7 @@ Every loop-back here lands after the last `review` row. Each fix re-runs the row
 unit over the fix delta before the stages re-verify — *Late loop-backs re-run the last row* in
 [review-unit.md](review-unit.md).
 
-Without `covers`, skip both stages. Set `stages.acceptance`, `stages.ux` and `stages.renders`
-each `skipped` with that `why`, each logged. A plan with no blueprint slice has no acceptance
-criteria and no Screens contract to verify against.
+The rule for a plan without `covers` is in [waves.md](waves.md).
 
 ## Recording the stages
 
