@@ -332,8 +332,10 @@ apply the **what-vs-how test**: a question about what the product should *do*
 §4, never settle it here. An approved plan carries no unresolved decisions.
 
 Every ruling lands in the `decisions` list with the alternative it rejected and
-the units it binds; anything raised that belongs to a later plan goes to
-*Parked* before the next question — and what remains of an item this element
+the units it binds; anything raised that belongs to a later plan goes to a
+`docs/memory/gaps/` record before the next question, per the parked-scope rule
+in `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, and to *Parked* when §7 writes the
+folder — and what remains of an item this element
 lands one piece of goes there as a `- Bnn: <piece>` line, at least one per
 `backlog_pieces` id, naming the chained folder where one already covers the
 piece. The **priority** (item 12) is stated as a fact, never asked: no folder
@@ -363,8 +365,9 @@ yes, `/vwf:execute all` ends after this plan and reports "restart, then
 
 ### 6. Present the shape — the approval gate (per chain element)
 
-**Nothing is written to disk before this gate.** Present the folder's sections
-per `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
+**Nothing is written to disk before this gate, save a parked record (§5).**
+Present the folder's sections per
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
 weight and confirmed one at a time: the goal and the Slice (chain position);
 the assumed decisions, every ruling with its rejected alternative and every
 drift entry; the unit map — id, wave, owns, depends-on, the reason each unit
@@ -384,8 +387,9 @@ advisory, when any; the parked list. Then wait for explicit approval. Offer:
   chain elements, and end with the command for the next one,
   `/vwf:plan <slice>` — no launch block.
 - **Reject** — then either **Revise** (apply feedback to the section named,
-  re-present, looping until approved or abandoned) or **Abandon** (nothing is
-  on disk; leave a one-line note of what was decided so the next attempt can
+  re-present, looping until approved or abandoned) or **Abandon** (no folder is
+  on disk, and a parked record stays; leave a one-line note of what was
+  decided so the next attempt can
   recall it — and abandon the chain's downstream elements too, since they stand
   on it).
 
@@ -542,8 +546,9 @@ In this order.
      a folder still untracked at hand-off gets swept into some later wave's
      commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder** and `docs/plans/index.json`, and
-     nothing else — the `plan-management` edit rides this commit and that
+   - **stage exactly the plan folder**, `docs/plans/index.json` and each
+     parked record this interview wrote to `docs/memory/gaps/`, and nothing
+     else — the `plan-management` edit rides this commit and that
      skill never commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: plan — <slice> — approved, awaiting execution`
@@ -552,8 +557,9 @@ In this order.
      git-workflow's push rule wants; do not ask again
 
    Under `multi-repo` the folder and the index are two repos: two commits,
-   the member's (the folder) first, the base's (the index row) last, both
-   pushed. The backlog project is the base's — resolved from the base's remote
+   the member's (the folder) first, the base's (the index row and each
+   parked record) last, both pushed. The backlog project is the base's —
+   resolved from the base's remote
    — so a member session addresses the same project and commits nothing for
    it.
 
@@ -603,7 +609,8 @@ the one to run first.
 
 ## What this skill never does
 
-- Writes anything to disk before the gate in §6 is approved
+- Writes anything to disk before the gate in §6 is approved, save a parked
+  record
 - Executes a unit, edits a file the plan names, or bumps a version
 - Asks two things in one turn, or asks what the blueprint, the surveyor or the
   repo already answers

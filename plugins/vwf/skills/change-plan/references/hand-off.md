@@ -20,8 +20,8 @@ Run these in order.
      still untracked at hand-off gets swept into some later wave's commit. The
      index row rides the same commit for the same reason, a direct commit on the
      branch, never a worktree's.
-   - **Stage exactly the plan folder** and `docs/plans/index.json`, and nothing
-     else. The `plan-management` edit rides this commit, because that skill
+   - **Stage exactly the plan folder**, `docs/plans/index.json` and each parked
+     record this interview wrote to `docs/memory/gaps/`, and nothing else. The `plan-management` edit rides this commit, because that skill
      never commits. Step 2 changed nothing in the tree.
    - **Commit** with type `docs` and the message
      `docs: change plan — <name> — approved, awaiting execution`.

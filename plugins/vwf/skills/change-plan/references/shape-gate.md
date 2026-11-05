@@ -1,6 +1,7 @@
 # §5 — Present the shape: the hard gate
 
-Write nothing to disk before this gate. Present these sections, scaled to their
+Write nothing to disk before this gate, save a parked record, which
+[scope-check.md](scope-check.md) owns. Present these sections, scaled to their
 weight and confirmed one at a time:
 
 1. The goal and the reversals, if any.
