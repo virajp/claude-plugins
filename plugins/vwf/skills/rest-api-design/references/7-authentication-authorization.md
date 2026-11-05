@@ -19,9 +19,9 @@
   `/rides` doesn't mean they can access any `rideId`
 - Distinguish `401` (who are you?) from `403` (I know who you are, but no) —
   never conflate them
-- Do not expose the existence of a resource to an unauthorized caller: return
-  `404` not `403` when the resource exists but the caller has no access (unless
-  enumeration resistance is not a concern)
+- Do not expose the existence of a resource to an unauthorized caller. Return
+  `404` not `403` when the resource exists but the caller has no access, unless
+  enumeration resistance is not a concern
 
 ### API Keys (for server-to-server or third-party integrations)
 
