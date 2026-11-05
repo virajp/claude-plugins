@@ -31,3 +31,13 @@ reopened entries are now SKILL-28, SKILL-58, SKILL-80, SKILL-114, SKILL-117,
 SKILL-123, six in all.
 
 Findings of `judgment.md`: no change from Round 1.
+
+## Wave review finding
+
+Restored rules: 0.
+
+`SKILL.md:120`: "the one verb that writes them" was false, because `claim`,
+`unclaim`, `status` and `complete` also write. It now says "the one verb this
+skill writes them through".
+
+Reopened as `pending`, because this edit changed its passage: SKILL-123.

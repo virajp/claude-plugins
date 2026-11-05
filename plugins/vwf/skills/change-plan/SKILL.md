@@ -117,5 +117,6 @@ or run every runnable plan, highest priority first:
   — a unit inherits no context.
 - Edit the backlog; call `/vwf:backlog` — it owns the project.
 - Edit `docs/plans/index.json` or a folder's `status` key; call
-  `plan-management add`, the one verb that writes them — every later status is
-  `/vwf:execute`'s to call, and the archive move is `plan-management`'s.
+  `plan-management add`, the one verb this skill writes them through — every
+  later status is `/vwf:execute`'s to call, and the archive move is
+  `plan-management`'s.

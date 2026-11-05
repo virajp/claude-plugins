@@ -129,7 +129,7 @@
       "started": "2026-11-05T09:13:10.584Z",
       "ended": "2026-11-05T09:14:35.202Z",
       "commit": "30c6d676",
-      "rounds": 2
+      "rounds": 3
     },
     {
       "id": "U5",
@@ -146,11 +146,11 @@
         "U4"
       ],
       "waits": "It compares the entries that U4 reopened with the text that U4 changed.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T09:19:15.733Z",
+      "ended": "2026-11-05T09:23:52.585Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -243,8 +243,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-05T09:19:15.657Z",
       "ended": ""
     },
     {
@@ -527,6 +527,27 @@
       "stage": "edit",
       "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52)",
       "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "SKILL.md:120 says add is the one verb that writes them, but the claim, status and complete verbs of plan-management also write; the old text said the one verb this skill calls · U5 took this as overbroad wording and not a changed rule, since SKILL.md:47 and the next clause narrow it; closed: the wave 4 review ruled the wording false, and U4 corrected SKILL.md:120",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "Freshness (D10): U5 read round.md, the record of U4, before it compared, and the unit file does not forbid this · the six verdicts stand, since the check verified the quote of each; U5 did not read 01-rewrite.md, judgment.md or the git history of the skill",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "U5, re-dispatched on SKILL-123, ran git diff on SKILL.md against the guardrail of its unit file, so it saw the old and new wording of line 120 · D10 forbids a writer reasoning and a diff holds none, so the verdict stands, and round 2 of the wave 4 review judges SKILL-123 apart; closed: round 2 of the wave 4 review judged SKILL-123 apart and raised nothing",
+      "state": "closed"
     }
   ],
   "overrides": [],
