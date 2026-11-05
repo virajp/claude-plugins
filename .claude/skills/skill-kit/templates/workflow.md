@@ -3,7 +3,8 @@ name: SKILL_NAME
 description: >-
   TODO: the outcome. Use as /SKILL_NAME TODO: the forms. Not for TODO: the sibling
   (use TODO).
-disable-model-invocation: true
+user-invocable: TODO
+disable-model-invocation: TODO
 metadata:
   archetype: workflow
 ---

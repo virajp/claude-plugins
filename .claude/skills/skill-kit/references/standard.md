@@ -18,6 +18,10 @@ these names.
 Evals go in one eval directory per plugin, because `claude plugin eval` reads it
 there. Do not add `evals/` to a skill.
 
+A rule that `p:plugins:check` owns takes priority over this standard. For
+example, its tool-name exception is the exact path `skills/readme/SKILL.md`, so
+the tool names of that skill stay in `SKILL.md`.
+
 ## Description
 
 The description is the only part that is always in context. State what the skill
@@ -35,31 +39,33 @@ description: >-
   Runs an approved plan folder to completion in its own worktree. Use as
   /vwf:execute <folder>, next or all. Not for writing plans (use plan).
 argument-hint: "<plan-folder> | next | all"
+user-invocable: true
 disable-model-invocation: true
 metadata:
   archetype: workflow
   subtype: cloud-service
   depends-on: [ plan-management, git-workflow ]
   implements: stackgen/design-import-screens@1
-  invocation-reason: why the state differs from the archetype default
   deprecated: true
 ```
 
 - `metadata.archetype` is required — every budget and section rule reads it.
 - `metadata.depends-on` names the skills that this skill delegates to — the lint
-  finds a user-only target through it.
-- `metadata.invocation-reason` is required only when the state differs from the
-  default and no skill depends on this one — the reason stays beside the
-  exception.
-- No per-skill version or changelog — a tracked version moves only at release.
-- Keep an existing `version` or `category` key of a pack — the pack format owns
-  those keys.
+  finds a user-only target through it. A skill that the host ships goes in
+  `hostSkills` in `assets/config.json`, because no root holds it.
+- Keep a `version` or `category` key where a skill has it, and add it nowhere —
+  a tracked version moves only at release.
+- No per-skill changelog — the commit history holds the changes.
 
 ## Invocation
 
-Follow `plugins/stackgen/assets/artifact-doctrine.md` §2. A skill must be
-model-invocable when anything delegates to it, because a user-only skill leaves
-the model's context with no error.
+Each skill declares `user-invocable` and `disable-model-invocation`, each `true`
+or `false`. The author decides each value from the purpose of the skill, and no
+archetype sets a value. Use `plugins/stackgen/assets/artifact-doctrine.md` §2 to
+decide.
+
+A skill must be model-invocable when anything delegates to it, because a
+user-only skill leaves the model's context with no error.
 
 ## Compact
 

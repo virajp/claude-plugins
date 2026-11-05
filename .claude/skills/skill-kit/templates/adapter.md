@@ -2,7 +2,8 @@
 name: SKILL_NAME
 description: >-
   Implements TODO for TODO. Invoked by TODO by fixed name. Not for direct use.
-disable-model-invocation: false
+user-invocable: TODO
+disable-model-invocation: TODO
 metadata:
   archetype: adapter
   implements: TODO/SKILL_NAME@1
