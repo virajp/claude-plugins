@@ -87,6 +87,7 @@ to `docs/plans/migrate.md`.
 | [`.claude/skills/vwf-plugin/`][vwf]                          | vwf's own shape — skills, agents, assets, hooks, adding a skill, the docs tree it maintains                                                                                                                                                                                                                                                                   |
 | [`.claude/skills/stackgen-plugin/`][sg]                      | stackgen's own shape — the dispatch rule, packs and bundles, where output lands, consent                                                                                                                                                                                                                                                                      |
 | [`.claude/skills/plugin-authoring/`][auth]                   | the sixteen checker rules, the invocation frontmatter, the plugin-root trap, dprint exclusions                                                                                                                                                                                                                                                                |
+| [`.claude/skills/skill-kit/`][kit]                           | the standard for every skill — archetypes, the lint, the scaffold, and the rule ledger that proves a rewrite keeps every rule                                                                                                                                                                                                                                 |
 | [`.claude/skills/release/`][rel]                             | the release ritual, the note format, the CI facts that make a failed publish legible                                                                                                                                                                                                                                                                          |
 | [`site/src/content/docs/plugins/vwf.md#vwfchange-plan`][chg] | planning a change to this repo with the ad-hoc planner — the interview, the folder; running it is [`/vwf:execute`][chge] — waves, the gate, after-landing steps; the how-to is [`how-to/operate/ad-hoc-change.md`][chgh]. A blueprint slice is the guarded planner, [`#vwfplan`][pln], run by the same [`#vwfexecute`][exe] — the same folder shape and index |
 
@@ -99,6 +100,7 @@ to `docs/plans/migrate.md`.
 [vwf]: .claude/skills/vwf-plugin/SKILL.md
 [sg]: .claude/skills/stackgen-plugin/SKILL.md
 [auth]: .claude/skills/plugin-authoring/SKILL.md
+[kit]: .claude/skills/skill-kit/SKILL.md
 [rel]: .claude/skills/release/SKILL.md
 [chg]: site/src/content/docs/plugins/vwf.md#vwfchange-plan
 [chge]: site/src/content/docs/plugins/vwf.md#vwfexecute

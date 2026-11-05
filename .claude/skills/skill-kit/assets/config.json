@@ -1,0 +1,13 @@
+{
+  "roots": [
+    ".claude/skills/*",
+    "plugins/*/skills/*",
+    "plugins/*/stacks/*/*/skills/*"
+  ],
+  "alwaysInstalledRoots": [
+    ".claude/skills/*",
+    "plugins/*/skills/*"
+  ],
+  "descriptionBudget": 8000,
+  "contractPath": "plugins/{host}/assets/contracts/{name}.md"
+}
