@@ -3,8 +3,8 @@
 Examples: `design-import-screens`, `ux-gate`. Several skills share one name, one
 per provider.
 
-The invocation state is user and model, always — a user-only adapter gives its
-host nothing. The name equals the contract's fixed name, with no prefix.
+A user-only adapter gives its host nothing, so keep the model invocation on. The
+name equals the contract's fixed name, with no prefix.
 
 ```yaml
 metadata:

@@ -120,7 +120,8 @@ function settle(entry, newDir) {
       if (inside.startsWith("..") || isAbsolute(inside)) { return `where leaves the new skill: ${entry.where}`; }
       if (!existsSync(file)) { return `where does not exist: ${entry.where}`; }
       const quote = flat(entry.quote);
-      if (quote.split(" ").length < MIN_QUOTE_WORDS) { return `quote has under ${MIN_QUOTE_WORDS} words`; }
+      const needed = Math.min(MIN_QUOTE_WORDS, flat(entry.text).split(" ").length);
+      if (quote.split(" ").length < needed) { return `quote has under ${needed} words`; }
       if (!flat(readFileSync(file, "utf8")).includes(quote)) { return `quote is not in ${entry.where}`; }
       return null;
     }

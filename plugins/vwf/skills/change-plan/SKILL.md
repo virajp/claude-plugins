@@ -8,12 +8,11 @@ description: >-
 argument-hint: "[what to plan]"
 model: opus
 
+user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
   depends-on: [plan-management, backlog, git-workflow]
-  invocation-reason: the rewrite keeps the skill's current invocation state,
-    because behavior does not change
 ---
 
 # change-plan

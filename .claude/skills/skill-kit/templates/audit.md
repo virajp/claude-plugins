@@ -2,7 +2,8 @@
 name: SKILL_NAME
 description: >-
   TODO: what it checks. Use as /SKILL_NAME. Not for TODO: the sibling (use TODO).
-disable-model-invocation: true
+user-invocable: TODO
+disable-model-invocation: TODO
 allowed-tools: Read Grep Glob Bash
 metadata:
   archetype: audit

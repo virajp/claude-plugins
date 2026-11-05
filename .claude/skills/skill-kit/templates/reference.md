@@ -3,7 +3,8 @@ name: SKILL_NAME
 description: >-
   TODO: the decision it supports. Use when TODO. Not for TODO: the sibling (use
   TODO).
-disable-model-invocation: false
+user-invocable: TODO
+disable-model-invocation: TODO
 metadata:
   archetype: reference
 ---
