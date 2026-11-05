@@ -9,12 +9,11 @@ description: >-
 argument-hint: "<plan-folder, its index.json, next, or all>"
 model: opus
 
+user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
-  depends-on: [plan-management, backlog, git-workflow, doctor, docs-sync, handoff]
-  invocation-reason: the rewrite keeps the skill's current invocation state,
-    because behavior does not change
+  depends-on: [plan-management, backlog, git-workflow, doctor, docs-sync, handoff, code-review, security-review]
 ---
 
 # execute
