@@ -12,8 +12,8 @@
   ],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-05 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-05T08:51:09Z in .worktrees/change-plan-pilot"
   },
   "consent": {
     "merge": true,
@@ -61,11 +61,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-05T08:51:55.553Z",
+      "ended": "2026-11-05T08:56:38.229Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -225,8 +225,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-05T08:51:55.442Z",
       "ended": ""
     },
     {
@@ -492,7 +492,22 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "Always-loaded words are 4,486 (before 4,912; total 4,786), lower but over the 1,500 budget, so SK003 warns · D8 accepts this, and U6 records it",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them",
+      "state": "open"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/change-plan-pilot",
