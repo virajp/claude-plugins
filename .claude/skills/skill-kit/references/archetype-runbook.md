@@ -1,7 +1,7 @@
 # Runbook (draft)
 
 Does or guides an operational procedure on live systems, where a wrong step has
-a blast radius. The invocation state is user only, always.
+a blast radius.
 
 | Section       | Holds                                          |
 | ------------- | ---------------------------------------------- |

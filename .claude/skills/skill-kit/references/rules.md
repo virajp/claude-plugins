@@ -21,7 +21,7 @@ only, so SK011 is the one guard for a repo-local skill.
 | SK009 | No hardcoded user path in a script                              | error       |
 | SK010 | No text that looks like a secret                                | error       |
 | SK011 | The frontmatter can be read                                     | error       |
-| SK012 | Invocation matches the default, or a dependent or reason exists | warn        |
+| SK012 | Both invocation keys are present, each `true` or `false`        | error       |
 | SK013 | A link reaches each file in `references/` and `workflows/`      | warn        |
 | SK014 | The Routing table has a `Loads` column                          | warn        |
 | SK015 | Required sections are present, and in order                     | warn        |
@@ -42,19 +42,22 @@ only, so SK011 is the one guard for a repo-local skill.
 | AD604 | Providers of one contract have the same sections   | warn     |
 
 The `descriptionBudget` in `assets/config.json` is a value of this repo, and not
-a limit of the host.
+a limit of the host. A name in `hostSkills` satisfies CL203, because the host
+ships that skill.
+
+Lint skips each folder in `exclude`, such as a vendored skill, because this
+standard does not apply to third-party text. The collection rules still read
+that skill as a target.
 
 ## Script: archetypes
 
 | ID    | Rule                                              | Severity |
 | ----- | ------------------------------------------------- | -------- |
-| WF301 | Each Phases row links a file                      | error    |
+| WF301 | Phases exists; with depth folders, each row links | error    |
 | WF303 | Halt and pause is a table with an ID column       | warn     |
-| DC401 | `user-invocable: false` has `paths`               | error    |
 | DC403 | At most 3 inline rules                            | warn     |
 | RF501 | Each topic of the subtype exists                  | error    |
 | RF502 | Each reference cites a source URL                 | warn     |
-| AD601 | User and model                                    | error    |
 | AD602 | `metadata.implements` resolves to a contract file | error    |
 | AD603 | `name` equals the contract's name                 | error    |
 | GN701 | Preview comes before Write                        | error    |
@@ -69,7 +72,6 @@ a limit of the host.
 | AN904 | The report template has the required parts        | error    |
 | AN905 | Findings links a findings schema                  | error    |
 | AN907 | Each topic of the subtype exists                  | error    |
-| RB101 | User-only                                         | error    |
 
 ## Reviewer: judgment list
 

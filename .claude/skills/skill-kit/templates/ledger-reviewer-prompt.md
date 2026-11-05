@@ -7,7 +7,8 @@ status `pending`, set one status:
 
 - `kept`: the new text holds the same rule, fact, step, condition or example.
   Set `where` to the path from the skill root. Set `quote` to at least 3 words
-  of the exact new text that holds it.
+  of the exact new text that holds it. A block of fewer than 3 words needs a
+  quote of all its words.
 - `no-rule`: the block holds no rule, fact, step, condition or example. A
   heading or a transition sentence can qualify. Set `reason`.
 - `missing`: the new text has no match, or the match is weaker.

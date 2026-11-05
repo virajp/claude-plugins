@@ -189,9 +189,11 @@ ruling in the plan.
 
 ## F. Parked
 
-Anything raised during A–E that belongs to a later plan is written to the
-*Parked* list of `index.md` before the next question is asked — never
-carried only in conversation. A Parked entry that belongs to a backlog item
+Anything raised during A–E that belongs to a later plan is written as a
+`docs/memory/gaps/` record, per the parked-scope rule in
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before the next question is asked —
+never carried only in conversation. When the folder is written, each point also
+goes to the *Parked* list of `index.md`. A Parked entry that belongs to a backlog item
 begins with its id — `- Bnn: <piece>` — naming the chained folder where one
 already covers the piece. Every `backlog_pieces` id needs at least one such
 line, and a `backlog` id has none; `plan.mjs validate` refuses a folder that
@@ -200,9 +202,9 @@ breaks either, names one id on both lists, or names a `source` id on neither.
 ## G. The gate
 
 19. **Present the shape** per the planner's gate step and ask once: approve,
-    revise or abandon. Only an explicit approve writes the folder — and the
-    hand-off commits and pushes it — and only a later explicit yes after
-    self-review sets `status.state` to `APPROVED`.
+    revise or abandon. Only an explicit approve writes the folder, and the
+    hand-off commits and pushes it and sets `status.state` to `APPROVED`. It
+    asks no second yes.
 20. **The rulings review.** At self-review, once the planner's own checks are
     fixed and while the folder is still `DRAFT` — `status.state` reads
     `DRAFT` — dispatch a fresh `plan-rulings-reviewer` subagent with the

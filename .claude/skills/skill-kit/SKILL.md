@@ -7,11 +7,10 @@ description: >-
   plugin-authoring).
 argument-hint: "new <archetype> <name> | lint [path | --all] | rewrite <path>"
 allowed-tools: Read Grep Glob Edit Write Bash Agent
+user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
-  invocation-reason: the model must apply the standard whenever it writes a
-    skill
 ---
 
 # skill-kit

@@ -14,7 +14,6 @@ import {
 } from "node:path";
 import {
   dependencies,
-  invocationState,
   links,
   loadedWords,
   meta,
@@ -186,6 +185,11 @@ export function skillRules(skill, ctx) {
     });
   }
 
+  for (const key of ["user-invocable", "disable-model-invocation"]) {
+    if (!(key in fm)) { add("SK012", "error", 1, `no ${key} key`); }
+    else if (!["true", "false"].includes(String(fm[key]))) { add("SK012", "error", 1, `${key} is not true or false`); }
+  }
+
   if (!m.archetype || !arch) {
     add("SK007", "error", 1, m.archetype ? `unknown archetype: ${m.archetype}` : "no metadata.archetype");
     return out;
@@ -197,8 +201,9 @@ export function skillRules(skill, ctx) {
   const words = loadedWords(skill);
   if (words.always > budget) { add("SK003", "warn", 1, `${words.always} always-loaded words, budget ${budget}`); }
 
-  const required = single ? arch.singleSections : arch.sections;
   const titles = sections(skill.body).map((s) => s.title);
+  // A single-file doctrine with no Run section is prose, and has no gate to describe.
+  const required = single ? (titles.includes("Run") ? arch.singleSections : []) : arch.sections;
   let last = -1;
   for (const title of required) {
     const at = titles.indexOf(title);
@@ -208,12 +213,6 @@ export function skillRules(skill, ctx) {
   }
   for (const folder of arch.folders) {
     if (!isDir(join(skill.dir, folder))) { add("SK016", "warn", 1, `missing folder: ${folder}/`); }
-  }
-
-  const state = invocationState(fm);
-  const dependents = ctx.dependents.get(fm.name) ?? [];
-  if (state !== arch.invocation && dependents.length === 0 && !m["invocation-reason"]) {
-    add("SK012", "warn", 1, `invocation is ${state}, the ${m.archetype} default is ${arch.invocation}`);
   }
 
   ARCHETYPE_RULES[m.archetype]?.(skill, add, ctx, m);
@@ -245,7 +244,8 @@ const ARCHETYPE_RULES = {
   workflow(skill, add) {
     const phases = section(skill, "Phases");
     if (!phases) { add("WF301", "error", skill.bodyLine, "no Phases section"); }
-    else {
+    // A workflow with no depth folder keeps its steps in SKILL.md, so a row has no file to link.
+    else if (isDir(join(skill.dir, "references")) || isDir(join(skill.dir, "workflows"))) {
       for (const row of tables(phases.text, phases.start + skill.bodyLine).flatMap((t) => t.rows)) {
         if (links(row.raw).length === 0) {
           add(
@@ -264,9 +264,6 @@ const ARCHETYPE_RULES = {
     }
   },
   doctrine(skill, add) {
-    if (skill.fm["user-invocable"] === "false" && !skill.fm.paths) {
-      add("DC401", "error", 1, "user-invocable: false needs paths");
-    }
     const rules = section(skill, "Rules that don't wait");
     const count = rules ? rules.text.split("\n").filter((l) => /^\s*[-*]\s/.test(l)).length : 0;
     if (count > 3) { add("DC403", "warn", rules.line, `${count} inline rules, limit 3`); }
@@ -280,8 +277,6 @@ const ARCHETYPE_RULES = {
     }
   },
   adapter(skill, add, ctx, m) {
-    const state = invocationState(skill.fm);
-    if (state !== "both") { add("AD601", "error", 1, `an adapter must be user and model, not ${state}`); }
     const parsed = (m.implements ?? "").match(/^([\w-]+)\/([\w-]+)@\w+$/);
     if (!parsed) {
       add("AD602", "error", 1, "metadata.implements is not <host>/<name>@<version>");
@@ -339,9 +334,6 @@ const ARCHETYPE_RULES = {
     }
     findingsLink(skill, add, "AN905");
   },
-  runbook(skill, add) {
-    if (invocationState(skill.fm) !== "user") { add("RB101", "error", 1, "a runbook must be user-only"); }
-  },
 };
 
 function hasCycle(graph) {
@@ -387,10 +379,12 @@ export function collectionRules(skills, ctx) {
     graph.set(s.fm.name, [...(graph.get(s.fm.name) ?? []), ...deps]);
     for (const dep of deps) {
       const targets = byName.get(dep) ?? [];
-      if (targets.length === 0) { add("CL203", "error", s.path, `depends-on target does not exist: ${dep}`); }
+      if (targets.length === 0 && !ctx.config.hostSkills.includes(dep)) {
+        add("CL203", "error", s.path, `depends-on target does not exist: ${dep}`);
+      }
       for (const t of targets) {
         if (meta(t).deprecated === "true") { add("CL204", "warn", s.path, `depends on a deprecated skill: ${dep}`); }
-        if (invocationState(t.fm) === "user") {
+        if (t.fm["disable-model-invocation"] === "true") {
           add(
             "CL205",
             "error",
