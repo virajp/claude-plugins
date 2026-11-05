@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Findings",
+  "type": "array",
+  "items": {
+    "type": "object",
+    "required": ["id", "severity", "finding", "evidence", "fix"],
+    "additionalProperties": false,
+    "properties": {
+      "id": { "type": "string" },
+      "severity": { "enum": ["error", "warn", "info"] },
+      "finding": { "type": "string" },
+      "evidence": { "type": "string" },
+      "fix": { "type": "string" },
+      "confidence": { "enum": ["observed", "inferred"] },
+      "impact": { "type": "string" }
+    }
+  }
+}

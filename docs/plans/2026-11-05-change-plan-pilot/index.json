@@ -1,0 +1,565 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "skill-kit pilot: rewrite change-plan with the rule ledger",
+  "requires": [],
+  "source": [
+    "B108"
+  ],
+  "backlog": [],
+  "backlog_pieces": [
+    "B108"
+  ],
+  "gaps_of": [],
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-05 — dcc7e3aa 9798798d 53ba3bb8 30c6d676 1f856867 04b6ba64 ff63f65b; seven gaps open, folder left live"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "node .claude/skills/skill-kit/scripts/ledger.mjs check docs/plans/2026-11-05-change-plan-pilot/ledger plugins/vwf/skills/change-plan",
+      "node .claude/skills/skill-kit/scripts/lint.mjs plugins/vwf/skills/change-plan"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "The shipped skill text changes with no new behavior, and it must reach users at the next release."
+    },
+    {
+      "id": "site",
+      "level": "NONE",
+      "reason": "Behavior does not change. If U7 edits the manual, it returns a GAP, so the user can raise the level by hand."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Extract the ledger and rewrite change-plan",
+      "wave": 1,
+      "file": "01-rewrite.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-05T08:51:55.553Z",
+      "ended": "2026-11-05T08:56:38.229Z",
+      "commit": "dcc7e3aa",
+      "rounds": 2
+    },
+    {
+      "id": "U2",
+      "title": "Fill the ledger as a fresh reviewer",
+      "wave": 2,
+      "file": "02-ledger-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger-review.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "It compares the ledger with the rewritten text that U1 creates.",
+      "status": "green",
+      "started": "2026-11-05T09:03:06.999Z",
+      "ended": "2026-11-05T09:06:56.389Z",
+      "commit": "9798798d",
+      "rounds": 1
+    },
+    {
+      "id": "U3",
+      "title": "Answer the judgment list as a fresh reviewer",
+      "wave": 2,
+      "file": "03-judgment-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/judgment.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "It reviews the rewritten text that U1 creates.",
+      "status": "green",
+      "started": "2026-11-05T09:03:07.034Z",
+      "ended": "2026-11-05T09:05:27.025Z",
+      "commit": "53ba3bb8",
+      "rounds": 1
+    },
+    {
+      "id": "U4",
+      "title": "Restore missing rules and apply the judgment findings",
+      "wave": 3,
+      "file": "04-restore.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan",
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/round.md"
+      ],
+      "depends_on": [
+        "U2",
+        "U3"
+      ],
+      "waits": "It acts on the ledger of U2 and the findings of U3.",
+      "status": "green",
+      "started": "2026-11-05T09:13:10.584Z",
+      "ended": "2026-11-05T09:14:35.202Z",
+      "commit": "1f856867",
+      "rounds": 3
+    },
+    {
+      "id": "U5",
+      "title": "Settle the open ledger entries as a fresh reviewer",
+      "wave": 4,
+      "file": "05-re-review.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/ledger",
+        "docs/plans/2026-11-05-change-plan-pilot/re-review.md"
+      ],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "It compares the entries that U4 reopened with the text that U4 changed.",
+      "status": "green",
+      "started": "2026-11-05T09:19:15.733Z",
+      "ended": "2026-11-05T09:23:52.585Z",
+      "commit": "04b6ba64",
+      "rounds": 2
+    },
+    {
+      "id": "U6",
+      "title": "Run the proof and write the before and after stats",
+      "wave": 5,
+      "file": "06-stats.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "docs/plans/2026-11-05-change-plan-pilot/stats.md"
+      ],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "It reports on the ledger that U5 settles.",
+      "status": "green",
+      "started": "2026-11-05T09:28:39.340Z",
+      "ended": "2026-11-05T09:29:54.538Z",
+      "commit": "ff63f65b",
+      "rounds": 2
+    },
+    {
+      "id": "U7",
+      "title": "Docs",
+      "wave": 6,
+      "file": "07-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "readme.md",
+        "CLAUDE.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/skills-and-agents.md",
+        "site/src/content/docs/plugins/vwf.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-05T09:34:04.711Z",
+      "ended": "2026-11-05T09:35:32.075Z",
+      "commit": "",
+      "rounds": 1
+    },
+    {
+      "id": "U8",
+      "title": "Gates",
+      "wave": 7,
+      "file": "08-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U7"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-05T09:37:34.641Z",
+      "ended": "2026-11-05T09:38:12.888Z",
+      "commit": "",
+      "rounds": 1
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-11-05T08:51:55.442Z",
+      "ended": "2026-11-05T09:02:15.083Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-11-05T09:03:06.928Z",
+      "ended": "2026-11-05T09:12:24.188Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-11-05T09:13:10.514Z",
+      "ended": "2026-11-05T09:18:29.567Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-11-05T09:19:15.657Z",
+      "ended": "2026-11-05T09:27:52.173Z"
+    },
+    {
+      "id": "W5",
+      "status": "green",
+      "started": "2026-11-05T09:28:39.270Z",
+      "ended": "2026-11-05T09:33:16.999Z"
+    },
+    {
+      "id": "W6",
+      "status": "green",
+      "started": "2026-11-05T09:34:04.601Z",
+      "ended": "2026-11-05T09:36:46.685Z"
+    },
+    {
+      "id": "W7",
+      "status": "green",
+      "started": "2026-11-05T09:37:34.571Z",
+      "ended": "2026-11-05T09:38:52.603Z"
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "docs/plans/2026-11-05-change-plan-pilot/ledger",
+      "why": "U1, U2, U4 and U5 write it in different waves, with one writer per wave (D11)",
+      "owner": "U1"
+    },
+    {
+      "id": "S2",
+      "file": "readme.md, CLAUDE.md, the manual",
+      "why": "every human-facing doc belongs to the docs unit",
+      "owner": "U7"
+    },
+    {
+      "id": "S3",
+      "file": "plugins/vwf/skills/change-plan",
+      "why": "U1 and U4 write it in different waves, with one writer per wave (D11)",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How must the ledger proof run under /vwf:execute?",
+      "ruling": "Separate units for rewrite, ledger review, and restore, so each reviewer is fresh.",
+      "rejected": "One unit does all; run in the planning session with no plan.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Where does the ledger live?",
+      "ruling": "The ledger lives in docs/plans/2026-11-05-change-plan-pilot/ledger/ and is committed.",
+      "rejected": "A cache folder; a gitignored path in the worktree.",
+      "units": [
+        "U1",
+        "U2",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "What happens at a defect in skill-kit itself?",
+      "ruling": "A skill-kit defect becomes a gap, and no unit changes the tool. A blocking defect stops the run.",
+      "rejected": "Fix the tool during the run.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How far does the rewrite compress?",
+      "ruling": "Link to owners, plus plain style. A rule that only the skill holds stays.",
+      "rejected": "Plain style only; merge with /vwf:plan.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How many restore rounds, and who can drop a rule?",
+      "ruling": "One restore round. A missing entry after the re-review stops the run, and no unit can set dropped, because the run is unattended.",
+      "rejected": "Two rounds; let the run drop rules.",
+      "units": [
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Do the phases keep their numbers?",
+      "ruling": "Phases keep the numbers §1 to §8, so that existing citations stay valid.",
+      "rejected": "Renumber.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Where does the argument placeholder go?",
+      "ruling": "The argument placeholder stays in SKILL.md, because the host is expected to expand it only in that file, so a reference must not depend on it.",
+      "rejected": "Move it with §1 into a reference.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "How are files marked, and what if the budget is exceeded?",
+      "ruling": "Mark always and sometimes honestly. If the always-loaded words exceed 1,500, record the warning and do not hide it.",
+      "rejected": "Mark files sometimes to pass the budget.",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Does this plan need a review unit?",
+      "ruling": "No. The change lands no runnable code, so the wave review is the check.",
+      "rejected": "A review unit that runs the security engines over prose.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U7",
+        "U8"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "What does fresh mean for a reviewer?",
+      "ruling": "Fresh means a new subagent that saw no writer's reasoning. The overlap list moves from Facts into the U1 unit file, so Facts stays neutral.",
+      "rejected": "Accept Facts as it is, with a hint that restated text was linked away.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "May several units write one path?",
+      "ruling": "Yes, in different waves, with one writer per wave. The skill folder and the ledger folder take this exception.",
+      "rejected": "Split the work so that each path has one writer in the whole run, which removes the restore round.",
+      "units": [
+        "U1",
+        "U2",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "May lint warnings remain?",
+      "ruling": "Errors block, and warnings do not. U1 rewrites to the style guide, and stats.md lists each warning that remains. A sentence is never split in a way that loses a condition.",
+      "rejected": "Clear all ST101, which pushes units to split sentences mechanically.",
+      "units": [
+        "U1",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "What if the rewrite does not lower the always-loaded words?",
+      "ruling": "U6 returns UNRESOLVED when the final always-loaded words are not below 4,912, so the run stops before the merge. The user then accepts the number with a ruling in decisions, or rewrites by hand. After a hand rewrite, the user reopens the affected entries and resets U5 to pending, and the run resumes at U5. On resume, U6 reads the ruling.",
+      "rejected": "Land on a green proof, and report the number.",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Who acts after a stop on an open ledger entry?",
+      "ruling": "The user decides each open entry by hand in the run's worktree: restore the rule and set its entry to pending, or record dropped with approved true. The user writes the ruling in decisions and commits. Then the run resumes at U5.",
+      "rejected": "A unit restores or drops with no one present.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Do the rulings override skill-kit workflows/rewrite.md?",
+      "ruling": "Yes, wherever they differ. U1 adds no script, because D9 depends on no runnable code landing.",
+      "rejected": "Follow rewrite.md first, and add a script.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "May a re-dispatched reviewer change a settled entry?",
+      "ruling": "Yes. A re-dispatched U2 or U5 may change the entry that a wave-review finding names, and nothing else.",
+      "rejected": "Leave the finding contested, with the entry unchanged.",
+      "units": [
+        "U2",
+        "U5"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "the plan has no covers list",
+      "started": "",
+      "ended": "2026-11-05T09:34:04.387Z"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "the plan has no covers list",
+      "started": "",
+      "ended": "2026-11-05T09:34:04.167Z"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "the plan has no covers list",
+      "started": "",
+      "ended": "2026-11-05T09:34:04.280Z"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "the plan has no covers list",
+      "started": "",
+      "ended": "2026-11-05T09:34:04.493Z"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "Always-loaded words are 4,486 (before 4,912; total 4,786), lower but over the 1,500 budget, so SK003 warns · D8 accepts this, and U6 records it",
+      "state": "open"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "25 ST101 warnings remain (before 76) · D12 lets them stand where a split risks a condition, and stats.md lists them",
+      "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "scope-check.md:18 and interview checklist section F write Parked lines to index.md during the interview, but no folder exists before §6, and SKILL.md:111 and shape-gate.md:3 forbid disk writes before §5 · a fix changes behavior and plan-interview.md is out of scope, so U4 leaves it; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "plan-interview.md item 19 wants a later explicit yes after self-review before APPROVED, and says the hand-off commits and pushes; §8 is auto and hand-off.md:29 treats the §5 approve as enough, so that yes has no declared gate (WF304) · the asset is out of scope and a fix can change behavior, so the skill text stands; a later plan must rule",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U2",
+      "stage": "edit",
+      "text": "references/gates-consent.md says the template owns the release_levels entry shape with no path, and write-folder.md gives the path · U2 took this as holding the rule (SKILL-52)",
+      "state": "open"
+    },
+    {
+      "id": "G6",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "SKILL.md:120 says add is the one verb that writes them, but the claim, status and complete verbs of plan-management also write; the old text said the one verb this skill calls · U5 took this as overbroad wording and not a changed rule, since SKILL.md:47 and the next clause narrow it; closed: the wave 4 review ruled the wording false, and U4 corrected SKILL.md:120",
+      "state": "closed"
+    },
+    {
+      "id": "G7",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "Freshness (D10): U5 read round.md, the record of U4, before it compared, and the unit file does not forbid this · the six verdicts stand, since the check verified the quote of each; U5 did not read 01-rewrite.md, judgment.md or the git history of the skill",
+      "state": "open"
+    },
+    {
+      "id": "G8",
+      "unit": "U5",
+      "stage": "edit",
+      "text": "U5, re-dispatched on SKILL-123, ran git diff on SKILL.md against the guardrail of its unit file, so it saw the old and new wording of line 120 · D10 forbids a writer reasoning and a diff holds none, so the verdict stands, and round 2 of the wave 4 review judges SKILL-123 apart; closed: round 2 of the wave 4 review judged SKILL-123 apart and raised nothing",
+      "state": "closed"
+    },
+    {
+      "id": "G9",
+      "unit": "U6",
+      "stage": "edit",
+      "text": "ledger check prints line numbers from the old SKILL.md (SKILL.md:509, and the file now has 122 lines), and 06-stats.md does not say how to show them · U6 kept them as printed, with a sentence in stats.md that explains this",
+      "state": "open"
+    }
+  ],
+  "overrides": [],
+  "run": {
+    "worktree": ".worktrees/change-plan-pilot",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-05-change-plan-pilot.jsonl"
+  }
+}
