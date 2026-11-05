@@ -6,41 +6,46 @@ description: Authoring discipline for a product's design system — the
   code-independent UX/visual contract (semantic tokens, typography, spacing,
   motion, accessibility standard, component behaviors, anti-patterns) that every
   blueprint screen references. Auto-applies when editing
-  docs/blueprint/design-system. Read the reference matching the layer you are
-  defining.
+  docs/blueprint/design-system.
 license: MIT
 user-invocable: false
 allowed-tools: Read Grep Glob Edit Write
 paths:
   - "docs/blueprint/design-system.md"
   - "docs/blueprint/design-system/**/*.md"
+metadata:
+  archetype: doctrine
 ---
 
 # Design System
 
-The product-wide **UX and visual language, as a contract**. It is a vwf
-foundation — a peer of `architecture.md` — and is **mandatory once the product
-has a UI surface** (a frontend/app project in the registry). Every blueprint
-Screens section references it instead of re-deciding color, type, spacing, or
-component behavior.
+The product-wide **UX and visual language, as a contract**. It is mandatory once
+the product has a UI surface: a frontend or app project in the registry. Read
+the reference that matches the layer you are defining.
 
-A design system records decisions that are **true regardless of framework**:
-semantic token *values*, type and spacing *scales*, motion *principles*, and the
-*accessibility standard* the product commits to. It never names the component
-library, CSS framework, or design file — that mapping is realization (`plan`).
+## Routing
 
-| Topic                                                                                                                         | When to read                                                          |
-| ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| [Foundations](references/foundations.md)                                 | **Read first.** What belongs here vs in plan; MASTER + override model |
-| [Color tokens](references/color-tokens.md)                               | Semantic, role-based color tokens with light/dark values and contrast |
-| [Typography](references/typography.md)                                   | Font pairing and the type scale                                       |
-| [Layout & spacing](references/layout-and-spacing.md)                     | Spacing scale, grid, breakpoints, radius, elevation                   |
-| [Motion](references/motion.md)                                           | Duration/easing tokens, motion principles, reduced-motion             |
-| [Accessibility](references/accessibility.md)                             | The committed accessibility standard (the gate)                       |
-| [Components & anti-patterns](references/components-and-anti-patterns.md) | Global component behaviors and what to avoid                          |
-| [Brand](references/brand.md)                                             | The logo — import-only; required when the payload carries `brand:`  |
-| [Terminal UX](references/terminal-ux.md)                                 | CLI/TUI conventions — required when a project declares platform `cli` |
-| [Checklist](references/checklist.md)                                     | Pre-delivery gate for the design-system doc                           |
+| Doing                                                  | Read                                                                     | Loads     |
+| ------------------------------------------------------ | ------------------------------------------------------------------------ | --------- |
+| Deciding what belongs here and what belongs in plan    | [Foundations](references/foundations.md)                                 | always    |
+| Defining color tokens                                  | [Color tokens](references/color-tokens.md)                               | sometimes |
+| Choosing the font pairing and the type scale           | [Typography](references/typography.md)                                   | sometimes |
+| Defining spacing, grid, breakpoints, radius, elevation | [Layout & spacing](references/layout-and-spacing.md)                     | sometimes |
+| Defining duration and easing tokens, reduced motion    | [Motion](references/motion.md)                                           | sometimes |
+| Stating the committed accessibility standard           | [Accessibility](references/accessibility.md)                             | sometimes |
+| Defining component behaviors and anti-patterns         | [Components & anti-patterns](references/components-and-anti-patterns.md) | sometimes |
+| Writing the logo section, when a payload has `brand:`  | [Brand](references/brand.md)                                             | sometimes |
+| Pinning CLI/TUI conventions, for platform `cli`        | [Terminal UX](references/terminal-ux.md)                                 | sometimes |
+| Passing the pre-delivery gate of the doc               | [Checklist](references/checklist.md)                                     | always    |
 
-Authored by `/vwf:design-system`, which elicits these decisions and writes
-`docs/blueprint/design-system.md`.
+## Rules that don't wait
+
+- Record only decisions that are true regardless of framework — they survive a
+  rebuild.
+- Name no component library, CSS framework or design file — that mapping is
+  realization, which `plan` owns.
+
+## Neighbours
+
+For the elicitation and the write of `docs/blueprint/design-system.md`, see
+`/vwf:design-system`.

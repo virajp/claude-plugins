@@ -12,10 +12,10 @@ Pin (each has more than one reasonable answer):
 - **Output formatting** — human output shape (tables/lists), a machine mode
   (`--json`/`--porcelain`) and when it's required, quiet/verbose levels, what
   goes to stdout vs stderr.
-- **Color semantics** — which roles get color (success/warn/error/emphasis), the
-  mapping to the product's semantic tokens by *role name* (not hex — terminals
-  map roles to the user's palette), and the no-color rule (`NO_COLOR`, non-TTY
-  auto-detect).
+- **Color semantics** — which roles get color (success/warn/error/emphasis). The
+  mapping to the product's semantic tokens by *role name*, not hex, because
+  terminals map roles to the user's palette. The no-color rule (`NO_COLOR`,
+  non-TTY auto-detect).
 - **Progress conventions** — spinner vs progress bar vs silent-until-done; what
   long-running output looks like when piped/non-TTY.
 - **Errors & exit codes** — the error message shape (what happened, why, what to

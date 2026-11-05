@@ -13,9 +13,14 @@ re-deciding:
   spinner; empty-state structure; error + recovery).
 - **Navigation** — primary nav pattern, active state, breadcrumb usage.
 
-**Anti-patterns (what to avoid):** emoji as functional icons; color as the only
-signal; harsh neon on dark; motion that ignores reduced-motion;
-placeholder-as-label; spacing or type off the scale; clichéd generic-AI
-aesthetics.
+**Anti-patterns (what to avoid):**
+
+- emoji as functional icons
+- color as the only signal
+- harsh neon on dark
+- motion that ignores reduced-motion
+- placeholder-as-label
+- spacing or type off the scale
+- clichéd generic-AI aesthetics
 
 These are behavioral contracts — name the behavior, not the widget library.
