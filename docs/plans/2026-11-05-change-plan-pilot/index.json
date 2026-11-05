@@ -12,8 +12,8 @@
   ],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-05T08:51:09Z in .worktrees/change-plan-pilot"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-05 — dcc7e3aa 9798798d 53ba3bb8 30c6d676 1f856867 04b6ba64 ff63f65b; seven gaps open, folder left live"
   },
   "consent": {
     "merge": true,
@@ -65,7 +65,7 @@
       "started": "2026-11-05T08:51:55.553Z",
       "ended": "2026-11-05T08:56:38.229Z",
       "commit": "dcc7e3aa",
-      "rounds": 1
+      "rounds": 2
     },
     {
       "id": "U2",
