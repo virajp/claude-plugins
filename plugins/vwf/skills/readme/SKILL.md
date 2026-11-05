@@ -8,11 +8,11 @@ description: >-
 argument-hint: "[target-dir]"
 model: sonnet
 
+user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
   depends-on: [documentation-standards]
-  invocation-reason: the rewrite keeps the skill's current invocation state, because behavior does not change
 ---
 
 # readme

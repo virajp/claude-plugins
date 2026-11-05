@@ -9,11 +9,11 @@ description: >-
 argument-hint: "[design-system id — omit to let the adapter resolve it]"
 model: sonnet
 
+user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
   depends-on: [import-design-system, design-system-authoring, git-workflow, blueprint, architecture]
-  invocation-reason: the rewrite keeps the skill's current invocation state, because behavior does not change
 ---
 
 # design-system

@@ -11,7 +11,6 @@ model: sonnet
 metadata:
   archetype: workflow
   depends-on: [design-import-design-system]
-  invocation-reason: vwf reaches this skill by delegation, and the only caller is /vwf:design-system
 ---
 
 # import-design-system

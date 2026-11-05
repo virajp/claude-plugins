@@ -12,7 +12,6 @@ model: sonnet
 metadata:
   archetype: workflow
   depends-on: [design-import-screens]
-  invocation-reason: vwf reaches this skill by delegation, and the only caller is /vwf:screens import
 ---
 
 # import-screens
