@@ -1,218 +1,97 @@
 ---
 name: design-system
-description: Import the product's design system from the configured design tool
-  into
-  docs/blueprint/design-system.md — the product-wide UX/visual contract
-  (semantic tokens, typography, spacing, motion, accessibility standard,
-  component behaviors) every blueprint screen references — and pin
-  design.design_system_id in .config/vwf.yaml. A vwf foundation, mandatory
-  once the product has a UI surface. Design systems are authored and iterated
-  in your design tool; this skill imports via its adapter plugin, and never
-  authors visual language itself. A product with no screen surface at all
-  takes the text-only path and elicits Terminal UX directly.
+description: >-
+  Imports the product's design system from the configured design tool into
+  docs/blueprint/design-system.md, and pins design.design_system_id in
+  .config/vwf.yaml. Use as /vwf:design-system once the product has a UI surface;
+  a product with no screen surface takes the text-only path. Not for authoring
+  visual language (use the design tool).
 argument-hint: "[design-system id — omit to let the adapter resolve it]"
 model: sonnet
 
 disable-model-invocation: false
+metadata:
+  archetype: workflow
+  depends-on: [import-design-system, design-system-authoring, git-workflow, blueprint, architecture]
+  invocation-reason: the rewrite keeps the skill's current invocation state, because behavior does not change
 ---
 
-# design-system — Import the Product's Design System
+# design-system
 
-**The design tool owns design-system authoring.** You pick or build the design
-system there — vwf imports it through the design adapter and never authors
-visual language. Which tool answers (`claude-design`,
-`lovable`, `stitch`, …) is the product's choice; vwf knows only the payload
-shape, per `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`. The canvas is where
-visual language is judged. This skill does one job: resolve the design system,
-**import** it into `docs/blueprint/design-system.md`, and **pin**
-`design.design_system_id` in `.config/vwf.yaml`.
+Resolves the design system, imports it into `docs/blueprint/design-system.md`,
+and pins `design.design_system_id` in `.config/vwf.yaml`. A vwf foundation,
+mandatory once the product has a UI surface.
 
-The repo doc still matters — it is the **offline contract**: the design-system
-reviewer bar, the execute ux gate, and the coder consume it without network or
-claude.ai auth, and it is git-versioned and greppable. The doc records
-the *decisions* — semantic token values, type and spacing scales, motion
-principles, the accessibility standard, global component behaviors — never the
-component library, CSS framework, or design-file mechanics (that is `plan`).
+The doc is the product-wide UX and visual contract that every blueprint screen
+references. A product with no screen surface at all takes the text-only path,
+and elicits Terminal UX directly.
 
-**Drift is one-way.** The canvas is the source; the doc is its distillation.
-Hand-edits to the doc are drift — resolved by changing the design system on the
-canvas and re-running this skill, never by publishing the doc back.
+**The design tool owns design-system authoring.** The user picks or builds the
+design system there, and iterates there. Which tool answers (`claude-design`,
+`lovable`, `stitch`, …) is the product's choice. vwf knows only the payload
+shape, per `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 
-## Doc Paths
+**The repo doc is the offline contract.** The design-system reviewer bar, the
+execute ux gate and the coder consume it without network or claude.ai auth. It is
+git-versioned and greppable. It records the decisions: semantic token values,
+type and spacing scales, motion principles, the accessibility standard, and
+global component behaviors. The component library, the CSS framework and
+design-file mechanics stay out; those are `plan`'s.
 
-| Doc           | Path                                                                                       |
-| ------------- | ------------------------------------------------------------------------------------------ |
-| Registry      | `docs/blueprint/registry.yaml`                                                             |
-| Design system | `docs/blueprint/design-system.md`                                                          |
-| Template      | `${CLAUDE_PLUGIN_ROOT}/assets/templates/design-system.md`                                  |
-| Config        | `.config/vwf.yaml` — the `design:` block, per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` |
-
-Doctrine: the **design-system-authoring** skill (foundations, color-tokens,
+Doctrine: the `design-system-authoring` skill (foundations, color-tokens,
 typography, layout-and-spacing, motion, accessibility,
 components-and-anti-patterns, brand, terminal-ux, checklist).
 
----
+## State
 
-## Pipeline
+| File                                                      | Access                  | Owner               |
+| --------------------------------------------------------- | ----------------------- | ------------------- |
+| `docs/blueprint/registry.yaml`                            | read                    | `/vwf:architecture` |
+| `docs/blueprint/design-system.md`, or the folder form     | written                 | this skill          |
+| `${CLAUDE_PLUGIN_ROOT}/assets/templates/design-system.md` | read, the template      | vwf                 |
+| `.config/vwf.yaml`, the `design:` block                   | read; the pin written   | per `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` |
+| `docs/memory/decisions/`, `docs/memory/gaps/`             | read; decisions written | per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`     |
+| `conventions.md`                                          | written, on graduation  | the blueprint       |
+| the commit                                                | made through its skill  | `/vwf:git-workflow` |
 
-### 1. Read the registry
+## Phases
 
-Read `docs/blueprint/registry.yaml`. **Halt if it does not exist:** "No registry
-found. Run `/vwf:architecture` first." If the registry has **no** project
-declaring a **screen platform** (`site`, `webapp`, `desktop`, `mobile`,
-`tablet`, `auto`, `watch`, `tv`, `spatial`), the run takes the **text-only
-path**: tell the user no
-project has a screen surface and ask whether to (a) **add the UI project to the
-registry first** via `/vwf:architecture` (then return here), or (b) proceed
-text-only. On (b), **skip §3 and §4 entirely** — the adapter exists for screens
-and there are none — and elicit the doc directly at §5.
+| §   | Phase                                                                | Gate                                    | File                                    | Loads     |
+| --- | -------------------------------------------------------------------- | --------------------------------------- | --------------------------------------- | --------- |
+| 1–4 | Read the registry, recall, preflight the adapter, delegate the import | user, when project tools disagree       | [import.md](references/import.md)       | always    |
+| 5–7 | Distill into the doc, write the doc, reviewer loop                    | user, each hole and each gap            | [doc.md](references/doc.md)             | always    |
+| 8–9 | Reconcile and persist; approval gate, pin and commit                  | user, an orphan fix; explicit approval  | [land.md](references/land.md)           | always    |
+| —   | Text-only path, when no project declares a screen platform            | user, which path                        | [text-only.md](references/text-only.md) | sometimes |
 
-**Format check.** Run the preflight in
-`${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`; if the repo's blueprint format
-is behind what vwf ships, nudge `/vwf:setup` (proceed unless a needed artifact
-is missing).
+## Halt and pause
 
-**Terminal surfaces.** Read `platforms:` in `docs/blueprint/registry.yaml`: any
-project declaring `cli` makes the doc's **Terminal UX** section required
-(design-system-authoring's terminal-ux reference) — always elicited in text
-(§5); the canvas neither designs nor imports it.
+H2, H3 and H4 stay distinct, because each needs a different fix.
 
-### 2. Recall
+| ID | Condition                                           | Action                                                                                                                                                                                                                                                                      |
+| -- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1 | `docs/blueprint/registry.yaml` does not exist       | Halt: "No registry found. Run `/vwf:architecture` first."                                                                                                                                                                                                                   |
+| H2 | No `design` on any screen-platform project          | Halt: "No design tool configured. Set `projects.<name>.design` in `.config/vwf.yaml` to one of the options the design-axis stack menu offers." A config still carrying a product-wide `design.tool` is `config_format` 12 drift: nudge `/vwf:setup` rather than reading it. |
+| H3 | The repo has no `design-import-design-system` skill | Halt: "the repo has no `design-import-design-system` skill. Materialize the project's `design` pin, then re-run."                                                                                                                                                           |
+| H4 | `/vwf:import-design-system` returns nothing usable  | Halt: "`<tool>` returned no usable payload", with the parse error.                                                                                                                                                                                                          |
+| H5 | The reviewer's gap count does not strictly decrease | Pause and ask the user.                                                                                                                                                                                                                                                     |
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, read prior design decisions and
-rationale (`docs/memory/decisions/`), plus parked visual/UX points
-(`docs/memory/gaps/` records whose slug ends in `-parked`). Skip silently if a
-folder is absent.
+## Output
 
-### 3. Preflight the design adapter — or halt
+- `docs/blueprint/design-system.md`, or the folder form, with `status: reviewed`.
+- `design.design_system_id` pinned in `.config/vwf.yaml`, in the same commit.
+- A summary of what was imported or changed, and every orphan that §8 found.
 
-**Skipped entirely on the text-only path** (§1: no project declares a screen
-platform). The adapter is only ever needed for screens, so preflighting it for
-a repo with none halts on a condition that is vacuously true — a `cli`-or-
-`plugin`-only product could otherwise never get a design system at all, while
-still owing the **Terminal UX** section §1 marks required.
+## Never
 
-vwf does not talk to any design tool. Per
-`${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`, the tool is a **per-project**
-key — `projects.<name>.design` in `.config/vwf.yaml` — resolved inside the
-adapter, not here. **Name the project you are importing for**: read the `design`
-value of every project declaring a screen platform; when they
-all agree, use that project and say which. When they disagree, ask which
-project's tool authors the product's one design system — that is a product
-decision, not something to pick silently. Then **verify the repo's own
-`design-import-design-system` skill exists** before delegating — that is what
-the project's `design:` pin materializes, and its absence is the one failure
-that otherwise reads as an empty design. Three distinct halts — never collapsed
-into one, since each needs a different fix:
-
-- **No `design` on any screen-platform project** → "No design tool configured.
-  Set `projects.<name>.design` in `.config/vwf.yaml` to one of the options the
-  design-axis stack menu offers." A config still carrying a product-wide
-  `design.tool` is `config_format` 12 drift — nudge `/vwf:setup` rather than
-  reading it.
-- **Pin not materialized** → "the repo has no `design-import-design-system`
-  skill. Materialize the project's `design` pin, then re-run."
-- **Adapter returns nothing usable** → "`<tool>` returned no usable payload",
-  with the parse error.
-
-The preflight exists because the failure is **silent**: an adapter skill set to
-`disable-model-invocation: true` cannot be invoked programmatically and does not
-error, so attempting the call and inspecting the result cannot distinguish
-"missing adapter" from "empty design system". Its **only** offline mode is the
-text-only path above, which exists because there are no screens to import —
-never as a fallback when an adapter is missing for a product that has some.
-
-### 4. Delegate the import
-
-**Skipped on the text-only path** — there is no payload to import; §5 elicits
-every section instead.
-
-Invoke `/vwf:import-design-system` and parse its reply as a **design-system
-payload** per the adapter contract. Everything downstream is vwf's job: you
-write `docs/blueprint/design-system.md` from the payload, gated by the
-`design-system-reviewer` — the adapter never touches a blueprint doc.
-
-**Record `source.derived`.** When the adapter reports `derived: true`, it
-reconstructed the tokens from generated code rather than reading a stored design
-system. Note that in the doc: a stored system is authoritative until someone
-changes it, a derived one is a snapshot of one generation and can drift the next
-time a screen is regenerated.
-
-If the payload carries a tool-side identifier, pin it under `design:` for the
-next run (per the vwf-config asset — the pin is adapter-scoped, since every tool
-identifies its design system differently).
-
-### 5. Distill into the doc
-
-Map the payload onto the template's sections: semantic token values, type &
-spacing scales, motion, accessibility, component behaviors, anti-patterns.
-**Contract vs realization** holds — values and scales, never the component
-library or CSS framework the payload may mention.
-
-**Brand is import-only.** When the payload carries a `brand:` block, write the
-template's **Brand** section from it verbatim in meaning — the logo source, every
-variant with its path and use, the clear-space rule, the minimum sizes, the
-rules — with every path kept **relative to the repo root** as the adapter
-returned it (design-system-authoring's brand reference). When the payload has
-no `brand:`, **delete the section and elicit nothing**: brand is never
-text-elicited, on the adapter path or the text-only one, because a logo is a
-file the design tool holds, not a decision an interview can produce.
-
-**On the text-only path there is no payload**, so every section is elicited
-here per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`, starting with **Terminal
-UX** (design-system-authoring's terminal-ux reference) for a product whose only
-surface is a terminal. Elicit only the sections the product's platforms oblige;
-a doc full of screen tokens no screen uses is the density bar's problem.
-
-**Nothing invented.** A field the adapter returned as `null`, or a section no
-tool decided (commonly the accessibility conformance target, anti-patterns, or
-the Terminal UX section when a `cli` platform requires it) is **elicited now**,
-per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. The import fills the doc;
-elicitation fills only the import's holes. Never fill a `null` by inference —
-the adapter reported it as unknown precisely so it would not be guessed.
-
-### 6. Write the doc
-
-Two equal forms — **single file** `docs/blueprint/design-system.md` (default),
-or the **folder** `docs/blueprint/design-system/` (`index.md` +
-`foundations.md` + `motion.md` + `components.md`) once it outgrows one sitting;
-an existing folder stays a folder. Author from the template with its **OKF
-frontmatter** (`type: vwf-design-system`, `title`, `description`, `status` —
-`draft` until §7 passes, then `reviewed`); every split file carries its own
-frontmatter.
-
-### 7. Reviewer loop (fresh subagent)
-
-Self-review against the design-system-authoring checklist first. Then loop:
-dispatch a **fresh** `design-system-reviewer` (stateless) with only the written
-doc (all files of the folder form; tell it whether a `cli` platform exists,
-and whether the payload carried `brand:`).
-**Gaps** → a decision hole is elicited and fixed in the doc; a *visual* gap is
-tool-side rework — the user iterates in their design tool, then re-import the
-affected sections. **`NO GAPS`** → `status: reviewed`. Convergence guard: pause
-and ask if the gap count does not strictly decrease.
-
-### 8. Reconcile & persist
-
-**Impact analysis (re-import).** When the import **renamed or removed** a token
-or component behavior, grep `docs/blueprint/` — the flow docs' Screens sections
-and References — for the old name and report every orphan; offer to fix them via
-`/vwf:blueprint`. Never edit a flow doc from here.
-
-**Cross-cutting conventions.** A theming/dark-mode strategy or an i18n/RTL
-decision graduates to `conventions.md`; pure token/scale/behavior values never
-do.
-
-**Architecture reconcile.** A product-shape change surfaced here (e.g. a new UI
-project) routes through `/vwf:architecture` — never a by-hand registry edit.
-
-**Persist.** Write each durable decision and its rationale as one
-`docs/memory/decisions/` file per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md` (skip
-what the doc captures verbatim).
-
-### 9. Approval gate, pin & commit
-
-Summarize what was imported/changed and wait for explicit approval. Then pin
-`design.design_system_id` in `.config/vwf.yaml` (confirmed, never silently) and
-hand **all** git actions to `/vwf:git-workflow` — the pin rides the same commit.
-Use a bare `docs:` message whose subject names the design system.
+- Author visual language; import it through the design adapter — the design tool
+  is where visual language is judged.
+- Publish the doc back, or keep a hand-edit. Change the design system in the
+  design tool, and re-run this skill — drift is one-way. The design tool is the
+  source, and the doc is its distillation. A hand-edit to the doc is drift.
+- Take the text-only path when an adapter is missing for a product with screens;
+  halt — it is the only path with no adapter. It exists only because there are no
+  screens to import.
+- Fill a `null` by inference; elicit it — the adapter reported it as unknown
+  precisely so that it is not guessed.
+- Edit a flow doc or the registry by hand; route through `/vwf:blueprint` or
+  `/vwf:architecture` — each owns its docs.
