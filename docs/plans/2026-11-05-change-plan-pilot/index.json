@@ -494,5 +494,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/change-plan-pilot",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-05-change-plan-pilot.jsonl"
+  }
 }
