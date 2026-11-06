@@ -28,8 +28,10 @@ own exit code.
 
 ## Run doctor before the claim
 
-On every run, fresh and resume, run `/vwf:doctor` in the main checkout. Scope it to
-the plan's projects, or the base repo's own when the plan names none. Run it before
+On every run, fresh and resume, run `/vwf:doctor <projects> prefer: report only` in
+the main checkout. Scope it to the plan's projects, or the base repo's own when the
+plan names none. So `<projects>` is the plan's projects, else the base repo's own
+project name. A repo with no such name passes the prefix alone. Run it before
 the claim and before the worktree is cut. It reads each project's `stack.languages`
 from `.config/vwf.yaml` and checks LSP servers, toolchains, manifests and the
 harness.

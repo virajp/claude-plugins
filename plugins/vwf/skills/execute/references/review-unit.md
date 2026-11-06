@@ -49,7 +49,7 @@ reviews, to `HEAD`:
   re-run is skipped.
 - Else from the branch base, the integration branch's tip the worktree was cut from.
 
-Rows never run out of order: a skipped row skips every later row too, per [blocking.md](blocking.md).
+Rows never run out of order: a failed, unresolved or skipped row skips every later row too, per [blocking.md](blocking.md).
 
 The row's **file list** is every file `git diff --name-only <from>..<to>` yields, each mapped to **the unit whose commit last touched it
 inside the range**. Build the commit → unit map **once, over the whole branch** (`<base>..HEAD`), and use it everywhere. The range bounds
@@ -80,7 +80,7 @@ The file list and its map are what the reviewers receive as their scope, never a
 still in scope. The list is the contract, and the section its description.
 
 The fresh-run refusals guarantee the range and the coverage agree. The row sits in a later wave than every unit it covers, directly or transitively through
-`depends_on`, so each is committed before the row runs. It covers every `code` unit in an earlier wave that no earlier row covers. So no covered commit
+`depends_on`, so each is committed before the row runs. It covers every unit of any kind in an earlier wave that no earlier row covers. So no covered commit
 is reviewed by a row that does not cover its unit.
 
 ## 2. engines

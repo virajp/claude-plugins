@@ -137,7 +137,7 @@ Read each `sometimes` file where it applies, and never upfront.
 | `<log root>/active/<session id>`, the session's run marker | written by `log.mjs`; deleted by `log.mjs` and the `SessionEnd` hook | this skill and its hooks |
 | `~/Library/Caches/vwf/<repo>/<folder basename>.jsonl`, the action log                                                 | append only                  | this skill and its hooks      |
 | `.config/releases.yaml`                                                                                               | raised on a merged landing   | this skill; the release step clears |
-| `docs/memory/decisions/`, `docs/memory/gaps/`                                                                         | read; decisions written      | the memory rule               |
+| `docs/memory/decisions/`, `docs/memory/problems/`, `docs/memory/gaps/`                                                | read; decisions written      | the memory rule               |
 | `docs/scratchpad/<project>/renders/` in the main checkout                                                             | written by `renders.mjs`     | this skill                    |
 | `.config/vwf.yaml`                                                                                                    | read; `harness:` at Reconcile | the repo                     |
 | Registry: `docs/blueprint/registry.yaml` — *cycle plans only*                                                         | read; updated at Reconcile   | the blueprint                 |
@@ -178,16 +178,16 @@ a pause are [pause.md](references/pause.md).
 | H1 | No approved plan, or a plan with `covers` and a missing blueprint for a needed slice                                                                                                                      | Hard halt                                                  |
 | H2 | The test, coverage or build harness cannot run at all (TDD cannot be verified) when a `code` unit is planned                                                                                              | Hard halt                                                  |
 | H3 | A git or merge conflict that cannot be safely resolved                                                                                                                                                    | Hard halt                                                  |
-| H4 | A stage subagent errors twice in a row (after one re-dispatch) on the same unit. A reviewer that returned without its `REVIEW:` / `SECURITY:` block counts as an error                                    | Commit what is safe, record the unit blocked, pause        |
+| H4 | A stage subagent errors twice in a row (after one re-dispatch) on the same unit. A reviewer that returned without its `REVIEW:` / `SECURITY:` block counts as an error                                    | Commit each green unit, record the unit blocked, pause     |
 | H5 | Resource caps: context > 65%, 5-hour > 90%, or 7-day > 80%, delivered by an external hook                                                                                                                 | Pause per [pause.md](references/pause.md)                  |
-| H6 | All-blocking gap: a blocking gap halts every remaining unit, and no independent work is left                                                                                                              | Document it and pause                                      |
 | H7 | Non-converging cap-exempt finding: a security or `[breaking-api]` finding trips the convergence guard                                                                                                     | Pause with the finding, the rounds tried, and each change  |
 | H8 | Uncovered decision: irreversible or outward-facing and not covered by the rules or the folder; an ambiguous wave order the written order cannot settle; blocking format drift                              | Blocking-gap stop. Never ask                               |
 
 An isolated blocking gap does not pause: skip, document and continue per the
-rules. Everything else is decided from the rules — do not pause for routine
-approvals. Refuse destructive operations (`--force`, `reset --hard`, deleting
-files the run did not create), and never pause on them.
+rules. An all-blocking gap ends at the final report. Everything else is decided
+from the rules — do not pause for routine approvals. Refuse destructive
+operations (`--force`, `reset --hard`, deleting a file outside the unit's Owns,
+except a file that the run created), and never pause on them.
 
 ## Output
 

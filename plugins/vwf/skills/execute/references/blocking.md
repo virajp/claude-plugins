@@ -1,7 +1,7 @@
 # Blocking and resume
 
-Read this when a unit returns `UNRESOLVED:`, fails its verification or dies, or when a run
-starts against a `BLOCKED` or `RUNNING` plan.
+Read this when a unit returns `UNRESOLVED:` or fails its verification, or when a run
+starts against a `BLOCKED` or `RUNNING` plan. A dead agent is H4, per [pause.md](pause.md).
 
 Every mark below is one call that sets the unit's `status` in the folder's `index.json`, made
 in the worktree:
@@ -15,17 +15,18 @@ included, with one `log.mjs event row`, `{"unit", "wave", "status"}`. Follow eac
 
 ## Isolated versus all-blocking
 
-A unit blocks when it returns `UNRESOLVED:`, when its agent errors twice, or when its own
-Verification fails after the one mechanical re-dispatch below. A `GAP:` never blocks: it is a stated
-assumption, appended to the `gaps` list of `index.json` and answered in the final report.
+A unit blocks when it returns `UNRESOLVED:`, or when its own Verification fails after the one
+mechanical re-dispatch below. An agent that errors twice is H4, a pause, per [pause.md](pause.md). A
+`GAP:` never blocks: it is a stated assumption, appended to the `gaps` list of `index.json` and answered
+in the final report.
 
 - **Isolated block**. Mark the unit `unresolved` or `failed`. Mark every unit that transitively
   depends on it `skipped`, with `depends on U<n>` as detail. **Continue** with every unit that does
   not. Later waves still run for their unblocked units, with these exceptions:
-  - A skipped `review` row skips **every later `review` row** too, with `depends on <row>` as detail.
-    Rows review consecutive ranges and are never run out of order.
-  - It also skips **every later `code` unit a later `review` row covers**, with
-    `review row <row> skipped` as detail. A `code` unit never lands without its row ahead of it. A
+  - A failed, unresolved or skipped `review` row skips **every later `review` row** too, with
+    `depends on <row>` as detail. Rows review consecutive ranges and are never run out of order.
+  - It also skips **every later unit of any kind a later `review` row covers**, with
+    `review row <row> <status>` as detail. A unit never lands without its row ahead of it. A
     commit between skipped rows would be swallowed as uncovered by the first row's range on resume, per
     [review-unit.md](review-unit.md).
   - The two fixed final units do **not** run while anything is skipped. Docs reconciled against a
@@ -47,7 +48,7 @@ carry is not mechanical, however small it looks.
 
 Write the block with `plan-management status <folder> BLOCKED "<detail>"` in the worktree, the detail being:
 
-`BLOCKED at wave <n> — U<a> UNRESOLVED: <text>; U<b> failed: <gate line or agent died>; U<c>, U<d> skipped (depend on U<a>)`
+`BLOCKED at wave <n> — U<a> UNRESOLVED: <text>; U<b> failed: <gate line>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
 
 Each unit's `status` and `commit` in `index.json` carry the facts per unit. The status line is the summary a

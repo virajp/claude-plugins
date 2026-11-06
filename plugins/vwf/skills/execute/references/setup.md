@@ -18,7 +18,8 @@ plan reads no blueprint artifact.
 
 Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before the first unit:
 
-1. List the file names of `docs/memory/decisions/` and `docs/memory/gaps/`.
+1. List the file names of `docs/memory/decisions/`, `docs/memory/problems/` and
+   `docs/memory/gaps/`.
 2. Read the files whose slug or title matches this plan, newest first, at most ten per folder.
    A match is on its slice, its name, or the projects it changes.
 3. Read no file in full that does not match.
