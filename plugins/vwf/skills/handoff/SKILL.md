@@ -30,7 +30,9 @@ session still reasons clearly — is worth far more than one squeezed out at 95%
 | Template | `${CLAUDE_PLUGIN_ROOT}/assets/templates/handoff.md`        |
 
 `$ARGUMENTS` is a short kebab-case name (e.g. `auth-refactor`). **If it is
-empty, the name is `next`** — never ask for one, never invent one.
+empty, the name is `next`** — never ask for one, never invent one. It can end
+with a `prefer:` preference, which is not part of the name (see Caller
+Preferences).
 
 ## The `next` handoff
 
@@ -45,6 +47,14 @@ name. `next` differs from a named handoff in exactly two ways:
   prompt** section is required. If the session has no clear next action, say so
   plainly rather than padding it — see step 5.
 
+## Caller Preferences
+
+Everything in `$ARGUMENTS` from `prefer:` to its end is a preference, never a
+name, and the words before it are the name. An argument with only a preference
+has an empty name, which means `next`. `prefer: the one thread is <text>` names
+the thread, and the skill does not ask at step 1. With no `prefer:`, the skill
+asks as step 1 says.
+
 ---
 
 ## Pipeline
@@ -53,7 +63,8 @@ name. `next` differs from a named handoff in exactly two ways:
 
 Restate, in one line, what work this handoff covers, so the captured state
 matches the user's intent. If the session spans several unrelated threads, ask
-which one to hand off (one handoff = one coherent thread).
+which one to hand off (one handoff = one coherent thread), unless a caller's
+preference names it (see Caller Preferences).
 
 ### 2. Tidy & checkpoint the working state
 
