@@ -12,8 +12,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-06 in .worktrees/execute-rule-defects — resumed after the exclude landed"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-06 — ace14a5b, 65e9d361, 6b4a19c9"
   },
   "consent": {
     "merge": true,
