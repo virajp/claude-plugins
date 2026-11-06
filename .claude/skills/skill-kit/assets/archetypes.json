@@ -1,6 +1,5 @@
 {
   "workflow": {
-    "budget": 1500,
     "description": 350,
     "sections": ["State", "Output", "Never"],
     "folders": []

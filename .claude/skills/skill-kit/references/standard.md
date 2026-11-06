@@ -76,7 +76,7 @@ Each table that routes to a file has a `Loads` column, with the value `always`
 or `sometimes`. A file that most runs read is `always`.
 
 The budget is a warning. It never blocks, and `sometimes` references have no
-cap.
+cap. A workflow has no budget, because an unattended run must load each rule.
 
 ## Duplication
 
