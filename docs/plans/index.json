@@ -1,4 +1,22 @@
 {
   "format": 1,
-  "plans": []
+  "plans": [
+    {
+      "id": "2026-11-06-execute-rule-defects",
+      "folder": "docs/plans/2026-11-06-execute-rule-defects",
+      "kind": "change",
+      "title": "Fix the rule defects of execute",
+      "target_repo": null,
+      "priority": 10,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [],
+      "backlog": [
+        "B111"
+      ],
+      "backlog_pieces": []
+    }
+  ]
 }
