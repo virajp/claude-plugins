@@ -222,8 +222,8 @@ alone on a security-only row — steps 2-6.
 **On a resume**. No field holds a late loop's range, and `git log` cannot tell a late loop that finished from one still pending. So rebuild the range from `git log` and the map alone. Its `from` is the parent
 of the oldest commit after the row's `range.to` that the map places on a unit the row covers. Its `to` is the newest such commit. A late re-run already done **repeats**, never skips, per [blocking.md](blocking.md)'s resume.
 
-**The contract review**. After the re-run, one contract review runs over the re-run's fix commits with the fixed units' files, per [edit-unit.md](edit-unit.md)'s reviewer section. Name it `R<wave>-late`
-when the trigger was the wave review. Name it `R-late` when it was the acceptance or UX pass or a fix-first loop-back and no wave is current. It is **one round, outside any cap**. Its findings loop back to the
+**The contract review**. After the re-run, one contract review runs over the re-run's fix commits with the fixed units' files, per [edit-unit.md](edit-unit.md)'s reviewer section. Start its `description` with `R<wave>-late`
+when the trigger was the wave review, and with `R-late` when it was the acceptance or UX pass or a fix-first loop-back and no wave is current. It is **one round, outside any cap**. Its findings loop back to the
 fixed units **once**. The same row re-run reviews that fix, then the same contract review does. Record a second loop-back from it `contested`, and proceed — never a third re-run. Then run
 the wave gate lines once more.
 

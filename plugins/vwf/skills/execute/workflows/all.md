@@ -87,8 +87,8 @@ Once the run-level questions above are answered, each iteration, in order:
 2. **Pick**. Invoke `plan-management next`. Nothing runnable → the loop ends, stop reason the message the verb returns. That is each
    `APPROVED` row and what it waits on, or that the index is absent or holds no rows. On a pick, print one line: the folder, its
    `kind` and its `priority`. Print nothing of the other rows.
-3. **Dispatch one runner**. Make one `Agent` call, `subagent_type: "vwf:execute-runner"` (the `execute-runner` agent). Name it `run-<n>` for
-   the iteration's number. Never pass `isolation: "worktree"`: the runner cuts its own, per Setup, or reuses the shared one. The prompt
+3. **Dispatch one runner**. Make one `Agent` call, `subagent_type: "vwf:execute-runner"` (the `execute-runner` agent). Start its `description` with `run-<n>` for
+   the iteration's number, and give it no `name`: with agent teams on, a `name` makes the runner a teammate, and a teammate's named agents fail. Never pass `isolation: "worktree"`: the runner cuts its own, per Setup, or reuses the shared one. The prompt
    is two paths and the overrides block, and nothing else:
    - the picked folder, repo-relative;
    - the **absolute** path of this skill's `SKILL.md`, the base directory this skill was loaded from plus `/SKILL.md`;
@@ -140,6 +140,8 @@ after-landing steps. It covers every stop too, each the stop those files already
 
 - **The folder is given**. The runner resolves the folder it was handed, as `/vwf:execute <folder>` would. It never runs `next` or `all`, and takes no second plan
   when its own lands or stops.
+- **Its plan runs `solo`**, whatever the folder's `execution` reads. A runner can start teammates, but it ends its turn before their reports arrive. The reason in the `execution` event is
+  *runner under all*.
 - **It applies the overrides it is handed**. The dispatch prompt's overrides block, per *The overrides block* above, applies over the folder. It applies exactly as those
   files describe for an `all` override. `Overrides: none`, or no block, leaves the folder as recorded.
 - **It returns the block and nothing else**. Every report those files write still goes where they put it: the folder's `status`, unit fields and `gaps`, the action log. Those reports are

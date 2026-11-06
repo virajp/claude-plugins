@@ -2415,7 +2415,19 @@ fix commits of the round before it. A row that covers `edit` units alone runs
 the `security` stage only, since the wave review has already judged those units.
 Then every `edit` unit is dispatched in one message as its own subagent, on the
 model its `units` entry names, given paths and never conversation context; its
-report and the wave review are its whole pipeline. Then each `code` unit runs
+report and the wave review are its whole pipeline. Under `execution: teams` the
+`edit` units and the wave reviewer of a wave are teammates. A unit can send a
+peer a fact or a question about a shared boundary, at most 3 messages a round,
+and never waits for an answer; the orchestrator relays the reviewer's findings
+to the live unit, each relay one of the wave review's two rounds; and no gate or
+commit runs until every teammate is idle. A `teams` plan runs `solo`, with the
+reason in the action log and the final report, when
+`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` is not `1`, when a team cannot start, and
+always under an `all` runner. It never stops for this. It has the same
+permission
+rule as a `solo` plan: an unattended run needs allow rules or a mode that does
+not prompt, and `dontAsk` does not protect a teammate, whose mode reads
+`default`. Then each `code` unit runs
 **one at a time** through the `code` stage to its commit. Each stage is a fresh
 purpose-built subagent:
 
@@ -3421,6 +3433,13 @@ things are always agreed before anything is written:
   stale copy until restarted: `yes` ends an `all` run after this plan, reporting
   "restart, then `/vwf:execute all`" — recorded as `consent.end_all_run`.
   Every other plan records `false`, unasked. `/vwf:plan` writes the same key.
+- **The execution mode** — `solo`, or `teams`, which asks that the `edit` units
+  and the wave reviewer can send messages to each other; `code` units and
+  `review` units do not change. The planner recommends `teams` when a wave holds
+  two or more `edit` units, otherwise `solo`, and you confirm. It is recorded as
+  the folder's `execution` key, with the reason in the `decisions` list, and a
+  folder with no key reads as `solo`. [`/vwf:execute`](#vwfexecute) says when a
+  `teams` plan falls back. `/vwf:plan` writes the same key.
 
 Nothing but a parked point's record reaches disk before a **hard gate**: the
 goal and any reversal, the

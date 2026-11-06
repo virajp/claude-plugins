@@ -28,7 +28,8 @@ folder commit, per [the plan files](plan-files.md).
 2. **Dispatch the `edit` units**. Dispatch every `edit` unit in the wave in one message, per
    [edit-unit.md](edit-unit.md)'s dispatch, and wait for every report. Log a `row` event per report
    as it arrives. Re-dispatch once on an agent error, then mark it `failed`. Set each unit's `status`
-   and `rounds` as its report is read.
+   and `rounds` as its report is read. In a `teams` wave the units are teammates, and their reports
+   count once all of them are idle, per *A `teams` wave* in [edit-unit.md](edit-unit.md).
 3. **Run the `code` units**. Run each `code` unit in the wave, one at a time, per
    [code-unit.md](code-unit.md). Its nodes are recall, the coder under TDD to the coverage gate, gaps,
    the unit's commit, persist and record. Set the unit's fields and log a `row` event per node as it returns.
@@ -39,13 +40,14 @@ folder commit, per [the plan files](plan-files.md).
    - Its scope is the contract: rulings honoured, Owns respected, cross-unit drift, docs falsified.
      It never reviews a `code` unit's code quality or security, which are the covering `review` row's.
    - Findings loop back to the owning unit, at most two rounds, under the convergence guard. Every
-     round is a `row` event.
+     round is a `row` event. In a `teams` wave the orchestrator relays them to the live unit.
    - The prompt also carries the unit files and `owns` lists of every unit a `review` row in this wave
      re-dispatched. Their fix commits count against those units' Owns.
    - A unit of either kind fixed here after the last `review` row covering it marks that row for a
      late re-run, taken at step 7. See *Late loop-backs re-run the last row* in
      [review-unit.md](review-unit.md).
-5. **Unit gate, then wave gate**. The orchestrator runs them once every unit of the wave has returned.
+5. **Unit gate, then wave gate**. The orchestrator runs them once every unit of the wave has returned,
+   and in a `teams` wave once every teammate is idle.
    For each green `edit` unit, in wave order, it runs every line of `gates.unit`. A `code` unit ran its
    unit gate inside its pipeline. Then it runs every line of `gates.wave`, once. Read every report for `UNRESOLVED:`
    too.

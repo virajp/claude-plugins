@@ -7,7 +7,7 @@
 // `{ worktree, log }`, both non-empty strings, which claim writes. A
 // cycle-only key — `covers`, `exposure`, `acceptance`, `consent.lsp` — is
 // required on a vwf-plan (`exposure` optional) and a finding on a
-// vwf-change-plan.
+// vwf-change-plan. `execution` is optional on both kinds; no key reads as solo.
 //
 // Each unit, wave, stage and index row carries `started` and `ended`: "" or a
 // UTC time as `new Date().toISOString()` prints it. `waves` lists exactly
@@ -70,6 +70,7 @@ const FOLDER = obj({
   gaps_of: strings(),
   covers: strings({ cycle: true }),
   exposure: str({ enum: ["dark"], cycle: true, optional: true }),
+  execution: str({ enum: ["solo", "teams"], optional: true }),
   status: obj({
     state: str({
       enum: ["DRAFT", "APPROVED", "RUNNING", "BLOCKED", "COMPLETE", "ARCHIVED"],

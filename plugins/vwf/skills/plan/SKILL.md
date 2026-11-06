@@ -345,7 +345,8 @@ state what it returns: `10 + max` over the `priority` of every unarchived
 `requires` row in the base repo's `docs/plans/index.json`, or `10` when the
 plan requires none of them — and which row it stands on. Item 10a places the
 `review` unit(s) — one after the last code unit by default, an earlier one
-only on a ruling recorded in the `decisions` list. Items 16–17 produce the
+only on a ruling recorded in the `decisions` list. Item 10b writes
+`execution`, with its reason in the `decisions` list. Items 16–17 produce the
 consent: the landing answer and the `after_landing` steps each carrying `run`
 — a step not confirmed `run` is dropped; a cycle plan carries no release step,
 as a release is always a hand step with `/release`; the `consent.lsp` answers
@@ -371,7 +372,8 @@ Present the folder's sections per
 weight and confirmed one at a time: the goal and the Slice (chain position);
 the assumed decisions, every ruling with its rejected alternative and every
 drift entry; the unit map — id, wave, owns, depends-on, the reason each unit
-in a later wave waits, the failing test each names; every new dependency
+in a later wave waits, the failing test each names; the execution mode, with
+its reason; every new dependency
 (package, what for, which unit); the unit gate, the wave gate and the plan
 gate, the after-landing steps, the gates the orchestrator keeps, and the
 derived priority with its arithmetic; the consent, the LSP answers and the

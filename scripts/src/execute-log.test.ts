@@ -584,6 +584,15 @@ describe("action-log hook Bash summary", () => {
 });
 
 describe("log.mjs summary", () => {
+  it("prints each execution mode and its reason", () => {
+    const file = startRun();
+    log(["event", "execution", "--mode", "teams"]);
+    log(["event", "execution", "--mode", "solo", "--reason", "flag off"]);
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/EXECUTION teams\n/);
+    expect(s.stdout).toMatch(/EXECUTION solo — flag off/);
+  });
+
   it("pairs phases, rows, gaps and totals gates by tier", () => {
     const file = startRun();
     log(["event", "phase.start", "--phase", "wave", "--wave", "1"]);

@@ -87,7 +87,8 @@ A re-run against `BLOCKED` or `RUNNING`:
 5. Reset `unresolved`, `failed` and `skipped` units to `pending`, one `plan.mjs set` of `units.U<n>.status` each. A reset
    stamps nothing. The unit's next `running` clears its `ended` and keeps its first `started`. A `failed` wave goes
    `running` again the same way when it re-runs, per [the plan files](plan-files.md).
-6. Re-run the preflight, then continue from the first wave with a pending unit.
+6. Re-run the preflight, then continue from the first wave with a pending unit. The preflight decides the execution mode again, and no teammate of an
+   earlier session survives: a `teams` wave starts its team anew, per [edit-unit.md](edit-unit.md).
    - `review` rows run in `units` order, each ranged from the previous row in `units` order that reached `green`.
    - A plan-level stage whose entry in `stages` reads `green` or `skipped` already ran, and is not run again.
    - The `gaps` list and the action log's lines from the earlier attempt stay. A unit's `rounds` continues from the value

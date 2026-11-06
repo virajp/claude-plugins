@@ -55,6 +55,8 @@ Each item is one point in the run and the call made there. Fill the names in ang
   - The `units` value is that file's `units` list, which is where a unit's `kind` comes from.
 - **Each phase, before and after:** `event phase.start --phase <phase>` and `event phase.end --phase <phase>`, with the
   same keys on both.
+- **The execution mode, once decided, and again if the run falls back:** `event execution --mode <solo|teams> --reason "<why>"`,
+  per [preflight.md](preflight.md). Drop `--reason` when the mode is what the plan recorded.
 - **Every gate line:** `run --tier <tier> --unit <id> --wave <n> -- <the gate line>`, the tier one of `unit`, `wave`,
   `plan`, `preflight`. Drop a key that does not apply.
 - **Every commit on a unit's behalf:** `run --event commit --unit <id> -- <the commit command>`.
@@ -142,6 +144,6 @@ not counted. For each, it prints:
 - the total agent time, the wall time the agents covered, the peak number at once and the parallel factor;
 - the gates by tier and the commits;
 - the tool time of the orchestrator apart from the agents;
-- the units from their `row` events, every gap from its `gap` events, and every stop.
+- the units from their `row` events, every gap from its `gap` events, every stop, and each execution mode.
 
 The final report names the log file's path, the folder's `run.log`.

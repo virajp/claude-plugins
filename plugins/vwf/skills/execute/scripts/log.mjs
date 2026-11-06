@@ -854,6 +854,11 @@ function report(ev, kinds) {
   for (const s of stops) {
     out.push("", `STOP at ${at(s.ts)}: ${s.reason ?? ""} — ${s.resume ?? ""}`);
   }
+
+  for (const m of ev.filter((e) => e.event === "execution")) {
+    const why = m.reason ? ` — ${m.reason}` : "";
+    out.push("", `EXECUTION ${m.mode ?? ""}${why}`);
+  }
   return { out, totals };
 }
 

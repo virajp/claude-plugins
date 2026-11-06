@@ -27,18 +27,27 @@ export function folderIn(text: string): string | undefined {
   return text.match(FOLDER)?.[1];
 }
 
-// The names /vwf:execute gives its agents: a unit (`U<n>`, a late loop
+// The ids /vwf:execute gives its agents: a unit (`U<n>`, a late loop
 // `U<n>-late<k>`) and a wave review (`R<wave>`, `R<wave>-late`, `R-late`). A
-// name already taken may carry a `-<n>` suffix.
+// teammate carries the id as its name, and a name already taken may carry a
+// `-<n>` suffix. A subagent has no name, so its description starts with the id.
 const UNIT_NAME = /^(U\d+)(?:-late\d+)?(?:-\d+)?$/;
 const REVIEW_NAME = /^(R\d+(?:-late)?|R-late)(?:-\d+)?$/;
+const UNIT_START = /^(U\d+)(?:-late\d+)?\b/;
+const REVIEW_START = /^(R\d+(?:-late)?|R-late)\b/;
 const ROW_ID = /\bU\d+(?:-late\d+)?\b/g;
 const PREFIX = "vwf:execute-";
 const RUNNER = "vwf:execute-runner";
 
-/** The wave review an agent's name says it is (`R2`, `R2-late`, `R-late`). */
-export function reviewName(name: string | undefined): string | undefined {
-  return name?.match(REVIEW_NAME)?.[1];
+/**
+ * The wave review an agent's name, else the start of its description, says it
+ * is (`R2`, `R2-late`, `R-late`).
+ */
+export function reviewName(
+  name: string | undefined,
+  description = "",
+): string | undefined {
+  return name?.match(REVIEW_NAME)?.[1] ?? description.match(REVIEW_START)?.[1];
 }
 
 // A review row's reviewers: their prompt names the row before the files of
@@ -263,7 +272,8 @@ function parse(text: string): { value?: unknown; problem?: string } {
 /**
  * The unit an agent is for, from the type and the name of its Agent
  * `tool.start` summary: a unit name (`U<n>`, `U<n>-late<k>`, a `-<n>`
- * suffix) first; then, for a `vwf:execute-*` agent other than the runner,
+ * suffix) first; then a description that starts with a unit id, for any agent
+ * other than the runner; then, for a `vwf:execute-*` agent other than the runner,
  * today's rules over `text` (the summary's description) — a review-row
  * reviewer by the row id, any other by a unit file's name.
  */
@@ -277,7 +287,14 @@ export function unitForAgent(
   if (named && units.some((unit) => unit.id === named)) {
     return named;
   }
-  if (!type.startsWith(PREFIX) || type === RUNNER) {
+  if (type === RUNNER) {
+    return undefined;
+  }
+  const started = text.match(UNIT_START)?.[1];
+  if (started && units.some((unit) => unit.id === started)) {
+    return started;
+  }
+  if (!type.startsWith(PREFIX)) {
     return undefined;
   }
 
@@ -652,7 +669,9 @@ export function replay(
         }
         const agent = agentOf(id);
         agent.started = true;
-        agent.startedAt = ts;
+        // A message wakes an idle teammate: the same agent starts again.
+        agent.ended = false;
+        agent.startedAt ??= ts;
         // A foreground Agent call ends after its agent: tie the agent to the
         // oldest open call of its type until tool.end names the child.
         if (agent.call === undefined) {
@@ -709,7 +728,7 @@ export function replay(
     if (agent.startedAt !== undefined) {
       one.startedAt = agent.startedAt;
     }
-    const review = reviewName(call.name);
+    const review = reviewName(call.name, call.description);
     tied.push({
       agent: one,
       review,
