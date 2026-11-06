@@ -43,7 +43,7 @@ has.
      its `detail`.
 
    Re-dispatch a unit whose agent **errored**, rather than returned, once with the same prompt. A second error marks it
-   `failed` with `agent died` as detail.
+   `failed` with `agent died` as detail, and the run then pauses per H4, per [pause.md](pause.md).
 
    Write the fields **when the report arrives**, not at the end of the wave. A field written late is a unit a resumed run
    repeats. The unit's `commit` is set when the orchestrator commits it, per the staging discipline.

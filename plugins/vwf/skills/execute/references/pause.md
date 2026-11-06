@@ -5,14 +5,15 @@ and pause table in `SKILL.md`. Do not guess past one.
 
 ## On any pause
 
-1. Make sure that the worktree is committed.
+1. Make sure that the worktree is committed, except the dead unit's edits that H4
+   leaves uncommitted.
 2. Append the folder's `gaps`.
 3. State precisely what is needed.
 4. Log the stop and end the action log, per [the action log](action-log.md).
 5. **Emit the exact resume command**, and stop.
 
 The resume command is always `/vwf:execute <folder>`, run by a person in a fresh
-session. This holds after a **resource-cap** pause too. There, a bare `/vwf:handoff`
+session. This holds after a **resource-cap** pause too. There, `/vwf:handoff`
 wrote the reserved `next` handoff first. `/vwf:recall next` may point the person at
 that command but never launches it — the run must start in a fresh context. The resume
 reads the folder's `index.json` and `git log`, per the Resume check in
@@ -20,8 +21,11 @@ reads the folder's `index.json` and `git log`, per the Resume check in
 
 ## Detail of the conditions
 
-**Subagent death (H4)**. Commit what is safe. Record the unit as **blocked**: its
-`status` set `failed`, its `why` in its `row` event's `detail` and in one `gaps` entry.
+**Subagent death (H4)**. Wait for the other reports, run the gates, and commit each
+green unit. Leave the dead unit's edits uncommitted, and name them in the `gaps` entry
+and the pause report. Record the unit as **blocked**: its `status` set `failed`, its
+`why` in its `row` event's `detail` and in that `gaps` entry. Invoke
+`plan-management status <folder> RUNNING "RUNNING — paused at unit <n>: agent died"`.
 Then pause, and never proceed on a dead stage.
 
 **Resource caps (H5)**. A repo may **tighten** the caps, never loosen them, through
@@ -52,7 +56,8 @@ On the injected cap directive:
 3. Invoke
    `plan-management status <folder> RUNNING "RUNNING — paused at unit <n> for context"`.
    The index row stays `RUNNING` — a pause is the folder's detail, not the queue's.
-4. Run `/vwf:handoff` with no argument, to snapshot state as the reserved `next` handoff.
+4. Run `/vwf:handoff prefer: the one thread is this plan's run`, which writes the
+   reserved `next` handoff, a snapshot of the state.
 5. Stop with the launch line `/vwf:execute <folder>`.
 
 The person re-runs it in a fresh session. `/vwf:recall next` surfaces the handoff and the

@@ -12,8 +12,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-06 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-06T03:57:53Z in .worktrees/execute-rule-defects"
   },
   "consent": {
     "merge": true,
@@ -69,11 +69,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-06T03:58:33.631Z",
+      "ended": "2026-11-06T04:01:28.169Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -88,11 +88,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-06T03:58:33.703Z",
+      "ended": "2026-11-06T04:01:28.262Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -142,8 +142,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-06T03:58:33.595Z",
       "ended": ""
     },
     {
@@ -303,7 +303,15 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "waves.md \"On failure\" said \"never mid-wave\" and SKILL.md H4 said \"Commit what is safe\", both outside the Edits, though H4 pauses · assumed the step 5 exception and pause.md govern; closed: wave review round 1 raised both, U1 fixed them in round 2, reviewer clean",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/execute-rule-defects",
