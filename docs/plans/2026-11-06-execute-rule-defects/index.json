@@ -305,5 +305,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/execute-rule-defects",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-06-execute-rule-defects.jsonl"
+  }
 }
