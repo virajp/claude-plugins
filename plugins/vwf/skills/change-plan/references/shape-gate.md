@@ -8,6 +8,7 @@ weight and confirmed one at a time:
 2. The decisions: every ruling and its rejected alternatives.
 3. The unit map: id, wave, owned paths, depends-on. State why each wave is safe
    to run concurrently, and the named reason each unit in a later wave waits.
+   State the execution mode and its reason.
 4. Every new third-party dependency any unit introduces: package, what for,
    which unit. The user consents to a dependency here, and a unit adds none the
    plan does not name.

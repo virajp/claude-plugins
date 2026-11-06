@@ -78,6 +78,7 @@ A change plan:
   "backlog": ["B12"],
   "backlog_pieces": [],
   "gaps_of": [],
+  "execution": "solo",
   "status": { "state": "DRAFT", "detail": "DRAFT 2026-09-04" },
   "consent": {
     "merge": true,
@@ -186,6 +187,7 @@ A cycle plan:
   "gaps_of": [],
   "covers": ["docs/blueprint/flows/<project>/<NNN>-<flow>/index.md"],
   "exposure": "dark",
+  "execution": "solo",
   "status": { "state": "DRAFT", "detail": "DRAFT 2026-09-04" },
   "consent": {
     "merge": true,
@@ -323,7 +325,9 @@ The rules for each key — JSON has no comments, so they sit here:
   is required on a `vwf-plan` (`exposure` optional) and a `validate` finding on
   a `vwf-change-plan`. An empty list is written `[]`. An object allows only the
   keys named here — an unknown key is a finding — save `consent.lsp`, which
-  is open: its keys are language names.
+  is open: its keys are language names. `execution` is the one other key that
+  `validate` does not require, so an older folder stays valid; a planner
+  always writes it.
 - **Empty strings.** `validate` refuses `""` in these places only: the plan
   `title`, a unit's `title` and `file`, a gap's `text`, `run`'s `worktree`
   and `log`, and every `id`. Every other string may be `""` — a `commit` not
@@ -352,6 +356,12 @@ The rules for each key — JSON has no comments, so they sit here:
 - **`covers`** *(cycle)* — the blueprint doc(s) this plan implements; the
   list the `implementation:` stamp is written to. **`exposure`** *(cycle,
   optional)* — `dark` when the slice ships behind a flag.
+- **`execution`** — `solo` or `teams`, the answer to interview item 10b, on
+  both kinds. `teams` asks that a plan's `edit` units and its wave reviewer can
+  send messages to each other; `code` units and `review` units do not change.
+  Talk is a help, never a precondition, so a unit file never depends on a peer.
+  A folder with no key reads as `solo`, and `format` stays `1`. `/vwf:execute`
+  does not read this key yet, so it changes no run today.
 - **`status`** — the one status a plan has. `state` is `DRAFT`, `APPROVED`,
   `RUNNING`, `BLOCKED`, `COMPLETE` or `ARCHIVED`; `detail` is one line: when
   it changed and by what — "APPROVED 2026-09-04 by the user"; "RUNNING since

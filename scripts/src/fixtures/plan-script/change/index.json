@@ -7,6 +7,7 @@
   "backlog": ["B1"],
   "backlog_pieces": ["B2"],
   "gaps_of": [],
+  "execution": "solo",
   "status": {
     "state": "APPROVED",
     "detail": "APPROVED 2026-10-24"

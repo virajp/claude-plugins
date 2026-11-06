@@ -114,6 +114,12 @@ in `decisions` says why.
 earlier review unit covers, of any kind — not only the units that land
 code — so no finding in its range falls on a unit it does not cover.
 
+10b. **Execution mode.** `solo`, or `teams`, which asks that the `edit` units
+and the wave reviewer can send messages to each other; `code` units and
+`review` units do not change. Recommend `teams` when a wave holds two or more
+`edit` units, otherwise `solo`, and have the user confirm. The answer is
+`execution` in `index.json`, and its reason is an entry in `decisions`.
+
 11. **Model per unit.** Default is `opus`, written explicitly into every
     unit's `model` in `index.json`. A unit the user wants on a stronger or
     cheaper tier records that tier instead; `inherit` means the session's

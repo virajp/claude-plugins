@@ -3420,6 +3420,13 @@ things are always agreed before anything is written:
   stale copy until restarted: `yes` ends an `all` run after this plan, reporting
   "restart, then `/vwf:execute all`" — recorded as `consent.end_all_run`.
   Every other plan records `false`, unasked. `/vwf:plan` writes the same key.
+- **The execution mode** — `solo`, or `teams`, which asks that the `edit` units
+  and the wave reviewer can send messages to each other; `code` units and
+  `review` units do not change. The planner recommends `teams` when a wave holds
+  two or more `edit` units, otherwise `solo`, and you confirm. It is recorded as
+  the folder's `execution` key, with the reason in the `decisions` list, and a
+  folder with no key reads as `solo`. `/vwf:execute` does not read this key yet,
+  so it changes no run today. `/vwf:plan` writes the same key.
 
 Nothing but a parked point's record reaches disk before a **hard gate**: the
 goal and any reversal, the
