@@ -112,11 +112,11 @@
         "U2"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-06T04:13:34.224Z",
+      "ended": "2026-11-06T04:15:44.406Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -148,8 +148,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-06T04:13:34.177Z",
       "ended": ""
     },
     {
@@ -279,28 +279,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.646Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.320Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.493Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers and no code unit, so nothing to stamp or persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.868Z"
     }
   },
   "gaps": [
