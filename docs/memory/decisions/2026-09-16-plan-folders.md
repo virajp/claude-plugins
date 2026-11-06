@@ -1,7 +1,7 @@
 # Decision — one plan folder shape, one plan index, both executors read it
 
 **Date** 2026-09-16 · **Branch** `2026-09-16-plan-folders` · **Plan**
-[`docs/plans/2026-09-16-plan-folders/`](../../plans/2026-09-16-plan-folders/index.md)
+`docs/plans/2026-09-16-plan-folders/`
 · **Reverses** nothing — this is the parked *Cycle-plan queue parity* item of
 [`2026-09-15-plan-index-queue.md`](./2026-09-15-plan-index-queue.md) coming due
 · **Backlog** none

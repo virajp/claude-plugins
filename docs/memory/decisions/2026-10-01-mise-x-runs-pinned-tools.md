@@ -2,7 +2,7 @@
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-gates` ·
 **Plan**
-[`docs/plans/2026-10-01-tool-config-script-gates/`](../../plans/2026-10-01-tool-config-script-gates/index.md)
+`docs/plans/2026-10-01-tool-config-script-gates/`
 (rulings G3, G8) · **Supersedes**
 [`2026-10-01-tool-config-renders-with-a-node-script.md`](./2026-10-01-tool-config-renders-with-a-node-script.md)
 D1's "run with the `node` on `PATH`"

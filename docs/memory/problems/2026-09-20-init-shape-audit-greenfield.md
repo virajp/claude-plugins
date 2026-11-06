@@ -5,7 +5,7 @@ PROBLEM 2026-09-20 ★4 | init/greenfield | mode "new" reads two markers and no 
 ```
 
 **Date** 2026-09-20 · **Branch** `plan/2026-09-20-init-shape-audit` · **Plan**
-[`docs/plans/2026-09-20-init-shape-audit/`](../../plans/2026-09-20-init-shape-audit/index.md)
+`docs/plans/2026-09-20-init-shape-audit/`
 · **Unit** U1
 
 Mirrors the mempalace drawer (wing `ai-plugins`, room `problems`); both stores
@@ -17,7 +17,7 @@ Every pointer is `file:line` against the worktree; `SKILL.md` unqualified is
 `plugins/vwf/skills/init/SKILL.md`, `new-repo.md` and its two siblings are under
 `plugins/vwf/skills/init/references/`, and pack paths are relative to
 `plugins/stackgen/stacks/`. The `.vscode` collision is ruled by
-[`2026-09-20-init-editor-dedupe`](../../plans/archived/2026-09-20-init-editor-dedupe/index.md)
+`2026-09-20-init-editor-dedupe`
 and is cited, not re-audited.
 
 ## How "new" is decided

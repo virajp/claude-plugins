@@ -2,7 +2,7 @@
 
 **Date** 2026-09-19 · **Branch** `2026-09-19-backlog-trim-preserves-status` ·
 **Plan**
-[`docs/plans/2026-09-19-backlog-trim-preserves-status/`](../../plans/2026-09-19-backlog-trim-preserves-status/index.md)
+`docs/plans/2026-09-19-backlog-trim-preserves-status/`
 · **Corrects** ruling 2 of
 [`2026-09-19-backlog-status-vocabulary.md`](./2026-09-19-backlog-status-vocabulary.md)
 — trim safety — and its reference's "step 2 is what makes it safe" sentence ·

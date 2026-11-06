@@ -1,7 +1,7 @@
 # Decision — mise config in `conf.d/` folders: `_base/`, `ai/`, one per pack
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-09-26-mise-conf-d-layout.md`](./2026-09-26-mise-conf-d-layout.md) lines
 25-42 (root `mise.<env>.toml`, flat section files,

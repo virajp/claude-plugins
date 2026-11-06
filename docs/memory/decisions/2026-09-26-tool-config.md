@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-26 · **Branch** `2026-09-26-tool-config-mise` · **Plan**
-[`docs/plans/2026-09-26-tool-config-mise/`](../../plans/2026-09-26-tool-config-mise/index.md)
+`docs/plans/2026-09-26-tool-config-mise/`
 · **Backlog** B54 (finished), B66 (first piece of three), B72 (the mise side)
 
 ## The ask

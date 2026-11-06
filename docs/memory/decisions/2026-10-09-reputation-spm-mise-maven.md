@@ -2,7 +2,7 @@
 
 **Date** 2026-10-09 · **Branch** `2026-10-09-reputation-spm-mise-maven` ·
 **Plan**
-[`docs/plans/2026-10-09-reputation-spm-mise-maven/`](../../plans/2026-10-09-reputation-spm-mise-maven/index.md)
+`docs/plans/2026-10-09-reputation-spm-mise-maven/`
 · **Completes** B60
 
 ## What was decided before

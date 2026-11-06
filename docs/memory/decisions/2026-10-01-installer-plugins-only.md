@@ -1,7 +1,7 @@
 # Decision — the installer installs plugins only
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-installer-plugins-only` · **Plan**
-[`docs/plans/2026-10-01-installer-plugins-only/`](../../plans/2026-10-01-installer-plugins-only/index.md)
+`docs/plans/2026-10-01-installer-plugins-only/`
 
 ## What was decided before
 

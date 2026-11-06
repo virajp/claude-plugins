@@ -1,7 +1,7 @@
 # Decision — review rows: the plan places the code and security review
 
 **Date** 2026-09-17 · **Branch** `2026-09-17-review-rows` · **Plan**
-[`docs/plans/2026-09-17-review-rows/`](../../plans/2026-09-17-review-rows/index.md)
+`docs/plans/2026-09-17-review-rows/`
 · **Reverses** nothing — the after-landing reversal the same plan carries is its
 own record,
 [`2026-09-17-after-landing-runs-on-recorded-consent.md`](./2026-09-17-after-landing-runs-on-recorded-consent.md)

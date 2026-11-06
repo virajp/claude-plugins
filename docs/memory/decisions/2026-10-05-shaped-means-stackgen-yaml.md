@@ -6,7 +6,7 @@
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
-[`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)
+`docs/plans/2026-10-05-vwf-callers-on-templates/`
 (F2, F3, F4, F9) · **Reverses**
 [`2026-09-27-tool-config-hygiene.md`](./2026-09-27-tool-config-hygiene.md) item
 7 ("Shaped means the `tool-config/*` records are present")

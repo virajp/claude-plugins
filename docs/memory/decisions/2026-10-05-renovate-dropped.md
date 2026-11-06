@@ -1,7 +1,7 @@
 # Decision — Renovate is dropped from tool-config
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-09-27-tool-config-hygiene.md`](./2026-09-27-tool-config-hygiene.md) lines
 24-26 (renovate lands `renovate.json` on `update_bot=renovate`)

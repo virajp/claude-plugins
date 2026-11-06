@@ -1,7 +1,7 @@
 # Decision — `REPO_NAME` is the folder, the task group is the project
 
 **Date** 2026-09-14 · **Branch** `2026-09-14-repo-name-split` · **Plan**
-[`docs/plans/2026-09-14-repo-name-split/`](../../plans/2026-09-14-repo-name-split/index.md)
+`docs/plans/2026-09-14-repo-name-split/`
 · **Reverses**
 [`2026-09-06-project-ids-are-slugged.md`](./2026-09-06-project-ids-are-slugged.md)'s
 **Four surfaces** paragraph (*"`REPO_NAME`, the toolchain manager's environment

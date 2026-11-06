@@ -1,7 +1,7 @@
 # Decision — plan-management: one owner of the plan index, the Status block and the archive
 
 **Date** 2026-09-18 · **Branch** `2026-09-18-plan-management` · **Plan**
-[`docs/plans/2026-09-18-plan-management/`](../../plans/2026-09-18-plan-management/index.md)
+`docs/plans/2026-09-18-plan-management/`
 · **Reverses** the typed `/vwf:archive` command, documented as user-only since
 the plan-index plan of 2026-09-15
 ([`2026-09-15-plan-index-queue.md`](./2026-09-15-plan-index-queue.md)) ·

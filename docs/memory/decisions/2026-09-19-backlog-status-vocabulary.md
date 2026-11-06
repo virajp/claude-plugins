@@ -2,7 +2,7 @@
 
 **Date** 2026-09-19 · **Branch** `2026-09-19-backlog-status-vocabulary` ·
 **Plan**
-[`docs/plans/2026-09-19-backlog-status-vocabulary/`](../../plans/2026-09-19-backlog-status-vocabulary/index.md)
+`docs/plans/2026-09-19-backlog-status-vocabulary/`
 · **Corrects** ruling 5 of
 [`2026-09-18-backlog-on-github-projects.md`](./2026-09-18-backlog-on-github-projects.md)
 — the Status mapping — and its reference's "an empty project starts at `B01`"

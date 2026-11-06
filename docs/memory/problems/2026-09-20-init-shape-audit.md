@@ -5,7 +5,7 @@ PROBLEM 2026-09-20 ★5 | init/shape-audit | 57 findings over 3 read-only walks 
 ```
 
 **Date** 2026-09-20 · **Branch** `plan/2026-09-20-init-shape-audit` · **Plan**
-[`docs/plans/2026-09-20-init-shape-audit/`](../../plans/2026-09-20-init-shape-audit/index.md)
+`docs/plans/2026-09-20-init-shape-audit/`
 · **Unit** U4
 
 Mirrors the mempalace drawer (wing `ai-plugins`, room `problems`); both stores

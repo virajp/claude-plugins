@@ -19,7 +19,7 @@ on the two-plugin north star is confirmed; **losing capability on the way there
 is not.**
 
 This binds **Wave C and Wave D** of
-[the stackgen plan](../../plans/archived/2026-08-19-stackgen.md). Wave D's line
+the stackgen plan. Wave D's line
 — *"the twelve plugin directories are deleted"* — is now explicitly conditional:
 a directory may be deleted only once every skill it holds has landed somewhere
 that survives. Migration is the precondition, not a side effect.

@@ -1,15 +1,15 @@
 # Decision — a native Swift stack, landed as a four-plan chain
 
 **Date** 2026-09-23 to 2026-09-25 · **Plans**
-[`2026-09-23-swift-stack-mechanism/`](../../plans/2026-09-23-swift-stack-mechanism/index.md)
+`2026-09-23-swift-stack-mechanism/`
 (2a) ·
-[`2026-09-23-swift-package-stack/`](../../plans/2026-09-23-swift-package-stack/index.md)
+`2026-09-23-swift-package-stack/`
 (2b) ·
-[`2026-09-23-swiftui-app-stack/`](../../plans/2026-09-23-swiftui-app-stack/index.md)
+`2026-09-23-swiftui-app-stack/`
 (2c) ·
-[`archived/2026-09-23-swiftui-platform-doctrine/`](../../plans/archived/2026-09-23-swiftui-platform-doctrine/index.md)
+`archived/2026-09-23-swiftui-platform-doctrine/`
 (2d) · **Retires**
-[`archived/2026-09-23-swift-native-stack/`](../../plans/archived/2026-09-23-swift-native-stack/index.md),
+`archived/2026-09-23-swift-native-stack/`,
 not run · **Completes** B56
 
 ## What was decided before
@@ -127,7 +127,7 @@ B57.
 ## Addendum — 2026-10-10: the parked third-party set shipped
 
 E4's parked third-party SwiftUI integrations shipped in
-[`2026-10-10-swiftui-third-party-integrations/`](../../plans/2026-10-10-swiftui-third-party-integrations/index.md),
+`2026-10-10-swiftui-third-party-integrations/`,
 which completes B61 (and B99, its Compose counterpart). E4 and the parked list
 above stand as history; the full Flutter dependency map is
 [`2026-10-10-flutter-dependency-parity.md`](./2026-10-10-flutter-dependency-parity.md).

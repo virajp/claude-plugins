@@ -1,7 +1,7 @@
 # Decision — init decides blank, source or shaped from the tree; the stack read; conflicts offered in every mode
 
 **Date** 2026-09-20 · **Branch** `2026-09-20-init-mode-seam` · **Plan**
-[`docs/plans/2026-09-20-init-mode-seam/`](../../plans/2026-09-20-init-mode-seam/index.md)
+`docs/plans/2026-09-20-init-mode-seam/`
 · **Backlog** B28, piece D2, plan 2 of 5 · **Problem**
 [`2026-09-20-init-shape-audit.md`](../problems/2026-09-20-init-shape-audit.md)
 (B1, G1, G2, G3, L5, G7, G8, G10, G13, G14)

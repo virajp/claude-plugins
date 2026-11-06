@@ -1,7 +1,7 @@
 # Decision — plan every item at the priority before recommending execute
 
 **Date** 2026-10-09 · **Branch** `2026-10-09-plan-all-before-execute` · **Plan**
-[`docs/plans/2026-10-09-plan-all-before-execute/`](../../plans/2026-10-09-plan-all-before-execute/index.md)
+`docs/plans/2026-10-09-plan-all-before-execute/`
 · **Reverses** the launch-line rules of `/vwf:plan` §6 and §8 and
 `/vwf:change-plan` §8 · **Backlog** B93
 

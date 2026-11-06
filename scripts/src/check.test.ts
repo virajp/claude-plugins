@@ -11,12 +11,12 @@ import {
   expect,
   it,
 } from "vitest";
+import type { Finding } from "./check.ts";
 import {
   check,
   prescribes,
   resolveRootRef,
 } from "./check.ts";
-import type { Finding } from "./check.ts";
 
 const repoRoot = join(import.meta.dirname, "..", "..");
 

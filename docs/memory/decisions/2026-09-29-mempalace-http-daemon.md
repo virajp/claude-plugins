@@ -1,7 +1,7 @@
 # Decision — vwf's mempalace server is an HTTP daemon the user runs
 
 **Date** 2026-09-29 · **Branch** `2026-09-29-mempalace-http-daemon` · **Plan**
-[`docs/plans/2026-09-29-mempalace-http-daemon/`](../../plans/2026-09-29-mempalace-http-daemon/index.md)
+`docs/plans/2026-09-29-mempalace-http-daemon/`
 · **Reverses** the stdio ruling · **Supersedes**
 [`2026-09-23-mempalace-stdio-settings-env.md`](./2026-09-23-mempalace-stdio-settings-env.md),
 which stays as history and is not edited

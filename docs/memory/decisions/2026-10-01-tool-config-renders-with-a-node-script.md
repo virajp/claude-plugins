@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes**
 [`2026-09-20-pack-intent-rendering.md`](./2026-09-20-pack-intent-rendering.md)
 on rendering ("a later plan if ever"), and stackgen's artifact doctrine §4 on

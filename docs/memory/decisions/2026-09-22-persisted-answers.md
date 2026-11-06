@@ -1,7 +1,7 @@
 # Decision — the four conditional answers are recorded in the config, and every caller of the materializer evaluates them
 
 **Date** 2026-09-22 · **Branch** `2026-09-22-persisted-answers` · **Plan**
-[`docs/plans/2026-09-22-persisted-answers/`](../../plans/2026-09-22-persisted-answers/index.md)
+`docs/plans/2026-09-22-persisted-answers/`
 · **Closes** gaps **G-2** and **G-7** of
 [`2026-09-20-pack-intent-rendering`](2026-09-20-pack-intent-rendering.md) — the
 two that plan recorded as a follow-up rather than closing itself. **G-6** and

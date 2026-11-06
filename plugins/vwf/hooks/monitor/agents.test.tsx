@@ -418,10 +418,12 @@ test(
     const w = world(on, {
       files: running(line("run.start", { mode: "fresh" })),
     });
-    w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(A, ["pending"], {
-      worktree: `.worktrees/${A}`,
-      log: `~/Library/Caches/vwf/repo/${A}.jsonl`,
-    }, { state: "RUNNING", detail: "wave 1 of 1" });
+    w.files[`${MAIN}/docs/plans/${A}/index.json`] = plan(
+      A,
+      ["pending"],
+      { worktree: `.worktrees/${A}`, log: `~/Library/Caches/vwf/repo/${A}.jsonl` },
+      { state: "RUNNING", detail: "wave 1 of 1" },
+    );
     await $.prompt.submit(execute(`docs/plans/${A}`));
     const ui = await $.ui.mount(PANE);
     expect(await ui.find({ type: "Text", text: /RUNNING · live/ }))
@@ -508,10 +510,7 @@ test(
     mock.clock(on, { now: NOW });
     world(on, {
       files: {
-        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
-          B,
-          "RUNNING",
-        ]),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [B, "RUNNING"]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
         [logOf(A)]: line("run.start", { mode: "fresh", session: "other" }),
@@ -532,10 +531,7 @@ test(
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
-        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [
-          B,
-          "APPROVED",
-        ]),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [B, "APPROVED"]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
         [logOf(A)]: line("run.start", { mode: "fresh", session: "x" }),
@@ -546,17 +542,11 @@ test(
     expect(await ui.find({ key: `plan-${A}` })).toBeDefined();
     expect(await ui.find({ key: `plan-${B}` })).toBeDefined();
     // Another session's plan moves: the list stays, with no event here.
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
-      B,
-      "APPROVED",
-    ]);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "APPROVED"]);
     await clock.advance(3500);
     expect(await ui.find({ key: `plan-${A}`, text: /Complete/ })).toBeDefined();
     // The claim.
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
-      B,
-      "RUNNING",
-    ]);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "RUNNING"]);
     await clock.advance(3500);
     expect(await ui.find({ key: `plan-${B}` })).toBeUndefined();
     expect(await ui.find({ type: "Text", text: new RegExp(B) })).toBeDefined();
@@ -666,10 +656,7 @@ test(
       files: {
         [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING"], [B, "COMPLETE"]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["running"]),
-        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["green"], {}, {
-          state: "COMPLETE",
-          detail: "",
-        }),
+        [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["green"], {}, { state: "COMPLETE", detail: "" }),
         [logOf(A)]: live,
       },
     });
@@ -714,10 +701,7 @@ test(
     const w = world(on, {
       files: {
         [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [B, "RUNNING"]),
-        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
-          state: "COMPLETE",
-          detail: "",
-        }),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, { state: "COMPLETE", detail: "" }),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["running"]),
         [logOf(B)]: line("run.start", { mode: "fresh", session: "other" }),
       },
@@ -775,32 +759,20 @@ test(
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
-        [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"], [
-          B,
-          "APPROVED",
-        ]),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "APPROVED"], [B, "APPROVED"]),
         [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["pending"]),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"]),
       },
     });
     await $.prompt.submit(execute("all"));
     const ui = await $.ui.mount(PANE);
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"], [
-      B,
-      "APPROVED",
-    ]);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "RUNNING"], [B, "APPROVED"]);
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
-      B,
-      "APPROVED",
-    ]);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "APPROVED"]);
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: new RegExp(A) })).toBeDefined();
-    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [
-      B,
-      "RUNNING",
-    ]);
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([A, "COMPLETE"], [B, "RUNNING"]);
     await clock.advance(3500);
     expect(await ui.find({ type: "Text", text: new RegExp(B) })).toBeDefined();
     await ui.unmount();
@@ -820,19 +792,20 @@ test(
     const clock = mock.clock(on, { now: NOW });
     const w = world(on, {
       files: {
-        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [
-          B,
-          "APPROVED",
-        ]),
-        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
-          state: "COMPLETE",
-          detail: "COMPLETE 2026-10-25",
-        }),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [B, "APPROVED"]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(
+          A,
+          ["green"],
+          {},
+          { state: "COMPLETE", detail: "COMPLETE 2026-10-25" },
+        ),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
-        [`${MAIN}/docs/plans/archived/2026-01-01-old/index.json`]: plan("Old plan", ["green"], {}, {
-          state: "COMPLETE",
-          detail: "",
-        }),
+        [`${MAIN}/docs/plans/archived/2026-01-01-old/index.json`]: plan(
+          "Old plan",
+          ["green"],
+          {},
+          { state: "COMPLETE", detail: "" },
+        ),
         [`${MAIN}/docs/plans/archived/2026-01-02-older/index.md`]: "# Older\n",
       },
     });
@@ -876,14 +849,8 @@ test(
     const clock = mock.clock(on, { now: NOW });
     world(on, {
       files: {
-        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [
-          B,
-          "APPROVED",
-        ]),
-        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, {
-          state: "COMPLETE",
-          detail: "",
-        }),
+        [`${MAIN}/docs/plans/index.json`]: plans([A, "COMPLETE"], [B, "APPROVED"]),
+        [`${MAIN}/docs/plans/${A}/index.json`]: plan(A, ["green"], {}, { state: "COMPLETE", detail: "" }),
         [`${MAIN}/docs/plans/${B}/index.json`]: plan(B, ["pending"], {}),
       },
     });

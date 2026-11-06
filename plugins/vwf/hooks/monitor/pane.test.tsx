@@ -1,9 +1,9 @@
+import type { TestBody } from "claude-code/testing";
 import {
   expect,
   mock,
   test,
 } from "claude-code/testing";
-import type { TestBody } from "claude-code/testing";
 
 const FOLDER = "2026-10-25-a-plan";
 const MAIN = "/repo";

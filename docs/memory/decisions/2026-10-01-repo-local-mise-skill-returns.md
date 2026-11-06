@@ -1,7 +1,7 @@
 # Decision — tool-config lands a repo-local mise skill again
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes** [`2026-09-26-tool-config.md`](./2026-09-26-tool-config.md) on
 "no mise skill", and the retired-toolchain-pack migration in tool-config's
 `references/mise.md` that deleted the repo-local mise skill

@@ -1,7 +1,7 @@
 # Decision — a pack's mise `tool-config:` entries are structured mappings
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes** [`2026-09-26-tool-config.md`](./2026-09-26-tool-config.md)
 items 6 and 10 for mise — the string grammar
 `mise add tool|env|alias … to <scope>` and the checker's parse of it

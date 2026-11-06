@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-10 · **Branch** `init-helper-library-and-ci-shfmt` · **Plan**
-[`docs/plans/2026-09-10-init-helper-library-and-ci-shfmt/`](../../plans/2026-09-10-init-helper-library-and-ci-shfmt/index.md)
+`docs/plans/2026-09-10-init-helper-library-and-ci-shfmt/`
 · **Reverses**, for one file, two standing rules of `init`'s existing-repo
 pipeline — the shebang pass's *flagged and never rewritten* and the
 missing-files pass's *already owned, never overwritten*

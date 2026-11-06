@@ -1,7 +1,7 @@
 # Decision — a pack task never clobbers host state; git-config requires a forge identity
 
 **Date** 2026-09-20 · **Branch** `2026-09-20-pack-first-run-safety` · **Plan**
-[`docs/plans/2026-09-20-pack-first-run-safety/`](../../plans/2026-09-20-pack-first-run-safety/index.md)
+`docs/plans/2026-09-20-pack-first-run-safety/`
 · **Backlog** B28, piece D2, plan 1 of 5 · **Problem**
 [`2026-09-20-init-shape-audit.md`](../problems/2026-09-20-init-shape-audit.md)
 (L1, L2, L3, L4, L6, L15, L16)

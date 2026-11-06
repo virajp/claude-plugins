@@ -7,7 +7,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-21 · **Branch** `2026-09-20-branch-model` · **Plan**
-[`docs/plans/2026-09-20-branch-model/`](../../plans/2026-09-20-branch-model/index.md)
+`docs/plans/2026-09-20-branch-model/`
 · **Backlog** B53; B28, piece D2, plan 4 of 5 · **Problem**
 [`2026-09-20-init-shape-audit.md`](../problems/2026-09-20-init-shape-audit.md)
 (candidate 11; B3, B13, G6, the init half of L14)

@@ -1,4 +1,0 @@
-/security-review, round 3 of loop U8, range 854e0c85..2f12755b, identification run as a subtask scoped to the range.
-
-No findings above confidence 8.
-Examined: the 854e0c85..2f12755b delta against generator, local-plugin (seed, merge, migration), materializer, sync, reputation (host:), reviewer rule 10, and shipped url packs; the closest residual, stdio npx mcp-remote <url> args skipping host: vetting, scored below 8 (needs steered research, and the gate shows args).

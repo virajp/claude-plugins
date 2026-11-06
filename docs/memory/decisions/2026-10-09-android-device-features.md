@@ -1,7 +1,7 @@
 # Decision — Android device families are two named `scope` values, built behind a capability check, with no worked case
 
 **Date** 2026-10-09 · **Branch** `2026-10-09-android-device-features` · **Plan**
-[`docs/plans/2026-10-09-android-device-features/`](../../plans/2026-10-09-android-device-features/index.md)
+`docs/plans/2026-10-09-android-device-features/`
 · **Adds** `android:samsung` and `android:oneplus` to the `features:` scope
 values on `mobile`, and the Compose pack's device-feature rule
 

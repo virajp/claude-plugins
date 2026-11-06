@@ -1,7 +1,7 @@
 # Decision — unclaim verb: release a stale RUNNING claim through plan-management
 
 **Date** 2026-09-19 · **Branch** `2026-09-19-unclaim-verb` · **Plan**
-[`docs/plans/2026-09-19-unclaim-verb/`](../../plans/2026-09-19-unclaim-verb/index.md)
+`docs/plans/2026-09-19-unclaim-verb/`
 · **Reverses** nothing · **Backlog** B12 covered · **Deferred by** the
 plan-management plan of 2026-09-18
 ([`2026-09-18-plan-management.md`](./2026-09-18-plan-management.md))

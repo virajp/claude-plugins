@@ -1,7 +1,7 @@
 # Decision — every list a pack appended to ships as a universal superset
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-09-26-tool-config-gates.md`](./2026-09-26-tool-config-gates.md) and
 [`2026-09-27-tool-config-hygiene.md`](./2026-09-27-tool-config-hygiene.md) lines

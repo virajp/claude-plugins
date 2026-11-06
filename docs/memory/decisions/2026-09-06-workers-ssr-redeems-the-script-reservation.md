@@ -1,7 +1,7 @@
 # Decision — Workers SSR redeems the Worker-script reservation
 
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
-[`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
+`docs/plans/2026-09-05-astro-static/`
 · **Narrows**, for one service only, the Cloudflare scope reservation as it
 stood after
 [`2026-09-05-workers-static-assets-redeems-the-cloudflare-reservation.md`](./2026-09-05-workers-static-assets-redeems-the-cloudflare-reservation.md)

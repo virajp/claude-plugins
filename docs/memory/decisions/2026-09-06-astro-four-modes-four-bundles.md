@@ -1,7 +1,7 @@
 # Decision — Astro is one pack and four bundles, one per rendering mode
 
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
-[`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
+`docs/plans/2026-09-05-astro-static/`
 · **Renames** a released bundle slug, `typescript-astro-react` → `astro-ssr`
 
 ## What was decided before

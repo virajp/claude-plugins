@@ -1,7 +1,7 @@
 # Decision — fnox is the development-only secrets provider, and no repo carries an encrypted secret
 
 **Date** 2026-10-07 · **Branch** `2026-10-07-fnox-dev-only-doctrine` · **Plan**
-[`docs/plans/2026-10-07-fnox-dev-only-doctrine/`](../../plans/2026-10-07-fnox-dev-only-doctrine/index.md)
+`docs/plans/2026-10-07-fnox-dev-only-doctrine/`
 · **Reverses** in part
 [`2026-09-06-secrets-store-is-runtime-not-development.md`](./2026-09-06-secrets-store-is-runtime-not-development.md),
 and the secrets contract's encrypt-into-git allowance · **Backlog** none
