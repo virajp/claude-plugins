@@ -139,6 +139,15 @@ describe("lint: structure", () => {
     expect(run("lint.mjs", `${SKILLS}/a`).out).not.toContain("SK003");
   });
 
+  it("applies no budget to a workflow", () => {
+    const words = "word ".repeat(2000);
+    write(`${SKILLS}/a/references/big.md`, words);
+    const table =
+      "\n## Routing\n\n| Doing | Read | Loads |\n| --- | --- | --- |\n| x | [b](references/big.md) | always |\n";
+    skill("a", `${GOOD}\nmetadata:\n  archetype: workflow`, table);
+    expect(run("lint.mjs", `${SKILLS}/a`).out).not.toContain("SK003");
+  });
+
   it("prints the three word counts", () => {
     skill("a", GOOD, "\none two three\n");
     expect(run("lint.mjs", "--words", `${SKILLS}/a`).out).toContain("body 3 always 3");

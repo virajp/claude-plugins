@@ -6,7 +6,7 @@ invocation values, per [standard.md](standard.md).
 
 | Archetype                           | Membership test                                                       | Budget                         | Description |
 | ----------------------------------- | --------------------------------------------------------------------- | ------------------------------ | ----------- |
-| [workflow](archetype-workflow.md)   | Runs phases with gates, and reads or writes project state             | 1,500                          | 350         |
+| [workflow](archetype-workflow.md)   | Runs phases with gates, and reads or writes project state             | none                           | 350         |
 | [doctrine](archetype-doctrine.md)   | States how files must be written, and applies while editing them      | 400, or 700 with no references | 250         |
 | [reference](archetype-reference.md) | Holds the judgment for choosing and using one service or provider     | 400                            | 300         |
 | [adapter](archetype-adapter.md)     | Implements a host's contract for one provider, under a fixed name     | 600                            | 300         |

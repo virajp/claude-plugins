@@ -199,7 +199,9 @@ export function skillRules(skill, ctx) {
   const single = m.archetype === "doctrine" && form === "single";
   const budget = single ? arch.singleBudget : arch.budget;
   const words = loadedWords(skill);
-  if (words.always > budget) { add("SK003", "warn", 1, `${words.always} always-loaded words, budget ${budget}`); }
+  if (budget !== undefined && words.always > budget) {
+    add("SK003", "warn", 1, `${words.always} always-loaded words, budget ${budget}`);
+  }
 
   const titles = sections(skill.body).map((s) => s.title);
   // A single-file doctrine with no Run section is prose, and has no gate to describe.
