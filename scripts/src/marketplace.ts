@@ -70,8 +70,8 @@ import {
   dirname,
   join,
 } from "node:path";
-import { readPlugins } from "./plugins.ts";
 import type { Plugin } from "./plugins.ts";
+import { readPlugins } from "./plugins.ts";
 
 /** Where the published manifest lands, relative to the repo root. */
 export const MANIFEST_PATH = ".claude-plugin/marketplace.json";
