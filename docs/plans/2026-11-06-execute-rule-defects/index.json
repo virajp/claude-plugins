@@ -12,8 +12,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-06T03:57:53Z in .worktrees/execute-rule-defects"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at plan gate — U4 failed: mise x -- mise run code:precommit red on 30 docs/design SVGs no unit owns (end-of-file-fixer; exclude dropped by e02b4ac5, added by 8fee757b). Restore the exclude, then resume. Worktree .worktrees/execute-rule-defects, branch execute-rule-defects"
   },
   "consent": {
     "merge": true,
@@ -132,9 +132,9 @@
         "U3"
       ],
       "waits": "",
-      "status": "green",
+      "status": "failed",
       "started": "2026-11-06T04:20:36.868Z",
-      "ended": "2026-11-06T04:21:41.193Z",
+      "ended": "2026-11-06T04:23:30.995Z",
       "commit": "",
       "rounds": 1
     }
@@ -154,9 +154,9 @@
     },
     {
       "id": "W3",
-      "status": "green",
+      "status": "failed",
       "started": "2026-11-06T04:20:36.833Z",
-      "ended": "2026-11-06T04:22:14.204Z"
+      "ended": "2026-11-06T04:23:31.068Z"
     }
   ],
   "shared_files": [
@@ -310,6 +310,13 @@
       "stage": "edit",
       "text": "waves.md \"On failure\" said \"never mid-wave\" and SKILL.md H4 said \"Commit what is safe\", both outside the Edits, though H4 pauses · assumed the step 5 exception and pause.md govern; closed: wave review round 1 raised both, U1 fixed them in round 2, reviewer clean",
       "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "",
+      "stage": "plan-gate",
+      "text": "plan gate line \"mise x -- mise run code:precommit\" is red on files no unit owns: end-of-file-fixer rewrites 30 SVGs under docs/design/, because e02b4ac5 (bootstrap sync) dropped the docs/design exclude that 8fee757b added for exports kept byte for byte · no assumption taken: run left them unedited and did not land; needs the exclude restored in .config/pre-commit-config.yaml on this branch and develop, by hand",
+      "state": "open"
     }
   ],
   "overrides": [],
