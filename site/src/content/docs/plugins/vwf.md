@@ -204,9 +204,9 @@ adopting it.
   session: code per unit, code review and security review at the review rows the
   plan places, and one acceptance and ux pass after all units, deciding from a
   fixed rule set and stopping only on a hard halt, a resource cap, an
-  all-blocking gap, an irreversible decision — or the **final report**, where it
-  lands per the consent the plan recorded, and stops for you only when a gate is
-  red, a gap blocks, or consent said no.
+  irreversible decision — or the **final report**, where it lands per the
+  consent the plan recorded, and stops for you only when a gate is red, a gap
+  blocks, or consent said no.
 - **Released APIs are frozen.** Once `/vwf:verify` records a production release,
   breaking a released API contract is blocked like a security finding —
   reviewers loop it until fixed, and the only way out is a conscious
@@ -2146,8 +2146,9 @@ reviewers over the branch delta. A cycle plan gets **one** by default, in its
 own wave after the last code unit and before the docs unit, covering every code
 unit; an earlier row is a ruling with its reason in the `decisions` list — a
 boundary later units build on. Every row sits in a wave strictly later than the
-units it covers, and covers every earlier-wave code unit no earlier row already
-covers, so the commit range it reviews and the units it covers are one set. No
+units it covers, and covers every earlier-wave unit no earlier row already
+covers, of any `kind`, so the commit range it reviews and the units it covers
+are one set. No
 code unit triggers a review by itself, and `execute` infers no row: a plan whose
 code units no review row covers, or whose rows break either placement rule, is
 refused at its preflight. Three things are always agreed before anything is
@@ -2603,9 +2604,9 @@ unresolvable git conflict); a stage subagent dying twice on the same unit; a
 the pending run state to `index.json`, commits what is green, sets the status to
 `RUNNING — paused at unit <n> for context`, hands off and stops with the launch
 line (`/vwf:recall next` surfaces it; you re-run `/vwf:execute <folder>` in a
-fresh session — `recall` never launches it for you); a gap
-that blocks *all* remaining work; a security or breaking-API finding whose fix
-loop isn't converging; or a decision the rules don't cover that is irreversible,
+fresh session — `recall` never launches it for you); a security or breaking-API
+finding whose fix loop isn't converging; or a decision the rules don't cover
+that is irreversible,
 a wave order the written order cannot settle, or blocking format drift — each a
 blocking-gap stop that commits what is safe and reports the ruling the folder
 needs with the resume command, never a question.
@@ -3597,7 +3598,8 @@ The one thing it won't do is invent work: if the session had no continuable next
 action, `handoff` says so instead of padding the prompt, and `recall` reports
 the same and waits for your direction. This is also the pair the **context-caps
 hook** drives when an autonomous `/vwf:execute` run hits a budget — snapshot
-with a bare `/vwf:handoff`, then `/clear` and `/vwf:recall next`. That is the
+with `/vwf:handoff prefer: the one thread is this plan's run`, then `/clear` and
+`/vwf:recall next`. That is the
 one prompt `recall` prints rather than runs: `execute` must start in a fresh
 context, so it shows the `/vwf:execute <folder>` launch line and you re-run it,
 and the run resumes

@@ -1,5 +1,5 @@
 # The bootstrap commit of the last sync. repo-sync writes it.
-bootstrap_commit = "0ccae6e84dad6f200fa017031092b79881b709f0"
+bootstrap_commit = "b6a4ecd0a1a2ef965b9aa5ebe55050cd115bcd52"
 environments = [ "dev", "ci" ]
 extensions = [ "astro-build.astro-vscode" ]
 repo_name = "claude-plugins"
@@ -12,6 +12,10 @@ repo_url = "https://github.com/virajp/claude-plugins"
 [tools.github]
 
 [tools.node]
+
+[tools.pre-commit]
+# The design exports, kept byte for byte.
+exclude = [ "^docs/design/" ]
 
 [branch.develop]
 direct_commit = true

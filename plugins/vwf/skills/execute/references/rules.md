@@ -110,12 +110,15 @@ These rules hold on every run. `execute-stages.md` below means
 
 ## Git, gates, commits
 
-- **All git through `/vwf:git-workflow`**. Never run raw git, with two exceptions:
+- **All git through `/vwf:git-workflow`**. A read-only git command, such as `git log` or
+  `git diff`, needs no skill. A git command that writes goes through the skill, except these:
   - The index row. Its claim and completion commits are the plain commands
     `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md` spells out. They run
     in the main checkout, around the `plan-management` verb that makes the edit.
   - The staging discipline below, whose `git add` and `git reset` are the plain commands
     that keep one unit's commit to its own Owns.
+  - `git merge` and its `--abort`, which refresh a shared worktree in [setup.md](setup.md).
+  - `git worktree remove`, which removes a shared worktree in [all.md](../workflows/all.md).
 
   On each mid-run invocation, pass git-workflow two declared preferences, so it never
   prompts. One is **isolate without asking** (its Step 1). The other is **commit only — do not
@@ -153,8 +156,9 @@ These rules hold on every run. `execute-stages.md` below means
 
 - **Memory through `docs/memory/`**. Follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
   - For a **`code` unit**, **recall per unit**, before dispatching the coder, not only before
-    the first unit. Read the files of `docs/memory/decisions/` and `docs/memory/gaps/` whose
-    slug or title matches that unit's slice, newest first, at most ten. Pass the hits to the coder.
+    the first unit. Read the files of `docs/memory/decisions/`, `docs/memory/problems/` and
+    `docs/memory/gaps/` whose slug or title matches that unit's slice, newest first, at most ten.
+    Pass the hits to the coder.
   - **Persist incrementally**: write each unit's durable decisions as `docs/memory/decisions/`
     files as it lands. Write them inside the run's worktree, so they land with the merge. Under
     multi-repo `linkage: siblings`, write them in the base checkout as the second working tree,
@@ -233,8 +237,9 @@ The reason for each is on its line, and the correct action follows the semicolon
   it, `done` for `backlog` and `partial` for `backlog_pieces`.
 - Edit a blueprint doc beyond the `implementation:` stamp, or run a blueprint-bound step on a plan
   without `covers`; stamp only, and skip the step.
-- Run a gate that `gates.unit`, `gates.wave` or `gates.plan` do not name, or skip one they do. Run
-  each named line once, and never twice at one point.
+- Run a gate that `gates.unit`, `gates.wave`, `gates.plan` or `gates.keeps` do not name, or skip one
+  they do. Run each named line once, and never twice at one point. `gates.keeps` entries run as
+  [reconcile.md](reconcile.md) says.
 - Pick up an item from *Out of scope* or *Parked*, however adjacent; leave it to a later plan.
 - Run on a repo or a folder in the old plan format, or migrate one itself; print the migration
   message.

@@ -50,8 +50,10 @@ folder commit, per [the plan files](plan-files.md).
    unit gate inside its pipeline. Then it runs every line of `gates.wave`, once. Read every report for `UNRESOLVED:`
    too.
    - A unit that returned `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
-     per [blocking and resume](blocking.md). A skipped `review` row takes every later `review` row and
-     every later `code` unit one covers with it, as that reference states. The rest of the run continues.
+     per [blocking and resume](blocking.md). A failed, unresolved or skipped `review` row takes every
+     later `review` row and every later unit of any kind one covers, per that reference.
+     The rest of the run continues. H4 is the exception: a unit marked `failed` with `agent died` pauses
+     the run, per [pause.md](pause.md).
    - Attribute a red gate line no skipped unit explains to the unit whose Owns covers the failing path,
      and handle it as that unit's failure.
    - A line that cannot be attributed marks every unit in the wave `failed`, with the gate line as detail.
@@ -81,6 +83,7 @@ wave, after the Acceptance & UX pass and after Reconcile; see [reconcile.md](rec
 ## On failure
 
 The run **skips what a failure blocks and keeps going** with what it does not. It then stops once at the
-end with every ruling needed — never mid-wave, and never with "how should I proceed". The exact semantics
-are [blocking and resume](blocking.md): isolated versus all-blocking, the mechanical re-dispatch, what the
-status line records, and how a re-run resumes.
+end with every ruling needed — never mid-wave, and never with "how should I proceed". H4 is the exception:
+once the wave's green units are committed, a dead agent pauses the run, per [pause.md](pause.md). The exact
+semantics are [blocking and resume](blocking.md): isolated versus all-blocking, the mechanical re-dispatch,
+what the status line records, and how a re-run resumes.

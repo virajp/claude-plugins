@@ -147,8 +147,8 @@ after-landing steps. It covers every stop too, each the stop those files already
   below, and no line more. The chain-forward lines are not returned: the loop's next `next` finds an unblocked plan on its own.
 - **It asks nothing, of anyone**. `SKILL.md` already asks the user nothing. Under runner mode there is no user to ask. So a point that would need one is a stop with its
   resume command, returned as `STOPPED`. When the runner invokes a skill that could prompt, it passes the answer in the invocation:
-  - the declared preferences those files name for `/vwf:git-workflow` and `plan-management archive`;
-  - at a resource-cap pause, `/vwf:handoff` with no argument, told that the one thread to hand off is this plan's run.
+  - the declared preferences those files name for `/vwf:git-workflow`, `/vwf:doctor` and `plan-management archive`;
+  - at a resource-cap pause, `/vwf:handoff prefer: the one thread is this plan's run`.
 
   Nothing answers a skill that asks regardless: the runner stops, `DETAIL:` naming the skill and its question.
 - **Its subagents are one layer deeper**. The loop is the session, and the runner is layer one. The units, reviewers and docs unit it dispatches are layer two. The docs-sync

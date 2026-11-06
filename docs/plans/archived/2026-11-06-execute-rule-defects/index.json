@@ -12,8 +12,8 @@
   "backlog_pieces": [],
   "gaps_of": [],
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-06 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-06 — ace14a5b, 65e9d361, 6b4a19c9"
   },
   "consent": {
     "merge": true,
@@ -69,11 +69,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-06T03:58:33.631Z",
+      "ended": "2026-11-06T04:01:28.169Z",
+      "commit": "ace14a5b",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -88,11 +88,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-06T03:58:33.703Z",
+      "ended": "2026-11-06T04:01:28.262Z",
+      "commit": "65e9d361",
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -112,11 +112,11 @@
         "U2"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-06T04:13:34.224Z",
+      "ended": "2026-11-06T04:15:44.406Z",
+      "commit": "6b4a19c9",
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -132,31 +132,31 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-06T04:20:36.868Z",
+      "ended": "2026-11-06T09:39:22.227Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-06T03:58:33.595Z",
+      "ended": "2026-11-06T04:13:05.551Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-06T04:13:34.177Z",
+      "ended": "2026-11-06T04:20:29.805Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-06T04:20:36.833Z",
+      "ended": "2026-11-06T09:40:15.350Z"
     }
   ],
   "shared_files": [
@@ -279,31 +279,46 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.646Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.320Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.493Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers and no code unit, so nothing to stamp or persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-06T04:13:33.868Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "waves.md \"On failure\" said \"never mid-wave\" and SKILL.md H4 said \"Commit what is safe\", both outside the Edits, though H4 pauses · assumed the step 5 exception and pause.md govern; closed: wave review round 1 raised both, U1 fixed them in round 2, reviewer clean",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "",
+      "stage": "plan-gate",
+      "text": "plan gate line \"mise x -- mise run code:precommit\" is red on files no unit owns: end-of-file-fixer rewrites 30 SVGs under docs/design/, because e02b4ac5 (bootstrap sync) dropped the docs/design exclude that 8fee757b added for exports kept byte for byte · no assumption taken: run left them unedited and did not land; needs the exclude restored in .config/pre-commit-config.yaml on this branch and develop, by hand; closed: the user ruled to restore the exclude, 7296ed3f on develop, merged into this branch as 8fe9a276",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/execute-rule-defects",

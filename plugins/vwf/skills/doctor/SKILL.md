@@ -21,17 +21,20 @@ repo agrees. Everything here is a **read**, save the one dry-run full mode runs
 consent.
 
 Scope to the projects named in `$ARGUMENTS`; with no argument, check every
-project in the registry. **That scope narrows §§3–5 only.** The harness, the
-memory store and the leftovers check belong to the repo rather than to any one
-project, so **§§6–8 run in full on every invocation**, scoped or not —
-and their references are read every run, not just when no argument was given.
+project in the registry. An argument with only a preference counts as no
+argument (see Caller Preferences). **That scope narrows §§3–5 only.** The
+harness, the memory store and the leftovers check belong to the repo rather
+than to any one project, so **§§6–8 run in full on every invocation**, scoped
+or not — and their references are read every run, not just when no argument was
+given.
 Narrowing them is how a scoped run comes back clean while a blocking finding
 sits unread, and `/vwf:setup` / `/vwf:execute`
 halt on a blocking finding they were never told about.
 
 The one argument that is not a project name is **`baseline`** — a named
 invocation that runs the repo-shape check alone, described below. Every other
-run, scoped or not, is doctor's **full mode**.
+run, scoped or not, is doctor's **full mode**. A preference is not a project
+name either: it scopes nothing.
 
 ## The `baseline` invocation
 
@@ -63,7 +66,8 @@ and Content drift; `/vwf:setup` for a missing pack lockfile and Project ids;
 layout; a fixed value in `.config/bootstrap.toml` for Merge model.
 
 `$ARGUMENTS` is either project names or `baseline`, never both — `baseline`
-scopes nothing, since the repo-shape check is per repo, not per project.
+scopes nothing, since the repo-shape check is per repo, not per project. Either
+form, or an argument with no names at all, can end with a `prefer:` preference.
 
 ## Doc Paths
 
@@ -84,10 +88,18 @@ scopes nothing, since the repo-shape check is per repo, not per project.
 The last two are read for the repo-shape check in §5 and, like everything else
 in this table, are only ever read.
 
+## Caller Preferences
+
+Everything in `$ARGUMENTS` from `prefer:` to its end is a preference, never a
+name, and the words before it are the project names or `baseline`.
+`prefer: report only` means doctor reports its findings, offers no fix and asks
+nothing. With no `prefer:`, doctor offers as §9 says.
+
 ## Hard Rules
 
 - **Read-only by default.** Every fix is offered, never applied unprompted, and
-  each is its own consent — never a batch "fix all".
+  each is its own consent — never a batch "fix all". A caller's
+  `prefer: report only` drops the offer (see Caller Preferences).
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule.
 - **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
