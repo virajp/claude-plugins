@@ -30,6 +30,47 @@ test("finds folders and wave-review names", async () => {
   expect(reviewName("R2")).toBe("R2");
   expect(reviewName("R-late")).toBe("R-late");
   expect(reviewName("run-1")).toBe(undefined);
+  expect(reviewName(undefined, "R2 wave review")).toBe("R2");
+  expect(reviewName(undefined, "R2-late wave review")).toBe("R2-late");
+  expect(reviewName(undefined, "R-late contract review")).toBe("R-late");
+  expect(reviewName(undefined, "run-1 the plan")).toBe(undefined);
+  expect(reviewName(undefined, "Review R2")).toBe(undefined);
+});
+
+test("ties an unnamed agent by the start of its description", async () => {
+  const units = [{ id: "U2", file: "02-pane.md" }];
+  expect(unitForAgent("general-purpose", undefined, units, "U2 The pane"))
+    .toBe("U2");
+  expect(unitForAgent("general-purpose", undefined, units, "U2-late1 fix"))
+    .toBe("U2");
+  expect(unitForAgent("general-purpose", undefined, units, "find U2 things"))
+    .toBe(undefined);
+  expect(unitForAgent("general-purpose", undefined, units, "U9 no such unit"))
+    .toBe(undefined);
+  expect(unitForAgent("vwf:execute-runner", undefined, units, "U2 the plan"))
+    .toBe(undefined);
+});
+
+test("a teammate woken by a message is live again, from its first start", async () => {
+  reset();
+  const lines = [
+    line("run.start", { mode: "fresh" }),
+    line("tool.start", {
+      tool: "Agent",
+      tool_use_id: "t1",
+      summary: "general-purpose :: U2 :: The pane",
+    }),
+    line("tool.end", { tool: "Agent", tool_use_id: "t1", child: "a1" }),
+    line("agent.start", { agent: "a1", agent_type: "U2" }),
+    line("agent.end", { agent: "a1", agent_type: "U2" }),
+  ];
+  const idle = replay(lines, folder());
+  expect(idle.units[1]!.agent!.live).toBe(false);
+  const first = idle.units[1]!.agent!.startedAt;
+  lines.push(line("agent.start", { agent: "a1", agent_type: "U2" }));
+  const woken = replay(lines, folder());
+  expect(woken.units[1]!.agent!.live).toBe(true);
+  expect(woken.units[1]!.agent!.startedAt).toBe(first);
 });
 
 test("maps a reviewer by its row, and a coder by its unit file", async () => {

@@ -120,6 +120,8 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
    A red line here is the integration branch's, not the plan's. Stop and report it as
    such — never start a run that would be blamed for a failure it inherited. The green
    preflight is in the action log, each line a `run --tier preflight` call.
+
+   Then decide the run's mode, per *The execution mode* in [preflight.md](preflight.md).
 3. **Stack conventions — only when the plan has a `code` unit**. Fetch the
    `conventions:` prose for every template this plan's projects pin. Follow the *Stack
    conventions* section of [the `code`-unit preflight](preflight.md). Fetch once for the

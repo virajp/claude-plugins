@@ -37,6 +37,25 @@ write* in [land.md](land.md).
 - **An entry whose `level` is not one of the four** → never reaches here: `validate` refused it above, naming the
   entry's path.
 
+## The execution mode (Setup step 2, every plan)
+
+Decide the run's mode once, on a fresh run and a resume alike. Read the folder's key with
+`plan.mjs get <folder>/index.json execution`. A `get` that exits with `no key execution` reads as `solo`.
+
+The mode is `teams` only when all three of these hold:
+
+- The key reads `teams`.
+- `printenv CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS` prints `1`. Read the flag, because with the flag off an `Agent` call with a `name` still succeeds, and
+  only its `SendMessage` fails.
+- The run is not a runner under `all`, per *Runner mode* in [all.md](../workflows/all.md).
+
+Otherwise the mode is `solo`, and **the run never stops for this**. A unit file depends on no peer, so a plan recorded `teams` lands the same way.
+
+Log the mode: `log.mjs event execution --mode <mode> --reason "<why>"`, the reason naming the condition that failed when the plan read `teams`. Drop `--reason` when the mode is what
+the plan recorded. The final report renders it. [edit-unit.md](edit-unit.md) says what the mode changes.
+
+An unattended `teams` run has the same permission rule as a `solo` one. This run adds no mechanism.
+
 ## The `code`-unit preflight (Setup steps 2 and 3)
 
 Read this at Setup step 2 **only when the plan has a `code` unit**, a `units` entry whose `kind` is `code`. A plan of

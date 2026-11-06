@@ -20,6 +20,8 @@ resource-cap handoff. The record is the account that survived all three intact. 
 - the release levels recorded: the folder's `release_levels` entries, and, once the landing has
   written them, each key it raised in `.config/releases.yaml`, from and to. For a folder whose
   `release_levels` is `[]`, the one line *old-shape folder — no release levels recorded*
+- the execution mode the run used, from the action log's `execution` event, and the reason when it fell
+  back from what the plan recorded
 - the worktree path
 - the action log's path, the folder's `run.log`, and its `log.mjs summary`. The summary reports each run
   of the plan (one `run.start` to the next, the pause between them not counted) and the totals. The

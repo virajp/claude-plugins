@@ -360,8 +360,10 @@ The rules for each key — JSON has no comments, so they sit here:
   both kinds. `teams` asks that a plan's `edit` units and its wave reviewer can
   send messages to each other; `code` units and `review` units do not change.
   Talk is a help, never a precondition, so a unit file never depends on a peer.
-  A folder with no key reads as `solo`, and `format` stays `1`. `/vwf:execute`
-  does not read this key yet, so it changes no run today.
+  A folder with no key reads as `solo`, and `format` stays `1`. A `teams` plan
+  runs `solo` when a team cannot start, and the final report says why; the rule
+  is *The execution mode* in
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/preflight.md`.
 - **`status`** — the one status a plan has. `state` is `DRAFT`, `APPROVED`,
   `RUNNING`, `BLOCKED`, `COMPLETE` or `ARCHIVED`; `detail` is one line: when
   it changed and by what — "APPROVED 2026-09-04 by the user"; "RUNNING since

@@ -205,6 +205,8 @@ The reason for each is on its line, and the correct action follows the semicolon
   unit.
 - Dispatch a wave whose predecessor is not green or explicitly skipped; wait for it, or skip it per
   the rules.
+- Give an agent a `name` outside a `teams` wave; a `name` makes a teammate when agent teams are on, and a
+  teammate cannot start named agents. Start its `description` with its id.
 - Run two `code` units' pipelines at once, or a `review` row beside a `code` unit's pipeline; run
   them serially. Never run an engine anywhere but at a `review` row. Never infer a `review` row the folder's
   `units` does not write; report it.

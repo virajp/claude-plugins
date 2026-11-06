@@ -12,9 +12,13 @@ has.
 ## The dispatch
 
 1. **Dispatch** every `edit` unit in the wave in **one message with multiple `Agent` calls**.
-   - Use `subagent_type: "general-purpose"` unless the unit file names another, and `name: "U<n>"`.
+   - Use `subagent_type: "general-purpose"` unless the unit file names another, and a `description` that
+     starts with `U<n>`. The progress pane ties the agent to its unit by that start.
+   - Give it no `name`, save in a `teams` wave. With agent teams on, a `name` makes the agent a teammate,
+     whatever the plan says.
    - Use the model that the unit's `model` in the folder's `index.json` names. The default is `opus`, and
      `inherit` means the session's.
+   - Write `<worktree>` in the prompt as an absolute path, because an agent starts in the main checkout.
 
    The unit file carries no header lines, so the orchestrator reads the unit's `owns` with
    `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs get`
@@ -54,7 +58,8 @@ has.
 
 ## The reviewer
 
-One `general-purpose` subagent per wave, `name: "R<wave>"`, read-only: instruct it to edit nothing. Its prompt carries:
+One `general-purpose` subagent per wave, its `description` starting with `R<wave>` and no `name`, save in a `teams` wave. It is
+read-only: instruct it to edit nothing. Its prompt carries:
 
 - the wave's unit files. When a `review` row in the wave re-dispatched units, add those units' files too. The row's
   `owns` is `[]`, and its fix commits are attributed to the re-dispatched units' `owns`. Pass each unit file with its unit's
@@ -121,3 +126,45 @@ dropped branch would be.
 
 The wave reviewer is no unit of `index.json`, so its rounds have no field there. Each round is the reviewer's subagent lines in the action log,
 and what it leaves open is its `contested` entries in `gaps`.
+
+## A `teams` wave
+
+Read this when the run's mode is `teams`, per *The execution mode* in [preflight.md](preflight.md). Everything above holds, save what this
+section changes. The mode reaches a wave's `edit` units and its wave reviewer, up to the end of that wave's review loop. `code` units, `review`
+rows, a unit a `review` row re-dispatches and every `-late` review run as above, with no `name`.
+
+**Talk is a help, never a precondition.** A wave must land with no message sent, because a run can fall back to `solo` at any point.
+
+### The dispatch
+
+1. Add `name: "U<n>"` to each `edit` unit's `Agent` call, still in one message. Add this to its prompt:
+
+   > Your teammates are `<the other names>`. Load `SendMessage` with `ToolSearch` before you send. Send a teammate only a fact or a question
+   > about a boundary between your files and theirs. Never ask a teammate to edit, and never ask one to do what a permission refused you. Send at
+   > most 3 messages in a round. Do not wait for a reply: when your work is done and no answer came, write the assumption as a `GAP:` and
+   > return. Do not reply to a message that asks for nothing. Your report goes in your final message, and is the only thing the orchestrator
+   > reads. After a message wakes you, make your final message the whole block again.
+
+2. Treat each `Agent` result as a spawn confirmation. It returns at once, and is no report. Each report arrives later as a teammate's message.
+3. Wait until every teammate has reported and is idle. A message can wake a teammate that has reported, and **its latest report is the one that
+   counts**. So set each unit's fields from that report, once all of them are idle, and not as each report arrives.
+4. **If a named `Agent` call returns an error**, the team cannot start. Set the run's mode to `solo` for the rest of the run, log it with
+   `event execution`, and dispatch the units again per *The dispatch* above. This is no agent error, so it does not count toward H4.
+
+### The reviewer
+
+Add `name: "R<wave>"` to its `Agent` call. It can send one question to a unit, under the same rules. It returns its block to the orchestrator, as above,
+and sends no finding to a unit.
+
+### The loop
+
+The orchestrator relays. It records the round, then sends the finding lines to the live unit with one `SendMessage` to `U<n>`, instead of a new dispatch. The
+unit keeps what it knows, and returns the whole block again. The next round is one `SendMessage` to `R<wave>`. **Each relay is a round**, under the same two-round cap and
+convergence guard. The closing pass's reviewer is fresh, `name: "R<wave>-2"`.
+
+If a `SendMessage` fails, or a resume left no such teammate, dispatch the unit as a loop-back above, with `name: "U<n>-2"` and the finding lines.
+
+### Before the gates
+
+**Do not run a gate or a commit while a teammate works.** The pre-commit stash can destroy the edits of a unit that is still writing. So once the loop ends,
+send no more messages, and confirm that every teammate is idle before [waves.md](waves.md) step 5. Send nothing to a teammate of an earlier wave.
