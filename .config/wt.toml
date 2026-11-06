@@ -1,0 +1,20 @@
+# The worktrunk (wt) config of this repository. This repository owns the file:
+# the sync writes it only when it is missing, and the next sync keeps your
+# version. wt asks you to approve each command the first time that it runs.
+
+# A new worktree runs these steps in sequence, and wt waits for them.
+[[pre-start]]
+trust = "mise trust"
+
+# Copies the gitignored files of the main worktree, for example build caches.
+# Without a .worktreeinclude file, this step copies nothing.
+[[pre-start]]
+copy = "wt step copy-ignored --require-include"
+
+[[pre-start]]
+setup = "mise run setup:worktree"
+
+[commit.generation]
+template-append = """
+- Use Conventional Commits, with the types of .config/git-conventional-commits.yaml
+"""
