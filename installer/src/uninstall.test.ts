@@ -233,9 +233,7 @@ describe("enumerate", () => {
     // allowlist, and a receipt records files that may still be on disk.
     writeReceiptFile(
       "claude.json",
-      receipt([
-        { kind: "tree", path: join(tmp, "claude-payload") },
-      ], [{ name: "vwf", scope: "user" }]),
+      receipt([{ kind: "tree", path: join(tmp, "claude-payload") }], [{ name: "vwf", scope: "user" }]),
     );
     writeReceiptFile(
       "opencode.json",

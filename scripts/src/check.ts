@@ -33,6 +33,11 @@ import {
   sep,
 } from "node:path";
 import { parse as parseYaml } from "yaml";
+import type {
+  Dependency,
+  Plugin,
+  PluginFile,
+} from "./plugins.ts";
 import {
   agentName,
   bodyOf,
@@ -40,11 +45,6 @@ import {
   readPlugins,
   readText,
   skillName,
-} from "./plugins.ts";
-import type {
-  Dependency,
-  Plugin,
-  PluginFile,
 } from "./plugins.ts";
 
 export interface Finding {
@@ -1379,9 +1379,10 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
       if (value !== true && value !== false) {
         findings.push({
           scope: `${plugin.dir}:${file.path}`,
-          message: `bundle \`default\` is ${
-            JSON.stringify(value)
-          }, not a boolean — the menu preselects on \`default: true\` alone, `
+          message:
+            `bundle \`default\` is ${
+              JSON.stringify(value)
+            }, not a boolean — the menu preselects on \`default: true\` alone, `
             + `so any other spelling never preselects and reports nothing`,
         });
         continue;
