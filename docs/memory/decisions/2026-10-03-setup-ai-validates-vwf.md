@@ -2,7 +2,7 @@
 
 **Date** 2026-10-03 · **Branch** `2026-10-03-setup-ai-validates-vwf` (worktree
 `.worktrees/2026-10-03-setup-ai-validates-vwf`) · **Plan**
-[`docs/plans/2026-10-03-setup-ai-validates-vwf/`](../../plans/2026-10-03-setup-ai-validates-vwf/index.md)
+`docs/plans/2026-10-03-setup-ai-validates-vwf/`
 · **Backlog** B86 · **Supersedes**
 [`2026-09-12-setup-ai-is-project-scope-through-claude.md`](./2026-09-12-setup-ai-is-project-scope-through-claude.md)
 · **Reverses** J1 of

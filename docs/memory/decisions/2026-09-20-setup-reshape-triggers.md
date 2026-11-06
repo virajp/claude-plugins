@@ -1,7 +1,7 @@
 # Decision — every structural change re-checks the shape and offers `reshape`
 
 **Date** 2026-09-20 · **Branch** `2026-09-20-setup-reshape-triggers` · **Plan**
-[`docs/plans/2026-09-20-setup-reshape-triggers/`](../../plans/2026-09-20-setup-reshape-triggers/index.md)
+`docs/plans/2026-09-20-setup-reshape-triggers/`
 · **Closes** the open half of
 [`2026-09-06-init-behind-setup.md`](./2026-09-06-init-behind-setup.md) —
 config-side drift as a mode signal · **Requires**

@@ -1,7 +1,7 @@
 # Decision — partial backlog items: a plan that lands one piece leaves its item Partially done
 
 **Date** 2026-09-25 · **Branch** `2026-09-25-partial-backlog-items` · **Plan**
-[`docs/plans/2026-09-25-partial-backlog-items/`](../../plans/2026-09-25-partial-backlog-items/index.md)
+`docs/plans/2026-09-25-partial-backlog-items/`
 · **Extends**
 [`2026-09-19-backlog-status-vocabulary.md`](./2026-09-19-backlog-status-vocabulary.md)
 — the Status field gains a fifth option — and

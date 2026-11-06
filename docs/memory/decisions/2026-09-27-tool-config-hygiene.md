@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-27 · **Branch** `2026-09-26-tool-config-hygiene` · **Plan**
-[`docs/plans/2026-09-26-tool-config-hygiene/`](../../plans/2026-09-26-tool-config-hygiene/index.md)
+`docs/plans/2026-09-26-tool-config-hygiene/`
 · **Backlog** B66 (third piece of three, finished), B72 (finished)
 
 ## The ask

@@ -1,7 +1,7 @@
 # Decision — /vwf:execute all runs every runnable plan, each in its own runner
 
 **Date** 2026-10-07 · **Branch** `2026-10-07-execute-all` · **Plan**
-[`docs/plans/2026-10-07-execute-all/`](../../plans/2026-10-07-execute-all/index.md)
+`docs/plans/2026-10-07-execute-all/`
 · **Reverses** execute's "a session that has done nothing else" and "chained
 plans land one focused run at a time" · **Backlog** none
 

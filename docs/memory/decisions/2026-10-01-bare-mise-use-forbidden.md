@@ -1,7 +1,7 @@
 # Decision — a bare `mise use` is forbidden; config first, then `mise install`
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes** the `mise use` remedies `/vwf:doctor` and the claude-code pack
 printed, and B75 item 5
 

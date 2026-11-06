@@ -4,7 +4,7 @@
     — new mode reads nothing before landing; a pre-existing path is a materializer conflict init never resolves | 4 files carry a stack, forge or editor assumption no pin conditions | 2 pack-owned files are rewritten by pack-owned tasks and then read as drift
 
 Plan
-[`docs/plans/2026-09-20-init-shape-audit/`](../../plans/2026-09-20-init-shape-audit/index.md),
+`docs/plans/2026-09-20-init-shape-audit/`,
 unit U3. Method is decision 1 — a read-only walk of the three bundles' `config/`
 trees, the init references that place them, and the materializer that copies
 them. Nothing here was run. Sibling walks: the greenfield walk

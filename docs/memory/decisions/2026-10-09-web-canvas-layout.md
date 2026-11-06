@@ -1,7 +1,7 @@
 # Decision — site and webapp get a browser canvas frame, and desktop renders in a native app window
 
 **Date** 2026-10-09 · **Branch** `2026-10-09-web-canvas-layout` · **Plan**
-[`docs/plans/2026-10-09-web-canvas-layout/`](../../plans/2026-10-09-web-canvas-layout/index.md)
+`docs/plans/2026-10-09-web-canvas-layout/`
 · **Finishes** backlog item B59
 
 ## The defect

@@ -1,7 +1,7 @@
 # Decision — the release tasks bump, commit on develop, merge to main, then tag
 
 **Date** 2026-10-08 · **Branch** `2026-10-08-release-tasks-bump` · **Plan**
-[`docs/plans/2026-10-08-release-tasks-bump/`](../../plans/2026-10-08-release-tasks-bump/index.md)
+`docs/plans/2026-10-08-release-tasks-bump/`
 · **Follows**
 [`2026-10-08-release-levels-recorded.md`](./2026-10-08-release-levels-recorded.md)
 (plan 1, which records the levels) · **Backlog** B96 (piece 2 of 2)

@@ -7,7 +7,7 @@ drift at every session start rejected
 
 **Date** 2026-11-03 to 2026-11-04 · **Branch** `tool-config-to-bootstrap` ·
 **Plan**
-[`docs/plans/2026-11-03-tool-config-to-bootstrap/`](../../plans/2026-11-03-tool-config-to-bootstrap/index.md)
+`docs/plans/2026-11-03-tool-config-to-bootstrap/`
 · **Backlog** B102 (phases 2 and 3), B103
 
 The earlier piece is

@@ -2,7 +2,7 @@
 
 **Date** 2026-09-18 · **Branch** `2026-09-18-backlog-on-github-projects` ·
 **Plan**
-[`docs/plans/2026-09-18-backlog-on-github-projects/`](../../plans/2026-09-18-backlog-on-github-projects/index.md)
+`docs/plans/2026-09-18-backlog-on-github-projects/`
 · **Reverses** the offline argument of ruling 3 in
 [`2026-09-13-vwf-process.md`](./2026-09-13-vwf-process.md) — "a backlog that
 exists only in memory is one an offline session cannot read" · **Backlog** none

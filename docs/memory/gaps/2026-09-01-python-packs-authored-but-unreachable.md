@@ -6,7 +6,7 @@ Mirrors the mempalace drawer (wing `ai-plugins`, room `gaps`); both stores
 written together, per `plugins/vwf/assets/memory.md`.
 
 Filed by section F of
-[the devtools dissolution plan](../../plans/archived/2026-09-01-devtools-dissolution.md),
+the devtools dissolution plan,
 which called for exactly this record so the state is not rediscovered later as a
 bug. It was written into the two packs' own files at landing time and is lifted
 here, where the gap register actually lives.

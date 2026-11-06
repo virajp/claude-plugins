@@ -2,7 +2,7 @@
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
-[`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)
+`docs/plans/2026-10-05-vwf-callers-on-templates/`
 (F1, F5, F10) · **Reverses**
 [`2026-10-03-setup-ai-validates-vwf.md`](./2026-10-03-setup-ai-validates-vwf.md)
 D5 (a pack plugin arrives through a `tool-config:` `add-plugin` entry) and D7

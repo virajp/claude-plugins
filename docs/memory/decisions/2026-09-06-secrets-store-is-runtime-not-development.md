@@ -2,7 +2,7 @@
 
 **Date** 2026-09-06 · **Branch** `2026-09-06-cloudflare-media-messaging-secrets`
 · **Plan**
-[`docs/plans/2026-09-06-cloudflare-media-messaging-secrets/`](../../plans/2026-09-06-cloudflare-media-messaging-secrets/index.md)
+`docs/plans/2026-09-06-cloudflare-media-messaging-secrets/`
 · **Extends** the `secrets-manager`-under-two-types placement recorded in
 [`2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md`](./2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md)
 

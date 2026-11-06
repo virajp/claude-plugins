@@ -1,7 +1,7 @@
 # Decision — the SwiftUI and Compose packs answer every 95octane Flutter dependency
 
 **Date** 2026-10-10 · **Plan**
-[`2026-10-10-swiftui-third-party-integrations/`](../../plans/2026-10-10-swiftui-third-party-integrations/index.md)
+`2026-10-10-swiftui-third-party-integrations/`
 · **Completes** B61 and B99 · **Source** `95octane/frontend/pubspec.yaml`
 
 ## What was decided before

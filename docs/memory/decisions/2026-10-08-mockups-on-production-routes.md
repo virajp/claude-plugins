@@ -1,7 +1,7 @@
 # Decision — mockups are a connected site on the production routes, served per platform
 
 **Date** 2026-10-08 · **Branch** `2026-10-08-mockups-served-at-a-url` · **Plan**
-[`docs/plans/2026-10-08-mockups-served-at-a-url/`](../../plans/2026-10-08-mockups-served-at-a-url/index.md)
+`docs/plans/2026-10-08-mockups-served-at-a-url/`
 · **Reverses** the first version of that plan: one server per flow, the
 `<NNN>-<flow>/<platform>/<slug>.html` tree, file paths when `node` is absent,
 two chained plans · **Backlog** B91 (piece 1 of 3)

@@ -7,7 +7,7 @@
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
-[`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)
+`docs/plans/2026-10-05-vwf-callers-on-templates/`
 (F7, F9) · **Backlog** B80 (pieces) · **Reverses**
 [`2026-09-22-persisted-answers.md`](./2026-09-22-persisted-answers.md), *What
 changed* (init's answers recorded in a top-level `answers:` block of

@@ -1,7 +1,7 @@
 # Decision — the tool-config script is the source of truth; the session edits what it hands back
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes**
 [`2026-09-26-tool-config-gates.md`](./2026-09-26-tool-config-gates.md) on each
 tool's doctrine living in `references/<tool>.md` for the model to apply — for

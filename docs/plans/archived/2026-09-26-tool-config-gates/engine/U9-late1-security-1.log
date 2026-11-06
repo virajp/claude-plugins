@@ -1,3 +1,0 @@
-No high-confidence vulnerabilities found.
-- c297b5f0 linter.yaml: comment lines re-wrapped only; no ignore pattern or key changed. Dropped.
-- 4852a8ec: prose only (SKILL.md, references/{dprint,mise,pre-commit}.md). Dropped (docs).

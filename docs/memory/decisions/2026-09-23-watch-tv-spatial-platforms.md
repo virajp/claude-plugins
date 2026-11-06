@@ -2,7 +2,7 @@
 
 **Date** 2026-09-23 · **Branch** `2026-09-23-watch-tv-spatial-platforms` ·
 **Plan**
-[`docs/plans/2026-09-23-watch-tv-spatial-platforms/`](../../plans/2026-09-23-watch-tv-spatial-platforms/index.md)
+`docs/plans/2026-09-23-watch-tv-spatial-platforms/`
 · **Adds** the `watch`, `tv` and `spatial` platform tokens and the
 `design.viewports` config key
 

@@ -2,7 +2,7 @@
 
 **Date** 2026-09-28 · **Branch** `2026-09-28-one-pin-and-tracked-lock` ·
 **Plan**
-[`docs/plans/archived/2026-09-28-one-pin-and-tracked-lock/`](../../plans/archived/2026-09-28-one-pin-and-tracked-lock/index.md)
+`docs/plans/archived/2026-09-28-one-pin-and-tracked-lock/`
 · **Supersedes**
 [`2026-09-27-mise-local-files-ignored-by-name.md`](./2026-09-27-mise-local-files-ignored-by-name.md)
 on the local lock patterns and on the rejected `**/` form; its `.toml` patterns

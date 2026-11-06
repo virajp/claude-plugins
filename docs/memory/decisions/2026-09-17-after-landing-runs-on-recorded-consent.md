@@ -1,7 +1,7 @@
 # Decision — an after-landing step runs on the consent the plan recorded
 
 **Date** 2026-09-17 · **Branch** `2026-09-17-review-rows` · **Plan**
-[`docs/plans/2026-09-17-review-rows/`](../../plans/2026-09-17-review-rows/index.md)
+`docs/plans/2026-09-17-review-rows/`
 · **Reverses** the after-landing clause of
 [`2026-09-16-one-executor.md`](./2026-09-16-one-executor.md) — "stops once
 before every after-landing step"; the `run` mode that plan retired is back — and

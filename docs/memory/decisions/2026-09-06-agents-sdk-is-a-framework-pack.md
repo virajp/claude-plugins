@@ -1,7 +1,7 @@
 # Decision — the Cloudflare Agents SDK ships as a framework pack with its own language bundle
 
 **Date** 2026-09-06 · **Branch** `2026-09-06-cloudflare-ai` · **Plan**
-[`docs/plans/2026-09-06-cloudflare-ai/`](../../plans/2026-09-06-cloudflare-ai/index.md)
+`docs/plans/2026-09-06-cloudflare-ai/`
 · **Adds** the first pack in the `framework` category `agent-sdk` minted by
 [`2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md`](./2026-09-06-cloud-service-categories-for-twenty-cloudflare-services.md)
 
@@ -99,7 +99,7 @@ axis exists to ask.
   a commented `durable_objects` + `migrations` block is a `workers-ssr`
   question, not this plan's, and it is the **"a `cloudflare-agents` deploy
   shape"** entry parked by
-  [`docs/plans/2026-09-06-cloudflare-ai/`](../../plans/2026-09-06-cloudflare-ai/index.md).
+  `docs/plans/2026-09-06-cloudflare-ai/`.
   Until it is answered, a project on this bundle reads the pairing prose and
   adds the two entries by hand.
 - **`framework/react` is a little more pressing.** The Agents SDK ships client

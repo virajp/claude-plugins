@@ -1,7 +1,7 @@
 # Decision — the plugins ship no editor configuration
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-drop-vscode` · **Plan**
-[`docs/plans/2026-10-01-drop-vscode/`](../../plans/2026-10-01-drop-vscode/index.md)
+`docs/plans/2026-10-01-drop-vscode/`
 · **Supersedes**
 [`2026-09-06-editor-fragments-inside-the-fence.md`](./2026-09-06-editor-fragments-inside-the-fence.md)
 and [`2026-09-20-init-editor-dedupe.md`](./2026-09-20-init-editor-dedupe.md)

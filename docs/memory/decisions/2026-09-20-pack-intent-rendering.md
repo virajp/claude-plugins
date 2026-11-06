@@ -1,7 +1,7 @@
 # Decision — a pack file may be conditional on an answer init holds; the editor baseline is editor-wide; the gates share one exclusion set
 
 **Date** 2026-09-22 · **Branch** `2026-09-20-pack-intent-rendering` · **Plan**
-[`docs/plans/2026-09-20-pack-intent-rendering/`](../../plans/2026-09-20-pack-intent-rendering/index.md)
+`docs/plans/2026-09-20-pack-intent-rendering/`
 · **Backlog** B28, piece D2, plan 5 of 5 — **B28 closes here** · **Problem**
 [`2026-09-20-init-shape-audit.md`](../problems/2026-09-20-init-shape-audit.md)
 (candidates 14, 15, 16 and 19; closes L9, L10, L11, L12's rendering half, L13,

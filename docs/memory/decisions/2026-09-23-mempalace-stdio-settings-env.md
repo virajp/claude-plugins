@@ -2,7 +2,7 @@
 
 **Date** 2026-09-23 · **Branch** `2026-09-23-mempalace-stdio-settings-env` ·
 **Plan**
-[`docs/plans/2026-09-23-mempalace-stdio-settings-env/`](../../plans/2026-09-23-mempalace-stdio-settings-env/index.md)
+`docs/plans/2026-09-23-mempalace-stdio-settings-env/`
 · **Reverses** the shared-HTTP-daemon ruling · **Supersedes** the daemon
 passages of
 [`2026-08-13-mempalace-wiring-and-plan.md`](./2026-08-13-mempalace-wiring-and-plan.md)

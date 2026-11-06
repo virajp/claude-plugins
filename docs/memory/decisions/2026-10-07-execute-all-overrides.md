@@ -1,7 +1,7 @@
 # Decision — /vwf:execute all asks its run-level questions once, as overrides for that run
 
 **Date** 2026-10-07 · **Branch** `2026-10-07-execute-all-overrides` · **Plan**
-[`docs/plans/2026-10-07-execute-all-overrides/`](../../plans/2026-10-07-execute-all-overrides/index.md)
+`docs/plans/2026-10-07-execute-all-overrides/`
 · **Reverses** none · **Backlog** none
 
 ## What prompted it

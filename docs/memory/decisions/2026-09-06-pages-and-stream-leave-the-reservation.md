@@ -2,7 +2,7 @@
 
 **Date** 2026-09-06 · **Branch** `2026-09-06-cloudflare-storage-and-data` ·
 **Plan**
-[`docs/plans/2026-09-06-cloudflare-storage-and-data/`](../../plans/2026-09-06-cloudflare-storage-and-data/index.md)
+`docs/plans/2026-09-06-cloudflare-storage-and-data/`
 · **Retires** the Cloudflare scope reservation as it stood after
 [`2026-09-05-workers-static-assets-redeems-the-cloudflare-reservation.md`](./2026-09-05-workers-static-assets-redeems-the-cloudflare-reservation.md)
 and

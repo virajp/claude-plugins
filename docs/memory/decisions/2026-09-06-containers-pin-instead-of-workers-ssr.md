@@ -2,7 +2,7 @@
 
 **Date** 2026-09-06 · **Branch**
 `2026-09-06-cloudflare-compute-and-orchestration` · **Plan**
-[`docs/plans/2026-09-06-cloudflare-compute-and-orchestration/`](../../plans/2026-09-06-cloudflare-compute-and-orchestration/index.md)
+`docs/plans/2026-09-06-cloudflare-compute-and-orchestration/`
 · **Constrains** the `deploy` axis for one provider, first stated in
 [`2026-09-06-workers-ssr-redeems-the-script-reservation.md`](./2026-09-06-workers-ssr-redeems-the-script-reservation.md)
 

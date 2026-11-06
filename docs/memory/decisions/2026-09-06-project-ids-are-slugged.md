@@ -1,7 +1,7 @@
 # Decision — a project id is slugged, and `assets/ids.md` owns the rule
 
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
-[`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
+`docs/plans/2026-09-05-astro-static/`
 · **Replaces** the reason written into
 `skills/stackgen-stack-template/references/materializer.md:57-68` on 2026-09-05
 

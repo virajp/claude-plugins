@@ -1,7 +1,7 @@
 # Decision — one universal `.vscode/settings.json` ships with tool-config
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-10-01-editor-config-dropped.md`](./2026-10-01-editor-config-dropped.md)
 E1-E3 (B40: no editor configuration in either plugin; `.vscode/` the user's)

@@ -2,7 +2,7 @@
 
 **Date** 2026-10-07 · **Branch** `2026-10-07-plans-carry-every-answer` ·
 **Plan**
-[`docs/plans/2026-10-07-plans-carry-every-answer/`](../../plans/2026-10-07-plans-carry-every-answer/index.md)
+`docs/plans/2026-10-07-plans-carry-every-answer/`
 · **Reverses** ruling 8 of
 [`2026-09-17-after-landing-runs-on-recorded-consent.md`](./2026-09-17-after-landing-runs-on-recorded-consent.md)
 — the `ask` after-landing mode — and execute's post-run dialogue · **Backlog**

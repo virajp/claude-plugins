@@ -1,7 +1,7 @@
 # Decision — the task library configures each gate once, and the hooks call it
 
 **Date** 2026-09-12 · **Branch** `2026-09-12-task-library` · **Plan**
-[`docs/plans/2026-09-12-task-library/`](../../plans/2026-09-12-task-library/index.md)
+`docs/plans/2026-09-12-task-library/`
 · **Reverses** D17 of
 [`2026-09-06-init-owns-the-first-commit.md`](./2026-09-06-init-owns-the-first-commit.md),
 *"the forge default"* · **Umbrella**
