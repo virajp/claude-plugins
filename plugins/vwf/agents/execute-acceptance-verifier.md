@@ -69,9 +69,13 @@ staging-capable test).
 
 **Blueprint/plan gaps are not findings.** A criterion that is untestable as
 written (not observable, ambiguous, contradicted by another flow) is a **gap**
-in the blueprint, not a code finding — report it on the `SPEC/PLAN GAPS:`
-contract line, naming the flow doc; the command that dispatched you records
-it.
+in the blueprint, not a code finding — report it as a question in your block,
+naming the flow doc, three lines, `n` counting from 1 in the block:
+`QUESTION Q<n>:` the question, readable alone; `OPTIONS Q<n>:` two to four
+options separated by ` | `, your recommendation first, each with its
+consequence after an em dash; `WHY Q<n>:` the flow doc and criterion, an em
+dash, and why the blueprint does not decide it. The command that dispatched
+you asks or reports it.
 
 ## Return contract
 
@@ -85,7 +89,10 @@ to the coder. Output **only** the block below:
 ACCEPTANCE:   # one line per criterion, or the single line "n/a — <what's missing>"
 - [PASS|FAIL|NOT-COVERED] <flow> — <criterion, terse> (test: <file> or "none") — <for FAIL: the observable that did not hold; for NOT-COVERED: what the test must assert>
 COUNTERS: ok   # or "n/a — metrics not exposed", "n/a — none declared", or one "- <counter> — did not increment" line each
-SPEC/PLAN GAPS: none   # untestable/ambiguous criteria: one terse line each, or "none"
+QUESTION: none   # or, per untestable/ambiguous criterion, the three lines below
+QUESTION Q<n>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+WHY Q<n>: <flow doc and criterion> — <why the blueprint does not decide it>
 VERDICT: approve   # or "changes-required"
 ```
 

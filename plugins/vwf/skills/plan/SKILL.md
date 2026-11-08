@@ -3,9 +3,9 @@ name: plan
 description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint (a flow or an entity). Reads desired (blueprint) vs actual (code),
   writes only the delta as a plan folder, docs/plans/<date>-<HHMM>-<slice>/ (an
-  index.json, an index.md and one file per unit), that /vwf:execute runs
-  unattended in a fresh context — a fresh session, or a runner that
-  /vwf:execute all dispatches.
+  index.json, an index.md and one file per unit), that /vwf:execute runs in a
+  fresh context — a fresh session, or a runner that /vwf:execute all
+  dispatches — asking the user only what the plan missed.
   Resolves the slice's transitive dependency chain and plans each
   unimplemented dependency as its own plan folder first, in order; routes any
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
@@ -23,8 +23,9 @@ Produce reviewable cycle plans for a chosen slice of the blueprint. A plan is a
 **diff**: it reads the blueprint (desired state) and the actual code (actual
 state) for one slice and writes only the delta — what exists, what is missing,
 what changes, and in what order — as a **plan folder** ordered for TDD, one
-unit per step, that `/vwf:execute` runs unattended in a fresh context — a
-fresh session, or a runner that `all` dispatches.
+unit per step, that `/vwf:execute` runs in a fresh context — a fresh
+session, or a runner that `all` dispatches. A run asks the user only what the
+plan missed, so the plan carries every answer it can.
 
 A slice is never planned over unbuilt ground: the slice's **dependency chain**
 is resolved first, and every dependency with an unimplemented delta gets **its
@@ -516,8 +517,9 @@ Then the **rulings review**, item 20 of
 the user one at a time and written into the folder, looped until `NO GAPS`,
 four rounds at most. A gap that is a hole in the blueprint contract, not in the
 plan, is routed back through `/vwf:blueprint` as §4 routes any blueprint gap,
-and the folder waits for it. These are the last questions the plan gets —
-`/vwf:execute` asks none.
+and the folder waits for it. These are the last questions the plan gets
+before the run — `/vwf:execute` asks only what the plan missed, and each such
+question is the planner's miss.
 
 ### 8. Hand off
 

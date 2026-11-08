@@ -4,12 +4,12 @@
 
 With `covers`, before the first unit, run the preflight in
 `${CLAUDE_PLUGIN_ROOT}/assets/format-check.md`. Take its report and never its offer
-— the run asks nothing.
+— the run does not migrate.
 
 - **Non-blocking** format drift: log it and continue.
-- **Blocking** drift (the run needs an artifact the old format lacks): a
-  **blocking-gap stop** per the Pause Conditions. Report the drift, name `/vwf:setup`
-  as what reconciles it, and give the resume command. Never migrate autonomously.
+- **Blocking** drift (the run needs an artifact the old format lacks): the H8
+  question, owner `setup`, per [questions.md](questions.md). Name the drift, and
+  `/vwf:setup` as what reconciles it. Never migrate autonomously.
 
 Without `covers`, skip the check, and say so in one line of the final report — the
 plan reads no blueprint artifact.
@@ -97,14 +97,14 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
      so the worktree is of the **target member**. The base's writes go to the base checkout as a second working tree. These are Reconcile's
      `implementation:` stamps, and the docs unit's edits to the base's own docs. Commit the two separately, **base repo
      last** — a half-finished run never leaves a doc claiming work that has not landed.
-2. **Preflight (unattended — nothing here asks)**. Doctor already ran before the claim,
-   per [claim.md](claim.md). Its blocking findings already halted the run. This step
-   reads the rest of its report.
+2. **Preflight (nothing here asks — its answers are in the folder)**. Doctor already ran
+   before the claim, per [claim.md](claim.md). Its blocking findings already halted the
+   run. This step reads the rest of its report.
 
    **When the plan has a `code` unit, read the LSP findings against the plan's
    `consent.lsp`**. Note everything else doctor reports, and carry it into the run's gap
    list; do not block on it. A missing LSP server was a question at `/vwf:plan`'s stack
-   gate, and its answer is `consent.lsp.<language>`. This run reads it and never asks:
+   gate, and its answer is `consent.lsp.<language>`. This run reads it and never re-asks it:
    follow the LSP rule in [the `code`-unit preflight](preflight.md) when doctor reports
    one. On a plan of `edit` units alone, a missing LSP server is a line in the final
    report and nothing more.

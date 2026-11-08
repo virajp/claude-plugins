@@ -5,7 +5,8 @@
 export type AgentRun = ReplayAgent;
 
 /** A run as the pane shows it (T8): live, paused or stopped, ended, or not run. */
-export type RunPhase = "live" | "paused" | "ended" | "not-run";
+// Or `question`: waiting for the user's answer to a question (D10).
+export type RunPhase = "live" | "paused" | "ended" | "not-run" | "question";
 
 /** The plan the pane shows: a row's or a folder's plan, replayed with its log. */
 export type PlanRun = {
@@ -182,6 +183,21 @@ export type ReplayUnit = PlanUnit & {
   agent?: ReplayAgent;
 };
 
+/** An open question of the action log: a `question` event with no `answer`. */
+export type ReplayQuestion = {
+  /** The plan-wide id, `Q<n>`. */
+  id: string;
+  /** Its owner: a unit (`U<n>`), a wave (`W<n>`) or a stage name. */
+  unit: string;
+  text: string;
+  at?: number;
+  /**
+   * Asked in the run still going: after the last run.start, and no run.end
+   * after it. False once a run.end follows: asked again at the resume (D41).
+   */
+  isWaiting: boolean;
+};
+
 /** The state of a plan: its folder's index.json, replayed with its log. */
 export type Replay = {
   title: string;
@@ -202,6 +218,11 @@ export type Replay = {
   lastAt?: number;
   /** The log's last tool call: what the run does now, and since when. */
   lastTool?: { tool: string; summary: string; at?: number };
+  /**
+   * The open questions: each `question` event with no later `answer` event
+   * of its id, in the order asked. Absent when there is none.
+   */
+  questions?: ReplayQuestion[];
   /** The log was read from a tail (over 4 MiB). */
   partial: boolean;
   /** No log line yet. */

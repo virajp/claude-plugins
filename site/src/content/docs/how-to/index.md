@@ -55,9 +55,9 @@ product's journey diverges, so read the spine first and keep it open alongside.
   under target, a UX complaint, a feature three teams want. Where each one
   belongs, picking **Relay** up after its deploy.
 - **[Hand off work that outlives one session](./operate/sessions-and-handoff.md)**
-  — a sweep, a long elicitation or an unattended run is going to outlast this
-  context window. Capturing it so a fresh session continues rather than rebuilds
-  it.
+  — a sweep, a long elicitation or a long `/vwf:execute` run is going to outlast
+  this context window. Capturing it so a fresh session continues rather than
+  rebuilds it.
 - **[Decide which stack your product pins](./operate/choosing-your-stack.md)** —
   vwf names no technology, so every concrete option comes from a `stackgen`
   bundle. Which bundle answers each of the eight axes, decided **before**
@@ -65,7 +65,7 @@ product's journey diverges, so read the spine first and keep it open alongside.
 - **[Change something the blueprint does not describe](./operate/ad-hoc-change.md)**
   — the work that is not a flow: CI, tooling, a docs tree, a refactor that moves
   no behavior. Planned with `/vwf:change-plan` into the same folder shape a
-  cycle plan takes, queued as one row of `docs/plans/index.json`, and run
-  unattended in a fresh context with the same `/vwf:execute` a cycle plan takes
-  — by name, `next` for the queue's pick, or `all` for every runnable plan —
-  beside the chain rather than in it.
+  cycle plan takes, queued as one row of `docs/plans/index.json`, and run in a
+  fresh context, asking you only what the plan missed, with the same
+  `/vwf:execute` a cycle plan takes — by name, `next` for the queue's pick, or
+  `all` for every runnable plan — beside the chain rather than in it.

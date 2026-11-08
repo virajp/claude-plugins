@@ -11,7 +11,7 @@ import {
 // the same one-line pitch the landing carries, a pointer at the full text,
 // and every manual page as its markdown URL, in sidebar order.
 const DESCRIPTION = "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. "
-  + "Asks one question at a time, then builds unattended.";
+  + "Asks one question at a time, then builds, asking only what the plan missed.";
 
 export async function GET({ site }: APIContext): Promise<Response> {
   if (!site) {

@@ -1,7 +1,7 @@
 # Blocking and resume
 
-Read this when a unit returns `UNRESOLVED:` or fails its verification, or when a run
-starts against a `BLOCKED` or `RUNNING` plan. A dead agent is H4, per [pause.md](pause.md).
+Read this when a unit is left `unresolved` by a question, or fails its verification, or when a
+run starts against a `BLOCKED` or `RUNNING` plan. A dead agent is H4, per [pause.md](pause.md).
 
 Every mark below is one call that sets the unit's `status` in the folder's `index.json`, made
 in the worktree:
@@ -15,10 +15,15 @@ included, with one `log.mjs event row`, `{"unit", "wave", "status"}`. Follow eac
 
 ## Isolated versus all-blocking
 
-A unit blocks when it returns `UNRESOLVED:`, or when its own Verification fails after the one
-mechanical re-dispatch below. An agent that errors twice is H4, a pause, per [pause.md](pause.md). A
-`GAP:` never blocks: it is a stated assumption, appended to the `gaps` list of `index.json` and answered
-in the final report.
+A unit's open point is first a question, per [questions.md](questions.md). A unit blocks only when:
+
+- its question goes unanswered — no one can answer, per *No one to answer* there;
+- the answer says to stop, or needs a change outside the plan's Goal, per *An answer that stops* there;
+- its own Verification fails after the one mechanical re-dispatch below. That failure is first a
+  question; it blocks once the answer is stop.
+
+An agent that errors twice is H4, a pause, per [pause.md](pause.md). A run takes no assumption, so no
+point blocks silently and none proceeds on a guess.
 
 - **Isolated block**. Mark the unit `unresolved` or `failed`. Mark every unit that transitively
   depends on it `skipped`, with `depends on U<n>` as detail. **Continue** with every unit that does
@@ -34,8 +39,9 @@ in the final report.
 - **All-blocking**. When every remaining unit is skipped, there is nothing left to run. Go straight to
   the final report.
 
-Either way the run stops **once**, at the final report. It lists every ruling needed together, and the resume command. There is one ruling per blocked unit, specific
-enough that the answer is a sentence the user pastes into the plan. The report asks nothing: never mid-wave, never "how should I proceed".
+Either way the run stops **once**, at the final report. It lists what was not answered — each open
+`QUESTION Q<n>: ` and `STOPPED: ` gap — together, with the resume command. The resume asks each
+question again under its own id.
 
 ## The mechanical re-dispatch
 
@@ -48,7 +54,7 @@ carry is not mechanical, however small it looks.
 
 Write the block with `plan-management status <folder> BLOCKED "<detail>"` in the worktree, the detail being:
 
-`BLOCKED at wave <n> — U<a> UNRESOLVED: <text>; U<b> failed: <gate line>; U<c>, U<d> skipped (depend on U<a>)`
+`BLOCKED at wave <n> — U<a> unresolved: Q<n> <text>; U<b> failed: <gate line>; U<c>, U<d> skipped (depend on U<a>)`
 plus the worktree path.
 
 Each unit's `status` and `commit` in `index.json` carry the facts per unit. The status line is the summary a
@@ -68,8 +74,13 @@ A re-run against `BLOCKED` or `RUNNING`:
    `/vwf:execute <folder>`. Execute never invokes `unclaim` itself, and nothing takes a `RUNNING` row otherwise.
 2. The index row stays `RUNNING` through the resume, and is not touched. A row found reading `APPROVED` was
    unclaimed, and the Resolve step claims it again before continuing.
-3. Each `unresolved` unit asked for a ruling. Confirm that it is now in the unit file or the `decisions` list
-   of `index.json`. If the status line's `UNRESOLVED:` text still describes an unanswered question, stop and name it.
+3. **Ask what was not answered first**, per *No one to answer* in [questions.md](questions.md), each id once and
+   under its own id:
+   - every `open` gap whose `text` starts `QUESTION Q<n>: `;
+   - every `question` event in the plan's action log with no `answer` event of the same id.
+
+   Record each answer, and close its gap. A `STOPPED: ` gap stays `open` until a person rules on it in the unit file
+   or the `decisions` list of `index.json`. If none is there, stop and name it.
 4. **The worktree is authoritative**. Read the units with the script above, `plan.mjs get <folder>/index.json units`.
    For every unit whose `status` is `green`, check that its `commit` exists on the branch.
    - Reset a `green` unit whose commit is absent to `pending`, and re-run it. The unit fields can be ahead of what
@@ -79,8 +90,8 @@ A re-run against `BLOCKED` or `RUNNING`:
    - The exception is a `code` or `edit` unit it covers whose `commit` is **not an ancestor of** the row's
      `range.to`. That value is the `to` its main loop recorded. The test is that `git merge-base --is-ancestor <commit> <to>` fails. That is a
      **pending late re-run**, run before continuing, per *Late loop-backs re-run the last row* there.
-   - `index.json` holds no late loop's `to`, and the action log is never read to decide a resume. So a late re-run
-     already done runs once more — a repeat, never a skip.
+   - `index.json` holds no late loop's `to`, and the action log is never read to decide a resume, save the open
+     questions of step 3. So a late re-run already done runs once more — a repeat, never a skip.
    - The test is by ancestry, never by recency, so a resume after a row's main loop that already reviewed the commit
      finds nothing pending. Each covered unit is tested **once**, whether the row's `depends_on` names it directly or
      reaches it transitively, so no unit counts twice.

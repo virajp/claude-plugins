@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-08 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-08 — 934c692b a8386029 344ebec7 9041fe4f b5731b9d d0e52cd3 43e1917b"
   },
   "consent": {
     "merge": true,
@@ -68,11 +68,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:28:34.169Z",
+      "ended": "2026-11-08T09:34:29.082Z",
+      "commit": "934c692b",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -87,11 +87,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:28:34.372Z",
+      "ended": "2026-11-08T09:34:29.182Z",
+      "commit": "a8386029",
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -121,11 +121,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:28:34.549Z",
+      "ended": "2026-11-08T09:34:29.275Z",
+      "commit": "344ebec7",
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -142,11 +142,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:28:34.735Z",
+      "ended": "2026-11-08T09:34:29.367Z",
+      "commit": "9041fe4f",
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -171,11 +171,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:28:34.898Z",
+      "ended": "2026-11-08T09:34:29.469Z",
+      "commit": "b5731b9d",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -193,14 +193,14 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:44:30.486Z",
+      "ended": "2026-11-08T09:45:40.778Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "d5fa9db4",
+        "to": "2957b79d"
       }
     },
     {
@@ -235,11 +235,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T09:46:23.409Z",
+      "ended": "2026-11-08T09:53:09.801Z",
+      "commit": "d0e52cd3",
+      "rounds": 2
     },
     {
       "id": "U8",
@@ -256,37 +256,37 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-08T10:01:55.328Z",
+      "ended": "2026-11-08T10:03:48.323Z",
+      "commit": "43e1917b",
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-08T09:28:34.114Z",
+      "ended": "2026-11-08T09:44:23.468Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-08T09:44:30.451Z",
+      "ended": "2026-11-08T09:46:04.372Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-08T09:46:23.371Z",
+      "ended": "2026-11-08T10:01:48.731Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-08T10:01:55.293Z",
+      "ended": "2026-11-08T10:04:48.528Z"
     }
   ],
   "shared_files": [
@@ -747,31 +747,74 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.439Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.221Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.329Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps and nothing to persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:23.155Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "p:plugins:check failed on agent citations of questions.md before U3 created it · assumed it clears once U3 lands; closed: p:plugins:check green over the whole wave",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "p:plugins:check and code:format red on teammates files while the wave ran · assumed they clear once the wave lands; closed: p:plugins:check green over the whole wave, code:format runs at the unit gate",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U5 never got the questions.md section names from U3 · U5 cites questions.md by path; closed: the wave 1 review found every questions.md citation correct after round 1",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "No ruling says how a recorded fact of the run (no harness, no capture, short coverage, a failed render copy) is treated once gaps become questions · the orchestrator kept it an open gap that is not asked, as before this plan, so the landing rules do not change",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The wave 1 closing-pass check found that final-report.md:17 listed two kinds of open gap after the recorded-fact fix · closed: U3 added the third kind (recorded facts, no resume command)",
+      "state": "closed"
+    },
+    {
+      "id": "G6",
+      "unit": "U8",
+      "stage": "edit",
+      "text": "The generator also rewrote the gitignored dev marketplace manifest · closed: a gitignored file, rewritten on every generator run by design; nothing to commit",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/execute-asks-the-user",

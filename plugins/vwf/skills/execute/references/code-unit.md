@@ -35,16 +35,16 @@ For the unit (skip it when its `status` in `index.json` already reads `green` wi
    Set the unit's `status` to `running`; `plan.mjs` stamps its times, per [the plan files](plan-files.md).
    Document a sub-100% coverage result against the configured target (`.config/vwf.yaml`
    `pipeline.coverage_target`, default 100) as a gap, never a silent pass.
-3. **gaps** — each line of the coder's `GAPS:` → one `plan.mjs append` to the `gaps` list of `index.json`.
-   The entry is `{id, unit, stage: "code", text, state: "open"}`, the next `G<n>`. That list is the one place
-   a run's gap goes. Decide
-   blocking or non-blocking, and act per the rules.
+3. **questions** — ask each of the coder's `QUESTION` lines, and each old `GAPS:` line, per
+   [questions.md](questions.md). Record each answer there, and resume the coder with it. Its latest block is its
+   report. Run no gate and no commit while a question is open or the resumed coder still works.
 4. **commit** — run every line of the folder's *Unit gate*, its `gates.unit` list, once. A red line is the
    unit's failure, per [waves.md](waves.md) step 5. Then commit the unit's work through `/vwf:git-workflow`,
    **per the commit-only preference**, with the unit file's Commit line. The folder's edits ride the same commit: the unit fields
    and the `gaps` entries of `index.json`. The folder is edited in the worktree, never in
    the main checkout.
-5. **record** — set the unit's fields. Its `status` is `green` (or `skipped`, `failed`, `unresolved` per the gap rules).
+5. **record** — set the unit's fields. Its `status` is `green` (or `skipped`, `failed`, or `unresolved` when its
+   question went unanswered or was answered stop, per [questions.md](questions.md)).
    Its `commit` is the short commit hash, and its `rounds` is the round reached.
    - Write the unit's durable decisions as `docs/memory/decisions/` files, per the run exception in `memory.md`.
      Write them in the run's worktree, or in the base checkout under multi-repo `linkage: siblings`, as Reconcile

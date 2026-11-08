@@ -57,23 +57,24 @@ moving above wave 1 its `waits` reason — `/vwf:plan` printing the launch line
 only once `/vwf:backlog unplanned` finds nothing left to plan at its priority,
 else the next item to plan, and `/vwf:change-plan` always printing it, with the
 next item to plan above it when one is left — and run, in a fresh context, by
-the one executor,
-`/vwf:execute <folder>` — or `/vwf:execute next`, which reads that index alone,
-of either kind, and picks the runnable plan with the lowest `priority` value, or
-`/vwf:execute all`, which runs every runnable plan in turn, each in its own
-`execute-runner` subagent, until one stops — which refuses a folder that is not
-on that branch, runs `/vwf:doctor`, claims the row `RUNNING` with a pushed
-commit before it cuts a worktree — the same commit writing the folder's `run`,
-the worktree and action-log paths — and marks it `COMPLETE` once the merge lands
-(archiving the folder there and re-pointing the row when no gap is open; leaving
-it live when one is, archived once you ask) — each plan folder carries this
-repo's gate lines in three tiers (a unit gate before each unit commit, a wave
-gate after each wave, a plan gate once at the end), `mise run p:plugins:local`
-as an after-landing step, recorded `run` at the interview or dropped, and the
-release levels it derives per project, which `/vwf:execute` writes to
-`.config/releases.yaml` at landing: it runs the step on a green landing without
-a prompt, bumps no version, releases nothing, and asks nothing at run time, save
-the run-level questions `/vwf:execute all` asks once, before its first plan —
+the one executor, `/vwf:execute <folder>` — or `/vwf:execute next`, which reads
+that index alone, of either kind, and picks the runnable plan with the lowest
+`priority` value, or `/vwf:execute all`, which runs every runnable plan in turn,
+each in its own `execute-runner` subagent, until one stops — which refuses a
+folder that is not on that branch, runs `/vwf:doctor`, claims the row `RUNNING`
+with a pushed commit before it cuts a worktree — the same commit writing the
+folder's `run`, the worktree and action-log paths — and marks it `COMPLETE` once
+the merge lands (archiving the folder there and re-pointing the row when no gap
+is open; leaving it live when one is, archived once you ask) — each plan folder
+carries this repo's gate lines in three tiers (a unit gate before each unit
+commit, a wave gate after each wave, a plan gate once at the end),
+`mise run p:plugins:local` as an after-landing step, recorded `run` at the
+interview or dropped, and the release levels it derives per project, which
+`/vwf:execute` writes to `.config/releases.yaml` at landing: it runs the step on
+a green landing without a prompt, bumps no version, releases nothing, and at run
+time asks you only what the plan missed — one question at a time, the
+recommendation first, the answer recorded in the folder's `decisions` — beside
+the run-level questions `/vwf:execute all` asks once, before its first plan;
 every stop is a report with its resume command. A repo still on the old markdown
 plan format (a `docs/plans/index.md`) is stopped before any change and pointed
 to `docs/plans/migrate.md`.
@@ -368,16 +369,16 @@ session's run marker), plus one hooks module, `hooks/monitor/register.tsx`,
 listed under `modules` in `hooks/hooks.json`, which draws the `/vwf:execute`
 progress pane against the state contract the manifest's `types` key names — and
 is the [`vwf-plugin`][vwf] skill's. The pane shows any plan of
-`docs/plans/index.json` or of
-its archive, in any status, with a plan list, and the plan's times from its row,
-its state and the unit, wave and stage times from that folder's `index.json` —
-the
-copy in the run's worktree, else the main checkout's; `plan.mjs` stamps every
-`started` and `ended` as it sets a status — and from the plan's action log only
-each unit's agent and the log's freshness, which tells a live run from a paused
-one. One more script ships as a **stackgen pack payload** copied into a target
-repo rather than discovered here, covered by the [`stackgen-plugin`][sg] skill.
-The three host rules that bite any command hook — BSD `sed`, never in
+`docs/plans/index.json` or of its archive, in any status, with a plan list, and
+the plan's times from its row, its state and the unit, wave and stage times from
+that folder's `index.json` — the copy in the run's worktree, else the main
+checkout's; `plan.mjs` stamps every `started` and `ended` as it sets a status —
+and from the plan's action log only each unit's agent, the log's freshness,
+which tells a live run from a paused one, and the open questions — a `question`
+event with no later `answer` — which show a run waiting for your answer. One
+more script ships as a **stackgen pack payload** copied into a target repo
+rather than discovered here, covered by the [`stackgen-plugin`][sg] skill. The
+three host rules that bite any command hook — BSD `sed`, never in
 `settings.json`, the per-event verdict shape — and the local gates of a hooks
 module are the [`plugin-authoring`][auth] skill's.
 

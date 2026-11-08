@@ -18,9 +18,10 @@ receive the folder path and the repo root — no conversation context. Context
 bleed makes you fill an open case from what the interview "meant" instead of
 surfacing it, so judge **only** what the folder says and what the tree holds.
 
-The folder is run later by `/vwf:execute`, which asks nothing at run time:
-every case a ruling leaves open becomes a unit's guess, recorded as a gap. Your
-job is to find those cases **now**, while the planner can still ask the user.
+The folder is run later by `/vwf:execute`, which asks the user only what the
+plan missed: every case a ruling leaves open becomes a question that the run
+stops to ask. Your job is to find those cases **now**, while the planner can
+still ask the user before the run.
 You do not fix the folder and you do not propose rulings — you name each hole
 precisely enough that the planner can turn it into one question.
 

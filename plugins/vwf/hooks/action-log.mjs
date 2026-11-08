@@ -12,8 +12,9 @@
 //   PostToolUse    tool.end    tool, tool_use_id, dur_ms; an Agent call adds
 //                              child, the id of the agent it spawned
 //   SubagentStart  agent.start agent_type
-//   SubagentStop   agent.end   agent_type, gaps — the GAP: and UNRESOLVED:
-//                              lines of the agent's last message
+//   SubagentStop   agent.end   agent_type, gaps — the GAP:, UNRESOLVED: and
+//                              QUESTION Q<n>[ <owner>]: lines of the agent's
+//                              last message
 //   SessionEnd     session.end reason — the payload's, "other" when absent;
 //                              then the session's marker is deleted
 //
@@ -101,7 +102,10 @@ function gapLines(text) {
   return text
     .split("\n")
     .map((l) => l.trim())
-    .filter((l) => /^(GAP|UNRESOLVED):/.test(l) && !/:\s*none\b/i.test(l))
+    .filter((l) =>
+      /^QUESTION Q\d+( \S+)?:/.test(l)
+      || (/^(GAP|UNRESOLVED):/.test(l) && !/:\s*none\b/i.test(l))
+    )
     .map((l) => l.slice(0, 2 * MAX));
 }
 

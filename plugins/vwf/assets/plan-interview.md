@@ -185,13 +185,13 @@ and the wave reviewer can send messages to each other; `code` units and
       "restart, then `/vwf:execute all`". When the `owns` touch no such
       plugin it is written `false`, unasked.
 
-The executor asks nothing at run time — every answer is in the folder, save
-the run-level questions /vwf:execute all asks once, before its first plan. It
-follows the plan, and only a runtime stop ends a run. So the interview is not
-done while any question the run would otherwise raise is unanswered: every
-key of `consent` carries an answer, every after-landing step reads `run`, and
-every decision a unit or the executor would otherwise have to pause on is a
-ruling in the plan.
+The executor follows the plan, and asks the user at run time only what the
+plan missed — beside the run-level questions /vwf:execute all asks once,
+before its first plan. A run question is the planner's miss, never a second
+interview. So the interview is not done while any question the run would
+otherwise raise is unanswered: every key of `consent` carries an answer, every
+after-landing step reads `run`, and every decision a unit or the executor
+would otherwise have to pause on is a ruling in the plan.
 
 ## F. Parked
 
@@ -216,12 +216,12 @@ breaks either, names one id on both lists, or names a `source` id on neither.
     `DRAFT` — dispatch a fresh `plan-rulings-reviewer` subagent with the
     folder path and the repo root alone. It returns `NO GAPS` or a numbered
     `GAPS:` list — the cases the rulings leave open, which the run would
-    otherwise meet as gaps. Ask the user each gap **one at a time**, the same
-    way as A–E, and write each answer into the folder before the next
-    question: a new or amended entry of `decisions`, quoted in the unit file
-    it reaches, a unit's `owns` widened, or a Parked line. An answer that a
-    case is accepted or out of scope is a ruling too, and goes into
-    `decisions`. An answer that changes the wave of a unit is written with
+    otherwise stop to ask as questions. Ask the user each gap **one at a
+    time**, the same way as A–E, and write each answer into the folder before
+    the next question: a new or amended entry of `decisions`, quoted in the
+    unit file it reaches, a unit's `owns` widened, or a Parked line. An
+    answer that a case is accepted or out of scope is a ruling too, and goes
+    into `decisions`. An answer that changes the wave of a unit is written with
     one `plan.mjs rewave <file> <unit>=<wave>...` call — after a `set` of
     its `waits` when the unit moves above wave 1 — never by a whole-file
     rewrite. Then dispatch a fresh reviewer again, over the changed

@@ -32,7 +32,10 @@ only each unit's agent, whether it is live, and how recent the last line is. The
 Two writers append to it:
 
 - The **hooks** in `hooks/hooks.json` write every tool call and subagent: start, end, duration, agent id. They write
-  on the machine's clock, with nothing for you to do.
+  on the machine's clock, with nothing for you to do. When a subagent stops, the hook copies the `GAP:`, `UNRESOLVED:`
+  and `QUESTION Q<n>:` lines of its last message, a runner's `QUESTION Q<n> <owner>:` among them, into `agent.end`'s
+  `gaps` list, each as a plain string with no class. `QUESTION: none` is not copied. A copied line says what the agent
+  returned, never whether a question is open.
 - **You** write what only the orchestrator knows, through the script below.
 
 ```sh
@@ -40,8 +43,11 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs <verb> …
 ```
 
 Call it from the directory the step runs in: the main checkout before the worktree exists, the worktree after. A log
-call never stops a run, and is never a reason to pause: skip a call that fails, and go on. The log is a record of the
-run, never an input to it. The unit fields of `index.json` and the worktree stay the record a resume reads.
+call never stops a run, and is never a reason to pause: skip a call that fails, and go on. A failed `next-question` is
+no exception: take the id one past the highest `Q<n>` in the text of the folder's `decisions` and `gaps`, and go on.
+The log is a record of the run, never an input to it, save in one place: the run reads question ids from it
+(`next-question`), and a resume reads from it the questions that have no answer. The unit fields of `index.json` and
+the worktree stay the record a resume reads for everything else.
 
 ## The calls
 
@@ -64,10 +70,15 @@ Each item is one point in the run and the call made there. Fill the names in ang
   `--from <sha> --to <sha> --files <n> --review <n> --security <n> --routed <n>`, the last the count of findings routed to
   an uncovered unit.
 - **Each gap recorded, and each `append` to the folder's `gaps`, and each `set` of a gap's `state`:** `event gap`, its JSON
-  on stdin (below). A recorded gap is a `GAP:`, an `UNRESOLVED:`, a `contested` finding or an oscillation.
+  on stdin (below). A recorded gap is a `GAP:`, an `UNRESOLVED:`, a `contested` finding, an oscillation or a question
+  that goes into `gaps` unanswered.
 - **Each run fact set in `index.json`:** `event row`, its JSON on stdin (below), right after the `plan.mjs set`. A run
   fact is a unit's `status`, `commit`, `rounds` or `range`, or a stage. A wave's `status` set has no event: the wave's `phase.start` and
   `phase.end` carry it.
+- **Each question, before it is asked, whether the ask then succeeds or not:** `event question`, its JSON on stdin
+  (below), its `id` the one `next-question` printed, or the question's own id when a resume asks it again.
+- **Each answer, once it is recorded in the folder's `decisions`:** `event answer`, its JSON on stdin (below), its
+  `decision` the `D<n>` of that entry.
 - **A stop** — a pause, a block, a refusal after `start`: `event stop --reason "<why>" --resume "/vwf:execute <folder>"`,
   then `end --outcome paused` or `end --outcome blocked`.
 - **The landing, after the last after-landing step:** `end --outcome complete`, or `end --outcome ready` when
@@ -85,9 +96,10 @@ the shell's redirection outside the wrapper:
 For the older events a `--key value` pair becomes a field; quote a value with spaces. Keep a `text` to the line as recorded,
 never a file's content.
 
-### `row` and `gap` on stdin
+### `row`, `gap`, `question` and `answer` on stdin
 
-`event row` and `event gap` read one JSON object on stdin, in a quoted heredoc (`<<'EOF'`), so the shell expands nothing in it:
+`event row`, `event gap`, `event question` and `event answer` read one JSON object on stdin, in a quoted heredoc
+(`<<'EOF'`), so the shell expands nothing in it:
 
 ```sh
 node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event row <<'EOF'
@@ -96,9 +108,15 @@ EOF
 node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event gap <<'EOF'
 {"unit": "U2", "stage": "", "text": "<the line>", "state": "open", "class": "GAP", "source": "unit"}
 EOF
+node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event question <<'EOF'
+{"id": "Q3", "unit": "U2", "text": "<the question>", "options": "<the OPTIONS text>", "why": "<the WHY text>"}
+EOF
+node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs event answer <<'EOF'
+{"id": "Q3", "decision": "D45"}
+EOF
 ```
 
-Both are strict, like `plan.snapshot` and `session.end`. A missing required key, a wrong type, a wrong enum value or an unknown
+All four are strict, like `plan.snapshot` and `session.end`. A missing required key, a wrong type, a wrong enum value or an unknown
 key exits non-zero and writes nothing. Like every log call, it never stops the run.
 
 - **`row`**: exactly one of `unit` (`"U<n>"`) or `stage` (a `stages` key). `status`, always: the unit's or the stage's status after
@@ -106,10 +124,27 @@ key exits non-zero and writes nothing. Like every log call, it never stops the r
   changed, when one did: `rounds` (an integer, 0 or more), `commit` (the short hash), `range` (`{"from": "<sha>", "to": "<sha>"}`) or
   `detail` (a string). A row with `status` alone records a status change.
 - **`gap`**: `unit`, `stage` (each `""` when not known), `text` (not empty) and `state` (`open` or `closed`), all required. `class`
-  (`GAP`, `UNRESOLVED`, `contested`, `oscillation`) and `source` (`unit`, `wave-review`, `review-row`, `gate`, `acceptance`, `ux`),
-  optional. `id` is the `G<n>` of the folder's `gaps` entry when the gap is one. Leave it out for a recorded line that is not an
+  (`GAP`, `UNRESOLVED`, `contested`, `oscillation`, `question`) and `source` (`unit`, `wave-review`, `review-row`, `gate`,
+  `acceptance`, `ux`), optional. The class `question` is only for a question that goes into the folder's `gaps` unanswered.
+  `id` is the `G<n>` of the folder's `gaps` entry when the gap is one. Leave it out for a recorded line that is not an
   `index.json` gap. Then `log.mjs` writes the next `L<n>`, with `state` `open`. That id is one past the highest `L` id in the log,
-  or `L1` when none. Never read the log for an id.
+  or `L1` when none. Never read the log for an `L` or `G` id: `log.mjs` writes the one, the folder holds the other.
+- **`question`**: `id` (`Q<n>`, plan-wide), `unit` (the owner: `U<n>` when the question is about a unit, else `W<n>`, `setup`,
+  `renders`, `acceptance`, `ux` or `reconcile`), `text` (the question), `options` (the raw `OPTIONS` text) and `why` (the `WHY`
+  text), all required and not empty. A resume or a fresh runner asks again from these, and fills `rejected` from `options`.
+- **`answer`**: `id` (the `Q<n>` it answers) and `decision` (the `D<n>` of the `decisions` entry that records it), both required.
+
+A `question` event with no later `answer` of the same id is an **open question**. Only these two events say which questions are
+open: not a `gap` of class `question`, and not a line the hook copied. The progress pane shows an open question as a wait.
+
+### The next question id
+
+    node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs next-question
+
+It reads the session's run marker, as `event` does, and prints `Q<n>`: one past the highest id of a `question` event in the
+plan's log, or `Q1` when it has none. It writes nothing. A question asked again under its own id counts once, so it never issues
+an id the log already holds. With no active run it prints the no-run line and exits 1; then take the id from the folder, as
+above.
 
 ### No active run
 
@@ -145,5 +180,9 @@ not counted. For each, it prints:
 - the gates by tier and the commits;
 - the tool time of the orchestrator apart from the agents;
 - the units from their `row` events, every gap from its `gap` events, every stop, and each execution mode.
+
+After the runs, once for the whole plan and only when the log holds a `question` event, it prints `QUESTIONS`: one line per
+question id in log order, with its owner, `answered: D<n>` or `open`, and its text on one line. An `answer` with no earlier
+`question` of its id is a warning line there, not an error.
 
 The final report names the log file's path, the folder's `run.log`.

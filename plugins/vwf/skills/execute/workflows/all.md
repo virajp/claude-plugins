@@ -4,7 +4,8 @@ Read this when the argument is `all`, and when you are an `execute-runner` hande
 this skill's `SKILL.md`. The second half, *Runner mode*, is yours.
 
 `/vwf:execute all` runs every runnable plan, highest priority first, one at a time, each in its own
-runner subagent. It stops at the first point that needs the user.
+runner subagent. A question a runner cannot settle is relayed: the runner returns it, the loop asks the
+user and resumes the runner with the answer, per *The loop* step 4. It stops at the first point it cannot settle.
 
 The session that typed it is **the loop**. It asks the run's questions once, picks, dispatches, and keeps a
 one-line result per plan. It runs what the answers deferred to its exit, and does nothing else. It never reads
@@ -48,7 +49,8 @@ folder's `overrides` list. A folder's `consent` is never changed.
      the run.
 
    A **no** to any question leaves the plans' steps as recorded.
-3. **After this step, nothing is asked** by the loop or a runner, until the exit. The exit asks nothing either.
+3. **After this step, no run-level question is asked**, until the exit. The exit asks nothing either. The one other
+   question the loop asks is a runner's relayed question, per *The loop* step 4; a runner itself asks no one.
 
 ### The overrides block
 
@@ -72,6 +74,22 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs append <folde
 
 It never changes `consent`. `Overrides: none`, or no block, appends nothing.
 
+### The answers block
+
+Only the fresh runner of *The loop* step 4, dispatched when the resume of a runner that returned `OUTCOME: QUESTION`
+failed, carries this block, right after the overrides block. One line per question the user answered, its plan-wide id
+and the answer as given:
+
+```text
+Answers:
+- Q<n>: <answer>
+- Q<n>: <answer>
+```
+
+`Answers: none` is never sent; with no answer, the block is left out. The runner records each answer per *Recording* in
+[questions.md](../references/questions.md) — one `decisions` entry, `rejected` filled from the `options` of that
+question's `question` event in the action log — before its resume path runs.
+
 ## The loop
 
 Run it in a session that has done nothing else; it cannot check that, so it trusts it. Each runner is the fresh context its plan
@@ -92,13 +110,31 @@ Once the run-level questions above are answered, each iteration, in order:
    is two paths and the overrides block, and nothing else:
    - the picked folder, repo-relative;
    - the **absolute** path of this skill's `SKILL.md`, the base directory this skill was loaded from plus `/SKILL.md`;
-   - the block for that folder.
+   - the block for that folder;
+   - only on the fresh runner of step 4, after a failed resume: *The answers block* above.
 
    Pass no conversation context, no recall, and no instruction beyond *run this folder in runner mode*. Runners never run in parallel: dispatch the next only once this one has
    returned.
-4. **Record the return**. The runner's reply is five lines, per *The return block* below. Keep them as one row of the loop's table. A reply
-   that is not those five lines can be an agent error, a death or free prose. Never re-dispatch it. A dead runner may hold a claim or a
-   worktree half-way. The row reads `STOPPED`, detail *runner returned no block*, resume `/vwf:execute <folder>`, and the loop ends there.
+4. **Record the return**. The runner's reply is five lines, per *The return block* below, followed by the question lines only when its
+   `OUTCOME:` is `QUESTION`. Keep the five as one row of the loop's table. A reply that is not that block can be an agent error, a death or
+   free prose. Never re-dispatch it. A dead runner may hold a claim or a worktree half-way. The row reads `STOPPED`, detail *runner returned
+   no block*, resume `/vwf:execute <folder>`, and the loop ends there.
+
+   A reply whose `OUTCOME:` is `QUESTION` is legal, and is not a row yet. The loop relays it:
+   - **Ask.** Each `QUESTION Q<n> <owner>:` line is one `AskUserQuestion` call, one per call, one at a time, its id and owner in the text,
+     its `OPTIONS Q<n>:` as the options (the first the recommendation) and its `WHY Q<n>:` beside it. The loop waits at each for as long
+     as necessary.
+   - **Resume.** Load `SendMessage` with `ToolSearch`, then send the runner, by its agent id, one message carrying each `Q<n>` and its
+     answer. Wait for its next reply: a return block again, read by this same step.
+   - **A failed resume.** Dispatch a fresh runner on the same folder as in step 3, with *The answers block* after the overrides block,
+     and read its reply by this same step.
+   - **No one to answer** (`AskUserQuestion` not available or failing, a headless loop): resume the runner with `SendMessage`, the
+     message reading *no one can answer* and naming each `Q<n>`. The runner then does what *No one to answer* in
+     [questions.md](../references/questions.md) says and returns `STOPPED`; record that block as usual. If that resume fails, the row
+     reads `STOPPED`, its detail naming the open question ids, resume `/vwf:execute <folder>`; the folder's next resume asks them from
+     the action log, per *No one to answer* in [questions.md](../references/questions.md).
+
+   The loop still reads no unit report, and edits no folder: the question lines are part of the runner's return block.
 5. **Continue or end**. The loop ends on the first row whose `OUTCOME:` is `STOPPED`, stop reason that row's `DETAIL:`. It also ends on the first
    row whose `ENDS RUN:` is `yes`. The stop reason is then *the plan edited a plugin this run loaded — restart, then `/vwf:execute all`*. Otherwise go back to
    step 1.
@@ -147,8 +183,20 @@ after-landing steps. It covers every stop too, each the stop those files already
 - **It returns the block and nothing else**. Every report those files write still goes where they put it: the folder's `status`, unit fields and `gaps`, the action log. Those reports are
   the final report, a pause's report, a refusal, the gap reconciliation and the chain-forward launch lines. What the runner sends back to the loop is the five lines
   below, and no line more. The chain-forward lines are not returned: the loop's next `next` finds an unblocked plan on its own.
-- **It asks nothing, of anyone**. `SKILL.md` already asks the user nothing. Under runner mode there is no user to ask. So a point that would need one is a stop with its
-  resume command, returned as `STOPPED`. When the runner invokes a skill that could prompt, it passes the answer in the invocation:
+- **It relays its questions; it asks no one itself**. A runner is a subagent, with no `AskUserQuestion`. Where `SKILL.md` asks the user, per
+  [questions.md](../references/questions.md), the runner instead:
+  - gives each question its plan-wide id with `log.mjs next-question`, and logs its `question` event before it returns;
+  - waits until every unit it dispatched has returned, then returns `OUTCOME: QUESTION` with the `QUESTION Q<n> <owner>:`,
+    `OPTIONS Q<n>:` and `WHY Q<n>:` lines of each open question, per *The return block* below;
+  - on resume, by the loop's `SendMessage` or a fresh runner's `Answers:` block, records each answer per *Recording* and applies it by
+    owner per *Resuming the owner* in [questions.md](../references/questions.md): a unit, a review finding, H7 or H8, a stage. It always
+    dispatches a fresh agent for it, with its prompt, the questions, the answers and the note that its earlier edits are in the worktree;
+    a fresh dispatch returns its result in the same turn;
+  - on a resume reading *no one can answer*, does *No one to answer* of [questions.md](../references/questions.md) itself and returns
+    `STOPPED`.
+
+  A runner never resumes one of its agents with `SendMessage`: that agent's reply goes to the top session, which the runner cannot read.
+  When the runner invokes a skill that could prompt, it passes the answer in the invocation:
   - the declared preferences those files name for `/vwf:git-workflow`, `/vwf:doctor` and `plan-management archive`;
   - at a resource-cap pause, `/vwf:handoff prefer: the one thread is this plan's run`.
 
@@ -160,11 +208,22 @@ after-landing steps. It covers every stop too, each the stop those files already
 
 ```text
 PLAN: <the folder, as handed>
-OUTCOME: <COMPLETE | COMPLETE with gaps | STOPPED>
+OUTCOME: <COMPLETE | COMPLETE with gaps | QUESTION | STOPPED>
 DETAIL: <the folder's status.detail, as last written>
 RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
 ```
+
+Only on `OUTCOME: QUESTION`, the five lines are followed by three lines per open question, and nothing else:
+
+```text
+QUESTION Q<n> <owner>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> — <consequence> | <option 4> — <consequence>]
+WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
+```
+
+`Q<n>` is the plan-wide id and `<owner>` the unit, wave or stage, per *Ids and owners* in
+[questions.md](../references/questions.md).
 
 Under an override, `DETAIL:` adds `; skipped: <commands>` for the steps the block deferred to the loop's exit.
 
@@ -172,6 +231,7 @@ Under an override, `DETAIL:` adds `; skipped: <commands>` for the steps the bloc
   `RESUME: none`.
 - **`COMPLETE with gaps`**: the same landing with a gap open, or with `plan-management archive` raising a warning, so the folder stayed live.
   `RESUME: none`; the gaps are in the folder's `gaps`.
+- **`QUESTION`**: the run is not over; it waits for the answers the question lines ask. `RESUME: none`, `ENDS RUN: no`.
 - **`STOPPED`**: every other end. `RESUME:` is `/vwf:execute <folder>`, except where a line says otherwise:
   - a refusal at Resolve;
   - a hard halt;

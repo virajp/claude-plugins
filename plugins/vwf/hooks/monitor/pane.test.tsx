@@ -314,3 +314,91 @@ test("in the terminal the chip is one Button", async ($, on) => {
   await band.unmount();
   await ui.unmount();
 });
+
+// A log of a run.start, then the given events, all over FRESH_MS old.
+const logOf = (...events: Record<string, unknown>[]) =>
+  [{ event: "run.start", mode: "fresh" }, ...events]
+    .map((one, i) =>
+      JSON.stringify({
+        ts: `2026-10-25T09:3${i}:00.000Z`,
+        run: "20261025-093000-aaaaaaaa",
+        session: "aaaaaaaa-1111",
+        agent: null,
+        ...one,
+      }) + "\n"
+    )
+    .join("");
+const QUESTION = {
+  event: "question",
+  id: "Q1",
+  unit: "W2",
+  text: "Which wave runs first?",
+  options: "W2 first | W3 first",
+  why: "index.md Waves",
+};
+
+test(
+  "D10: an open question shows waiting for your answer and its text, not paused",
+  async ($, on) => {
+    const kept = FILES[LOG]!;
+    FILES[LOG] = logOf(QUESTION);
+    try {
+      const ui = await openPane($, on, "terminal", [], []);
+      expect(await ui.find({ type: "Text", text: /^waiting for your answer\s*$/ })).toBeDefined();
+      expect(await ui.find({ type: "Text", text: /Q1 W2 — Which wave runs first\?/ })).toBeDefined();
+      expect(await ui.find({ type: "Text", text: /paused or stopped/ })).toBe(undefined);
+      expect(JSON.stringify(await ui.drawn())).toContain("\"color\":\"magenta\"");
+      await ui.unmount();
+    } finally {
+      FILES[LOG] = kept;
+    }
+  },
+);
+
+test(
+  "D10: on the desktop an open question shows waiting for your answer and its text",
+  async ($, on) => {
+    const kept = FILES[LOG]!;
+    FILES[LOG] = logOf(QUESTION);
+    try {
+      const desk = await openPane($, on, "desktop", [], []);
+      expect(await desk.find({ type: "Text", text: /^waiting for your answer$/ })).toBeDefined();
+      expect(await desk.find({ type: "Text", text: /^Q1 W2 — Which wave runs first\?$/ })).toBeDefined();
+      expect(await desk.find({ type: "Text", text: /paused or stopped/ })).toBe(undefined);
+      await desk.unmount();
+    } finally {
+      FILES[LOG] = kept;
+    }
+  },
+);
+
+test(
+  "D41: an open question followed by run.end shows paused and the question asked at the resume",
+  async ($, on) => {
+    const kept = FILES[LOG]!;
+    FILES[LOG] = logOf(QUESTION, { event: "run.end", outcome: "paused" });
+    try {
+      const ui = await openPane($, on, "terminal", [], []);
+      expect(await ui.find({ type: "Text", text: /paused or stopped/ })).toBeDefined();
+      expect(await ui.find({ type: "Text", text: /^open question: Q1, asked at the resume\s*$/ }))
+        .toBeDefined();
+      expect(await ui.find({ type: "Text", text: /^waiting for your answer/ })).toBe(undefined);
+      await ui.unmount();
+    } finally {
+      FILES[LOG] = kept;
+    }
+  },
+);
+
+test("an answered question leaves the pane as it was", async ($, on) => {
+  const kept = FILES[LOG]!;
+  FILES[LOG] = logOf(QUESTION, { event: "answer", id: "Q1", decision: "D9" });
+  try {
+    const ui = await openPane($, on, "terminal", [], []);
+    expect(await ui.find({ type: "Text", text: /paused or stopped/ })).toBeDefined();
+    expect(await ui.find({ type: "Text", text: /Which wave runs first/ })).toBe(undefined);
+    await ui.unmount();
+  } finally {
+    FILES[LOG] = kept;
+  }
+});

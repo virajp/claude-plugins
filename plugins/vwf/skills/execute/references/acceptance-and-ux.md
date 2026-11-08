@@ -11,7 +11,7 @@ silent:
 - `acceptance` when the folder's `acceptance` list is `[]`: no flow touched.
 - `ux` when the plan changes no screens in a UI project.
 
-On anything short of a clean pass, follow the autonomous policy below. It holds the
+On anything short of a clean pass, follow the stage policy below. It holds the
 loop-to-`code` rule and its 4-round cap under the convergence guard, the `n/a` cases, and
 the spec-gap routing. Two rules hold whatever it says:
 
@@ -69,7 +69,7 @@ The copy writes only into the main checkout's gitignored `docs/scratchpad/`. It 
 never blocks the landing. A non-zero exit of the script is a gap, recorded with its stderr, and the run
 continues.
 
-## The autonomous policy
+## The stage policy
 
 Read this when the `acceptance` or `ux` stage returns anything other than a clean pass. A run whose both
 stages pass first time, or whose skip conditions held, never needs it. The stage contracts themselves are
@@ -94,13 +94,14 @@ Every write below is one call in the worktree to
   screen. Dispatch `execute-coder` with the **finding lines** the stage returned; the fix is the code, the
   missing E2E test, or the style or state correction. Re-commit, and re-verify the affected stage, **up to 4
   rounds** (the review-cap rule), under the same **convergence guard**. A round can fail to strictly reduce the failures, or re-break a criterion an earlier round fixed. Either
-  ends the loop early as an oscillation gap. Document residuals, at the cap or at the guard, as gaps, and proceed to the final report. A residual is
-  never silently dropped.
+  ends the loop early as an oscillation. Ask about each residual, at the cap or at the guard, per
+  [questions.md](questions.md), and proceed to the final report. A residual is never silently dropped.
 - **Acceptance `n/a — no harness`**, or **ux `RENDERED: n/a` on a web slice** → record it as a gap, and
   proceed. The gap names what harness or capture is missing, in the harness-contract vocabulary. Never scaffold infrastructure
   beyond the plan's own units.
-- **Untestable criteria / unpinned states** (`SPEC/PLAN GAPS` / `SPEC GAPS`) → the `gaps` list of `index.json`,
-  per the gap rules.
+- **Untestable criteria / unpinned states** — the verifier's and reviewer's `QUESTION` lines, and old `SPEC/PLAN GAPS`
+  or `SPEC GAPS` lines → questions, per [questions.md](questions.md). The owner is the unit that owns the flow or
+  screen, or the stage, `acceptance` or `ux`, when none does. Each answer continues that stage.
 - **A gap** from either stage is one `gaps` entry: `{id, unit, stage, text, state: "open"}`, the next `G<n>`.
   Its `stage` is `acceptance` or `ux`. Its `unit` is the unit that owns the flow or screen, or `""` when none
   does.

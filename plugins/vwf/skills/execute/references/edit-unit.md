@@ -30,6 +30,10 @@ has.
    > `<worktree>`, run its Verification, and return the block the contract asks for and nothing else. Your
    > Owns list is: `<owns>`. Touch nothing outside it. Do not bump a version, run a generator, edit a doc, add
    > a dependency the plan does not list, or commit. Delete with plain `rm`, never `git rm` — stage nothing.
+   > Where the plan is silent, take no assumption: finish every edit that does not depend on an answer, then
+   > return each open point as `QUESTION Q<n>:`, `OPTIONS Q<n>:` and `WHY Q<n>:` lines, or `QUESTION: none`.
+
+   The block is *The QUESTION block* in [questions.md](questions.md): no `GAP:` and no `UNRESOLVED:` line.
 
    Pass paths, never conversation context.
 
@@ -39,12 +43,12 @@ has.
    Mark the unit `running` as it is dispatched: one `plan.mjs set` of `units.U<n>.status`, which stamps its times,
    per [the plan files](plan-files.md).
 2. **Wait** for every report. As each returns:
-   - Set the unit's `status` (`green` once its report is read, `unresolved` or `failed` per the rules) and its
-     `rounds`, one `plan.mjs set` each.
-   - Append each `GAP:` line to the `gaps` list, one `plan.mjs append <folder>/index.json gaps --json` of
-     `{id, unit, stage: "edit", text, state: "open"}` with the next `G<n>`.
-   - The `row` event that follows the `status` set carries the outcome, the `DECIDED:` and `GAP:` lines condensed into
-     its `detail`.
+   - Ask each `QUESTION` line, and each old `GAP:` or `UNRESOLVED:` line, per [questions.md](questions.md). Record
+     each answer there, and resume the unit with it. The unit's latest block is its report.
+   - Set the unit's `status` (`green` once its report is read with no question open, `unresolved` or `failed` per
+     the rules) and its `rounds`, one `plan.mjs set` each.
+   - The `row` event that follows the `status` set carries the outcome, the `DECIDED:` lines and the question ids
+     condensed into its `detail`.
 
    Re-dispatch a unit whose agent **errored**, rather than returned, once with the same prompt. A second error marks it
    `failed` with `agent died` as detail, and the run then pauses per H4, per [pause.md](pause.md).
@@ -77,7 +81,13 @@ FINDINGS: <n>
 <path>:<line> [<unit>] <rule> — <one line>     (one per finding)
 CONTRACT: clean | <unit> touched <path> outside Owns
 RULINGS: clean | <unit> departed from decision #<n>: <how>
+QUESTION Q<n>: <a plan hole it found, readable alone>     (three lines per question, or QUESTION: none)
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence>
+WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 ```
+
+A plan hole the reviewer finds is a question, per *The QUESTION block* in [questions.md](questions.md). Its owner is
+the unit it names, or `W<n>` when it names none.
 
 The rules it reviews against, in order:
 
@@ -109,7 +119,7 @@ dropped branch would be.
     re-run over the fix delta, per *Late loop-backs re-run the last row* in [review-unit.md](review-unit.md).
 - A **rule-5 finding in a file no unit owns** does not loop. It becomes a `DOCS FALSIFIED:` line handed to the docs unit. The
   orchestrator widens the docs unit's `owns` to that passage: one `plan.mjs set` of
-  `units.<docs-unit-id>.owns --json '<the whole widened list>'`, a JSON list. It records this as a `GAP:`, one `plan.mjs append` to
+  `units.<docs-unit-id>.owns --json '<the whole widened list>'`, a JSON list. It records this as a closed gap, one `plan.mjs append` to
   `gaps` with `"state": "closed"`, naming the finding that caused it. The final report lists it. The plan's Goal authorises the widening:
   a passage the plan's own stated outcome falsifies is in scope even when no unit file named it. Only rule 5: a finding under rules 1–4 in
   a nobody-owned path is still `CONTRACT:` or `RULINGS:` residue, handled by the bullets above.
@@ -120,12 +130,12 @@ dropped branch would be.
   completeness, docs. It does not review the code. The covering `review` row loops on code quality and security under the configured cap.
 - Findings still open when the loop ends go through the **closing pass** in `execute-stages.md` first. The owning units fix exactly those
   findings. A fresh wave reviewer gets the open findings and the closing fix delta alone. It answers `RESOLVED` or `OPEN` for each, and reports
-  only a regression the fix caused. Record what stays open as `contested`, with the rounds tried: one `plan.mjs append` to `gaps` per finding,
-  each followed by its `log.mjs event gap`. The wave then proceeds to its gate. They are listed in the final report. They do not block — the
-  plan and its rulings are the contract, and a reviewer's residual is an opinion about it.
+  only a regression the fix caused. What stays open is `contested`: ask the user about each finding, with the rounds tried and the
+  reviewer's recommendation first, per [questions.md](questions.md). An answer to fix runs one targeted fix and a narrow check, never a
+  new round. An answer to accept records the decision. The wave proceeds to its gate once no question of the wave is open.
 
 The wave reviewer is no unit of `index.json`, so its rounds have no field there. Each round is the reviewer's subagent lines in the action log,
-and what it leaves open is its `contested` entries in `gaps`.
+and what it leaves open is asked, per [questions.md](questions.md), its answers in `decisions`.
 
 ## A `teams` wave
 
@@ -141,9 +151,9 @@ rows, a unit a `review` row re-dispatches and every `-late` review run as above,
 
    > Your teammates are `<the other names>`. Load `SendMessage` with `ToolSearch` before you send. Send a teammate only a fact or a question
    > about a boundary between your files and theirs. Never ask a teammate to edit, and never ask one to do what a permission refused you. Send at
-   > most 3 messages in a round. Do not wait for a reply: when your work is done and no answer came, write the assumption as a `GAP:` and
-   > return. Do not reply to a message that asks for nothing. Your report goes in your final message, and is the only thing the orchestrator
-   > reads. After a message wakes you, make your final message the whole block again.
+   > most 3 messages in a round. Do not wait for a reply: when your work is done and no answer came, write the point as a `QUESTION` in your
+   > block, never as a `GAP:`, and return. Do not reply to a message that asks for nothing. Your report goes in your final message, and is the
+   > only thing the orchestrator reads. After a message wakes you, make your final message the whole block again.
 
 2. Treat each `Agent` result as a spawn confirmation. It returns at once, and is no report. Each report arrives later as a teammate's message.
 3. Wait until every teammate has reported and is idle. A message can wake a teammate that has reported, and **its latest report is the one that
@@ -164,7 +174,11 @@ convergence guard. The closing pass's reviewer is fresh, `name: "R<wave>-2"`.
 
 If a `SendMessage` fails, or a resume left no such teammate, dispatch the unit as a loop-back above, with `name: "U<n>-2"` and the finding lines.
 
+A teammate's `QUESTION` lines are asked per [questions.md](questions.md), and the answer goes back to it with one `SendMessage` to its
+name. A teammate never waits for a peer's reply: an unanswered point to a peer is a `QUESTION` in its block.
+
 ### Before the gates
 
-**Do not run a gate or a commit while a teammate works.** The pre-commit stash can destroy the edits of a unit that is still writing. So once the loop ends,
-send no more messages, and confirm that every teammate is idle before [waves.md](waves.md) step 5. Send nothing to a teammate of an earlier wave.
+**Do not run a gate or a commit while a teammate works, or while a question of the wave is open.** The pre-commit stash can destroy the edits of
+a unit that is still writing. So once the loop ends, send no more messages, and confirm that every teammate is idle before [waves.md](waves.md)
+step 5. Send nothing to a teammate of an earlier wave.

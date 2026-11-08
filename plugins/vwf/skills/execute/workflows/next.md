@@ -7,7 +7,8 @@ candidates are every `APPROVED` row whose requirements are satisfied, `cycle` or
 
 - **On a pick:** print what it returned. That is the folder taken, its `kind` and its
   `priority`, and every other `APPROVED` row with why it was not taken. Ask no
-  confirmation — the session is meant to run unattended. Then continue with
+  confirmation — the pick is the queue's, and the run asks only what its plan
+  left open. Then continue with
   [folder.md](folder.md) as if that folder had been named.
 - **Nothing runnable:** stop with the message the verb returns. That is each
   `APPROVED` row and what it waits on, or that the index is absent or holds no rows.

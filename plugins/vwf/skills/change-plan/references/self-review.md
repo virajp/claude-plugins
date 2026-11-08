@@ -41,11 +41,13 @@ Then check:
 - Every project the units touch has a `release_levels` entry with a reason, and
   `consent` has no release key.
 - Every `consent` key carries an answer, and no `after_landing` entry carries a
-  `mode` other than `run` — `/vwf:execute` asks nothing at run time.
+  `mode` other than `run` — `/vwf:execute` asks only what the plan missed.
 - The launch line names this folder.
 
 ## The rulings review
 
 Then run item 20 of `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md`, which owns
 the loop: a fresh `plan-rulings-reviewer` over the `DRAFT` folder, four rounds
-at most. These are the last questions the plan gets — `/vwf:execute` asks none.
+at most. These are the last questions the plan gets before the run —
+`/vwf:execute` asks only what the plan missed, and each such question is the
+planner's miss.

@@ -26,8 +26,9 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
   [the rules](rules.md).
   That call is a planner write, run after a `set` of a moved unit's `waits` when
   the unit moves above wave 1. A run never renumbers waves.
-- A write that exits non-zero wrote nothing. It is a blocking-gap stop per the
-  Pause Conditions, with its stderr as the detail.
+- A write that exits non-zero wrote nothing. It is no decision a person can
+  answer, so it stays a stop per the Pause Conditions, with its stderr as the
+  detail, never a question of [questions.md](questions.md).
 
 ## What the run writes
 
@@ -39,6 +40,7 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs <verb> …
 - Each wave's `status`: `set waves.W<n>.status running` as the wave starts,
   `green` as it closes, `failed` when a unit in it failed or was skipped.
 - Each entry of `gaps`.
+- One entry of `decisions` per answer the user gave, per [questions.md](questions.md).
 - Each of the four `stages`: its `state` `running` as it starts, then `green`,
   `failed` or `skipped`.
 - Under `all`, one entry of `overrides`.
