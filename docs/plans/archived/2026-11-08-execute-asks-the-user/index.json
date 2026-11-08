@@ -797,8 +797,8 @@
       "id": "G4",
       "unit": "U3",
       "stage": "edit",
-      "text": "No ruling says how a recorded fact of the run (no harness, no capture, short coverage, a failed render copy) is treated once gaps become questions · the orchestrator kept it an open gap that is not asked, as before this plan, so the landing rules do not change",
-      "state": "open"
+      "text": "No ruling says how a recorded fact of the run (no harness, no capture, short coverage, a failed render copy) is treated once gaps become questions · the orchestrator kept it an open gap that is not asked, as before this plan, so the landing rules do not change; closed 2026-11-08: the user ruled to keep this behavior as is",
+      "state": "closed"
     },
     {
       "id": "G5",
