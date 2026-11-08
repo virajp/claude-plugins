@@ -235,11 +235,11 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:46:23.409Z",
+      "ended": "2026-11-08T09:53:09.801Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U8",
@@ -278,8 +278,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-08T09:46:23.371Z",
       "ended": ""
     },
     {
@@ -747,28 +747,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.439Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.221Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:16.329Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps and nothing to persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-08T09:46:23.155Z"
     }
   },
   "gaps": [

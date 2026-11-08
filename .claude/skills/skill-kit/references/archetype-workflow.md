@@ -17,5 +17,5 @@ A small workflow can keep its steps in `SKILL.md`, in a Steps section. With no
 `references/` or `workflows/` folder, a Phases row has no File column. A move to
 a file that each run loads saves no words.
 
-Ask the user only at a gate that Phases declares — an unattended run has no one
-to answer.
+Ask the user only at a gate that Phases declares — a run asks nowhere else, and
+may have no one to answer.

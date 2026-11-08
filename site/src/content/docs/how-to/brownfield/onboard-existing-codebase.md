@@ -326,10 +326,10 @@ folder recorded. Both are covered in the spine —
 with the stage table and pause conditions at
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
-Bookable's first run merges with one gap: the blueprint never said whether a
-reschedule inside the notice window is refused or escalated to the studio. It is
-recorded rather than guessed at, and closing it at its source through
-`/vwf:blueprint` is the offer after the landing.
+Bookable's first run asks one question: the blueprint never said whether a
+reschedule inside the notice window is refused or escalated to the studio. The
+run asks rather than guesses, records the answer in the folder's `decisions`,
+and merges; a rule the blueprint should hold still belongs in `/vwf:blueprint`.
 
 Bookable deploys itself, as it always has; once the slice is live, the
 post-deploy check is the spine's

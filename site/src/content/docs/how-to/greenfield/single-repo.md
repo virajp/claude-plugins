@@ -304,7 +304,7 @@ See [`/vwf:plan`](../../plugins/vwf.md#vwfplan).
 /vwf:execute next
 ```
 
-This is the unattended stage, run in a **fresh session** — or, with
+This is the build stage, run in a **fresh session** — or, with
 `/vwf:execute all`, every runnable plan in turn, each in its own runner
 subagent, until one stops. `next` reads `docs/plans/index.json` and takes the
 runnable cycle plan of lowest priority — the entity plan first, since the flow
@@ -314,23 +314,25 @@ one-shared-worktree question before the first plan — and works the folder's
 units in dependency order, each code unit through TDD and coverage, and the
 review rows the plan places through code and security review, looping findings
 back into the code. After all units land, one acceptance and UX pass runs
-against the whole slice. Nothing asks you anything unless it hits a pause
-condition — those are listed under
+against the whole slice. It asks you only what the plan missed — a hole a unit
+or a reviewer found, one question at a time with its recommendation first — and
+records each answer in the folder; its stops and its questions are listed under
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 It ends at a **final report**, read back out of the run state in the plan
 folder's `index.json`: per-unit commits, coverage, the acceptance and UX
 results, the implementation stamps it wrote onto the blueprint docs, and the
 consolidated gap list. Relay's entity run reaches the report clean; the flow run
-carries one gap — the blueprint never said what happens to a task whose assignee
-leaves the team — recorded rather than guessed at.
+asks one question — the blueprint never said what happens to a task whose
+assignee leaves the team. The run asks rather than guesses, and records the
+answer in the folder's `decisions`.
 
 Both folders recorded consent to merge on green, so each run lands itself —
-merge and push through `/vwf:git-workflow`, the index row set `COMPLETE` — and
-the report names that gap with the command that closes it at its source,
-`/vwf:blueprint`, which Relay then runs. A red gate, a blocking gap or a `no` in
-the consent block would have stopped at the report instead, with the worktree
-left intact. The stage table and the resource caps:
+merge and push through `/vwf:git-workflow`, the index row set `COMPLETE`; a rule
+the blueprint should hold still belongs in `/vwf:blueprint`, which Relay then
+runs. A red gate, a question no one answered or an answer that said stop, or a
+`no` in the consent block would have stopped at the report instead, with the
+worktree left intact. The stage table and the resource caps:
 [`/vwf:execute`](../../plugins/vwf.md#vwfexecute).
 
 A long run can pause on a resource cap and hand off instead of finishing, which
@@ -459,22 +461,24 @@ third: it is what lets the run merge without asking you again.
 
 A *what* question — a behaviour the blueprint never pinned — is never settled in
 the plan. It routes back through `/vwf:blueprint` and the diff is re-derived, so
-an approved plan carries no open decisions into an unattended run.
+an approved plan carries no open decisions into the run. The run asks you only
+what the plan missed, one question at a time, so stay near it.
 
 ### The execute merge gate
 
 The merge decision is made once, at plan approval, as the folder's consent block
-— the run lands itself on green and asks nothing at the end. It is a merge
+— the run lands itself on green and asks nothing at the landing. It is a merge
 decision, not a code review: the adversarial review happens inside the run, two
 reviewers — code and security — at the review row the plan places. What stops
-the run at its report instead is a red gate line, a gap that blocks, or a
-consent block that said no; then you read the run's account — the gap list, the
-acceptance and UX results, whether the stages that were skipped were skipped for
-reasons you accept. The run asks nothing: a fix goes into the folder — a ruling
-into the unit file or the decisions table — and you re-run
-`/vwf:execute <folder>` to resume; leaving it unmerged is the rejection. If the
-folder could not be read and the report came from `git log` and the action log,
-it says it is reconstructed; that changes how much weight it carries.
+the run at its report instead is a red gate line, a question no one answered or
+an answer that said stop, or a consent block that said no; then you read the
+run's account — the gap list, the acceptance and UX results, whether the stages
+that were skipped were skipped for reasons you accept. A stop is not a question:
+a fix goes into the folder — a ruling into the unit file or the decisions table
+— and you re-run `/vwf:execute <folder>` to resume; leaving it unmerged is the
+rejection. If the folder could not be read and the report came from `git log`
+and the action log, it says it is reconstructed; that changes how much weight it
+carries.
 
 Non-blocking gaps do not stop the landing and should not be treated as blockers.
 Let it land, then close each one at its source with the command the report names

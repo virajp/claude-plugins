@@ -20,21 +20,22 @@ reviewed product through four disciplined phases.
 3. **Plan** — diff the blueprint against the real code for one slice, planning
    its unbuilt dependencies as their own chained plans first, and write the
    delta to apply.
-4. **Execute** — implement the plan autonomously under strict TDD, with code
-   review, security review, E2E acceptance, and UX conformance per the rules,
-   landing per the consent the plan recorded at approval — merged on green when
-   consent says yes, stopped at the report otherwise — with post-deploy
-   verification and a production-feedback intake closing the loop.
+4. **Execute** — implement the plan under strict TDD, asking you only what the
+   plan missed, with code review, security review, E2E acceptance, and UX
+   conformance per the rules, landing per the consent the plan recorded at
+   approval — merged on green when consent says yes, stopped at the report
+   otherwise — with post-deploy verification and a production-feedback intake
+   closing the loop.
 
 You drive it with slash commands. Claude does the work — asking one question at
-a time while authoring, running unattended while executing — and never merges
-until you approve. The whole manual, command by command, is
-**[the vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/)**.
-Journey-shaped guides — starting fresh, adopting vwf in a codebase that already
-works, and running a live product — are in
-**[the how-to guides](https://claude-plugins.virajp.dev/how-to/)**. Both are
-published at [claude-plugins.virajp.dev](https://claude-plugins.virajp.dev) and
-authored under `site/` in this repo.
+a time while authoring, and while executing only what the plan missed — and
+never merges until you approve. The whole manual, command by command, is **[the
+vwf manual](https://claude-plugins.virajp.dev/plugins/vwf/)**. Journey-shaped
+guides — starting fresh, adopting vwf in a codebase that already works, and
+running a live product — are in **[the how-to
+guides](https://claude-plugins.virajp.dev/how-to/)**. Both are published at
+[claude-plugins.virajp.dev](https://claude-plugins.virajp.dev) and authored
+under `site/` in this repo.
 
 Around it the marketplace ships **one more plugin** — `stackgen`, which
 materializes whatever stack you pin, right down to the repo's toolchain manager
@@ -59,9 +60,9 @@ blocker rather than a preference. Know this before you install.
 - **It is built for the 1-million-token context window.** The orchestrator holds
   the blueprint, the plan, the registry and each subagent's output at once. On
   the standard window a real cycle will degrade or overflow.
-- **It runs `opus` where judgment decides the outcome**, and where nobody is
-  watching — `product`, `blueprint`, `plan`, the blueprint review gates, and
-  every subagent inside the unattended `execute` run. `sonnet` and `haiku` carry
+- **It runs `opus` where judgment decides the outcome**, and where nobody
+  reviews each step — `product`, `blueprint`, `plan`, the blueprint review
+  gates, and every subagent inside the `execute` run. `sonnet` and `haiku` carry
   the rest. An `execute` cycle runs several `opus` subagents per step with fix
   loop-backs, so **expect a meaningful token cost per slice.** This is not a
   cheap workflow.
@@ -246,34 +247,36 @@ pass to `claude plugin install`.
 `/vwf:` commands covering the whole arc: shape a bare repo — or a whole
 multi-repo product in one run — into the standard layout, onboard it, pin the
 outcome contract, model the system, sweep a whole-product blueprint to complete
-coverage, plan one slice as a reviewable diff, execute it unattended and land it
-per the consent the plan recorded, verify the deploy, and route what production
-teaches you back to the document that fixes it. It carries
-[cross-session memory](https://claude-plugins.virajp.dev/plugins/vwf/#memory) as
-plain files under `docs/memory/`, session handoff and recall, the
-[Karpathy coding guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/),
-and the Markdown docs surface it absorbed. Both planners write the
-same plan folder — `/vwf:plan` for a blueprint slice, and beside that arc the
-ad-hoc `/vwf:change-plan` for work with no blueprint slice behind it (tooling,
-CI, docs, a refactor) — an `index.json` holding every structured fact, an
-`index.md` holding the prose, and one file per unit — which each commits and
-pushes at hand-off with a row in `docs/plans/index.json`, the one plan index, so
-the fresh session can see it. One node script, `plan.mjs`, reads, validates and
-writes both JSON files; a repo still on the old markdown format is pointed to
-the migration guide, `docs/plans/migrate.md`, and nothing runs until it is
-migrated. One executor runs both: `/vwf:execute <folder>` runs a folder of
-either kind unattended in a fresh context — a `code` unit through TDD and
-coverage, the code and security review at the plan's `review` rows, an `edit`
-unit through the wave review — and `/vwf:execute next` picks the runnable plan
-with the lowest `priority` value from that index, of either kind, and runs it,
-running each after-landing step the plan recorded `run` and asking nothing at
-run time. No plan releases anything: each records a release level per project it
+coverage, plan one slice as a reviewable diff, execute it and land it per the
+consent the plan recorded, verify the deploy, and route what production teaches
+you back to the document that fixes it. It carries [cross-session
+memory](https://claude-plugins.virajp.dev/plugins/vwf/#memory) as plain files
+under `docs/memory/`, session handoff and recall, the [Karpathy coding
+guidelines](https://claude-plugins.virajp.dev/plugins/karpathy-guidelines/), and
+the Markdown docs surface it absorbed. Both planners write the same plan folder
+— `/vwf:plan` for a blueprint slice, and beside that arc the ad-hoc
+`/vwf:change-plan` for work with no blueprint slice behind it (tooling, CI,
+docs, a refactor) — an `index.json` holding every structured fact, an `index.md`
+holding the prose, and one file per unit — which each commits and pushes at
+hand-off with a row in `docs/plans/index.json`, the one plan index, so the fresh
+session can see it. One node script, `plan.mjs`, reads, validates and writes
+both JSON files; a repo still on the old markdown format is pointed to the
+migration guide, `docs/plans/migrate.md`, and nothing runs until it is migrated.
+One executor runs both: `/vwf:execute <folder>` runs a folder of either kind in
+a fresh context — a `code` unit through TDD and coverage, the code and security
+review at the plan's `review` rows, an `edit` unit through the wave review — and
+`/vwf:execute next` picks the runnable plan with the lowest `priority` value
+from that index, of either kind, and runs it, running each after-landing step
+the plan recorded `run` and asking you, at run time, only what the plan missed —
+one question at a time, the recommendation first, each answer recorded in the
+folder. No plan releases anything: each records a release level per project it
 changes, which the landing raises in `.config/releases.yaml`, and a release is
 always a hand step. `/vwf:execute all` runs every runnable plan in turn, highest
 priority first, each in its own `execute-runner` subagent, and stops at the
 first plan that stops — keeping one line per plan in the session, and asking its
 run-level questions (one shared worktree, deduped after-landing steps, landing a
-plan recorded not to merge) once, before the first plan. Beside both sits
+plan recorded not to merge) once, before the first plan; a question a runner
+meets is relayed to you and its answer sent back. Beside both sits
 `/vwf:backlog`, the sole writer of the backlog project on the repo's forge — a
 GitHub Project named for the base repo, the prioritised list of work that cannot
 be picked up now, which every planning and landing command calls to move an
@@ -404,10 +407,10 @@ That is also where the **context & rate-limit caps hook** now comes from — the
 (context over 65%, 5-hour over 90%, 7-day over 80%) by triggering a handoff. Its
 sensor *is* the bar: those figures reach a session only on the statusline
 payload, never on hook stdin, which is why the two travel together. **vwf cannot
-detect its absence**, so install it before a long autonomous run rather than
+detect its absence**, so install it before a long `/vwf:execute` run rather than
 after — without it the pause never fires. On any platform the formula refuses,
 that is not a step you can complete: the pause is simply unavailable, and a long
-autonomous run has to be sized accordingly.
+`/vwf:execute` run has to be sized accordingly.
 
 **If you installed the bar from here, `--uninstall` no longer tidies up after
 it.** `pnpx @virajp.dev/claude-plugins --uninstall` still reads and reverts the

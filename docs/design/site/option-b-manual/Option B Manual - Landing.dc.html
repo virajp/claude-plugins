@@ -60,7 +60,7 @@ footer .l{display:flex;gap:24px}footer .l a{text-decoration:none;color:var(--mis
   <div class="hero">
     <img src="assets/vwf-mark-white.svg" width="96" height="96" alt="vwf mark" style="display:block">
     <h1>Four phases from a vague idea to a reviewed release.</h1>
-    <p>An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.</p>
+    <p>An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds, asking only what the plan missed.</p>
     <div class="cta"><a class="btn" href="#">Read the manual</a><a class="btn sec" href="#">GitHub</a></div>
   </div>
 
@@ -71,7 +71,7 @@ footer .l{display:flex;gap:24px}footer .l a{text-decoration:none;color:var(--mis
       <div class="ph"><div class="n">1</div><h3>Product<code>/vwf:product</code></h3><p>Pin the outcome contract: the problem, the users, measurable goals, and the order to build in. Everything downstream must trace to it.</p></div>
       <div class="ph"><div class="n">2</div><h3>Blueprint<code>/vwf:blueprint</code></h3><p>Keep an always-current blueprint of the whole product, organized by flow, with entities as the data contracts under them, closed by a whole-product coherence review.</p></div>
       <div class="ph"><div class="n">3</div><h3>Plan<code>/vwf:plan</code></h3><p>Diff the blueprint against the real code for one slice, planning its unbuilt dependencies as their own chained plans first, and write the delta to apply.</p></div>
-      <div class="ph"><div class="n">4</div><h3>Execute<code>/vwf:execute</code></h3><p>Implement the plan autonomously under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.</p></div>
+      <div class="ph"><div class="n">4</div><h3>Execute<code>/vwf:execute</code></h3><p>Implement the plan under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.</p></div>
     </div>
   </section>
 
@@ -90,7 +90,7 @@ claude plugin install vwf@virajp-plugins</div>
     <div class="spread">
       <div>
         <h3>vwf<code>vwf@virajp-plugins</code></h3>
-        <p>The workflow. Onboard a repo, pin the outcome contract, model the system, sweep the blueprint to complete coverage, plan one slice as a reviewable diff, execute it unattended behind one merge gate, verify the deploy, and route what production teaches you back to the document that fixes it.</p>
+        <p>The workflow. Onboard a repo, pin the outcome contract, model the system, sweep the blueprint to complete coverage, plan one slice as a reviewable diff, execute it behind one merge gate, verify the deploy, and route what production teaches you back to the document that fixes it.</p>
         <p>It names no technology at all. No language, no framework, no cloud. That is what lets the second plugin exist.</p>
       </div>
       <div>
@@ -105,7 +105,7 @@ claude plugin install vwf@virajp-plugins</div>
     <h2>Know this before you install</h2>
     <p>vwf is deliberately heavyweight, and some of what it needs is a real adoption blocker rather than a preference.</p>
     <p><b>It is built for the 1-million-token context window.</b> The orchestrator holds the blueprint, the plan, the registry and each subagent's output at once. On the standard window a real cycle will degrade or overflow.</p>
-    <p><b>It runs opus where judgment decides the outcome</b>, and where nobody is watching. An execute cycle runs several opus subagents per step with fix loop-backs, so expect a meaningful token cost per slice. This is not a cheap workflow.</p>
+    <p><b>It runs opus where judgment decides the outcome</b>, and where nobody reviews each step. An execute cycle runs several opus subagents per step with fix loop-backs, so expect a meaningful token cost per slice. This is not a cheap workflow.</p>
     <p><b>It expects a testable, registry-described project</b>, and five binaries on your PATH: mise, graphify, uv, pnpm and rtk. Nothing checks this at install time. It is opinionated on purpose: one workflow, one set of conventions, sized for a solo developer or a small team.</p>
   </section>
 

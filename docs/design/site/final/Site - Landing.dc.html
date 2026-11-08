@@ -82,7 +82,7 @@ footer .h{font-size:13px;color:var(--muted);margin-bottom:6px}
   <div class="hero">
     <div class="copy">
       <h1>Four phases from a vague idea to a reviewed release.</h1>
-      <p>An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.</p>
+      <p>An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds, asking only what the plan missed.</p>
       <div class="cta"><a class="btn" href="#">Get started</a><a class="btn sec" href="#">GitHub</a></div>
     </div>
     <div class="draw">
@@ -100,14 +100,14 @@ footer .h{font-size:13px;color:var(--muted);margin-bottom:6px}
     <h2>Four phases, one slash command each.</h2>
     <div class="rail">
       <div class="side">
-        <p>Everything up to the blueprint is done in full before planning; plan halts on a partial coverage stamp. While you author, Claude asks one question at a time. While it executes, it runs unattended and never merges until you approve.</p>
+        <p>Everything up to the blueprint is done in full before planning; plan halts on a partial coverage stamp. While you author, Claude asks one question at a time. While it executes, it asks only what the plan missed, and never merges until you approve.</p>
         <p><a href="#">Read the command reference</a></p>
       </div>
       <div class="steps">
         <div class="st"><div class="dot"></div><div><h3>Product<code>/vwf:product</code></h3><p>Pin the outcome contract: the problem, the users, measurable goals, and the order to build in. Everything downstream must trace to it.</p></div></div>
         <div class="st"><div class="dot"></div><div><h3>Blueprint<code>/vwf:blueprint</code></h3><p>Keep an always-current blueprint of the whole product, organized by flow, with entities as the data contracts under them, closed by a whole-product coherence review.</p></div></div>
         <div class="st"><div class="dot"></div><div><h3>Plan<code>/vwf:plan</code></h3><p>Diff the blueprint against the real code for one slice, planning its unbuilt dependencies as their own chained plans first, and write the delta to apply.</p></div></div>
-        <div class="st"><div class="dot"></div><div><h3>Execute<code>/vwf:execute</code></h3><p>Implement the plan autonomously under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.</p></div></div>
+        <div class="st"><div class="dot"></div><div><h3>Execute<code>/vwf:execute</code></h3><p>Implement the plan under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.</p></div></div>
       </div>
     </div>
   </section>
@@ -128,7 +128,7 @@ claude plugin install vwf@virajp-plugins</div></div>
       <div class="cell blue">
         <img src="assets/vwf-mark-white.svg" width="56" height="56" alt="">
         <h3>vwf<code>vwf@virajp-plugins</code></h3>
-        <p>The workflow. Onboard a repo, pin the outcome contract, model the system, sweep the blueprint to complete coverage, plan one slice, execute it unattended, verify the deploy, and route what production teaches you back to the document that fixes it. It names no technology at all.</p>
+        <p>The workflow. Onboard a repo, pin the outcome contract, model the system, sweep the blueprint to complete coverage, plan one slice, execute it, verify the deploy, and route what production teaches you back to the document that fixes it. It names no technology at all.</p>
         <a href="#">vwf manual</a>
       </div>
       <div class="cell ink">

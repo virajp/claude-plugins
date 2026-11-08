@@ -4,9 +4,9 @@ description: "Capture a session so a fresh one continues it, instead of rebuildi
 order: 3
 ---
 
-A blueprint sweep, a long elicitation, an unattended run — plenty of vwf work
-takes longer than one context window, and much of it lives in a worktree you
-will not be sitting in tomorrow. This guide covers capturing a session so a
+A blueprint sweep, a long elicitation, a long `/vwf:execute` run — plenty of vwf
+work takes longer than one context window, and much of it lives in a worktree
+you will not be sitting in tomorrow. This guide covers capturing a session so a
 fresh one continues it, instead of rebuilding it from the diff and whatever you
 remember.
 
@@ -133,18 +133,19 @@ at 95% — by then the summary is produced by exactly the degraded context you a
 trying to escape. Hand off before a deliberate stop mid-task too, not only when
 the bar gets high.
 
-You do not have to watch the bar during an unattended
-[`/vwf:execute`](../../plugins/vwf.md#vwfexecute) run: it carries its own
-resource cap, hands off on its own when it hits one, and the same `/vwf:recall`
-surfaces the `/vwf:execute <folder>` launch line — you re-run it in a fresh
-session, and the run resumes from the run state in the plan folder's
-`index.json`. Under `/vwf:execute all` the same pause ends the loop, and the
-stopped plan's `/vwf:execute <folder>` is the line to re-run. That pause is
-delivered by an external `PostToolUse` caps hook, because a command cannot
-measure its own context window — `brew install virajp/tap/claude-status`
-provides one (macOS on Apple silicon only). **Without it the pause never fires**
-and the run keeps going into a full window; vwf cannot detect its absence, so
-this is worth installing before the first long run rather than after.
+You do not have to watch the bar during a
+[`/vwf:execute`](../../plugins/vwf.md#vwfexecute) run — it asks you only what
+the plan missed, so stay near it for that: it carries its own resource cap,
+hands off on its own when it hits one, and the same `/vwf:recall` surfaces the
+`/vwf:execute <folder>` launch line — you re-run it in a fresh session, and the
+run resumes from the run state in the plan folder's `index.json`. Under
+`/vwf:execute all` the same pause ends the loop, and the stopped plan's
+`/vwf:execute <folder>` is the line to re-run. That pause is delivered by an
+external `PostToolUse` caps hook, because a command cannot measure its own
+context window — `brew install virajp/tap/claude-status` provides one (macOS on
+Apple silicon only). **Without it the pause never fires** and the run keeps
+going into a full window; vwf cannot detect its absence, so this is worth
+installing before the first long run rather than after.
 
 ### Named handoff, or `next`
 

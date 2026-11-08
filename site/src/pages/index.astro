@@ -31,7 +31,7 @@ const phases = [
     name: "Execute",
     command: "/vwf:execute",
     text:
-      "Implement the plan autonomously under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.",
+      "Implement the plan under strict TDD, with code review, security review, E2E acceptance and UX conformance, behind one final merge gate.",
   },
 ];
 
@@ -129,14 +129,14 @@ const guides = [
 
 <Base
   title="vwf: four phases from a vague idea to a reviewed release"
-  description="An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended."
+  description="An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds, asking only what the plan missed."
   jsonLd={{
     "@context": "https://schema.org",
     "@type": "WebSite",
     "name": "vwf",
     "url": Astro.site!.href,
     "description":
-      "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds unattended.",
+      "An opinionated Claude Code plugin: Product, Blueprint, Plan, Execute. Asks one question at a time, then builds, asking only what the plan missed.",
   }}
 >
   <div class="page">
@@ -147,7 +147,8 @@ const guides = [
           <h1>Four phases from a vague idea to a reviewed release.</h1>
           <p>
             An opinionated Claude Code plugin: Product, Blueprint, Plan,
-            Execute. Asks one question at a time, then builds unattended.
+            Execute. Asks one question at a time, then builds, asking only what
+            the plan missed.
           </p>
           <div class="cta">
             <a
@@ -178,8 +179,8 @@ const guides = [
             <p>
               Everything up to the blueprint is done in full before planning;
               plan halts on a partial coverage stamp. While you author, Claude
-              asks one question at a time. While it executes, it runs unattended
-              and never merges until you approve.
+              asks one question at a time. While it executes, it asks only what
+              the plan missed, and never merges until you approve.
             </p>
             <p>
               <a href="/plugins/vwf/#commands">Read the command reference</a>
@@ -243,9 +244,9 @@ claude plugin install vwf@virajp-plugins</pre>
             <p>
               The workflow. Onboard a repo, pin the outcome contract, model the
               system, sweep the blueprint to complete coverage, plan one slice,
-              execute it unattended, verify the deploy, and route what
-              production teaches you back to the document that fixes it. It
-              names no technology at all.
+              execute it, verify the deploy, and route what production teaches
+              you back to the document that fixes it. It names no technology at
+              all.
             </p>
             <a href="/plugins/vwf/">vwf manual</a>
           </div>
