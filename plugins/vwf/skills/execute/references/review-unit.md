@@ -160,8 +160,9 @@ round 1 already reviewed the rest. Merging the two reviewers' findings into one 
 Gating is per-stage and unchanged:
 
 - Every security finding and every `[breaking-api]` finding **must** be fixed (cap-exempt).
-- Other review findings loop under `pipeline.review_round_cap`. Residuals after the cap go to the **closing pass** in `execute-stages.md`, and what it leaves open is documented as
-  gaps, marked `contested`.
+- Other review findings loop under `pipeline.review_round_cap`. Residuals after the cap go to the **closing pass** in `execute-stages.md`. What it leaves open is
+  `contested`, and each is asked when the loop ends, the reviewer's recommendation first, per [questions.md](questions.md).
+- A security or `[breaking-api]` finding that trips the convergence guard is the H7 question, per [questions.md](questions.md).
 
 A round counts once, even though it ran two reviewers and may have re-dispatched several units.
 
@@ -169,17 +170,17 @@ Before each new round, apply the **convergence guard** in `execute-stages.md`. T
 to a unit. The closing pass's check dispatches both reviewers with the open findings and the closing fix delta alone, and runs no engine. The guard ignores a kept out-of-range finding
 a previous row or this row's earlier loop marked `contested`. It is that loop's residual, not this loop's oscillation.
 
-## 5. gaps
+## 5. questions
 
-Each line of a reviewer's `SPEC/PLAN GAPS:` → one `plan.mjs append` to the `gaps` list of `index.json`, the one place a run's gap goes. The entry is
-`{id, unit, stage, text, state: "open"}`, the next `G<n>`, `unit` the row id, `stage` `review` or `security`. Decide blocking or non-blocking, and act per the rules.
+Each `QUESTION` line of a reviewer, and each old `SPEC/PLAN GAPS:` line, is a question, per [questions.md](questions.md). Its owner is the unit it names, or
+the row id when it names none. A reviewer is not resumed: the answer goes into the loop-back it feeds.
 
 ## 6. record
 
 Set the row's `status`:
 
-- `green` when the last round is clean. Also `green` when the loop ended at the cap or the convergence guard, and its closing pass settled what stayed open. The pass recorded it `contested`, or closed it all.
-  Contested findings never block, per [the rules](rules.md), so the row is done, the next row's range starts after it, and a resume skips it.
+- `green` when the last round is clean. Also `green` when the loop ended at the cap or the convergence guard, its closing pass settled what stayed open, and each
+  `contested` finding was answered, per [questions.md](questions.md). Then the row is done, the next row's range starts after it, and a resume skips it.
 - `failed` or `unresolved` per the rules.
 
 Its `commit` stays `""`: the row has no commit of its own, and the folder's edits ride the commit that closes the wave.

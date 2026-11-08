@@ -54,7 +54,8 @@ Otherwise the mode is `solo`, and **the run never stops for this**. A unit file 
 Log the mode: `log.mjs event execution --mode <mode> --reason "<why>"`, the reason naming the condition that failed when the plan read `teams`. Drop `--reason` when the mode is what
 the plan recorded. The final report renders it. [edit-unit.md](edit-unit.md) says what the mode changes.
 
-An unattended `teams` run has the same permission rule as a `solo` one. This run adds no mechanism.
+A `teams` run has the same permission rule as a `solo` one, and asks the user the same way, per
+[questions.md](questions.md). This run adds no mechanism.
 
 ## The `code`-unit preflight (Setup steps 2 and 3)
 
@@ -69,7 +70,8 @@ This applies **only when `doctor` reports a missing LSP server**. A clean prefli
 non-LSP, never needs it.
 
 The question was asked once, at `/vwf:plan`'s stack gate. Its answer is the folder's `consent.lsp.<language>`, reading
-`installed` or `proceed without`: `plan.mjs get <folder>/index.json consent.lsp`. This run reads it and asks nothing:
+`installed` or `proceed without`: `plan.mjs get <folder>/index.json consent.lsp`. The answer is in the folder, so this
+run reads it and never re-asks it:
 
 - **`installed`, and the server is still missing** → halt with the remedy: the plan was approved on a promise that did
   not hold. Name the language. Say to install the server through `/plugin` (Discover), or to set it to `proceed without`

@@ -1,4 +1,4 @@
-# The Autonomous Rules
+# The run rules
 
 These rules hold on every run. `execute-stages.md` below means
 `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`.
@@ -19,8 +19,8 @@ These rules hold on every run. `execute-stages.md` below means
 
   Reorder only to honor a real dependency the list left implicit. If the derivation
   finds a **cycle or genuine ambiguity**, fall back to the list's **written order** as
-  is. If even that is not executable, it is a **blocking-gap stop** (per the Pause
-  Conditions) naming the order the folder must state. Never invent an order.
+  is. If even that is not executable, it is an H8 **question** naming the order to settle,
+  per [questions.md](questions.md). Never invent an order.
 - **One plan, one worktree**. Through `/vwf:git-workflow`, create a dedicated isolated
   worktree for this plan, with the declared preference: **yes, isolate; do not prompt**.
   Implement everything there, and **commit each unit autonomously** (no consent). Merge
@@ -64,42 +64,47 @@ These rules hold on every run. `execute-stages.md` below means
   `execute-stages.md` before each new round.
   - A round that did not strictly reduce the finding count, or that resurfaced a finding
     an earlier round resolved, is not converging. End the loop there rather than burn the
-    remaining rounds. Record the contested findings as an **oscillation** gap naming them
-    and the rounds tried.
+    remaining rounds. The contested findings are an **oscillation**, asked after the closing
+    pass with the rounds tried, per [questions.md](questions.md).
   - The wave review's own loop is capped at two rounds under the same guard, per
     [edit-unit.md](edit-unit.md).
   - A loop that ends at the cap or the guard with findings open first runs the **closing
     pass** in `execute-stages.md`. That is one fix aimed at the open set alone, checked
     narrowly with no engine, and never a round.
-  - Any review finding still unresolved after the closing pass is **documented as a gap**,
-    and execution continues. It does not block.
-  - The gap's diagnosis differs by exit. At the **cap**: "blueprint/plan was not thorough
+  - Any review finding still unresolved after the closing pass is **asked** when the loop
+    ends, the reviewer's recommendation first, per [questions.md](questions.md). Other units
+    continue meanwhile.
+  - The question's diagnosis differs by exit. At the **cap**: "blueprint/plan was not thorough
     enough" — the contract left something open. At the **guard**, the contract is not the
     suspect and must not be named as one. The loop itself failed to settle, and
     reconciliation should look there first.
   - A guard trip on a **cap-exempt** finding (security or `[breaking-api]`) is not a gap —
-    those must be fixed. It is a pause; see the Pause Conditions.
+    those must be fixed. It is the H7 question, per [questions.md](questions.md).
 
 ## Gaps
 
-- **Gaps: document and continue**. Append every gap to the folder's `gaps` list, per
-  [the plan files](plan-files.md), the one place a run's gaps go. A gap is a blueprint or
-  plan hole, not a code finding. Then execution continues. A unit's own `GAP:` line is one entry whose
-  `unit` is that unit and whose `text` carries the assumption it took.
-  - A *non-blocking* gap never stops the run.
-  - An *isolated blocking* gap means that the unit cannot proceed without a human decision, but
-    other units can. Skip that unit **and its dependents**, document, and continue, per
-    [blocking and resume](blocking.md). A unit's `UNRESOLVED:` is the same thing.
+- **A run takes no assumption**. A blueprint or plan hole, not a code finding, is a question
+  to the user, per [questions.md](questions.md). The answer goes into the folder's `decisions`.
+  The folder's `gaps` list, per [the plan files](plan-files.md), is the one place a run's
+  gaps go.
+  - A unit's `QUESTION` lines, and an old `GAP:` or `UNRESOLVED:` line, are asked, never
+    recorded as an assumption.
+  - An *isolated block* means that the unit cannot proceed without a human decision, but other
+    units can: an unanswered question, or a stop answer. Skip that unit **and its dependents**,
+    document, and continue, per [blocking and resume](blocking.md).
 - **Every gap entry carries its state**. Each entry of `gaps` has a `state`, `open` or
-  `closed`, and its `text` reads `<what the plan left open> · <the assumption taken>`.
+  `closed`. A `closed` entry's `text` reads `<what the plan left open> · <how it was settled>`.
   - An entry is `closed` only when the run settled it with no ruling owed. Examples:
     - an Owns widened under the plan's Goal and the fix applied;
     - a finding a later round or the closing pass resolved;
     - a citation corrected.
 
     Its `text` ends with how.
-  - Everything that still wants a person is `open`: an assumption a unit took, a `contested`
-    finding, an oscillation, an `UNRESOLVED:`.
+  - Everything that still wants a person is `open`. A run writes three kinds: an unanswered
+    question, its `text` starting `QUESTION Q<n>: `, and a stop answer, its `text` starting
+    `STOPPED: `, per [questions.md](questions.md); and a recorded fact of the run — no harness,
+    no capture, a coverage short of target, a failed render copy — which stays an `open` gap in
+    its usual text form and is not asked.
   - Only the `open` entries are the gap list: the count, the archive rule and the
     reconciliation read them alone.
   - A person who later rules on an entry sets its `state` to `closed`, and ends its `text`
@@ -175,27 +180,32 @@ These rules hold on every run. `execute-stages.md` below means
     resumed run reads it after a pause, **and** the final report renders it. A field left unset
     under context pressure is work a resumed run repeats, and a result the report cannot vouch
     for.
-  - The execute subagents return their findings and gaps in their report blocks. The orchestrator
-    records each gap in `index.json`, and hands each finding back, as its lines, to the unit a fix
-    loop-back re-dispatches.
+  - The execute subagents return their findings and questions in their report blocks. The
+    orchestrator asks each question per [questions.md](questions.md), records each answer in
+    `index.json`, and hands each finding back, as its lines, to the unit a fix loop-back
+    re-dispatches.
 
 ## What does not stop the run
 
-The plan is approved and every ruling is in the folder. The run does **not** pause to:
+The plan is approved and every ruling it could carry is in the folder. The run does **not** pause to:
 
 - re-ask a ruling, or confirm a unit's scope;
 - report progress between units or waves;
 - ask whether to continue after a green gate, or ask before a commit;
 - ask before the claim or the landing row;
 - ask about a missing LSP server;
-- ask what to do about a gap or a `GAP:` — a gap is recorded, and the stated assumption stands
-  until the final report;
+- ask about a point the folder or the rules settle — the run asks only where the plan is silent,
+  per [questions.md](questions.md);
 - ask before it copies the ux renders into the main checkout's scratchpad.
 
+A unit's open point is asked, and the run continues meanwhile: the unit ends its turn with its
+`QUESTION` lines, the orchestrator asks the user one question at a time, records the answer in the
+folder, and resumes the unit. No gate and no commit runs while a question of the wave is open. The
+run asks only per [questions.md](questions.md).
+
 It stops at the Pause Conditions and at the final report, nowhere else. An inherited red preflight,
-a merge conflict and a resource cap are among those conditions. At neither does it ask: each stop is a report
-with its resume command. Record everything else in the folder's `index.json` and the action log,
-and answer it at the end.
+a merge conflict and a resource cap are among those conditions. Each stop is a report with its
+resume command. Record everything else in the folder's `index.json` and the action log.
 
 ## What this skill never does
 
@@ -216,8 +226,8 @@ The reason for each is on its line, and the correct action follows the semicolon
   the one exception, and it is the orchestrator's because it may write outside the worktree.
 - Lower or clear a key in `.config/releases.yaml`, or write it anywhere but the release-levels write
   on a merged landing; raise it there alone.
-- Ask the user anything at run time; report and stop. The session question and `all`'s run-level
-  questions are asked before the run starts.
+- Take an assumption where the folder is silent; ask per [questions.md](questions.md). The session
+  question and `all`'s run-level questions are asked before the run starts.
 - Write a lock file with Write, Edit, `sed` or a script, or let a unit do it. A lock file is the
   file a package manager or a toolchain manager writes to pin what it resolved. A lock file changes only as the
   output of the CLI that owns it, per the unit contract in

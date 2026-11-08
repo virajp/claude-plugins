@@ -18,10 +18,10 @@ metadata:
 
 # execute
 
-Implement an approved plan to completion, autonomously. The plan folder is the
+Implement an approved plan to completion. The plan folder is the
 contract, and its `index.json` is the input. `/vwf:plan` or `/vwf:change-plan`
 wrote every consent, unit scope and gate line there. The prose is beside them in
-`index.md`, and the rulings are in the unit files. Read them; do not re-ask them.
+`index.md`, and the rulings are in the unit files. Read them; never re-ask them.
 
 **The argument** is `$ARGUMENTS`.
 
@@ -43,24 +43,24 @@ Acceptance and UX conformance run once after all units when the plan has
 `edit` units, and the wave reviewer for every wave.
 
 There are no per-stage human gates. Decisions come from
-[the Autonomous Rules](references/rules.md). The run stops only at a runtime
+[the run rules](references/rules.md). The run stops only at a runtime
 stop: a Pause Condition, or the final report when something stands in the way
 of the landing. Each stop is reported with its resume command.
 
-**Execute asks the user nothing**. The planner asked every question a run needs,
-and recorded the answer in the folder. Where the folder is silent and the rules
-do not decide, report what is missing and stop. Never offer a choice, wait for a
-yes, or ask how to proceed. A fix goes into the folder, and the person re-runs
-`/vwf:execute <folder>`. Two exceptions come before the run starts and never
-from a run. One is the run-level questions of `all`, asked once by the loop before its
-first plan. The other is the session question below.
+**A run asks only what the plan missed**. The planner asked every question it
+could, and recorded each answer in the folder. Where the folder is silent and the
+rules do not decide, the run asks the user, per
+[questions.md](references/questions.md), and records the answer in the folder.
+It never re-asks a ruling the folder holds, and never takes an assumption. The
+session question below and the run-level questions of `all`, asked once by the
+loop before its first plan, stay as they are.
 
 Run in a fresh context: a fresh session, or a runner that `all` dispatches. The
 skill cannot check that. When the person typed `/vwf:execute`, the launch line
 said it, and this skill trusts it.
 
-Adopt the **Autonomous delivery driver** persona. Keep moving, and decide from the
-rules. Isolate all work in one worktree, and document what you cannot resolve. Land
+Adopt the **Delivery driver** persona. Keep moving, and decide from the rules. Ask
+where the plan is silent, and never assume. Isolate all work in one worktree. Land
 only what the plan's `consent` already authorised.
 
 ## First, on every run
@@ -121,6 +121,7 @@ halts as [folder.md](workflows/folder.md) says.
 | A wave holds a `review` row                         | [review-unit.md](references/review-unit.md)      | sometimes |
 | On failure, and on a resume                         | [blocking.md](references/blocking.md)            | sometimes |
 | A Pause Condition holds                             | [pause.md](references/pause.md)                  | sometimes |
+| A unit returns a question, or H7, H8 or a failed Verification holds | [questions.md](references/questions.md) | sometimes |
 
 Read each `sometimes` file where it applies, and never upfront.
 
@@ -161,6 +162,7 @@ Read the *cycle plans only* rows on a plan with `covers`, and never otherwise.
 | Start the log, run doctor, claim the row  | auto                                       | [claim.md](references/claim.md)                            | always    |
 | Format check, recall, setup               | auto                                       | [setup.md](references/setup.md)                            | always    |
 | Waves                                     | auto                                       | [waves.md](references/waves.md)                            | always    |
+| Questions                                 | user, when the plan is silent              | [questions.md](references/questions.md)                    | sometimes |
 | Acceptance and UX, with `covers`          | auto                                       | [acceptance-and-ux.md](references/acceptance-and-ux.md)    | sometimes |
 | Reconcile and the fixed final waves       | auto                                       | [reconcile.md](references/reconcile.md)                    | always    |
 | The final report                          | auto                                       | [final-report.md](references/final-report.md)              | always    |
@@ -180,12 +182,14 @@ a pause are [pause.md](references/pause.md).
 | H3 | A git or merge conflict that cannot be safely resolved                                                                                                                                                    | Hard halt                                                  |
 | H4 | A stage subagent errors twice in a row (after one re-dispatch) on the same unit. A reviewer that returned without its `REVIEW:` / `SECURITY:` block counts as an error                                    | Commit each green unit, record the unit blocked, pause     |
 | H5 | Resource caps: context > 65%, 5-hour > 90%, or 7-day > 80%, delivered by an external hook                                                                                                                 | Pause per [pause.md](references/pause.md)                  |
-| H7 | Non-converging cap-exempt finding: a security or `[breaking-api]` finding trips the convergence guard                                                                                                     | Pause with the finding, the rounds tried, and each change  |
-| H8 | Uncovered decision: irreversible or outward-facing and not covered by the rules or the folder; an ambiguous wave order the written order cannot settle; blocking format drift                              | Blocking-gap stop. Never ask                               |
+| H7 | Non-converging cap-exempt finding: a security or `[breaking-api]` finding trips the convergence guard                                                                                                     | Ask, per [questions.md](references/questions.md)           |
+| H8 | Uncovered decision: irreversible or outward-facing and not covered by the rules or the folder; an ambiguous wave order the written order cannot settle; blocking format drift                              | Ask, per [questions.md](references/questions.md)           |
 
-An isolated blocking gap does not pause: skip, document and continue per the
-rules. An all-blocking gap ends at the final report. Everything else is decided
-from the rules — do not pause for routine approvals. Refuse destructive
+An isolated block does not pause: an unanswered question (no one to answer) or
+a stop answer marks the unit `unresolved`, skips its dependents, and the run
+continues per [questions.md](references/questions.md). An all-blocking one ends at
+the final report. Everything else is decided from the rules — do not pause for
+routine approvals. Refuse destructive
 operations (`--force`, `reset --hard`, deleting a file outside the unit's Owns,
 except a file that the run created), and never pause on them.
 
@@ -202,8 +206,8 @@ The full list is [*What this skill never does*](references/rules.md).
 
 - Read a unit's owned files or do a unit's work inline; dispatch it — the
   session's context stays the size of the reports.
-- Ask the user anything at run time; report and stop with the resume command —
-  no one is there to answer.
+- Take an assumption where the folder is silent; ask per
+  [questions.md](references/questions.md) — the answer goes into the folder.
 - Merge or push the run branch before the landing, or past the recorded
   `consent`; commit in the worktree — the plan holds the only authorisation.
 - Bump a version; record a release level at the landing — a person runs the

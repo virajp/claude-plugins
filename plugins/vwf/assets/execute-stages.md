@@ -217,19 +217,21 @@ blueprint-bound and never fires on a plan without one.
   - the finding count did not **strictly decrease**;
   - a finding an earlier round resolved has **resurfaced**.
 
-  Do not spend the remaining rounds proving it. Stop the loop where it stands
-  and record the contested findings as an **oscillation** gap naming them and
-  the rounds tried. The diagnosis is the loop — the coder trading one reviewer's
-  fix against the other's, or regressing an earlier one — so it is never filed
-  as "blueprint/plan was not thorough enough", which sends the reconciliation at
-  the far end to rewrite a contract that was never at fault. (This is the review
-  loop's form of the convergence guard `elicitation.md` §9 puts on review loops
-  during authoring — same idea, different loop.)
+  Do not spend the remaining rounds proving it. Stop the loop where it stands.
+  The contested findings are an **oscillation**: after the closing pass, each
+  is asked, with the rounds tried and the reviewer's recommendation first, per
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`. The diagnosis
+  is the loop — the coder trading one reviewer's fix against the other's, or
+  regressing an earlier one — so it is never filed as "blueprint/plan was not
+  thorough enough", which sends the reconciliation at the far end to rewrite a
+  contract that was never at fault. (This is the review loop's form of the
+  convergence guard `elicitation.md` §9 puts on review loops during authoring —
+  same idea, different loop.)
 
   **Cap-exempt findings never take this exit.** Security and `[breaking-api]`
   findings must be fixed and can never be downgraded to gaps, so a guard trip on
   one is not a gap at all — it is a decision the rules do not cover, and the
-  invoking command pauses on it.
+  invoking command asks it as the H7 question.
 - **Closing pass** — *every unit.* A loop that ends at the cap or at the
   convergence guard with findings still open — a `review` row's loop, a late
   re-run's, the wave review's — does not record them yet. Each round's engines
@@ -246,11 +248,13 @@ blueprint-bound and never fires on a plan without one.
      `RESOLVED` or `OPEN` for each listed finding, and reports a new finding
      only when the closing fix itself caused it — a regression, labelled as
      one. It raises nothing else.
-  3. **Record.** A finding `OPEN` and a regression are recorded `contested`, as
-     the loop's exit would have recorded them, with the diagnosis of that exit
-     (cap or guard); a `RESOLVED` finding is closed. A regression on a
-     security or `[breaking-api]` finding is cap-exempt and pauses, as the
-     guard's cap-exempt rule says.
+  3. **Ask.** A finding `OPEN` and a regression are `contested`, with the
+     diagnosis of the loop's exit (cap or guard); a `RESOLVED` finding is
+     closed. Each contested finding is asked, the reviewer's recommendation
+     first. An answer to fix runs one targeted fix and a narrow check in this
+     pass's form, never a new round; an answer to accept records the decision.
+     A regression on a security or `[breaking-api]` finding is cap-exempt, and
+     is the H7 question, as the guard's cap-exempt rule says.
 
   The closing pass is **not a round**: the cap and the guard do not count it
   and do not apply to it, and it never loops. It is reported as round
@@ -258,14 +262,16 @@ blueprint-bound and never fires on a plan without one.
   that ends clean has no closing pass.
 - **Capture blueprint/plan gaps as they surface** — *`code` units with
   `covers`.* A *gap* (a hole in the blueprint or plan, distinct from a code
-  finding) reported by any stage is never silently worked around. The subagent
-  returns it as a `GAP:` line in its report — what is under- or mis-specified,
-  where, and the assumption it proceeded on; the orchestrator records that line
-  **the moment it surfaces** — one entry appended to the `gaps` list of the
-  plan folder's `index.json`, the durable copy and the only one; a run files
-  nothing under `docs/memory/gaps/`. Gaps do not block the pipeline; they are
-  reconciled at cycle end. A durable decision the run settles is written as a
-  `docs/memory/decisions/` file per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
+  finding) reported by any stage is never silently worked around, and never
+  built on an assumption. The subagent returns it as `QUESTION`, `OPTIONS` and
+  `WHY` lines in its report — what is under- or mis-specified, where, and the
+  options; the orchestrator asks it **the moment it surfaces**, per
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`. The answer is
+  one entry appended to the `decisions` list of the plan folder's `index.json`;
+  a question no one could answer is one `open` entry of its `gaps` list, the
+  durable copy and the only one. A run files nothing under `docs/memory/gaps/`.
+  A durable decision the run settles is written as a `docs/memory/decisions/`
+  file per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`.
 - **Never silently edit the blueprint** — *`code` units with `covers`.* Flag
   drift and offer; do not rewrite it. **Single exception:** the Reconcile step
   updates the `implementation:` frontmatter key on the docs the plan's
@@ -300,7 +306,8 @@ schema. Every write is one `set` or `append` call, in the worktree, to
 | `units[].rounds` | the highest round the unit reached; for a `review` row, its main loop's                                        |
 | `units[].range`  | a `review` row only: `{from, to}` of its main loop's last round; the next row's `from` reads its `to`          |
 | `waves[].status` | the unit statuses: `running` as the wave starts, `green` as it closes, `failed` when a unit in it failed or was skipped |
-| `gaps`           | one entry per gap, `contested` residual or oscillation: `{id, unit, stage, text, state}`, written `open`       |
+| `gaps`           | one entry per unanswered question (`QUESTION Q<n>: `), stop answer (`STOPPED: `) or settled gap: `{id, unit, stage, text, state}` |
+| `decisions`      | the planner's rulings, then one entry appended by the run per answer: `{id, decision, ruling, rejected, units}` |
 | `overrides`      | one entry per `override:` line an `all` run hands the runner: `{id, text}`                                     |
 | `stages`         | `renders`, `acceptance`, `ux` and `reconcile`, each `{state, detail}`: `pending`, `running`, `green`, `failed`, `skipped` |
 | `started`, `ended` | on every unit, wave and stage: never set by the run — `plan.mjs` stamps them on each `status` or `state` set     |
@@ -316,8 +323,8 @@ never read to resume it.
 
 - **A unit is done** when its `status` reads `green`: a `code` unit with a
   `commit`; a `review` row when its reviewers' last round is clean, or when its
-  loop ended at the cap or the convergence guard with the residuals recorded
-  `contested`; an `edit` unit when its report is read and the wave review
+  loop ended at the cap or the convergence guard and each `contested` residual
+  was answered; an `edit` unit when its report is read and the wave review
   passed it.
 - **Round counts are per loop.** The round count is the unit's `rounds` — the
   highest round, counted **per loop** for a `review` row: its main loop in

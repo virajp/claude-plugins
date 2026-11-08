@@ -47,11 +47,13 @@ folder commit, per [the plan files](plan-files.md).
      late re-run, taken at step 7. See *Late loop-backs re-run the last row* in
      [review-unit.md](review-unit.md).
 5. **Unit gate, then wave gate**. The orchestrator runs them once every unit of the wave has returned,
-   and in a `teams` wave once every teammate is idle.
+   and in a `teams` wave once every teammate is idle. Read every report for `QUESTION` lines, and for old
+   `GAP:` and `UNRESOLVED:` lines, and ask each per [questions.md](questions.md). Run no gate while a
+   question of the wave is open, or while a resumed unit still works.
    For each green `edit` unit, in wave order, it runs every line of `gates.unit`. A `code` unit ran its
-   unit gate inside its pipeline. Then it runs every line of `gates.wave`, once. Read every report for `UNRESOLVED:`
-   too.
-   - A unit that returned `UNRESOLVED:` or `failed`, and every unit that depends on it, is **skipped**
+   unit gate inside its pipeline. Then it runs every line of `gates.wave`, once.
+   - A unit left `unresolved` (its question unanswered, or answered stop) or `failed`, and every unit
+     that depends on it, is **skipped**
      per [blocking and resume](blocking.md). A failed, unresolved or skipped `review` row takes every
      later `review` row and every later unit of any kind one covers, per that reference.
      The rest of the run continues. H4 is the exception: a unit marked `failed` with `agent died` pauses

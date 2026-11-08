@@ -12,9 +12,14 @@ resource-cap handoff. The record is the account that survived all three intact. 
     `row` events;
   - the units its findings re-dispatched;
   - each late re-run's rounds beside the main loop's, per [review-unit.md](review-unit.md)
-- every entry of `gaps` the units returned, with the assumption each proceeded on. Include every
-  Owns the orchestrator widened at run time, with the finding that caused it
-- the review findings that survived the cap, marked `contested`
+- every `decisions` entry the run appended from an answer, with its question id, the question and the
+  answer, per [questions.md](questions.md)
+- every `open` entry of `gaps`: each unanswered question (`QUESTION Q<n>: `) and each stop answer
+  (`STOPPED: `), with the resume command that asks it again; and each recorded fact of the run — no
+  harness, no capture, a coverage short of target, a failed render copy — listed as a fact, with no
+  resume command, per [the run rules](rules.md). Include every Owns the orchestrator widened at run
+  time, a `closed` entry, with the finding that caused it
+- the review findings that survived the cap, marked `contested`, and the answer each was given
 - **model downgrades**, named on the nodes that ran under them
 - the unit gate, wave gate, plan gate and orchestrator gate results
 - the release levels recorded: the folder's `release_levels` entries, and, once the landing has

@@ -31,12 +31,8 @@ Then pause, and never proceed on a dead stage.
 **Resource caps (H5)**. A repo may **tighten** the caps, never loosen them, through
 `.config/vwf.yaml` `pipeline.execute_caps`; the hook honors the lower value.
 
-**Non-converging cap-exempt finding (H7)**. The fix is not holding, or keeps trading
-against another finding. These can never be downgraded to gaps, so the loop has nowhere to
-exit to. Pause with the finding, the rounds tried, and what each round changed.
-
-**Uncovered decision (H8)**. Commit what is safe, append the gap, report the ruling the
-folder needs, and give the resume command. Never ask.
+**H7 and H8** are no longer pauses. Each is a question to the user, whose answer authorises
+one action, per [questions.md](questions.md).
 
 ### The resource-cap signal
 
@@ -52,13 +48,15 @@ never arrive.
 On the injected cap directive:
 
 1. Finish setting the unit fields for every report already in hand.
-2. Commit what is green.
-3. Invoke
+2. Record each question still open as an `open` gap, per *No one to answer* in
+   [questions.md](questions.md). The resume asks it again under its own id.
+3. Commit what is green.
+4. Invoke
    `plan-management status <folder> RUNNING "RUNNING — paused at unit <n> for context"`.
    The index row stays `RUNNING` — a pause is the folder's detail, not the queue's.
-4. Run `/vwf:handoff prefer: the one thread is this plan's run`, which writes the
+5. Run `/vwf:handoff prefer: the one thread is this plan's run`, which writes the
    reserved `next` handoff, a snapshot of the state.
-5. Stop with the launch line `/vwf:execute <folder>`.
+6. Stop with the launch line `/vwf:execute <folder>`.
 
 The person re-runs it in a fresh session. `/vwf:recall next` surfaces the handoff and the
 launch line, but cannot invoke this skill.
