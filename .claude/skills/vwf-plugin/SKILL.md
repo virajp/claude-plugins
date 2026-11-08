@@ -270,6 +270,12 @@ pick the invocation mode per the policy below, and run
 `mise run p:plugins:check` — strict-YAML frontmatter drops a skill **silently**
 when it fails to parse.
 
+Write the skill to the repo standard first: scaffold it with
+[`skill-kit`](../skill-kit/SKILL.md) (`/skill-kit new <archetype> <name>`), and
+run `/skill-kit lint` on it: one of the eight archetypes, both invocation keys
+declared. Every vwf skill meets that standard, save the vendored
+`karpathy-guidelines`, which stays verbatim.
+
 ### Invocation policy
 
 Claude spells this with two independent booleans, and the useful states are
