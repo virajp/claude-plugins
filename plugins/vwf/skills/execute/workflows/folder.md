@@ -103,8 +103,13 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
   [blocking and resume](../references/blocking.md).
   - The worktree named in the status line exists, and the run starts at the first
     unit that is not `green`.
-  - The ruling a block asked for must now be in the plan. If the status line still
-    reads the same `UNRESOLVED:`, stop and say which ruling is missing.
+  - The ruling a block asked for must now be in the plan: in the unit file, or in
+    a `decisions` entry an answer appended. First ask every open gap whose text
+    starts `QUESTION Q<n>: ` and every `question` event of the action log with no
+    `answer` event, each under its own id and once, per *No one to answer* in
+    [questions.md](../references/questions.md). If the status line still reads
+    the same `UNRESOLVED:` with no answer recorded, stop and say which ruling is
+    missing.
   - The row is expected to read `RUNNING` already, and is left alone. A row reading
     `APPROVED` was unclaimed, and the run claims it again in
     [claim.md](../references/claim.md).
