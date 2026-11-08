@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-08 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-08 14:57 in .worktrees/execute-asks-the-user"
   },
   "consent": {
     "merge": true,
@@ -68,11 +68,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.169Z",
+      "ended": "2026-11-08T09:34:29.082Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -87,11 +87,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.372Z",
+      "ended": "2026-11-08T09:34:29.182Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -121,11 +121,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.549Z",
+      "ended": "2026-11-08T09:34:29.275Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -142,11 +142,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.735Z",
+      "ended": "2026-11-08T09:34:29.367Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -171,11 +171,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.898Z",
+      "ended": "2026-11-08T09:34:29.469Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -266,8 +266,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-08T09:28:34.114Z",
       "ended": ""
     },
     {
@@ -771,7 +771,43 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "p:plugins:check failed on agent citations of questions.md before U3 created it · assumed it clears once U3 lands; closed: p:plugins:check green over the whole wave",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "p:plugins:check and code:format red on teammates files while the wave ran · assumed they clear once the wave lands; closed: p:plugins:check green over the whole wave, code:format runs at the unit gate",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U5 never got the questions.md section names from U3 · U5 cites questions.md by path; closed: the wave 1 review found every questions.md citation correct after round 1",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "No ruling says how a recorded fact of the run (no harness, no capture, short coverage, a failed render copy) is treated once gaps become questions · the orchestrator kept it an open gap that is not asked, as before this plan, so the landing rules do not change",
+      "state": "open"
+    },
+    {
+      "id": "G5",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The wave 1 closing-pass check found that final-report.md:17 listed two kinds of open gap after the recorded-fact fix · closed: U3 added the third kind (recorded facts, no resume command)",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/execute-asks-the-user",

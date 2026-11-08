@@ -23,7 +23,8 @@
 //
 //   node log.mjs start --folder <plan folder> [--mode fresh|resume] [--key value]…
 //   node log.mjs event <name> [--key value]…
-//   node log.mjs event row|gap <<'EOF'  (one JSON object on stdin)
+//   node log.mjs event row|gap|question|answer <<'EOF'  (one JSON object on stdin)
+//   node log.mjs next-question
 //   node log.mjs run [--event gate] [--key value]… -- <command> [args]…
 //   node log.mjs end [--outcome <outcome>]
 //   node log.mjs summary <file>
@@ -42,16 +43,22 @@
 // Every line carries ts (ISO time, milliseconds), run, session, agent (null
 // for the orchestrator) and event. For the free events a --key value pair
 // becomes a field: an integer value is a number, true and false are booleans,
-// any other a string. row, gap, plan.snapshot and session.end are strict
-// (SCHEMAS below): a bad object exits non-zero and writes nothing.
+// any other a string. row, gap, question, answer, plan.snapshot and
+// session.end are strict (SCHEMAS below): a bad object exits non-zero and
+// writes nothing.
+//
+// next-question prints Q<n>, one past the highest id of a `question` event in
+// the active run's log, Q1 when it has none, and writes nothing. A question
+// asked again under its own id (a resume) counts once. It is the one verb that
+// reads the log for the run: with no active run it exits 1.
 //
 // prune deletes <root>/<repo>/<basename>.jsonl only when
 // <repo root>/docs/plans/archived/<basename> or …/<basename>-<n> is a
 // directory, the basename is not --keep, and the file is older than --days.
 //
-// A log call never stops a run: with no active run, start excepted, a call
-// prints `log.mjs: no active run in session <id>` on stderr and exits 0 —
-// `run` still runs its command and keeps its exit code.
+// A log call never stops a run: with no active run, start and next-question
+// excepted, a call prints `log.mjs: no active run in session <id>` on stderr
+// and exits 0 — `run` still runs its command and keeps its exit code.
 
 import { spawnSync } from "node:child_process";
 import {
@@ -84,7 +91,10 @@ const DAY = 24 * 60 * 60 * 1000;
 
 // The keys of a folder's `stages` object in schema.mjs, which exports no list.
 const STAGES = ["renders", "acceptance", "ux", "reconcile"];
-const GAP_CLASS = ["GAP", "UNRESOLVED", "contested", "oscillation"];
+const GAP_CLASS = ["GAP", "UNRESOLVED", "contested", "oscillation", "question"];
+const QUESTION_ID = /^Q\d+$/;
+// The owner of a question: a unit, a wave or a stage.
+const QUESTION_OWNER = /^(U\d+|W\d+|setup|renders|acceptance|ux|reconcile)$/;
 const GAP_SOURCE = [
   "unit",
   "wave-review",
@@ -304,6 +314,33 @@ const SCHEMAS = {
     }
     return f;
   },
+  "question"(o) {
+    const f = unknown(o, ["id", "unit", "text", "options", "why"]);
+    if (!isStr(o.id) || !QUESTION_ID.test(o.id)) {
+      f.push("id must be Q<n>");
+    }
+    if (!isStr(o.unit) || !QUESTION_OWNER.test(o.unit)) {
+      f.push(
+        "unit must be U<n>, W<n>, setup, renders, acceptance, ux or reconcile",
+      );
+    }
+    for (const k of ["text", "options", "why"]) {
+      if (!isStr(o[k]) || !o[k]) {
+        f.push(`${k} must be a non-empty string`);
+      }
+    }
+    return f;
+  },
+  "answer"(o) {
+    const f = unknown(o, ["id", "decision"]);
+    if (!isStr(o.id) || !QUESTION_ID.test(o.id)) {
+      f.push("id must be Q<n>");
+    }
+    if (!isStr(o.decision) || !/^D\d+$/.test(o.decision)) {
+      f.push("decision must be D<n>");
+    }
+    return f;
+  },
 };
 
 /** The findings for one strict event's payload; an empty list is valid. */
@@ -415,6 +452,27 @@ function nextL(file) {
   return `L${max + 1}`;
 }
 
+// One past the highest question id in the log; Q1 when none.
+function nextQ(file) {
+  let max = 0;
+  for (const e of read(file)) {
+    const m = e.event === "question" && /^Q(\d+)$/.exec(e.id ?? "");
+    if (m) {
+      max = Math.max(max, Number(m[1]));
+    }
+  }
+  return `Q${max + 1}`;
+}
+
+function nextQuestion() {
+  const ctx = active();
+  if (!ctx) {
+    noRun();
+    process.exit(1);
+  }
+  process.stdout.write(nextQ(ctx.file) + "\n");
+}
+
 // Events only start, end and the SessionEnd hook write.
 const RESERVED = ["run.start", "run.end", "plan.snapshot", "session.end"];
 
@@ -432,7 +490,7 @@ function event(args) {
     warn(`event ${name} is written by start, end or the hook only`);
     process.exit(2);
   }
-  const stdin = name === "row" || name === "gap";
+  const stdin = ["row", "gap", "question", "answer"].includes(name);
   if (stdin && rest.length) {
     warn(`event ${name} takes its JSON on stdin, not --key pairs`);
     process.exit(2);
@@ -862,6 +920,43 @@ function report(ev, kinds) {
   return { out, totals };
 }
 
+// The plan-wide questions, in log order across every run: a question with no
+// later answer of its id is open. Empty when the log holds no question.
+function questions(ev) {
+  const qs = new Map();
+  const warns = [];
+  for (const e of ev) {
+    if (e.event === "question" && isStr(e.id)) {
+      qs.set(e.id, {
+        unit: e.unit ?? "",
+        text: String(e.text ?? "").replace(/\s+/g, " ").trim(),
+        state: "open",
+      });
+    }
+    if (e.event === "answer" && isStr(e.id)) {
+      const q = qs.get(e.id);
+      if (q) {
+        q.state = `answered: ${e.decision ?? "?"}`;
+      } else {
+        warns.push(`warning: answer ${e.id} has no earlier question`);
+      }
+    }
+  }
+  if (!qs.size) {
+    return [];
+  }
+  return [
+    "",
+    "",
+    "QUESTIONS",
+    table(
+      ["id", "unit", "state", "text"],
+      [...qs.entries()].map(([id, q]) => [id, q.unit, q.state, q.text]),
+    ),
+    ...warns,
+  ];
+}
+
 function summary(args) {
   const file = args[0];
   if (!file) {
@@ -900,6 +995,7 @@ function summary(args) {
       sum[k] += totals[k];
     }
   });
+  out.push(...questions(ev));
   const wall = ms(ev[ev.length - 1].ts) - ms(ev[0].ts);
   out.push(
     "",
@@ -913,9 +1009,17 @@ function summary(args) {
 
 function main() {
   const [cmd, ...rest] = process.argv.slice(2);
-  const verbs = { start, event, run, end, summary, prune };
+  const verbs = {
+    start,
+    event,
+    "next-question": nextQuestion,
+    run,
+    end,
+    summary,
+    prune,
+  };
   if (!verbs[cmd]) {
-    warn("usage: log.mjs start|event|run|end|summary|prune …");
+    warn("usage: log.mjs start|event|next-question|run|end|summary|prune …");
     process.exit(2);
   }
   verbs[cmd](rest);
