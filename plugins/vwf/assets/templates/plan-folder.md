@@ -78,6 +78,7 @@ A change plan:
   "backlog": ["B12"],
   "backlog_pieces": [],
   "gaps_of": [],
+  "execution": "solo",
   "status": { "state": "DRAFT", "detail": "DRAFT 2026-09-04" },
   "consent": {
     "merge": true,
@@ -186,6 +187,7 @@ A cycle plan:
   "gaps_of": [],
   "covers": ["docs/blueprint/flows/<project>/<NNN>-<flow>/index.md"],
   "exposure": "dark",
+  "execution": "solo",
   "status": { "state": "DRAFT", "detail": "DRAFT 2026-09-04" },
   "consent": {
     "merge": true,
@@ -323,7 +325,9 @@ The rules for each key — JSON has no comments, so they sit here:
   is required on a `vwf-plan` (`exposure` optional) and a `validate` finding on
   a `vwf-change-plan`. An empty list is written `[]`. An object allows only the
   keys named here — an unknown key is a finding — save `consent.lsp`, which
-  is open: its keys are language names.
+  is open: its keys are language names. `execution` is the one other key that
+  `validate` does not require, so an older folder stays valid; a planner
+  always writes it.
 - **Empty strings.** `validate` refuses `""` in these places only: the plan
   `title`, a unit's `title` and `file`, a gap's `text`, `run`'s `worktree`
   and `log`, and every `id`. Every other string may be `""` — a `commit` not
@@ -352,11 +356,19 @@ The rules for each key — JSON has no comments, so they sit here:
 - **`covers`** *(cycle)* — the blueprint doc(s) this plan implements; the
   list the `implementation:` stamp is written to. **`exposure`** *(cycle,
   optional)* — `dark` when the slice ships behind a flag.
+- **`execution`** — `solo` or `teams`, the answer to interview item 10b, on
+  both kinds. `teams` asks that a plan's `edit` units and its wave reviewer can
+  send messages to each other; `code` units and `review` units do not change.
+  Talk is a help, never a precondition, so a unit file never depends on a peer.
+  A folder with no key reads as `solo`, and `format` stays `1`. A `teams` plan
+  runs `solo` when a team cannot start, and the final report says why; the rule
+  is *The execution mode* in
+  `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/preflight.md`.
 - **`status`** — the one status a plan has. `state` is `DRAFT`, `APPROVED`,
   `RUNNING`, `BLOCKED`, `COMPLETE` or `ARCHIVED`; `detail` is one line: when
   it changed and by what — "APPROVED 2026-09-04 by the user"; "RUNNING since
-  2026-09-05 10:12 in <worktree path>"; "BLOCKED at wave 2 — U4 UNRESOLVED:
-  <ruling needed>; U5 skipped (depends on U4)".
+  2026-09-05 10:12 in <worktree path>"; "BLOCKED at wave 2 — U4 unresolved,
+  QUESTION Q3 open; U5 skipped (depends on U4)".
 - **`consent`** — **the mode recorded here is the consent.** `merge`: may a
   fully green run merge to the integration branch and push, `true` or
   `false`. `end_all_run` is always present: `true` when the interview (item
@@ -374,7 +386,7 @@ The rules for each key — JSON has no comments, so they sit here:
   commit it makes on a unit's behalf — the unit's own commit and each fix
   commit — and never while another unit is still editing; a red line is that
   unit's failure. `wave`: run once after each wave, plus the wave review, plus
-  every report read for `UNRESOLVED:`; add the plan's own checks here. `plan`:
+  every report read for QUESTION lines; add the plan's own checks here. `plan`:
   run once, after the fixed final waves, over the finished tree, before the
   run is called green. Every `unit` and `wave` line must be green before wave
   1 — a check that holds only once a unit has landed belongs in that unit's
@@ -383,9 +395,8 @@ The rules for each key — JSON has no comments, so they sit here:
 - **`after_landing`** — the steps the orchestrator runs after the landing, in
   order, or `[]`. `mode` is always `run`: a `run` step runs on a green landing
   without a prompt, and a step the interview did not confirm `run` (item 17)
-  is not in the list; `/vwf:execute` asks nothing at run time. Where a step
-  stages something this session already loaded, it is picked up only by a
-  **restarted** session.
+  is not in the list. Where a step stages something this session already
+  loaded, it is picked up only by a **restarted** session.
 - **`release_levels`** — one entry per project the units touch, `NONE`
   included. `level` is `NONE`, `PATCH`, `MINOR` or `MAJOR`, derived by the
   planner (interview item 18) — breaks users → `MAJOR`, new behaviour →
@@ -466,6 +477,8 @@ The rules for each key — JSON has no comments, so they sit here:
   any other, with why it collides and the unit that owns it.
 - **`decisions`** — the assumed decisions, to confirm or override at review:
   the question, the ruling, the rejected alternative, the units it reaches.
+  A run appends one entry per answer the user gives to a run question, per
+  the execute skill's `references/questions.md`.
   For a cycle plan, every code-contradicts-blueprint drift is an entry: the
   contradiction as the decision, the conforming unit in `units` — the
   blueprint is never adjusted to match code silently.
@@ -483,16 +496,18 @@ The rules for each key — JSON has no comments, so they sit here:
   as it ends or is skipped — on a change plan every stage that does not apply is
   `skipped` — and a resume reads them to know whether a stage already passed.
 - **`gaps`** — both kinds; `[]` at approval. `execute` appends one entry per
-  blueprint or plan hole as it surfaces: `unit` is the id of an existing unit,
-  or `""` for a plan-level gap; `stage` names the stage that found it, or
-  `""`; `text` is what the blueprint or plan under- or mis-specified and the
-  assumption execution proceeded on, or how the run closed it; `state` is
-  `open` or `closed`. The next id is `G<n>`, one past the highest. Only `open`
-  entries count in the `gaps` of the plan's row in `docs/plans/index.json`
-  and keep the folder live; a person who rules on one sets its `state` to
-  `closed` and adds the ruling to its `text`. The durable copy, and the only
-  one: a run files no `docs/memory/gaps/` record. Reconciled into the
-  blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at cycle end.
+  blueprint or plan hole it cannot settle with an answer, and per point it
+  closes: `unit` is the id of an existing unit, or `""` for a plan-level gap;
+  `stage` names the stage that found it, or `""`; `text` is an unanswered
+  question (starting `QUESTION Q<n>: `), a stop answer (starting
+  `STOPPED: `), or how the run closed a point — a run takes no assumption;
+  `state` is `open` or `closed`. The next id is `G<n>`, one past the
+  highest. Only `open` entries count in the `gaps` of the plan's row in
+  `docs/plans/index.json` and keep the folder live; a person who rules on one
+  sets its `state` to `closed` and adds the ruling to its `text`. The durable
+  copy, and the only one: a run files no `docs/memory/gaps/` record.
+  Reconciled into the blueprint (/vwf:blueprint) and a re-plan (/vwf:plan) at
+  cycle end.
 - **`overrides`** — `[]` at approval; an `all` run's `override:` block, one
   entry each, its lines joined by `; `. It never changes `consent`.
 - **`run`** — `{}` or exactly `{"worktree": …, "log": …}`, both non-empty
@@ -572,12 +587,24 @@ A unit returns exactly this block and nothing else — no file contents, no diff
     CHANGED: <path> — <one line>            (one per file)
     DECIDED: <what> — <why>                 (choices made inside scope, or none)
     DOCS FALSIFIED: <path> — <passage>      (reported, never edited; or none)
-    GAP: <what the plan left unspecified and the assumption taken>   (or none)
-    UNRESOLVED: <the ruling needed>         (or none)
+    QUESTION Q<n>: <the question, readable alone>
+    OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+    WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 
-A `GAP:` is a hole in the plan the unit could proceed past on a stated
-assumption; it is recorded and the run continues. An `UNRESOLVED:` is a ruling
-the unit could not proceed without; it blocks the unit and its dependents.
+The three QUESTION lines repeat per question, `n` counting from 1 in the
+block, with two to four options; a block with no question carries the one
+line `QUESTION: none`. A question is a point the plan does not decide and the
+unit cannot settle inside its scope; the unit never proceeds on an
+assumption. A `GAP:`, `GAPS:` or `UNRESOLVED:` line from a folder written
+before this rule is read as a question with no options, and the orchestrator
+writes the options itself.
+
+A unit completes every edit that does not depend on an answer, never builds on
+a part an answer can change, then returns all its open questions in one block.
+Its edits stay uncommitted in the worktree. The orchestrator asks the user,
+records each answer in `decisions`, and resumes the unit with the question ids
+and answers; the resumed unit applies them and returns the whole block again
+(the execute skill's `references/questions.md`).
 
 ## Out of scope
 

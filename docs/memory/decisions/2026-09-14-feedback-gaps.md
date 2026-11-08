@@ -1,7 +1,7 @@
 # Decision — feedback keeps one hop, gains a shape-change kind and a build-state line
 
 **Date** 2026-09-14 · **Branch** `2026-09-14-feedback-gaps` · **Plan**
-[`docs/plans/2026-09-14-feedback-gaps/`](../../plans/2026-09-14-feedback-gaps/index.md)
+`docs/plans/2026-09-14-feedback-gaps/`
 · **Reverses** nothing · **Backlog** B05 (group C of the 2026-09-13 capture)
 
 ## What was decided before

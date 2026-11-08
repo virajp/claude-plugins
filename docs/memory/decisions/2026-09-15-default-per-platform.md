@@ -1,7 +1,7 @@
 # Decision — a bundle's default flag is unique per (axis, platform)
 
 **Date** 2026-09-15 · **Branch** `2026-09-15-default-per-platform` · **Plan**
-[`docs/plans/2026-09-15-default-per-platform/`](../../plans/2026-09-15-default-per-platform/index.md)
+`docs/plans/2026-09-15-default-per-platform/`
 · **Widens** checker rule 14 and the stack-adapter contract; flags `astro-ssg`
 
 ## What was decided before

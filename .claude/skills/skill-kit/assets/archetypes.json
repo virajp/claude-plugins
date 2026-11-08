@@ -1,0 +1,64 @@
+{
+  "workflow": {
+    "description": 350,
+    "sections": ["State", "Output", "Never"],
+    "folders": []
+  },
+  "doctrine": {
+    "budget": 400,
+    "singleBudget": 700,
+    "description": 250,
+    "sections": ["Routing"],
+    "singleSections": ["Owns", "Run", "Config rules", "Overrides", "Failures"],
+    "folders": []
+  },
+  "reference": {
+    "budget": 400,
+    "description": 300,
+    "sections": ["Routing"],
+    "folders": ["references"],
+    "subtypes": {
+      "cloud-service": ["pick-and-trade", "service-doctrine", "cost-shape", "identity-shape", "local-dev"],
+      "capability-provider": ["pick-and-trade", "contract-satisfaction", "cost-shape", "access-shape", "local-stack"],
+      "datastore": ["pick-and-trade", "contract-satisfaction", "cost-shape", "access-shape", "local-stack"],
+      "cloud-provider": ["identity-and-iam", "networking-and-private-plane", "cost-doctrine", "local-development-map"],
+      "ci-system": [],
+      "deploy-target": []
+    }
+  },
+  "adapter": {
+    "budget": 600,
+    "description": 300,
+    "sections": ["Contract", "Preconditions", "Steps", "Output", "Rules"],
+    "folders": []
+  },
+  "generator": {
+    "budget": 1200,
+    "description": 300,
+    "sections": ["Inputs", "Consent"],
+    "folders": ["templates", "scripts"]
+  },
+  "audit": {
+    "budget": 1200,
+    "description": 300,
+    "sections": ["Scope", "Checks", "Findings", "Report"],
+    "folders": ["references", "assets"]
+  },
+  "analysis": {
+    "budget": 1200,
+    "description": 300,
+    "sections": ["Question", "Scope", "Access", "Collect", "Analyze", "Findings", "Report"],
+    "folders": ["references", "scripts", "templates"],
+    "subtypes": {
+      "infrastructure": ["scope-and-access", "sources", "metrics", "cost-model", "method"],
+      "codebase": ["scope", "map", "signals", "method"],
+      "incident": ["timeline", "signals", "contributing-factors", "actions"]
+    }
+  },
+  "runbook": {
+    "budget": 1200,
+    "description": 300,
+    "sections": ["Blast radius", "Preflight", "Decision tree", "Steps", "Rollback", "Verify"],
+    "folders": ["references", "scripts"]
+  }
+}

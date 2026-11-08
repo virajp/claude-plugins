@@ -3,9 +3,9 @@ name: plan
 description: Produce reviewable cycle plans as diffs for one slice of the
   blueprint (a flow or an entity). Reads desired (blueprint) vs actual (code),
   writes only the delta as a plan folder, docs/plans/<date>-<HHMM>-<slice>/ (an
-  index.json, an index.md and one file per unit), that /vwf:execute runs
-  unattended in a fresh context — a fresh session, or a runner that
-  /vwf:execute all dispatches.
+  index.json, an index.md and one file per unit), that /vwf:execute runs in a
+  fresh context — a fresh session, or a runner that /vwf:execute all
+  dispatches — asking the user only what the plan missed.
   Resolves the slice's transitive dependency chain and plans each
   unimplemented dependency as its own plan folder first, in order; routes any
   blueprint gap it uncovers back through /vwf:blueprint before writing — so no
@@ -23,8 +23,9 @@ Produce reviewable cycle plans for a chosen slice of the blueprint. A plan is a
 **diff**: it reads the blueprint (desired state) and the actual code (actual
 state) for one slice and writes only the delta — what exists, what is missing,
 what changes, and in what order — as a **plan folder** ordered for TDD, one
-unit per step, that `/vwf:execute` runs unattended in a fresh context — a
-fresh session, or a runner that `all` dispatches.
+unit per step, that `/vwf:execute` runs in a fresh context — a fresh
+session, or a runner that `all` dispatches. A run asks the user only what the
+plan missed, so the plan carries every answer it can.
 
 A slice is never planned over unbuilt ground: the slice's **dependency chain**
 is resolved first, and every dependency with an unimplemented delta gets **its
@@ -332,8 +333,10 @@ apply the **what-vs-how test**: a question about what the product should *do*
 §4, never settle it here. An approved plan carries no unresolved decisions.
 
 Every ruling lands in the `decisions` list with the alternative it rejected and
-the units it binds; anything raised that belongs to a later plan goes to
-*Parked* before the next question — and what remains of an item this element
+the units it binds; anything raised that belongs to a later plan goes to a
+`docs/memory/gaps/` record before the next question, per the parked-scope rule
+in `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, and to *Parked* when §7 writes the
+folder — and what remains of an item this element
 lands one piece of goes there as a `- Bnn: <piece>` line, at least one per
 `backlog_pieces` id, naming the chained folder where one already covers the
 piece. The **priority** (item 12) is stated as a fact, never asked: no folder
@@ -343,7 +346,8 @@ state what it returns: `10 + max` over the `priority` of every unarchived
 `requires` row in the base repo's `docs/plans/index.json`, or `10` when the
 plan requires none of them — and which row it stands on. Item 10a places the
 `review` unit(s) — one after the last code unit by default, an earlier one
-only on a ruling recorded in the `decisions` list. Items 16–17 produce the
+only on a ruling recorded in the `decisions` list. Item 10b writes
+`execution`, with its reason in the `decisions` list. Items 16–17 produce the
 consent: the landing answer and the `after_landing` steps each carrying `run`
 — a step not confirmed `run` is dropped; a cycle plan carries no release step,
 as a release is always a hand step with `/release`; the `consent.lsp` answers
@@ -363,12 +367,14 @@ yes, `/vwf:execute all` ends after this plan and reports "restart, then
 
 ### 6. Present the shape — the approval gate (per chain element)
 
-**Nothing is written to disk before this gate.** Present the folder's sections
-per `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
+**Nothing is written to disk before this gate, save a parked record (§5).**
+Present the folder's sections per
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
 weight and confirmed one at a time: the goal and the Slice (chain position);
 the assumed decisions, every ruling with its rejected alternative and every
 drift entry; the unit map — id, wave, owns, depends-on, the reason each unit
-in a later wave waits, the failing test each names; every new dependency
+in a later wave waits, the failing test each names; the execution mode, with
+its reason; every new dependency
 (package, what for, which unit); the unit gate, the wave gate and the plan
 gate, the after-landing steps, the gates the orchestrator keeps, and the
 derived priority with its arithmetic; the consent, the LSP answers and the
@@ -384,8 +390,9 @@ advisory, when any; the parked list. Then wait for explicit approval. Offer:
   chain elements, and end with the command for the next one,
   `/vwf:plan <slice>` — no launch block.
 - **Reject** — then either **Revise** (apply feedback to the section named,
-  re-present, looping until approved or abandoned) or **Abandon** (nothing is
-  on disk; leave a one-line note of what was decided so the next attempt can
+  re-present, looping until approved or abandoned) or **Abandon** (no folder is
+  on disk, and a parked record stays; leave a one-line note of what was
+  decided so the next attempt can
   recall it — and abandon the chain's downstream elements too, since they stand
   on it).
 
@@ -510,8 +517,9 @@ Then the **rulings review**, item 20 of
 the user one at a time and written into the folder, looped until `NO GAPS`,
 four rounds at most. A gap that is a hole in the blueprint contract, not in the
 plan, is routed back through `/vwf:blueprint` as §4 routes any blueprint gap,
-and the folder waits for it. These are the last questions the plan gets —
-`/vwf:execute` asks none.
+and the folder waits for it. These are the last questions the plan gets
+before the run — `/vwf:execute` asks only what the plan missed, and each such
+question is the planner's miss.
 
 ### 8. Hand off
 
@@ -542,8 +550,9 @@ In this order.
      a folder still untracked at hand-off gets swept into some later wave's
      commit. The index row rides the same commit for the same
      reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder** and `docs/plans/index.json`, and
-     nothing else — the `plan-management` edit rides this commit and that
+   - **stage exactly the plan folder**, `docs/plans/index.json` and each
+     parked record this interview wrote to `docs/memory/gaps/`, and nothing
+     else — the `plan-management` edit rides this commit and that
      skill never commits; step 2 changed nothing in the tree
    - **commit** with type `docs` and the message
      `docs: plan — <slice> — approved, awaiting execution`
@@ -552,8 +561,9 @@ In this order.
      git-workflow's push rule wants; do not ask again
 
    Under `multi-repo` the folder and the index are two repos: two commits,
-   the member's (the folder) first, the base's (the index row) last, both
-   pushed. The backlog project is the base's — resolved from the base's remote
+   the member's (the folder) first, the base's (the index row and each
+   parked record) last, both pushed. The backlog project is the base's —
+   resolved from the base's remote
    — so a member session addresses the same project and commits nothing for
    it.
 
@@ -603,7 +613,8 @@ the one to run first.
 
 ## What this skill never does
 
-- Writes anything to disk before the gate in §6 is approved
+- Writes anything to disk before the gate in §6 is approved, save a parked
+  record
 - Executes a unit, edits a file the plan names, or bumps a version
 - Asks two things in one turn, or asks what the blueprint, the surveyor or the
   repo already answers

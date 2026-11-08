@@ -1,7 +1,7 @@
 # Decision — init's forge pass: visibility, licence by visibility, default branch, protection, backlog project
 
 **Date** 2026-09-20 · **Branch** `2026-09-20-init-forge-pass` · **Plan**
-[`docs/plans/2026-09-20-init-forge-pass/`](../../plans/2026-09-20-init-forge-pass/index.md)
+`docs/plans/2026-09-20-init-forge-pass/`
 · **Reverses** §forge (D17 and its 2026-09-12 supersession) of
 [`2026-09-06-init-owns-the-first-commit.md`](./2026-09-06-init-owns-the-first-commit.md)
 and "The D17 reversal" of

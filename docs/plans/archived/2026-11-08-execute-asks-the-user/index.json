@@ -1,0 +1,823 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Make /vwf:execute ask the user in place of leaving open gaps",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-08 — 934c692b a8386029 344ebec7 9041fe4f b5731b9d d0e52cd3 43e1917b"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "the progress pane tests and the strict plugin validation, which CI does not run: claude plugin test plugins/vwf and claude plugin validate --strict plugins/vwf, from the worktree root",
+        "pass": "both exit 0, and the new waiting-state tests are among those that ran"
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "a /vwf:execute run now asks the user when the plan is silent, and the progress pane shows a waiting state: new behaviour"
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "the manual changes to describe the interactive run"
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Log the question and the answer",
+      "wave": 1,
+      "file": "01-log-and-hook.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/scripts/log.mjs",
+        "plugins/vwf/hooks/action-log.mjs",
+        "plugins/vwf/skills/execute/references/action-log.md",
+        "scripts/src/execute-log.test.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.169Z",
+      "ended": "2026-11-08T09:34:29.082Z",
+      "commit": "934c692b",
+      "rounds": 2
+    },
+    {
+      "id": "U2",
+      "title": "Show a waiting state in the progress pane",
+      "wave": 1,
+      "file": "02-pane.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/hooks/monitor/**",
+        "plugins/vwf/types/index.d.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.372Z",
+      "ended": "2026-11-08T09:34:29.182Z",
+      "commit": "a8386029",
+      "rounds": 1
+    },
+    {
+      "id": "U3",
+      "title": "Write the question protocol into the execute skill",
+      "wave": 1,
+      "file": "03-protocol.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/SKILL.md",
+        "plugins/vwf/skills/execute/references/questions.md",
+        "plugins/vwf/skills/execute/references/rules.md",
+        "plugins/vwf/skills/execute/references/blocking.md",
+        "plugins/vwf/skills/execute/references/pause.md",
+        "plugins/vwf/skills/execute/references/waves.md",
+        "plugins/vwf/skills/execute/references/final-report.md",
+        "plugins/vwf/skills/execute/references/edit-unit.md",
+        "plugins/vwf/skills/execute/references/code-unit.md",
+        "plugins/vwf/skills/execute/references/review-unit.md",
+        "plugins/vwf/skills/execute/references/acceptance-and-ux.md",
+        "plugins/vwf/skills/execute/references/setup.md",
+        "plugins/vwf/skills/execute/references/plan-files.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/format-check.md",
+        "plugins/vwf/skills/execute/references/preflight.md",
+        "plugins/vwf/assets/memory.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.549Z",
+      "ended": "2026-11-08T09:34:29.275Z",
+      "commit": "344ebec7",
+      "rounds": 2
+    },
+    {
+      "id": "U4",
+      "title": "Relay a question through the all loop",
+      "wave": 1,
+      "file": "04-all-loop.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/workflows/all.md",
+        "plugins/vwf/skills/execute/workflows/next.md",
+        "plugins/vwf/skills/execute/workflows/folder.md",
+        "plugins/vwf/agents/execute-runner.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.735Z",
+      "ended": "2026-11-08T09:34:29.367Z",
+      "commit": "9041fe4f",
+      "rounds": 2
+    },
+    {
+      "id": "U5",
+      "title": "Give the agents, the template and the planners the QUESTION block",
+      "wave": 1,
+      "file": "05-agents-and-template.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/agents/execute-coder.md",
+        "plugins/vwf/agents/execute-code-reviewer.md",
+        "plugins/vwf/agents/execute-security-reviewer.md",
+        "plugins/vwf/agents/execute-acceptance-verifier.md",
+        "plugins/vwf/agents/execute-ux-reviewer.md",
+        "plugins/vwf/agents/plan-rulings-reviewer.md",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/vwf/skills/plan/SKILL.md",
+        "plugins/vwf/skills/change-plan/SKILL.md",
+        "plugins/vwf/skills/change-plan/references/self-review.md",
+        "plugins/vwf/skills/verify/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.898Z",
+      "ended": "2026-11-08T09:34:29.469Z",
+      "commit": "b5731b9d",
+      "rounds": 2
+    },
+    {
+      "id": "U6",
+      "title": "Review: the log script, the hook, the pane and the protocol",
+      "wave": 2,
+      "file": "06-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:44:30.486Z",
+      "ended": "2026-11-08T09:45:40.778Z",
+      "commit": "",
+      "rounds": 1,
+      "range": {
+        "from": "d5fa9db4",
+        "to": "2957b79d"
+      }
+    },
+    {
+      "id": "U7",
+      "title": "Docs",
+      "wave": 3,
+      "file": "07-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/**",
+        "site/src/pages/index.astro",
+        "site/src/pages/llms.txt.ts",
+        "readme.md",
+        "CLAUDE.md",
+        ".claude/docs/**",
+        ".claude/skills/vwf-plugin/**",
+        "docs/memory/decisions/2026-11-08-execute-asks-the-user.md",
+        "docs/design/site/option-a-drafting-table/Option A Drafting Table - Landing.dc.html",
+        "docs/design/site/option-b-manual/Option B Manual - Landing.dc.html",
+        "docs/design/site/option-c-schematic/Option C Schematic - Landing.dc.html",
+        "docs/design/site/final/Site - Landing.dc.html",
+        ".claude/skills/skill-kit/references/archetype-workflow.md",
+        ".claude/skills/skill-kit/references/standard.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T09:46:23.409Z",
+      "ended": "2026-11-08T09:53:09.801Z",
+      "commit": "d0e52cd3",
+      "rounds": 2
+    },
+    {
+      "id": "U8",
+      "title": "Gates",
+      "wave": 4,
+      "file": "08-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/.claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U7"
+      ],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-08T10:01:55.328Z",
+      "ended": "2026-11-08T10:03:48.323Z",
+      "commit": "43e1917b",
+      "rounds": 1
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-11-08T09:28:34.114Z",
+      "ended": "2026-11-08T09:44:23.468Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-11-08T09:44:30.451Z",
+      "ended": "2026-11-08T09:46:04.372Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-11-08T09:46:23.371Z",
+      "ended": "2026-11-08T10:01:48.731Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-11-08T10:01:55.293Z",
+      "ended": "2026-11-08T10:04:48.528Z"
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated from the plugin manifests; regenerating mid-wave races",
+      "owner": "U8"
+    },
+    {
+      "id": "S2",
+      "file": "readme.md, CLAUDE.md, site/src/content/docs/**, .claude/docs/**, .claude/skills/vwf-plugin/**",
+      "why": "human-facing docs that every unit's change falsifies",
+      "owner": "U7"
+    },
+    {
+      "id": "S3",
+      "file": "plugins/vwf/skills/execute/references/questions.md",
+      "why": "new file that U3 creates; U4 and U5 cite it by path and section name, never edit it",
+      "owner": "U3"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Which points must a run ask the user about, in place of recording an assumption and continuing?",
+      "ruling": "Every would-be open gap: a unit's assumption (the old GAP and GAPS lines), an UNRESOLVED ruling, a reviewer's SPEC GAPS or PLAN GAPS line, a contested finding and an oscillation. A closed gap, which the run settled with no ruling owed (an Owns widened under the Goal, a finding a later round resolved, a citation corrected), stays recorded and is not asked.",
+      "rejected": "Ask only about assumptions that change behaviour, a contract or the scope; ask only about the GAP and UNRESOLVED lines of units.",
+      "units": [
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "How does a question reach the user and the answer reach the unit?",
+      "ruling": "A unit cannot wait live. It ends its turn with the QUESTION block of D3, and its edits stay uncommitted in the worktree. The orchestrator asks the user with AskUserQuestion, one question per call, one at a time, and the other units of the wave continue. It records the answer per D5, then resumes the unit with SendMessage to the unit's agent id (a teammate by its name), the message carrying each question id and its answer. If the SendMessage fails, it dispatches the unit again with the same prompt plus the questions and answers, and a note that its earlier edits are in the worktree. No gate and no commit runs while a question of the wave is open or a resumed unit still works.",
+      "rejected": "A unit that sends its question with SendMessage and waits live: a subagent cannot receive a reply before its turn ends.",
+      "units": [
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "What is the shape of a question in a unit's return block?",
+      "ruling": "The unit return block drops the GAP: and UNRESOLVED: lines and gains three lines per question, n counting from 1 in the block: `QUESTION Q<n>: <the question, readable alone>`, `OPTIONS Q<n>: <option 1, the recommendation> | <option 2> [| <option 3> | <option 4>]` with two to four options, each with its consequence after an em dash, and `WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>`. A block with no question carries the one line `QUESTION: none`. The CHANGED, DECIDED and DOCS FALSIFIED lines stay. A GAP:, GAPS: or UNRESOLVED: line from a folder written before this plan is read as a question with no options, and the orchestrator writes the options itself. The read-only reviewers and verifiers (code, security, acceptance, ux, the wave reviewer) return their SPEC GAPS or PLAN GAPS lines as these QUESTION lines too.",
+      "rejected": "Keep GAP: and UNRESOLVED: beside QUESTION.",
+      "units": [
+        "U1",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "When does a unit return its questions?",
+      "ruling": "A unit completes every edit that does not depend on an answer, then returns all its open questions in one block. It never builds on a part that an answer can change.",
+      "rejected": "Stop at the first question.",
+      "units": [
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "Where is an answer recorded?",
+      "ruling": "Each answer is one entry appended to the folder's decisions list with the next D<n>: `decision` is the question, `ruling` is the answer as the user gave it, `rejected` is the options not taken, joined by `; `, or `none` for a free-text answer, and `units` is the asking unit. The schema does not change. The orchestrator logs `log.mjs event question --id <unit>-Q<n> --unit <unit> --text <question>` as it asks, and `log.mjs event answer --id <unit>-Q<n> --decision D<n>` once it records the answer. An unanswered question (D7) is one open entry of gaps, its text starting `QUESTION: `, and one gap event of class `question`. The hook logs each QUESTION Q<n>: line of a subagent report the way it logs a GAP: line today, as class `question`.",
+      "rejected": "A new key in index.json for questions, which needs a schema change and new fixtures.",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "How does a question reach the user under /vwf:execute all, where the runner is a subagent?",
+      "ruling": "A runner with an open question first waits until every unit it dispatched has returned, then returns the return block with `OUTCOME: QUESTION` and, after the five lines, the QUESTION, OPTIONS and WHY lines of each open question, each prefixed with its unit id (`QUESTION U3-Q1: …`). The loop asks the user each one, then resumes the runner with SendMessage, the message carrying each id and its answer. The resumed runner records the answers per D5 and dispatches a fresh unit for each asking unit, with its prompt plus the questions, the answers and the note that its earlier edits are in the worktree; a fresh dispatch from the runner returns its result in the same turn. If the SendMessage to the runner fails, the loop dispatches a fresh runner on the same folder, with an `Answers:` block after the overrides block, one line per id and answer; that runner appends each answer per D5 before its resume path runs. The loop still reads no unit report: the QUESTION lines are part of the runner's return block.",
+      "rejected": "The runner resumes its unit with SendMessage (tested 2026-11-08: the unit's reply goes to the top session, not to the runner); the loop forwards the unit's reply; no questions under all.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "What does a run do when no one can answer?",
+      "ruling": "In an open session the orchestrator waits at the question for as long as necessary, with no timeout. A run where AskUserQuestion is not available or fails (a headless run such as claude -p) records each question as an open gap per D5, marks the unit unresolved, marks its dependents skipped, continues every unit that does not depend on it, and stops at the final report with the resume command. No run takes an assumption. A resource-cap pause (H5) with a question still open records it the same way before the handoff. A resume asks every open gap whose text starts `QUESTION: ` before it re-runs the unit, and resets that gap to closed with the answer once it is recorded.",
+      "rejected": "An --unattended argument that restores the old behaviour; stop the whole run at the first question.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Which stops become questions?",
+      "ruling": "H7 (a security or breaking-API finding that does not converge), H8 (an uncovered irreversible or outward-facing decision, a wave order the written order cannot settle, blocking format drift) and a unit whose own Verification fails after the one mechanical re-dispatch. The orchestrator asks; the answer authorises that one action and the run continues. An answer that needs a path outside the unit's Owns widens the Owns under the existing rule, recorded as a closed gap that names the decision. H1, H2, H3, H4 and H5 stay stops. The plan's recorded merge consent does not change, and no answer widens it.",
+      "rejected": "Keep H7 a pause; ask at H8 only.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "What happens to a contested finding or an oscillation at the end of a review loop?",
+      "ruling": "The orchestrator asks the user about each one when its loop ends, after the closing pass, with the reviewer's recommendation as the first option. An answer to fix runs one targeted fix of that finding and a narrow check in the form of the closing pass, never a new round; if the finding is still open, the orchestrator asks again. An answer to accept records the decision, and no gap stays open. The security and breaking-API findings keep their own rule: always fixed, and H7 is the question of D8.",
+      "rejected": "Record a contested finding as an open gap in the final report.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Does the progress pane show that a run waits for an answer?",
+      "ruling": "Yes. While the plan's action log has a `question` event with no later `answer` event of the same id, the pane shows the phase `question`: the text `waiting for your answer` and the question text, and never `paused or stopped`, however old the last line is.",
+      "rejected": "Park the pane change.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "What does a teammate do when a peer does not answer its message?",
+      "ruling": "Rule 6 of 2026-11-06 stays: a teammate never waits for a peer's reply. When no answer came, it writes the point as a QUESTION in its block, not as a GAP:, and the orchestrator asks the user.",
+      "rejected": "None; this follows from D1.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "How does this plan relate to backlog item B110, which asks execute to decide fix-or-park without the user?",
+      "ruling": "This plan wins, and B110 stays open. Each question puts the agent's recommendation first, so a good recommendation takes one answer. A later plan for B110 can let the run accept routine recommendations alone if the questions prove too many, and can rule on the review-loop exit.",
+      "rejected": "Close B110 as replaced; merge B110 into this plan.",
+      "units": [
+        "U7"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Which execution mode does this plan use?",
+      "ruling": "teams. Wave 1 holds five edit units whose boundaries are close: U3 writes the protocol that U4 and U5 cite, and U1 and U2 share the event names. D3 and D5 fix the shapes, so talk is a help and never a precondition.",
+      "rejected": "solo.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Does this change plan need a review unit?",
+      "ruling": "Yes, one, U6 in wave 2, covering U1 to U5: log.mjs, the action-log hook and the pane are runnable code.",
+      "rejected": "The wave review alone.",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Does the execute-runner agent need new tools?",
+      "ruling": "No. The loop resumes the runner and asks the user; the runner only dispatches fresh units, which it can do today. Its tools line does not change. This corrects the user's first wording of the all ruling, which expected a change.",
+      "rejected": "Add SendMessage and AskUserQuestion to the runner.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "How is the part that a diff cannot prove verified?",
+      "ruling": "The run keeps one check, K1: claude plugin test plugins/vwf passes, which covers the pane. A whole interactive run is parked: docs/memory/gaps/2026-11-08-interactive-execute-real-run-test-parked.md.",
+      "rejected": "A nested headless claude -p smoke run in a scratch repo, which proves only the headless stop.",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Does this reverse a standing decision, and what stays?",
+      "ruling": "It reverses D9 of docs/memory/decisions/2026-10-07-plans-carry-every-answer.md (an uncovered decision was a blocking-gap stop, and pause-and-ask was rejected), the 'execute asks nothing at run time' rule, and the 'questions that block' alternative rejected in 2026-11-06-execution-solo-teams.md. The planners keep their full interview: they still ask every question they can before the run, and a run question exists only for what the plan missed. The session question and the run-level questions of all stay as they are.",
+      "rejected": "Also shorten the planner interview.",
+      "units": [
+        "U3",
+        "U4",
+        "U5",
+        "U7"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "What if an answer stops the unit or goes beyond the plan?",
+      "ruling": "An answer that says to stop, or that needs a change outside the plan's Goal, is recorded per D5, the unit is marked unresolved with the answer as detail, and the run continues as for an isolated block today: dependents skipped, the run stops at the final report. A unit that returns a further question after its resume is asked again; there is no cap, because the user can always answer stop.",
+      "rejected": "A cap on the number of questions per unit.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings gap 1: log.mjs checks a schema only for an event that takes JSON on stdin, so a --key question or answer event is never checked. Which form do the two events take?",
+      "ruling": "The question and answer events take JSON on stdin, as row and gap do, so their strict schemas run: `log.mjs event question` with one JSON object on stdin, and `log.mjs event answer` the same. This replaces the --key command lines of D5; the keys are unchanged.",
+      "rejected": "event() checks every --key event against SCHEMAS when a schema exists.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings gap 2: the hook copies GAP: lines into agent.end gaps as plain strings, with no class. How does it treat a QUESTION Q<n>: line?",
+      "ruling": "As a plain string in the same agent.end gaps list, exactly as a GAP: line, with no class. QUESTION: none is not copied. Only the orchestrator question and answer events say which questions are open. This replaces the hook sentence of D5.",
+      "rejected": "A separate questions list on agent.end.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings gap 3: is the gap event of class question wanted, and how is an open question told from an answered one?",
+      "ruling": "Open versus answered comes only from the question and answer events: a question event with no later answer of the same id is open. The gap event of class question is written only when a question goes into the folder gaps list unanswered (D7), as every gaps append already writes one gap event. The pane and summary do not use it for the open test.",
+      "rejected": "Drop the class and log an unanswered question as class GAP.",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings gap 4: a unit numbers its questions from Q1 in each block, so ids repeat across resumes and rounds. How do question ids stay unique?",
+      "ruling": "A unit Q<n> is local to its block. The orchestrator (a runner, under all) gives each question a plan-wide id Q<n>, one past the highest question id in the plan action log, and uses it in the question and answer events, in the decisions entry text, in the resume message and in the runner return block. The event id pattern is ^Q[0-9]+$, and the owner goes in the unit key. This replaces the <unit>-Q<n> ids of D5 and D6.",
+      "rejected": "An id of <unit>-R<round>-Q<n>, which still repeats after a resume in the same round.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Rulings gap 5: what owns a question that comes from no unit (acceptance, ux, setup H8, a wave order, the wave reviewer)?",
+      "ruling": "The owner is the unit the question is about when there is one, for example the unit a wave-review finding names. Otherwise it is the stage name: setup, acceptance, ux, or W<n> for a wave. The question event unit key takes either form (^(U[0-9]+|W[0-9]+|setup|acceptance|ux)$). The decisions entry units list is that unit, or [] for a stage. An unanswered stage question is a gaps entry with unit \"\" and stage set to the stage name.",
+      "rejected": "Always a stage name, which leaves the resume no unit to give the answer to.",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Rulings gap 6: under all, what does a resumed runner do with an answer that is not for a unit (a reviewer or verifier, setup H8, H7, a stage)?",
+      "ruling": "Exactly what questions.md says for a folder run, by owner: a unit gets a fresh dispatch with the answer, a review finding goes into its loop-back or the fix of D9, H7 and H8 do the one authorised action, a stage answer continues that stage. The only difference under all: a runner never resumes an agent with SendMessage; it always dispatches fresh. A runner runs solo, so it has no teammates.",
+      "rejected": "Relay unit questions only, and stop the runner as STOPPED on the rest.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Rulings gap 7: the existing AskUserQuestion hook closes the pane while a question dialog is on screen, so the waiting state shows only before and after the dialog. Accepted?",
+      "ruling": "Accepted. The pane steps aside while the dialog is on screen, and shows the waiting state at all other times. U2 does not change the hook at register.tsx:993-1004. The tests cover the state, not the dialog.",
+      "rejected": "Change the hook so the pane stays open beside the dialog.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Rulings gap 8: does a run answer also write a docs/memory/decisions/ file?",
+      "ruling": "Every answer goes into the folder decisions list (D5). An answer that sets a rule beyond this plan (a convention, a doctrine) also becomes a docs/memory/decisions/ file, under the existing run rule for durable decisions in execute-stages.md and rules.md. A one-off answer about this plan edit writes no memory file.",
+      "rejected": "Folder only, always; a memory file for every answer.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Rulings gap 9: preflight.md:57 (an unattended teams run) and :72 (the run asks nothing about the LSP answer) are falsified and owned by no unit.",
+      "ruling": "U3 owns plugins/vwf/skills/execute/references/preflight.md. It rewords :57 for a run that can ask, and rewords :72 to keep its meaning without the words asks nothing: the LSP answer is in the folder, so the run does not re-ask it.",
+      "rejected": "Narrow the grep check and leave the file.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Rulings gap 10: plugins/vwf/skills/plan/SKILL.md:520 says /vwf:execute asks none, outside U5 edit 7.",
+      "ruling": "U5 edit 7 also covers line 520 with the D17 wording, and U5 grep check adds the pattern asks none.",
+      "rejected": "Leave line 520.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Rulings gap 11: site/src/pages/index.astro:34,132,139,150,181,246 and site/src/pages/llms.txt.ts:14 say builds unattended and autonomously, outside U7 owns.",
+      "ruling": "U7 owns both files and rewords each passage so that it does not claim the run never asks. The home page is marketing text: keep its tone, remove only the false claim.",
+      "rejected": "Out of scope, parked.",
+      "units": [
+        "U7"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Rulings gap 12: plugins/vwf/.claude-plugin/plugin.json:12 says an autonomous execute, and the generator copies it into .claude-plugin/marketplace.json:47.",
+      "ruling": "U7 owns plugin.json and edits its description line alone, to wording that holds for a run that asks. The version does not change. U8 regenerates marketplace.json, which then changes.",
+      "rejected": "Leave the description.",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Rulings gap 13: U8 expected no marketplace change, so its commit would be empty.",
+      "ruling": "Settled by D30: the description change makes p:plugins:marketplace rewrite .claude-plugin/marketplace.json, so U8 commits that file. If the generator still changes nothing, U8 makes no commit and reports it.",
+      "rejected": "An empty commit.",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Rulings gap 14: does a stop answer (D18) also write an open gap?",
+      "ruling": "Yes. A stop answer writes its decisions entry and one open gaps entry whose text starts STOPPED: and names the answer, owned as D23 says. The unit is unresolved and the run stops at the final report; the open gap keeps the work visible until a person rules on it.",
+      "rejected": "The decisions entry only.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Rulings round 2 gap 1: a U7 commit of plugin.json fires the p:plugins:marketplace --check pre-commit hook, which fails until U8 regenerates marketplace.json.",
+      "ruling": "The plugin.json description edit moves to U8, the gates unit. U8 owns plugins/vwf/.claude-plugin/plugin.json and .claude-plugin/marketplace.json, edits the description line alone (no version), runs the generator, and both files ride one commit. This replaces the U7 part of D30.",
+      "rejected": "U7 runs the generator, which breaks the rule that only the gates unit runs one.",
+      "units": [
+        "U7",
+        "U8"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Rulings round 2 gap 2: /vwf:verify (plugins/vwf/skills/verify/SKILL.md:136) reads the acceptance verifier SPEC/PLAN GAPS: line, which U5 replaces.",
+      "ruling": "U5 owns plugins/vwf/skills/verify/SKILL.md. Verify reads the QUESTION lines in place of the old line and reports them as it reports the old line today. Verify does not become interactive in this plan.",
+      "rejected": "The verifier keeps the old line in environment mode, which gives the agent two return shapes.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Rulings round 2 gap 3: plugins/vwf/assets/memory.md:165-169 says a run subagent returns a GAP: line that the orchestrator appends to gaps; no unit owns it.",
+      "ruling": "U3 owns plugins/vwf/assets/memory.md and rewords those lines alone: a run subagent returns QUESTION lines, and the orchestrator asks them per the execute skill references/questions.md.",
+      "rejected": "U5 owns it.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Rulings round 2 gap 5: how does the orchestrator read the next question id?",
+      "ruling": "log.mjs gets one verb, next-question, that takes the same plan arguments as its other verbs and prints Q<n>: one past the highest question id in that plan action log, or Q1 when it has none. It writes nothing. U1 builds and tests it, U1 documents it in action-log.md, and U3 and U4 cite that exact verb. This replaces the choice left open in U1 edit 1.",
+      "rejected": "A summary line that the orchestrator parses.",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Rulings round 2 gap 6: a question left open by a pause or a failed ask would get a new id at the resume, so its old id is never answered.",
+      "ruling": "An unanswered question keeps its id. Its open gaps entry text starts QUESTION Q<n>: (not QUESTION: ), so it carries the id. A resume asks it again under that same id and writes the answer event for it, which closes it in the pane and the summary. next-question never issues an id that the log already holds. A stopped run logs run.end, and the pane phase ended wins over question, so a stopped run does not show a wait. This amends the gap text prefix of D5 and D7.",
+      "rejected": "Write an answer event with decision none for the old id and ask under a new id.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Rulings round 2 gap 7: under all, a headless loop finds that it cannot ask only after the runner returned OUTCOME: QUESTION. Who does D7?",
+      "ruling": "The loop resumes the runner with SendMessage, the message reading no one can answer and naming each Q<n>. The runner then does D7 itself: it records each open gap, marks the units, continues the units that do not depend on them, and ends with the final report and a STOPPED return block. If the resume fails, the loop ends the row STOPPED with the open question ids in its detail, and the folder records them on its next resume. The loop still edits no folder.",
+      "rejected": "The runner tests for a person before it returns a question; a subagent cannot call AskUserQuestion, so it cannot know.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Rulings round 2 gap 8: what happens when no one can answer a question owned by a stage or a wave?",
+      "ruling": "The open gap is recorded with unit \"\" and stage set to the owner name. A setup or W<n> question blocks everything after it: the run marks every pending unit skipped, with the question id as detail, and goes to the final report. An acceptance or ux question sets that stage failed, and the run goes to the final report. Either way the run stops at the final report with the resume command, and the resume asks the question first (D37).",
+      "rejected": "Stop at once like a pause, with nothing marked.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D40",
+      "decision": "Rulings round 3, gaps 1, 3, 4, 6, 7 and 8, accepted together by the user.",
+      "ruling": "(1) U2 also owns plugins/vwf/types/index.d.ts, to add question to the RunPhase type; it only adds. (3) The question section of log.mjs summary is plan-wide, printed once after the per-run reports. (4) next-question reads the session active run marker, as the event verb does; with no active run it prints an error and exits 1. (6) Every gap text prefix in U3 and U5 is QUESTION Q<n>: per D37. (7) The U5 grep check covers only the five execute-* agents and the template; other agents keep their own GAPS lines. (8) summary is log.mjs:865-912, and its gaps block is 818-850.",
+      "rejected": "Review each separately.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Rulings round 3 gap 2: the pane ended phase comes from the folder status, so a question left open at a pause (folder RUNNING) would show waiting for your answer until the resume.",
+      "ruling": "The question phase holds only while the run that asked is still going: the open question event comes after the last run.start and no run.end follows it. When a run.end follows the open question, the pane shows the phase it shows today (paused, or ended from the folder status) and adds one line: open question: Q<n>, asked at the resume. This replaces the D37 sentence that a stopped run shows no wait because ended wins.",
+      "rejected": "Accept waiting for your answer until the resume.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Rulings round 3 gap 5: under all, when the loop cannot resume the runner, the open questions are in no gaps entry. How does the next resume find them?",
+      "ruling": "From the action log. Under all, the runner logs the question event of each question before it returns OUTCOME: QUESTION. A resume asks every question event in the plan action log that has no answer event, under its own id, as well as the open QUESTION Q<n>: gaps, each id once. This is the one exception to the rule that a resume never reads the action log to decide what to run. U3 writes the rule in questions.md and blocking.md, and U4 cites it in all.md and folder.md.",
+      "rejected": "The loop appends the questions to the folder gaps, which breaks the rule that the loop never edits a folder.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Rulings round 3 gap 9: tracked copy outside every owns still says unattended or autonomous: brag-output/** and the Landing design sources under docs/design/site/.",
+      "ruling": "brag-output/** is out of scope: it was a test and is not used. U7 owns the four Landing .dc.html design sources under docs/design/site/ (option-a, option-b, option-c, final) and removes the false claim from each, changing nothing else.",
+      "rejected": "Rewording brag-output; leaving the design sources.",
+      "units": [
+        "U7"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Rulings round 4, gaps 1 to 11, the recommended rulings accepted together by the user.",
+      "ruling": "(1) The stdin check is log.mjs:435-460. (2) U1 rewrites the three action-log.md sentences (a log call never stops a run; the log is never an input; never read the log for an id): question ids (D22, D36) and the resume of D42 are the one place a run reads the log. If next-question fails, the orchestrator takes the id one past the highest Q<n> in the folder decisions and gaps text, and continues. (3) The orchestrator logs the question event before each ask, whether the ask then succeeds or not. (4) The question event gains two required keys, options (the raw OPTIONS text) and why (the WHY text); a resume or a fresh runner re-asks from them and fills rejected from options. (5) U4 adds the Answers: block to all.md:92 (the dispatch prompt) and to the Inputs of execute-runner.md. (6) renders and reconcile are owners too, and the owner pattern is ^(U[0-9]+|W[0-9]+|setup|renders|acceptance|ux|reconcile)$; an unanswered one fails that stage per D39. The landing asks nothing: the consent rules hold. (7) U3 adds a Phases row to SKILL.md: Questions, gate user when the plan is silent, file references/questions.md, loads sometimes. (8) U7 owns .claude/skills/skill-kit/references/archetype-workflow.md and standard.md and rewords only the unattended-run reason. (9) U3 Edit 14 also covers execute-stages.md:221,249,303,320 per D9. (10) U2 Verification and K1 use claude plugin validate --strict plugins/vwf beside claude plugin test plugins/vwf. (11) The approval commit stages the parked record; no change.",
+      "rejected": "Accept the eleven as open gaps.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U7"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
+      "started": "",
+      "ended": "2026-11-08T09:46:16.439Z"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
+      "started": "",
+      "ended": "2026-11-08T09:46:16.221Z"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
+      "started": "",
+      "ended": "2026-11-08T09:46:16.329Z"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps and nothing to persist",
+      "started": "",
+      "ended": "2026-11-08T09:46:23.155Z"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "edit",
+      "text": "p:plugins:check failed on agent citations of questions.md before U3 created it · assumed it clears once U3 lands; closed: p:plugins:check green over the whole wave",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U4",
+      "stage": "edit",
+      "text": "p:plugins:check and code:format red on teammates files while the wave ran · assumed they clear once the wave lands; closed: p:plugins:check green over the whole wave, code:format runs at the unit gate",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "U5 never got the questions.md section names from U3 · U5 cites questions.md by path; closed: the wave 1 review found every questions.md citation correct after round 1",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "No ruling says how a recorded fact of the run (no harness, no capture, short coverage, a failed render copy) is treated once gaps become questions · the orchestrator kept it an open gap that is not asked, as before this plan, so the landing rules do not change; closed 2026-11-08: the user ruled to keep this behavior as is",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U3",
+      "stage": "edit",
+      "text": "The wave 1 closing-pass check found that final-report.md:17 listed two kinds of open gap after the recorded-fact fix · closed: U3 added the third kind (recorded facts, no resume command)",
+      "state": "closed"
+    },
+    {
+      "id": "G6",
+      "unit": "U8",
+      "stage": "edit",
+      "text": "The generator also rewrote the gitignored dev marketplace manifest · closed: a gitignored file, rewritten on every generator run by design; nothing to commit",
+      "state": "closed"
+    }
+  ],
+  "overrides": [],
+  "run": {
+    "worktree": ".worktrees/execute-asks-the-user",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-08-execute-asks-the-user.jsonl"
+  }
+}

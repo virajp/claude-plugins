@@ -7,7 +7,7 @@
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-gates` ·
 **Plan**
-[`docs/plans/2026-10-01-tool-config-script-gates/`](../../plans/2026-10-01-tool-config-script-gates/index.md)
+`docs/plans/2026-10-01-tool-config-script-gates/`
 (ruling G4) · **Supersedes** `vwf:init`'s new-repo §9 trust step and §10
 aggregator offer, as recorded in
 [`2026-09-06-init-owns-the-first-commit.md`](./2026-09-06-init-owns-the-first-commit.md)

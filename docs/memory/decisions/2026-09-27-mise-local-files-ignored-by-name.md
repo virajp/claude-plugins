@@ -2,7 +2,7 @@
 
 **Date** 2026-09-27 · **Branch** `2026-09-27-dash-names-and-mise-ignores` ·
 **Plan**
-[`docs/plans/2026-09-27-dash-names-and-mise-ignores/`](../../plans/2026-09-27-dash-names-and-mise-ignores/index.md)
+`docs/plans/2026-09-27-dash-names-and-mise-ignores/`
 · **Backlog** B73 · **Supersedes**
 [`2026-09-26-mise-conf-d-layout.md:15`](./2026-09-26-mise-conf-d-layout.md) on
 where the uncommitted local files are ignored, and closes that memo's open gap

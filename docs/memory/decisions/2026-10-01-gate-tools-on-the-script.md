@@ -2,7 +2,7 @@
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-gates` ·
 **Plan**
-[`docs/plans/2026-10-01-tool-config-script-gates/`](../../plans/2026-10-01-tool-config-script-gates/index.md)
+`docs/plans/2026-10-01-tool-config-script-gates/`
 (rulings G1, G2, G5, G6, G7, G9) · **Supersedes**
 [`2026-10-01-pack-entries-are-structured.md`](./2026-10-01-pack-entries-are-structured.md)
 D10 ("mise only, for now") for these four tools and `all`, and the string verbs

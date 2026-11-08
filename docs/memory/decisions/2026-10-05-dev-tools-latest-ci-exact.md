@@ -1,7 +1,7 @@
 # Decision — dev tools pin `latest`, what CI loads pins exact
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-10-01-mise-lockfile-dropped-exact-pins.md`](./2026-10-01-mise-lockfile-dropped-exact-pins.md)
 D2 (every pin the script writes is exact) and

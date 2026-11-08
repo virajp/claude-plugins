@@ -164,9 +164,11 @@ stated. Gaps are captured **as they surface**, never silently worked around.
 
 **During a run** each stage subagent that hits a gap — the coder, the review
 and security reviewers, the acceptance verifier and the UX reviewer — returns
-it as a `GAP:` line in its report, and the orchestrator appends it to the
-`gaps` list of the plan folder's `index.json` — one `plan.mjs append`. That
-entry is the durable copy and the only one; reconcile works from it.
+it as `QUESTION` lines in its report, and the orchestrator asks them per
+`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`. The answer is
+one `decisions` entry of the plan folder's `index.json`; a question no one
+answered is one `gaps` entry there. That entry is the durable copy and the only
+one; reconcile works from it.
 
 **Outside a run** — `/vwf:blueprint`, `/vwf:verify`, `/vwf:feedback` — a gap is
 a `gaps` record, per *What a record holds*.

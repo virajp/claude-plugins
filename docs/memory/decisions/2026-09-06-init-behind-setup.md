@@ -1,7 +1,7 @@
 # Decision — `init` moves behind `/vwf:setup`, and the ids are confirmed first
 
 **Date** 2026-09-06 · **Branch** `2026-09-06-init-behind-setup` · **Plan**
-[`docs/plans/2026-09-06-init-behind-setup/`](../../plans/2026-09-06-init-behind-setup/index.md)
+`docs/plans/2026-09-06-init-behind-setup/`
 · **Reverses**
 [`2026-09-06-init-owns-the-first-commit.md`](./2026-09-06-init-owns-the-first-commit.md)'s
 re-run doctrine (*"`init` must be run at regular interval"*, and the **When to

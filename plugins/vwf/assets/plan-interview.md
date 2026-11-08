@@ -114,6 +114,12 @@ in `decisions` says why.
 earlier review unit covers, of any kind — not only the units that land
 code — so no finding in its range falls on a unit it does not cover.
 
+10b. **Execution mode.** `solo`, or `teams`, which asks that the `edit` units
+and the wave reviewer can send messages to each other; `code` units and
+`review` units do not change. Recommend `teams` when a wave holds two or more
+`edit` units, otherwise `solo`, and have the user confirm. The answer is
+`execution` in `index.json`, and its reason is an entry in `decisions`.
+
 11. **Model per unit.** Default is `opus`, written explicitly into every
     unit's `model` in `index.json`. A unit the user wants on a stronger or
     cheaper tier records that tier instead; `inherit` means the session's
@@ -179,19 +185,21 @@ code — so no finding in its range falls on a unit it does not cover.
       "restart, then `/vwf:execute all`". When the `owns` touch no such
       plugin it is written `false`, unasked.
 
-The executor asks nothing at run time — every answer is in the folder, save
-the run-level questions /vwf:execute all asks once, before its first plan. It
-follows the plan, and only a runtime stop ends a run. So the interview is not
-done while any question the run would otherwise raise is unanswered: every
-key of `consent` carries an answer, every after-landing step reads `run`, and
-every decision a unit or the executor would otherwise have to pause on is a
-ruling in the plan.
+The executor follows the plan, and asks the user at run time only what the
+plan missed — beside the run-level questions /vwf:execute all asks once,
+before its first plan. A run question is the planner's miss, never a second
+interview. So the interview is not done while any question the run would
+otherwise raise is unanswered: every key of `consent` carries an answer, every
+after-landing step reads `run`, and every decision a unit or the executor
+would otherwise have to pause on is a ruling in the plan.
 
 ## F. Parked
 
-Anything raised during A–E that belongs to a later plan is written to the
-*Parked* list of `index.md` before the next question is asked — never
-carried only in conversation. A Parked entry that belongs to a backlog item
+Anything raised during A–E that belongs to a later plan is written as a
+`docs/memory/gaps/` record, per the parked-scope rule in
+`${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, before the next question is asked —
+never carried only in conversation. When the folder is written, each point also
+goes to the *Parked* list of `index.md`. A Parked entry that belongs to a backlog item
 begins with its id — `- Bnn: <piece>` — naming the chained folder where one
 already covers the piece. Every `backlog_pieces` id needs at least one such
 line, and a `backlog` id has none; `plan.mjs validate` refuses a folder that
@@ -200,20 +208,20 @@ breaks either, names one id on both lists, or names a `source` id on neither.
 ## G. The gate
 
 19. **Present the shape** per the planner's gate step and ask once: approve,
-    revise or abandon. Only an explicit approve writes the folder — and the
-    hand-off commits and pushes it — and only a later explicit yes after
-    self-review sets `status.state` to `APPROVED`.
+    revise or abandon. Only an explicit approve writes the folder, and the
+    hand-off commits and pushes it and sets `status.state` to `APPROVED`. It
+    asks no second yes.
 20. **The rulings review.** At self-review, once the planner's own checks are
     fixed and while the folder is still `DRAFT` — `status.state` reads
     `DRAFT` — dispatch a fresh `plan-rulings-reviewer` subagent with the
     folder path and the repo root alone. It returns `NO GAPS` or a numbered
     `GAPS:` list — the cases the rulings leave open, which the run would
-    otherwise meet as gaps. Ask the user each gap **one at a time**, the same
-    way as A–E, and write each answer into the folder before the next
-    question: a new or amended entry of `decisions`, quoted in the unit file
-    it reaches, a unit's `owns` widened, or a Parked line. An answer that a
-    case is accepted or out of scope is a ruling too, and goes into
-    `decisions`. An answer that changes the wave of a unit is written with
+    otherwise stop to ask as questions. Ask the user each gap **one at a
+    time**, the same way as A–E, and write each answer into the folder before
+    the next question: a new or amended entry of `decisions`, quoted in the
+    unit file it reaches, a unit's `owns` widened, or a Parked line. An
+    answer that a case is accepted or out of scope is a ruling too, and goes
+    into `decisions`. An answer that changes the wave of a unit is written with
     one `plan.mjs rewave <file> <unit>=<wave>...` call — after a `set` of
     its `waits` when the unit moves above wave 1 — never by a whole-file
     rewrite. Then dispatch a fresh reviewer again, over the changed

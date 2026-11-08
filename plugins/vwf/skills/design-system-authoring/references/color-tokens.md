@@ -13,9 +13,9 @@ Roles to cover (only those the product uses):
 - **State** — success, warning, error, info (each with a text/surface pair).
 - **Interaction states** — hover, active, disabled, selected (as derivations).
 
-For each token, give: the light value, the dark value (if dark mode is in
-scope), a usage note, and the **contrast pairing** it must satisfy (text on
-surface ≥ 4.5:1; large text and UI components ≥ 3:1). Flag any token that fails
+For each token, give the light value, the dark value (if dark mode is in
+scope), and a usage note. Give the **contrast pairing** it must satisfy: text on
+surface ≥ 4.5:1, large text and UI components ≥ 3:1. Flag any token that fails
 its pairing.
 
 Name by role (`color.text.muted`), never by hue (`gray-500`). Dark mode is a set

@@ -9,6 +9,7 @@
   "gaps_of": [],
   "covers": ["docs/blueprint/flows/sign-in"],
   "exposure": "dark",
+  "execution": "teams",
   "status": {
     "state": "RUNNING",
     "detail": "RUNNING since 2026-10-24 10:00 in .claude/worktrees/sign-in"

@@ -1,7 +1,7 @@
 # Decision — the mise lockfile is dropped; every pin is an exact version
 
 **Date** 2026-10-01 · **Branch** `2026-10-01-tool-config-script-mise` · **Plan**
-[`docs/plans/2026-10-01-tool-config-script-mise/`](../../plans/2026-10-01-tool-config-script-mise/index.md)
+`docs/plans/2026-10-01-tool-config-script-mise/`
 · **Supersedes**
 [`2026-09-28-lock-files-tracked.md`](./2026-09-28-lock-files-tracked.md) on the
 one tracked mise lock, and

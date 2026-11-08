@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-21 · **Branch** `2026-09-20-init-brownfield-reads` · **Plan**
-[`docs/plans/2026-09-20-init-brownfield-reads/`](../../plans/2026-09-20-init-brownfield-reads/index.md)
+`docs/plans/2026-09-20-init-brownfield-reads/`
 · **Backlog** B28, piece D2, plan 3 of 5 · **Problem**
 [`2026-09-20-init-shape-audit.md`](../problems/2026-09-20-init-shape-audit.md)
 (candidates 5–10, 12, 13; B2, B4–B12, B14–B20, G4, G5, L4 init's half, L6, L7,

@@ -327,6 +327,103 @@ describe("log.mjs event row and gap", () => {
   });
 });
 
+describe("log.mjs event question and answer", () => {
+  const ask = (o: object) => log(["event", "question"], SID, JSON.stringify(o));
+  const answer = (o: object) => log(["event", "answer"], SID, JSON.stringify(o));
+  const q = {
+    id: "Q1",
+    unit: "U2",
+    text: "Which owner?",
+    options: "U2 — keeps it local | U3 — moves it",
+    why: "index.md Goal — silent on the owner",
+  };
+
+  it("writes a valid question and a valid answer", () => {
+    const file = startRun();
+    expect(ask(q).status).toBe(0);
+    expect(answer({ id: "Q1", decision: "D45" }).status).toBe(0);
+    const ev = lines(file).slice(2);
+    expect(ev[0]).toMatchObject({ event: "question", ...q });
+    expect(ev[1]).toMatchObject({ event: "answer", id: "Q1", decision: "D45" });
+  });
+
+  it.each(["W2", "setup", "renders", "acceptance", "ux", "reconcile"])(
+    "accepts a question owned by %s",
+    (unit) => {
+      startRun();
+      expect(ask({ ...q, unit }).status).toBe(0);
+    },
+  );
+
+  it.each([
+    ["no id", { id: undefined }],
+    ["a bad id", { id: "U1-Q1" }],
+    ["a bad unit", { unit: "wave" }],
+    ["no options", { options: undefined }],
+    ["no why", { why: undefined }],
+    ["empty text", { text: "" }],
+    ["an unknown key", { extra: 1 }],
+  ])("refuses a question with %s", (_, extra) => {
+    const file = startRun();
+    const before = readFileSync(file, "utf8");
+    expect(ask({ ...q, ...extra }).status).not.toBe(0);
+    expect(readFileSync(file, "utf8")).toBe(before);
+  });
+
+  it.each([
+    ["no decision", { id: "Q1" }],
+    ["a bad decision", { id: "Q1", decision: "G1" }],
+    ["a bad id", { id: "1", decision: "D1" }],
+  ])("refuses an answer with %s", (_, o) => {
+    const file = startRun();
+    const before = readFileSync(file, "utf8");
+    expect(answer(o).status).not.toBe(0);
+    expect(readFileSync(file, "utf8")).toBe(before);
+  });
+
+  it("refuses the --key form of question and answer with exit 2", () => {
+    startRun();
+    expect(log(["event", "question", "--id", "Q1"]).status).toBe(2);
+    expect(log(["event", "answer", "--id", "Q1"]).status).toBe(2);
+  });
+
+  it("accepts a gap of class question", () => {
+    const file = startRun();
+    const r = log(
+      ["event", "gap"],
+      SID,
+      JSON.stringify({
+        unit: "U2",
+        stage: "",
+        text: "QUESTION Q1: Which owner?",
+        state: "open",
+        class: "question",
+      }),
+    );
+    expect(r.status).toBe(0);
+    expect(lines(file).at(-1)).toMatchObject({ class: "question" });
+  });
+
+  it("next-question prints Q1, then one past the highest, counting a re-ask once", () => {
+    const file = startRun();
+    const next = () => log(["next-question"]);
+    expect(next().stdout).toBe("Q1\n");
+    ask(q);
+    ask({ ...q, id: "Q2" });
+    const n = lines(file).length;
+    expect(next().stdout).toBe("Q3\n");
+    expect(lines(file)).toHaveLength(n);
+    ask({ ...q, id: "Q2" });
+    expect(next().stdout).toBe("Q3\n");
+  });
+
+  it("next-question with no active run exits 1", () => {
+    const r = log(["next-question"]);
+    expect(r.status).toBe(1);
+    expect(r.stderr).toBe(`log.mjs: no active run in session ${SID}\n`);
+  });
+});
+
 describe("log.mjs prune", () => {
   function logFile(name: string, ageDays: number) {
     const f = join(root, "repo", `${name}.jsonl`);
@@ -475,6 +572,35 @@ describe("action-log hook", () => {
     expect(s.stdout).toMatch(/GAPS[\s\S]*the plan named no owner/);
   });
 
+  it("copies QUESTION Q<n>: lines like GAP: lines, and not QUESTION: none", () => {
+    const file = startRun();
+    const stop = (msg: string) =>
+      hook({
+        session_id: SID,
+        hook_event_name: "SubagentStop",
+        agent_id: "a1",
+        agent_type: "general-purpose",
+        last_assistant_message: msg,
+      });
+    stop(
+      "CHANGED: x\nQUESTION Q1: Which owner?\nOPTIONS Q1: a | b\nWHY Q1: w\n"
+        + "QUESTION Q2: Which name?\nGAP: took U3",
+    );
+    stop("CHANGED: y\nQUESTION: none");
+    stop("OUTCOME: QUESTION\nQUESTION Q4 U3: Which owner?\nQUESTION Q5 setup: Which pin?");
+    const ends = lines(file).filter((e) => e.event === "agent.end");
+    expect(ends[0].gaps).toEqual([
+      "QUESTION Q1: Which owner?",
+      "QUESTION Q2: Which name?",
+      "GAP: took U3",
+    ]);
+    expect(ends[1].gaps).toEqual([]);
+    expect(ends[2].gaps).toEqual([
+      "QUESTION Q4 U3: Which owner?",
+      "QUESTION Q5 setup: Which pin?",
+    ]);
+  });
+
   it("SessionEnd appends session.end to the strict schema and drops the marker", () => {
     const file = startRun();
     const id = lines(file)[0].run;
@@ -584,6 +710,15 @@ describe("action-log hook Bash summary", () => {
 });
 
 describe("log.mjs summary", () => {
+  it("prints each execution mode and its reason", () => {
+    const file = startRun();
+    log(["event", "execution", "--mode", "teams"]);
+    log(["event", "execution", "--mode", "solo", "--reason", "flag off"]);
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/EXECUTION teams\n/);
+    expect(s.stdout).toMatch(/EXECUTION solo — flag off/);
+  });
+
   it("pairs phases, rows, gaps and totals gates by tier", () => {
     const file = startRun();
     log(["event", "phase.start", "--phase", "wave", "--wave", "1"]);
@@ -621,6 +756,46 @@ describe("log.mjs summary", () => {
     expect(s.stdout).toMatch(
       /GAPS[\s\S]*L1\s+GAP\s+unit\s+U1\s+open\s+no ruling/,
     );
+  });
+
+  const ask = (id: string, text = "Which owner?") =>
+    log(
+      ["event", "question"],
+      SID,
+      JSON.stringify({ id, unit: "U1", text, options: "a | b", why: "w" }),
+    );
+  const answer = (id: string, decision: string) => log(["event", "answer"], SID, JSON.stringify({ id, decision }));
+
+  it("lists one answered and one open question, once for the plan", () => {
+    const file = startRun();
+    ask("Q1");
+    ask("Q2", "Which\nname?");
+    answer("Q1", "D45");
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/QUESTIONS[\s\S]*Q1\s+U1\s+answered: D45\s+Which owner\?/);
+    expect(s.stdout).toMatch(/Q2\s+U1\s+open\s+Which name\?/);
+    expect(s.stdout.match(/QUESTIONS/g)).toHaveLength(1);
+  });
+
+  it("shows a question asked twice, across two runs, then answered, as one line", async () => {
+    const file = startRun();
+    ask("Q1");
+    log(["end", "--outcome", "paused"]);
+    await new Promise((r) => setTimeout(r, 1100));
+    startRun("resume");
+    ask("Q1");
+    answer("Q1", "D46");
+    answer("Q9", "D47");
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/RUN 2 of 2/);
+    expect(s.stdout.match(/^Q1\s/gm)).toHaveLength(1);
+    expect(s.stdout).toMatch(/Q1\s+U1\s+answered: D46/);
+    expect(s.stdout).toMatch(/warning: answer Q9 has no earlier question/);
+  });
+
+  it("omits the questions section when there is none", () => {
+    const file = startRun();
+    expect(log(["summary", file]).stdout).not.toMatch(/QUESTIONS/);
   });
 
   it("reports each run and totals without the pause", () => {

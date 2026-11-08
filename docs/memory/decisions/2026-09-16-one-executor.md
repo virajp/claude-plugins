@@ -1,7 +1,7 @@
 # Decision — one executor: `/vwf:execute` runs every plan folder
 
 **Date** 2026-09-16 · **Branch** `2026-09-16-one-executor` · **Plan**
-[`docs/plans/2026-09-16-one-executor/`](../../plans/2026-09-16-one-executor/index.md)
+`docs/plans/2026-09-16-one-executor/`
 · **Reverses** nothing — this is the first Parked item of
 [`2026-09-16-plan-folders.md`](./2026-09-16-plan-folders.md) coming due, plan 2
 of 2, whose `requires:` names that folder · **Backlog** none

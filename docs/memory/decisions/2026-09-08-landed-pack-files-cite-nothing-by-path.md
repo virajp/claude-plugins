@@ -2,7 +2,7 @@
 
 **Date** 2026-09-08 · **Branch** `2026-09-08-checker-landed-citations` ·
 **Plan**
-[`docs/plans/2026-09-08-checker-landed-citations/`](../../plans/2026-09-08-checker-landed-citations/index.md)
+`docs/plans/2026-09-08-checker-landed-citations/`
 · **Gives an owner** to two rules that existed only as doctrine —
 `assets/output-tree.md`'s "the output works with no plugin installed", and a
 bundle-pin criterion that had lived as an acceptance line in an archived plan

@@ -7,7 +7,7 @@
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-vwf-callers-on-templates` ·
 **Plan**
-[`docs/plans/2026-10-05-vwf-callers-on-templates/`](../../plans/2026-10-05-vwf-callers-on-templates/index.md)
+`docs/plans/2026-10-05-vwf-callers-on-templates/`
 (F6, F8, F11) · **Backlog** B80 items 2 and 4
 
 ## What was decided before

@@ -1,7 +1,7 @@
 # Decision — `init` walks the members: one survey, one plan, one consent
 
 **Date** 2026-09-13 · **Branch** `2026-09-13-init-walks-the-members` · **Plan**
-[`docs/plans/2026-09-13-init-walks-the-members/`](../../plans/2026-09-13-init-walks-the-members/index.md)
+`docs/plans/2026-09-13-init-walks-the-members/`
 · **Reverses**
 [`2026-09-06-init-behind-setup.md`](./2026-09-06-init-behind-setup.md)'s **What
 stays outside** bullet on the target directory (*"`init`'s `[target-dir]` is not

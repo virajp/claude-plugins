@@ -1,124 +1,80 @@
 ---
 name: readme
-description: Create or update the repository's README — scan the codebase and
-  document it
-  with a title, short description, a project list, an architecture mermaid
-  diagram with notes, an infrastructure (cloud tools) section, a local
-  development setup guide, per-project sections (monorepo or multi-repo), and
-  the important task-runner commands. Follows the documentation-standards
-  skill.
+description: >-
+  Creates or updates the repository's README from a scan of the codebase: the
+  project list, an architecture diagram, infrastructure, local development, and
+  the task-runner commands. Use as /vwf:readme [target-dir]. Not for reconciling
+  docs after a change (use docs-sync).
 argument-hint: "[target-dir]"
 model: sonnet
 
+user-invocable: true
 disable-model-invocation: false
+metadata:
+  archetype: workflow
+  depends-on: [documentation-standards]
 ---
 
-# readme — Document the repo in its README
+# readme
 
-Scan the repository and write (or update) its **README**, following the
-**documentation-standards** skill (writing style, tables, and the mermaid
-diagram rules). Default the target to the current repo root; if `$ARGUMENTS`
-names a directory, operate on `<dir>`.
+Scans the repository and writes or updates its README, following the
+`documentation-standards` skill: writing style, tables, and the mermaid diagram
+rules. The target defaults to the current repo root. If `$ARGUMENTS` names a
+directory, operate on `<dir>`.
 
-Update an **existing** readme in place — preserve its filename and casing
-(`README.md` / `readme.md`); otherwise create `readme.md`. Lowercase is the
-default because every other file this toolkit lays at a repo root is lowercase,
-and a readme that shouts is the one exception nobody chose. An existing
-uppercase name is never renamed here — renaming is a repo-shape move, and
-`/vwf:init` is what makes it, as one line of a surveyed plan.
+## State
 
-## Required sections (in this order)
+| File                                                | Access      | Owner      |
+| --------------------------------------------------- | ----------- | ---------- |
+| the existing `README.md` or `readme.md`             | read, write | this skill |
+| `readme.md`, when the repo has no README            | written     | this skill |
+| the repo's manifests, configs and task-runner files | read        | the repo   |
+| `docs/blueprint/architecture.md`, if present        | read        | the repo   |
 
-The README must contain these, top to bottom:
+## Phases
 
-1. **Title** — the project name as the `#` H1.
-2. **Short description** — one or two sentences on what the project is and does.
-3. **List of projects** — every project/package in the repo (a table for a
-   monorepo; a single entry for a multi-repo member).
-4. **Architecture** — a `mermaid` diagram of how the projects/services fit
-   together, plus the important notes a reader needs (boundaries, data flow, key
-   decisions).
-5. **Infrastructure** — every cloud tool/service the repo uses.
-6. **Local Development** — a step-by-step guide to run the repo locally.
-7. **Projects** — one detailed section per project (monorepo) or a single
-   project section (multi-repo member).
-8. **Important tasks** — the commands a developer runs day to day, from the
-   repo's task runner (omit if the repo has none).
+| §   | Phase                                                                | Gate                           | File                            | Loads  |
+| --- | -------------------------------------------------------------------- | ------------------------------ | ------------------------------- | ------ |
+| 1–3 | Detect by a scan, ask what cannot be inferred, write the eight sections | user at §2, one batched round | [steps.md](references/steps.md) | always |
 
-When updating, **refresh these eight in place and keep every other section** an
-existing README has (License, Contributing, badges, …) — never delete them.
+## Detect signals
 
-## 1. Detect (scan the repo — do not assume)
+The tool names stay in this file, because the plugin checker allows them in
+`skills/readme/SKILL.md` and not in a reference. This skill documents a repo that
+it did not choose, so it has to recognize what is there.
 
-Gather the facts before writing:
+| Fact                    | Scan for                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Title and description   | The repo or package name (`package.json` `name`, `pubspec.yaml`, `Cargo.toml`, `pyproject.toml`, the git remote, or the directory name), and any existing description or tagline                                                                                                                                                                                                                                                                                                                                                                       |
+| Layout and projects     | Monorepo or multi-repo: `pnpm-workspace.yaml`, `package.json` `workspaces`, `melos.yaml`, `nx.json`, `turbo.json`, a Cargo `[workspace]`, `go.work`, or multiple package manifests in sub-directories                                                                                                                                                                                                                                                                                                                                                  |
+| Architecture            | How the projects relate: workspace or import dependencies between packages, service boundaries (api, worker, web, db), entry points, and any existing `docs/blueprint/architecture.md` (for example a vwf Project Registry)                                                                                                                                                                                                                                                                                                                            |
+| Infrastructure          | IaC (`*.tf`, Pulumi, CDK, CloudFormation); containers and orchestration (`Dockerfile`, `docker-compose*`, k8s manifests, Helm); CI/CD (`.github/workflows`, `.gitlab-ci.yml`); deploy configs (`vercel.json`, `netlify.toml`, `fly.toml`, `render.yaml`, `app.yaml`, `serverless.yml`); and cloud SDKs or services in dependencies or config (AWS, GCP, Azure, Firebase, Supabase, Vercel, Cloudflare, Neon, PlanetScale, …)                                                                                                                           |
+| Local development       | The toolchain manager, env setup (`.env.example`, mise `[env]`), and prerequisites                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| Task runner             | mise (`mise.toml` or `.config/mise*.toml`, then `mise tasks`), `package.json` `scripts`, a `Makefile`, or a `justfile`                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 
-- **Title & description.** Repo/package name (`package.json` `name`,
-  `pubspec.yaml`, `Cargo.toml`, `pyproject.toml`, the git remote, or the
-  directory name) and any existing description/tagline.
-- **Layout & projects.** Monorepo vs multi-repo — `pnpm-workspace.yaml`,
-  `package.json` `workspaces`, `melos.yaml`, `nx.json`, `turbo.json`, a Cargo
-  `[workspace]`, `go.work`, or multiple package manifests in sub-directories.
-  Record each project's path, name, language/stack, and purpose.
-- **Architecture.** How the projects relate — workspace/import dependencies
-  between packages, service boundaries (api / worker / web / db), entry points,
-  and any existing `docs/blueprint/architecture.md` (e.g. a vwf Project
-  Registry) — to draw the diagram and capture the key decisions.
-- **Infrastructure (cloud tools).** Scan for: IaC (`*.tf`, Pulumi, CDK,
-  CloudFormation), containers/orchestration (`Dockerfile`, `docker-compose*`,
-  k8s manifests, Helm), CI/CD (`.github/workflows`, `.gitlab-ci.yml`), deploy
-  configs (`vercel.json`, `netlify.toml`, `fly.toml`, `render.yaml`, `app.yaml`,
-  `serverless.yml`), and cloud SDKs/services in dependencies or config (AWS,
-  GCP, Azure, Firebase, Supabase, Vercel, Cloudflare, Neon, PlanetScale, …).
-- **Local development.** The toolchain manager (this marketplace standardizes on
-  **mise** — `MISE_ENV=dev mise run setup` alone, the single bootstrap
-  entrypoint, which installs the pinned tools itself, over the `setup:*` steps
-  it already orders), env setup (`.env.example`, mise `[env]`), and
-  prerequisites. Note `MISE_ENV=dev mise run setup:worktree` too where the
-  repo has one — it is the lighter
-  bootstrap a fresh worktree runs, and a contributor who does not know it
-  exists runs the slow path forever.
-- **Task runner.** Detect the repo's runner — mise (`mise.toml` /
-  `.config/mise*.toml` → `mise tasks`), `package.json` `scripts`, a `Makefile`,
-  or a `justfile` — preferring mise when more than one is present. Read the
-  tasks from whichever exists and pick the ones used day to day (setup, the
-  lint/test/build gates, dev/run, release). If none exists, there is no
-  section 8.
+## Halt and pause
 
-## 2. Ask (one batched round — only what you cannot infer)
+| ID | Condition                                  | Action                                            |
+| -- | ------------------------------------------ | ------------------------------------------------- |
+| H1 | A fact of §2 cannot be inferred from a scan | Ask in the one round of §2. Do not invent the fact |
 
-Ask only for what the scan can't answer: the one-line description/tagline if
-none exists; which detected cloud services are actually in use vs vestigial; and
-confirmation of the architecture's boundaries before drawing the diagram. Don't
-invent a description, a cloud service, or a project's purpose — ask.
+## Output
 
-## 3. Write
+State:
 
-Write/update the README with the eight sections above, per the
-**documentation-standards** skill:
+- Whether you created or updated the README.
+- The layout detected, monorepo or multi-repo, and the projects listed.
+- Anything you had to ask about, such as a cloud service that you flagged.
+- Anything you could not determine, such as a service you could not confirm.
 
-- Short sentences, active voice, no filler; a language id on every code block;
-  tables for the project list, infrastructure, and mise tasks.
-- **Architecture diagram** — `mermaid`, type chosen by purpose (`flowchart` for
-  topology/dependencies, `sequenceDiagram` for request flows). No `%%{init}%%`
-  or custom themes (GitHub + GitLab portability). Quote any label with special
-  characters (`A["api (node)"]`). Animate any dotted/loop-back edge. One concept
-  per diagram — split if it sprawls. Each note states the *why*, not just the
-  *what*.
-- **List of projects** as a table: `| Project | Path | Stack | Purpose |`.
-- **Infrastructure** as a table: `| Tool / Service | Used for |`.
-- **Local Development** as ordered, copy-pasteable steps — clone, env setup,
-  `MISE_ENV=dev mise run setup` with no `mise install` before it, and how
-  to run it; plus `MISE_ENV=dev mise run setup:worktree` for a fresh worktree
-  when the repo defines it.
-- **Projects** — per project: what it is, its stack, how to run/test it, and its
-  key tasks.
-- **Important tasks** as a table: `| Task | What it does |` — use real names
-  from the detected runner (`mise tasks`, `package.json` scripts, the `Makefile`
-  targets, or the `justfile` recipes), never invented ones. Omit the section
-  when the repo has no task runner.
+## Never
 
-## 4. Report
-
-State whether you **created or updated** the README, the layout detected
-(monorepo / multi-repo) and the projects listed, and anything you had to ask about
-or could not determine (e.g. a cloud service you flagged but couldn't confirm).
+- Delete a section outside the eight, such as License, Contributing or badges.
+  Refresh the eight in place, and keep every other section — they are not this
+  skill's.
+- Rename an existing uppercase README; keep its filename and casing — renaming
+  is a repo-shape move. `/vwf:init` makes it, as one line of a surveyed plan.
+- Invent a description, a cloud service or a project's purpose; ask — a guess
+  reads as a fact in a README.
+- Invent a task name; use real names from the detected runner — a reader runs
+  these commands as written.

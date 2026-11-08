@@ -270,9 +270,11 @@ describe("reverting a receipt", () => {
 describe("reading a receipt", () => {
   it("reads one written to disk by an older version", () => {
     const path = join(root, "receipt.json");
-    const receipt = legacy("2026-01-01T00:00:00Z", [
-      { kind: "file", path: join(root, "a.txt") },
-    ], [{ name: "vwf", scope: "user" }]);
+    const receipt = legacy(
+      "2026-01-01T00:00:00Z",
+      [{ kind: "file", path: join(root, "a.txt") }],
+      [{ name: "vwf", scope: "user" }],
+    );
     writeFileSync(path, `${JSON.stringify(receipt, null, 2)}\n`);
 
     expect(readReceipt(path)).toEqual(receipt);

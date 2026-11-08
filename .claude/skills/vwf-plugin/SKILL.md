@@ -98,10 +98,18 @@ live when one is, for the `archive` verb once the user asks in prose, raising
 the folder's `release_levels` in `.config/releases.yaml` in that same commit and
 bumping no version — and runs each after-landing step without a prompt on a
 green landing — every one is recorded `run` at the interview, none releases, and
-the `.config/vwf.yaml` `after_landing:` commands follow — and it asks nothing at
-run time, save the run-level questions `execute all` asks once, before its first
-plan — one shared worktree, deduped after-landing steps, landing a plan recorded
-not to merge — each an override for that run only. On the old markdown plan
+the `.config/vwf.yaml` `after_landing:` commands follow — and at run time it
+asks the user only what the plan missed, per the execute skill's
+`references/questions.md`: a unit or reviewer returns `QUESTION Q<n>:`,
+`OPTIONS Q<n>:` and `WHY Q<n>:` lines in place of the old `GAP:` and
+`UNRESOLVED:`, the orchestrator asks each with `AskUserQuestion`, one at a time,
+records the answer as a `decisions` entry and resumes the unit; a headless run
+records each as an open `QUESTION Q<n>:` gap and stops at the final report;
+under `all` the runner returns `OUTCOME: QUESTION` with the question lines and
+the loop asks and resumes it. Beside them stay the run-level questions
+`execute all` asks once, before its first plan — one shared worktree, deduped
+after-landing steps, landing a plan recorded not to merge — each an override for
+that run only. On the old markdown plan
 format — a `docs/plans/index.md` in the base repo, or a live folder with
 `index.md` and no `index.json` — `execute` and every `plan-management` verb stop
 before any change and point to `docs/plans/migrate.md` in this repo; no
@@ -262,6 +270,12 @@ pick the invocation mode per the policy below, and run
 `mise run p:plugins:check` — strict-YAML frontmatter drops a skill **silently**
 when it fails to parse.
 
+Write the skill to the repo standard first: scaffold it with
+[`skill-kit`](../skill-kit/SKILL.md) (`/skill-kit new <archetype> <name>`), and
+run `/skill-kit lint` on it: one of the eight archetypes, both invocation keys
+declared. Every vwf skill meets that standard, save the vendored
+`karpathy-guidelines`, which stays verbatim.
+
 ### Invocation policy
 
 Claude spells this with two independent booleans, and the useful states are
@@ -379,7 +393,9 @@ description, else by its program name alone — `(command)` when that is unclear
 never by its arguments. On `SessionEnd` it appends `session.end` and deletes the
 session's marker. The marker and the file are written by the execute skill's
 `scripts/log.mjs`, which the orchestrator calls for what only it knows (phases,
-gates, commits, review rounds, unit and stage `row` events, gaps, stops), per
+gates, commits, review rounds, unit and stage `row` events, gaps, each
+`question` before it is asked and each `answer` once recorded, stops; and
+`next-question`, the next plan-wide `Q<n>`), per
 `skills/execute/references/action-log.md`. The log is one append-only JSONL file
 per plan at `~/Library/Caches/vwf/<repo>/<plan folder basename>.jsonl` — each
 `start`, fresh or resume, appends a `run.start`, and every line carries its run
@@ -405,11 +421,17 @@ folder with no row under `docs/plans/` or `docs/plans/archived/`; the folder's
 there during the landing), else the main checkout's or its archived copy; and
 the log at `run.log`, `~` expanded from `HOME`, replayed whole at each read
 (from its last 4,000,000 bytes, through `tail`, when it is over 4 MiB) for each
-unit's agent and its liveness, the transcript and the session alone — it
-computes no time and no run end. A folder `BLOCKED` or `COMPLETE`, or the row
+unit's agent and its liveness, the transcript, the session and the open
+questions alone — it computes no time and no run end. A folder `BLOCKED` or
+`COMPLETE`, or the row
 `COMPLETE`, is an ended run; a `RUNNING` one is live while an agent is live or
 the log's last line is under 10 minutes old, and the header reads
-`paused or stopped` otherwise; a row `APPROVED` or `DRAFT` is `not-run`. It
+`paused or stopped` otherwise; a `question` event with no later `answer`, after
+the last `run.start` and with no `run.end` after it, makes the phase `question`
+— `waiting for your answer` and the question text, however old the last line —
+and once a `run.end` follows, the usual phase with one line per open question,
+`open question: Q<n>, asked at the resume`; a row `APPROVED` or `DRAFT` is
+`not-run`. It
 never
 searches a worktree. `/vwf:execute <folder>` shows that plan with
 `claim in progress`; `/vwf:execute next` or `all` shows the plan list until a

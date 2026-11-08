@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
-[`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
+`docs/plans/2026-09-05-astro-static/`
 · **Reverses** `new-repo.md:20`, *"Nothing else in this pipeline touches git
 history"* · **Umbrella**
 [`2026-09-05-vwf-init-and-the-repo-shape.md`](./2026-09-05-vwf-init-and-the-repo-shape.md)

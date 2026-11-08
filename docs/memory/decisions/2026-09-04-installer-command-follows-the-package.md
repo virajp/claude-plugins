@@ -3,7 +3,7 @@
 **Date** 2026-09-04 · **Branch** `develop` (worktree
 `2026-09-04-rename-to-claude-plugins`) · **Supersedes** the *artifact vs
 command* rule in
-[`docs/plans/archived/02-rename-installer.md`](../../plans/archived/02-rename-installer.md)
+`docs/plans/archived/02-rename-installer.md`
 and the passages that carried it in `installer/CLAUDE.md`,
 `.claude/docs/installer/packaging.md`, `docs/installer/internals.md` and
 `tsup.config.ts`.

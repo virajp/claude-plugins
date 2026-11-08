@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-10-01-tool-config-renders-with-a-node-script.md`](./2026-10-01-tool-config-renders-with-a-node-script.md)
 R1 (assets are working files, no second template tree, `MARKED POSITION`

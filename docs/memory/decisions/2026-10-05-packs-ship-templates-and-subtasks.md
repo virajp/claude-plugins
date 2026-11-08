@@ -1,7 +1,7 @@
 # Decision — packs ship templates and subtasks; the hooks call `…:all` tasks
 
 **Date** 2026-10-05 · **Branch** `2026-10-05-tool-config-templates` · **Plan**
-[`docs/plans/2026-10-05-tool-config-templates/`](../../plans/2026-10-05-tool-config-templates/index.md)
+`docs/plans/2026-10-05-tool-config-templates/`
 · **Supersedes**
 [`2026-10-01-pack-entries-are-structured.md`](./2026-10-01-pack-entries-are-structured.md)
 whole; [`2026-09-26-tool-config.md`](./2026-09-26-tool-config.md) items 6 and 10

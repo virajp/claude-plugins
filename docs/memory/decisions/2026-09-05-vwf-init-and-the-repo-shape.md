@@ -2,7 +2,7 @@
 
 **Date** 2026-09-05 · **Branch** `2026-09-05-vwf-init` (worktree
 `.worktrees/2026-09-05-vwf-init`) · **Plan**
-[`docs/plans/2026-09-05-vwf-init/`](../../plans/2026-09-05-vwf-init/index.md)
+`docs/plans/2026-09-05-vwf-init/`
 
 Mirrors the mempalace drawer (wing `claude-plugins`, room `decisions`).
 

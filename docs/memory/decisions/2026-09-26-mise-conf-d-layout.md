@@ -1,9 +1,9 @@
 # Decision — mise conf.d layout: section files, one lock for every environment
 
 **Date** 2026-09-26 · **Branch** `2026-09-26-mise-conf-d-layout` · **Plan**
-[`docs/plans/2026-09-26-mise-conf-d-layout/`](../../plans/2026-09-26-mise-conf-d-layout/index.md)
+`docs/plans/2026-09-26-mise-conf-d-layout/`
 · **Backlog** B54, piece one of two · **Supersedes** plan A,
-[`archived/2026-09-26-mise-lock-gaps/`](../../plans/archived/2026-09-26-mise-lock-gaps/index.md),
+`archived/2026-09-26-mise-lock-gaps/`,
 never run
 
 The user: *"`mise` config files are becoming large and difficult to manage"*.

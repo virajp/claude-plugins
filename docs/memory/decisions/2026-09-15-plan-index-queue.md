@@ -1,7 +1,7 @@
 # Decision — `docs/plans/index.md` is the change-plan queue, and after-landing steps are `ask` only
 
 **Date** 2026-09-15 · **Branch** `2026-09-15-plan-index-queue` · **Plan**
-[`docs/plans/2026-09-15-plan-index-queue/`](../../plans/2026-09-15-plan-index-queue/index.md)
+`docs/plans/2026-09-15-plan-index-queue/`
 · **Reverses** part of
 [`2026-09-13-vwf-process.md`](./2026-09-13-vwf-process.md) — the rule that
 change plans are never listed in the index, and the `run` after-landing mode ·

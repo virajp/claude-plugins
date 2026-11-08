@@ -13,13 +13,13 @@ through `/vwf:plan` would mean inventing a slice to hang it on.
 That work has its own planner:
 **[`/vwf:change-plan`](../../plugins/vwf.md#vwfchange-plan)** writes a plan
 folder and queues it in `docs/plans/index.json`, and the one executor,
-**[`/vwf:execute`](../../plugins/vwf.md#vwfexecute)**, runs it unattended in a
-fresh context — by name, `next` to take the queue's pick, or `all` to run every
-runnable plan in turn. The planner sits beside the chain rather than in it, and
-reads neither the blueprint nor the architecture registry; the executor reads
-the blueprint only for a plan that covers a slice. The folder it writes and the
-index it queues in are the same ones `/vwf:plan` uses; what differs is what runs
-over a unit.
+**[`/vwf:execute`](../../plugins/vwf.md#vwfexecute)**, runs it in a fresh
+context, asking you only what the plan missed — by name, `next` to take the
+queue's pick, or `all` to run every runnable plan in turn. The planner sits
+beside the chain rather than in it, and reads neither the blueprint nor the
+architecture registry; the executor reads the blueprint only for a plan that
+covers a slice. The folder it writes and the index it queues in are the same
+ones `/vwf:plan` uses; what differs is what runs over a unit.
 
 The worked example picks up **Relay**, the team task manager from
 [start a product from an empty repo](../greenfield/single-repo.md), some months
@@ -110,8 +110,8 @@ puts two or three approaches in front of you with their trade-offs and a
 recommendation, and records the one you pick **with the alternative it
 rejected** — which is what stops the next plan re-opening the same argument.
 
-Two of the questions are the ones that make the run unattended later, and they
-are worth answering carefully; a third thing is stated rather than asked:
+Two of the questions are the ones the run leans on most later, and they are
+worth answering carefully; a third thing is stated rather than asked:
 
 - **The three gates.** The exact commands the run must pass, proposed from your
   repo's own task list and its `harness:` stamp, in three tiers: the **unit
@@ -153,7 +153,7 @@ next, since the running session would otherwise go on using the old copy.
 Relay's change touches no plugin, so the answer is written `false` without
 asking.
 
-### 3. Approve the shape, then walk away
+### 3. Approve the shape
 
 Nothing has been written to disk yet. The plan is presented as a shape first:
 the goal and any standing decision it reverses, the assumed-decisions table, the
@@ -175,12 +175,12 @@ except a one-line note the next attempt can recall. Approving writes
 structured fact (the units, the rulings, the gates, the consent, the release
 levels), an `index.md` holding the prose, and one file per unit.
 
-Expect a few more questions before you walk away. A fresh reviewer reads the
+Expect a few more questions before the run. A fresh reviewer reads the
 written folder against the tree and lists the cases the rulings leave open — an
 input no ruling handles, two rulings that disagree, a passage the change makes
 untrue in a file no unit owns. `change-plan` asks you each one, one at a time,
 and writes your answer into the folder, until the reviewer finds nothing, four
-rounds at most. Each answer here is a gap the run does not record later.
+rounds at most. Each answer here is a question the run does not ask you later.
 
 Then it finishes the hand-off for you. A row for the plan is appended to
 `docs/plans/index.json` — the queue every plan of either kind sits in, this one
@@ -198,10 +198,10 @@ the run instead. Only then does it **check that nothing is left to plan**:
 [`/vwf:backlog unplanned`](../../plugins/vwf.md#vwfbacklog) at the highest
 priority among the plan's backlog ids — or, with none, the highest priority any
 open item carries — plus any piece of your request not yet planned. When it
-lists something, there is no launch line: it prints the unplanned items and the
-planner command for the next one, and that is your next step — plan first, run
-after. When it lists nothing, or the backlog cannot be read (one line says so),
-it prints the launch line.
+lists something, it prints the unplanned items and the planner command for the
+next one, then the launch line, so you can copy either. When it lists nothing,
+or the backlog cannot be read (one line says so), it prints the launch line
+alone.
 
 It does not start executing, and that is deliberate.
 
@@ -247,7 +247,8 @@ is **held** and run once at the end; and, for each plan whose consent says not
 to merge, whether to **land it this run**. Each is asked only when it applies,
 the shared worktree always. A yes is an override for this run only, appended to
 each folder's `overrides` list; a folder's `consent` never changes. After the
-last answer it asks nothing until it ends.
+last answer it asks nothing more of its own; a question a runner meets is
+relayed to you, and your answer goes back to that runner.
 
 The fresh context is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. Under
@@ -279,22 +280,24 @@ is never taken over, however long it has sat there; if the session that claimed
 it is gone, ask the session to unclaim it — its worktree must be gone first —
 and the plan is runnable again.
 
-From there you are not needed. It creates one worktree (or, under `all` with the
-shared worktree answered yes, reuses the run's), runs the plan's unit gate and
-wave gate once as a preflight (a red line here is the branch's problem, not the
-plan's, and it says so rather than fixing it), then works wave by wave: every
-unit in a wave — all `edit` units, in a change plan — dispatched at once as its
-own subagent, a reviewer over the wave's diff with at most two rounds of
-findings, the unit gate for each unit and the wave gate, each line once, and one
-commit per green unit. The plan gate runs once, at the end. Each of those
-commits stages only what that unit owns, and unstages anything else that reached
-the index first, so one unit's work never rides another's commit. The two-round
-loop has one exception: a docs finding in a file no unit owns has nowhere to
-loop back to, so it goes to the docs unit, which is given that passage to own
-for the rest of the run, and you see it in the report as a `GAP:`. When the two
-rounds end with findings still open, one closing pass fixes exactly those
-findings and a fresh reviewer checks each one; only what it leaves open reaches
-the report as `contested`. The last two units are fixed — a docs unit that runs
+From there it needs you only for what the plan missed, so stay near it. It
+creates one worktree (or, under `all` with the shared worktree answered yes,
+reuses the run's), runs the plan's unit gate and wave gate once as a preflight
+(a red line here is the branch's problem, not the plan's, and it says so rather
+than fixing it), then works wave by wave: every unit in a wave — all `edit`
+units, in a change plan — dispatched at once as its own subagent, a reviewer
+over the wave's diff with at most two rounds of findings, the unit gate for each
+unit and the wave gate, each line once, and one commit per green unit. The plan
+gate runs once, at the end. Each of those commits stages only what that unit
+owns, and unstages anything else that reached the index first, so one unit's
+work never rides another's commit. The two-round loop has one exception: a docs
+finding in a file no unit owns has nowhere to loop back to, so it goes to the
+docs unit, which is given that passage to own for the rest of the run, and you
+see it in the report as a closed gap naming the widening. When the two rounds
+end with findings still open, one closing pass fixes exactly those findings and
+a fresh reviewer checks each one; only what it leaves open is put to you as a
+question, the reviewer's recommendation first: fix runs one targeted fix, accept
+records your decision. The last two units are fixed — a docs unit that runs
 [`/vwf:docs-sync`](../../plugins/vwf.md#vwfdocs-sync) over the branch delta, and
 a gates unit, which runs the generators and the full gate and bumps nothing.
 Relay's docs unit is what actually deletes the hand-written step from the
@@ -303,14 +306,24 @@ contributing guide.
 The orchestrator never reads a unit's files itself, so a long run costs you the
 size of the reports, not the size of the diff.
 
+When a unit or a reviewer meets something the plan does not settle, the run asks
+you rather than guessing: one question at a time, its options with their
+consequences, the recommendation first, and the line of the plan that leaves it
+open. Your answer becomes a new entry in the folder's `decisions`, and the unit
+resumes with it; the progress pane reads *waiting for your answer* meanwhile. A
+headless run, with no one to answer, records each question as an open gap and
+stops at the report; the next `/vwf:execute <folder>` asks them first.
+
 ### 5. Read the report
 
 The final report is rendered from the run state in the folder's `index.json`
 rather than from memory — by then the run may have spanned dozens of dispatches.
-It gives you every unit with its outcome and commit, every `GAP:` a unit
-proceeded past and the assumption it took — including every unit whose owned
-paths the run widened, with the finding that widened them (read these) — the
-review findings that survived the cap, the gate results, and the worktree path.
+It gives you every unit with its outcome and commit, every question the run
+asked you with the answer it recorded, every gap still open — a recorded fact of
+the run, such as a coverage short of target, a question no one could answer, or
+a `STOPPED:` answer — and every unit whose owned paths the run widened, with the
+finding that widened them (read these) — the review findings that survived the
+cap, the gate results, and the worktree path.
 
 If everything is green it marks every backlog item the plan finishes `done` and
 every item it landed a piece of `Partially done` — the item stays open, with a
@@ -335,7 +348,8 @@ the report names the warning and the archive to ask for once it is settled.
 
 A failure does not abandon the run. The unit that failed, and everything
 depending on it, is skipped; the rest carries on, and the run stops **once at
-the end** with everything it needs — never mid-wave with "how should I proceed".
+the end** with everything it needs. A hole in the plan is not a failure: it is a
+question, asked when it comes up.
 
 What you get is the same final report, plus a `BLOCKED` status naming the ruling
 that is missing. Resuming is two steps:

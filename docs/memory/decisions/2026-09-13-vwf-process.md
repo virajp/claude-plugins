@@ -1,7 +1,7 @@
 # Decision — the plan is committed at hand-off, 13 and 17 are never issued, and the backlog has one writer
 
 **Date** 2026-09-14 · **Branch** `2026-09-13-vwf-process` · **Plan**
-[`docs/plans/2026-09-13-vwf-process/`](../../plans/2026-09-13-vwf-process/index.md)
+`docs/plans/2026-09-13-vwf-process/`
 · **Reverses** nothing · **Backlog** B01, B02, B03 (group A of the 2026-09-13
 capture)
 

@@ -1,7 +1,7 @@
 # Decision — a plain HTML page tree is one pack and one bundle beside Astro
 
 **Date** 2026-09-15 · **Branch** `2026-09-15-html-site-pack` · **Plan**
-[`docs/plans/2026-09-15-html-site-pack/`](../../plans/2026-09-15-html-site-pack/index.md)
+`docs/plans/2026-09-15-html-site-pack/`
 · **Adds** `framework/html`, the `html` bundle and the `document` category
 
 ## What was decided before

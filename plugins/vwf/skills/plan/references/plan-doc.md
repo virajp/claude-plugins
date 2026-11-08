@@ -59,7 +59,8 @@ plan of a chain moves the id to `backlog`); **`gaps_of`** (the landed plan
 folders whose gaps this element takes — interview item 2b;
 `plan-management add` sets each one's `gaps` in the plan index to `open` `0`,
 with this folder on its `moved_to`); and `exposure` `dark` when the slice
-ships behind a flag, else no `exposure` key. **`status`** is
+ships behind a flag, else no `exposure` key. **`execution`** is `solo` or
+`teams`, the answer to interview item 10b. **`status`** is
 `{state, detail}`: `state` `DRAFT` and `detail` `DRAFT <date>` until §8's
 `plan-management add` sets `APPROVED`; from then on that skill rewrites it on
 the executor's behalf, and `requires` is never re-pointed by anyone.

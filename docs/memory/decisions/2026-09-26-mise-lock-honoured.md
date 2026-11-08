@@ -1,7 +1,7 @@
 # Decision — mise lock honoured: setup:all installs from the lockfile, --upgrade moves it
 
 **Date** 2026-09-26 · **Branch** `2026-09-26-mise-lock-honoured` · **Plan**
-[`docs/plans/2026-09-26-mise-lock-honoured/`](../../plans/2026-09-26-mise-lock-honoured/index.md)
+`docs/plans/2026-09-26-mise-lock-honoured/`
 · **Narrows**
 [`2026-09-20-pack-first-run-safety.md`](./2026-09-20-pack-first-run-safety.md) —
 `setup:all` now passes one flag on · **Backlog** B54, piece one of two (the lock

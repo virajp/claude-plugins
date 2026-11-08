@@ -1,7 +1,7 @@
 # Decision — plans record derived release levels; execute bumps no version
 
 **Date** 2026-10-08 · **Branch** `2026-10-08-release-levels-recorded` · **Plan**
-[`docs/plans/2026-10-08-release-levels-recorded/`](../../plans/2026-10-08-release-levels-recorded/index.md)
+`docs/plans/2026-10-08-release-levels-recorded/`
 · **Reverses** ruling 9 of
 [`2026-09-17-after-landing-runs-on-recorded-consent.md`](./2026-09-17-after-landing-runs-on-recorded-consent.md),
 confirmed again in

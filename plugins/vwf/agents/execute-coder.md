@@ -46,11 +46,19 @@ initial round.
 
 **Blueprint/plan gaps.** The plan is authoritative, but where it (or the
 blueprint it implements) leaves a behaviour underspecified or is contradicted by
-the real code, do **not** silently invent — proceed on the most idiomatic
-assumption to keep moving, but **capture the gap**: return it as one line under
-`GAPS:` in your return block — what the blueprint/plan under-/mis-specified,
-where, and the assumption you proceeded on. The orchestrator records each line
-in the plan's `index.json`.
+the real code, do **not** invent and do **not** proceed on an assumption —
+**ask**. Complete every edit that does not depend on an answer, never build on
+a part an answer can change, then return all your open questions in one block,
+three lines each, `n` counting from 1 in the block:
+`QUESTION Q<n>:` the question, readable alone; `OPTIONS Q<n>:` two to four
+options separated by ` | `, the recommendation first, each with its
+consequence after an em dash; `WHY Q<n>:` the `path:line` or plan section, an
+em dash, and why the plan does not decide it. The orchestrator asks the user
+(`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`) and records
+each answer in the plan's `index.json`. Your edits stay uncommitted in the
+worktree meanwhile. **Resumed with answers?** Apply each one under the same TDD
+cycle below, then return the whole block again — a further question is asked
+the same way.
 
 **Orient before you code.** Grep and Glob for where the code you must touch
 lives, who calls it, and whether something already realizes the behaviour —
@@ -71,8 +79,9 @@ exists:
    where it reads clearly. Install a **new** dependency only if the plan names
    it — the plan's approval gate is where the user consented to it. If a
    dependency the `dependencies` list of the plan's `index.json` doesn't name
-   seems necessary, do **not** install it: capture it as a plan gap (per
-   Blueprint/plan gaps above) and implement the minimum without it. A
+   seems necessary, do **not** install it: it is a question (per
+   Blueprint/plan gaps above), not a gap; implement the minimum that does not
+   depend on it. A
    dependency change reaches the lock file only through the package
    manager's own CLI, the command the stack's package-manager conventions
    name — never through Write, Edit, `sed` or a script on the lock file;
@@ -117,7 +126,10 @@ IMPLEMENTED:
 - <one terse line per unit edit satisfied>   # ≤ 8 lines total
 TESTS: <suite command> — <N passed / M failed>
 COVERAGE: <overall % | n/a — no coverage tooling>   # if < 100%, append "— uncovered: file:line, file:line …"
-GAPS: none   # or one line per blueprint/plan hole hit: <what was left open> · <the assumption taken>
+QUESTION: none   # or, per blueprint/plan hole hit, the three lines below
+QUESTION Q<n>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 ```
 
 Nothing before or after the block. If a gate failed and you stopped, say so in

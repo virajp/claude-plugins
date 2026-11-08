@@ -2,9 +2,9 @@
 
 **Date** 2026-09-12 · **Branch** `2026-09-12-setup-ai` (worktree
 `.worktrees/2026-09-12-setup-ai`) · **Plan**
-[`docs/plans/2026-09-12-setup-ai/`](../../plans/2026-09-12-setup-ai/index.md) ·
+`docs/plans/2026-09-12-setup-ai/` ·
 **Reverses** D22 of
-[`docs/plans/archived/2026-09-05-vwf-init/index.md`](../../plans/archived/2026-09-05-vwf-init/index.md),
+`docs/plans/archived/2026-09-05-vwf-init/index.md`,
 *"`code:ai`"* · **Umbrella**
 [`2026-09-05-vwf-init-and-the-repo-shape.md`](./2026-09-05-vwf-init-and-the-repo-shape.md)
 

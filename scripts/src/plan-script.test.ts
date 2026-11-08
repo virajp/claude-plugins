@@ -817,6 +817,9 @@ describe("validate", () => {
     ["a release level is not valid", "change", (d) => {
       d.release_levels[0].level = "HUGE";
     }, "release_levels.vwf.level:"],
+    ["an execution mode is not valid", "change", (d) => {
+      d.execution = "swarm";
+    }, "execution:"],
     ["an after-landing mode is not run", "change", (d) => {
       d.after_landing[0].mode = "ask";
     }, "after_landing.A1.mode:"],
@@ -932,6 +935,23 @@ describe("validate", () => {
     delete doc.exposure;
     writeFileSync(cycle, bytes(doc));
     expect(plan(["validate", cycle]).status).toBe(0);
+  });
+
+  it.each([
+    ["the change plan", () => change],
+    ["the cycle plan", () => cycle],
+  ])("accepts %s without the optional execution", (_, file) => {
+    const doc = parse(file());
+    delete doc.execution;
+    writeFileSync(file(), bytes(doc));
+    expect(plan(["validate", file()]).status).toBe(0);
+  });
+
+  it.each(["solo", "teams"])("accepts execution %s", (mode) => {
+    const doc = parse(change);
+    doc.execution = mode;
+    writeFileSync(change, bytes(doc));
+    expect(plan(["validate", change]).status).toBe(0);
   });
 
   it.each([

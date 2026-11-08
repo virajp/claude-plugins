@@ -1,14 +1,18 @@
 # Density — the contract is read by machines
 
 A blueprint doc's audience is `plan`, `execute`, and their subagents. Every line
-is re-read on every later turn of whatever loaded it, so length is not free: a
+is re-read on every later turn of whatever loaded it, so length is not free. A
 600-line flow doc costs the same attention whether or not the extra 450 lines
-carry a decision.
+carry a decision. Write for that reader, not for a human skimming a spec.
 
 The completeness bars ask *"is this decided?"* and can only ever ask for more.
-This reference is the counter-pressure: **a doc that specifies its contract in
-fewer lines is better, and one that is long without deciding more is wrong.**
-Both directions are reviewer failures.
+This reference is the counter-pressure.
+
+**A doc that specifies its contract in fewer lines is better, and one that is
+long without deciding more is wrong.**
+
+Both directions are reviewer failures: a doc fails review for being long exactly
+as it fails for being thin.
 
 ## The test
 
@@ -23,9 +27,9 @@ sentence explaining a table that is already unambiguous.
 
 ## Budgets
 
-Soft ceilings per doc, at `status: reviewed`. Not line-counting for its own sake
-— a doc over budget is *almost always* over because of the anti-patterns below,
-so the number is a trigger to look, not an automatic failure.
+Soft ceilings per doc, at `status: reviewed`. This is not line-counting for its
+own sake. A doc over budget is *almost always* over because of the anti-patterns
+below. The number is a trigger to look, not an automatic failure.
 
 | Doc                  | Budget              | Hard smell       |
 | -------------------- | ------------------- | ---------------- |
@@ -41,11 +45,10 @@ A doc genuinely over budget with every line passing the test is fine — say so 
 the review and move on. A doc over budget because nobody trimmed it is a gap.
 
 **A plugin flow gets 160, not 120, and the extra is structural.** It owes five
-sections a service flow has no equivalent for — host & extension point,
-invocation surface, what the host supplies, gates & halts, artifacts written
-(see the plugin-contract reference) — which measured at ~40 lines on the first
-one authored. Judging it against 120 flags every plugin flow ever written, which
-is a budget that has stopped measuring anything. The **anti-patterns below still
+sections that a service flow lacks (see the plugin-contract reference). They are host & extension point, invocation surface, what the host
+supplies, gates & halts, and artifacts written. They measured at ~40 lines on the
+first one authored. Judging it against 120 flags every plugin flow ever written,
+and such a budget has stopped measuring anything. The **anti-patterns below still
 apply unchanged**: the allowance is for the extra sections, not for looser prose
 inside them.
 
@@ -55,7 +58,7 @@ Each of these was measured in a real bundle; the line counts are what they cost
 there.
 
 **Rationale in the contract.** "…so the screen shows its correct gated form from
-the first frame." The contract is *that* it renders gated; why is a decision
+the first frame." The contract is *that* it renders gated. Why is a decision
 record, and belongs in a `docs/memory/decisions/` file.
 
 **Revision narration.** "`subscriber` was renamed to `premium`", "removed
@@ -71,24 +74,23 @@ nothing is emphasized. If a step needs five bolded caveats, it is really five
 steps, or a table.
 
 **Prose where a table was meant.** Any "X applies to A but not B" comparison is
-a table with one column per case and `yes` / `no` / a limit in each cell —
-feature tiers, per-actor permissions, per-platform differences. Prose
-comparisons are both longer and harder to diff.
+a table. Give it one column per case, with `yes`, `no` or a limit in each cell.
+Examples are feature tiers, per-actor permissions and per-platform differences.
+Prose comparisons are both longer and harder to diff.
 
 **Sentence-length diagram labels.** A mermaid edge label is a term
 (`cancellation webhook`), not a clause. The diagram is a *view* of the steps or
-the lifecycle table — if a label carries a condition the table does not, the
+the lifecycle table. If a label carries a condition the table does not, the
 table is what is incomplete.
 
 **Open Questions as a parking lot.** Open Questions holds what blocks *this*
 doc's contract. Anything else is out-of-scope and goes to a
 `docs/memory/gaps/` file per the parked-scope rule in
-`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md` — not into a contract doc that
-every later run must read past.
+`${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. It does not go into a contract doc
+that every later run must read past.
 
 **Spillover with a cross-reference back.** Splitting one decision across two
-sections and linking between them costs more than stating it once in the section
-that owns it. Put it where it belongs; do not narrate the split.
+sections with links costs more than stating it once in its owning section. Put it where it belongs; do not narrate the split.
 
 ## What is never trimmed
 

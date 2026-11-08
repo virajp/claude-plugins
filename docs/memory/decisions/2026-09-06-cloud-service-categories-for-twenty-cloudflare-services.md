@@ -2,7 +2,7 @@
 
 **Date** 2026-09-06 · **Branch** `2026-09-06-cloudflare-storage-and-data` ·
 **Plan**
-[`docs/plans/2026-09-06-cloudflare-storage-and-data/`](../../plans/2026-09-06-cloudflare-storage-and-data/index.md)
+`docs/plans/2026-09-06-cloudflare-storage-and-data/`
 · **Extends** the closed `cloud-service` and `framework` category lists in
 `plugins/stackgen/assets/taxonomy.md`
 

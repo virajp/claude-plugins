@@ -1,7 +1,7 @@
 # Decision — editor fragments come inside the charter fence; whole editor files stay out
 
 **Date** 2026-09-06 · **Branch** `2026-09-05-astro-static` · **Plan**
-[`docs/plans/2026-09-05-astro-static/`](../../plans/2026-09-05-astro-static/index.md)
+`docs/plans/2026-09-05-astro-static/`
 · **Narrows** the `config/`-tier fence as written in
 `assets/output-tree.md:202-214`, and reopens it a second time after
 [`2026-09-05-charter-fence-opens-for-gate-configs.md`](./2026-09-05-charter-fence-opens-for-gate-configs.md)

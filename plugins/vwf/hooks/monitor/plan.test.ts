@@ -30,6 +30,47 @@ test("finds folders and wave-review names", async () => {
   expect(reviewName("R2")).toBe("R2");
   expect(reviewName("R-late")).toBe("R-late");
   expect(reviewName("run-1")).toBe(undefined);
+  expect(reviewName(undefined, "R2 wave review")).toBe("R2");
+  expect(reviewName(undefined, "R2-late wave review")).toBe("R2-late");
+  expect(reviewName(undefined, "R-late contract review")).toBe("R-late");
+  expect(reviewName(undefined, "run-1 the plan")).toBe(undefined);
+  expect(reviewName(undefined, "Review R2")).toBe(undefined);
+});
+
+test("ties an unnamed agent by the start of its description", async () => {
+  const units = [{ id: "U2", file: "02-pane.md" }];
+  expect(unitForAgent("general-purpose", undefined, units, "U2 The pane"))
+    .toBe("U2");
+  expect(unitForAgent("general-purpose", undefined, units, "U2-late1 fix"))
+    .toBe("U2");
+  expect(unitForAgent("general-purpose", undefined, units, "find U2 things"))
+    .toBe(undefined);
+  expect(unitForAgent("general-purpose", undefined, units, "U9 no such unit"))
+    .toBe(undefined);
+  expect(unitForAgent("vwf:execute-runner", undefined, units, "U2 the plan"))
+    .toBe(undefined);
+});
+
+test("a teammate woken by a message is live again, from its first start", async () => {
+  reset();
+  const lines = [
+    line("run.start", { mode: "fresh" }),
+    line("tool.start", {
+      tool: "Agent",
+      tool_use_id: "t1",
+      summary: "general-purpose :: U2 :: The pane",
+    }),
+    line("tool.end", { tool: "Agent", tool_use_id: "t1", child: "a1" }),
+    line("agent.start", { agent: "a1", agent_type: "U2" }),
+    line("agent.end", { agent: "a1", agent_type: "U2" }),
+  ];
+  const idle = replay(lines, folder());
+  expect(idle.units[1]!.agent!.live).toBe(false);
+  const first = idle.units[1]!.agent!.startedAt;
+  lines.push(line("agent.start", { agent: "a1", agent_type: "U2" }));
+  const woken = replay(lines, folder());
+  expect(woken.units[1]!.agent!.live).toBe(true);
+  expect(woken.units[1]!.agent!.startedAt).toBe(first);
 });
 
 test("maps a reviewer by its row, and a coder by its unit file", async () => {
@@ -629,4 +670,87 @@ test("an agent whose agent.start is not in the tail has no start, and is not liv
   expect(u3.agent!.id).toBe("a3");
   expect(u3.agent!.startedAt).toBe(undefined);
   expect(u3.agent!.live).toBe(false);
+});
+
+test("D10, D41: an open question of the run still going gives the phase question", async () => {
+  reset();
+  const asked = [
+    line("run.start", { mode: "fresh" }),
+    line("question", { id: "Q1", unit: "U2", text: "Which colour?", options: "a | b", why: "02-pane.md" }),
+  ];
+  const state = replay(asked, folder());
+  expect(state.questions).toEqual([
+    { id: "Q1", unit: "U2", text: "Which colour?", at: at(2), isWaiting: true },
+  ]);
+  const now = (state.lastAt ?? 0) + FRESH_MS * 3;
+  const facts = { state: "RUNNING", rowStatus: "RUNNING", hasLiveAgent: false, now };
+  const isAsking = (one: typeof state) => one.questions?.some((q) => q.isWaiting) === true;
+  // However old the last line is, it waits for the answer, not paused.
+  expect(phaseOf({ ...facts, lastAt: state.lastAt, isAsking: isAsking(state) }))
+    .toBe("question");
+  // An ended run stays ended.
+  expect(phaseOf({ ...facts, state: "COMPLETE", isAsking: true })).toBe("ended");
+  expect(phaseOf({ ...facts, rowStatus: "COMPLETE", isAsking: true })).toBe("ended");
+
+  // Answered: the phase it gave before.
+  const answered = replay(
+    [...asked, line("answer", { id: "Q1", decision: "D45" })],
+    folder(),
+  );
+  expect(answered.questions).toBe(undefined);
+  expect(phaseOf({ ...facts, lastAt: answered.lastAt, isAsking: isAsking(answered) }))
+    .toBe("paused");
+
+  // Asked twice under one id, then answered once: closed.
+  reset();
+  const twice = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q1", unit: "W2", text: "Which order?" }),
+      line("run.end", { outcome: "paused" }),
+      line("run.start", { mode: "resume" }),
+      line("question", { id: "Q1", unit: "W2", text: "Which order?" }),
+      line("answer", { id: "Q1", decision: "D45" }),
+    ],
+    folder(),
+  );
+  expect(twice.questions).toBe(undefined);
+});
+
+test("D41: a run.end after an open question keeps today's phase, the question asked at the resume", async () => {
+  reset();
+  const state = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+      line("run.end", { outcome: "paused" }),
+    ],
+    folder(),
+  );
+  expect(state.questions).toEqual([
+    { id: "Q3", unit: "setup", text: "Which host?", at: at(2), isWaiting: false },
+  ]);
+  const now = (state.lastAt ?? 0) + FRESH_MS * 3;
+  expect(phaseOf({
+    state: "RUNNING",
+    rowStatus: "RUNNING",
+    hasLiveAgent: false,
+    lastAt: state.lastAt,
+    isAsking: state.questions?.some((q) => q.isWaiting) === true,
+    now,
+  }))
+    .toBe("paused");
+  // Asked again at the resume: waiting once more.
+  reset();
+  const resumed = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+      line("run.end", { outcome: "paused" }),
+      line("run.start", { mode: "resume" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+    ],
+    folder(),
+  );
+  expect(resumed.questions?.[0]?.isWaiting).toBe(true);
 });

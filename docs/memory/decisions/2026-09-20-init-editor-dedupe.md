@@ -1,9 +1,9 @@
 # Decision — a hand key and the editor block never both carry a key
 
 **Date** 2026-09-20 · **Branch** `2026-09-20-init-editor-dedupe` · **Plan**
-[`docs/plans/2026-09-20-init-editor-dedupe/`](../../plans/2026-09-20-init-editor-dedupe/index.md)
+`docs/plans/2026-09-20-init-editor-dedupe/`
 · **Supersedes** the 2026-09-10/11 ruling in
-[`docs/plans/archived/2026-09-10-repo-task-groups-and-editor-block/`](../../plans/archived/2026-09-10-repo-task-groups-and-editor-block/index.md)
+`docs/plans/archived/2026-09-10-repo-task-groups-and-editor-block/`
 · **Amends** the precedence passage of
 [`2026-09-06-editor-fragments-inside-the-fence.md`](./2026-09-06-editor-fragments-inside-the-fence.md)
 

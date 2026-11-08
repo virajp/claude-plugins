@@ -6,7 +6,7 @@
 > The body is left exactly as written.
 
 **Date** 2026-09-12 · **Branch** `2026-09-12-init-brownfield` · **Plan**
-[`docs/plans/2026-09-12-init-brownfield/`](../../plans/2026-09-12-init-brownfield/index.md)
+`docs/plans/2026-09-12-init-brownfield/`
 · **Reverses** two standing rules of `init`'s existing-repo pipeline — the
 2026-09-10 helper decision's *unmapped call is deferred*, and the missing-files
 pass's *already owned, never overwritten* · **Amended** at the fixture gate the

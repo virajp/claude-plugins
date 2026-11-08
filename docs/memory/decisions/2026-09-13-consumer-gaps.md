@@ -1,7 +1,7 @@
 # Decision — architecture decides, setup pins: five consumer gaps closed
 
 **Date** 2026-09-13 · **Branch** `2026-09-13-consumer-gaps` · **Plan**
-[`docs/plans/2026-09-13-consumer-gaps/`](../../plans/2026-09-13-consumer-gaps/index.md)
+`docs/plans/2026-09-13-consumer-gaps/`
 · **Reverses** `plugins/vwf/assets/stack-adapter.md`'s
 materialization-at-pin-time rule and
 `plugins/vwf/skills/architecture/references/stack-menu.md`'s placement of it

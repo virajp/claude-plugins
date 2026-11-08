@@ -1,7 +1,7 @@
 # Decision — an OS-specific feature inside a form-factor platform is a structured `features:` entry
 
 **Date** 2026-10-09 · **Branch** `2026-10-09-os-feature-declarations` · **Plan**
-[`docs/plans/2026-10-09-os-feature-declarations/`](../../plans/2026-10-09-os-feature-declarations/index.md)
+`docs/plans/2026-10-09-os-feature-declarations/`
 · **Adds** the `features:` list to a flow platform file's frontmatter
 
 ## What was decided before

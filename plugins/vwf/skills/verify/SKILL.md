@@ -133,8 +133,9 @@ just automated feedback):
   incident and its postmortem stub.
 - **NOT-COVERED / no harness** → a testing gap; write a `docs/memory/gaps/`
   file and offer a plan step next cycle.
-- **`SPEC/PLAN GAPS:`** (a criterion untestable as written, from §3's
-  verifier return) → write each line as one `docs/memory/gaps/` record per
+- **`QUESTION Q<n>:`** (a criterion untestable as written, from §3's
+  verifier return, with its `OPTIONS Q<n>:` and `WHY Q<n>:` lines) → write
+  each question, its options and its why as one `docs/memory/gaps/` record per
   `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, naming the flow doc it concerns (a
   name that exists takes the next `-2`, `-3` suffix), and offer
   `/vwf:blueprint <flow>` to pin the criterion down.
