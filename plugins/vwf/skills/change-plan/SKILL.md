@@ -71,7 +71,7 @@ weaker match.
 | --- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | H1  | §5 answer is revise or abandon                                                                       | Revise loops back to the section named. Abandon leaves no folder, any parked record, and a one-line note of what was decided, for the next attempt.   |
 | H2  | §8 `plan-management add` refuses: `docs/plans/index.md` of the base repo exists, the old plan format | Stop. The folder stays `DRAFT` and uncommitted, and no later step runs. The output is the refusal as `add` printed it.                                |
-| H3  | §8 finds something unplanned at the check priority                                                   | Print no launch block. End with the second ending under Output.                                                                                       |
+| H3  | §8 finds something unplanned at the check priority                                                   | Print the next planner command above the launch block. End with the second ending under Output.                                                       |
 | H4  | §7 rulings review still returns gaps after round four                                                | Follow item 20 of the interview checklist. Hand off with no unread list.                                                                              |
 
 ## Output
@@ -79,31 +79,50 @@ weaker match.
 After §8's check, end in exactly one of three ways:
 
 - **Nothing unplanned** — end with the launch block below, exactly as written.
-- **Something unplanned** — no launch block. Print the unplanned pieces of this
-  request first, then the unplanned items at the check priority. Then print the
-  command for the next one, and nothing after it: `/vwf:change-plan <item>`, or
-  `/vwf:plan <slice>` when the item names a blueprint slice. A piece of this
-  request that is next goes straight back to §3 instead. `/vwf:execute` is
-  unchanged, and the user may still run it.
+- **Something unplanned** — print the unplanned pieces of this request first,
+  then the unplanned items at the check priority. Then print the command for
+  the next one, `/vwf:change-plan <item>`, or `/vwf:plan <slice>` when the item
+  names a blueprint slice, as the next-plan block below. End with the launch
+  block, so the user can copy either command. A piece of this request that is
+  next goes straight back to §3 instead.
 - **The backlog unreadable** — the verb says so. End with the launch block,
   preceded by one line saying the backlog could not be read, so the check did
   not run.
 
-The launch block, with nothing after it:
+Print every command in its own `text` fence, and every prose line outside the
+fences, so each command gets its own copy button.
+
+The next-plan block:
+
+````markdown
+Plan the next one:
 
 ```text
+/vwf:change-plan <item>
+```
+````
+
+The launch block, with nothing after it:
+
+````markdown
 Run in a fresh context — a fresh session, or a runner that `all` dispatches:
 
+```text
 /vwf:execute docs/plans/<date>-<name>
+```
 
 or let the queue pick it, by priority:
 
+```text
 /vwf:execute next
+```
 
 or run every runnable plan, highest priority first:
 
+```text
 /vwf:execute all
 ```
+````
 
 ## Never
 

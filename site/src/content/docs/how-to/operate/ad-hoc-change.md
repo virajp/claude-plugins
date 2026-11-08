@@ -198,10 +198,10 @@ the run instead. Only then does it **check that nothing is left to plan**:
 [`/vwf:backlog unplanned`](../../plugins/vwf.md#vwfbacklog) at the highest
 priority among the plan's backlog ids — or, with none, the highest priority any
 open item carries — plus any piece of your request not yet planned. When it
-lists something, there is no launch line: it prints the unplanned items and the
-planner command for the next one, and that is your next step — plan first, run
-after. When it lists nothing, or the backlog cannot be read (one line says so),
-it prints the launch line.
+lists something, it prints the unplanned items and the planner command for the
+next one, then the launch line, so you can copy either. When it lists nothing,
+or the backlog cannot be read (one line says so), it prints the launch line
+alone.
 
 It does not start executing, and that is deliberate.
 

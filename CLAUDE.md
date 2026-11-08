@@ -53,9 +53,11 @@ was planned on together with its row in `docs/plans/index.json`, the **one plan
 index**, created once with the Write tool and validated, every later change made
 through `plan.mjs set`, `append` or `remove`, and a folder's waves renumbered by
 the planner through `plan.mjs rewave`, after `plan.mjs set` gives each unit
-moving above wave 1 its `waits` reason — printing the launch line only once
-`/vwf:backlog unplanned` finds nothing left to plan at its priority, else the
-next item to plan — and run, in a fresh context, by the one executor,
+moving above wave 1 its `waits` reason — `/vwf:plan` printing the launch line
+only once `/vwf:backlog unplanned` finds nothing left to plan at its priority,
+else the next item to plan, and `/vwf:change-plan` always printing it, with the
+next item to plan above it when one is left — and run, in a fresh context, by
+the one executor,
 `/vwf:execute <folder>` — or `/vwf:execute next`, which reads that index alone,
 of either kind, and picks the runnable plan with the lowest `priority` value, or
 `/vwf:execute all`, which runs every runnable plan in turn, each in its own

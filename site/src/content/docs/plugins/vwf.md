@@ -3513,13 +3513,14 @@ highest priority any open item carries — plus the pieces of this session's own
 request not yet planned. A request split into pieces is planned piece after
 piece in the one session: each piece but the last goes straight back to the
 interview for the next, with no launch line. While anything is unplanned the
-plan ends with the unplanned pieces and items and the command for the next one —
+plan prints the unplanned pieces and items and the command for the next one —
 `/vwf:change-plan <item>`, or `/vwf:plan <slice>` when the item names a slice —
-and `/vwf:execute` still runs if you type it. A backlog it cannot read prints
-the launch line after one line saying so. When nothing is unplanned, the launch
-line comes in three forms — the folder by name; `next`, which lets the queue
+and then the launch line, so you can copy either. A backlog it cannot read
+prints the launch line after one line saying so. The launch line comes in three
+forms — the folder by name; `next`, which lets the queue
 pick by priority; or `all`, which runs every runnable plan in turn, each in its
-own runner:
+own runner. Each command, the next planner command too, prints in its own code
+block, so each has its own copy button:
 
 ```text
 /vwf:execute docs/plans/<date>-<name>
