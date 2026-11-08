@@ -256,11 +256,11 @@
         "U7"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-08T10:01:55.328Z",
+      "ended": "2026-11-08T10:03:48.323Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -284,8 +284,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-08T10:01:55.293Z",
       "ended": ""
     }
   ],
@@ -805,6 +805,13 @@
       "unit": "U3",
       "stage": "edit",
       "text": "The wave 1 closing-pass check found that final-report.md:17 listed two kinds of open gap after the recorded-fact fix · closed: U3 added the third kind (recorded facts, no resume command)",
+      "state": "closed"
+    },
+    {
+      "id": "G6",
+      "unit": "U8",
+      "stage": "edit",
+      "text": "The generator also rewrote the gitignored dev marketplace manifest · closed: a gitignored file, rewritten on every generator run by design; nothing to commit",
       "state": "closed"
     }
   ],
