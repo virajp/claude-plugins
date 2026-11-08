@@ -113,9 +113,14 @@ worktree's gitignored `docs/scratchpad/` and is never committed.
 
 **Blueprint/design-system gaps are not findings.** If a screen state exists that
 neither the design system nor the flow's Screens section pins down (the docs are
-silent, not the code wrong), that is a **gap** — report it on the
-`SPEC GAPS:` contract line; the orchestrator records it in the plan's
-`index.json`.
+silent, not the code wrong), that is a **gap** — report it as a question in
+your block, three lines, `n` counting from 1 in the block: `QUESTION Q<n>:`
+the question, readable alone; `OPTIONS Q<n>:` two to four options separated by
+` | `, your recommendation first, each with its consequence after an em dash;
+`WHY Q<n>:` the doc anchor, an em dash, and why the docs do not decide it. The
+orchestrator asks the user
+(`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`) and records
+the answer in the plan's `index.json`.
 
 ## Return contract
 
@@ -132,7 +137,10 @@ FINDINGS:   # one line each, most-severe first; omit anything that isn't a findi
 RENDERED: ok   # or "n/a — <why>"; the gate reported which
 RENDER: <project> <code> <platform> <state> <file>   # one per renders: item; omit when none
 A11Y: clean   # or "<n> violations (worst: <rule>)"
-SPEC GAPS: none   # states/behaviors no doc pins down: one terse line each, or "none"
+QUESTION: none   # or, per state/behavior no doc pins down, the three lines below
+QUESTION Q<n>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+WHY Q<n>: <doc anchor> — <why the docs do not decide it>
 VERDICT: approve   # or "changes-required"
 ```
 

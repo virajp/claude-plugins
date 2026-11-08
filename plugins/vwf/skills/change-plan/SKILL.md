@@ -2,7 +2,7 @@
 name: change-plan
 description: >-
   Turns an ad-hoc change request into a plan folder that /vwf:execute runs
-  unattended in a fresh context. Use when the user wants to plan a change with
+  in a fresh context. Use when the user wants to plan a change with
   no blueprint slice behind it: tooling, docs, CI, a refactor, or a tree the
   blueprint does not describe. Not for a blueprint slice (use plan).
 argument-hint: "[what to plan]"
@@ -17,10 +17,10 @@ metadata:
 
 # change-plan
 
-Produce a plan that `/vwf:execute <folder>` can run with no one present. That is
-the whole bar. The folder holds every decision, ruling, file scope, gate and
-consent the run needs — otherwise the run stops and asks, which defeats the
-point. This skill talks to the user; `/vwf:execute` does not.
+Produce a plan that `/vwf:execute <folder>` can run without a question. That
+is the whole bar. The folder holds every decision, ruling, file scope, gate and
+consent the run needs. A run that meets a point the folder does not decide
+stops and asks the user, and that question is this planner's miss.
 
 This planner sits beside vwf's chain, not inside it. A blueprint slice — a flow
 or an entity the product describes — is `/vwf:plan` → `/vwf:execute`. A change

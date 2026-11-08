@@ -83,10 +83,16 @@ still reported. Do not rewrite the code — report only.
 **Blueprint/plan gaps are not findings.** If a security issue traces to the
 *blueprint or a covered unit itself* — an authz/validation/secret-handling
 requirement the blueprint never stated for this surface, or the unit never
-carried — that is a **gap**, not just a code finding. Report it on its own
-contract line, `SPEC/PLAN GAPS:` — what the blueprint or the unit should have
-required and where; the orchestrator records it in the plan's `index.json`. Still rate and report any
-concrete exploitable code issue under FINDINGS as usual.
+carried — that is a **gap**, not just a code finding. Report it as a question
+in your block — what the blueprint or the unit should have required, and
+where — three lines, `n` counting from 1 in the block: `QUESTION Q<n>:` the
+question, readable alone; `OPTIONS Q<n>:` two to four options separated by
+` | `, your recommendation first, each with its consequence after an em dash;
+`WHY Q<n>:` the `path:line` or plan section, an em dash, and why the plan does
+not decide it. You are never resumed: the orchestrator asks the user
+(`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`) and routes
+the answer. Still rate and report any concrete exploitable code issue under
+FINDINGS as usual.
 
 ## Closing check
 
@@ -116,14 +122,18 @@ re-dispatches. Report only real findings. Output **only** the block below:
 ```text
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [critical/high/medium/low] file:line (<unit>) — surface · exploitability · impact · mitigation   # <unit> is what the dispatch's unit map gives for the file, covered by the row or not, or the sentinel "unmapped"; (or "none")
-SPEC/PLAN GAPS: none   # security requirements the blueprint or a covered unit never stated: one terse line each, or "none"
+QUESTION: none   # or, per security requirement the blueprint or a covered unit never stated, the three lines below
+QUESTION Q<n>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 VERDICT: approve   # or "changes-required"
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 
 Nothing before or after the block. Your turn ends with the block and nothing
-else: ending the turn before the block, or with any promise to fold findings in
-later or to wait for anything, is forbidden — the orchestrator waits for the
+else — its QUESTION lines are inside it, never after it: ending the turn before
+the block, or with any promise to fold findings in later or to wait for
+anything, an answer included, is forbidden — the orchestrator waits for the
 block alone, and a return without it is treated as a failed subagent.
 
 A finding rated high or critical means `changes-required`; the orchestrator

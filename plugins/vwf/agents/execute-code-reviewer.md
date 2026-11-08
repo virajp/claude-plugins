@@ -122,9 +122,14 @@ finding is still reported. Do not rewrite the code — report only.
 **Blueprint/plan gaps are not findings.** If you spot a hole in the *blueprint
 or plan itself* — a behaviour neither pins down, a unit edit the code can't
 satisfy as written, a requirement the blueprint never stated — that is a
-**gap**, not a code finding. Report it on its own contract line,
-`SPEC/PLAN GAPS:` — what is under-/mis-specified and where — not under
-FINDINGS; the orchestrator records it in the plan's `index.json`.
+**gap**, not a code finding. Report it as a question in your block, not under
+FINDINGS: three lines, `n` counting from 1 in the block — `QUESTION Q<n>:` the
+question, readable alone; `OPTIONS Q<n>:` two to four options separated by
+` | `, your recommendation first, each with its consequence after an em dash;
+`WHY Q<n>:` the `path:line` or plan section, an em dash, and why the plan does
+not decide it. You are never resumed: the orchestrator asks the user
+(`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/questions.md`) and routes
+the answer.
 
 ## Closing check
 
@@ -159,15 +164,19 @@ the lines themselves to the units it re-dispatches. Report only real findings. O
 FINDINGS:   # one line each, most-severe first; omit anything that isn't a finding
 - [severity] file:line (<unit>) — what's wrong, why, and the fix   # <unit> is what the dispatch's unit map gives for the file, or the sentinel "unmapped"; (or the single line "none")
 SPEC COMPLIANCE: met   # tree-at-`to` vs covered units: "met" or "unmet: <terse list>" (unit edits missing/extra, each naming its unit)
-SPEC/PLAN GAPS: none   # holes in the blueprint/plan itself: one terse line each, or "none"
+QUESTION: none   # or, per hole in the blueprint/plan itself, the three lines below
+QUESTION Q<n>: <the question, readable alone>
+OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — <consequence> [| <option 3> | <option 4>]
+WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 API COMPAT: ok   # or "breaking — <endpoint/field> vs released <project>@<version>" | "n/a — no released snapshot / no API surface touched"
 VERDICT: approve   # or "changes-required"
 ENGINE: unavailable — <reason>   # include only if the ## Engine section was unavailable: the orchestrator's reason, or "not supplied" when the section was absent
 ```
 
 Nothing before or after the block. Your turn ends with the block and nothing
-else: ending the turn before the block, or with any promise to fold findings in
-later or to wait for anything, is forbidden — the orchestrator waits for the
+else — its QUESTION lines are inside it, never after it: ending the turn before
+the block, or with any promise to fold findings in later or to wait for
+anything, an answer included, is forbidden — the orchestrator waits for the
 block alone, and a return without it is treated as a failed subagent.
 
 Any finding rated `[high]` or worse forces
