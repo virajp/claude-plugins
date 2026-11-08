@@ -671,3 +671,86 @@ test("an agent whose agent.start is not in the tail has no start, and is not liv
   expect(u3.agent!.startedAt).toBe(undefined);
   expect(u3.agent!.live).toBe(false);
 });
+
+test("D10, D41: an open question of the run still going gives the phase question", async () => {
+  reset();
+  const asked = [
+    line("run.start", { mode: "fresh" }),
+    line("question", { id: "Q1", unit: "U2", text: "Which colour?", options: "a | b", why: "02-pane.md" }),
+  ];
+  const state = replay(asked, folder());
+  expect(state.questions).toEqual([
+    { id: "Q1", unit: "U2", text: "Which colour?", at: at(2), isWaiting: true },
+  ]);
+  const now = (state.lastAt ?? 0) + FRESH_MS * 3;
+  const facts = { state: "RUNNING", rowStatus: "RUNNING", hasLiveAgent: false, now };
+  const isAsking = (one: typeof state) => one.questions?.some((q) => q.isWaiting) === true;
+  // However old the last line is, it waits for the answer, not paused.
+  expect(phaseOf({ ...facts, lastAt: state.lastAt, isAsking: isAsking(state) }))
+    .toBe("question");
+  // An ended run stays ended.
+  expect(phaseOf({ ...facts, state: "COMPLETE", isAsking: true })).toBe("ended");
+  expect(phaseOf({ ...facts, rowStatus: "COMPLETE", isAsking: true })).toBe("ended");
+
+  // Answered: the phase it gave before.
+  const answered = replay(
+    [...asked, line("answer", { id: "Q1", decision: "D45" })],
+    folder(),
+  );
+  expect(answered.questions).toBe(undefined);
+  expect(phaseOf({ ...facts, lastAt: answered.lastAt, isAsking: isAsking(answered) }))
+    .toBe("paused");
+
+  // Asked twice under one id, then answered once: closed.
+  reset();
+  const twice = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q1", unit: "W2", text: "Which order?" }),
+      line("run.end", { outcome: "paused" }),
+      line("run.start", { mode: "resume" }),
+      line("question", { id: "Q1", unit: "W2", text: "Which order?" }),
+      line("answer", { id: "Q1", decision: "D45" }),
+    ],
+    folder(),
+  );
+  expect(twice.questions).toBe(undefined);
+});
+
+test("D41: a run.end after an open question keeps today's phase, the question asked at the resume", async () => {
+  reset();
+  const state = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+      line("run.end", { outcome: "paused" }),
+    ],
+    folder(),
+  );
+  expect(state.questions).toEqual([
+    { id: "Q3", unit: "setup", text: "Which host?", at: at(2), isWaiting: false },
+  ]);
+  const now = (state.lastAt ?? 0) + FRESH_MS * 3;
+  expect(phaseOf({
+    state: "RUNNING",
+    rowStatus: "RUNNING",
+    hasLiveAgent: false,
+    lastAt: state.lastAt,
+    isAsking: state.questions?.some((q) => q.isWaiting) === true,
+    now,
+  }))
+    .toBe("paused");
+  // Asked again at the resume: waiting once more.
+  reset();
+  const resumed = replay(
+    [
+      line("run.start", { mode: "fresh" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+      line("run.end", { outcome: "paused" }),
+      line("run.start", { mode: "resume" }),
+      line("question", { id: "Q3", unit: "setup", text: "Which host?" }),
+    ],
+    folder(),
+  );
+  expect(resumed.questions?.[0]?.isWaiting).toBe(true);
+});

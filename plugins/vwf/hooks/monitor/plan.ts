@@ -8,6 +8,7 @@ import type {
   QueueRow,
   Replay,
   ReplayAgent,
+  ReplayQuestion,
   ReplayUnit,
   RunPhase,
 } from "../../types";
@@ -229,12 +230,14 @@ export const FRESH_MS = 10 * 60 * 1000;
  * BLOCKED, COMPLETE or ARCHIVED, or the row COMPLETE, ends it; a row that
  * reads APPROVED or DRAFT did not run; else it is live while an agent is live
  * or the log's last line (none yet: the row's start) is under FRESH_MS old,
- * and paused or stopped otherwise.
+ * and paused or stopped otherwise. A question the run still going asked and
+ * nobody answered makes it `question` (D10, D41), however old the last line.
  */
 export function phaseOf(facts: {
   state: string;
   rowStatus: string;
   hasLiveAgent: boolean;
+  isAsking?: boolean;
   lastAt?: number;
   rowStarted?: number;
   now: number;
@@ -249,6 +252,9 @@ export function phaseOf(facts: {
   }
   if (facts.rowStatus === "APPROVED" || facts.rowStatus === "DRAFT") {
     return "not-run";
+  }
+  if (facts.isAsking === true) {
+    return "question";
   }
   const last = facts.lastAt ?? facts.rowStarted;
 
@@ -559,7 +565,8 @@ function splitSummary(
  * main or archived copy) gives the status, the units, waves and stages with
  * their times, and the open gaps; the log lines add each unit's agents, the
  * wave-review agents, the live agents, the session for the pick and the ts of
- * the last line. `plan.snapshot`, `row` and `gap` events are no source of
+ * the last line, and the open questions: each `question` event with no later
+ * `answer` of its id. `plan.snapshot`, `row` and `gap` events are no source of
  * state.
  */
 export function replay(
@@ -598,6 +605,10 @@ export function replay(
     return agent;
   };
   let count = 0;
+  // The open questions by id, and where the last run.start and run.end fall.
+  const asked = new Map<string, { unit: string; text: string; at?: number; index: number }>();
+  let lastStart = -1;
+  let lastEnd = -1;
 
   for (const raw of lines) {
     if (raw.trim() === "") {
@@ -626,6 +637,27 @@ export function replay(
     switch (str(e["event"])) {
       case "run.start":
         runSession = session;
+        lastStart = count;
+        break;
+      case "run.end":
+        lastEnd = count;
+        break;
+      case "question": {
+        const id = str(e["id"]);
+        if (id !== "") {
+          // A question asked again under its id moves to its latest asking.
+          asked.delete(id);
+          asked.set(id, {
+            unit: str(e["unit"]),
+            text: str(e["text"]),
+            index: count,
+            ...(ts === undefined ? {} : { at: ts }),
+          });
+        }
+        break;
+      }
+      case "answer":
+        asked.delete(str(e["id"]));
         break;
       case "tool.start": {
         const tool = str(e["tool"]);
@@ -782,6 +814,16 @@ export function replay(
   }
   if (lastTool !== undefined) {
     state.lastTool = lastTool;
+  }
+  if (asked.size > 0) {
+    // Waiting: asked after the last run.start, with no run.end after it.
+    state.questions = [...asked].map(([id, one]): ReplayQuestion => ({
+      id,
+      unit: one.unit,
+      text: one.text,
+      ...(one.at === undefined ? {} : { at: one.at }),
+      isWaiting: one.index > lastStart && lastEnd < one.index,
+    }));
   }
 
   return state;

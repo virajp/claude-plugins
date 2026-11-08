@@ -28,6 +28,8 @@ const FILL: Record<string, string> = {
   green: "#3fa66a",
   yellow: "#d9a520",
   blue: "#4a90d9",
+  // A run waiting for the user's answer: not the red of a failure.
+  purple: "#9b6dd6",
 };
 // The same colors as a pill's tint: the color at 15% over the pane.
 const TINT = (color: string) => `${color}26`;
@@ -191,6 +193,27 @@ export type Timeline = {
 /** A log line older than this reads as a warning in the Now card. */
 const QUIET_MS = 3 * 60 * 1000;
 
+/** What the pane says while a run waits for the user's answer (D10). */
+export const WAITING = "waiting for your answer";
+
+/**
+ * The lines of the open questions: while the run waits, one per question
+ * (`<id> <owner> — <text>`); once a run.end follows, one per question that
+ * the resume asks again (D41).
+ */
+export function questionLines(plan: PlanRun): string[] {
+  const open = plan.replay.questions ?? [];
+  if (plan.phase === "question") {
+    return open
+      .filter((one) => one.isWaiting)
+      .map((one) => `${one.id} ${one.unit} — ${one.text}`);
+  }
+
+  return open
+    .filter((one) => !one.isWaiting)
+    .map((one) => `open question: ${one.id}, asked at the resume`);
+}
+
 /** The badge of a plan: its words and its color. */
 function badgeOf(plan: PlanRun, isClaiming: boolean): { text: string; color: string } {
   const state = plan.replay.state;
@@ -205,6 +228,9 @@ function badgeOf(plan: PlanRun, isClaiming: boolean): { text: string; color: str
   }
   if (plan.phase === "ended") {
     return { text: "COMPLETE", color: "green" };
+  }
+  if (plan.phase === "question") {
+    return { text: `RUNNING · ${WAITING}`, color: "purple" };
   }
 
   return plan.phase === "paused"
@@ -261,6 +287,7 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
   const endedAt = time(plan.row.ended);
   const badge = badgeOf(plan, p.isClaiming);
   const message = messageOf(p);
+  const asking = questionLines(plan);
 
   // The axis runs from the first start to the last end, or to now while not ended.
   const dated = [
@@ -462,6 +489,22 @@ export function drawTimeline(ui: GraphicUi, p: Timeline) {
 
       {message !== undefined && card("message", <Text size="footnote">{message}</Text>, FILL[badge.color] ?? PENDING)}
 
+      {asking.length > 0
+        && card(
+          "question",
+          [
+            ...(plan.phase === "question"
+              ? [<Text key="question-head" size="footnote" weight="medium">{WAITING}</Text>]
+              : []),
+            ...asking.map((text, i) => (
+              <Box key={`question-${i}`} overflow="hidden">
+                <Text size="footnote" wrap="truncate">{text}</Text>
+              </Box>
+            )),
+          ],
+          FILL["purple"]!,
+        )}
+
       {(running.length > 0 || activeWave !== undefined)
         && card(
           "now",
@@ -652,6 +695,8 @@ export function chipProps(plan: PlanRun, now: number): LiveChip {
   const isEnded = plan.phase === "ended";
   const word = state.state === "BLOCKED"
     ? "Blocked"
+    : plan.phase === "question"
+    ? "Waiting for your answer"
     : plan.phase === "paused"
     ? "Paused"
     : isEnded

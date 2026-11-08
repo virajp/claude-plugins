@@ -40,6 +40,8 @@ import {
   drawChip,
   drawList,
   drawTimeline,
+  questionLines,
+  WAITING,
 } from "./view";
 
 const PANE = "vwf-monitor";
@@ -155,13 +157,14 @@ async function refreshLive($: $) {
           ...one.plan,
           replay: settle(one.plan.replay, listed, now, session),
         }, now);
-        if (plan.phase === "live" || plan.phase === "paused") {
+        if (plan.phase === "live" || plan.phase === "paused" || plan.phase === "question") {
           plans.push(plan);
         }
       }
     }
   }
-  const rank = (plan: PlanRun) => (plan.replay.session === session ? 2 : 0) + (plan.phase === "live" ? 1 : 0);
+  const rank = (plan: PlanRun) =>
+    (plan.replay.session === session ? 2 : 0) + (plan.phase === "live" || plan.phase === "question" ? 1 : 0);
   const best = plans.sort((a, b) => rank(b) - rank(a) || (time(b.row.started) ?? 0) - (time(a.row.started) ?? 0))[0];
   const last = await read($, live);
   let chip = best === undefined ? last : chipProps(best, now);
@@ -189,7 +192,7 @@ function notify($: $, before: PlanRun | undefined, after: PlanRun | undefined) {
   if (before === undefined || after === undefined || before.folder !== after.folder) {
     return;
   }
-  const wasGoing = before.phase === "live" || before.phase === "paused";
+  const wasGoing = before.phase === "live" || before.phase === "paused" || before.phase === "question";
   if (!wasGoing || before.phase === after.phase && before.replay.state === after.replay.state) {
     return;
   }
@@ -200,6 +203,8 @@ function notify($: $, before: PlanRun | undefined, after: PlanRun | undefined) {
   if (after.replay.state === "BLOCKED") {
     $.ui.toast(`${title} is BLOCKED.`);
     $.ui.status(`vwf · ${name} · BLOCKED · ${done} of ${units.length} units`);
+  } else if (after.phase === "question") {
+    $.ui.status(`vwf · ${name} · ${WAITING} · ${done} of ${units.length} units`);
   } else if (after.phase === "paused") {
     $.ui.toast(`${title} has no activity for 10 minutes.`);
     $.ui.status(`vwf · ${name} · paused or stopped · ${done} of ${units.length} units`);
@@ -276,7 +281,8 @@ function isLive(r: Run | null): boolean {
     && r.endedAt === undefined
     && (r.waiting !== undefined
       || r.plan?.phase === "live"
-      || r.plan?.phase === "paused");
+      || r.plan?.phase === "paused"
+      || r.plan?.phase === "question");
 }
 
 /** True while a read can change what the pane shows. */
@@ -298,6 +304,7 @@ function phased(plan: PlanRun, now: number): PlanRun {
       state: plan.replay.state,
       rowStatus: plan.row.status,
       hasLiveAgent: plan.replay.live.length > 0,
+      isAsking: plan.replay.questions?.some((one) => one.isWaiting) === true,
       lastAt: plan.replay.lastAt,
       rowStarted: time(plan.row.started),
       now,
@@ -1206,7 +1213,10 @@ export const register: Register = (on) => {
       ? "not run"
       : p.phase === "paused"
       ? `paused or stopped${state.detail ? ` — ${state.detail}` : ""}`
+      : p.phase === "question"
+      ? WAITING
       : p.phase;
+    const asking = questionLines(p);
     // A start and end, and the time between, or up to now while not ended.
     const times = (started: string, ended: string) => {
       const from = time(started);
@@ -1339,6 +1349,8 @@ export const register: Register = (on) => {
           })} {done}/{units.length}
         </Text>
         {state.noData && <Text dimColor>no run data yet</Text>}
+        {p.phase === "question" && <Text color="magenta" bold>{fit(WAITING, width)}</Text>}
+        {asking.map((text, i) => <Text key={`question-${i}`} color="magenta">{fit(text, width)}</Text>)}
         <Text>{" "}</Text>
         <Text dimColor>
           {fit(
