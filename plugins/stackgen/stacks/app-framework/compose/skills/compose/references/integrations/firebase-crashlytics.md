@@ -1,7 +1,8 @@
 # Jetpack Compose — Firebase Crashlytics
 
 **Wiring, configuration and anti-patterns only.** The logging, key and
-non-fatal API is Context7's at use time.
+non-fatal API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Crashlytics reports crashes, non-fatals and ANRs with readable stack traces.
 Readable is the part that takes wiring: an R8-minified build needs its mapping
@@ -18,7 +19,8 @@ file uploaded, and native code needs its symbols.
    when the app ships native code.
 3. **Declare the plugin at the root, apply it in the app module**, after the
    Google services plugin. It needs current Gradle, Android Gradle plugin and
-   Google services plugin versions; Context7 states the minimums at use time.
+   Google services plugin versions; Context7 states the minimums at use time
+   when Context7 is installed, else the official documentation does.
 4. **Mapping-file upload follows minification.** With R8 on, the plugin
    uploads the mapping file for that variant by default; the
    `mappingFileUploadEnabled` setting on the build type or flavour overrides

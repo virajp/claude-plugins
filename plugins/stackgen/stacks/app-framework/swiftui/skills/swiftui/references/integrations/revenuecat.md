@@ -2,9 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface —
 configuration builders, offerings and packages, purchase and restore calls,
-customer info and entitlements, the paywall views — is Context7's at use time,
-and is the half that ages. This reference carries the setup order, the
-identity flow and the testing wiring a per-type lookup gives only piecemeal.
+customer info and entitlements, the paywall views — is Context7's at use time
+when Context7 is installed, else the official documentation's, and is the half
+that ages. This reference carries the setup order, the identity flow and the
+testing wiring a per-type lookup gives only piecemeal.
 
 RevenueCat is a purchase backend wrapped around StoreKit: the app buys through
 its SDK, purchases-ios, and RevenueCat's servers validate the transaction and

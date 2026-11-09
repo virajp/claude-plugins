@@ -19,7 +19,8 @@ The provider's managed identity issuer — **one service under two names**, the
 second being the same product at organization scale. This skill carries what is
 this service's alone; the provider-wide judgment it sits on — cost doctrine,
 IAM, the emulator map, the private plane — is the `gcp` skill's, cited and never
-restated. The SDK surface belongs to Context7 at use time.
+restated. The SDK surface belongs to Context7 at use time when Context7 is
+installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

@@ -21,7 +21,8 @@ chunks, embeds, indexes and re-syncs it, answering a query with the
 matching chunks or with a generated answer and its citations. This skill
 carries the judgment; the binding's current signatures, the request
 options of the day and the `wrangler ai-search` flags belong to Context7
-at use time. The provider-wide half — the account and role model, the
+at use time when Context7 is installed, else to the official
+documentation. The provider-wide half — the account and role model, the
 billing principle, what exists locally — is the `cloudflare` skill's,
 cited and never restated.
 

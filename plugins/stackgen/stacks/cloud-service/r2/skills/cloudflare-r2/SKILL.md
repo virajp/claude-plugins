@@ -18,9 +18,10 @@ allowed-tools: Read Grep Glob Edit Write Bash
 
 S3-compatible object storage with no egress fee. This skill carries the
 judgment; the SDK surface, the Workers API signatures and wrangler's
-current flags belong to Context7 at use time. The provider-wide half —
-the account and role model, the billing principle, what exists locally —
-is the `cloudflare` skill's, cited and never restated.
+current flags belong to Context7 at use time when Context7 is installed,
+else to the official documentation. The provider-wide half — the account
+and role model, the billing principle, what exists locally — is the
+`cloudflare` skill's, cited and never restated.
 
 Read the reference that matches what you are doing — one, not all of them.
 

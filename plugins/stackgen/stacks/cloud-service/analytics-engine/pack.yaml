@@ -2,7 +2,7 @@ name: Cloudflare Analytics Engine
 summary: High-cardinality time-series written from a Worker with one
   non-blocking call and read back with SQL — usage metrics, per-tenant
   counters and service telemetry without a metrics pipeline the team runs.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: analytics
 # `capability` is deliberately unset, as `cloud-service/zero-trust-access`

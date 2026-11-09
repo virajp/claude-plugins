@@ -2,9 +2,10 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 the sign-in button, authorization requests and scopes, credential types, the
-credential-state check — is Context7's at use time, and is the half that ages.
-This reference carries the setup order, the entitlement and the lifecycle a
-per-type lookup gives only piecemeal.
+credential-state check — is Context7's at use time when Context7 is installed,
+else the official documentation's, and is the half that ages. This reference
+carries the setup order, the entitlement and the lifecycle a per-type lookup
+gives only piecemeal.
 
 Sign in with Apple gives the app a stable, opaque **user identifier** for this
 person, an **identity token** the backend verifies,

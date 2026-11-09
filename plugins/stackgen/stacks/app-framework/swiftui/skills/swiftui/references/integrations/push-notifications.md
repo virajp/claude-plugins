@@ -2,9 +2,10 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 authorization options, the notification center's delegate, categories and
-actions, payload keys beyond the few named here — is Context7's at use time,
-and is the half that ages. This reference carries the setup order, the
-entitlements and the extension that a per-type lookup gives only piecemeal.
+actions, payload keys beyond the few named here — is Context7's at use time
+when Context7 is installed, else the official documentation's, and is the half
+that ages. This reference carries the setup order, the entitlements and the
+extension that a per-type lookup gives only piecemeal.
 
 Push is two halves that ship separately: the app registers with the Apple Push
 Notification service (APNs) and hands its **device token** to the product's

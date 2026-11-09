@@ -92,9 +92,11 @@ bought nothing but a dependency edge. `/markdown:readme` is therefore
 vwf skill, agent or reference uses Context7 at run time, so its one `mcpServers`
 entry installed a server for everyone that vwf itself never called. It became
 a stackgen `addon` pack, and on 2026-11-09 that pack was removed with every
-plugin-installed MCP server: the user installs any MCP server, and the one thing
-that needs Context7, the stackgen generator, asks the user to install it and
-waits when none is reachable. The record is
+plugin-installed MCP server: the user installs any MCP server. The stackgen
+generator researches with Context7 first when Context7 is installed, else the
+official documentation, and never asks for it
+([the generator decision](../../../../docs/memory/decisions/2026-11-09-generator-without-context7.md)).
+The record is
 [the MCP-servers decision](../../../../docs/memory/decisions/2026-11-09-mcp-servers-owned-by-user.md),
 which reverses parts of
 [the optional-tools decision](../../../../docs/memory/decisions/2026-11-02-optional-tools-in-vwf-tools.md).

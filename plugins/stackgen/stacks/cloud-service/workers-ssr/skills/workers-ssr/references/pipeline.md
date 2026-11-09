@@ -74,8 +74,9 @@ one. Two shapes exist and the product picks one and records it:
 2. **A version uploaded rather than deployed.** Cloudflare gives each
    uploaded version its own preview URL without moving production traffic,
    and a version can be given a stable alias so the URL does not change per
-   upload. Check the wrangler floor for aliasing at Context7 rather than
-   assuming; it is recent.
+   upload. Check the wrangler floor for aliasing at Context7 when Context7
+   is installed, else in the official documentation, rather than assuming;
+   it is recent.
 
 **A preview of a rendering deployment reaches whatever its script reaches.**
 That is the difference from a static preview and it is easy to miss: a

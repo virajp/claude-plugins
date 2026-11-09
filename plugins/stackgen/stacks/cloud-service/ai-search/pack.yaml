@@ -3,7 +3,7 @@ summary: A managed retrieval pipeline — point an instance at a bucket, a
   website or its own storage and it chunks, embeds, indexes and answers
   queries with citations, so the product gets retrieval without running
   the pipeline that produces it.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: retrieval
 # `capability` is deliberately unset: `retrieval` realizes no vwf

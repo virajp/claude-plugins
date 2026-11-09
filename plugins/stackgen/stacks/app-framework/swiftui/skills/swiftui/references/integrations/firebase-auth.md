@@ -2,10 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — the auth
 instance, credentials and providers, the user object, the state listener,
-multi-factor resolution — is Context7's at use time, and is the half that ages.
-This reference carries the setup order, the URL schemes, the emulator and
-keychain wiring, and how Sign in with Apple and Google Sign-In hand their
-credentials to Firebase.
+multi-factor resolution — is Context7's at use time when Context7 is installed,
+else the official documentation's, and is the half that ages. This reference
+carries the setup order, the URL schemes, the emulator and keychain wiring, and
+how Sign in with Apple and Google Sign-In hand their credentials to Firebase.
 
 Firebase Authentication turns a provider's credential — Apple, Google, email,
 phone — into one Firebase user the rest of the product keys on, and keeps that

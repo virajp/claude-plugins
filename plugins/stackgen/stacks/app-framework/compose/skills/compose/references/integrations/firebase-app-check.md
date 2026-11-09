@@ -1,7 +1,8 @@
 # Jetpack Compose — Firebase App Check (Play Integrity)
 
 **Wiring, configuration and anti-patterns only.** The provider-factory and
-token API is Context7's at use time.
+token API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 App Check attests that a request to a Firebase backend comes from the genuine
 app on a genuine device. On Android the production provider is Play Integrity;

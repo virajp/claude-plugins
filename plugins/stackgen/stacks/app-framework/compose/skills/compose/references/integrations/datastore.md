@@ -1,7 +1,8 @@
 # Jetpack Compose — DataStore
 
 **Wiring, configuration and anti-patterns only.** The read and update API is
-Context7's at use time.
+Context7's at use time when Context7 is installed, else the official
+documentation's.
 
 DataStore holds small, settings-shaped data — preferences, flags, the last
 selected tab — as a `Flow`, written transactionally off the main thread. It

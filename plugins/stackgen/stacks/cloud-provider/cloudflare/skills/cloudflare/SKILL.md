@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 
 The provider-wide half of this stack: what holds across every Cloudflare
 service, written once. This skill carries the judgment; the dashboard,
-the API and `cloudflared`'s current flags belong to Context7 at use time.
+the API and `cloudflared`'s current flags belong to Context7 at use time
+when Context7 is installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

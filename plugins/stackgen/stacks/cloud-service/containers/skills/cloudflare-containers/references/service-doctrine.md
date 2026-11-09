@@ -89,10 +89,11 @@ rather than from outside it — calling the instance's own `fetch` from
 within its `fetch` is infinite recursion
 ([Container class](https://developers.cloudflare.com/containers/container-class/)).
 
-**The rest of the class's surface moves.** Read it at Context7 when you
-write the class rather than from a doctrine file; what belongs here is the
-judgment, and the judgment is that `sleepAfter` is a **product decision**
-— see below.
+**The rest of the class's surface moves.** Read it at Context7 (when
+Context7 is installed, else in the official documentation) when you write
+the class rather than from a doctrine file; what belongs here is the
+judgment, and the judgment is that `sleepAfter` is a **product decision** —
+see below.
 
 ## Instance types
 
@@ -164,15 +165,15 @@ value that was present when the image was made, and the image outlives the
 build.
 
 What a running instance is configured with is set from the Worker side, on
-the Container class. Read the current property names at Context7 when you
-write the class; what does not move is the rule — **the Worker is the only
-thing holding secrets, and it passes the container what that container
-needs and nothing else**. The provider's secrets doctrine and stackgen's
-secrets contract govern how a value reaches the Worker in the first
-place; a dedicated Cloudflare secrets service is not among the services
-this stack offers today, and the scope fence in the
-`cloud-provider/cloudflare` component's conventions, in this
-composition's template, is what says so.
+the Container class. Read the current property names at Context7 (when
+Context7 is installed, else in the official documentation) when you write
+the class; what does not move is the rule — **the Worker is the only thing
+holding secrets, and it passes the container what that container needs and
+nothing else**. The provider's secrets doctrine and stackgen's secrets
+contract govern how a value reaches the Worker in the first place; a
+dedicated Cloudflare secrets service is not among the services this stack
+offers today, and the scope fence in the `cloud-provider/cloudflare`
+component's conventions, in this composition's template, is what says so.
 
 ## Observing it
 
@@ -183,8 +184,9 @@ reports what is deployed, and `wrangler containers images list` what the
 account is storing
 ([Containers](https://developers.cloudflare.com/containers/)). Anything
 beyond that — streaming a container's own output, attaching to a running
-instance — is a wrangler surface that moves; check it at Context7 rather
-than assuming it from another platform's tooling.
+instance — is a wrangler surface that moves; check it at Context7 when
+Context7 is installed, else in the official documentation, rather than
+assuming it from another platform's tooling.
 
 ## What this component stays silent on
 

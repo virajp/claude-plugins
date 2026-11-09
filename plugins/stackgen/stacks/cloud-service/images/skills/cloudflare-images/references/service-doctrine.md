@@ -87,7 +87,8 @@ The binding block the project adds to its own wrangler config is in
 
 ## The four options that carry the decisions
 
-The parameter list is long and belongs to Context7 at use time
+The parameter list is long and belongs to Context7 at use time when Context7 is
+installed, else to the official documentation
 ([features](https://developers.cloudflare.com/images/optimization/features)).
 Four of them are where the design lives:
 

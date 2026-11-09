@@ -1,7 +1,8 @@
 # Jetpack Compose — Firebase Authentication
 
 **Wiring, configuration and anti-patterns only.** The sign-in, credential and
-user API is Context7's at use time.
+user API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Firebase Authentication owns the signed-in user and the ID token the backend
 verifies. Google sign-in on Android goes through Credential Manager, covered in

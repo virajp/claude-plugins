@@ -45,9 +45,10 @@ credential that can create the resource. **Durable Objects are provisioned
 by the migration**, which travels inside the deploy, so nothing is created
 out of band and no extra grant appears for it.
 
-Confirm the exact current permission name against Context7 rather than this
-file; Cloudflare renames them, and a token created from a stale name fails
-with an authorization error that names no permission.
+Confirm the exact current permission name against Context7 when Context7 is
+installed, else the official documentation, rather than this file;
+Cloudflare renames them, and a token created from a stale name fails with an
+authorization error that names no permission.
 
 ## What the migration makes the deploy credential able to do
 

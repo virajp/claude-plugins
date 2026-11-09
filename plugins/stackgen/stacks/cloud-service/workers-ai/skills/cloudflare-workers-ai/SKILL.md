@@ -19,7 +19,8 @@ Serverless inference on a catalog Cloudflare hosts, reached from a Worker
 as an ordinary binding: name a model, pass an input, get a result on the
 request path. This skill carries the judgment; the current catalog, each
 model's input schema and the limit numbers of the day belong to Context7
-at use time.
+at use time when Context7 is installed, else to the official
+documentation.
 
 Read the reference that matches what you are doing — one, not all of
 them.

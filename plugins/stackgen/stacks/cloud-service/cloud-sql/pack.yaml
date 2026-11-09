@@ -2,7 +2,7 @@ name: Cloud SQL for PostgreSQL
 summary: Managed relational Postgres — the answer when the data model has real
   relationships, when reporting queries matter, or when the product must stay
   portable off this provider.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: sql
 capability: relational-datastore

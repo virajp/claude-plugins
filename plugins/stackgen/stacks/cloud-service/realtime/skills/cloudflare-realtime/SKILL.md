@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 A WebRTC selective forwarding unit and TURN service, driven from the
 product's own server over an HTTPS API. This skill carries the judgment;
 the current API surface, the SDP exchange and the dashboard belong to
-Context7 at use time.
+Context7 at use time when Context7 is installed, else to the official
+documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

@@ -1,7 +1,7 @@
 name: OIDC issuer
 summary: Identity as an open protocol rather than a product — any issuer
   speaking OpenID Connect, self-hosted or managed.
-version: 0.1.0
+version: 0.1.1
 type: capability-provider
 category: identity
 capability: third-party-auth

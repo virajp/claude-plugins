@@ -73,7 +73,8 @@ one. Two shapes exist and the product picks one and records it:
    uploaded version its own preview URL without moving production
    traffic, and a version can be given a stable alias so the URL does not
    change per upload. Check the wrangler floor for aliasing at Context7
-   rather than assuming; it is recent.
+   when Context7 is installed, else in the official documentation, rather
+   than assuming; it is recent.
 
 Whichever is picked, the acceptance suite is given that URL by name — the
 same way any other environment value reaches it, catalogued in

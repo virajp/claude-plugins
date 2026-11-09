@@ -2,7 +2,7 @@ name: Cloudflare Zero Trust Access
 summary: An identity-aware proxy in front of a project that must not be
   publicly reachable — an operator plane invisible to the internet rather
   than merely authenticated, whichever cloud actually hosts it.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: access
 # `capability` is deliberately unset: `access` realizes no vwf capability

@@ -1,7 +1,8 @@
 # Jetpack Compose — Cloud Storage for Firebase
 
 **Wiring, configuration and anti-patterns only.** The reference, upload and
-download API is Context7's at use time.
+download API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Cloud Storage for Firebase holds user files in a Google Cloud Storage bucket,
 guarded by Security Rules and, optionally, App Check. The SDK resumes an

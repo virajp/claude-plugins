@@ -23,8 +23,9 @@ monorepo the workspace globs live in the root `pnpm-workspace.yaml` (see the
   that another dependency does not accept.
 - A stable package gets its **major** range: `">=4.0.0 <5.0.0"`. A package that
   can break in a minor release gets its **minor** range: `">=4.0.0 <4.1.0"`.
-- Choose from the package's own stability docs — read them with Context7, not
-  from memory. Use the minor range for:
+- Choose from the package's own stability docs — read them with Context7 when
+  Context7 is installed, else from the official documentation, not from memory.
+  Use the minor range for:
   - every `0.x` package;
   - a package or an API its docs mark unstable or experimental (for example,
     the Effect 4 packages other than `effect`, the OpenTelemetry `0.2xx`

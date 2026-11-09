@@ -1,7 +1,8 @@
 # Jetpack Compose — image loading and cropping
 
 **Wiring, configuration and anti-patterns only.** Coil's request, cache and
-composable API, and the cropper's options, are Context7's at use time.
+composable API, and the cropper's options, are Context7's at use time when
+Context7 is installed, else the official documentation's.
 
 Coil loads remote and local images into Compose with coroutines, a memory and
 a disk cache, and decodes at the size the layout asks for. Picking an image

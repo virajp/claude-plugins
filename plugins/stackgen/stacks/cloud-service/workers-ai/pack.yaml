@@ -3,7 +3,7 @@ summary: Serverless inference on a catalog of open models, reached from a
   Worker through a binding — text, embeddings, vision, speech — the
   product's inference provider when the model it needs is in the catalog
   and the request should not leave the edge to be answered.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: inference
 # `capability` is deliberately unset: `inference` realizes no vwf

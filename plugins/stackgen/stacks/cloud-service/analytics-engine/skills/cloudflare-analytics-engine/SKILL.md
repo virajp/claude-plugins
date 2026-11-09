@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 A time-series store the product writes to from its own code and reads
 back with SQL. This skill carries the judgment; the SQL dialect's current
 function list, the binding's type signature and the API's response shapes
-belong to Context7 at use time.
+belong to Context7 at use time when Context7 is installed, else to the
+official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

@@ -3,7 +3,7 @@ summary: A vector index bound to a Worker — similarity search over
   embeddings for retrieval, recommendation and classification, with
   namespace and metadata filtering, and the place a product's own
   embeddings live.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: vector
 capability: search-index

@@ -2,7 +2,7 @@ name: Firebase Cloud Messaging
 summary: The provider's push transport to mobile and web clients — free at the
   service, best-effort by design, and the one service in this bundle with no
   emulator for delivery.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: messaging
 capability: push-notifications

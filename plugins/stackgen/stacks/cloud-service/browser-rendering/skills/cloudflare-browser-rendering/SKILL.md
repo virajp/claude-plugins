@@ -19,7 +19,8 @@ Headless Chrome on Cloudflare's network, reached from a Worker through a
 binding, from anywhere through a REST endpoint, or over the DevTools
 protocol. This skill carries the judgment; the automation libraries'
 current signatures, each endpoint's option list and the limit numbers of
-the day belong to Context7 at use time.
+the day belong to Context7 at use time when Context7 is installed, else
+to the official documentation.
 
 Cloudflare's docs now call the product **Browser Run**; the Wrangler key,
 the REST path and the token permission still say browser rendering, which

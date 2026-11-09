@@ -19,7 +19,8 @@ One URL in front of every model call — to Workers AI or to any third-party
 provider — carrying caching, rate limiting, logging, retries and fallbacks,
 and holding the upstream keys so the Worker never does. This skill carries
 the judgment; the current provider list, the exact request shapes and the
-dashboard belong to Context7 at use time.
+dashboard belong to Context7 at use time when Context7 is installed, else to
+the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

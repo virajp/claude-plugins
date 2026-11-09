@@ -3,7 +3,7 @@ name: Audit store · PostgreSQL
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/audit-store-postgres@0.1.0
+- capability-provider/audit-store-postgres@0.1.1
 ---
 
 # Backing — Audit store · PostgreSQL

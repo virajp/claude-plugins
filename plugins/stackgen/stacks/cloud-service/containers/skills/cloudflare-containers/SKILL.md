@@ -21,7 +21,8 @@ A container image running beside a Worker: the Worker is the front door,
 the image runs the process an isolate cannot host, and the container is
 addressed through a Durable Object. This skill carries the judgment;
 wrangler's current flags, the Container class's API and the platform's
-current limits belong to Context7 at use time.
+current limits belong to Context7 at use time when Context7 is installed,
+else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

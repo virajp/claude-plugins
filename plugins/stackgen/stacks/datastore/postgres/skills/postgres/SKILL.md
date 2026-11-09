@@ -17,7 +17,8 @@ paths:
 # PostgreSQL
 
 The relational datastore that needs no cloud. This skill carries the judgment a
-reader cannot look up; the API surface belongs to Context7 at use time.
+reader cannot look up; the API surface belongs to Context7 at use time when
+Context7 is installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

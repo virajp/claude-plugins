@@ -88,8 +88,8 @@ and the right shape for a preview surface or an internal tool.
 
 Serving from a **subpath** of an existing hostname rather than a whole one
 is supported and needs a `route` plus a recent enough wrangler; check the
-current floor at Context7 rather than assuming, because it moved once
-already.
+current floor at Context7 when Context7 is installed, else in the official
+documentation, rather than assuming, because it moved once already.
 
 ## Credentials are never in the file
 

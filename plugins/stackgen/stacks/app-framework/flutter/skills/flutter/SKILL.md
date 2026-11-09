@@ -37,7 +37,8 @@ matching your task — one, not all of them.
 | Wiring a third-party integration | [`references/integrations/`](references/integrations/) — one per integration |
 
 **Integration references are wiring only** — setup order, platform
-configuration, anti-patterns. Their API surface is Context7's at use time.
+configuration, anti-patterns. Their API surface is Context7's at use time when
+Context7 is installed, else the official documentation's.
 
 **The native edges have their own skills**, scoped to the channel boundary:
 `flutter-android` (Kotlin) and `flutter-ios` (Swift).

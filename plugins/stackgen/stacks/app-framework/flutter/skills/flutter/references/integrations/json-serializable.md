@@ -1,6 +1,6 @@
 # json_serializable — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -31,9 +31,9 @@ Sections in this file:
 
 The annotation vocabulary — field customization, nested objects, collections,
 enums, defaults, null-safety patterns, custom converters and Equatable
-integration — is API surface. Fetch it from Context7 at use time. Where the
-generator sits in the build order is in
-[Build, flavors & signing](../build-flavors-signing.md).
+integration — is API surface. Fetch it from Context7 at use time when Context7
+is installed, else from the official documentation. Where the generator sits in
+the build order is in [Build, flavors & signing](../build-flavors-signing.md).
 
 ## Setup
 

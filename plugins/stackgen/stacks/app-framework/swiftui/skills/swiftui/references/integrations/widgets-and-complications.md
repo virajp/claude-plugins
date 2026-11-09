@@ -2,8 +2,9 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 configurations, timeline providers, families, relevance — is Context7's at use
-time, and is the half that ages. This reference carries the setup order and the
-parts a per-type lookup gives only piecemeal.
+time when Context7 is installed, else the official documentation's, and is the
+half that ages. This reference carries the setup order and the parts a per-type
+lookup gives only piecemeal.
 
 WidgetKit is one mechanism across the platforms that host widgets: a home or
 lock screen widget on iOS and iPadOS, a desktop and Notification Center widget

@@ -4,7 +4,7 @@ summary: Streaming ingestion into the object store — events sent from a
   landing in R2 as JSON, Parquet or Apache Iceberg tables, so clickstream,
   telemetry and structured product events become durable without a broker
   the team runs.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: ingestion
 # `capability` is deliberately unset: `ingestion` realizes no vwf capability

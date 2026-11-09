@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 A vector index bound to a Worker: the product's own embeddings, stored
 with an id and metadata, searched by nearest neighbour. This skill
 carries the judgment; the client API's current signatures, the Wrangler
-flags and the limit numbers of the day belong to Context7 at use time.
+flags and the limit numbers of the day belong to Context7 at use time
+when Context7 is installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of
 them.

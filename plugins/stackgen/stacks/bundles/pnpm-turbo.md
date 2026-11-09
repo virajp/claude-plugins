@@ -3,7 +3,7 @@ name: pnpm · Turborepo
 axis: repo
 kind: workspace
 components:
-- package-manager/pnpm@1.1.1
+- package-manager/pnpm@1.1.2
 - build-orchestrator/turbo@generated
 ---
 

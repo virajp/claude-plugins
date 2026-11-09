@@ -19,7 +19,8 @@ One object per id, single-threaded, with its own transactional storage,
 alarms and WebSocket coordination — reached from a Worker through a binding
 to a class that lives in the Worker's own script. This skill carries the
 judgment; the current API surface, Wrangler's flags and the dashboard belong
-to Context7 at use time.
+to Context7 at use time when Context7 is installed, else to the official
+documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

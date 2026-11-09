@@ -203,8 +203,9 @@ the agent rather than the product. One ships today: `taste-skill`, the plugin
 the `claude-code` design tool's `design-session` authors through, and that skill
 halts without it. No tool on the menu installs an MCP server: every MCP server
 is yours to install. A pack that needs one names it in its `conventions.md`, and
-the agent asks you to install it when a skill needs it — stackgen's generator,
-for one, asks for a Context7 server before it generates anything.
+the agent asks you to install it when a skill needs it. stackgen's generator
+asks for none: it uses Context7 when Context7 is installed, else the official
+documentation.
 
 ## The closed menu, and the one door out of it
 

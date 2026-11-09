@@ -1,6 +1,6 @@
 # Maps & location — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -33,9 +33,10 @@ Sections in this file:
 
 Reading a position once or as a stream, the map widget and its controller,
 markers, polylines, circles, camera control, custom styling and the wakelock are
-API surface. Fetch them from Context7 at use time. **Always check and request
-location permission before any location call** — that is a platform contract,
-not a package detail, and the declarations it needs are below.
+API surface. Fetch them from Context7 at use time when Context7 is installed,
+else from the official documentation. **Always check and request location
+permission before any location call** — that is a platform contract, not a
+package detail, and the declarations it needs are below.
 
 ## Setup
 

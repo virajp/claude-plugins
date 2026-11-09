@@ -20,8 +20,9 @@ paths:
 # Audit store · Cloudflare D1
 
 An isolated, append-only audit dataset in a D1 database of its own. This skill
-carries the judgment; the D1 API and SQL surface belong to Context7 at use time,
-and the store-wide judgment belongs to the `cloud-service/d1` component.
+carries the judgment; the D1 API and SQL surface belong to Context7 at use time
+when Context7 is installed, else to the official documentation, and the
+store-wide judgment belongs to the `cloud-service/d1` component.
 
 Read the reference that matches what you are doing — one, not all of them.
 

@@ -386,7 +386,8 @@ which is the grain `stackgen-sync` acts at.
   belongs to the category level, written once.
 - **Judgment, not API surface.** A pack's conventions and skills carry the
   decisions a reader cannot look up — layout, placement, testing shape, what
-  bills and what breaks. API reference belongs to Context7 at use time.
+  bills and what breaks. API reference belongs to Context7 at use time,
+  when Context7 is installed; else the official documentation.
 - **Facts are per language and honest.** `n/a` is an answer; an invented
   mise tool or manifest name surfaces as a doctor finding in every repo that
   pins the pack. A tool the stack cannot run without whose `mise_tool` is

@@ -35,10 +35,11 @@ route changes approximately never, and a token that can edit DNS for a
 production zone is a much larger credential than one that can replace a
 deployment.
 
-Confirm the exact current permission names against Context7 rather than
-this file; Cloudflare renames them, and a token created from a stale name
-fails with an authorization error that says nothing about which permission
-was missing.
+Confirm the exact current permission names against Context7 when Context7
+is installed, else the official documentation, rather than this file;
+Cloudflare renames them, and a token created from a stale name fails with
+an authorization error that says nothing about which permission was
+missing.
 
 ## The two environment variables
 

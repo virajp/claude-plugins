@@ -65,10 +65,11 @@ plugin: stackgen
 note: Packs listed here are curated and copied verbatim. Any technology no
   pack covers can be GENERATED — pin `generated/<technology-slug>` on the
   axis that needs it, and the first template fetch runs the generation
-  pipeline (researched via Context7, instantiated against vwf's principles
-  catalog, gated by review and your consent) directly into the repo's
-  committed .claude/ tree. Generation needs a Context7 MCP server: when none
-  is reachable, the agent asks you to install one yourself and waits.
+  pipeline (researched from current sources, Context7 first when Context7
+  is installed, else the official documentation and the package
+  registries; instantiated against vwf's principles catalog, gated by
+  review and your consent) directly into the repo's committed .claude/
+  tree.
 templates:
   - slug: <bundle filename without .md>
     axis: <bundle frontmatter axis>

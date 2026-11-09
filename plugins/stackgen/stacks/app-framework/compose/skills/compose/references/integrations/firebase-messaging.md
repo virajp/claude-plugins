@@ -1,7 +1,8 @@
 # Jetpack Compose — Firebase Cloud Messaging
 
 **Wiring, configuration and anti-patterns only.** The messaging service, token
-and message API is Context7's at use time.
+and message API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 FCM delivers push messages to the device. On Android the wiring is a service in
 the manifest, the notification permission, and notification channels created

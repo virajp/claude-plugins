@@ -50,8 +50,9 @@ Input shape is the **model's**, not the service's: chat-shaped models take
 take `text` (a string or an array of them), and image, speech and
 reranking models each take their own. There is no common envelope to
 learn, which means the model catalog page for the specific model is the
-schema — Context7 at use time, not this reference
-([model catalog](https://developers.cloudflare.com/workers-ai/models/)).
+schema — Context7 at use time when Context7 is installed, else the official
+documentation, not this reference ([model
+catalog](https://developers.cloudflare.com/workers-ai/models/)).
 
 **Stream anything a human waits for.** `stream: true` returns a stream the
 Worker hands straight back as `text/event-stream`, and Cloudflare

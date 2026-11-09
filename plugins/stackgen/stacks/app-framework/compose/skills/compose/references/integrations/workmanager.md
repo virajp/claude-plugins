@@ -1,7 +1,8 @@
 # Jetpack Compose — WorkManager
 
 **Wiring, configuration and anti-patterns only.** Worker and request API is
-Context7's at use time.
+Context7's at use time when Context7 is installed, else the official
+documentation's.
 
 WorkManager runs deferrable work that must complete even if the app is killed
 or the device restarts — syncing pending writes, uploading, periodic refresh.

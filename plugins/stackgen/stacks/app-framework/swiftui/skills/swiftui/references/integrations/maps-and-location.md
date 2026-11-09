@@ -2,10 +2,11 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 the map view and its content, camera positions, map controls, the location
-manager, live updates, authorization and accuracy values — is Context7's at
-use time, and is the half that ages. This reference carries the usage strings,
-the authorization order, the background mode and the testing wiring a per-type
-lookup gives only piecemeal.
+manager, live updates, authorization and accuracy values — is Context7's at use
+time when Context7 is installed, else the official documentation's, and is the
+half that ages. This reference carries the usage strings, the authorization
+order, the background mode and the testing wiring a per-type lookup gives only
+piecemeal.
 
 Two frameworks, one feature: **MapKit** draws the map and its content, and
 **Core Location** tells the app where the device is. A map that only shows

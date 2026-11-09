@@ -1,6 +1,6 @@
 # GetX — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -38,7 +38,8 @@ Sections in this file:
 | [Context-free UI](#context-free-ui)                  | Why GetX helpers take no BuildContext               |
 
 The reactive operators themselves, the translation map and the UI-helper
-signatures are API surface — fetch them from Context7 at use time.
+signatures are API surface — fetch them from Context7 at use time when Context7
+is installed, else from the official documentation.
 
 ## Setup
 
@@ -254,7 +255,8 @@ tab-local stack.
 Every GetX UI helper — snackbars, dialogs, bottom sheets, `Get.width` — works
 **without a `BuildContext`**, which is what lets a controller or a service
 surface UI without one being threaded down to it. That is the constraint worth
-knowing; the helper signatures are Context7's.
+knowing; the helper signatures are Context7's when Context7 is installed, else
+the official documentation's.
 
 It does not licence storing a `BuildContext`. The rule in
 [Standards & architecture](../standards-and-architecture.md) still holds:

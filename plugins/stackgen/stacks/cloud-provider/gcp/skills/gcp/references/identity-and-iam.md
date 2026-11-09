@@ -1,8 +1,9 @@
 # Identity & IAM — Google Cloud
 
-Context7 has the full role catalogue and every API signature. What it cannot
-tell you is **which role to grant**, why the obvious one is usually too broad,
-and which identity mechanism to use in the first place. That is this file.
+Context7 has the full role catalogue and every API signature when Context7 is
+installed, else the official documentation has them. What it cannot tell you is
+**which role to grant**, why the obvious one is usually too broad, and which
+identity mechanism to use in the first place. That is this file.
 
 Each service component states the narrow grants *it* needs and cites this one;
 nothing below is repeated there.
@@ -111,7 +112,8 @@ protect only the direct client path.
 6. Does every server endpoint **re-authorize**, rather than trusting rules?
 
 These six find nearly every real privilege problem, and none of them requires
-reading the role catalogue — which is what Context7 is for.
+reading the role catalogue — which is what Context7 is for when Context7 is
+installed, else the official documentation.
 
 **No emulator enforces IAM**, so every permission error is a production-only
 error. That is why this review is run against a real environment and why the

@@ -3,7 +3,7 @@ summary: Stateful serverless — one addressable object per id, single-threaded,
   with its own strongly consistent SQLite storage, alarms and WebSocket
   coordination; where state that must be correct per key lives, which is
   neither the cache nor the shared database.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: stateful-compute
 # `capability` is deliberately unset: `stateful-compute` realizes no vwf

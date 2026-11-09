@@ -2,10 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — peer
 connections, media tracks and capturers, session descriptions, rooms and
-participants, the audio manager, the video views — is Context7's at use time,
-and is the half that ages. This reference carries the setup order, the
-capabilities and the audio-session rules a per-type lookup gives only
-piecemeal.
+participants, the audio manager, the video views — is Context7's at use time
+when Context7 is installed, else the official documentation's, and is the half
+that ages. This reference carries the setup order, the capabilities and the
+audio-session rules a per-type lookup gives only piecemeal.
 
 Two ways in, and the product picks one. **Plain WebRTC** is the WebRTC
 framework itself: peer-to-peer media, with **no signalling** — exchanging

@@ -2,7 +2,7 @@ name: Audit store · Cloudflare D1
 summary: An isolated, append-only audit dataset in a D1 database of its own —
   written through one seam and read only by the console Worker that holds the
   binding.
-version: 0.1.0
+version: 0.1.1
 type: capability-provider
 category: audit
 capability: audit-store

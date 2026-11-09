@@ -19,7 +19,7 @@ allowed-tools: Read Grep Glob Edit Write Bash
 A serverless SQLite database a Worker reaches through a binding. This
 skill carries the judgment; SQLite's own SQL surface, the Worker API's
 current signatures and `wrangler`'s current flags belong to Context7 at
-use time.
+use time when Context7 is installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of
 them.

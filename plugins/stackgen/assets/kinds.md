@@ -66,7 +66,8 @@ baseline.
   lint/format config). Hooks only from packs (e.g. a command normalizer);
   generation never emits scripts.
 - **Scope**: layout, idioms, testing shape, placement. Never API reference
-  (Context7 serves that at use time), never the datastore's or cloud's
+  (Context7 serves that at use time, when Context7 is installed; else the
+  official documentation), never the datastore's or cloud's
   judgment.
 - **Facts**: per language — `lsp` (how a language server is provided;
   stackgen ships none, so this recommends the mise tool or marketplace
@@ -129,7 +130,8 @@ recorded when the user settles it.
 **Materiality**: one judgment reference per `frameworks:` entry —
 written-against, so removing the framework means rewriting the reference.
 **Dependencies get no reference** — a line in manifest doctrine at most;
-Context7 serves their API at use time. Each framework reference owns its
+Context7 serves their API at use time, when Context7 is installed; else the
+official documentation. Each framework reference owns its
 own seam and names neighbors only through the capability vocabulary;
 cross-framework integration judgment lives in standards (topic 1), never
 in per-pair references.
@@ -595,7 +597,8 @@ researched and cited. Topic 12 is conditional and repeats per integration.
     **setup order, platform configuration and anti-patterns only.** Manifest
     entries, entitlements, permission declarations, emulator wiring: the
     parts a per-package documentation lookup gives only piecemeal. **Never
-    API surface** — that is Context7's at use time, and it is the half that
+    API surface** — that is Context7's at use time, when Context7 is
+    installed, else the official documentation's — and it is the half that
     ages.
 
 ## `deploy-target` — where a built artifact lands

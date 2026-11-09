@@ -3,7 +3,7 @@ summary: One URL in front of every model call the product makes — to Workers
   AI or to any third-party provider — adding caching, rate limiting, logging,
   retries and fallbacks, and holding the upstream provider keys so the Worker
   never does.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: ai-gateway
 # `capability` is deliberately unset: `ai-gateway` realizes no vwf

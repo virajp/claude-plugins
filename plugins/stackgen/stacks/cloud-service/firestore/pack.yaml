@@ -2,7 +2,7 @@ name: Firestore
 summary: The document datastore with a first-class offline emulator and a
   governed client-direct path — the fastest way to a working product where the
   data model is document-shaped.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: document
 capability: document-datastore

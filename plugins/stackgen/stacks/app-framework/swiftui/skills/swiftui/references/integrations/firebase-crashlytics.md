@@ -2,9 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — custom
 keys, logs, user ids, recorded errors, the unsent-report calls — is Context7's
-at use time, and is the half that ages. This reference carries the symbol
-upload, the build settings it depends on and the collection switch a per-type
-lookup gives only piecemeal.
+at use time when Context7 is installed, else the official documentation's, and
+is the half that ages. This reference carries the symbol upload, the build
+settings it depends on and the collection switch a per-type lookup gives only
+piecemeal.
 
 Crashlytics starts itself when `FirebaseApp.configure()` runs and reports a
 crash on the next launch. A crash is only readable once the build's **dSYM**

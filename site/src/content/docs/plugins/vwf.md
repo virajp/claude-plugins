@@ -4074,9 +4074,10 @@ the agent asks you to install it and waits. A pack that needs a server names it
 in a `## MCP servers` section of its `conventions.md` — its name, what it is
 for, and its official install page, `(optional)` when the pack works without it
 — and `/vwf:doctor` reports a declared server that `claude mcp list` does not
-show as drift, never blocking, and an optional one not at all. The one thing
-that needs Context7, stackgen's generator, asks you to install a Context7 server
-when none is reachable. A repo whose machine still holds servers stackgen once
+show as drift, never blocking, and an optional one not at all. stackgen's
+generator researches with Context7 first when Context7 is installed,
+else the official documentation, and never asks for it. A repo whose machine
+still holds servers stackgen once
 installed moves off them through [`config_format` 26](#vwfsetup). See
 [stackgen's MCP servers](./stackgen.md#mcp-servers--yours-to-install).
 

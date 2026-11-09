@@ -3,7 +3,7 @@ summary: Headless Chrome as a service — a Worker drives a real browser
   through a binding, or any caller hits a REST endpoint for content,
   screenshots, PDFs and structured scrapes, so the product renders,
   tests and crawls without running browsers of its own.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: browser
 # `capability` is deliberately unset: `browser` realizes no vwf capability

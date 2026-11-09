@@ -17,7 +17,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 The provider's push transport to mobile and web clients. This skill carries what
 is this service's alone; the provider-wide judgment it sits on — cost doctrine,
 IAM, the emulator map, the private plane — is the `gcp` skill's, cited and never
-restated. The payload schema belongs to Context7 at use time.
+restated. The payload schema belongs to Context7 at use time when Context7 is
+installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

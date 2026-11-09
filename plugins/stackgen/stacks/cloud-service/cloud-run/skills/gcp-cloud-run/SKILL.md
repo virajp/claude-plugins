@@ -17,7 +17,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 Serverless containers on Google Cloud. This skill carries what is Cloud Run's
 alone; the provider-wide judgment it sits on — cost doctrine, IAM, the emulator
 map, the private plane — is the `gcp` skill's, cited and never restated. The
-command surface belongs to Context7 at use time.
+command surface belongs to Context7 at use time when Context7 is installed, else
+to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 
