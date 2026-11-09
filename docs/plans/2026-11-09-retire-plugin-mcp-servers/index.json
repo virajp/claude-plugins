@@ -792,5 +792,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/retire-plugin-mcp-servers",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-09-retire-plugin-mcp-servers.jsonl"
+  }
 }
