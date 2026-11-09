@@ -59,7 +59,6 @@ python	.config/mise/tasks/setup/deps/python
 repo-sync	.config/mise/conf.d/repo-sync/mise.dev.toml
 repo-sync	.config/mise/tasks/code/lint/repo-sync
 repo-sync	.config/mise/tasks/setup/configs/_default
-repo-sync	.config/mise/tasks/setup/configs/sync
 vscode	.config/mise/conf.d/vscode/mise.dev.toml
 vscode	.config/mise/tasks/setup/vscode
 vscode	.vscode/extensions.json

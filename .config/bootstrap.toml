@@ -1,5 +1,5 @@
 # The bootstrap commit of the last sync. repo-sync writes it.
-bootstrap_commit = "b6a4ecd0a1a2ef965b9aa5ebe55050cd115bcd52"
+bootstrap_commit = "928de1b902de83de8c0afdbc555b969ac1b01a65"
 environments = [ "dev", "ci" ]
 extensions = [ "astro-build.astro-vscode" ]
 repo_name = "claude-plugins"
