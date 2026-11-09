@@ -17,6 +17,25 @@
         "B106"
       ],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-09-generator-without-context7",
+      "folder": "docs/plans/2026-11-09-generator-without-context7",
+      "kind": "change",
+      "title": "The stackgen generator works without Context7",
+      "target_repo": null,
+      "priority": 20,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-09-retire-plugin-mcp-servers"
+      ],
+      "backlog": [
+        "B124"
+      ],
+      "backlog_pieces": []
     }
   ]
 }
