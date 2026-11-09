@@ -49,10 +49,11 @@
  * impurity this avoids. The cost is that a ref can name a tag that does not
  * exist yet, which `plugins.yml` asserts against on the release branch.
  *
- * The projection is one-directional and lossy on purpose. `mcpServers` and
- * `lspServers` live in the plugin manifest and are deliberately NOT copied
- * across: Claude reads them from the installed bundle, and a second copy in the
- * marketplace is a copy that can drift.
+ * The projection is one-directional and lossy on purpose. A plugin manifest
+ * declares no `mcpServers` (the checker refuses the key), and `lspServers`
+ * lives in the plugin manifest and is deliberately NOT copied across: Claude
+ * reads it from the installed bundle, and a second copy in the marketplace is a
+ * copy that can drift.
  *
  * Usage:
  *   node scripts/src/marketplace.ts            write both manifests
