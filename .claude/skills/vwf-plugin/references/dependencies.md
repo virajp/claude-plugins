@@ -71,17 +71,15 @@ tooling checks is,
 since 2026-09-18, a forge CLI (`gh`) that is absent, not logged in, or without
 the `project` scope, which leaves `/vwf:backlog` with nothing to read and every
 planner's recall of it empty, since the backlog is a GitHub Project with no file
-fallback — and where a product picks the `context7` tool, the **Context7 runner
-is not checked at all**, a missing one surfacing as a dead MCP server. That
-runner is `pnpm dlx` by default and `${CONTEXT7_RUNNER}` overrides it, so what a
-check would have to verify is whatever the user pinned, not `pnpm`.
+fallback. An MCP server a pack declares in its `## MCP servers` section is the
+user's install, and doctor reports one that is not listed by `claude mcp list`
+as drift, never blocking (an `(optional)` one not at all).
 
 So the trade is slightly worse than "doctor already blocked on it": one blocks
-once a stack is pinned, one degrades, and one is silent. It was still worth
+once a stack is pinned, and one degrades. It was still worth
 taking — `claude plugin install vwf` cannot now fail for a reason the user did
 not ask about — but `readme.md`'s caveat states the gap rather than implying
-doctor covers it, and that is the honest version. **If a Context7-runner check
-is ever added to doctor, this paragraph is what should shrink.**
+doctor covers it, and that is the honest version.
 
 `markdown` used to be on that list and is gone as a plugin: vwf **absorbed** it.
 Its two skills (`documentation-standards`, `readme`) are vwf skills now,
@@ -92,12 +90,13 @@ bought nothing but a dependency edge. `/markdown:readme` is therefore
 
 `context7` went the same way and then left. **vwf declares no MCP server.** No
 vwf skill, agent or reference uses Context7 at run time, so its one `mcpServers`
-entry installed a server for everyone that vwf itself never called. It is now a
-stackgen `addon` pack, `addon/context7`, picked on `/vwf:architecture`'s tools
-round and landed in `vwf-tools` by `/vwf:setup`, and the one thing that needs
-it,
-the stackgen generator, halts with that remedy when no Context7 server is
-reachable from any source. This reverses the absorption; the record is
+entry installed a server for everyone that vwf itself never called. It became
+a stackgen `addon` pack, and on 2026-11-09 that pack was removed with every
+plugin-installed MCP server: the user installs any MCP server, and the one thing
+that needs Context7, the stackgen generator, asks the user to install it and
+waits when none is reachable. The record is
+[the MCP-servers decision](../../../../docs/memory/decisions/2026-11-09-mcp-servers-owned-by-user.md),
+which reverses parts of
 [the optional-tools decision](../../../../docs/memory/decisions/2026-11-02-optional-tools-in-vwf-tools.md).
 
 The dependency list is declared in **one** place —
@@ -112,7 +111,9 @@ Its three import skills became vwf's own in Wave C — `/vwf:import-screens`,
 project declares a `design:` tool. Wave D finished the job: the three per-tool
 references left vwf for stackgen `design-tool` packs, and the manifest that
 carried the Claude Design MCP server was deleted once `.mcp.json` became a
-permitted target.
+permitted target. The `claude-design` pack itself was removed on 2026-11-09,
+before standalone Claude Design closes on 2026-12-14; `config_format` 26 re-pins
+a project that used it to `claude-code`, `lovable` or `stitch`.
 
 The seam is **two hops of fixed names**, and no constructed name anywhere. vwf
 calls its own three skills; those delegate to three more fixed names in the
@@ -127,9 +128,10 @@ retired, which is the intended direction whenever an entry stops feeling
 arguable. And **the guard's MCP rule was generalized**: it matched the
 plugin-scoped `mcp__plugin_design-tools_` prefix, which a project-scoped
 `.mcp.json` server never produces, so matching only that would have quietly
-stopped catching anything. It was widened once more when `.mcp.json` stopped
-being a target at all: a design tool's server now lands in `vwf-tools`, whose
-prefix is `mcp__plugin_vwf-tools_<token>__`.
+stopped catching anything. It is now matched by prefix alone: any
+`mcp__<server>__`, `mcp__plugin_vwf-tools_` or `mcp__plugin_design-tools_`
+prefix in vwf prose is a finding, because vwf reaches no MCP server, whoever
+installed it.
 
 **There is no CI dependency edge at all any more.** vwf owns the
 delivery-pipeline **contract** (`assets/delivery-pipeline.md`), which states

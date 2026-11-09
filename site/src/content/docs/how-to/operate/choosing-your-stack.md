@@ -199,14 +199,12 @@ the kind's edge, not a gap — and a Flutter checkout's `pub` is a pack inside t
 **The addon axis is the optional tools**, shown as a tools menu after the other
 rounds, once per product, with **nothing preselected**: only what you pick is
 ever installed, and picking nothing is a complete answer. It holds what serves
-the agent rather than the product. `context7` is current library documentation,
-and stackgen's generator halts without a Context7 server, so a product that will
-generate anything wants it. `taste-skill` is the plugin the `claude-code` design
-tool's `design-session` authors through, and that skill halts without it.
-`notion` is the place your team's docs, specs and tickets already live, and what
-it lands is the wiring that lets the agent reach them — no part of the product
-runs against it. Its server lands at user scope, so once authorised it is
-reachable from every repo on your machine: grant it narrowly.
+the agent rather than the product. One ships today: `taste-skill`, the plugin
+the `claude-code` design tool's `design-session` authors through, and that skill
+halts without it. No tool on the menu installs an MCP server: every MCP server
+is yours to install. A pack that needs one names it in its `conventions.md`, and
+the agent asks you to install it when a skill needs it — stackgen's generator,
+for one, asks for a Context7 server before it generates anything.
 
 ## The closed menu, and the one door out of it
 
@@ -313,8 +311,9 @@ pins, gates and their tasks — is not a pack's: stackgen asks
 consent line, and bootstrap's `mise run setup:configs` writes them. A **language
 server** cannot be — it is a plugin-manifest feature no project file can express
 — so stackgen writes one small local plugin on your machine, `vwf-tools`, which
-holds any MCP server your picks need too, and prints the two commands that
-register it, rather than running them. It is user-scoped, so it
+holds language servers only, and prints the two commands that register it,
+rather than running them. It installs no MCP server: those are yours. It is
+user-scoped, so it
 serves every repo you work in and **your collaborators get none of it**: their
 editor tooling is their own machine's business. Expect to do that once, and to
 be asked before it happens.

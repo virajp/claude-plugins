@@ -71,15 +71,11 @@ blocker rather than a preference. Know this before you install.
   a project in an architecture registry you author first. It will not operate on
   an ad-hoc folder.
 - **`mise` and `node` must be on your `PATH`.** `node` runs vwf's own scripts.
-  `pnpm` matters only if the product picks the optional `context7` tool, as its
-  **default** runner; `CONTEXT7_RUNNER` overrides it, so a bun or npm user needs
-  no pnpm — see
-  [the stackgen manual](https://claude-plugins.virajp.dev/plugins/stackgen/).
   **Nothing checks these at install time**, and `/vwf:doctor` covers only part
   of them: it blocks on a missing `mise` once any stack axis is pinned (and
   `/vwf:setup` and `/vwf:execute` halt on it), reports a missing language server
-  as an ordinary finding, and says nothing at all about `node` or the Context7
-  runner. Run `/vwf:doctor` first regardless, but install what you use rather
+  as an ordinary finding, and says nothing at all about `node`. Run
+  `/vwf:doctor` first regardless, but install what you use rather
   than relying on it to tell you. Another, `gh`, logged in, is needed by
   `/vwf:backlog`,
   which keeps the backlog
@@ -224,9 +220,9 @@ Paste one of these, adjusting the plugin name:
   produces from that prompt. It is your agent's best effort, and the honest
   expectation is that skills port well, hooks and MCP wiring port unevenly, and
   subagents port worst.
-- **MCP wiring varies most.** MCP transport support differs per tool; vwf
-  declares no server, and each one stackgen lands, an optional tool's or a
-  design tool's, goes into a local plugin only Claude Code reads.
+- **MCP wiring varies most.** MCP transport support differs per tool; no
+  plugin here declares or installs a server — you install each one a pack
+  names, in whichever tool you use.
 - **Model-invocation restrictions may be approximated.** Some skills are marked
   so the model cannot invoke them itself and you own the timing
   (`disable-model-invocation: true`). If your tool has no equivalent, that
@@ -290,8 +286,8 @@ principles-driven stack materializer. A stack is a composition of **components**
 — the language, its package manager, each framework, the toolchain gates — and
 each one resolves on its own: a component a shipped **pack** covers is copied
 verbatim; an uncovered one is **generated** — researched via Context7 topic by
-topic, which needs a Context7 server from some source and halts without one (the
-optional `context7` tool is the one stackgen offers), instantiated against vwf's
+topic, which needs a Context7 MCP server and, without one, asks you to install
+it yourself and waits, instantiated against vwf's
 principles catalog, gated by a reviewer agent and your explicit consent, so a
 covered language never regenerates because its framework is new. Every concrete
 third-party name a generated component emits — a package, a runner-invoked tool,
@@ -309,10 +305,10 @@ land mostly in the repo's committed `.claude/` tree — skills, agents, hooks an
 rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
 fixes what the output must cover and how deep, recorded in a lockfile per
 component — so most of the result is plain files your collaborators get with a
-`git pull` and no plugin install. **Servers** are the exception, and they carry
-their own consent lines rather than riding the landing: a **language server** is
-a plugin-manifest feature no project file can express at all, and an **MCP
-server** travels the same way, so stackgen writes one small local plugin on your
+`git pull` and no plugin install. **Language servers** are the exception, and
+they carry their own consent line rather than riding the landing: a language
+server is a plugin-manifest feature no project file can express at all, so
+stackgen writes one small local plugin on your
 machine — at the fixed path `~/.claude/plugins/local/vwf-tools/`, holding the
 union across the repos you have materialized from — and **prints the two
 registration commands for you to run rather than running them itself**. That one
@@ -320,12 +316,12 @@ is user-scoped and your collaborators get none of it, which is the same line
 your editor already draws: a product commits which tools it picked, and each
 person's machine gets the servers when they run `/vwf:setup`. Every generated
 language server declaration carries an extension map, so it never starts in a
-repo with no matching files; an MCP server has no such map, so the gate says
-plainly that it and any account grant it holds are reachable from every repo on
-your machine. A machine that still has the older `stackgen-lsp` plugin is
-offered
-one migration to `vwf-tools`, and a repo's `.mcp.json` entries are stackgen's to
-move or report at the same time. Re-syncing
+repo with no matching files. **MCP servers are yours**: stackgen installs none.
+A pack that needs one names it, what it is for and its official install page in
+a `## MCP servers` section of its `conventions.md`; when a skill needs it and it
+is missing, the agent asks you to install it and waits, and `/vwf:doctor`
+reports a declared server that is not installed. A machine that still has the
+older `stackgen-lsp` plugin is offered one migration to `vwf-tools`. Re-syncing
 against newer packs is an explicit, diffed decision — never a silent overwrite,
 never a `settings.json` edit without separate consent, and removal is by
 subtraction, dropping only the keys your repo's lockfile recorded. A pack may
@@ -351,17 +347,14 @@ and CI workflow files stay outside that fence: they declare what the project
 *is*, and no pack decides either. The packs, bundles and kinds that ship are
 inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
 generated from the tree itself; the newest kind is `addon`, vwf's eighth axis —
-**optional tools**, `context7`, `notion` and `taste-skill`, offered by a tools
+**optional tools**, `taste-skill` today, offered by a tools
 menu in `/vwf:architecture` with nothing preselected, recorded in the
 product-level `addons:` list of `.config/vwf.yaml`, and installed by
 `/vwf:setup`
 only while picked. Before it came `stylesheet`, the one that answers vwf's
 seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
 `stylex` and `plain-css` filling it and the design system's tokens staying the
-contract each of them realizes. The newest **category** is `workspace`, filled
-by the `notion` tool — the place a team's docs, specs and tickets already live,
-wired for the agent to reach through one hosted MCP server the person authorises
-once, and nothing more: no part of the product runs against it. The newest
+contract each of them realizes. The newest
 **design tool** is the terminal itself — the `claude-code` pack, which vwf's
 architecture menu preselects on the design axis: the design system, the logo and
 a flow's screens are authored in session, through the `taste-skill` plugin, the
@@ -489,12 +482,12 @@ maintainers. 🙏
   Karpathy's observations. Its `karpathy-guidelines` skill is vendored into
   `vwf`; see `plugins/vwf/vendor/andrej-karpathy-skills/`.
 - **[Context7](https://github.com/upstash/context7)** by
-  [Upstash](https://upstash.com) — the MCP docs server behind `stackgen`'s
-  optional `context7` tool.
+  [Upstash](https://upstash.com) — the MCP docs server `stackgen`'s generator
+  researches through, installed by you.
 - **[mise](https://mise.jdx.dev/)** by Jeff Dickey — resolves the toolchain the
   plugins and hooks depend on.
 - **[pnpm](https://pnpm.io/)** — the default package manager the normalizing
-  hook rewrites to, and the default runner behind the Context7 server.
+  hook rewrites to.
 - **[typescript-language-server](https://github.com/typescript-language-server/typescript-language-server)**,
   the **[Dart SDK](https://dart.dev/)**,
   **[kotlin-lsp](https://github.com/Kotlin/kotlin-lsp)**, and

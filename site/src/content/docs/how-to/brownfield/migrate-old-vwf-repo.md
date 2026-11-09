@@ -66,20 +66,29 @@ move, never as a question. Jotter's `.config/vwf.yaml` still carries the
 `memory:` block an older format wrote, and its root a `mempalace.yaml`: the
 `config_format` 24 step offers each for removal as one numbered row.
 
-Six lineage rows are about recent formats rather than about old spellings, and
-they behave differently from each other. `config_format` **25**, the current
-one, adds the top-level `addons:` list of optional tools and keeps what a repo
-has: `notion` leaves every `backing_template` and joins the list when a list or
-a repo's stackgen lockfile names it, `taste-skill` joins when a lockfile records
-it, and one yes/no question asks whether to keep Context7, the server vwf's
-manifest used to ship. It is one numbered row; declined, the stamp stays at 24
-and the next pass offers it again. `config_format` **23** retires the top-level
+Seven lineage rows are about recent formats rather than about old spellings,
+and they behave differently from each other. `config_format` **26**, the current
+one, makes every MCP server yours to install. Its repo part runs once: it
+removes the retired `context7` and `notion` tools and their `addons:` entries,
+asks one question that re-pins every project on `claude-design` to
+`claude-code` (the default), `lovable` or `stitch` — offering `taste-skill` with
+`claude-code` — and clears that tool's `design.*` values, and deletes every MCP
+record in each stackgen lockfile directly, so none survives. Each accepted part
+stays; the stamp stays at 25 until every part is applied, and the next pass
+offers only what is left. Its machine part runs on every `/vwf:setup`: when this
+machine's `vwf-tools` still holds an MCP server, one consent removes them all
+and setup lists them for you to install by hand. `config_format` **25** added
+the top-level `addons:` list of optional tools and keeps what a repo has:
+`notion` leaves every `backing_template` and is removed, and `taste-skill` joins
+when a lockfile records it. It is one numbered row; declined, the stamp stays
+at 24 and the next pass offers it again. `config_format` **23** retires the
+top-level
 `answers:` block: a repo's secrets provider is bootstrap's now, the forge is
 read
 live, and the dependency-bot key goes with the bot config it chose. Its step is
 applied by `/vwf:setup reshape`, and until then a repo still stamped 22 stays as
 it is: its `answers:` block is ignored wherever it would have been read, and
-`/vwf:doctor` reports 22 against 25. A repo carrying `.config/stackgen.yaml`,
+`/vwf:doctor` reports 22 against 26. A repo carrying `.config/stackgen.yaml`,
 `.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root
 `.config/mise.dev.toml` and no `.config/bootstrap.toml` is **shaped on the old
 layout**: setup and `init` name it, and `/vwf:setup reshape` runs bootstrap's

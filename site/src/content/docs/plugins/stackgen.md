@@ -54,9 +54,7 @@ The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 never learns what an ORM is; stackgen never redefines a capability — several
 categories, `cdn` and `access` among them, leave their capability token
 deliberately unset until vwf defines one, because a category classifies what a
-component *is*, never whether a product must have one. `workspace` is unset for
-a reason of its own rather than a pending decision — it is the agent's knowledge
-source, not the product's runtime, so no capability is waiting on it. Which
+component *is*, never whether a product must have one. Which
 categories those are is
 [`assets/taxonomy.md`](https://github.com/virajp/claude-plugins/blob/main/plugins/stackgen/assets/taxonomy.md)'s
 to say. Categories make components substitutable answers to one blueprint
@@ -146,7 +144,7 @@ sitemap, and the icon task. Astro's conventions restate it by role and cite
 nothing by path, which is what lets a framework pack that does not exist yet
 satisfy the same bar. It sits beside the other cross-pack contracts —
 `datastore`, `identity`, `local-stack`, `object-storage`, `observability`,
-`orchestration`, `release-trigger`, `secrets`, `audit` and `workspace`.
+`orchestration`, `release-trigger`, `secrets` and `audit`.
 
 **The build output is a named fact.** The `framework/astro` pack's conventions
 carry a fixed `## Build output` heading stating that the build writes `./dist` —
@@ -211,11 +209,12 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
 2. **Generation only for what no pack covers, per uncovered component.** The
    first template fetch runs the pipeline for each uncovered component: resolve
    the **kind** and its topic bar → detect the real stack (its manifests) → one
-   Context7 research pass per bar topic, which needs a Context7 server from some
-   source → instantiate
+   Context7 research pass per bar topic, which needs a Context7 MCP server you
+   installed → instantiate
    vwf's principles catalog with citations → vet every concrete third-party name
-   the component emits — packages, runner-invoked tools, a generated server's
-   command and runner chain and the hosts in its `args` and `env`, GitHub
+   the component emits — packages, runner-invoked tools, a generated language
+   server's command and runner chain and the hosts in its `args` and `env`,
+   GitHub
    Actions,
    container images, SwiftPM packages, Maven artifacts and Gradle plugins, and
    mise tools on any backend — through `stackgen-reputation`, one verdict per
@@ -226,8 +225,9 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
    looped forever) → the same materialized tree, the verdict table shown whole
    beside the reviewer's verdict at the dry-run consent gate. No Context7 server
    reachable from any source, or a reputation source unreachable → **halt, never
-   guess**; the Context7 halt names its remedy,
-   [the `context7` tool](#optional-tools--the-addon-kind).
+   guess**; the Context7 halt asks you to install a Context7 MCP server
+   yourself,
+   at user scope, names its official install page, and waits.
    When the bundle root
    itself is uncovered, the pin is `generated/<technology-slug>`.
 
@@ -466,25 +466,13 @@ more. On 2026-11-03 the skill itself was removed, and every universal file
 became
 bootstrap's.
 
-The newest category is **`workspace`**, minted on 2026-09-14 under
-`capability-provider` and under the `addon` kind since 2026-11-02 — and the
-first
-minted for something no blueprint chooses. The
-workspace is where a team's docs, specs and tickets live, and it is the
-**agent's** knowledge source rather than anything the product runs against, so
-it realizes no vwf capability token and none is pending. Its neutral contract
-(`assets/contracts/workspace.md`) states a permission shape rather than an
-availability one: the person authenticates and not the repository, the agent's
-reach stops where that person's does, and a write needs the person to ask for it
-in the session. One pack realizes it — `addon/notion`, an optional tool — and
-what it lands is **wiring and nothing else**: its skills, and a
-`user_mcp_servers:` entry the materializer writes into `vwf-tools` behind its
-own
-consent line. User scope means the authorised server is reachable from every
-repo
-on the machine, not only the one that picked it, and the gate says so.
+On 2026-11-09 stackgen stopped installing MCP servers: the `addon/context7`,
+`addon/notion` and `design-tool/claude-design` packs left, and with `notion` the
+`workspace` category and its contract, which nothing else used. Every MCP server
+is now the user's to install; see [MCP servers](#mcp-servers--yours-to-install).
 
-Before it came **`audit`**, under the same kind and minted the same day for
+The newest category is **`audit`**, under `capability-provider`, minted on
+2026-09-14 for
 vwf's `audit-store` token — the append-only, access-controlled store the
 operator console reads. It is deliberately *not* part of observability:
 telemetry answers what the system did and may sample, drop and expire; an audit
@@ -508,7 +496,8 @@ single required artifact is named by the kind itself: every pack in it ships a
 `tokens.md`.
 
 The newest **design tool** is the terminal itself — `claude-code`, the fourth
-`design-tool` pack beside `claude-design`, `lovable` and `stitch`, and the first
+`design-tool` pack beside `lovable` and `stitch` (`claude-design`, the other,
+was removed on 2026-11-09), and the first
 with a **file canvas**: there is no hosted server and no key. The design system,
 the logo and a flow's screens are authored
 in session, through the `taste-skill` plugin's design skills, into a committed
@@ -566,27 +555,42 @@ the pick, and `/vwf:setup` materializes each slug in the base repo alone, on
 every
 run, and removes a dropped one.
 
-| Tool          | Lands                                                                    | Who needs it                                                                                      |
-| ------------- | ------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------- |
-| `context7`    | one server in `vwf-tools`                                                | the generator, which halts when no Context7 server is reachable from any source, and you, at will |
-| `notion`      | its skills, and one server in `vwf-tools`                                | nothing in the workflow; it is the agent's door into your team's workspace                        |
-| `taste-skill` | a Claude plugin at user scope, which the materializer asks bootstrap for | the `claude-code` design tool's `design-session`, which halts without it; its imports do not      |
+| Tool          | Lands                                                                    | Who needs it                                                                                 |
+| ------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
+| `taste-skill` | a Claude plugin at user scope, which the materializer asks bootstrap for | the `claude-code` design tool's `design-session`, which halts without it; its imports do not |
 
-**The two halts say the same thing:** add the tool in `/vwf:architecture`'s
-tools
-menu, run `/vwf:setup`, restart the session. A Context7 server from a user-level
-MCP or another plugin answers the generator too; a duplicate registration is
-your
-choice. Nothing else blocks on a missing tool, and `/vwf:doctor` reports a
-picked
-tool that is not installed, or an installed one that is not picked, as drift.
+**The halt says:** add the tool in `/vwf:architecture`'s tools menu, run
+`/vwf:setup`, restart the session. Nothing else blocks on a missing tool, and
+`/vwf:doctor` reports a picked tool that is not installed, or an installed one
+that is not picked, as drift. No optional tool installs an MCP server.
 
-**`context7`'s runner is yours.** It runs over stdio through `sh -c`, as
-`${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp`. `pnpm dlx` is the default;
-export `CONTEXT7_RUNNER` to run it with `bunx`, `npx -y` or an absolute path.
-Nothing checks the runner, so a wrong one surfaces as a dead MCP server.
-`CONTEXT7_API_KEY` is optional and reaches the server only as a process
-environment variable.
+### MCP servers — yours to install
+
+stackgen installs no MCP server, and no pack declares one for it to install:
+the user owns every MCP install. A pack whose skills reach a server names it in
+a `## MCP servers` section of its `conventions.md` — the server's exact name,
+what it is for, and its official install page, with `(optional)` after the name
+when the pack works without it — and never an install command. The materializer
+records each line in the component's lockfile entry as `required_mcp_servers`.
+When a skill needs the server and it is missing, the agent asks you to install
+it
+under that exact name and waits. `/vwf:doctor` runs `claude mcp list` and
+reports a declared server it does not list as drift, never blocking, and an
+optional one not at all. The `lovable` pack names `lovable`, Lovable's server;
+the `stitch`
+pack names `stitch` (optional), Stitch's remote server at
+`https://stitch.googleapis.com/mcp`, which needs an API key — the pack works
+through Stitch's SDK without it. The generator's Context7 server is the same:
+yours to install, at user scope, and the generator asks for it.
+
+A repo that still pins `context7`, `notion` or `claude-design`, or a machine
+whose `vwf-tools` still holds MCP servers, moves off them through `/vwf:setup`'s
+`config_format` 26 step: it calls `remove: <slug>` — which takes any
+materialized slug on any axis — for each retired component, re-pins the design
+tool, deletes every MCP record in each lockfile, and on the machine calls
+`remove: key <name>` for each MCP server key `vwf-tools` holds, listing them for
+you to install by hand. Until then a pin whose pack no longer exists is reported
+and skipped, never an error.
 
 ## Kinds — what can be generated, and its shape
 
@@ -606,7 +610,7 @@ in shape while only content varies:
 | `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                                             |
 | `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature. The tool's source may be a hosted canvas or a **committed directory** the imports read as files, and a pack may ship one extra, user-invocable authoring skill beyond the three the checker counts |
 | `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                                   |
-| `addon`               | addon                  | one component, standing alone — an optional tool, picked and never defaulted, whose pack declares `user_mcp_servers:` or a `## Claude plugins` section. See [Optional tools](#optional-tools--the-addon-kind)                                                                                                                                                                                                                                                                                        |
+| `addon`               | addon                  | one component, standing alone — an optional tool, picked and never defaulted, whose pack declares a `## Claude plugins` section. See [Optional tools](#optional-tools--the-addon-kind)                                                                                                                                                                                                                                                                                                               |
 
 Every kind in that table is defined; no reservations are outstanding. Three of
 the eight axes — `design`, `cicd` and `stylesheet` — are **tool axes**, where
@@ -650,16 +654,16 @@ and rules, all landing in the repo's own `.claude/` tree. Two things cannot be
 `.claude/` files, and each is a separate target with its own consent line rather
 than something that rides the landing:
 
-- **A server** goes into `vwf-tools`, a small local plugin stackgen writes at
-  the
-  fixed path `~/.claude/plugins/local/vwf-tools/`. A language server cannot be
-  expressed by any project file at all — `lspServers` is a plugin-manifest
-  feature — so the one way to provide one is to *be* a plugin, and an MCP server
-  travels the same way, from a pack's `user_mcp_servers:`: the pick is what a
-  product commits, and each person's machine gets the server when they run
-  `/vwf:setup`. It holds the union of what every repo you have materialized from
-  contributed, and stackgen **prints the two registration commands rather than
-  running them**. A repo's `.mcp.json` is no longer a path a server can take.
+- **A language server** goes into `vwf-tools`, a small local plugin stackgen
+  writes at the fixed path `~/.claude/plugins/local/vwf-tools/`. A language
+  server cannot be expressed by any project file at all — `lspServers` is a
+  plugin-manifest feature — so the one way to provide one is to *be* a plugin:
+  the pick is what a product commits, and each person's machine gets the server
+  when they run `/vwf:setup`. It holds the union of what every repo you have
+  materialized from contributed, LSP servers only, and stackgen **prints the
+  two registration commands rather than running them**. It installs no MCP
+  server, in `vwf-tools` or a repo's `.mcp.json`: those are
+  [yours](#mcp-servers--yours-to-install).
 - **A repo's own config files** belong to the repo, not to `.claude/`. A pack
   declares the repo-specific ones in a `config/` tree mirroring the repo root,
   and they land there. The tier is an allowlist: a `test:*` task, a
@@ -699,12 +703,7 @@ of a per-repo obligation nobody maintains. What makes that safe is the
 `extensionToLanguage` map every generated language server declaration must
 carry:
 a repo with no matching files never starts the server, and a declaration without
-a map is forbidden outright. **An MCP server has no such map.** Once it lands,
-it
-and any account grant it holds are reachable from every repo on your machine,
-not
-only the one that picked it, so its consent line shows the full declaration and
-says that reach.
+a map is forbidden outright.
 
 **A machine with the older `stackgen-lsp` plugin is offered one migration.** The
 first materialization or sync that finds its directory offers, in order: write
@@ -714,21 +713,14 @@ checks
 its own result and is skipped when already done, a failed or declined step stops
 and reports, and the next run continues from the first incomplete one. Decline
 the whole offer and nothing is written: `stackgen-lsp` stays as it is, a newly
-picked tool's server lands nowhere, the repo's `.mcp.json` entries are kept, and
-the offer returns on each later setup or sync.
+picked language server lands nowhere, and the offer returns on each later setup
+or sync.
 
-**A declaration is never copied out of a repo.** A recorded `.mcp.json` key
-moves
-to `vwf-tools` only when a shipped pack declares it, and takes that pack's
-declaration; any other key stays in `.mcp.json` and is reported, since a
-committed
-file earns no process in every session on your machine. In the same way the
-migration seeds this repo's claim only for a key whose old-manifest declaration
-matches the shipped pack's, or one this run generated; any other key stays
-unclaimed and kept. `.claude-plugin/claims.json` beside the manifest records
-which
-repos claim each key, so a removal drops a key only when no repo still claims
-it.
+The migration seeds this repo's claim only for a key whose old-manifest
+declaration matches the shipped pack's, or one this run generated; any other key
+stays unclaimed and kept. `.claude-plugin/claims.json` beside the manifest
+records which repos claim each key, so a removal drops a key only when no repo
+still claims it.
 
 ```text
 .claude/
@@ -754,8 +746,7 @@ collaborator with no plugin installed. **Three consent tiers** guard a landing:
    registering with a user-scoped tool is a bigger act than editing a project
    file — split into two separately declinable items: the manifest write, and
    the registration. Declining the registration leaves a valid plugin directory
-   nobody has installed, and prints the two commands for later; a declined MCP
-   server leaves the skills landed and says the tool will be unreachable.
+   nobody has installed, and prints the two commands for later.
 
 Every target **merges, never owns**: the keys stackgen added are recorded in the
 lockfile, so sync and removal touch only those, and removal of the local plugin
@@ -965,7 +956,7 @@ before it lands:
 4. **The names.** Every concrete third-party name the component emits — a
    `mise_tool` entry, written `mise:<backend>:<path>@<version>` — its toml key
    and the version it pins — once a short name is expanded with `mise registry`,
-   a package a runner-invoked task names, an MCP or language server entry's
+   a package a runner-invoked task names, a language server entry's
    command and every package its runner chain fetches, the host of a server's
    `url` and of any URL or bare host in its `args` or `env` values, a GitHub
    Action, a container image, a `Package.swift` dependency, a Maven
@@ -1009,8 +1000,8 @@ before it lands:
 - **Generation needs Context7, the catalog, and the reputation sources.**
   Missing any is a halt with its name, not a degraded run — a name whose
   registry or advisory source could not be reached is never landed on a guessed
-  verdict. Context7 may come from any source, and the halt names the `context7`
-  tool as the remedy.
+  verdict. Context7 is an MCP server you install, and the halt asks you to
+  install it and waits.
 - **Drift is a feature with a viewport.** Your repo's copies may diverge from an
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
   becomes a diff you decide about. A record whose path its component no longer

@@ -228,10 +228,10 @@ one: a stack's own gates are bootstrap's.
 
   Two of those are worth the extra sentence. The technology-free guard bans vwf
   naming a concrete technology **only where the mention prescribes**, which is
-  subtler than it sounds — and it reads the manifest's `mcpServers` invocations
-  and every stackgen pack's `user_mcp_servers:` beside the prose, where the bar
-  is not "names no tool" (a manifest must name
-  something executable) but that the runner is **overridable**. And the
+  subtler than it sounds — and it refuses any `mcp__` server prefix in vwf
+  prose, since vwf reaches no MCP server. Beside it the checker refuses an
+  `mcpServers` key in any plugin manifest and a retired `user_mcp_servers:` key
+  in any pack, because a plugin installs no MCP server — the user does. And the
   plugin-root rule caught a defect that had shipped in all four render trees for
   months: `${CLAUDE_PLUGIN_ROOT}` names only its *own* plugin, so `typescript`
   pointing at vwf's `delivery-pipeline.md` resolved to nothing at runtime. Both

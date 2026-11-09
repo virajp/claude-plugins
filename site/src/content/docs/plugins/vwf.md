@@ -48,13 +48,12 @@ Restart Claude Code afterward so the commands, hooks, and dependencies load.
 `vwf` shells out to a few external tools. Install them first — nothing checks
 them at install time, and the table below gives the command for each.
 
-| Tool            | Required?    | Why                                                                                              | Install                                                                  |
-| --------------- | ------------ | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------ |
-| mise            | **required** | task runner + resolves the toolchain                                                             | `brew install mise`                                                      |
-| node            | **required** | runs vwf's own scripts, the mockup scripts among them, and the context7 tool when picked         | `node` in your global mise config, then `mise install`                   |
-| pnpm            | when picked  | the default runner of the context7 tool, when a product picks it; `CONTEXT7_RUNNER` overrides it | `pnpm` in your global mise config, then `mise install`                   |
-| Claude Code CLI | **required** | hosts the commands                                                                               | `claude-code` in your global mise config, then `mise install`            |
-| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`)                                            | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
+| Tool            | Required?    | Why                                                   | Install                                                                  |
+| --------------- | ------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
+| mise            | **required** | task runner + resolves the toolchain                  | `brew install mise`                                                      |
+| node            | **required** | runs vwf's own scripts, the mockup scripts among them | `node` in your global mise config, then `mise install`                   |
+| Claude Code CLI | **required** | hosts the commands                                    | `claude-code` in your global mise config, then `mise install`            |
+| gh              | recommended  | reads and writes the backlog project (`/vwf:backlog`) | `brew install gh`, then `gh auth login` and `gh auth refresh -s project` |
 
 Your global mise config is `~/.config/mise/config.toml`: add each tool to its
 `[tools]` table at an exact version, then run `mise install`. Never a bare
@@ -100,7 +99,8 @@ choose a stack: stackgen acts only when an axis is pinned.
 The Markdown/documentation skills used to be another dependency. They are **part
 of `vwf` now**: `documentation-standards` and `/vwf:readme` are vwf skills.
 Context7 was one too, then part of vwf, and is now an
-[optional tool](#mcp-servers) you pick, since nothing in vwf calls it. The
+[MCP server you install](#mcp-servers) yourself, since nothing in vwf calls it.
+The
 Karpathy coding guidelines were a third, and are now a **vendored** skill —
 `karpathy-guidelines` — because as a url-sourced
 dependency it was silently absent for most installs, and vendoring puts the
@@ -174,10 +174,9 @@ adopting it.
 **Dependencies**
 
 - **External prerequisites, checked at run time rather than install time.**
-  `mise` and `node` must be on your `PATH`, and `pnpm` too when a product picks
-  the `context7` tool. Nothing refuses the install any
+  `mise` and `node` must be on your `PATH`. Nothing refuses the install any
   more; `/vwf:setup` and `/vwf:execute` halt on a missing `mise` once a stack is
-  pinned, and `pnpm` fails later in its own way. `gh`, logged in, is needed by
+  pinned. `gh`, logged in, is needed by
   [`/vwf:backlog`](#vwfbacklog) (the `project` scope), by
   [`/vwf:init`](#vwfinit)'s forge pass (the `repo` scope — `project` only for
   its backlog step; `glab` on GitLab) and by the doctor predicate that reads the
@@ -1391,17 +1390,30 @@ bootstrap's migration M24 or its `remove tools` instruction does, and doctor
 names that remedy.
 
 **`config_format` 25 adds `addons:`** and keeps what the repo has: `notion`
-leaves every `backing_template` and joins the list when any such list names it
-or any locally cloned repo's stackgen lockfile records it, `taste-skill` joins
-when a lockfile records it, and one yes/no question asks whether to keep
-Context7,
-the server vwf's manifest used to ship. A member not cloned locally is skipped
-with a warning. The result is one numbered row; declined, the config and the
-stamp stay at 24 and the next pass offers it again. The lockfile's
-`stackgen-lsp`
-block and any recorded `.mcp.json` entries are
+leaves every `backing_template` and is removed, in the base and each member,
+under the step's one consent, and `taste-skill` joins when a lockfile records
+it. A member not cloned locally is a part not yet applied, and the stamp stays
+at 24 until it is done. The result is one numbered row; declined, the config and
+the stamp stay at 24 and the next pass offers it again. The lockfile's
+`stackgen-lsp` block is
 [stackgen's to migrate](./stackgen.md#the-output--claude-first-and-two-targets-beside-it),
 behind its own consent, in the materialize pass that follows.
+
+**`config_format` 26 makes every MCP server yours to install**, and no stack
+plugin lands one. Its **repo part** is the format step and runs once: it removes
+the retired `context7` and `notion` tools and their `addons:` entries; asks one
+question that re-pins every project on `claude-design` to `claude-code` (the
+default), `lovable` or `stitch` — offering `taste-skill` with `claude-code`,
+yes the default — removes the old tool's skills and lockfile entry before the
+new tool lands, and clears its `design.*` values (`design-system.md` and the
+flow docs stay); and deletes every MCP record in each stackgen lockfile
+directly, so none survives — in the base and each member. Each accepted part is
+applied and stays, a declined part writes nothing, and the stamp moves to 26
+only once every part is applied; until then setup offers only what is left. Its
+**machine part** runs on every `/vwf:setup`, at any stamp: when this machine's
+`vwf-tools` holds an MCP server key, one consent removes them all, naming the
+other repos that claim one, and setup lists the servers for you to install by
+hand. Declined, nothing is written and it is offered again next run.
 
 Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
 linkage; project roles and platforms — `watch`, `tv` and `spatial` from an Xcode
@@ -1575,9 +1587,10 @@ blueprint deliberately doesn't.
 A second foundation, **mandatory once the registry has a UI project** (some
 project declares a **screen platform**) — and **import-only**: the design tool
 owns design-system authoring. You pick or build the design system in the tool
-the project pins on its `design` axis (for example Claude Design, whose stock
-systems are strong; visual language is judged on a canvas, not as hex values in
-chat); the command imports it through the design adapter:
+the project pins on its `design` axis (for example the `claude-code` design
+session, which authors it into a committed canvas; visual language is judged on
+a canvas, not as hex values in chat); the command imports it through the design
+adapter:
 
 ```text
 /vwf:design-system                  # resolve: pin → pick from your design systems
@@ -1849,7 +1862,8 @@ mockups** (one page per screen plus each pinned state variant, styled from the
 design system's tokens, with no JavaScript in the files) into the repo's
 **gitignored `docs/scratchpad/` tree**, and serves them as **one connected site
 per platform** at the app's **production routes**. Mockups are **never pushed to
-Claude Design**; the scratchpad is the only render surface. Before any write it
+the design tool**; the scratchpad is the only render surface. Before any write
+it
 checks that `docs/scratchpad/` is ignored — probing a path inside it, so a
 folder that does not exist yet still reads as ignored — and stops if it is not:
 the line is in the repo's `.gitignore`, synced by bootstrap's git tool, and vwf
@@ -2063,8 +2077,9 @@ doc, and the states its tweaks must cover.
 
 Nothing that steers the *visual* design goes in — no tokens, type, spacing, or
 component styling. The design tool resolves those from its own design system
-(Claude Design, for example, from its Design System project), and the canvas
-chat is where you make the design yours. What a screen **shows** and how it
+(the `claude-code` design session, for example, from the committed canvas's
+`design-system.md`), and the canvas is where you make the design yours. What a
+screen **shows** and how it
 **behaves** is contract, transcribed rather than left to the canvas.
 
 `import` reads the designed pages back **as data**, matches them by the naming
@@ -2080,9 +2095,10 @@ page (an in-car page with no subset flow proposes one) — and at index level
 against the `index--<platform>` stitch (a missing index or an unreachable flow
 page is canvas rework) — and asks **one question per delta**: accept (the design
 wins; the contract follows), reject (the contract stands; the canvas gets
-rework), or adapt. It also diffs each canvas project's CLAUDE.md against the
-repo-side `CLAUDE--<platform>.md` and offers to fold canvas-discovered
-conventions into the file's canvas-owned section — the one edit `import` makes
+rework), or adapt. It reads conventions only from the repo's own
+`CLAUDE--<platform>.md`, and offers to fold conventions the designed pages
+recorded in their notes into the file's canvas-owned section — the one edit
+`import` makes
 itself. Accepted contract deltas are handed to `/vwf:blueprint <flow>` — the
 blueprint skill remains the only flow-doc editor, so every design-driven change
 still passes the reviewer gate and demotes `implementation:` stamps where the
@@ -4052,13 +4068,17 @@ rules:
 
 ## MCP servers
 
-`vwf` declares none, and nothing in the workflow calls one. Context7 and Notion
-are optional tools you pick on [the `addon` axis](#stack-templates), and a
-design
-tool brings its own server; each lands in `vwf-tools`, the local plugin stackgen
-generates on your machine. The one thing that needs Context7, stackgen's
-generator, halts when none is reachable and says how to add it. See
-[stackgen's optional tools](./stackgen.md#optional-tools--the-addon-kind).
+`vwf` declares none, nothing in the workflow calls one, and no plugin here
+installs one: **every MCP server is yours to install**, and where one is needed
+the agent asks you to install it and waits. A pack that needs a server names it
+in a `## MCP servers` section of its `conventions.md` — its name, what it is
+for, and its official install page, `(optional)` when the pack works without it
+— and `/vwf:doctor` reports a declared server that `claude mcp list` does not
+show as drift, never blocking, and an optional one not at all. The one thing
+that needs Context7, stackgen's generator, asks you to install a Context7 server
+when none is reachable. A repo whose machine still holds servers stackgen once
+installed moves off them through [`config_format` 26](#vwfsetup). See
+[stackgen's MCP servers](./stackgen.md#mcp-servers--yours-to-install).
 
 ## See also
 

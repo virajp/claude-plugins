@@ -119,9 +119,9 @@ So after installing, run:
 
 Doctor blocks on a missing **`mise`** once any stack axis is pinned; both
 `/vwf:setup` and `/vwf:execute` halt on it. It is not a complete substitute for
-the retired gate: a missing language server is an ordinary finding, and `pnpm`
-is not checked at all, which matters only where a product picked the optional
-`context7` tool, whose server then fails to start. Install every prerequisite.
+the retired gate: a missing language server is an ordinary finding, and an MCP
+server a pack names is reported as drift, never blocking — it is yours to
+install. Install every prerequisite.
 
 ## The statusline has moved
 
