@@ -1,4 +1,22 @@
 {
   "format": 1,
-  "plans": []
+  "plans": [
+    {
+      "id": "2026-11-09-retire-plugin-mcp-servers",
+      "folder": "docs/plans/2026-11-09-retire-plugin-mcp-servers",
+      "kind": "change",
+      "title": "Retire plugin-installed MCP servers and the context7, notion and claude-design packs",
+      "target_repo": null,
+      "priority": 10,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [],
+      "backlog": [
+        "B106"
+      ],
+      "backlog_pieces": []
+    }
+  ]
 }

@@ -1,0 +1,796 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Retire plugin-installed MCP servers and the context7, notion and claude-design packs",
+  "requires": [],
+  "source": [
+    "B106"
+  ],
+  "backlog": [
+    "B106"
+  ],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-09 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:plugins:inventory -- --check",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- pnpm exec tsc --noEmit -p installer",
+      "mise x -- mise run p:site:check",
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "Search every tree (plugins/, scripts/, .claude/ save .claude/worktrees, site/src/, readme.md, CLAUDE.md) case-insensitively for context7, notion (the tool, not the English word), claude-design, Claude Design, user_mcp_servers and contracts/workspace",
+        "pass": "Every hit is one of: the retired TOOL_TOKENS entry and its comment in scripts/src/check.ts; the config_format 26 migration step and its lineage row; the checker rule that refuses user_mcp_servers and its tests; the generator halt that asks the user to install a Context7 MCP server; the 142 passive pack hints that plan 2 owns; the new decision record; history lines that state a past fact (format-lineage rows, site/CLAUDE.md design-source note); the generator Context7 research wording that plan 2 owns (generator.md research loop, the stackgen plugin.json description, .claude/skills/stackgen-plugin/SKILL.md, site/src/content/docs/plugins/stackgen.md research section); the Context7 credit in readme.md; the claude-design sample token in the scripts/src/check.test.ts prescription tests; the user_mcp_servers retirement and refusal text (pack-format.md, stackgen-skill-reviewer.md, stacks/readme.md, checks.md, repo-shape.md); the doctor re-pin row in stack-checks.md; the step 26 lines (vwf-config.md, setup SKILL.md, migration-and-consent.md, site vwf.md, migrate-old-vwf-repo.md); the Context7 research lines in stackgen-reputation SKILL.md and references/sources.md; the claude-design removal-history sentence in stacks/readme.md; the passive hints plan 2 owns in plugins/stackgen/assets/kinds.md (69, 132, 598), pack-format.md (363) and agents/stackgen-skill-reviewer.md (55)"
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "stackgen",
+      "level": "MAJOR",
+      "reason": "Removes three shipped packs, the workspace category and the user_mcp_servers pack key; a generated pack that declares the key now fails the checker"
+    },
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "config_format 26: a repo must migrate, which removes addons, plugin-installed MCP servers and a claude-design pin"
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual stops naming the three tools and the ui-with-design-tool how-to is rewritten around claude-code"
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No installer file changes"
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Remove the three packs and the workspace category",
+      "wave": 1,
+      "file": "01-remove-packs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/stacks/addon/context7/**",
+        "plugins/stackgen/stacks/addon/notion/**",
+        "plugins/stackgen/stacks/design-tool/claude-design/**",
+        "plugins/stackgen/stacks/bundles/context7.md",
+        "plugins/stackgen/stacks/bundles/notion.md",
+        "plugins/stackgen/stacks/bundles/claude-design.md",
+        "plugins/stackgen/stacks/design-tool/stitch/**",
+        "plugins/stackgen/stacks/bundles/stitch.md",
+        "plugins/stackgen/stacks/design-tool/lovable/**",
+        "plugins/stackgen/stacks/bundles/lovable.md",
+        "plugins/stackgen/stacks/readme.md",
+        "plugins/stackgen/stacks/inventory.md",
+        "plugins/stackgen/assets/taxonomy.md",
+        "plugins/stackgen/assets/contracts/workspace.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "stackgen installs no MCP server",
+      "wave": 1,
+      "file": "02-stackgen-mcp-doctrine.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/assets/pack-format.md",
+        "plugins/stackgen/assets/kinds.md",
+        "plugins/stackgen/assets/artifact-doctrine.md",
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/skills/stackgen-stack-template/SKILL.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/generator.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/local-plugin.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md",
+        "plugins/stackgen/skills/stackgen-stack-menu/SKILL.md",
+        "plugins/stackgen/skills/stackgen-sync/SKILL.md",
+        "plugins/stackgen/skills/stackgen-reputation/SKILL.md",
+        "plugins/stackgen/agents/stackgen-skill-reviewer.md",
+        "plugins/stackgen/.claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json",
+        "package.json"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "vwf config_format 26 and design-tool wording",
+      "wave": 1,
+      "file": "03-vwf-migration.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/skills/setup/references/format-lineage.md",
+        "plugins/vwf/skills/setup/references/migrate-pipeline.md",
+        "plugins/vwf/skills/setup/references/migration-and-consent.md",
+        "plugins/vwf/skills/setup/references/materialize.md",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/architecture/references/stack-menu.md",
+        "plugins/vwf/skills/design-system/SKILL.md",
+        "plugins/vwf/skills/screens/references/import-mode.md",
+        "plugins/vwf/skills/screens/references/prompt-mode.md",
+        "plugins/vwf/assets/vwf-config.md",
+        "plugins/vwf/assets/design-adapter.md",
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/templates/screen-prompt.md",
+        "plugins/vwf/assets/templates/canvas-claude.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Checker refuses user_mcp_servers and guards every MCP prefix",
+      "wave": 1,
+      "file": "04-checker.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "scripts/src/check.ts",
+        "scripts/src/check.test.ts",
+        "scripts/src/plugins.ts",
+        "scripts/src/marketplace.ts"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Review: the checker and the wave 1 edits",
+      "wave": 2,
+      "file": "05-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U6",
+      "title": "Docs",
+      "wave": 3,
+      "file": "06-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/plugins.md",
+        ".claude/docs/repo-shape.md",
+        ".claude/skills/stackgen-plugin/**",
+        ".claude/skills/vwf-plugin/**",
+        ".claude/skills/plugin-authoring/references/checks.md",
+        ".claude/skills/plugin-authoring/references/structure.md",
+        ".claude/agents/target-verifier.md",
+        "site/src/content/docs/**",
+        "site/src/pages/index.astro",
+        "docs/memory/decisions/2026-11-09-mcp-servers-owned-by-user.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Gates",
+      "wave": 4,
+      "file": "07-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/stacks/inventory.md",
+        ".claude-plugin/marketplace.json"
+      ],
+      "depends_on": [
+        "U6"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "plugins/stackgen/stacks/inventory.md",
+      "why": "Generated. The pre-commit inventory hook fails a commit that changes the stacks tree without it, so U1 regenerates it as its last step; U7 regenerates again only if it drifted",
+      "owner": "U1"
+    },
+    {
+      "id": "S2",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "Generated from plugin.json. The pre-commit marketplace hook fails a commit that changes the stackgen description without it, so U2 regenerates it as its last step; U7 regenerates again only if it drifted",
+      "owner": "U2"
+    },
+    {
+      "id": "S3",
+      "file": "every human-facing doc: CLAUDE.md, readme.md, .claude/**, site/src/content/docs/**",
+      "why": "Several units falsify passages in the same docs",
+      "owner": "U6"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "One plan or several",
+      "ruling": "Two plans. Plan 1 (this folder) removes the three packs and moves MCP ownership to the user. Plan 2 requires this folder: the generator researches without Context7, and the 142 passive Context7 hints (B124) are decided",
+      "rejected": "One plan with everything; three plans, one per tool",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "What plan 1 does with the generator, which still needs Context7",
+      "ruling": "Reword the halt only. The generator keeps requiring Context7 until plan 2. When no Context7 server is reachable, it asks the user to install a Context7 MCP server themselves (user scope), names the official install page, and waits; it never installs one and never names a tools menu option",
+      "rejected": "Change nothing (the halt then names a removed menu option); move the full rework into plan 1",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "Who installs MCP servers",
+      "ruling": "The user. User's words: 'I want the ownership of install mcp servers to move to user and not this plugin. Wherever the mcp servers are required, AI agent should simply ask the user to install them.' The pack key user_mcp_servers: is retired: no pack declares it, the generator emits none, the materializer writes none, and vwf-tools holds LSP servers only. The tier-3 consent keeps only its LSP part",
+      "rejected": "Keep user_mcp_servers: for generated packs; a separate plan for the ownership move",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U6"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How a pack declares that it needs an MCP server",
+      "ruling": "A '## MCP servers' section in the pack's conventions.md, beside the existing '## Claude plugins' section. One line per server: its name, what it is for, and its official install page. It is not handed to bootstrap. When a skill needs the server and it is not available, the agent asks the user to install it and waits. Doctor reports a declared server that is not available as drift, never blocking",
+      "rejected": "Skill text only, with no structured declaration; a pack.yaml key such as required_mcp_servers:",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How a repo that pins context7, notion or claude-design moves off them",
+      "ruling": "config_format 26. The /vwf:setup migration removes context7 and notion from addons: through the existing remove: path. It removes every MCP server key that vwf-tools holds (its .mcp.json-style server entries and claims for MCP keys), with one consent, and prints the list of servers for the user to install themselves if they want to keep them. It asks once to re-pin each design: claude-design pin to another design tool, claude-code (the default) first, then lovable and stitch, and removes the old adapter skills and the claude-design server",
+      "rejected": "A doctor remedy only, with no format bump; a silent drop in setup",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "The config_format 25 step, which asks about context7 and moves notion into addons:",
+      "ruling": "Step 25 no longer asks the context7 question and no longer adds context7 or notion to addons:. A repo at 24 is never asked about a tool that step 26 then removes. Step 26 handles repos already at 25",
+      "rejected": "Leave step 25 as it is",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "A declined step 26",
+      "ruling": "Amended by D26: each accepted part of the step 26 repo part is applied and stays; a declined part writes nothing; the stamp stays at 25 until every part is applied; doctor reports drift; setup offers only the remaining parts on the next run",
+      "rejected": "Apply part of the step",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "The checker and user_mcp_servers:",
+      "ruling": "A checker rule refuses a user_mcp_servers: key in any pack.yaml. The D28 stdio runner guard over pack entries (checkPackRunners and its tests with the stacks/addon/context7 fixture) is removed. checkManifestRunners becomes a refusal of any mcpServers key in every plugin manifest (vwf and stackgen plugin.json), because a plugin declares no MCP server (D3); its runner helpers go, with a test that a plugin.json with mcpServers is refused (rulings round 2, gap 2)",
+      "rejected": "Keep the runner guard for generated packs",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "TOOL_TOKENS and the design-MCP guard",
+      "ruling": "The guard becomes general: any mcp__plugin_vwf-tools_, mcp__plugin_design-tools_ or mcp__<name>__ server prefix in vwf prose is a finding, because vwf reaches no server, whoever installed it. claude-design stays in TOOL_TOKENS as a retired token with a comment that names the 2026-12-14 sunset of standalone Claude Design. The prescription tests keep their sample token; the guard tests change to the general prefix. The ENUMERATION_PEERS comment names claude-code, lovable and stitch as the design values",
+      "rejected": "Remove the token and the guard; remove the token and keep a token-matched guard",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "The workspace category and contracts/workspace.md, which only notion used",
+      "ruling": "Delete both. The bundle kind workspace (bun and pnpm workspaces) is a different thing and stays",
+      "rejected": "Keep the contract with no provider",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "The how-to page ui-with-design-tool.md, built on Claude Design",
+      "ruling": "Keep the page and its URL. Rewrite the walkthrough around claude-code, the default design tool: the canvas in docs/design/<project>/, design-session, review on loopback. Name lovable and stitch as other choices",
+      "rejected": "A generic rewrite with no tool; delete the page and its four links",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "The stackgen-sync relocation row capability-provider/notion to addon/notion",
+      "ruling": "Remove the row. Step 26 cleans up repos that still have notion from any older format, because the migration steps run in sequence",
+      "rejected": "Rewrite the row to point at a removal",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "The stitch pack text that compares Stitch to Claude Design",
+      "ruling": "Reword it to compare with claude-code. The stitch pack version moves 0.1.0 to 0.1.1, with the pin in bundles/stitch.md, per the rule that a plan which edits a pack bumps it",
+      "rejected": "Leave the comparison",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "A review unit",
+      "ruling": "One review unit, U5, after wave 1, because scripts/src/check.ts is tooling source that runs. It covers U1 to U4; it covers edit units alone, so it runs the security half",
+      "rejected": "No review; the wave review only",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Execution mode",
+      "ruling": "teams, because wave 1 holds four edit units",
+      "rejected": "solo",
+      "units": []
+    },
+    {
+      "id": "D16",
+      "decision": "Generated files",
+      "ruling": "The pre-commit inventory and marketplace hooks fail a commit whose generated file is stale. So U1 runs mise x -- mise run p:plugins:inventory as its last step and U2 runs mise x -- mise run p:plugins:marketplace as its last step, each keeping the output in its own commit — the precedent of D17 in the 2026-11-02 record. U7 regenerates both and commits only if they drifted",
+      "rejected": "Only the gates unit regenerates them; that leaves U1 and U2 commits red at the hook",
+      "units": [
+        "U1",
+        "U2",
+        "U7"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Reversals of the 2026-11-02 record docs/memory/decisions/2026-11-02-optional-tools-in-vwf-tools.md",
+      "ruling": "D2 (every MCP server lands in vwf-tools), D3 (claude-design stays required), D6 and D21 (context7, notion and taste-skill are the addon packs; notion joins addons:), D9 (the generator halt names the tools menu) and D28 (the runner guard) are reversed. U6 writes docs/memory/decisions/2026-11-09-mcp-servers-owned-by-user.md, which states each reversal and points to that record; the old record is not edited",
+      "rejected": "Edit the old record",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Commit order inside wave 1",
+      "ruling": "The orchestrator commits the wave 1 units in the order U1, U2, U4, U3. U4 adds a rule that refuses user_mcp_servers:, and pre-commit stashes the unstaged edits of the units not yet committed, so a U4 commit before U1 would scan the three packs U1 deletes and fail the hook. U3 commits after U4, so its claude-design mentions beside claude-code pass with the new ENUMERATION_PEERS entry (rulings round 4, gap 1)",
+      "rejected": "Any order",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Which stackgen call removes MCP keys for step 26 (rulings gap 1)",
+      "ruling": "Extend remove:. It accepts any materialized slug, not only axis addon (stack-template SKILL.md:96-97 loses that refusal). Plain remove: <slug> deletes the component with all its keys. The form remove: <slug> mcp-only keeps the component and deletes only its MCP server keys from the vwf-tools manifest, claims.json and the lockfile local_plugin MCP records, and returns the removed server names. Step 26 calls plain remove: for context7, notion and the re-pinned claude-design, and remove: <slug> mcp-only for every other slug whose lockfile entry has an MCP key",
+      "rejected": "A new verb retire-mcp:; plain remove: only, with a hand step for generated packs",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "MCP keys on a machine whose repo is already at 26 (rulings gap 2)",
+      "ruling": "Step 26 has two parts. The repo part (addons:, the claude-design re-pin) is the format step and runs once. The machine part runs on every /vwf:setup run, beside reconcile-claims: when this machine vwf-tools manifest holds any MCP server key, setup offers to remove them with one consent, through remove: <slug> mcp-only for each slug that claims one (and a plain key removal for a key no slug claims), and lists the servers for the user to install by hand. Declined: nothing is written and it is offered again next run. Doctor remedy /vwf:setup then points at this check",
+      "rejected": "Run once in step 26, and a hand remedy in doctor for other machines",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "MCP keys that other repos claim (rulings gap 3)",
+      "ruling": "The machine cleanup of D20 removes every MCP server key and every MCP claim in claims.json, whichever repo claims it. Its one consent names the other claiming repos. Those repos move to 26 on their next setup",
+      "rejected": "Drop only this repo claims and keep a key while another repo claims it",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "A capability-provider/notion entry in a repo at 24 (rulings gap 4)",
+      "ruling": "Step 25 still takes notion out of backing_template and adds nothing to addons:. Inside step 25 existing consent it calls the extended plain remove: for the capability-provider/notion component, so its skills and its server go",
+      "rejected": "Leave it to step 26",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Order of the design re-pin (rulings gap 5)",
+      "ruling": "Step 26 records the user choice, runs plain remove: claude-design (its skills, its server, its lockfile entry), then materializes the new design tool, so the new adapter skills land on clean paths",
+      "rejected": "Land the new tool first, then remove only old files whose hash still matches",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Several projects pinned to claude-design (rulings gap 6)",
+      "ruling": "One re-pin question that names every pinned project; the answer applies to all of them. Projects that pin another design tool are not touched",
+      "rejected": "One question per project",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "The design.* values of a re-pinned project (rulings gap 7)",
+      "ruling": "Step 26 clears design.design_system_id, the re-pinned project design.projects entries and design.flows_rendered. The next /vwf:design-system and /vwf:screens set them for the new tool. docs/blueprint/design-system.md and the flow docs stay, because they are vwf own copies",
+      "rejected": "Keep them and report drift",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Partial consent in step 26 (rulings gap 8)",
+      "ruling": "Each accepted part is applied and stays. A declined part writes nothing. The config_format stamp moves to 26 only when every part of the repo part is applied; until then setup offers only the remaining parts on each run, because every part is idempotent",
+      "rejected": "All or nothing: ask every question first and apply nothing until every answer is yes",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "How doctor decides a declared MCP server is available (rulings gap 9)",
+      "ruling": "Doctor runs claude mcp list and looks for the exact server name of each ## MCP servers line in its output, at any scope. The command health-checks (connects to) each approved server; doctor accepts that as its one side effect and says so in the row. A listed server counts as available even if its health check fails, and the row notes the failure. A name that is not listed is drift. When the claude CLI is not on PATH, the row reads not checked. Each ## MCP servers line tells the user to install the server under that exact name (amended in rulings round 2, gap 6)",
+      "rejected": "The session tool list (mcp__<server>__ tools)",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Who formats the changed files (rulings gap 10)",
+      "ruling": "Before it returns, each edit unit runs mise x -- mise run code:format -- --fix <each file it changed>, on its own changed files only, never the whole tree. The unit gate then only checks",
+      "rejected": "Change the unit gate to code:format --fix over the whole tree",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Hits that stay on purpose (rulings gap 11)",
+      "ruling": "K1 pass list widened: the generator Context7 research wording that plan 2 owns, the Context7 credit in readme.md, and the claude-design sample token in the check.test.ts prescription tests",
+      "rejected": "Remove the credit and the sample token",
+      "units": []
+    },
+    {
+      "id": "D30",
+      "decision": "What U3 edits in vwf-config.md (rulings gap 12)",
+      "ruling": "config_format 25 to 26; the 24 to 25 narrative gets the D6 amendment; a new 25 to 26 narrative for step 26 (repo part and machine part); the :238 writer row of addons: names step 26 as a writer",
+      "rejected": "Bump the number only",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "The removal of a vwf-tools key no slug claims (rulings round 2, gap 7)",
+      "ruling": "A stack-template verb form remove: key <name>. It deletes that one server key from the vwf-tools manifest and claims.json, runs under the D20 machine-cleanup consent, and returns the removed key name",
+      "rejected": "An unnamed removal",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "The context7 keyword in the root package.json (rulings round 2, gap 12)",
+      "ruling": "U2 removes the keyword context7 from package.json keywords and owns package.json for that one edit",
+      "rejected": "Leave it",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "The lovable and stitch MCP servers (rulings round 2, gap 1)",
+      "ruling": "U1 adds a ## MCP servers section (D4) to the conventions.md of the lovable and stitch packs: the server name, its purpose and its official install page, read from the pack own skills and references. Their skills that reach the server ask the user to install it when it is missing and wait. Each pack gets one patch bump and a new bundle pin (stitch is bumped once in total, D13)",
+      "rejected": "Leave lovable and stitch out of scope",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Lockfile MCP records whose vwf-tools key is gone (rulings round 2, gap 8)",
+      "ruling": "Every stackgen verb (materialize, sync, reconcile-claims) ignores MCP records in a lockfile: it lands no server, adds no claim and reports nothing. The repo part of step 26 deletes the MCP records from that repo lockfile",
+      "rejected": "Report each record as drift until step 26",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Step 26 in a multi-repo product (rulings round 2, gap 9)",
+      "ruling": "Step 26 runs remove: and the re-pin materialize in each repo whose lockfile names the component: the base and each member. A member that is not cloned locally is listed as a part not yet applied; per D26 the stamp stays at 25 until every member is done, and setup offers only that member part on a later run",
+      "rejected": "Warn and skip an uncloned member, as step 25 does, and move the stamp",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "A removed pin on any axis before step 26 (rulings round 2, gap 10)",
+      "ruling": "The materializer and stack-template resolution report and skip any pin whose pack no longer exists, on every axis (addon, design and the rest), never an error. Its materialized skills stay until step 26 removes them",
+      "rejected": "Keep the error for a removed design pin",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "How vwf names claude-design without failing the checker (rulings round 2, gap 11)",
+      "ruling": "U4 adds claude-code to ENUMERATION_PEERS. U3 writes every vwf mention of claude-design within 100 characters of the replacement list, for example: re-pin claude-design to claude-code, lovable or stitch. The retired token still catches a lone mention",
+      "rejected": "Add format-lineage.md and stack-checks.md to TOOL_NAME_EXCEPTIONS",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Mechanical fixes from rulings round 3 (gaps 2, 3, 4, 6, 7)",
+      "ruling": "Gap 3: U4 follows D8 as amended, checkManifestRunners becomes a refusal over the vwf and stackgen manifests and the runner helpers go. Gap 4: the format line takes the mise separator, code:format -- --fix. Gap 6: U1 writes the D4 bullet format, quoted in its own file, as a new last section of each conventions.md, since neither has a ## Claude plugins section. Gap 7: K1 widened to the hits the rulings create. Gap 2: U6 owns .claude/skills/plugin-authoring/references/structure.md (the mcpServers manifest lines 73 and 93: a plugin declares no MCP server) and U4 owns scripts/src/marketplace.ts (the comment at 52-55 only)",
+      "rejected": "Ask each one; they follow from D3, D4, D8 and D29",
+      "units": [
+        "U1",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Where doctor gets the declared server names (rulings round 3, gap 1)",
+      "ruling": "When the materializer lands a pack, it reads the ## MCP servers section of its conventions.md and records each line (name, purpose, install URL) in that component lockfile entry under a new key required_mcp_servers. Doctor reads only the lockfile for the D4 and D27 row. Nothing installs a server",
+      "rejected": "Doctor calls the stack-template skill for each pinned slug",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D40",
+      "decision": "The lovable and stitch ## MCP servers lines (rulings round 3, gap 5)",
+      "ruling": "Both packs get a line. U1 takes each server name and install page from the vendor official documentation, fetches the page live, and cites the URL and date in its report; with no official page it returns a question. A server a pack does not require carries the marker (optional) after its name; the Stitch line is optional, because Stitch works through its SDK. The D4 format gains that marker (U2, pack-format.md), the lockfile record of D39 carries optional: true (U2), and doctor never reports an optional server as drift (U3)",
+      "rejected": "Lovable only; Stitch gets no line",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Step 25 notion removal in a multi-repo product (rulings round 3, gap 8)",
+      "ruling": "Step 25 runs the capability-provider/notion removal in each repo whose lockfile records it: the base and each member. An uncloned member is a part not yet applied, and the stamp stays at 24 until it is done, as D35 rules for step 26",
+      "rejected": "Warn and skip an uncloned member and move the stamp to 25",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Mechanical fixes from rulings round 4 (gaps 1, 7, 8, 9, 10)",
+      "ruling": "Gap 1: commit order U1, U2, U4, U3 (D18 amended). Gap 7: K1 accepts the passive hints plan 2 owns in kinds.md, pack-format.md and the reviewer agent. Gap 8: D19 cites stack-template SKILL.md:96-97. Gap 9: U6 reads plugins/vwf/skills/docs-sync/SKILL.md. Gap 10: U3 owns plugins/vwf/skills/screens/references/import-mode.md (24-28) and prompt-mode.md (118), which name Claude Design MCP tool verbs and its hosted canvas project; U3 rewrites them tool-neutral: the adapter skills do the reading, and the canvas conventions file belongs to the configured design tool",
+      "rejected": "Ask each one; they follow from D9, D18, D29 and B106",
+      "units": [
+        "U3",
+        "U6"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Consent of remove: calls inside step 26 (rulings round 4, gap 2)",
+      "ruling": "When setup calls remove: inside step 26, setup asks the one consent and passes consented to each call; the verb asks its own consent only when a user runs it directly",
+      "rejected": "One consent per remove: call",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "How remove: reaches a member repo (rulings round 4, gap 3)",
+      "ruling": "Setup calls the verb once inside each member repo, the way it materializes members today; remove: gets no new repo argument",
+      "rejected": "A new repo argument to remove:",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Machine-part key coverage (rulings round 4, gap 4)",
+      "ruling": "The machine part uses remove: key <name> for every MCP key in vwf-tools. It edits only the vwf-tools manifest and claims.json and commits nothing; each repo own step 26 cleans its lockfile (D34). This replaces the mcp-only calls of D20 in the machine part; mcp-only stays for the repo part",
+      "rejected": "remove: <slug> mcp-only per slug in the machine part",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "taste-skill after a re-pin to claude-code (rulings round 4, gap 5)",
+      "ruling": "After a re-pin to claude-code, step 26 offers to add taste-skill to addons: in the same question, yes the default",
+      "rejected": "Leave it to /vwf:architecture",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D47",
+      "decision": "A lockfile with no required_mcp_servers key (rulings round 4, gap 6)",
+      "ruling": "Doctor reads a missing key as no servers declared. stackgen-sync fills the key when it updates a pack to a version whose conventions.md has a ## MCP servers section",
+      "rejected": "Step 26 backfills the key",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
