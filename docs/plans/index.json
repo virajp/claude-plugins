@@ -1,44 +1,4 @@
 {
   "format": 1,
-  "plans": [
-    {
-      "id": "2026-11-09-retire-plugin-mcp-servers",
-      "folder": "docs/plans/archived/2026-11-09-retire-plugin-mcp-servers",
-      "kind": "change",
-      "title": "Retire plugin-installed MCP servers and the context7, notion and claude-design packs",
-      "target_repo": null,
-      "priority": 10,
-      "status": "COMPLETE",
-      "started": "2026-11-09T13:24:34.298Z",
-      "ended": "2026-11-09T15:20:16.255Z",
-      "gaps": {
-        "open": 0,
-        "moved_to": []
-      },
-      "requires": [],
-      "backlog": [
-        "B106"
-      ],
-      "backlog_pieces": []
-    },
-    {
-      "id": "2026-11-09-generator-without-context7",
-      "folder": "docs/plans/2026-11-09-generator-without-context7",
-      "kind": "change",
-      "title": "The stackgen generator works without Context7",
-      "target_repo": null,
-      "priority": 20,
-      "status": "RUNNING",
-      "started": "2026-11-09T15:23:26.618Z",
-      "ended": "",
-      "gaps": null,
-      "requires": [
-        "2026-11-09-retire-plugin-mcp-servers"
-      ],
-      "backlog": [
-        "B124"
-      ],
-      "backlog_pieces": []
-    }
-  ]
+  "plans": []
 }
