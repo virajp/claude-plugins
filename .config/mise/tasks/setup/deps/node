@@ -14,24 +14,55 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # project, so the task does not apply and prints nothing.
 [[ -f "${MISE_PROJECT_ROOT}/package.json" ]] || exit 0
 
-# mise installs pnpm itself, so the task never runs `pnpm self-update`. An
-# upgrade stays inside the ranges of each package.json, and `--no-save` keeps
-# the ranges as they are: only the lockfile changes. To keep a package at its
-# locked version, list it in `update.ignoreDeps` of pnpm-workspace.yaml.
+# The selection is the folder that the sync generates for the tool. `mise x --
+# which` is not the test, because it also finds a tool of the user-level config.
+conf_d="${MISE_PROJECT_ROOT}/.config/mise/conf.d"
+has_pnpm=false
+has_aube=false
+[[ ! -d "${conf_d}/pnpm" ]] || has_pnpm=true
+[[ ! -d "${conf_d}/aube" ]] || has_aube=true
+
+# The bun tool owns the dependencies of a Bun repository, and it has no task.
+if [[ "${has_pnpm}" == false && "${has_aube}" == false && -d "${conf_d}/bun" ]]; then
+  exit 0
+fi
+
 if [[ "${usage_upgrade:-false}" == "true" ]]; then
   print_header "Upgrading Node dependencies ..."
-  mise x -- pnpm update --dir "${MISE_PROJECT_ROOT}" --recursive --no-save
 else
   print_header "Installing Node dependencies ..."
+fi
+
+if [[ "${has_pnpm}" == true && "${has_aube}" == true ]]; then
+  print_error "this repository selects both pnpm and aube."
+  print_warn "- remove [tools.pnpm] or [tools.aube] from .config/bootstrap.toml, then run mise run setup:configs"
+  exit 1
+elif [[ "${has_pnpm}" == true ]]; then
+  package_manager=pnpm
+elif [[ "${has_aube}" == true ]]; then
+  package_manager=aube
+else
+  print_error "this repository has a package.json, and it selects no package manager."
+  print_warn "- add [tools.pnpm] or [tools.aube] to .config/bootstrap.toml, then run mise run setup:configs"
+  exit 1
+fi
+
+# mise installs the package manager itself, so the task never runs a self-update.
+# An upgrade stays inside the ranges of each package.json, and `--no-save` keeps
+# the ranges as they are: only the lockfile changes. To keep a package at its
+# locked version, list it in `update.ignoreDeps` of the workspace file.
+if [[ "${usage_upgrade:-false}" == "true" ]]; then
+  mise x -- "${package_manager}" update --dir "${MISE_PROJECT_ROOT}" --recursive --no-save
+else
   # The lockfile decides the versions; an install never changes it.
-  mise x -- pnpm install --dir "${MISE_PROJECT_ROOT}" --frozen-lockfile
+  mise x -- "${package_manager}" install --dir "${MISE_PROJECT_ROOT}" --frozen-lockfile
 fi
 
 print_subheader "Checking for outdated Node dependencies ..."
-# A report only: `pnpm outdated` exits 1 when a dependency is outdated.
-mise x -- pnpm outdated --dir "${MISE_PROJECT_ROOT}" --recursive --long || true
+# A report only: `outdated` exits 1 when a dependency is outdated.
+mise x -- "${package_manager}" outdated --dir "${MISE_PROJECT_ROOT}" --recursive --long || true
 
 print_subheader "Auditing Node dependencies for known vulnerabilities ..."
-# Exits 1 for a vulnerability at or above `audit.level` of pnpm-workspace.yaml,
+# Exits 1 for a vulnerability at or above `audit.level` of the workspace file,
 # and that stops the setup.
-mise x -- pnpm audit --dir "${MISE_PROJECT_ROOT}"
+mise x -- "${package_manager}" audit --dir "${MISE_PROJECT_ROOT}"

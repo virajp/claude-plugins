@@ -3,6 +3,7 @@
 # The next sync replaces it, and a manual change is lost.
 
 #MISE description="Sync the shared files of this repository's tools from bootstrap"
+#MISE tools.pre-commit="latest"
 
 #USAGE flag "--dry-run" help="show the changes without writing them"
 #USAGE flag "--verbose" help="list each file, also an unchanged one"
@@ -11,9 +12,10 @@ set -euo pipefail
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 
-# This task only clones. `setup:configs:sync` then runs in a new process with
-# the sync code of this clone, so a change to the sync code applies in the same
-# run. The cache is ~/.cache/sync-engine/, which each consumer of this machine
+# This task only refreshes the cache clone and copies it. The Go engine then
+# runs in a child process with that copy, so a change to the sync code applies
+# in the same run. sync-engine/VERSION of the copy selects the engine release.
+# The cache is ~/.cache/sync-engine/, which each consumer of this machine
 # uses, and each run fetches main into it. The code below is sync-engine/clone
 # of the bootstrap clone: the sync embeds it when it renders this template. A
 # lock makes a second run wait until the first has updated the cache and copied
@@ -283,50 +285,39 @@ if [[ "${usage_verbose:-false}" == "true" ]]; then
   export SYNC_ENGINE_VERBOSE=1
 fi
 
-file_mode() { stat -c %a -- "$1" 2> /dev/null || stat -f %Lp -- "$1"; }
-
-# refresh_local_task <root>: the local sync task and its helpers run before the
-# file loop can write them, so they come from the copy here. Only a local file
-# is replaced, and a symlink stays. A dry run copies nothing. `_default` itself
-# stays old for this run: it needs the full render.
-refresh_local_task() {
-  local tasks=$1/.config/mise/tasks
-  local pair local_file clone_file tmp commit
-  local found='' differs='' failed=''
-  for pair in repo-sync:setup/configs/sync mise:_scripts/helpers; do
-    local_file=${tasks}/${pair#*:}
-    clone_file=${_SE_COPY}/repo/tools/${pair%%:*}/.config/mise/tasks/${pair#*:}
-    [[ -f ${local_file} || -L ${local_file} ]] || continue
-    found=1
-    [[ ! -L ${local_file} && -f ${clone_file} ]] || continue
-    if cmp -s -- "${local_file}" "${clone_file}" &&
-      [[ $(file_mode "${local_file}") == "$(file_mode "${clone_file}")" ]]; then
-      continue
-    fi
-    if [[ -n ${DRY_RUN} ]]; then
-      differs=1
-      continue
-    fi
-    # Next to the file, so the final mv is atomic.
-    tmp=${local_file}.tmp.$$
-    if cp -p -- "${clone_file}" "${tmp}" && mv -f -- "${tmp}" "${local_file}"; then
-      differs=1
-    else
-      rm -f -- "${tmp}"
-      failed=1
-      print_warn "Cannot update ${local_file} - using the local file"
-    fi
-  done
-  [[ -n ${found} ]] || return 0
-  commit=$(git -C "${_SE_COPY}" rev-parse --short HEAD) || commit=''
-  if [[ -n ${differs} && -n ${DRY_RUN} ]]; then
-    print_info "Would update the local sync task to ${commit}"
-  elif [[ -n ${differs} ]]; then
-    print_info "Updated the local sync task to ${commit}"
-  elif [[ -z ${failed} ]]; then
-    print_info "The local sync task is up to date"
+# The engine: SYNC_ENGINE_BIN, a local build, else the release that
+# sync-engine/VERSION of the copy names. VERSION has one line, MAJOR.MINOR.PATCH.
+if [[ -n ${SYNC_ENGINE_BIN:-} ]]; then
+  if [[ ! -f ${SYNC_ENGINE_BIN} || ! -x ${SYNC_ENGINE_BIN} ]]; then
+    print_error "SYNC_ENGINE_BIN ${SYNC_ENGINE_BIN} is not an executable file - nothing synced"
+    exit 2
   fi
+  engine=("${SYNC_ENGINE_BIN}")
+else
+  version=''
+  IFS= read -r version 2> /dev/null < "${_SE_COPY}/sync-engine/VERSION" || true
+  if [[ ! ${version} =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    print_error "sync-engine/VERSION of the clone is not MAJOR.MINOR.PATCH ('${version}') - nothing synced"
+    exit 5
+  fi
+  if ! mise install "github:virajp/bootstrap@${version}"; then
+    print_error "cannot install the sync engine ${version} (github:virajp/bootstrap) - nothing synced"
+    exit 5
+  fi
+  engine=(mise x "github:virajp/bootstrap@${version}" -- sync-engine)
+fi
+
+# sync_repo <folder>: run the engine in the folder of a repository, with that
+# folder as MISE_PROJECT_ROOT, as mise runs a task. The first failure stops the
+# task with its code.
+sync_repo() {
+  local rc=0
+  print_header "Syncing the shared files from bootstrap ..."
+  # The tools come from the pack base and from the [tools.*] and [packs.*]
+  # tables of .config/bootstrap.toml.
+  # shellcheck disable=SC2086
+  (cd -- "$1" && MISE_PROJECT_ROOT=$1 SYNC_ENGINE_CLONE="${_SE_COPY}" "${engine[@]}" repo ${DRY_RUN}) || rc=$?
+  ((rc == 0)) || exit "${rc}"
 }
 
-refresh_local_task "${MISE_PROJECT_ROOT}"
-SYNC_ENGINE_CLONE="${_SE_COPY}" REPO_SYNC_CLONE="${_SE_COPY}" mise run setup:configs:sync ${DRY_RUN}
+sync_repo "${MISE_PROJECT_ROOT}"

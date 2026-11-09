@@ -12,6 +12,7 @@
 # statistics do not count them.
 *.lock           linguist-generated
 pnpm-lock.yaml   linguist-generated
+aube-lock.yaml   linguist-generated
 Package.resolved linguist-generated
 
 # Binary files: git does not change their line endings and shows no diff.

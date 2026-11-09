@@ -13,12 +13,6 @@ compile = false
 [settings.npm]
 package_manager = "aube"
 
-[shell_alias]
-npx = "pnpm dlx"
-
 [tools]
 [tools.node]
 version = "lts"
-[tools.pnpm]
-depends = [ "node" ]
-version = "latest"
