@@ -87,9 +87,11 @@ that slug, record one entry `(repo, slug)`. Then:
 slugs are fetched on every run.** Each element is an entry `(base, slug)`, in
 list order after the project axes. A slug the base's lockfile already names is
 still passed to the adapter's template skill below, because the pick is
-committed and the servers land per machine, so another person's first run has
-something to do. An absent `addons:` and `[]` both mean no tool: nothing is
-landed, and this pass never writes `unresolved` there.
+committed and what a pack lands per machine must reach each machine, so another
+person's first run has something to do. That per-machine landing is an LSP
+server and nothing else: an addon lands no server, and no pack lands an MCP
+server — each one is the user's to install. An absent `addons:` and `[]` both
+mean no tool: nothing is landed, and this pass never writes `unresolved` there.
 
 An empty landing list is the ordinary state of a re-run: say every pinned axis
 is materialized, and move on. That sentence is what makes the pass idempotent
@@ -160,14 +162,15 @@ there, and a slug still listed is not dropped by a move off another axis.
 
 **A slug dropped from `addons:` leaves through one call**, made for each such
 slug in the base: `/<plugin>:<plugin>-stack-template remove: <slug>`, the
-removal path for the `addon` axis in
-`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Setup deletes no file for it.
+removal path in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, which takes
+any materialized slug. Setup deletes no file for it.
 The call shows its own plan on its own consent, takes
 out everything the lockfile records for the slug and commits once, returning
 **removed** or **declined**. A declined slug stays recorded, so the next run
 offers it again.
 
-**After the `remove:` calls, one more call reconciles this machine's claims**,
+**After every removal in this section, one more call reconciles this
+machine's claims**,
 made once per run in the base on each plugin named in `stacks:`, whether or not
 a slug was dropped: `/<plugin>:<plugin>-stack-template reconcile-claims:`. It
 takes no slug and is not a landing-list entry. An addon dropped on another
@@ -175,6 +178,20 @@ machine reaches this one by a pull, so no `remove:` call is made for it, and
 this call is what lets go of it. It asks on its own consent and returns one
 line, **removed**, **declined** or **unchanged**; setup wraps it in no consent
 and no commit. A decline changes nothing, and the next run offers it again.
+
+**Beside the claims reconcile, on every run, the machine part of the
+`config_format` `25 → 26` step.** When this machine's stack plugin manifest
+holds any MCP server key, setup offers one consent that lists every such key
+and the other repos `claims.json` names for it, and says it changes this
+machine alone. On a yes it calls
+`/<plugin>:<plugin>-stack-template remove: key <name>` once per key, passing
+that consent, so the call asks no second time; each call edits only the
+manifest and `claims.json`, commits nothing and returns the removed key name.
+Setup then prints the removed servers for the user to install by hand, each
+under its own name, if they want to keep one. Declined, nothing is written and
+the next run offers it again. A manifest with no MCP server key asks nothing
+and prints nothing. Each repo's own lockfile records are its `25 → 26` repo
+part's, never this call's.
 
 Every other dropped slug is setup's own. For each of
 its component packs that no slug still pinned in that repo also composes,
@@ -184,7 +201,10 @@ A **generated** component of the dropped slug — a `<type>/<name>@generated`
 ref that no slug still pinned in that repo also composes — has no pack: its
 recorded files are the `.claude/` copies the lockfile names for that ref (its
 skill, its citations), and they join the same consent. On a yes, delete those
-recorded files and their lockfile entries, and commit, one commit per slug.
+recorded files and their lockfile entries — the slug's `local_plugin` LSP
+records with them — and commit, one commit per slug; the claims reconcile then
+subtracts the slug's LSP claims from this machine, since the lockfile no
+longer records them.
 A decline leaves everything as it stands and is reported; `/vwf:setup`
 offers it again on the next run. A tool bootstrap selected for the pack leaves
 through the bootstrap delta of `/stackgen:stackgen-sync`.
@@ -255,6 +275,8 @@ One block, carried back to the spine:
   **declined**;
 - one line per plugin for the claims reconcile — the plugin, and **removed**,
   **declined** or **unchanged**;
+- one line for the MCP server cleanup when it was offered — **removed**, with
+  the server names to install by hand, or **declined**;
 - one line per member skipped as absent, with its checkout line;
 - one line per axis written `unresolved`, naming the project and the axis;
 - the sentence **"architecture decides; setup pins"**, so a reader knows where

@@ -62,17 +62,41 @@ Four sources define it, and none of them is a history:
    yet. Build the list as the
    [format lineage](format-lineage.md) row for 25 states, reading the
    `.claude/stackgen/lock.yaml` of every repo of the product cloned locally,
-   with one warning line per member that is not. Then ask the row's one yes/no
-   question, per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`; either answer
-   is complete. The result is **one numbered row** in the dry-run plan: the
-   `addons:` list it writes and each `backing_template` entry it removes, a list
-   it empties reading `[]`. On consent it is applied and the stamp moves to
-   **25**. A declined row leaves the config and the stamp at 24, since a 25 stamp
-   over an addon slug left in `backing_template` would claim a move that did
-   not happen, and the next migrate pass offers it again. The lockfile's
-   `local_plugin` rename and the recorded `.mcp.json` entries are stackgen's,
-   behind its own consent, run by the [materialize pass](materialize.md) that
-   follows.
+   with one warning line per member that is not. The step asks no question:
+   it adds no retired tool to `addons:`, so a repo at 24 is never asked about a
+   tool the `25 → 26` step then removes. The result is **one numbered row** in
+   the dry-run plan: the `addons:` list it writes, each `backing_template`
+   entry it removes, a list it empties reading `[]`, and each repo — the base
+   and each member — whose lockfile records the `capability-provider/notion`
+   pack, where the stack adapter's plain `remove:` takes that component's
+   skills and server. On consent it is applied and the stamp moves to
+   **25**, unless a member that records the pack is not cloned locally: that
+   member is a part not yet applied, the stamp stays at 24 and the next pass
+   offers only that part. A declined row leaves the config and the stamp at 24,
+   since a 25 stamp over a slug left in `backing_template` would claim a move
+   that did not happen, and the next migrate pass offers it again. The
+   lockfile's `local_plugin` rename is stackgen's, behind its own consent, run
+   by the [materialize pass](materialize.md) that follows.
+   **`config_format` 25 → 26** makes every MCP server the user's to install.
+   It runs once the stamp reads 25, including when this pass just moved it
+   there, and has the two parts the [format lineage](format-lineage.md) row for
+   26 states. The **repo part** is this step: in each repo whose
+   `.claude/stackgen/lock.yaml` names the component — the base and each member,
+   setup calling the stack adapter inside each member as it materializes
+   members — plain `remove:` for each retired tool and its `addons:` entry;
+   the row's one re-pin question, asked before the plan is shown, for every
+   project pinned to `claude-design`, re-pinned to claude-code, lovable or
+   stitch, then plain `remove: claude-design`, the picked tool's materialize
+   and the cleared `design.*` values; and one row that deletes every MCP
+   record left in each lockfile directly, whichever slug recorded it or none,
+   so no MCP record survives the migration. Each is a numbered row of the
+   dry-run plan; setup passes the consent to each `remove:` call it makes.
+   Each accepted row is applied and stays, a declined row writes nothing, and a
+   member that is not cloned locally is a row not yet applied. The stamp moves
+   to **26** only once every row is applied; until then each migrate pass
+   offers only the rows that remain, since every row is idempotent. The
+   **machine part** is not a migrate row: it runs on every `/vwf:setup` run,
+   beside the claims reconcile in the [materialize pass](materialize.md).
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and
