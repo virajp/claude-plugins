@@ -15,8 +15,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-09 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-09 20:54 in .worktrees/generator-without-context7"
   },
   "consent": {
     "merge": true,
@@ -92,11 +92,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-09T15:24:54.032Z",
+      "ended": "2026-11-09T15:33:27.422Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -159,11 +159,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-09T15:24:54.065Z",
+      "ended": "2026-11-09T15:33:27.487Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -218,8 +218,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-09T15:24:53.999Z",
       "ended": ""
     },
     {
@@ -484,7 +484,15 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U2",
+      "stage": "",
+      "text": "U2 asked (Q1) whether to re-wrap 7 hint lines the wave review flagged as 81-83 long · closed: the reviewer measured bytes; counted in characters every line keeps the 80-column fold, and round 2 marked the finding RESOLVED, so no ruling was owed",
+      "state": "closed"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/generator-without-context7",

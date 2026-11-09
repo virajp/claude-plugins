@@ -41,7 +41,8 @@ first to go whole rather than by skill: the kind *was* the plugin. Its neutral
 rules, its resolution discipline and its one implemented system are the pack
 and the contract above; what did not come across is its worked YAML, by the
 same rule every pack follows — a pack carries judgment, and the vendor's own
-syntax comes from Context7 at use time.
+syntax comes from Context7 at use time, when Context7 is installed; else the
+official documentation.
 
 **Wave C — the TypeScript Language-Bundle**, five components across four
 directories: `language/typescript`, `package-manager/pnpm`,
@@ -95,7 +96,8 @@ so Dart is a `primary` member and Kotlin and Swift are `platform-edge` members
 with their own boundary-scoped skills.
 
 Its integration references are **wiring only** — 45 files kept from 160, the
-other 115 being API surface that Context7 serves current at use time. What was
+other 115 being API surface that Context7 serves current at use time, when
+Context7 is installed; else the official documentation. What was
 kept is setup order, platform configuration (manifest entries, entitlements,
 permissions) and anti-patterns: the half a per-package lookup gives piecemeal.
 

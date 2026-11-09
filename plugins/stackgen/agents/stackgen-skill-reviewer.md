@@ -43,7 +43,13 @@ edits. You never write files.
    catalog entry actually says what the artifact leans on. An uncited claim,
    or a citation that does not support its claim, is a gap. Where the
    generation run reported thin research coverage, the artifact must say so —
-   confident prose over disclosed-thin sources is a gap.
+   confident prose over disclosed-thin sources is a gap. Thin is measured
+   against the run's primary source — Context7 when Context7 is installed,
+   else the official documentation — and a topic the citations record as
+   switched to web sources mid-run is measured against the official
+   documentation. A web-source supplement used on a topic not disclosed thin
+   is a gap; a registry citation for a package name or version never is —
+   the registries are always read.
 4. **Emitted facts are honest.** Per-language facts (LSP provision, mise
    tool, manifest) and every `harness` entry name real, verifiable things or
    `n/a` — an invented task name or mechanism is a gap, because doctor will
@@ -52,7 +58,8 @@ edits. You never write files.
    tools; anything that implements a server, invents a tool, or scaffolds
    beyond the declared stack is a gap.
 6. **Judgment density.** The conventions carry decisions a reader cannot look
-   up; API-reference material that Context7 serves at use time is a gap, and
+   up; API-reference material that Context7 serves at use time (when
+   Context7 is installed; else the official documentation) is a gap, and
    so is a generated skill the detected stack gave no reason to generate.
 7. **Kind conformance.** The artifact set matches its declared kind's
    structure and scope: every structural element the kind requires is
@@ -81,7 +88,8 @@ edits. You never write files.
    bar topic with no artifact is a gap, with exactly two honest outs: the
    citations record the topic `n/a` with why (the detected stack makes it
    inapplicable), or the citations disclosed the research thin for that
-   topic. **Never report an artifact as too long — there is no line cap.**
+   topic against the run's primary source. **Never report an artifact as
+   too long — there is no line cap.**
    What is checkable is decomposition: an artifact that has outgrown one
    sitting must be a lean router skill plus `references/` that load on
    demand, one per topic, and an artifact that is *not* split that way is

@@ -16,32 +16,36 @@ the composition's single consent gate and landing. Generation is
   catalog in the invocation → halt and name what is missing. Never
   substitute general knowledge for the catalog — the catalog is the trust
   anchor the reviewer gate checks against.
-- **Context7 must be reachable, from some source** — a Context7 MCP server
-  the user installed, at any scope, or another plugin. It is the **primary
-  and preferred research channel**: resolve the technology's library IDs and
-  fetch current documentation before writing a word. stackgen never installs
-  one. When none is reachable, generation **halts** and asks the user, with
-  exactly this sentence:
+- **A research source must be reachable.** Before the first topic, probe
+  once whether a Context7 MCP server is reachable — one the user installed,
+  at any scope, or another plugin. stackgen never installs one and never
+  asks for one. The run's **primary source** is Context7 when Context7 is
+  installed and reachable; otherwise it is the technology's official
+  documentation, found with `WebSearch` and read with `WebFetch`. `WebFetch`
+  is the one web tool generation cannot do without, because it reads the
+  page; without `WebSearch` the official page is reached through the
+  registry's homepage link. The **package registries are always read**, in
+  either case, for every package name and version.
 
-  > Generation needs a Context7 MCP server. Install one yourself at user
-  > scope — the install page is https://github.com/upstash/context7 — then
-  > tell me when it is done.
+  With no Context7 and no `WebFetch` — refused or offline — there is no
+  research source, and generation **halts** before writing anything, with
+  exactly this sentence and no install step:
 
-  Then it **waits**, and re-checks that Context7 is reachable before it
-  continues; still unreachable, it asks again rather than generating.
+  > Generation stopped: no research source is reachable — WebFetch,
+  > WebSearch and the package registries refused or are offline, and no
+  > Context7 server answered — and a generated pack needs cited facts.
 
   A generated skill written from training knowledge is exactly the
   plausible-but-stale artifact this pipeline exists to prevent.
-  Supplementary sources are allowed only where Context7's coverage of a
+  Other sources are allowed only where the primary source's coverage of a
   topic is thin — and both the thinness and every supplement are disclosed,
   per topic, in the citations file (step 3): the output says what it could
   not verify rather than padding.
 - **The sources `stackgen-reputation` names must be reachable.** Step 4
   vets every concrete name the component emits through that skill, and a
   source it cannot reach yields an `UNRESOLVED:` row, never an inferred
-  verdict. Unreachable → **halt**, on the same terms as Context7: a name
-  landed unvetted is exactly the plausible-but-unchecked artifact the
-  check exists to prevent.
+  verdict. Unreachable → **halt**: a name landed unvetted is exactly the
+  plausible-but-unchecked artifact the check exists to prevent.
 
 ## Pipeline
 
@@ -68,13 +72,34 @@ the composition's single consent gate and landing. Generation is
    nothing here invents a bar for it.
 3. **The topic loop — research, write, cite, per topic.** For each
    applicable topic, in order:
-   - **Research** — one Context7 pass per topic, minimum: the topic's
+   - **Research** — one pass of the primary source per topic, minimum: a
+     Context7 pass when Context7 is installed, else the official
+     documentation through `WebSearch` and `WebFetch` — the topic's
      current APIs, configuration shape, idioms, the ecosystem's own
-     conventions, against the detected versions and companions.
-     Supplementary sources only where Context7's coverage of *this topic*
-     is thin — and the thinness itself is recorded for the topic, which
-     is what lets the reviewer accept a thin topic honestly instead of
-     flagging it as a coverage gap. An `lsp_servers:` declaration bound for
+     conventions, against the detected versions and companions; and the
+     package registries for every package name and version. Other sources
+     only where the primary source's coverage of *this topic* is thin —
+     and the thinness itself is recorded for the topic, which is what lets
+     the reviewer accept a thin topic honestly instead of flagging it as a
+     coverage gap. Context7 with no library or no documents for the
+     technology is a **thin topic**, not a failure. With Context7 reachable
+     and the web sources refused, a thin topic is written from Context7
+     alone and disclosed as thin, with the note *web sources unreachable*;
+     a registry that cannot be read is the reputation `UNRESOLVED:` halt
+     (step 4).
+
+     **A source that fails mid-run.** Only a Context7 tool error or
+     timeout is a failure. From the topic that failed on, the run uses
+     `WebSearch`, `WebFetch` and the registries for every remaining topic,
+     never tries Context7 again, and treats the official documentation as
+     the primary source for the thin rule; a topic half-researched in
+     Context7 is researched again from its start. The switch is a note, naming
+     that topic, in the component's citations file. When every source
+     fails mid-run, generation halts with the sentence above: it writes no
+     pack and keeps nothing partial, the halt report lists the topics that
+     were done — no file records them — and the next run starts again.
+
+     An `lsp_servers:` declaration bound for
      `vwf-tools` is researched from fresh sources alone, resolved from the
      technology's name by this research channel, at first generation and at
      every regeneration alike: its `command`, `args` and `env` never come
@@ -233,9 +258,8 @@ the composition's single consent gate and landing. Generation is
    that clears the check, with no URL or bare host in its `args` or
    `env` values, can replace it. `warn` rows travel
    with the table to the dry-run consent gate. An `UNRESOLVED:` row halts
-   the same way a Context7 outage does (the preconditions above): a name
-   whose sources could not be reached is never landed on an inferred
-   verdict.
+   generation on its own terms (the preconditions above): a name whose
+   sources could not be reached is never landed on an inferred verdict.
 5. **The reviewer gate.** Dispatch the `stackgen-skill-reviewer` agent per
    generated component — stateless: it gets the catalog paths, the
    declared kind and the component's classification, the detected stack,
@@ -258,7 +282,8 @@ the composition's single consent gate and landing. Generation is
   tools — it never implements servers, and it never invents a tool the
   ecosystem does not have. A capability with no real mechanism is `n/a`.
 - **Judgment over API surface.** The conventions carry decisions (layout,
-  placement, testing shape, failure modes); API reference stays in Context7,
-  fetched by whoever codes against it later.
+  placement, testing shape, failure modes); API reference stays out of the
+  pack, looked up at use time by whoever codes against it — in Context7 when
+  Context7 is installed, else the official documentation.
 - **The minimalism bar applies to the output itself**: generate the entries
   the detected stack needs, not one skill per catalog entry by rote.

@@ -239,11 +239,12 @@ verdicts:
   recommendation, and it is the user's to make.
 
 A source the skill cannot reach yields `UNRESOLVED`, never an inferred
-verdict, and halts generation the way it does when no Context7 server is
-reachable from any source — for that one, the agent asks the user to install
-a Context7 MCP server at user scope themselves
-(`https://github.com/upstash/context7`), waits, and re-checks before it
-continues.
+verdict, and halts generation on its own terms. Research is a separate
+precondition, and it never halts on Context7: Context7 first when Context7 is
+installed; without it, `WebSearch` to find the official documentation and
+`WebFetch` to read it; the package registries for every name and version in
+either case. Generation halts for research only when no source at all is
+reachable, and that halt names no install step.
 
 Three forms name no one thing to vet, so each stops generation as
 `UNRESOLVED`, whatever the verdict table says: a shell, or an interpreter's
