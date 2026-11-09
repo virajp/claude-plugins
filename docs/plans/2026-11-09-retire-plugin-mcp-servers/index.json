@@ -243,11 +243,11 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T14:12:52.948Z",
+      "ended": "2026-11-09T14:21:09.676Z",
+      "commit": "588118c7",
+      "rounds": 1
     },
     {
       "id": "U7",
@@ -286,9 +286,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-09T14:12:52.916Z",
+      "ended": "2026-11-09T14:24:11.332Z"
     },
     {
       "id": "W4",
@@ -821,28 +821,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.592Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.702Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.820Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers and no code unit — no stamps, nothing to persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.970Z"
     }
   },
   "gaps": [
