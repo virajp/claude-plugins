@@ -125,24 +125,27 @@ languages: # language and app-framework components only
 package_manager: <token> # package-manager components only
 lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
-user_mcp_servers: {} # a component needing an MCP server — the generated local plugin's mcpServers, tier 3
 lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
 harness:
   <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
 
-**Servers are two sibling keys.** `user_mcp_servers:` and `lsp_servers:` are
-user-scoped and land in the generated local plugin's manifest. This changes no
-artifact: the landed set is still closed to skills, agents, hooks and rules,
-and these are payload the materializer writes elsewhere.
+**`lsp_servers:` is the one server key.** It is user-scoped and lands in the
+generated local plugin's manifest. This changes no artifact: the landed set
+is still closed to skills, agents, hooks and rules, and this is payload the
+materializer writes elsewhere.
+
+**A pack declares no MCP server.** The `user_mcp_servers:` key is retired:
+`p:plugins:check` refuses it in any `pack.yaml`, and nothing installs an MCP
+server for a repo — the user owns every MCP install. A pack that needs one
+names it in a `## MCP servers` section of its `conventions.md` (below).
 
 ### The `addon` type, kind and axis
 
 An `addon` pack is an optional tool. It is **never `default: true`**, it is
 picked only through the tools menu and recorded in `.config/vwf.yaml`'s
-`addons:` list, and it carries at least one of `user_mcp_servers:` or a
-`## Claude plugins` section. Its bundle is one `addon` component alone, with the
-same token for its type, kind and axis.
+`addons:` list, and it carries a `## Claude plugins` section. Its bundle is
+one `addon` component alone, with the same token for its type, kind and axis.
 
 ### `binaries:` — a name, or a name and its probe
 
@@ -208,6 +211,29 @@ plugin: `<name>@<marketplace>`, the source of its marketplace for
 
 The materializer reads the section and asks bootstrap to install each
 plugin, through the same handoff as the tools. There is no `pack.yaml` key.
+
+### `## MCP servers` — a server the component needs
+
+Any pack may name an MCP server its skills reach, in its `conventions.md`,
+under a `## MCP servers` heading beside `## Claude plugins`, one bullet for
+each server: its exact name, what it is for, and its official install page —
+never an install command, never a config block. A server the pack can work
+without carries the marker `(optional)` after its name.
+
+```markdown
+## MCP servers
+
+- `<name>` — <what it is for>; install: <official URL>
+- `<name>` (optional) — <what it is for>; install: <official URL>
+```
+
+The section is **never handed to bootstrap**, and nothing installs the
+server. The user installs it under that exact name. When a skill needs the
+server and it is not available, the agent asks the user to install it and
+waits. The materializer records each line in the component's lockfile entry
+under `required_mcp_servers` (an `optional` server with `optional: true`),
+and `/vwf:doctor` reads that record: a declared server that is not available
+is drift, never blocking, and an optional one is never reported.
 
 The bundle-level lists the previous format carried per pack — `frameworks`,
 `dependencies`, `optional_languages`, `capabilities` — are **derived at

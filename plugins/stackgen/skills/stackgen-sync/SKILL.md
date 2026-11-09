@@ -31,9 +31,11 @@ user's clock.
    skill. Partition entries by **component** (every landing carries its
    component ref) and by source: pack-sourced vs `generated`. Read the
    `settings_keys` and `local_plugin` blocks too — those
-   name state outside `.claude/`, and each diffs on its own terms below — and
-   any top-level `mcp_servers` list, the retired `.mcp.json` record step 4
-   handles.
+   name state outside `.claude/`, and each diffs on its own terms below. An
+   MCP record — a `local_plugin.mcp_servers` list or a top-level
+   `mcp_servers` list an older stackgen wrote — is ignored: sync lands no
+   server, adds no claim and reports nothing for it, and `/vwf:setup`'s step
+   26 deletes it.
 
    **Entries are not all under `.claude/`.** A component may have landed
    repo config files from its `config/` tree — a `test:*` task, a
@@ -62,27 +64,30 @@ user's clock.
    A pack that no longer exists in this stackgen version is reported, never
    deleted.
 
-   **The relocation table.** Two items moved to a new pack, and this fixed
+   **The required MCP servers.** A component updated to a pack version whose
+   `conventions.md` has a `## MCP servers` section gets its lines recorded in
+   the lockfile's `required_mcp_servers`, on the terms of the materializer —
+   filled when the key is missing, rewritten when the lines changed. It rides
+   the component's update and has no consent line of its own: it is a record,
+   and nothing installs a server.
+
+   **The relocation table.** One item moved to a new pack, and this fixed
    table is the whole of it — there is no general diff across pins:
 
    | From                                                               | To                  |
    | ------------------------------------------------------------------ | ------------------- |
-   | `capability-provider/notion`                                       | `addon/notion`      |
    | the `taste-skill@taste-skill` claim of `design-tool/claude-code@1` | `addon/taste-skill` |
 
    **In the base repo**, where the new pack is pinned, a relocated item is
    **re-attributed in the lockfile, never removed and re-added**, before the
-   diff above runs against it, and the report names it. A change of place (a
-   `.mcp.json` entry to `vwf-tools`, which takes the new pack's declaration and
-   never the repo's) or of content is a normal update behind its normal consent.
+   diff above runs against it, and the report names it. A change of content is
+   a normal update behind its normal consent.
 
    **In a member repo of a multi-repo product** — one carrying
-   `.config/vwf-membership.yaml` — the table does not apply: the old notion
-   skill files and `.mcp.json` entry are removed by that member's own sync,
-   behind consent, and a claim on `taste-skill@taste-skill` goes by the
-   bootstrap handoff's Removal section. A sync in the base repo names each
-   member not cloned locally in a one-line warning; its old items wait for a
-   sync there.
+   `.config/vwf-membership.yaml` — the table does not apply: a claim on
+   `taste-skill@taste-skill` goes by the bootstrap handoff's Removal section.
+   A sync in the base repo names each member not cloned locally in a one-line
+   warning; its old items wait for a sync there.
 
    **A retired record whose file is gone is dropped.** A recorded path
    that its recording component — the `component:` ref — no longer
@@ -121,10 +126,10 @@ user's clock.
    has no pack to diff against; offer to re-run the generator for that
    component alone (the pipeline in `/stackgen:stackgen-stack-template`'s
    references — fresh research against its recorded citations, reviewer
-   gate included) and diff its output against the repo's copy. A
-   declaration bound for `vwf-tools` is the exception: it is researched
-   from fresh sources alone, never from those citations or any other text
-   the repo holds, because a repo can plant them. A
+   gate included) and diff its output against the repo's copy. An
+   `lsp_servers:` declaration bound for `vwf-tools` is the exception: it is
+   researched from fresh sources alone, never from those citations or any
+   other text the repo holds, because a repo can plant them. A
    regenerated component goes through the generator and so through its
    `stackgen-reputation` check: every concrete name it emits is re-checked
    at regeneration, a name that passed at first generation included, and
@@ -147,22 +152,14 @@ user's clock.
      6 with no prompt, and the report names the rewrite. The repo's servers
      then merge behind the normal tier-3 line, as a first write when
      `vwf-tools` does not exist.
-   - **The lockfile has a top-level `mcp_servers` list** — a key a shipped pack
-     declares, the pack a lockfile component names or the relocation table maps
-     it to, is moved into `local_plugin.mcp_servers` with **that pack's**
-     declaration, with its own `.mcp.json` key-removal line at step 5. No
-     `command`, `args`, `env` or `url` is ever copied from `.mcp.json` or the
-     lockfile. Any other key, a generated component's included, and any
-     `.mcp.json` key the lockfile does not record, is reported and left in
-     place; a generated component's server arrives through step 3.
-
-   Then the diff. No `local_plugin` block and no key the composition declares
+   Then the diff — of LSP keys only; sync subtracts and offers no MCP key. No
+   `local_plugin` block and no key the composition declares
    → skip the rest of this step; this repo has never written to the
    machine and a sync must not start. Otherwise read
    `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json` and
-   compare, **key by key and only for the keys this repo claims** under
-   `local_plugin.lsp_servers` / `local_plugin.mcp_servers`, and the keys the
-   current composition declares:
+   compare, **key by key and only for the `lspServers` keys this repo claims**
+   under `local_plugin.lsp_servers`, and the keys the current composition
+   declares:
 
    - a key the current composition declares that this repo does not claim yet
      — **offer** it, classified by the merge table;
@@ -188,18 +185,12 @@ user's clock.
    three-state classification. **Repo edits are never overwritten by
    default** — a *repo edited* file is taken only if the user picks it
    explicitly, and the default selection covers only *pack moved* files.
-   Five things get their **own** consent lines rather than riding the
+   Four things get their **own** consent lines rather than riding the
    file plan, and each is separately declinable:
 
    - any change to entries under `settings_keys` — a
      `.claude/settings.json` edit, and **settings.json is never modified
      without explicit consent**;
-   - the removal of recorded keys from the repo's `.mcp.json` — on the same
-     terms, only keys the lockfile recorded and step 4 moved into the manifest,
-     deleting the file only if it is then empty, and not offered while the
-     migration is declined. Declined → the lockfile keeps those keys in its
-     top-level `mcp_servers` list and the removal is offered again on the next
-     run;
    - any change to a `config/`-tier entry — a write **outside
      `.claude/`**, into files the repo's collaborators own and read, so it
      is its own **tier-2** line listing every path, on the same
@@ -208,12 +199,12 @@ user's clock.
      landed and says the tasks stay as they are;
    - the bootstrap delta of step 2 — each instruction as it will be sent,
      on the terms of step 7 of the bootstrap handoff;
-   - anything from step 4 — the **tier-3** line, which shows each server's
-     full declaration (`command`, `args`, the `env` keys and their values,
-     `url`), says plainly that it writes to this machine outside the repo and
-     that a server landing in `vwf-tools`, with any account grant it holds, is
-     reachable from every repo on this machine, not only the one that picked
-     it, and where a
+   - anything from step 4 — the **tier-3** line, LSP servers only, which shows
+     each server's full declaration (`command`, `args`, the `env` keys and
+     their values), says plainly that it writes to this machine outside the
+     repo and that a server landing in `vwf-tools` starts in every repo on
+     this machine whose files match its extension map, not only the one that
+     picked it, and where a
      registration or de-registration is involved **prints the `claude`
      commands and asks; it never runs them unprompted**.
 

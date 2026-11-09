@@ -688,9 +688,11 @@ resolves to nothing silently.
   token, so the pin and the config key are one value.
 - **Structure**: exactly three model-invocable skills, at the fixed names
   `design-import-screens`, `design-import-design-system` and
-  `design-import-conversations`, plus this tool's MCP wiring where it has an
-  API. Three because vwf has three import surfaces and each returns a
-  different payload; fewer would make one of them silently unavailable.
+  `design-import-conversations`, plus a `## MCP servers` line in its
+  `conventions.md` where the tool is reached over MCP — never the server's
+  wiring, which is the user's to install. Three because vwf has three
+  import surfaces and each returns a different payload; fewer would make
+  one of them silently unavailable.
 - **Scope**: how to read this tool's authored designs back, and how to reach
   its API. **Never** what a design *means* — the diffing, the contract deltas
   and every blueprint edit stay vwf's. **Never** the prompt side: design briefs
@@ -733,8 +735,9 @@ A closed list of five topics, one artifact per topic. Topic 5 is conditional.
    empty payload there reads as a design nobody made.
 4. **Reach & credentials** — how the tool's API is contacted, what
    authentication it needs, and what must never be logged. Where the tool is
-   reached over MCP, this topic owns that wiring and the consent it lands
-   behind.
+   reached over MCP, this topic names the server its `## MCP servers` line
+   declares and what a skill does when it is missing: ask the user to install
+   it, and wait.
 5. **Naming contract** — the page and frame naming this tool needs so an
    import can find anything, mirroring what `/vwf:screens prompt` commissions.
    *(conditional — `n/a` for a tool with no canvas)*
@@ -849,8 +852,8 @@ only while it is picked.
 - **Axis**: `addon`. The bundle slug **is** the entry in the product-level
   `addons:` list. No bundle on the axis carries `default: true`.
 - **Structure**: the pack lands no repo file of its own beyond its skills. It
-  declares `user_mcp_servers:`, landed in `vwf-tools`, or a `## Claude plugins`
-  section, handed to bootstrap. A pack with judgment to carry hangs it per the
+  carries a `## Claude plugins` section, handed to bootstrap; it declares no
+  MCP server. A pack with judgment to carry hangs it per the
   kind-general rule, one artifact per topic behind a lean router skill.
 - **Scope**: what the tool serves and who needs it, where it lands, and what the
   person must have on `PATH`. **Never** a client library, a credential or

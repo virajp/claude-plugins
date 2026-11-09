@@ -62,10 +62,15 @@ edits. You never write files.
    each skill's invocation mode matches the kind's ruling, and nothing
    outside the output vocabulary (no executables from generation, no MCP or
    LSP configuration) appears at all. **The generated local plugin is not
-   an artifact** — `lsp_servers:` and `user_mcp_servers:` are payload
-   fields the materializer lands behind their own consent lines, so their
-   absence from the artifact set is correct and never a gap; what they must
-   satisfy is check 9.
+   an artifact** — `lsp_servers:` is a payload field the materializer lands
+   behind its own consent line, so its absence from the artifact set is
+   correct and never a gap; what it must satisfy is check 9. A generated
+   `user_mcp_servers:` entry **is** a gap: the key is retired, and a
+   component that needs an MCP server names it in a `## MCP servers` section
+   of its `conventions.md` — one line per server, its exact name, what it is
+   for and its official install page, `(optional)` after the name where the
+   component works without it, never an install command or a config block —
+   which is the accepted form.
 8. **Coverage.** For a kind whose topic bar is settled in `assets/kinds.md`
    (today: `language-bundle`, `database`, `cloud-provider`,
    `capability-provider`, `ci-system`, `app-framework` and `deploy-target`),
@@ -99,14 +104,13 @@ edits. You never write files.
 10. **Every name has a verdict.** Grep the generated component for every
     concrete third-party name it emits — `mise_tool` entries, runner-invoked
     tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
-    `user_mcp_servers:` and `lsp_servers:` commands, every package a server's
+    `lsp_servers:` commands, every package a server's
     runner chain fetches (nested runners, `--package`, `-p`, `--from`,
     `pipx run --spec`, whose name is the one vetted, `--with`, `dlx`, the
     positional a runner starts when it has no package flag),
-    `user_mcp_servers:` `url` hosts, the host of any URL or bare host
-    (a hostname or IP address with no scheme) in either kind of entry's `args`
-    or `env` values, action references, image references — and
-    look each one up in the verdict table you were handed.
+    the host of any URL or bare host (a hostname or IP address with no
+    scheme) in an entry's `args` or `env` values, action references, image
+    references — and look each one up in the verdict table you were handed.
     A name with no row is a gap; a row reading `block` is a gap. Each of these
     is a gap whatever the table says: a chain whose fetched packages cannot be
     read (a fetching runner the generator's rule does not name, a package spec

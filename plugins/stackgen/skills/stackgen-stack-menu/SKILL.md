@@ -55,8 +55,7 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    carries the key: no optional tool is preselected.
 
    **Add `needed_by` to an `addon` entry a shipped pack needs**, and to no
-   other: `context7` → "the stackgen generator (any uncovered component)",
-   `taste-skill` → "the claude-code design tool's design-session".
+   other: `taste-skill` → "the claude-code design tool's design-session".
 2. Return the payload below. The `generate` block is present on **every**
    answer — it is the open entry, and it is what makes an empty pack list read
    as a decision rather than a fault.
@@ -68,8 +67,8 @@ note: Packs listed here are curated and copied verbatim. Any technology no
   axis that needs it, and the first template fetch runs the generation
   pipeline (researched via Context7, instantiated against vwf's principles
   catalog, gated by review and your consent) directly into the repo's
-  committed .claude/ tree. Generation needs the context7 tool, picked on the
-  tools round, and halts when no Context7 server is reachable.
+  committed .claude/ tree. Generation needs a Context7 MCP server: when none
+  is reachable, the agent asks you to install one yourself and waits.
 templates:
   - slug: <bundle filename without .md>
     axis: <bundle frontmatter axis>
