@@ -2,7 +2,8 @@
 
 **Wiring, configuration and anti-patterns only.** The `GoogleMap` composable,
 its camera, marker and overlay API, and the fused location provider's request
-API are Context7's at use time.
+API are Context7's at use time when Context7 is installed, else the official
+documentation's.
 
 Maps Compose (`com.google.maps.android:maps-compose`) puts the Maps SDK for
 Android behind composables; Play Services Location supplies the fused location

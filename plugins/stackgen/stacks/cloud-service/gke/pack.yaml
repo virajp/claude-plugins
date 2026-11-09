@@ -2,7 +2,7 @@ name: GKE Autopilot · Artifact Registry
 summary: Managed Kubernetes, for products that have outgrown per-service
   autoscaling or need workloads a request-scoped platform cannot host — taken
   deliberately, for a larger operational surface and a per-cluster cost floor.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: compute
 kind: cloud-provider

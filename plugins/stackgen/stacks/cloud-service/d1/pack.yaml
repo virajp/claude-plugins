@@ -2,7 +2,7 @@ name: Cloudflare D1
 summary: A serverless SQLite database bound to a Worker — relational data
   with read replication, sized for a per-tenant or per-product dataset
   rather than for one monolith.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: sql
 capability: relational-datastore

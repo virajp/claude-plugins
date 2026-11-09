@@ -21,7 +21,7 @@ functions — see [standards & architecture](standards-and-architecture.md).
 - **One HTTP client, built once, injected.** The client is provided by a Hilt
   module in the data layer; a repository receives an interface over it. Which
   client library is the repo's choice, made once; its API is Context7's at use
-  time.
+  time when Context7 is installed, else the official documentation's.
 - **The wire model is not the UI model.** Network DTOs are `@Serializable`
   types mapped to the app's model types at the repository edge; nothing above
   the data layer imports a DTO.

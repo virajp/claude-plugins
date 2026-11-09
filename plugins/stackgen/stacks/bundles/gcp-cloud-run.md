@@ -3,8 +3,8 @@ name: Google Cloud · Cloud Run · Artifact Registry
 axis: deploy
 kind: cloud-provider
 components:
-- cloud-provider/gcp@0.1.0
-- cloud-service/cloud-run@0.2.1
+- cloud-provider/gcp@0.1.1
+- cloud-service/cloud-run@0.2.2
 artifact: container-image
 ---
 

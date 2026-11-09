@@ -2,9 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — event and
 parameter names, user properties, the consent types, the screen-view helpers —
-is Context7's at use time, and is the half that ages. This reference carries
-the setup order, the property-list entries and the consent and tracking
-interplay a per-type lookup gives only piecemeal.
+is Context7's at use time when Context7 is installed, else the official
+documentation's, and is the half that ages. This reference carries the setup
+order, the property-list entries and the consent and tracking interplay a
+per-type lookup gives only piecemeal.
 
 Firebase Analytics is the measurement half of the Firebase SDK for Apple
 platforms; every other `firebase-*.md` reference here shares its bootstrap — one
@@ -61,7 +62,8 @@ Decide once for the app, not per product.
 
 - **Debug logging** is a scheme launch argument, `-FIRDebugEnabled`, on the
   shared Run scheme's development configuration only. The Analytics-specific
-  debug-mode flag that feeds DebugView is Context7's at use time.
+  debug-mode flag that feeds DebugView is Context7's at use time when Context7
+  is installed, else the official documentation's.
 - **DebugView** is for the developer's device; never ship a build with debug
   mode forced on.
 

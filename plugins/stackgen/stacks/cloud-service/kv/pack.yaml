@@ -2,7 +2,7 @@ name: Cloudflare Workers KV
 summary: A global, eventually consistent key-value store for read-heavy
   configuration, routing metadata and cached results — the cache layer a
   Worker reads on every request, not the datastore it writes on every one.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: key-value
 capability: cache-layer

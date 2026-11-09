@@ -1,6 +1,6 @@
 # Firebase Crashlytics — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -31,7 +31,7 @@ Sections in this file:
 
 Recording non-fatal errors, custom keys and logs, the user identifier, isolate
 error capture and collection control are API surface. Fetch them from Context7
-at use time.
+at use time when Context7 is installed, else from the official documentation.
 
 ## Initialization
 

@@ -16,8 +16,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 
 An identity-aware proxy in front of a project that must not be publicly
 reachable. This skill carries the judgment; policy-expression syntax,
-connector flags and the API's current shape belong to Context7 at use
-time.
+connector flags and the API's current shape belong to Context7 at use time
+when Context7 is installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

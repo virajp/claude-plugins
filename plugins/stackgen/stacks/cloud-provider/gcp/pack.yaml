@@ -3,7 +3,7 @@ summary: The provider-wide judgment every Google Cloud service inherits — how
   the
   meter runs, how a workload gets an identity without a key, which services have
   emulators, and what a private plane looks like here.
-version: 0.1.0
+version: 0.1.1
 type: cloud-provider
 kind: cloud-provider
 # No `axis:` — a cloud-provider component composes into Cloud-Bundles on BOTH the

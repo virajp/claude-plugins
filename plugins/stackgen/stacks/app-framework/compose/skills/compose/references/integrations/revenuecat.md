@@ -1,7 +1,8 @@
 # Jetpack Compose — RevenueCat
 
 **Wiring, configuration and anti-patterns only.** The configuration, identity,
-offerings, purchase, restore and customer-info API is Context7's at use time.
+offerings, purchase, restore and customer-info API is Context7's at use time
+when Context7 is installed, else the official documentation's.
 
 RevenueCat wraps Google Play Billing: the app buys through the RevenueCat SDK,
 RevenueCat validates the purchase server-side and tracks the subscription's

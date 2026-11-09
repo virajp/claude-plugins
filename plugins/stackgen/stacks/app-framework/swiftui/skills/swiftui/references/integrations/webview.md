@@ -3,9 +3,10 @@
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 the SwiftUI web view and its page model, the WebKit view and its
 configuration, navigation decisions, script message handlers, the website
-data store — is Context7's at use time, and is the half that ages. This
-reference carries the hosting choice, the transport and data-store wiring and
-the bridge rules a per-type lookup gives only piecemeal.
+data store — is Context7's at use time when Context7 is installed, else the
+official documentation's, and is the half that ages. This reference carries the
+hosting choice, the transport and data-store wiring and the bridge rules a
+per-type lookup gives only piecemeal.
 
 A web view shows content the app does not own — a help centre, a checkout, a
 partner's form — inside the app's own chrome. It is a second runtime with its

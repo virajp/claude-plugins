@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 Events from a Worker binding or an HTTP endpoint, optionally reshaped by
 SQL, landing in R2 as files or as Iceberg tables. This skill carries the
 judgment; the current CLI flags, the SQL dialect's surface and the API's
-shape belong to Context7 at use time.
+shape belong to Context7 at use time when Context7 is installed, else to
+the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

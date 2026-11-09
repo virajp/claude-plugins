@@ -3,7 +3,7 @@ name: PostgreSQL
 axis: backing
 kind: database
 components:
-- datastore/postgres@0.1.0
+- datastore/postgres@0.1.1
 ---
 
 # Backing — PostgreSQL

@@ -54,7 +54,8 @@ realises: a flow's `<token>.md` take is built on that file.
 ## Integrations (topic 12)
 
 One per library the app wires. Each is wiring only — setup order, configuration,
-anti-patterns; its API surface is Context7's at use time.
+anti-patterns; its API surface is Context7's at use time when Context7 is
+installed, else the official documentation's.
 
 | Wiring | Read |
 | --- | --- |

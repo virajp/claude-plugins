@@ -1,6 +1,6 @@
 # WebView — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## webview_flutter
 
@@ -20,8 +20,9 @@ Sections in this file:
 The controller and widget API — loading URLs, POST bodies, HTML, assets and
 files; running JavaScript and registering Dart↔JS channels; the navigation
 delegate; cookies; scroll control — is API surface. Fetch it from Context7 at
-use time, and note that v3→v4 deprecated a large part of it, so pin the version
-before trusting an answer.
+use time when Context7 is installed, else from the official documentation, and
+note that v3→v4 deprecated a large part of it, so pin the version before
+trusting an answer.
 
 Two facts do not come from an SDK lookup. **The controller and the widget always
 travel together** — a `WebViewWidget` renders a `WebViewController`, and neither

@@ -91,5 +91,6 @@ backing-axis pins' business and are declared in the same file, by whichever
 component documents them. Nothing about them is special because the caller is
 an agent.
 
-API details for every key named here are Context7's at use time; this
-reference states what must be present and why, never the full schema.
+API details for every key named here are Context7's at use time when Context7
+is installed, else the official documentation's; this reference states what
+must be present and why, never the full schema.

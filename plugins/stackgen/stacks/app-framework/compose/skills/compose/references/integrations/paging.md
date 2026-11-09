@@ -1,7 +1,8 @@
 # Jetpack Compose — Paging
 
 **Wiring, configuration and anti-patterns only.** The pager, source and
-mediator API is Context7's at use time.
+mediator API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Paging loads a large list in pages as the user scrolls, with loading and error
 states for each end of the list.

@@ -2,9 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — storage
 references, upload and download tasks, their progress, metadata, download
-URLs — is Context7's at use time, and is the half that ages. This reference
-carries the bucket configuration, the emulator, App Check enforcement and the
-background-transfer rules a per-type lookup gives only piecemeal.
+URLs — is Context7's at use time when Context7 is installed, else the official
+documentation's, and is the half that ages. This reference carries the bucket
+configuration, the emulator, App Check enforcement and the background-transfer
+rules a per-type lookup gives only piecemeal.
 
 Cloud Storage for Firebase stores user files in a Google Cloud Storage bucket
 and lets the app upload and download them directly, with Security Rules

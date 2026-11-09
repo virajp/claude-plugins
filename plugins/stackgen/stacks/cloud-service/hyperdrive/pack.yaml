@@ -2,7 +2,7 @@ name: Cloudflare Hyperdrive
 summary: A connection pool and query cache between Workers and an existing
   Postgres or MySQL wherever it lives — the datastore stays where it is,
   and the Worker stops paying a cold TCP+TLS handshake per request.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: database-proxy
 # `capability` is deliberately unset: `database-proxy` realizes no vwf

@@ -9,7 +9,8 @@ native build files configure native dependencies only.
 than re-resolving.
 
 **Dependencies get no reference of their own** beyond wiring — their API surface
-is Context7's at use time. What a dependency does earn is an integration wiring
-reference where it needs platform configuration.
+is Context7's at use time when Context7 is installed, else the official
+documentation's. What a dependency does earn is an integration wiring reference
+where it needs platform configuration.
 
 Full judgment: the `pub` skill.

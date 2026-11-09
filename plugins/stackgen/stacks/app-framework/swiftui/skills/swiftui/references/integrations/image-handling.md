@@ -3,9 +3,10 @@
 **Wiring, configuration and anti-patterns only.** The API surface — pipeline
 configuration options, image requests and processors, the lazy image view's
 modifiers, the prefetcher, the crop controller's styles and delegate — is
-Context7's at use time, and is the half that ages. This reference carries the
-setup order, the cache and memory wiring and the rules a per-type lookup gives
-only piecemeal.
+Context7's at use time when Context7 is installed, else the official
+documentation's, and is the half that ages. This reference carries the setup
+order, the cache and memory wiring and the rules a per-type lookup gives only
+piecemeal.
 
 Remote images go through **Nuke**: one image pipeline that loads, decodes,
 processes and caches, and its SwiftUI view, `LazyImage`, which reads that

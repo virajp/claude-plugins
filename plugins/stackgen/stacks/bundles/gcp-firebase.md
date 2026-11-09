@@ -3,11 +3,11 @@ name: Google Cloud · Firebase
 axis: backing
 kind: cloud-provider
 components:
-- cloud-provider/gcp@0.1.0
-- cloud-service/firestore@0.1.0
-- cloud-service/firebase-auth@0.1.0
-- cloud-service/firebase-storage@0.1.0
-- cloud-service/firebase-messaging@0.1.0
+- cloud-provider/gcp@0.1.1
+- cloud-service/firestore@0.1.1
+- cloud-service/firebase-auth@0.1.1
+- cloud-service/firebase-storage@0.1.1
+- cloud-service/firebase-messaging@0.1.1
 ---
 
 # Backing — Google Cloud · Firebase

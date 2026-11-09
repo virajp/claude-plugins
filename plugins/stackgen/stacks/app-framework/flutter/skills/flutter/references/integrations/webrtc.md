@@ -1,6 +1,6 @@
 # WebRTC — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -35,10 +35,11 @@ Sections in this file:
 
 `getUserMedia`, `RTCPeerConnection`, the offer/answer exchange, track
 replacement and ICE restart are API surface. Fetch them from Context7 at use
-time. One architectural fact does not come from any SDK: **WebRTC defines no
-signaling.** Exchanging the session descriptions and ICE candidates is your
-transport's job, and a full-mesh group call means every participant holds a peer
-connection to every other — which is what caps the practical group size.
+time when Context7 is installed, else from the official documentation. One
+architectural fact does not come from any SDK: **WebRTC defines no signaling.**
+Exchanging the session descriptions and ICE candidates is your transport's job,
+and a full-mesh group call means every participant holds a peer connection to
+every other — which is what caps the practical group size.
 
 ## Setup
 

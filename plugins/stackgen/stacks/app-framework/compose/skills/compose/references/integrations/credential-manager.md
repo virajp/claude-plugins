@@ -1,7 +1,8 @@
 # Jetpack Compose — Credential Manager
 
 **Wiring, configuration and anti-patterns only.** The request, option,
-credential and exception API is Context7's at use time.
+credential and exception API is Context7's at use time when Context7 is
+installed, else the official documentation's.
 
 Credential Manager is the Jetpack API for signing in: one bottom sheet for
 Sign in with Google, passkeys and saved passwords. It replaces the legacy

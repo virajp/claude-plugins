@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 A connection pool and a query cache between Workers and a relational
 database that already exists somewhere else. This skill carries the
 judgment; driver APIs, the wrangler flag surface and the current
-configuration schema belong to Context7 at use time.
+configuration schema belong to Context7 at use time when Context7 is
+installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of
 them.

@@ -1,7 +1,8 @@
 # Jetpack Compose — CameraX
 
 **Wiring, configuration and anti-patterns only.** The use-case and provider API
-is Context7's at use time.
+is Context7's at use time when Context7 is installed, else the official
+documentation's.
 
 CameraX wraps the camera stack in lifecycle-aware use cases — preview, image
 capture, image analysis, video capture — that behave the same across devices.

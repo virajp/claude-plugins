@@ -20,8 +20,9 @@ versions of that adapter emulated the platform from Node behind a proxy
 option, and the class of bug that arrangement hid — a Node built-in
 available locally and absent at the edge — is exactly the one this stack's
 `nodejs_compat` cliff produces.** Check the adapter's own current
-documentation at Context7 rather than this file; the mechanism moved once
-and can move again.
+documentation at Context7 when Context7 is installed, else the official
+documentation itself, rather than this file; the mechanism moved once and
+can move again.
 
 **`wrangler dev` against the built output**, which is the closer surface
 and the second one. It serves the actual uploaded shape: the file set

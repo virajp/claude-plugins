@@ -18,7 +18,8 @@ paths:
 # OIDC issuer
 
 Identity as a protocol, not a product. This skill carries the judgment; the
-issuer's own API surface belongs to Context7 at use time.
+issuer's own API surface belongs to Context7 at use time when Context7 is
+installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

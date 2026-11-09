@@ -1,7 +1,8 @@
 # Jetpack Compose — Firebase Analytics
 
 **Wiring, configuration and anti-patterns only.** The event, parameter and
-consent API is Context7's at use time.
+consent API is Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Firebase Analytics records product events from the app. Every Firebase file in
 this directory shares the first three setup steps below — the Google services

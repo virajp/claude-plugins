@@ -2,9 +2,9 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 products, purchase results, transactions, entitlements, the merchandising
-views — is Context7's at use time, and is the half that ages. This reference
-carries the setup order, the testing wiring and the rules a per-type lookup
-gives only piecemeal.
+views — is Context7's at use time when Context7 is installed, else the official
+documentation's, and is the half that ages. This reference carries the setup
+order, the testing wiring and the rules a per-type lookup gives only piecemeal.
 
 StoreKit 2 is the Swift-concurrency StoreKit; the original StoreKit's payment
 queue is the older path and is not added to new code. Purchases are signed by

@@ -1,6 +1,6 @@
 # Firebase Auth — integration wiring
 
-**Wiring, platform configuration and anti-patterns only.** The API surface is Context7's at use time, and is the half that ages — this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
+**Wiring, platform configuration and anti-patterns only.** The API surface is looked up at use time — in Context7 when Context7 is installed, else in the official documentation — and is the half that ages; this reference carries the setup order and platform configuration a per-package lookup gives only piecemeal.
 
 ## Anti-Patterns
 
@@ -113,8 +113,9 @@ Sections in this file:
 
 Which providers exist, and how each sign-in call is spelled — email/password,
 Google, Apple, OAuth, phone, anonymous, provider linking, MFA, user
-management — is API surface. Fetch it from Context7 at use time; what this
-reference carries is the wiring and the layering rules around it.
+management — is API surface. Fetch it from Context7 at use time when Context7 is
+installed, else from the official documentation; what this reference carries is
+the wiring and the layering rules around it.
 
 ## Setup
 

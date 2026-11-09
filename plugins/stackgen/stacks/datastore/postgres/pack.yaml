@@ -1,7 +1,7 @@
 name: PostgreSQL
 summary: The relational datastore that needs no cloud — open engine, managed
   equivalent everywhere, no lock-in beyond SQL itself.
-version: 0.1.0
+version: 0.1.1
 type: datastore
 category: sql
 capability: relational-datastore

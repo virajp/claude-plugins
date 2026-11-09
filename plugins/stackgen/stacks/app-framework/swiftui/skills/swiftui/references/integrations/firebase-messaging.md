@@ -2,9 +2,10 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 the messaging delegate, token retrieval and its update stream, topics, the
-extension helper — is Context7's at use time, and is the half that ages. This
-reference carries the setup order, the console credential, the swizzling
-decision and the extension a per-type lookup gives only piecemeal.
+extension helper — is Context7's at use time when Context7 is installed, else
+the official documentation's, and is the half that ages. This reference carries
+the setup order, the console credential, the swizzling decision and the
+extension a per-type lookup gives only piecemeal.
 
 Firebase Cloud Messaging (FCM) sits on top of APNs: the app still registers
 with APNs and receives an APNs device token, and FCM maps that token to an

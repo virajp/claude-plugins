@@ -53,7 +53,8 @@ screen you are building runs on.
 ## Integrations (topic 12)
 
 One per integration the app wires. Each is wiring only — setup order, platform
-configuration, anti-patterns; its API surface is Context7's at use time.
+configuration, anti-patterns; its API surface is Context7's at use time when
+Context7 is installed, else the official documentation's.
 
 | Wiring | Read |
 | --- | --- |

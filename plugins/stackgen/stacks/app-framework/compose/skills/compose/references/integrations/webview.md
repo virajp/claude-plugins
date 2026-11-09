@@ -2,7 +2,8 @@
 
 **Wiring, configuration and anti-patterns only.** The `WebView`,
 `WebViewClient`, `WebChromeClient` and `WebSettings` API, and the
-`androidx.webkit` additions, are Context7's at use time.
+`androidx.webkit` additions, are Context7's at use time when Context7 is
+installed, else the official documentation's.
 
 Compose has no web view of its own: the platform `WebView` is a legacy `View`
 bound to its host activity, wrapped in `AndroidView`. It runs a Chromium engine

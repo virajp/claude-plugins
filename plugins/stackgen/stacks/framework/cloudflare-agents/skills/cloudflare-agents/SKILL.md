@@ -39,5 +39,6 @@ that object, and the object's own doctrine belongs to the
 | Writing or wiring tests, or running the agent locally | [Testing](references/testing.md) |
 
 API signatures are Context7's at use time
-(`/websites/developers_cloudflare_agents`); these references carry patterns,
-placement and judgment only.
+(`/websites/developers_cloudflare_agents`) when Context7 is installed, else
+the official documentation's; these references carry patterns, placement and
+judgment only.

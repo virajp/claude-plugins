@@ -18,7 +18,8 @@ allowed-tools: Read Grep Glob Edit Write Bash
 An assets-only Worker: no `main`, no bindings, no script. The build output
 directory is uploaded and the edge serves it. This skill carries the
 judgment; wrangler's current flags, the asset configuration keys and the
-API's shape belong to Context7 at use time.
+API's shape belong to Context7 at use time when Context7 is installed,
+else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

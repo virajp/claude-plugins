@@ -19,7 +19,8 @@ paths:
 # OpenTelemetry · Grafana OTel-LGTM
 
 The telemetry sink that needs no cloud. This skill carries the judgment; the
-SDK and collector API surface belong to Context7 at use time.
+SDK and collector API surface belong to Context7 at use time when Context7 is
+installed, else to the official documentation.
 
 Read the reference that matches what you are doing — one, not all of them.
 

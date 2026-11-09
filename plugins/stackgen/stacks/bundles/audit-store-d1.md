@@ -3,7 +3,7 @@ name: Audit store · Cloudflare D1
 axis: backing
 kind: capability-provider
 components:
-- capability-provider/audit-store-d1@0.1.0
+- capability-provider/audit-store-d1@0.1.1
 ---
 
 # Backing — Audit store · Cloudflare D1

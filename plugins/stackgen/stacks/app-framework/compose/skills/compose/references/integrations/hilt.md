@@ -1,7 +1,8 @@
 # Jetpack Compose — Hilt
 
 **Wiring, configuration and anti-patterns only.** Annotations' full API and
-scoping details are Context7's at use time.
+scoping details are Context7's at use time when Context7 is installed, else the
+official documentation's.
 
 Hilt is the app's dependency-injection container and its composition root. It
 generates its components at compile time with KSP.

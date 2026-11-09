@@ -43,8 +43,9 @@ deployed, every container port is reachable automatically
 **Containers' own local-development guide says none of this**
 ([local development](https://developers.cloudflare.com/containers/guides/local-dev/)),
 so whether it generalizes to every Containers image is an inference rather
-than a documented fact — check it at Context7 before treating a missing
-`EXPOSE` as the diagnosis.
+than a documented fact — check it at Context7 when Context7 is installed,
+else in the official documentation, before treating a missing `EXPOSE` as
+the diagnosis.
 
 The recommendation survives the uncertainty in either case: declaring the
 ports costs a line, an `EXPOSE` documents the image's interface anyway,

@@ -33,10 +33,10 @@ returned.
 
 **Server-generated time.** A column default evaluated by the database,
 never a timestamp sent by the client and never one the Worker took from
-its own clock. The specific SQLite function belongs to Context7 at use
-time; the rule does not — several Worker instances mean several clocks,
-and an ordering derived from them is wrong in ways that surface as
-impossible sequences much later.
+its own clock. The specific SQLite function belongs to Context7 at use time when
+Context7 is installed, else to the official documentation; the rule does not —
+several Worker instances mean several clocks, and an ordering derived from them
+is wrong in ways that surface as impossible sequences much later.
 
 **A deterministic local stack.** `wrangler dev` runs in local mode by
 default and gives the Worker a local database behind the same binding,

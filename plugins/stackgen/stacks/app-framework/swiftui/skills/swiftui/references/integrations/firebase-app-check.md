@@ -2,9 +2,10 @@
 
 **Wiring, configuration and anti-patterns only.** The API surface — the
 provider factories, the providers, token retrieval, limited-use tokens — is
-Context7's at use time, and is the half that ages. This reference carries the
-provider choice per platform, the order against `FirebaseApp.configure()` and
-the debug-token handling a per-type lookup gives only piecemeal.
+Context7's at use time when Context7 is installed, else the official
+documentation's, and is the half that ages. This reference carries the provider
+choice per platform, the order against `FirebaseApp.configure()` and the
+debug-token handling a per-type lookup gives only piecemeal.
 
 App Check attaches a short-lived token to every request a Firebase product
 makes, proving the request came from this app on a genuine device. The token
@@ -46,9 +47,9 @@ requests still succeed.
   the SDK's default factory already falls back to the debug provider.
 - **CI.** Create a debug token in the console, store it in the CI system's
   secret store, and hand it to the debug build's test run as an environment
-  variable; the variable the Apple SDK reads is Context7's at use time. The
-  token never enters the repo, a scheme file that is committed, or a release
-  build.
+  variable; the variable the Apple SDK reads is Context7's at use time when
+  Context7 is installed, else the official documentation's. The token never
+  enters the repo, a scheme file that is committed, or a release build.
 - **A debug token is a credential.** It lets any client pass App Check. A token
   that leaked is deleted in the console at once and replaced.
 - **Never in a release build.** The SDK's own header says the debug provider is

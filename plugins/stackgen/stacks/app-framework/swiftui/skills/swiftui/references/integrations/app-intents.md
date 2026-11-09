@@ -2,8 +2,9 @@
 
 **Wiring, platform configuration and anti-patterns only.** The API surface —
 intents, parameters, entities, queries, App Shortcut phrases — is Context7's at
-use time, and is the half that ages. This reference carries where the pieces
-live and the order they are wired in.
+use time when Context7 is installed, else the official documentation's, and is
+the half that ages. This reference carries where the pieces live and the order
+they are wired in.
 
 App Intents is the one way the app's actions reach the system: Siri, the
 Shortcuts app, Spotlight, interactive widgets and Live Activities, and the

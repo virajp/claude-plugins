@@ -1,7 +1,8 @@
 # Jetpack Compose — Play In-App Updates
 
 **Wiring, configuration and anti-patterns only.** The update manager, update
-info and install-state API is Context7's at use time.
+info and install-state API is Context7's at use time when Context7 is
+installed, else the official documentation's.
 
 Play In-App Updates, part of the Play Core libraries, lets the app ask Google
 Play whether a newer version exists and run the update from inside the app,

@@ -107,4 +107,5 @@ progress rather than the work — Cloudflare draws the line at roughly thirty
 seconds and at anything needing retries or a human
 ([run workflows](https://developers.cloudflare.com/agents/runtime/execution/run-workflows/)).
 
-Signatures for every symbol named here are Context7's at use time.
+Signatures for every symbol named here are Context7's at use time when Context7
+is installed, else the official documentation's.

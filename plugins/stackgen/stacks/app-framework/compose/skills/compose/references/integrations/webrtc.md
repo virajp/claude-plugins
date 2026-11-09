@@ -1,7 +1,8 @@
 # Jetpack Compose — WebRTC
 
 **Wiring, configuration and anti-patterns only.** The peer-connection, track,
-renderer and room API is Context7's at use time.
+renderer and room API is Context7's at use time when Context7 is installed,
+else the official documentation's.
 
 Two ways to put real-time audio and video in an Android app, each with its own
 setup order. **Plain WebRTC** is the library alone: the product brings its own

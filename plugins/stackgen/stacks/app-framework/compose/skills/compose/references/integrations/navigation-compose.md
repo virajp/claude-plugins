@@ -2,7 +2,8 @@
 
 **Wiring, configuration and anti-patterns only.** The route model and the back
 stack rules are [navigation](../navigation.md)'s; the `NavHost` and
-`NavController` API is Context7's at use time.
+`NavController` API is Context7's at use time when Context7 is installed, else
+the official documentation's.
 
 ## Setup order
 

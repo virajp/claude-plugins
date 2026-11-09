@@ -2,7 +2,7 @@ name: Cloudflare Workflows
 summary: Durable multi-step execution bound to a Worker — steps that retry,
   sleep for days and wait for an external event without holding compute,
   for a process that must finish once it has started.
-version: 0.1.0
+version: 0.1.1
 type: cloud-service
 category: orchestration
 capability: durable-workflows

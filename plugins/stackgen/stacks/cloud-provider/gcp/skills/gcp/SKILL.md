@@ -19,8 +19,9 @@ once. Each service's own skill cites this rather than restating it, and carries
 only what is that service's alone.
 
 This skill is judgment — which decision to take and what it costs. The API
-surface, the role catalogue and every current price belong to Context7 and the
-console at use time, not here.
+surface, the role catalogue and every current price belong to Context7 when
+Context7 is installed, else the official documentation, and the console at use
+time, not here.
 
 Read the reference that matches what you are doing — one, not all of them.
 

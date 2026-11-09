@@ -2,7 +2,7 @@ name: Temporal
 summary: Durable execution that needs no cloud — a workflow is ordinary code
   whose progress is persisted, so a crash, a deploy or a week-long wait resumes
   where it stopped.
-version: 0.1.0
+version: 0.1.1
 type: capability-provider
 category: workflow
 capability: durable-workflows
