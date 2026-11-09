@@ -2,7 +2,7 @@ name: Lovable
 summary: Prompt-to-app at lovable.dev — a real project surface, but what it
   returns is generated app code rather than a canvas, which makes the screens
   import lossier.
-version: 0.1.0
+version: 0.1.1
 type: design-tool
 kind: design-tool
 axis: design

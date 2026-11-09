@@ -15,3 +15,9 @@ The three import skills land at **fixed names** in the repo's own
 `.claude/skills/` — `design-import-screens`, `design-import-design-system`
 and `design-import-conversations`. vwf invokes those names; it never
 constructs one from configuration, and it never learns which tool answered.
+
+## MCP servers
+
+- `lovable` — reads the Lovable workspace, projects and generated source for
+  the screens and design-system imports; install:
+  https://docs.lovable.dev/integrations/lovable-mcp-server

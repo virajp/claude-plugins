@@ -19,8 +19,10 @@ model: sonnet
 
 The project's design tool resolved to `lovable`. Lovable's **MCP server** must
 be connected (OAuth, workspace-scoped); every tool call is scoped to the token's
-workspace. If it is not connected, stop with an `ERROR:` line — do not fall back
-to scraping the editor UI.
+workspace. This pack installs no server: if it is not available, ask the user
+to install it under the name `lovable`
+(https://docs.lovable.dev/integrations/lovable-mcp-server) and wait — do not
+fall back to scraping the editor UI.
 
 ## The honest caveat
 

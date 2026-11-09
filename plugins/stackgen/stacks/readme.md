@@ -192,15 +192,16 @@ The `claude-code-plugin` bundle survives, trimmed to stack facts. It is what
 lets the authoring repo stay onboarded on vwf, and it is not a special case —
 every bundle here is a stack its author uses.
 
-**Wave D — `design-tool/`, kind `design-tool`:** `claude-design`, `lovable`,
-`stitch`. Each carries the three import skills at the **fixed names** vwf
-delegates to — `design-import-screens`, `design-import-design-system`,
+**Wave D — `design-tool/`, kind `design-tool`:** `lovable` and `stitch`; a
+`claude-design` pack also landed here and was removed on 2026-11-09. Each
+carries the three import skills at the **fixed names** vwf delegates to —
+`design-import-screens`, `design-import-design-system`,
 `design-import-conversations` — landed in the repo's own `.claude/`. That is the
 `ux-gate` seam reused rather than a second one invented: vwf now names no design
 tool anywhere, and the technology-free guard's allowlist got **smaller**, which
 is the intended direction whenever an exception stops feeling arguable.
 
-A fourth tool is the **terminal itself**, with a file canvas: its source of
+A third tool is the **terminal itself**, with a file canvas: its source of
 truth is a committed directory under the target repo's `docs/`, its adapters
 read files rather than call a server, and it ships one extra user-invocable
 skill that runs the design session. The bundle whose frontmatter carries
@@ -208,14 +209,16 @@ skill that runs the design session. The bundle whose frontmatter carries
 at most one per axis per platform, where a bundle declaring no `platforms:`
 covers every platform on its axis, which the checker enforces.
 
-`claude-design` also declares an MCP server, under `user_mcp_servers:`, which
-the materializer writes into the generated local plugin, `vwf-tools`, behind its
-own consent line (`../assets/output-tree.md`). A curated registry of servers
-fails on **scaling** before it fails on charter, since a list can only hold what
-someone curated. LSP configuration stays out of the repo too — no project file
-can express one — and reaches the developer's machine through the same plugin,
-the output target Wave E added. The project-scoped `mcp_servers:` key and the
-`.mcp.json` path Wave D opened were retired on 2026-11-02.
+**No pack declares an MCP server**, and stackgen installs none: the user owns
+every MCP install. A pack that needs one names it in a `## MCP servers` section
+of its `conventions.md` — `lovable` and `stitch` do — and when a skill needs the
+server and it is not available, the agent asks the user to install it and
+waits. LSP configuration stays out of the repo — no project file can express
+one — and reaches the developer's machine through the generated local plugin,
+`vwf-tools`, the output target Wave E added (`../assets/output-tree.md`). The
+project-scoped `mcp_servers:` key and the `.mcp.json` path Wave D opened were
+retired on 2026-11-02, and the `user_mcp_servers:` key that replaced them on
+2026-11-09.
 
 **Secrets — `capability-provider/`, category `secrets-manager`:** `fnox`, the
 one pack left in the category since its hosted-vault sibling was deleted. Its
@@ -255,34 +258,15 @@ to the realization: the D1 pack states plainly that it cannot write atomically
 with the act and so writes the event first, over-reporting under a monitor. The
 contract's realizations table is where that comparison lives.
 
-**Optional tools — `addon/`, kind `addon`:** `context7`, `notion` and
-`taste-skill`, each with a bundle on the `addon` axis and none a default. They
-serve the agent rather than the product, so `/vwf:architecture`'s tools round
-offers them with nothing preselected, `.config/vwf.yaml`'s `addons:` records the
-pick, and `/vwf:setup` materializes each only while it is picked. `context7` and
-`notion` land one server each in `vwf-tools`; `taste-skill` carries a
-`## Claude plugins` section the materializer hands to bootstrap. `context7` left
-vwf's manifest and `taste-skill` left the `claude-code` design tool's default
-bundle to get here; the generator and `design-session` halt without them, each
-naming this round.
-
-**Workspace — `addon/`, category `workspace`:** `notion`, moved from
-`capability-provider/` on 2026-11-02, the first provider of a category minted
-for something no blueprint chooses. The workspace is where the team's docs,
-specs and tickets live, and it is the **agent's** knowledge source rather than
-anything the product runs against — so the category realizes no vwf token and
-none is pending, which its neutral contract
-`../assets/contracts/workspace.md` states in its opening lines instead of
-leaving the reader to infer a gap.
-
-What the pack lands is **wiring and nothing else**: its skills, and a
-`user_mcp_servers:` entry the materializer writes into `vwf-tools` behind its
-own consent line. That is the whole scope — no vwf step reads a workspace
-today. The contract's work is therefore the permission shape rather than an
-availability one: the person authenticates and not the repository, the
-agent's reach stops where that person's does, writes need the person to ask
-in the session, and a declined consent line leaves the skills landed and
-**says** the tool is unreachable rather than returning an empty search.
+**Optional tools — `addon/`, kind `addon`:** `taste-skill`, with a bundle on
+the `addon` axis and not a default. It serves the agent rather than the
+product, so `/vwf:architecture`'s tools round offers it with nothing
+preselected, `.config/vwf.yaml`'s `addons:` records the pick, and `/vwf:setup`
+materializes it only while it is picked. It carries a `## Claude plugins`
+section the materializer hands to bootstrap. `taste-skill` left the
+`claude-code` design tool's default bundle to get here; `design-session` halts
+without it, naming this round. Its two siblings, `context7` and `notion`, each
+of which landed a server in `vwf-tools`, were removed on 2026-11-09.
 
 **Stylesheet — `stylesheet/`, kind `stylesheet`:** `tailwindcss`, `stylex`
 and `plain-css`, the first three packs of a type and a kind minted together

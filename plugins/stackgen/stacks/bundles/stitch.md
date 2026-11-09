@@ -3,7 +3,7 @@ name: Google Stitch
 axis: design
 kind: design-tool
 components:
-- design-tool/stitch@0.1.0
+- design-tool/stitch@0.1.1
 ---
 
 # Design — Google Stitch

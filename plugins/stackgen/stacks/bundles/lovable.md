@@ -3,7 +3,7 @@ name: Lovable
 axis: design
 kind: design-tool
 components:
-- design-tool/lovable@0.1.0
+- design-tool/lovable@0.1.1
 ---
 
 # Design — Lovable

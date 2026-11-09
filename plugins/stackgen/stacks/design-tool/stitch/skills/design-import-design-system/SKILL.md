@@ -21,10 +21,10 @@ The project's design tool resolved to `stitch`.
 
 ## Read this first: Stitch has no stored design system
 
-Unlike Claude Design (first-class design-system objects) or Lovable (a published
-`design-system.json`), **Stitch does not store a design system**. It generates
-screens; any "design system" is **reconstructed** from the tokens visible in
-that generated output.
+Unlike `claude-code` (a committed `docs/design/<project>/design-system.md`) or
+Lovable (a published `design-system.json`), **Stitch does not store a design
+system**. It generates screens; any "design system" is **reconstructed** from
+the tokens visible in that generated output.
 
 Two consequences, and neither is optional:
 

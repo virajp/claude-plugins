@@ -17,3 +17,9 @@ The three import skills land at **fixed names** in the repo's own
 `.claude/skills/` — `design-import-screens`, `design-import-design-system`
 and `design-import-conversations`. vwf invokes those names; it never
 constructs one from configuration, and it never learns which tool answered.
+
+## MCP servers
+
+- `stitch` (optional) — an alternative to the SDK for the screens import,
+  authenticated with `STITCH_API_KEY`; install:
+  https://stitch.googleapis.com/mcp

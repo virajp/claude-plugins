@@ -24,7 +24,9 @@ The project's design tool resolved to `stitch`.
 `STITCH_API_KEY` in the environment, and the `@google/stitch-sdk` package
 reachable (`pnpm dlx` / `bunx`). Stitch's MCP server may be used instead where
 it is connected; the SDK is the first-party surface and the one this path
-assumes.
+assumes. This pack installs no server: if the MCP path is wanted and the server
+is not available, ask the user to install it under the name `stitch`
+(https://stitch.googleapis.com/mcp, with `STITCH_API_KEY`) and wait.
 
 ## Why this tool fits vwf well
 
