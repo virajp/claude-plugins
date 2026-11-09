@@ -209,26 +209,22 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
 2. **Generation only for what no pack covers, per uncovered component.** The
    first template fetch runs the pipeline for each uncovered component: resolve
    the **kind** and its topic bar → detect the real stack (its manifests) → one
-   Context7 research pass per bar topic, which needs a Context7 MCP server you
-   installed → instantiate
-   vwf's principles catalog with citations → vet every concrete third-party name
-   the component emits — packages, runner-invoked tools, a generated language
-   server's command and runner chain and the hosts in its `args` and `env`,
-   GitHub
-   Actions,
-   container images, SwiftPM packages, Maven artifacts and Gradle plugins, and
-   mise tools on any backend — through `stackgen-reputation`, one verdict per
-   name (`pass`, `warn`, `block`); a **`block` halts that component** with the
-   verdict table and you name the replacement, which is checked in turn — the
-   generator never swaps a name silently → the `stackgen-skill-reviewer` gate
-   (capped at **four rounds**, after which residuals are reported rather than
-   looped forever) → the same materialized tree, the verdict table shown whole
-   beside the reviewer's verdict at the dry-run consent gate. No Context7 server
-   reachable from any source, or a reputation source unreachable → **halt, never
-   guess**; the Context7 halt asks you to install a Context7 MCP server
-   yourself,
-   at user scope, names its official install page, and waits.
-   When the bundle root
+   research pass per bar topic, with Context7 first when Context7 is installed,
+   else the official documentation read with `WebFetch`, and the package
+   registries always → instantiate vwf's principles catalog with citations → vet
+   every concrete third-party name the component emits — packages,
+   runner-invoked tools, a generated language server's command and runner chain
+   and the hosts in its `args` and `env`, GitHub Actions, container images,
+   SwiftPM packages, Maven artifacts and Gradle plugins, and mise tools on any
+   backend — through `stackgen-reputation`, one verdict per name (`pass`,
+   `warn`, `block`); a **`block` halts that component** with the verdict table
+   and you name the replacement, which is checked in turn — the generator never
+   swaps a name silently → the `stackgen-skill-reviewer` gate (capped at **four
+   rounds**, after which residuals are reported rather than looped forever) →
+   the same materialized tree, the verdict table shown whole beside the
+   reviewer's verdict at the dry-run consent gate. The generator never asks for
+   Context7. No research source reachable — no Context7 and no `WebFetch` — or a
+   reputation source unreachable → **halt, never guess**. When the bundle root
    itself is uncovered, the pin is `generated/<technology-slug>`.
 
 Mixed compositions are the ordinary case — a covered language beside an
@@ -355,7 +351,8 @@ case) behind an `#available` guard at the smallest scope, showing the entry's
 declared `fallback` wherever the guard fails and never inventing one, where it
 once left device and OS features to a prose deviation. Like Flutter's, those
 integration references are wiring only — setup order, platform configuration,
-anti-patterns — with the API surface left to Context7 at use time.
+anti-patterns — with the API surface left to Context7 at use time when Context7
+is installed; else the official documentation.
 
 **Kotlin** arrived on 2026-10-09 as the fifth language a language-bundle is
 rooted at: `kotlin-library`, a Kotlin/JVM library published as a JAR on the
@@ -580,8 +577,8 @@ optional one not at all. The `lovable` pack names `lovable`, Lovable's server;
 the `stitch`
 pack names `stitch` (optional), Stitch's remote server at
 `https://stitch.googleapis.com/mcp`, which needs an API key — the pack works
-through Stitch's SDK without it. The generator's Context7 server is the same:
-yours to install, at user scope, and the generator asks for it.
+through Stitch's SDK without it. The generator never asks for a Context7 server:
+it uses one when Context7 is installed, and the official documentation when not.
 
 A repo that still pins `context7`, `notion` or `claude-design`, or a machine
 whose `vwf-tools` still holds MCP servers, moves off them through `/vwf:setup`'s
@@ -935,11 +932,13 @@ before it lands:
    the ground. The catalog is passed in by vwf; stackgen never reaches into
    another plugin's files.
 2. **The citations.** Each technology claim cites current documentation fetched
-   through Context7 during the run — the primary research channel, one pass per
-   bar topic minimum — recorded durably under `.claude/stackgen/citations/`, one
-   file per component keyed per topic. Supplementary sources are allowed only
-   where that topic's Context7 coverage is thin, and both the supplement and the
-   thinness are disclosed.
+   during the run — from Context7 when Context7 is installed, else the official
+   documentation through `WebFetch`, the run's primary source, one pass per bar
+   topic minimum, with the package registries always read for names and versions
+   — recorded durably under `.claude/stackgen/citations/`, one file per
+   component keyed per topic. Supplementary sources are allowed only where the
+   primary source's coverage of that topic is thin, and both the supplement and
+   the thinness are disclosed.
 3. **Artifact validity.** Separately from what it covers, every artifact has to
    *work*: strict-YAML frontmatter (a rejected skill is dropped with no error),
    the invocation state its kind rules — an adapter carries both
@@ -956,35 +955,33 @@ before it lands:
 4. **The names.** Every concrete third-party name the component emits — a
    `mise_tool` entry, written `mise:<backend>:<path>@<version>` — its toml key
    and the version it pins — once a short name is expanded with `mise registry`,
-   a package a runner-invoked task names, a language server entry's
-   command and every package its runner chain fetches, the host of a server's
-   `url` and of any URL or bare host in its `args` or `env` values, a GitHub
-   Action, a container image, a `Package.swift` dependency, a Maven
-   dependency or Gradle plugin in a build file — gets a verdict from
-   `stackgen-reputation` before the dry-run gate shows it: `pass`, `warn` or
-   `block`, decided by thresholds written in the skill's `references/signals.md`
-   rather than judged on the spot — among them: absent from its registry, first
-   published under 30 days ago, an unpatched critical or high advisory on the
-   version to be pinned, a near-name of a far more downloaded package,
-   deprecated or archived → `block`; one maintainer, bottom-tier downloads, no
-   provenance, a low Scorecard, a Maven artifact with no linked source project →
-   `warn`. A name with no version is vetted at its newest stable version, never
-   a prerelease the registry marks default. A `block` halts the component with
-   the table; you name the replacement, and it is checked in turn — never a
-   silent swap. A source the skill cannot reach is `UNRESOLVED`, never an
-   inferred verdict, and halts like an unreachable Context7. **A remote host
-   always blocks**: no source vets one and a server there can change what it
-   serves, so a generated server with a `host:` name does not land. A chain's
-   packages are read through `--package`, `-p`, `--from`, `--spec` and `--with`,
-   `pipx run --spec` among them. A shell or an interpreter's inline code
-   anywhere
-   in a chain, `env sh -c` included, a `data:` or `file:` value, and a
-   code-loading variable such as `NODE_OPTIONS` each stop generation as
-   `UNRESOLVED`, as does a chain that cannot be read. **The vetting ends at what
-   it can read from the declared command.** The consent gate shows the full
-   command and its env values, and you are the control for any form the vetting
-   does not parse. Shipped packs are outside the check: their names were curated
-   by hand.
+   a package a runner-invoked task names, a language server entry's command and
+   every package its runner chain fetches, the host of a server's `url` and of
+   any URL or bare host in its `args` or `env` values, a GitHub Action, a
+   container image, a `Package.swift` dependency, a Maven dependency or Gradle
+   plugin in a build file — gets a verdict from `stackgen-reputation` before the
+   dry-run gate shows it: `pass`, `warn` or `block`, decided by thresholds
+   written in the skill's `references/signals.md` rather than judged on the spot
+   — among them: absent from its registry, first published under 30 days ago, an
+   unpatched critical or high advisory on the version to be pinned, a near-name
+   of a far more downloaded package, deprecated or archived → `block`; one
+   maintainer, bottom-tier downloads, no provenance, a low Scorecard, a Maven
+   artifact with no linked source project → `warn`. A name with no version is
+   vetted at its newest stable version, never a prerelease the registry marks
+   default. A `block` halts the component with the table; you name the
+   replacement, and it is checked in turn — never a silent swap. A source the
+   skill cannot reach is `UNRESOLVED`, never an inferred verdict, and halts the
+   run. **A remote host always blocks**: no source vets one and a server there
+   can change what it serves, so a generated server with a `host:` name does not
+   land. A chain's packages are read through `--package`, `-p`, `--from`,
+   `--spec` and `--with`, `pipx run --spec` among them. A shell or an
+   interpreter's inline code anywhere in a chain, `env sh -c` included, a
+   `data:` or `file:` value, and a code-loading variable such as `NODE_OPTIONS`
+   each stop generation as `UNRESOLVED`, as does a chain that cannot be read.
+   **The vetting ends at what it can read from the declared command.** The
+   consent gate shows the full command and its env values, and you are the
+   control for any form the vetting does not parse. Shipped packs are outside
+   the check: their names were curated by hand.
 5. **The reviewer + you.** The `stackgen-skill-reviewer` agent returns `NO GAPS`
    or a numbered list — checking the kind's **topic-bar coverage**, artifact
    validity, the content, and that every emitted name has a row in the verdict
@@ -997,11 +994,12 @@ before it lands:
 
 ## Caveats
 
-- **Generation needs Context7, the catalog, and the reputation sources.**
-  Missing any is a halt with its name, not a degraded run — a name whose
-  registry or advisory source could not be reached is never landed on a guessed
-  verdict. Context7 is an MCP server you install, and the halt asks you to
-  install it and waits.
+- **Generation needs a research source, the catalog, and the reputation
+  sources.** Missing any is a halt with its name, not a degraded run — a name
+  whose registry or advisory source could not be reached is never landed on a
+  guessed verdict. Context7 is not required: the generator uses it first when
+  Context7 is installed, else the official documentation through `WebFetch`, and
+  halts only when neither is reachable.
 - **Drift is a feature with a viewport.** Your repo's copies may diverge from an
   upgraded pack by design; `/stackgen:stackgen-sync` is where the divergence
   becomes a diff you decide about. A record whose path its component no longer

@@ -187,11 +187,11 @@
         "U2"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-09T15:34:48.606Z",
+      "ended": "2026-11-09T15:40:57.034Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -224,8 +224,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-09T15:34:48.573Z",
       "ended": ""
     },
     {

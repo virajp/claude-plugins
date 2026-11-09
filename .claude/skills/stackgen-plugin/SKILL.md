@@ -28,11 +28,11 @@ generator can call it over every concrete third-party name a generated component
 emits, and a person can run `/stackgen:stackgen-reputation <ecosystem>:<name> …`
 on a name before typing it anywhere; it returns `pass`, `warn` or `block` per
 name from public read APIs over `WebFetch`, and is the only network stackgen
-touches beyond Context7. Since `devtools` dissolved into it, stackgen also
-carried the repo's own gate doctrine as packs, and those packs left in turn:
-every universal file a repo runs — the mise config and task library, dprint,
-taplo, pre-commit, gitleaks, grype, the house linter, git and the editor
-settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, the
+touches beyond the generator's research sources. Since `devtools` dissolved into
+it, stackgen also carried the repo's own gate doctrine as packs, and those packs
+left in turn: every universal file a repo runs — the mise config and task
+library, dprint, taplo, pre-commit, gitleaks, grype, the house linter, git and
+the editor settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, the
 `setup:*` and `code:*` tasks with them, and `stackgen:tool-config`, which once
 rendered them, was removed on 2026-11-03. `/vwf:init` runs bootstrap's readme
 prompt, `/vwf:setup`'s materialize pass applies packs through the adapter, and
@@ -68,12 +68,13 @@ pins, stackgen resolves its composition and dispatches **per component**:
 
 1. A component a shipped **pack** covers is **copied verbatim** from `stacks/`.
 2. An uncovered component is **generated**: resolve the kind and its topic bar →
-   detect the real stack → one Context7 research pass per topic → instantiate
-   vwf's principles catalog with citations → at assemble, every concrete
-   third-party name the component emits (packages, runner-invoked tools, a
-   `lsp_servers:` entry's whole runner chain and every
-   URL or bare host in its `args` and `env` values, actions, images, SwiftPM
-   packages, Maven artifacts and Gradle plugins, mise tools as
+   detect the real stack → one research pass per topic, with Context7 first when
+   Context7 is installed, else `WebFetch` of the official documentation, and the
+   package registries always → instantiate vwf's principles catalog with
+   citations → at assemble, every concrete third-party name the component emits
+   (packages, runner-invoked tools, a `lsp_servers:` entry's whole runner chain
+   and every URL or bare host in its `args` and `env` values, actions, images,
+   SwiftPM packages, Maven artifacts and Gradle plugins, mise tools as
    `mise:<backend>:<path>@<version>`) through `stackgen-reputation` — nine
    prefixes, `host:` the newest, which always blocks since no source vets a
    remote host, Go, Cargo, Ruby and .NET reached through `mise:` — a `block`
@@ -83,15 +84,11 @@ pins, stackgen resolves its composition and dispatches **per component**:
    its tenth check reads the verdict table it is handed — every name has a row,
    none reads `block` — and it stays offline. A shell or inline code in a chain,
    a `data:` or `file:` value and a code-loading variable each stop generation
-   as
-   `UNRESOLVED:`. The vetting ends at what it can read from the declared
-   command:
-   the consent gate shows the full command and its env values, and the person at
-   the gate is the control for any form it does not parse. **The generator's
-   context7 halt:** generation needs a Context7 MCP server, which stackgen never
-   installs; without one it asks the user to install it themselves, at user
-   scope, names the official install page, and waits. Context7 or a reputation
-   source
+   as `UNRESOLVED:`. The vetting ends at what it can read from the declared
+   command: the consent gate shows the full command and its env values, and the
+   person at the gate is the control for any form it does not parse. The
+   generator never halts on Context7 and never asks for it; with no research
+   source reachable (no Context7 and no `WebFetch`) or a reputation source
    unreachable → **halt, never guess**. The verdict table is shown whole beside
    the reviewer's verdict at the dry-run consent gate; a template read-back
    (`/vwf:plan`, `/vwf:execute`) never re-checks.
@@ -303,7 +300,8 @@ recommends `/vwf:setup`.
   sets, so formatting one here makes a freshly initialised repo fail its own
   first hook run. Run the shipped config when a payload file needs formatting.
 - **A pack carries judgment, never the vendor's syntax** — worked YAML comes
-  from Context7 at use time. Category-level doctrine is written once, in
+  from Context7 at use time when Context7 is installed; else the official
+  documentation. Category-level doctrine is written once, in
   `assets/contracts/`; instance packs cite it.
 - **The no-skill-lost rule runs backwards**: a pack is the destination that has
   to exist *before* a source retires, never a replacement on landing. Every

@@ -285,30 +285,28 @@ is what lets the rest of this list exist. `vwf@virajp-plugins`
 principles-driven stack materializer. A stack is a composition of **components**
 — the language, its package manager, each framework, the toolchain gates — and
 each one resolves on its own: a component a shipped **pack** covers is copied
-verbatim; an uncovered one is **generated** — researched via Context7 topic by
-topic, which needs a Context7 MCP server and, without one, asks you to install
-it yourself and waits, instantiated against vwf's
-principles catalog, gated by a reviewer agent and your explicit consent, so a
-covered language never regenerates because its framework is new. Every concrete
-third-party name a generated component emits — a package, a runner-invoked tool,
-a server's command and whatever its runner chain fetches, a GitHub Action, a
-container image, a SwiftPM package, a Maven artifact or Gradle plugin, a mise
-tool on any backend — is vetted first by `stackgen-reputation` against public
-registry, advisory and scorecard data, one verdict per name (`pass`, `warn`,
-`block`); a `block` halts that component until you name a replacement, and the
-same skill is yours to run on any name as
-`/stackgen:stackgen-reputation <ecosystem>:<name> …`. A generated server is
-vetted on what can be read from its declared command, and the consent gate shows
-the whole command and its env values, so you are the control for any form the
-vetting does not parse. Both paths
-land mostly in the repo's committed `.claude/` tree — skills, agents, hooks and
-rules only, shaped by a closed kind vocabulary whose per-kind **topic bar**
-fixes what the output must cover and how deep, recorded in a lockfile per
-component — so most of the result is plain files your collaborators get with a
-`git pull` and no plugin install. **Language servers** are the exception, and
-they carry their own consent line rather than riding the landing: a language
-server is a plugin-manifest feature no project file can express at all, so
-stackgen writes one small local plugin on your
+verbatim; an uncovered one is **generated** — researched topic by topic, with
+Context7 first when Context7 is installed, else the official documentation and
+the package registries, instantiated against vwf's principles catalog, gated by
+a reviewer agent and your explicit consent, so a covered language never
+regenerates because its framework is new. Every concrete third-party name a
+generated component emits — a package, a runner-invoked tool, a server's command
+and whatever its runner chain fetches, a GitHub Action, a container image, a
+SwiftPM package, a Maven artifact or Gradle plugin, a mise tool on any backend —
+is vetted first by `stackgen-reputation` against public registry, advisory and
+scorecard data, one verdict per name (`pass`, `warn`, `block`); a `block` halts
+that component until you name a replacement, and the same skill is yours to run
+on any name as `/stackgen:stackgen-reputation <ecosystem>:<name> …`. A generated
+server is vetted on what can be read from its declared command, and the consent
+gate shows the whole command and its env values, so you are the control for any
+form the vetting does not parse. Both paths land mostly in the repo's committed
+`.claude/` tree — skills, agents, hooks and rules only, shaped by a closed kind
+vocabulary whose per-kind **topic bar** fixes what the output must cover and how
+deep, recorded in a lockfile per component — so most of the result is plain
+files your collaborators get with a `git pull` and no plugin install. **Language
+servers** are the exception, and they carry their own consent line rather than
+riding the landing: a language server is a plugin-manifest feature no project
+file can express at all, so stackgen writes one small local plugin on your
 machine — at the fixed path `~/.claude/plugins/local/vwf-tools/`, holding the
 union across the repos you have materialized from — and **prints the two
 registration commands for you to run rather than running them itself**. That one
@@ -331,44 +329,40 @@ root config and the deploy task beside it, a project task a framework pack owns
 merges-never-owns terms, behind their own consent line, and capped by a fixed
 allowlist of what may sit at a repo's root. The mise config, the file-based task
 library everything else runs through, the gates and their configs, the ignore
-and
-attribute files, the editor settings and the hooks belong to no pack: they are
-[bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init` reaches
-through bootstrap's own readme prompt, and the `setup:*` and `code:*` tasks are
-bootstrap's with them.
-A pack ships no toolchain at all: its tool pins, its gates and their configs,
-and its generic tasks are bootstrap's.
-The materializer reads a fresh clone of bootstrap to choose the tools a stack
-needs, and asks for them through bootstrap's own entry point, behind its own
-consent line; it never edits `.config/bootstrap.toml` itself. A value only the
-machine can answer — the Xcode a repo builds with — is found by bootstrap's
-task, or set by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests
-and CI workflow files stay outside that fence: they declare what the project
-*is*, and no pack decides either. The packs, bundles and kinds that ship are
-inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
-generated from the tree itself; the newest kind is `addon`, vwf's eighth axis —
-**optional tools**, `taste-skill` today, offered by a tools
-menu in `/vwf:architecture` with nothing preselected, recorded in the
-product-level `addons:` list of `.config/vwf.yaml`, and installed by
-`/vwf:setup`
-only while picked. Before it came `stylesheet`, the one that answers vwf's
-seventh axis — how a web frontend's styles are authored, with `tailwindcss`,
-`stylex` and `plain-css` filling it and the design system's tokens staying the
-contract each of them realizes. The newest
-**design tool** is the terminal itself — the `claude-code` pack, which vwf's
-architecture menu preselects on the design axis: the design system, the logo and
-a flow's screens are authored in session, through the `taste-skill` plugin, the
-optional tool a product pinning it picks, into a committed
-`docs/design/<project>/`
-that vwf imports like any hosted canvas, and reviewed in a browser served from
-the repo on loopback — you click, comment, press Done, and the session applies
-the comments. stackgen is now the only stack plugin: its packs are the covered
-path, its generator the uncovered tail. A `vwf` dependency, because vwf's stack
-menu is the union of what the installed stack plugins offer — with none present
-it comes back empty, and the axes carry no free-text escape. You can defer an
-axis and keep defining the product, but `/vwf:plan` and `/vwf:execute` halt
-until it is answered. Having it installed commits you to nothing; it acts only
-once an axis is pinned. `stackgen@virajp-plugins`
+and attribute files, the editor settings and the hooks belong to no pack: they
+are [bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init`
+reaches through bootstrap's own readme prompt, and the `setup:*` and `code:*`
+tasks are bootstrap's with them. A pack ships no toolchain at all: its tool
+pins, its gates and their configs, and its generic tasks are bootstrap's. The
+materializer reads a fresh clone of bootstrap to choose the tools a stack needs,
+and asks for them through bootstrap's own entry point, behind its own consent
+line; it never edits `.config/bootstrap.toml` itself. A value only the machine
+can answer — the Xcode a repo builds with — is found by bootstrap's task, or set
+by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests and CI
+workflow files stay outside that fence: they declare what the project *is*, and
+no pack decides either. The packs, bundles and kinds that ship are inventoried
+in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
+the tree itself; the newest kind is `addon`, vwf's eighth axis — **optional
+tools**, `taste-skill` today, offered by a tools menu in `/vwf:architecture`
+with nothing preselected, recorded in the product-level `addons:` list of
+`.config/vwf.yaml`, and installed by `/vwf:setup` only while picked. Before it
+came `stylesheet`, the one that answers vwf's seventh axis — how a web
+frontend's styles are authored, with `tailwindcss`, `stylex` and `plain-css`
+filling it and the design system's tokens staying the contract each of them
+realizes. The newest **design tool** is the terminal itself — the `claude-code`
+pack, which vwf's architecture menu preselects on the design axis: the design
+system, the logo and a flow's screens are authored in session, through the
+`taste-skill` plugin, the optional tool a product pinning it picks, into a
+committed `docs/design/<project>/` that vwf imports like any hosted canvas, and
+reviewed in a browser served from the repo on loopback — you click, comment,
+press Done, and the session applies the comments. stackgen is now the only stack
+plugin: its packs are the covered path, its generator the uncovered tail. A
+`vwf` dependency, because vwf's stack menu is the union of what the installed
+stack plugins offer — with none present it comes back empty, and the axes carry
+no free-text escape. You can defer an axis and keep defining the product, but
+`/vwf:plan` and `/vwf:execute` halt until it is answered. Having it installed
+commits you to nothing; it acts only once an axis is pinned.
+`stackgen@virajp-plugins`
 
 Every plugin above is authored here. Nothing in this marketplace is re-listed
 from another repo any more: the last one that was — the Karpathy coding
