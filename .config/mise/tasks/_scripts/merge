@@ -52,6 +52,27 @@ source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/helpers"
 # shellcheck source=/dev/null
 source "${MISE_PROJECT_ROOT}/.config/mise/tasks/_scripts/checks"
 
+# Stops the task when mise runs it for another repository. In a submodule, mise
+# also finds the tasks of the root repository. If the submodule has no merge
+# task of that name, mise runs the root's task in the root folder, and that task
+# then lands a branch of the root. `MISE_ORIGINAL_CWD` is the folder where mise
+# ran (the folder of `mise -C` too), so its repository must be the repository of
+# the task. A run from a subfolder of the same repository passes.
+require_own_repository() {
+  local here there
+  [ -n "${MISE_ORIGINAL_CWD:-}" ] || return 0
+  here=$(git -C "${MISE_ORIGINAL_CWD}" rev-parse --show-toplevel 2> /dev/null) || return 0
+  there=$(git -C "${MISE_PROJECT_ROOT}" rev-parse --show-toplevel 2> /dev/null) || there=''
+  if [ "${here}" != "${there}" ]; then
+    print_error "${MISE_TASK_NAME:-this task} is a task of ${there}, not of ${here}."
+    print_warn "- ${here} has no ${MISE_TASK_NAME:-such task}, so mise found the task of the repository above it"
+    print_warn "- run \`mise run setup:configs\` in ${here} for its own merge tasks, then merge again"
+    exit 1
+  fi
+}
+
+require_own_repository
+
 # The gate every merge passes before it touches a branch: run the hooks over the
 # WHOLE tree and fail if any of them rewrote a file.
 #
