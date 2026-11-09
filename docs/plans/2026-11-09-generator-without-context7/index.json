@@ -486,5 +486,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/generator-without-context7",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-09-generator-without-context7.jsonl"
+  }
 }

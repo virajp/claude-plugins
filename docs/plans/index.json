@@ -28,8 +28,8 @@
       "title": "The stackgen generator works without Context7",
       "target_repo": null,
       "priority": 20,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-09T15:23:26.618Z",
       "ended": "",
       "gaps": null,
       "requires": [
