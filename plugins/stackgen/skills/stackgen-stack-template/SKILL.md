@@ -7,9 +7,9 @@ description: Return one stackgen stack as a vwf template payload — reading the
   gate. Invoked by /vwf:setup, which materializes a first pin, and by
   /vwf:plan and /vwf:execute, which fetch an already-materialized entry.
   /vwf:setup also calls it on every run for each picked addon, to remove
-  a dropped addon, and to reconcile this repo's server claims — not a
-  general-purpose skill.
-argument-hint: "<slug> | remove: <slug> | reconcile-claims:"
+  a component or a server key, and to reconcile this repo's server claims
+  — not a general-purpose skill.
+argument-hint: "<slug> | remove: <slug> | remove: key <name> | reconcile-claims:"
 disable-model-invocation: false
 user-invocable: false
 ---
@@ -27,10 +27,9 @@ packs by copy, uncovered components by generation. Materialization is
 > stay `false`** — the first so vwf can reach the skill by its constructed
 > name, the second because no user types it. See `stackgen-stack-menu`. The
 > `argument-hint` stays: it costs nothing on a hidden skill and documents the
-> one argument the caller passes. `remove: <slug>`
-> ([Removing a dropped addon](#removing-a-dropped-addon)) and
-> `reconcile-claims:` ([Reconciling claims](#reconciling-claims)) are that
-> argument's other forms.
+> one argument the caller passes. `remove: <slug>`, `remove: key <name>`
+> ([Removing a component](#removing-a-component)) and `reconcile-claims:`
+> ([Reconciling claims](#reconciling-claims)) are that argument's other forms.
 
 ## Resolution order
 
@@ -43,18 +42,11 @@ packs by copy, uncovered components by generation. Materialization is
    `/stackgen:stackgen-sync`'s job, on the user's clock — and it acts per
    component.
 
-   **The one exception is an entry whose `axis:` is `addon`**, because its
-   pick is committed while its servers land per machine, so a second machine
-   has the entry and none of the servers. That call does not stop at the read.
-   It runs the `stackgen-lsp` migration offer when that directory exists,
-   merges the pack's servers into `vwf-tools` behind the normal tier-3 consent
-   when any is missing from this machine's manifest, adds this repo's claim,
-   offers the registration when `vwf-tools` is not registered, and then returns
-   the same payload — nothing else: no regeneration, no diff, no repo copy
-   touched. The procedure is
-   [the materializer](references/materializer.md#an-addon-already-materialized).
+   An entry whose `axis:` is `addon` is no exception: an addon lands no
+   server, so the call `/vwf:setup` makes for it on every run is this same
+   read ([the materializer](references/materializer.md#an-addon-already-materialized)).
    Only `/vwf:setup` makes an `addon` call; `/vwf:plan` and `/vwf:execute`
-   collect no `addon` pin, so this never runs on their clock.
+   collect no `addon` pin.
 2. **A first pin? Read the recorded composition.** The slug names a **bundle
    file**, `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/<slug>.md`. Its frontmatter
    already lists every component as a `<type>/<slug>@<version|generated>`
@@ -83,38 +75,56 @@ packs by copy, uncovered components by generation. Materialization is
    refs and the lockfile recording every landing per component, so a later
    re-sync can act on one component alone. Return the payload from the
    freshly materialized entry.
-4. **Anything else is an error, not a guess.** Name the packs that do exist
-   and the `generated/<technology-slug>` form. Never answer an unknown slug
-   from general knowledge — a template this plugin has not materialized is a
-   template the repo does not have.
+4. **Anything else is reported and skipped, never a guess.** A slug with no
+   materialized entry and no bundle file — on any axis, a pin whose pack was
+   removed among them — returns one line, **skipped**, naming the slug, the
+   packs that do exist and the `generated/<technology-slug>` form. It is never
+   an error, and a component ref inside a bundle whose pack no longer exists is
+   reported and skipped the same way by the materializer. Never answer an
+   unknown slug from general knowledge — a template this plugin has not
+   materialized is a template the repo does not have. A removed pin's
+   materialized skills stay until `/vwf:setup`'s step 26 takes them out through
+   `remove:`.
 
-## Removing a dropped addon
+## Removing a component
 
-`/stackgen:stackgen-stack-template remove: <slug>` is the one call that takes
-an addon out, because `/stackgen:stackgen-sync` is user-only and `/vwf:setup`
-has to reach it. It takes one `addon` slug, skips the resolution order and
-returns no payload: one line, **removed** or **declined**. A slug whose entry's
-`axis:` is not `addon` is an error, and a slug the lockfile does not record has
-nothing to remove, and the call says so. On one plan and one consent it
-applies the removal rules of
+`/stackgen:stackgen-stack-template remove:` is the one call that takes a
+component out, because `/stackgen:stackgen-sync` is user-only and `/vwf:setup`
+has to reach it. It skips the resolution order and returns no payload: one
+line, **removed** or **declined**. It has two forms:
+
+- **`remove: <slug>`** — any materialized slug, on any axis: a dropped addon,
+  a pin whose pack was removed, a re-pinned design tool. It deletes the
+  component with all its records and keys, MCP ones included. A slug the
+  lockfile does not record has nothing to remove, and the call says so.
+- **`remove: key <name>`** — deletes one server key from the `vwf-tools`
+  manifest and `claims.json`, whichever repos claim it, and returns the removed
+  key name. It edits no lockfile and commits nothing. `/vwf:setup`'s machine
+  cleanup uses it for every MCP key in `vwf-tools`.
+
+The first applies, on one plan and one consent, the removal rules of
 [the local plugin](references/local-plugin.md#removal--by-subtraction) and
-[the bootstrap handoff](references/bootstrap-handoff.md#removal), deletes
+[the bootstrap handoff](references/bootstrap-handoff.md#removal), delete
 the slug's recorded files, refusing and reporting a recorded path that resolves
-outside the repo root, updates the lockfile and commits once. The procedure
-is [the materializer](references/materializer.md#removing-a-dropped-addon).
+outside the repo root, update the lockfile and commit once. A call carrying a
+`consented` line — `/vwf:setup` passes one into each call it makes under a
+consent it already asked — shows the plan and asks nothing; a call without one
+asks its own consent. `/vwf:setup` reaches a member repo with the `repo:` line,
+as it does for a materialization. The procedure
+is [the materializer](references/materializer.md#removing-a-component).
 
 ## Reconciling claims
 
 `/stackgen:stackgen-stack-template reconcile-claims:` takes no slug.
-`/vwf:setup` makes the call once per run in the base repo, because an addon
-dropped on another machine reaches this one by a pull: the lockfile no longer
-records the server, so no `remove:` call is made, and this repo's claim stays.
-Every `vwf-tools` key in `claims.json` that claims this repo's path and that the
-lockfile no longer records loses this repo's claim, behind the normal tier-3
-consent, and leaves the manifest only when no repo claims it. It skips the
-resolution order and returns no payload: one line, **removed**, **declined** or
-**unchanged**. A decline changes nothing and is offered again on the next run.
-The procedure is
+`/vwf:setup` makes the call once per run in the base repo, because an LSP
+server dropped on another machine reaches this one by a pull: the lockfile no
+longer records the server, so no `remove:` call is made, and this repo's claim
+stays. Every `lspServers` key in `claims.json` that claims this repo's path and
+that the lockfile no longer records loses this repo's claim, behind the normal
+tier-3 consent, and leaves the manifest only when no repo claims it. It skips
+the resolution order and returns no payload: one line, **removed**, **declined**
+or **unchanged**. A decline changes nothing and is offered again on the next
+run. The procedure is
 [the materializer](references/materializer.md#reconciling-this-repos-claims).
 
 ## The payload
@@ -171,9 +181,7 @@ drift. It adds no consent tier.
   conventions mid-run and must never trigger research, network, or a write.
   The reputation check belongs to generation — where a name is first
   emitted — and never to a read: a materialized entry is returned as it
-  was landed, with no re-check. An `addon` entry's exception in step 1 writes
-  only behind its consent, and with no server missing and `vwf-tools`
-  registered it is this same file read, plus the read-only registration check.
+  was landed, with no re-check.
 - **Dispatch is per component; landing is per bundle.** Pack-or-generate is
   decided component by component — a covered language never regenerates
   because its framework is uncovered — but the user consents to one landing
@@ -197,13 +205,19 @@ drift. It adds no consent tier.
   not know which framework it was pinned beside. A config file that guessed
   would overwrite the framework pack's.
 - **An `addon` bundle is an optional tool**, landed the ordinary way only in
-  the base repo: its `user_mcp_servers:` go to the local plugin, its
-  `## Claude plugins` section to the bootstrap handoff. Its pin comes from
-  the tools menu, through `.config/vwf.yaml`'s `addons:` list, and a slug
-  dropped from that list leaves through `remove: <slug>`.
-- **Servers never land in a repo.** A component's `user_mcp_servers:` and
-  `lsp_servers:` are the only server fields, and both go to the generated
-  local plugin, `vwf-tools` ([the local plugin](references/local-plugin.md)).
+  the base repo: its `## Claude plugins` section goes to the bootstrap
+  handoff, and it lands no server. Its pin comes from the tools menu, through
+  `.config/vwf.yaml`'s `addons:` list, and a slug dropped from that list
+  leaves through `remove: <slug>`.
+- **Servers never land in a repo.** A component's `lsp_servers:` is the only
+  server field, and it goes to the generated local plugin, `vwf-tools`
+  ([the local plugin](references/local-plugin.md)), which holds LSP servers
+  only. **No MCP server is installed by this skill**: the user owns every MCP
+  install. A component that needs one names it in its `conventions.md`'s
+  `## MCP servers` section, and the materializer records each line in the
+  lockfile's `required_mcp_servers` for `/vwf:doctor` to read
+  (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). MCP records an older
+  lockfile carries are ignored by every verb but `remove:`.
 - **A landing is not confined to `.claude/`.** A component may also declare
   repo config files in a `config/` tree that mirrors the **repo root** —
   `config/.config/mise/tasks/test/golden` lands at
@@ -233,22 +247,23 @@ drift. It adds no consent tier.
   invocation beside the catalog paths, in the same payload style the vwf
   stack-adapter contract's delegation protocol uses for those — a path
   relative to the current repo's root. The argument itself stays
-  `<slug>`, `remove: <slug>` or `reconcile-claims:`; there is no second
-  positional. When the
+  `<slug>`, one of the `remove:` forms or `reconcile-claims:`; there is no
+  second positional. When the
   line is present every
   read of `.claude/stackgen/…` in steps 1–3, every write the materializer
   makes, and the lockfile it keeps
   (`<repo>/.claude/stackgen/lock.yaml`) resolve under that path; absent
   means the current repo. Each repo gets its own independent copies and
   its own lockfile — never one repo's copies pasted around. This
-  line and the `declined:` line
+  line, the `declined:` line
   [one offer per setup run](references/materializer.md#one-offer-per-setup-run)
-  defines are the whole of the optional input beside the catalog paths.
+  defines and the `consented` line of
+  [removing a component](#removing-a-component) are the whole of the optional
+  input beside the catalog paths.
 - **The caller may pass context; this skill never reaches for another
   plugin's files.** vwf passes the principles-catalog paths into the
   invocation (the design-adapter payload style). If a generation run needs
   the catalog and none was passed, halt and say so — `${CLAUDE_PLUGIN_ROOT}`
   names this plugin's root, nothing else's.
 - **All writes go through the consent gate and the git workflow** — see the
-  materializer. A fetch (step 1) writes nothing, ever, the `addon` exception's
-  gated writes apart.
+  materializer. A fetch (step 1) writes nothing, ever.

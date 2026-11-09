@@ -70,7 +70,7 @@ native format. Minimal form:
 `$schema` is not decoration — it is what gives an editor the field list, and
 that schema is the authority for the shape. Keep one key order across every
 manifest in a marketplace: `$schema`, `name`, `version`, `description`,
-`author`, `repository`, `keywords`, `dependencies`, `mcpServers`, `lspServers`.
+`author`, `repository`, `keywords`, `dependencies`, `lspServers`.
 
 **A manifest declares no install-time eligibility.** There is no `scope`, no
 `optIn`, no `userOnly`, and no `requires`. Scope is whichever `--scope` the user
@@ -90,10 +90,9 @@ Optional blocks:
   plugin's own name. Only a plugin that ships a hooks module needs it.
 - **`lspServers`** — keyed by language id; each needs `command`, `args` and
   `extensions`, optionally `startupTimeout`.
-- **`mcpServers`** — keyed by name, declaring a transport. **Which transport,
-  and why it is load-bearing rather than stylistic, is artifact doctrine** and
-  lives in stackgen's `assets/artifact-doctrine.md` §5; this file covers only
-  that the manifest block exists.
+- **No `mcpServers`.** A plugin declares no MCP server: every server is the
+  user's install, and an agent that needs one asks the user to install it.
+  `p:plugins:check` refuses the key in any plugin manifest.
 - **`dependencies`** — objects of `{marketplace, name}`. When the parent is
   enabled, Claude auto-installs and auto-enables them at the same scope. A
   dependency may name another marketplace, but **cross-marketplace deps are

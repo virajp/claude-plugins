@@ -4,9 +4,9 @@
      auto.md, watch.md, tv.md, spatial.md, site.md, webapp.md — mirroring the
      flow folder's platform files), each
      commissioning exactly ONE interactive
-     page. A compact wireframe-level design brief for a claude.ai/design
-     canvas session, NOT a blueprint doc: no OKF frontmatter. The user pastes
-     it into the canvas chat themselves — /vwf:screens never runs it. The
+     page. A compact wireframe-level design brief for the configured design
+     tool's canvas session, NOT a blueprint doc: no OKF frontmatter. The user
+     pastes it into the canvas chat themselves — /vwf:screens never runs it. The
      brief is ALWAYS the flow's full screen blueprint — on a revision,
      regenerate the whole file in place (git keeps history); never write a
      change note. Replace every backticked `<placeholder>` with plain prose;

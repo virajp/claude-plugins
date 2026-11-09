@@ -14,8 +14,8 @@
 # `<product>`: `<Platform>` — screen conventions
 
 Scope: this project holds the **`<platform>`** screen flows of `<product>`.
-`<the other declared platforms>` live in separate Claude Design projects with
-their own conventions.
+`<the other declared platforms>` live in separate projects in the configured
+design tool, one design project per platform, each with its own conventions.
 
 ## Product
 

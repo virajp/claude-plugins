@@ -13,8 +13,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-09 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-09 — 9ed9af34 36ecb67f 67337190 c7892cf8 588118c7"
   },
   "consent": {
     "merge": true,
@@ -96,11 +96,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T13:26:10.543Z",
+      "ended": "2026-11-09T13:43:41.954Z",
+      "commit": "9ed9af34",
+      "rounds": 3
     },
     {
       "id": "U2",
@@ -129,11 +129,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T13:26:10.616Z",
+      "ended": "2026-11-09T14:03:42.230Z",
+      "commit": "36ecb67f",
+      "rounds": 5
     },
     {
       "id": "U3",
@@ -162,11 +162,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T13:26:10.690Z",
+      "ended": "2026-11-09T14:02:56.079Z",
+      "commit": "c7892cf8",
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -183,11 +183,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T13:26:10.762Z",
+      "ended": "2026-11-09T13:34:28.965Z",
+      "commit": "67337190",
+      "rounds": 1
     },
     {
       "id": "U5",
@@ -204,14 +204,14 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-09T14:10:42.428Z",
+      "ended": "2026-11-09T14:12:06.967Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "756dbd06",
+        "to": "91c9c81a"
       }
     },
     {
@@ -243,11 +243,11 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-09T14:12:52.948Z",
+      "ended": "2026-11-09T14:21:09.676Z",
+      "commit": "588118c7",
+      "rounds": 1
     },
     {
       "id": "U7",
@@ -264,37 +264,37 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-09T14:24:18.605Z",
+      "ended": "2026-11-09T14:26:32.653Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-09T13:26:10.503Z",
+      "ended": "2026-11-09T14:10:35.990Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-09T14:10:42.395Z",
+      "ended": "2026-11-09T14:12:31.358Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-09T14:12:52.916Z",
+      "ended": "2026-11-09T14:24:11.332Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-09T14:24:18.570Z",
+      "ended": "2026-11-09T14:26:59.090Z"
     }
   ],
   "shared_files": [
@@ -762,36 +762,111 @@
         "U2",
         "U3"
       ]
+    },
+    {
+      "id": "D48",
+      "decision": "Q1: The official name and install page of the Stitch MCP server for the stitch pack optional ## MCP servers line (D40)",
+      "ruling": "https://stitch.googleapis.com/mcp is the MCP server for stitch and it requires API key",
+      "rejected": "none",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D49",
+      "decision": "Q2: Where the /vwf:screens import mode gets the canvas page list and the canvas conventions file",
+      "ruling": "Read the conventions file only from the repo own CLAUDE--<platform>.md, and find pages by the naming contract alone; no adapter change",
+      "rejected": "Add a conventions field and a page list to the screens payload (design-adapter.md and the adapter skills of all three design-tool packs)",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D50",
+      "decision": "Q3: Whether config_format 26 deletes lockfile MCP records that no slug owns",
+      "ruling": "Step 26 deletes every MCP record in each lockfile directly, as one row of the step; no record survives the migration",
+      "rejected": "Leave it to the per-slug mcp-only calls, so ownerless records survive, ignored per D34",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D51",
+      "decision": "Q4: Keep or restore the edited argument-hint of plugins/stackgen/skills/stackgen-stack-template/SKILL.md",
+      "ruling": "Keep \"<slug> | remove: <slug> [mcp-only] | remove: key <name> | reconcile-claims:\" and change the description \"remove a dropped addon\" to \"remove a component or a server key\"",
+      "rejected": "Restore \"<slug> | remove: <slug> | reconcile-claims:\" with no frontmatter change",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D52",
+      "decision": "Q5: Whether the stackgen form remove: <slug> mcp-only stays once D50 removed its only caller",
+      "ruling": "Drop it: U2 removes mcp-only from stack-template SKILL.md, from its argument-hint (D51) and from its references; this amends D19",
+      "rejected": "Keep it as a documented form no vwf step calls",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D53",
+      "decision": "Q6: /vwf:screens import step 5 under D49",
+      "ruling": "Accept: step 5 copies conventions in from the payload notes, and there is no report on the canvas copy",
+      "rejected": "No canvas-side step at all; step 5 removed",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D54",
+      "decision": "Q7: Does the keep check K1 pass when its hits are of a kind the pass list names but sit in files or lines the list does not name",
+      "ruling": "Accept: K1 passes; each hit is a kind the pass list names and the file lists were examples; the plan lands as is",
+      "rejected": "Fail: the file lists are exhaustive; re-dispatch U2, U4 and U6 to remove or reword each hit, then re-run the gates and K1",
+      "units": []
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.592Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.702Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.820Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers and no code unit — no stamps, nothing to persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-09T14:12:47.970Z"
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "",
+      "stage": "",
+      "text": "The pre-commit marketplace hook failed the U1 commit: the worktree held a gitignored .dev-marketplace that U2 generated with the new stackgen description, while the commit stash reverted plugin.json · moved the run-created .dev-marketplace out of the worktree to the session scratchpad; U7 regenerates it",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/retire-plugin-mcp-servers",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-09-retire-plugin-mcp-servers.jsonl"

@@ -109,10 +109,10 @@ belongs to `claude`, which is why it writes **no receipt**.
   from this same marketplace, at the same scope. That is Claude's own native
   behaviour (≥ 2.1.143), and it is what the CLI's `--all` leans on: the flag
   installs `DEFAULT_INSTALL` (`vwf`) alone and lets the edge bring `stackgen`.
-- **MCP and LSP declarations** ride in the plugin manifest. vwf declares no MCP
-  server, so an `mcpServers` block in an installed vwf manifest is a finding, a
-  `context7` or `mempalace` server above all: Context7 is a stackgen `addon`
-  pack, landed by `/vwf:setup` only when a product picks it.
+- **MCP and LSP declarations** ride in the plugin manifest. No plugin declares
+  an MCP server, so an `mcpServers` block in any installed manifest is a
+  finding: the user installs every MCP server, and stackgen lands LSP servers
+  only, into `vwf-tools`.
 
 ## Procedure
 

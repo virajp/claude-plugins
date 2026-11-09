@@ -86,10 +86,10 @@ The closed list. A component is exactly one of:
   pack must not decide it for them. Pinned per project, and asked only of
   a project declaring a `site` or `webapp` platform. Composes into a
   Stylesheet-Bundle.
-- **`addon`** — an optional tool the user picks for the whole product: an MCP
-  server or a Claude plugin the agent uses, which nothing the product runs
-  depends on. Never a default. An `addon` pack realizes no capability token,
-  and its `capability` stays unset. Composes into an Addon-Bundle.
+- **`addon`** — an optional tool the user picks for the whole product: a
+  Claude plugin the agent uses, which nothing the product runs depends on.
+  Never a default. An `addon` pack realizes no capability token, and its
+  `capability` stays unset. Composes into an Addon-Bundle.
 
 ## Categories
 
@@ -110,10 +110,8 @@ and its components leave `category` unset.
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
   `secrets-manager` / `audit`
-- **`addon`**: `workspace` — the team's knowledge workspace, where the docs,
-  specs and tickets live and which the agent reads, searches and writes; the
-  `addon/notion` pack serves it. An `addon` pack whose tool is no such thing,
-  like `addon/context7` or `addon/taste-skill`, leaves `category` unset.
+- **`addon`**: none — an `addon` pack, like `addon/taste-skill`, leaves
+  `category` unset.
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 - **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
   the token mapping can be paid for. `utility` generates classes from a
@@ -146,19 +144,12 @@ whichever channel token the service actually is — `email`,
 Some categories have **no capability token today** — `cdn`,
 `secrets-manager`, `access`, `static-hosting`, `stateful-compute`,
 `database-proxy`, `ingestion`, `analytics`, `inference`, `ai-gateway`,
-`retrieval`, `browser`, `media`, `realtime` and `workspace`. That is a
+`retrieval`, `browser`, `media` and `realtime`. That is a
 known vwf-side gap, not a taxonomy error: the component leaves
 `capability` unset, and nothing here mints a token to fill the hole —
 minting capabilities is vwf's move. It is also why a category can exist
 here before vwf has decided whether every product must have one: the
 taxonomy classifies what a component *is*, never whether it is required.
-
-`workspace` is on that list for a reason of its own rather than a pending
-vwf decision. The workspace is the **agent's** knowledge source, not the
-product's runtime — no blueprint capability is waiting on it, so there is
-no seam for architecture to elicit and nothing here asks for a token. The
-`addon/notion` pack serves it, and like every `addon` pack it realizes no
-capability token. Its neutral contract is `contracts/workspace.md`.
 
 Fourteen `cloud-service` tokens and one `framework` token (`agent-sdk`)
 were minted on 2026-09-06 for the Cloudflare developer platform.
@@ -247,14 +238,7 @@ tokens it realizes, or that its category has none yet (`contracts/secrets.md`
 is the first of those). That is what lets two providers in one category be
 compared against the same clauses instead of against each other's marketing.
 
-The newest is `contracts/workspace.md`, the `workspace` category's, and the
-third to realize no vwf token at all after `contracts/secrets.md` and
-`contracts/web-head.md` — the workspace is the agent's knowledge source
-rather than anything a blueprint picks, so what the contract states is how
-the agent **reaches** it and what it may read and write, never what the
-product depends on.
-
-Before it came `contracts/web-head.md`, what any web framework pack must
+The newest is `contracts/web-head.md`, what any web framework pack must
 realize for a project the outside world reaches; and before that
 `contracts/audit.md`, the `audit` category's, realizing vwf's
 `audit-store` token. Audit sits deliberately beside `contracts/observability.md`

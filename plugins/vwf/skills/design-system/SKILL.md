@@ -27,7 +27,7 @@ references. A product with no screen surface at all takes the text-only path,
 and elicits Terminal UX directly.
 
 **The design tool owns design-system authoring.** The user picks or builds the
-design system there, and iterates there. Which tool answers (`claude-design`,
+design system there, and iterates there. Which tool answers (`claude-code`,
 `lovable`, `stitch`, …) is the product's choice. vwf knows only the payload
 shape, per `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 

@@ -181,7 +181,11 @@ is **required only for a project declaring a `site` or a `webapp` platform** —
 on any other project the key's absence is correct and is not a finding — and
 each slug of the top-level `addons:` list. A pin naming
 a template that isn't there is **drift** — usually a template renamed under the
-user's feet, or a stack plugin that was never installed. An axis reading
+user's feet, or a stack plugin that was never installed. A pin naming a tool
+the stack plugin removed is the same **drift**, never blocking, remedy
+`/vwf:setup`, whose format step re-pins or removes it: a `design:` pin to
+claude-design — re-pin to claude-code, lovable or stitch with `/vwf:setup`. An
+axis reading
 `unresolved` is not a pin: report the degradation above and resolve nothing. A
 **`custom` pin is
 `13` drift and blocking**: the value was retired in `config_format` 14, and it
@@ -224,20 +228,25 @@ member's: addon pins materialize in the base repo alone. **Read every owner from
 that lockfile**, and never match keys against pack declarations. Each item
 carries its owners as a list:
 
-- a server under `local_plugin.mcp_servers` is `{name, packs: [...]}`;
 - a `bootstrap.plugins` map entry lists its owners in `components: [...]`;
 - a skill entry names its owner by its component.
 
 An item is **owned by `addon/<slug>`** when that owner is a ref to that pack, at
 whatever version the ref carries. An entry with no owners — the old shape — reads
-as **owners unknown** and is skipped; the next sync rewrites it.
+as **owners unknown** and is skipped; the next sync rewrites it. An addon lands
+no server, so no server is an addon's item; an MCP server record a lockfile
+still carries is ignored here, and the `25 → 26` format step deletes it.
 
 - **Forward** — for each slug in `addons:`: no lockfile item is owned by
-  `addon/<slug>`; or an owned server is missing from the `vwf-tools` manifest,
-  `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json`; or an owned
-  bootstrap plugin is not installed (`claude plugin list`).
-- **Reverse** — any lockfile item (server, skill entry, bootstrap plugin) owned
-  by `addon/<slug>` whose slug is not in `addons:`.
+  `addon/<slug>`; or an owned bootstrap plugin is not installed
+  (`claude plugin list`).
+- **Reverse** — any lockfile item (skill entry, bootstrap plugin) owned by
+  `addon/<slug>` whose slug is not in `addons:`.
+- **An MCP server key in `vwf-tools`** — the manifest,
+  `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json`, holds LSP
+  servers only, so any MCP server key in it is drift, remedy `/vwf:setup`: its
+  machine cleanup, offered on every run, removes every such key on one consent
+  and lists the servers for the user to install by hand.
 - **Unclaimed keys** — a server key in the `vwf-tools` manifest that
   `~/.claude/plugins/local/vwf-tools/.claude-plugin/claims.json` lists for no
   repo; an absent `claims.json` lists none, so that is one row naming every key.
@@ -246,8 +255,25 @@ as **owners unknown** and is skipped; the next sync rewrites it.
 - **The old plugin** — a `~/.claude/plugins/local/stackgen-lsp/` directory, read
   whatever the lockfile says, stays drift until its migration is accepted, and
   `/vwf:setup` is what offers it again (stackgen migrates it). The row says what
-  the wait costs: until then a picked tool's server and a design tool's server
-  land nowhere, and the repo's `.mcp.json` entries stay.
+  the wait costs: until then the repo's LSP servers land nowhere.
+
+**Declared MCP servers.** No plugin installs an MCP server: each is the user's.
+A pack that needs one declares it in the `## MCP servers` section of its
+conventions, and the stack plugin records each line on that component's
+lockfile entry under `required_mcp_servers` — the server's name, what it is
+for, its install page, and `optional: true` on a server the pack does not
+require. Read that key from every entry of each repo's
+`.claude/stackgen/lock.yaml` on this machine, base and members; an entry with
+no such key declares no server, and is not a finding. Run `claude mcp list`
+once and look for each declared name, exactly, in its output, at any scope.
+That command health-checks — connects to — each server the user approved; it is
+this check's one side effect, and the row says so. A listed server counts as
+available even when its health check fails, and the row notes the failure. A
+required name the output does not list is **drift, never blocking**: name the
+server, the pack that declares it, what it is for and its install page, and ask
+the user to install it under that exact name. An optional server is never a
+finding. When the `claude` CLI is not on `PATH`, the row reads
+**not checked**.
 
 **A declared backing capability should have a provider.** For each registry
 project, read its `capabilities:` and classify each token by the **kind** marked

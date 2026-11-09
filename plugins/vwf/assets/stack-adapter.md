@@ -249,7 +249,7 @@ in one respect worth stating, because it is what keeps them cheap:
 
 **The slug *is* the config value.** `projects.<name>.design`,
 `projects.<name>.cicd` and `projects.<name>.stylesheet` already hold a tool
-token — `claude-design`, `github-actions` — and a menu entry on these axes takes
+token — `claude-code`, `github-actions` — and a menu entry on these axes takes
 that same token as its slug. So there is exactly one value, written once, and no
 second spelling to drift against. `/vwf:doctor` reports a pin resolving to no
 menu entry the same way it reports any other unresolvable pin.
@@ -299,19 +299,28 @@ through `/<plugin>:<plugin>-stack-template <slug>`, **to the base repo only**:
 the call carries no `repo:` line, and in a multi-repo product members get none.
 In a single repo, the repo is the base. **The call is made on every
 `/vwf:setup` run**, including for a slug the lockfile already names, because a
-pick is committed while its servers land per machine, in each person's user
-scope.
+pick is committed while each person's first run on a machine still has the
+pack's per-machine part to land. **An addon lands no server**: no pack lands an
+MCP server, each is the user's to install, and a pack that needs one names it in
+the `## MCP servers` section of its conventions.
 
 **A slug dropped from `addons:` leaves through one call of its own**,
 `/<plugin>:<plugin>-stack-template remove: <slug>`, made once per slug by
 `/vwf:setup` in the base repo, never by setup deleting its files, which would
-leave the slug's server claim, skill files and bootstrap records behind. The call
-takes one `addon` slug and an entry on any other axis is an error; it returns
-no payload, one line, **removed** or **declined**. The plugin takes out
-everything its lockfile records for the slug on one plan and one consent of its
-own, and commits once; vwf wraps it in no consent and no commit. A slug the
-lockfile does not record has nothing to remove, and the call says so. A declined
-slug removes nothing and `/vwf:setup` offers it again on the next run.
+leave the slug's claims, skill files and bootstrap records behind. The call
+takes any slug the lockfile records, on any axis; it returns no payload, one
+line, **removed** or **declined**. One more form exists: `remove: key <name>`
+deletes one server key from this machine's local plugin manifest and its claims
+file, commits nothing and returns the removed key name — the form the machine
+part of `/vwf:setup`'s `config_format` `25 → 26` step calls. That step's repo
+part deletes every MCP record left in a lockfile itself. Setup makes each call
+inside the repo it targets, a member included. The plugin takes out everything
+its lockfile records for the slug on one plan, and commits once; vwf wraps it
+in no commit. The call asks one consent of its own only when a user runs it
+directly: inside step 26 setup asks the step's one consent and passes it to
+each call, which then asks none of its own. A slug the lockfile does not record
+has nothing to remove, and the call says so. A declined slug removes nothing
+and `/vwf:setup` offers it again on the next run.
 
 **After its `remove:` calls, `/vwf:setup` makes one more call**,
 `/<plugin>:<plugin>-stack-template reconcile-claims:`, once per run in the base
@@ -452,9 +461,9 @@ side of the contract is three rules:
   declined is **unmaterialized**, and the fetch says so rather than generating
   silently — `/vwf:setup` offers it again on its next run. The one call that
   may do more is `/vwf:setup`'s every-run call for an `addon` pin
-  ([The `addon` axis](#the-addon-axis)): the entry is read as above, and a server
-  of that pin this machine's local plugin lacks is the adapter's to offer behind
-  its own consent.
+  ([The `addon` axis](#the-addon-axis)): the entry is read as above, and what
+  that pin lands per machine and this machine lacks is the adapter's to offer
+  behind its own consent — never an MCP server, which is the user's to install.
   That is not the `unresolved` axis state above and must not be recorded as one:
   the axis *was* answered, and what is missing is the artifact, not the decision.
 - **The menu may carry one open entry.** A materializing adapter's menu may

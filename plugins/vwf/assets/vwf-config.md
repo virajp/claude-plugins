@@ -44,12 +44,14 @@ ships, asks about and composes no editor configuration. Since
 `docs/blueprint/.vwf.yml`. **Format 24** retired the `memory:` block: vwf's
 memory is the file store under `docs/memory/`. **Format 25** added the
 top-level `addons:` list — the optional tools the product picked, on the
-`addon` axis — and moved a tool out of `backing_template` into it.
+`addon` axis — and moved a tool out of `backing_template` into it. **Format
+26** took the retired optional tools out of `addons:`, re-pinned a retired
+design tool, and left every MCP server to the user to install.
 
-## Schema (config_format 25)
+## Schema (config_format 26)
 
 ```yaml
-config_format: 25 # this file's own schema version — setup migrates it
+config_format: 26 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
 product:
@@ -235,7 +237,7 @@ at answering the question, never at installing something.
 | `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) |
 | `product`            | `setup` (confirmed with the user)                                                                                                         | every command that names the product                                                                            |
 | `stacks`             | `setup` (confirmed with the user)                                                                                                        | `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
-| `addons`             | `architecture` (the tools round, elicited); `setup` (the `24 → 25` migration)                                                            | `setup` (the materialize pass), `doctor` (drift, never blocking), `architecture` (the current pick on a re-run) |
+| `addons`             | `architecture` (the tools round, elicited); `setup` (the `24 → 25` and `25 → 26` migrations)                                             | `setup` (the materialize pass), `doctor` (drift, never blocking), `architecture` (the current pick on a re-run) |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
@@ -769,9 +771,13 @@ earlier than 65/90/80), never loosen.
   stack plugin moved to the `addon` axis comes out of every
   `projects.<name>.stack.backing_template` that lists it — a list it empties
   reads `[]` — and goes into `addons:`. Keep what the repo has: a tool a repo's
-  stackgen lockfile records goes in too, and the tool vwf's manifest used to
-  ship for everyone is one yes/no question. The slugs, the lockfile keys and the
-  question are the setup skill's `format-lineage` row for 25.
+  stackgen lockfile records goes in too. **Amended with format 26:** the step
+  asks no question about the server vwf's manifest used to ship and adds no
+  retired tool to `addons:`, so a repo at 24 is never asked about a tool the
+  `25 → 26` step then removes; a retired tool that a lockfile records is removed
+  through the stack adapter's `remove:` under the step's consent, in the base
+  and each member. The slugs and the lockfile keys are the setup skill's
+  `format-lineage` row for 25.
 
   A config still reading **24** is not broken for a reader: an absent `addons:`
   reads as none, and `/vwf:doctor`'s stamp check reports 24 against 25 until the
@@ -781,6 +787,32 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   ninth config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20`, `21`, `22`, `23` and `24`.
+
+- **`25 → 26` migration** (performed by `/vwf:setup`, its migrate pipeline):
+  **every MCP server is the user's to install.** No stack plugin lands one, so
+  the retired optional tools leave `addons:`, a project pinned to the retired
+  design tool is re-pinned, and every MCP record goes. The step has two parts.
+  The **repo part** is the format step and runs once: it removes the retired
+  tools and their `addons:` entries, asks one question that re-pins every
+  project on `claude-design` to claude-code, lovable or stitch, clears that
+  tool's `design.*` values, and deletes every MCP record from each repo's stack
+  lockfile directly, so none survives — in the base and each member. Each
+  accepted part is applied and stays, a declined part writes nothing, and the
+  stamp moves to 26 only once every part is applied. The **machine part** runs
+  on every `/vwf:setup` run, beside the claims reconcile: when this machine's
+  stack plugin manifest holds an MCP server key, one consent removes them all
+  and setup lists the servers for the user to install by hand. The slugs, the
+  verbs and the questions are the setup skill's `format-lineage` row for 26.
+
+  A config still reading **25** is not broken for a reader: a retired tool in
+  `addons:` or a retired `design` pin is reported and skipped by the stack
+  plugin, and `/vwf:doctor`'s stamp check reports 25 against 26 until the next
+  `/vwf:setup` applies every part.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  tenth config bump to ship without a paired blueprint bump, after `14`,
+  `16`, `18`, `20`, `21`, `22`, `23`, `24` and `25`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

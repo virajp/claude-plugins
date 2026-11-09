@@ -158,6 +158,12 @@ registry of them and generates the **installer** rather than the config. A
 curated list could only ever hold what someone curated, and stackgen exists for
 the uncovered tail.
 
+**No MCP server is materialized.** stackgen wires LSP servers alone; the user
+owns every MCP install. A pack that needs an MCP server names it in its
+`conventions.md`'s `## MCP servers` section
+(`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), and the agent asks the user
+to install it when it is missing.
+
 What the generated wiring must respect:
 
 - **The transport choice is load-bearing, not stylistic.** A **stdio** MCP
@@ -183,7 +189,7 @@ What the generated wiring must respect:
 `lspServers` exists only in a plugin manifest, so the installer pattern above
 takes one further form: stackgen **generates a plugin** at the fixed path
 `~/.claude/plugins/local/vwf-tools/` — a `.claude-plugin/plugin.json`
-carrying `lspServers` and `mcpServers` as a union across the user's stacks,
+carrying `lspServers` alone, as a union across the user's stacks,
 beside a single-plugin `marketplace.json` — and prints the two `claude plugin`
 commands that register it at **user** scope. The full contract, the consent
 tier and the lockfile key are
@@ -202,9 +208,8 @@ Two rules bind the generated manifest:
 emits instead. A **concrete name** is any third-party thing a generated
 component would have a repo fetch or run: a package a `mise_tool` entry or a
 runner-invoked harness task names (`dlx`, `npx`, `uv run --with`, `uvx`), a
-command a `user_mcp_servers:` or `lsp_servers:` entry spawns, every package a
-server's runner chain fetches, the host a `user_mcp_servers:` `url` names, the
-host of any URL or bare host in either kind of entry's `args` or `env` values,
+command an `lsp_servers:` entry spawns, every package a server's runner chain
+fetches, the host of any URL or bare host in an entry's `args` or `env` values,
 a GitHub Action, a container image, a dependency in a `Package.swift`, a Maven
 dependency or a Gradle plugin in a build file. Every
 one of them gets a verdict before the dry-run gate shows it, from the
@@ -235,8 +240,10 @@ verdicts:
 
 A source the skill cannot reach yields `UNRESOLVED`, never an inferred
 verdict, and halts generation the way it does when no Context7 server is
-reachable from any source — the remedy for that one being to add `context7` in
-`/vwf:architecture`'s tools menu, run `/vwf:setup`, then restart the session.
+reachable from any source — for that one, the agent asks the user to install
+a Context7 MCP server at user scope themselves
+(`https://github.com/upstash/context7`), waits, and re-checks before it
+continues.
 
 Three forms name no one thing to vet, so each stops generation as
 `UNRESOLVED`, whatever the verdict table says: a shell, or an interpreter's
@@ -264,11 +271,12 @@ an artifact for any of: frontmatter that does not parse strictly; an invocation
 state contradicting its kind's ruling; a skill or plugin name assembled from
 configuration; a hook verdict shape that does not match its event; a
 `settings.json` edit not behind its own consent line; an
-`lspServers` entry with no `extensionToLanguage` map; and a local-plugin write
-or registration not behind its own tier-3 consent line. It also fails an
-artifact for a concrete name (§6) with no row in the verdict table it is
-handed, or a row reading `block` — reading the table, never looking a name up
-itself.
+`lspServers` entry with no `extensionToLanguage` map; a `user_mcp_servers:`
+entry, a retired key whose accepted form is a `## MCP servers` section; and a
+local-plugin write or registration not behind its own tier-3 consent line. It
+also fails an artifact for a concrete name (§6) with no row in the verdict
+table it is handed, or a row reading `block` — reading the table, never
+looking a name up itself.
 
 Every one of these is silent at run time. That is the whole reason they are
 checked here.

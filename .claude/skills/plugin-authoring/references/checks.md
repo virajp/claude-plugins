@@ -149,10 +149,12 @@ much smaller than the one it replaced: whole families of assertion became
       probe that is not a string is never run, and a glob that climbs out
       matches something the repo does not own — both silently. A retired
       `tool-config:`,
-      `machine_env:`, `values:` or `conditional:` key is **refused** outright:
-      nothing reads any of them — the toolchain is bootstrap's, a machine value
-      is found by bootstrap's task or set in `conf.d/zz-repo`, and no pack used
-      `conditional:`. The finding names the pack and the key.
+      `machine_env:`, `values:`, `conditional:` or `user_mcp_servers:` key is
+      **refused** outright: nothing reads any of them — the toolchain is
+      bootstrap's, a machine value is found by bootstrap's task or set in
+      `conf.d/zz-repo`, no pack used `conditional:`, and a pack names a server
+      it needs in a `## MCP servers` section of its `conventions.md`, which the
+      user installs. The finding names the pack and the key.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -281,32 +283,27 @@ at the tail is not (`pnpm-workspace` is not an `npm` mention). The symmetric
 form this started as let every compound head through — two escapes shipped in
 vwf before it was tightened.
 
-The MCP-server rule was **generalized twice**. It used to match only
-`mcp__plugin_design-tools_<token>`, the plugin-scoped prefix. Wave D landed a
-design tool in the project's own `.mcp.json`, which scoped its server
-`mcp__<token>__`, and matching the old prefix alone would have quietly stopped
-catching anything. A design tool now lands in the generated `vwf-tools` local
-plugin, whose prefix is `mcp__plugin_vwf-tools_<token>__`. All three spellings
-are banned in vwf prose, which covers another design tool the day one is added.
+The MCP-server rule is **matched by prefix**, independent of `TOOL_TOKENS`:
+vwf reaches no MCP server, whoever installed it — it calls the fixed adapter
+skills, and a server is the user's install. So any `mcp__<server>__` prefix in
+vwf prose is a finding, and the two plugin-scoped spellings it once used,
+`mcp__plugin_design-tools_` and `mcp__plugin_vwf-tools_`, with it. A server name
+no token list knows is caught too.
 
-**The manifest half is a different bar, on purpose.** The guard also reads vwf's
-`mcpServers` `command`/`args`, and every stackgen pack's `user_mcp_servers:`
-stdio entries, as one string per stdio server (an `http` server has no runner in
-it to hardcode). A declaration has to name something executable — `sh` is a tool
-name too — so the bar is not "names no tool" but **"the name is overridable"**:
-`${VAR}` and `${VAR:-default}` expansions are elided before the token scan, so a
-runner behind one passes and a fixed one is a finding. It was added after
-`"command": "pnpm"` sat unnoticed in the context7 entry, which a bun user cannot
-satisfy and which fails as a dead MCP server rather than as a missing
-prerequisite; `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the recommendation
-while letting another runner answer. That entry is `addon/context7`'s now, and
-vwf's manifest declares no server, so the manifest path has nothing to read
-today
-and stays for the day one is added.
+**The manifest half is a separate refusal.** A plugin declares no MCP server,
+so an `mcpServers` key in any plugin manifest — vwf's or stackgen's — is a
+finding (`checkManifestMcpServers`). Every server is the user's install, and an
+agent that needs one asks the user to install it.
 
-**Two design tokens are deliberately unbannable** and live in
-`ENUMERATION_PEERS` instead — `stitch` (an ordinary English word the screens
-doctrine leans on) and `lovable` (an ordinary adjective). They prove an
+`claude-design` stays in `TOOL_TOKENS` as a **retired token**: standalone Claude
+Design closes on 2026-12-14 and its pack is gone, so a lone mention in vwf prose
+is a finding, while a re-pin line that names it beside `claude-code`, `lovable`
+or `stitch` is an enumeration.
+
+**Three design tokens are deliberately unbannable** and live in
+`ENUMERATION_PEERS` instead — `claude-code` (the default design tool),
+`stitch` (an ordinary English word the screens doctrine leans on) and `lovable`
+(an ordinary adjective). They prove an
 enumeration without being policed. The evidence set is wider than the
 prohibition set on purpose.
 

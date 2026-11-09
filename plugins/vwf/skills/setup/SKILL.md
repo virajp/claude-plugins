@@ -165,17 +165,22 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The current stamp is `config_format: 25`. The latest config step, `24 → 25`,
-adds `addons:`, moves into it each optional tool the repo already records,
-taking its slug out of `backing_template`, and asks one yes/no question about
-the MCP server vwf's manifest shipped; the
-[format lineage](references/format-lineage.md) row for 25 names the tools and
-their sources. The step before it, `23 → 24`, retires the
-palace — the `memory:` block, each `mempalace.yaml`, and the
-`docs/memory/planning/`, `runs/` and `doctor/` folders, one removal row each on
-consent — and is this pipeline's, offered by state at any stamp;
-[migrate pipeline](references/migrate-pipeline.md) step 1 names both, and the
-`22 → 23` step before them, which `/vwf:setup reshape` applies.
+The current stamp is `config_format: 26`. The latest config step, `25 → 26`,
+makes every MCP server the user's to install: its repo part removes the retired
+tools from `addons:` and each lockfile, deletes every MCP record left in each
+lockfile, re-pins every project on `claude-design` to claude-code, lovable or
+stitch in one question, and moves the stamp only once every part is applied;
+its machine part runs on every run, beside the claims reconcile in the
+materialize pass. The
+[format lineage](references/format-lineage.md) row for 26 names both. The step
+before it, `24 → 25`, adds `addons:` and moves into it each optional tool the
+repo already records, taking its slug out of `backing_template`, asking no
+question; the row for 25 names the tools and their sources. Before that,
+`23 → 24` retires the palace — the `memory:` block, each `mempalace.yaml`, and
+the `docs/memory/planning/`, `runs/` and `doctor/` folders, one removal row
+each on consent — and is this pipeline's, offered by state at any stamp;
+[migrate pipeline](references/migrate-pipeline.md) step 1 names all three, and
+the `22 → 23` step before them, which `/vwf:setup reshape` applies.
 
 | `.config/vwf.yaml`                                       | Mode      |
 | -------------------------------------------------------- | --------- |
@@ -238,7 +243,10 @@ run continues — a slug is never rewritten. The pass also reads `addons:` and
 fetches each slug as an `addon`-axis pin through the stack adapter, on every
 run and in the base repo only; a slug removed from `addons:` goes through the
 adapter's removal path, and an absent `addons:` reads as none and is never
-written `unresolved`.
+written `unresolved`. Beside the claims reconcile, on every run, the pass
+offers the machine part of the `25 → 26` step: when this machine's stack
+plugin manifest holds an MCP server key, one consent removes every key and
+setup lists the servers for the user to install by hand.
 
 ### The second shape check
 

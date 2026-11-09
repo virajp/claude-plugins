@@ -114,8 +114,9 @@ Components blocks, never left for the canvas to decide.
 4. **Deliver the files — nothing else.** The brief files are the deliverable:
    say where they are and that the user pastes each into the canvas chat — and,
    when a `CLAUDE--<platform>.md` is new or its generated sections changed, that
-   they set it as that canvas project's CLAUDE.md. Never push anything via the
-   design tool's MCP, never `put_conversation`, never run a brief.
+   they set it as that canvas project's conventions file in the configured
+   design tool. Never push anything to the design tool, never write to its
+   conversation, never run a brief.
 5. **Commit** the prompt + conventions files via `/vwf:git-workflow`
    (`docs: screens brief for <flow>`).
 6. **Stop.** The canvas session is the user's — iterate as long as needed; when

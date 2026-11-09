@@ -51,7 +51,9 @@ is not a folder of the clone's `tools/` is never sent.
    `## Claude plugins` section, one line for each plugin:
    `<name>@<marketplace>`, the source of its marketplace, and the scope
    (`user` or `project`). Collect them. A plugin always goes through this
-   handoff: the local plugin `vwf-tools` holds servers only.
+   handoff: the local plugin `vwf-tools` holds servers only. A
+   `## MCP servers` section is **never** handed to bootstrap — only
+   `## Claude plugins` is; an MCP server is the user's to install.
 
 5. **Subtract what the repo has.** A tool that `.config/bootstrap.toml`
    already selects — its own `[tools.<tool>]` table, or through a pack —
@@ -100,7 +102,7 @@ still needs keeps its record, without the removed components. A tool with
 no record is never removed: stackgen did not add it.
 
 A dropped addon's removal is this section, called by
-[the materializer](materializer.md#removing-a-dropped-addon). Its instructions
+[the materializer](materializer.md#removing-a-component). Its instructions
 are shown inside that call's one consent rather than on a line of their own,
 and step 8's files join its one commit.
 

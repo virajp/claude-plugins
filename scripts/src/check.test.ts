@@ -575,6 +575,20 @@ describe("the pack config tier", () => {
     ]);
   });
 
+  it("refuses a retired user_mcp_servers key, and passes a pack without it", () => {
+    // A pack declares no MCP server: it names one it needs in its
+    // conventions.md, and the user installs it.
+    const root = tree(facts(
+      "user_mcp_servers:\n  foo: { type: http, url: \"http://127.0.0.1:1/mcp\" }\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      "stacks/app-framework/swiftui/pack.yaml: `user_mcp_servers:` is "
+      + "retired — a pack names a server it needs in a `## MCP servers` "
+      + "section of its conventions.md, and the user installs it",
+    ]);
+    expect(check(tree(facts("")))).toEqual([]);
+  });
+
   it("flags a mise conf.d fragment in a pack's config/ tier", () => {
     // A tool pin is bootstrap's; a copied fragment is a second writer.
     const root = tree(facts("", {
@@ -1377,41 +1391,35 @@ describe("the technology-free vwf guard", () => {
     ]);
   });
 
-  it("flags vwf reaching a design tool's MCP server directly", () => {
-    // The old plugin-scoped prefix, which a machine upgrading from an earlier
-    // version can still be carrying in its prose.
-    const root = tree(
-      vwf({
-        "assets/feedback.md": "Call mcp__plugin_design-tools_claude-design_get_page.\n",
-      }),
-    );
+  // vwf reaches no MCP server, whoever installed it, so every prefix is a
+  // finding — with a server name no token list knows.
+  it.each([
+    "mcp__plugin_vwf-tools_foo__bar",
+    "mcp__plugin_design-tools_foo_bar",
+    "mcp__foo__bar",
+  ])("flags vwf reaching an MCP server by prefix: %s", (tool) => {
+    const root = tree(vwf({ "assets/feedback.md": `Call ${tool}.\n` }));
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("reaches the \"claude-design\" MCP server"),
+      expect.stringContaining("reaches an MCP server directly"),
     ]);
   });
 
-  it("flags the project-scoped MCP spelling too", () => {
-    // Servers used to land in the project's own `.mcp.json`, which scopes them
-    // `mcp__<server>__`, and a repo upgrading can still carry that prose.
-    const root = tree(
-      vwf({ "assets/feedback.md": "Call mcp__claude-design__get_page.\n" }),
-    );
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("reaches the \"claude-design\" MCP server"),
-    ]);
-  });
-
-  it("flags the vwf-tools MCP spelling too", () => {
-    // Servers land in the generated `vwf-tools` plugin now, which scopes them
-    // `mcp__plugin_vwf-tools_<server>__`.
+  it("reports a retired token inside a prefix once, as the MCP finding", () => {
     const root = tree(
       vwf({
         "assets/feedback.md": "Call mcp__plugin_vwf-tools_claude-design__get_page.\n",
       }),
     );
     expect(messages(check(root))).toEqual([
-      expect.stringContaining("reaches the \"claude-design\" MCP server"),
+      expect.stringContaining("reaches an MCP server directly"),
     ]);
+  });
+
+  it("passes plain prose that reaches no server", () => {
+    const root = tree(
+      vwf({ "assets/feedback.md": "Call the adapter skill.\n" }),
+    );
+    expect(check(root)).toEqual([]);
   });
 
   it("exempts the two reviewed paths and the worked example bundle", () => {
@@ -1441,111 +1449,26 @@ describe("the technology-free vwf guard", () => {
     expect(check(root)).toEqual([]);
   });
 
-  // The manifest half. The guard globbed `.md` only, which is exactly how
-  // `"command": "pnpm"` sat in vwf's context7 entry unseen — a manifest is not
-  // prose, so nothing read it.
-  const manifest = (context7: Record<string, unknown>) => ({
-    vwf: {
-      manifest: {
-        name: "vwf",
-        version: "1.0.0",
-        description: "the vwf plugin",
-        mcpServers: { context7 },
-      },
-    },
-  });
-
-  it("flags a hardcoded runner in an MCP server invocation", () => {
-    const root = tree(manifest({
-      command: "pnpm",
-      args: ["dlx", "@upstash/context7-mcp"],
-    }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("hardcodes \"pnpm\""),
-    ]);
-  });
-
-  it("accepts a runner behind a ${VAR:-default} expansion", () => {
-    // The recommendation survives — pnpm is still what runs by default. What
-    // changed is that a bun user can displace it, instead of getting a dead
-    // server with no stated prerequisite.
-    const root = tree(manifest({
-      command: "sh",
-      args: ["-c", "${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp"],
-    }));
-    expect(check(root)).toEqual([]);
-  });
-
-  it("still flags a token outside the expansion", () => {
-    // Overridable in name only: the expansion is there, but the runner it
-    // selects is not the part that was hardcoded.
-    const root = tree(manifest({
-      command: "sh",
-      args: ["-c", "bun x ${CONTEXT7_ARGS:-@upstash/context7-mcp}"],
-    }));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("hardcodes \"bun\""),
-    ]);
-  });
-
-  // The same bar over a pack, where the context7 entry lives now.
-  const addonPack = (yaml: string) => ({
-    stackgen: {
-      manifest: { name: "stackgen", version: "1.0.0", description: "x" },
-      files: { "stacks/addon/context7/pack.yaml": yaml },
-    },
-  });
-
-  it("accepts a pack's runner behind a ${VAR:-default} expansion", () => {
-    const root = tree(addonPack(
-      [
-        "name: Context7",
-        "user_mcp_servers:",
-        "  context7:",
-        "    command: sh",
-        "    args:",
-        "      - -c",
-        "      - \"${CONTEXT7_RUNNER:-pnpm dlx} @upstash/context7-mcp\"",
-        "",
-      ]
-        .join("\n"),
-    ));
-    expect(check(root)).toEqual([]);
-  });
-
-  it("flags a pack's bare runner", () => {
-    const root = tree(addonPack(
-      [
-        "name: Context7",
-        "user_mcp_servers:",
-        "  context7:",
-        "    command: pnpm",
-        "    args:",
-        "      - dlx",
-        "      - \"@upstash/context7-mcp\"",
-        "",
-      ]
-        .join("\n"),
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("hardcodes \"pnpm\""),
-    ]);
-  });
-
-  it("ignores an http server, which has no runner to hardcode", () => {
+  // A plugin declares no MCP server: the key is refused in every manifest.
+  it.each(["vwf", "stackgen"])("refuses mcpServers in the %s manifest", (name) => {
     const root = tree({
-      vwf: {
+      [name]: {
         manifest: {
-          name: "vwf",
+          name,
           version: "1.0.0",
-          description: "the vwf plugin",
+          description: "x",
           mcpServers: {
             remote: { type: "http", url: "http://127.0.0.1:8765/mcp" },
           },
         },
       },
     });
-    expect(check(root)).toEqual([]);
+    expect(check(root)).toEqual([{
+      scope: `${name}:.claude-plugin/plugin.json`,
+      message: "declares `mcpServers` — a plugin declares no MCP server; "
+        + "every server is the user's install, and an agent that needs one "
+        + "asks the user to install it",
+    }]);
   });
 });
 
@@ -1577,6 +1500,16 @@ describe("prescription vs enumeration", () => {
     expect(
       prescribes(
         "Which tool answers (`claude-design`,\n`lovable`, `stitch`, …) is the\nproduct's choice",
+        "claude-design",
+      ),
+    )
+      .toBe(false);
+  });
+
+  it("counts claude-code as a peer of the retired claude-design", () => {
+    expect(
+      prescribes(
+        "`claude-design` is retired; the design values are `claude-code`.",
         "claude-design",
       ),
     )

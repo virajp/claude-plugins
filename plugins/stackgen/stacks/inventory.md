@@ -7,7 +7,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 `../assets/kinds.md`. The narrative — which wave landed what, and why — is
 [`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.
 
-**76 packs, 69 bundles, 11 kinds.**
+**73 packs, 66 bundles, 11 kinds.**
 
 ## Kinds
 
@@ -21,16 +21,14 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `ci-system` | 1 | 1 |
 | `app-framework` | 5 | 3 |
 | `deploy-target` | 1 | 2 |
-| `design-tool` | 4 | 4 |
+| `design-tool` | 3 | 3 |
 | `stylesheet` | 3 | 3 |
-| `addon` | 3 | 3 |
+| `addon` | 1 | 1 |
 
 ## Packs
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `addon/context7` | Context7 | `addon` | addon |  |  | 1.0.0 | Current library documentation for the agent and for the stackgen generator, reached over one MCP server the product picks. |
-| `addon/notion` | Notion | `addon` | addon | workspace |  | 1.0.0 | The workspace a team already writes in — its docs, specs and tickets reached by the agent through one hosted server the person authorises once. |
 | `addon/taste-skill` | taste-skill | `addon` | addon |  |  | 1.0.0 | The Claude plugin whose design skills the claude-code design tool's design-session authors through, handed to bootstrap when picked. |
 | `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 0.5.1 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
 | `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 1.0.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
@@ -76,9 +74,8 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 0.1.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
 | `deploy-target/container-image` | OCI image · any container host | `deploy-target` | deploy |  |  | 0.2.1 | Build one standard OCI image, push it to any registry, run it on any host that runs containers — portability bought by declining the managed features one cloud would otherwise supply. |
 | `design-tool/claude-code` | Claude Code | `design-tool` | design |  |  | 2.0.0 | The terminal you already work in — the design system, the logo and a flow's screens are authored in session into a canvas directory the repo commits, and reviewed in a browser served from the repo on loopback. |
-| `design-tool/claude-design` | Claude Design | `design-tool` | design |  |  | 1.0.0 | The canvas Anthropic hosts at claude.ai/design — designed pages live on a canvas project, reached over its own MCP server. |
-| `design-tool/lovable` | Lovable | `design-tool` | design |  |  | 0.1.0 | Prompt-to-app at lovable.dev — a real project surface, but what it returns is generated app code rather than a canvas, which makes the screens import lossier. |
-| `design-tool/stitch` | Google Stitch | `design-tool` | design |  |  | 0.1.0 | Prompt-to-UI at stitch.withgoogle.com — fast for screens, and honest that it stores no design system at all. |
+| `design-tool/lovable` | Lovable | `design-tool` | design |  |  | 0.1.1 | Prompt-to-app at lovable.dev — a real project surface, but what it returns is generated app code rather than a canvas, which makes the screens import lossier. |
+| `design-tool/stitch` | Google Stitch | `design-tool` | design |  |  | 0.1.1 | Prompt-to-UI at stitch.withgoogle.com — fast for screens, and honest that it stores no design system at all. |
 | `framework/android` | Android | `language-bundle` | project | meta-framework |  | 1.0.0 | The Android build framework — the Android Gradle plugin owning the app or AAR module, the SDK levels its build files state, Android Lint as a gate, R8, and the emulator driven headless by Gradle Managed Devices for the E2E run. |
 | `framework/astro` | Astro | `language-bundle` | project | meta-framework |  | 0.5.1 | Astro as the content-first web framework that owns the build — file routes, content collections, islands only where interactivity demands it, and two config decisions (`output`, and whether an adapter is present) that between them give four ways to render. It covers MDX, the image pipeline, and layouts and slots, and carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `framework/cloudflare-agents` | Cloudflare Agents SDK | `language-bundle` | project | agent-sdk |  | 0.1.0 | The `agents` package as the shape of a stateful, addressable agent on Workers — an `Agent` class that compiles to a Durable Object, with state that survives hibernation, its own SQLite, scheduled work and live client connections, plus the client that talks to it. |
@@ -120,7 +117,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `bun` | bun · workspaces | `workspace` | repo | `package-manager/bun@generated` |
 | `claude-code-plugin` | Claude Code plugin | `language-bundle` | project | `language/markdown@0.1.0`, `language/bash@0.1.0` |
 | `claude-code` | Claude Code | `design-tool` | design | `design-tool/claude-code@2.0.0` |
-| `claude-design` | Claude Design | `design-tool` | design | `design-tool/claude-design@1.0.0` |
 | `cloudflare-ai-gateway` | Cloudflare AI Gateway | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.1`, `cloud-service/ai-gateway@0.1.0` |
 | `cloudflare-ai-search` | Cloudflare AI Search | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.1`, `cloud-service/ai-search@0.1.0` |
 | `cloudflare-analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.1`, `cloud-service/analytics-engine@0.1.0` |
@@ -144,7 +140,6 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing | `cloud-provider/cloudflare@0.1.1`, `cloud-service/workflows@0.1.0` |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | `cloud-provider/cloudflare@0.1.1`, `cloud-service/zero-trust-access@0.1.0` |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy | `deploy-target/container-image@0.2.1` |
-| `context7` | Context7 | `addon` | addon | `addon/context7@1.0.0` |
 | `dart-flutter` | Dart · Flutter | `app-framework` | project | `app-framework/flutter@1.0.0`, `package-manager/pub@0.3.1`, `toolchain-gate/analysis-options@0.2.3` |
 | `fnox` | fnox | `capability-provider` | backing | `capability-provider/fnox@3.0.0` |
 | `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy | `cloud-provider/gcp@0.1.0`, `cloud-service/cloud-run@0.2.1` |
@@ -155,8 +150,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `html` | HTML | `language-bundle` | project | `language/typescript@0.5.0`, `package-manager/pnpm@1.1.1`, `toolchain-gate/tsconfig@0.2.2`, `toolchain-gate/eslint@0.3.5`, `framework/html@0.2.1` |
 | `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `language/kotlin@1.0.0`, `package-manager/gradle@0.1.1`, `toolchain-gate/ktlint@1.0.0`, `toolchain-gate/detekt@1.0.0`, `framework/android@1.0.0`, `app-framework/compose@0.5.1` |
 | `kotlin-library` | Kotlin · library | `language-bundle` | project | `language/kotlin@1.0.0`, `package-manager/gradle@0.1.1`, `toolchain-gate/ktlint@1.0.0`, `toolchain-gate/detekt@1.0.0` |
-| `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.0` |
-| `notion` | Notion | `addon` | addon | `addon/notion@1.0.0` |
+| `lovable` | Lovable | `design-tool` | design | `design-tool/lovable@0.1.1` |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy | `deploy-target/npm-registry@generated` |
 | `oidc` | OIDC issuer | `capability-provider` | backing | `capability-provider/oidc@0.1.0` |
 | `otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | `capability-provider/otel-lgtm@0.1.0` |
@@ -164,7 +158,7 @@ under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in
 | `pnpm-turbo` | pnpm · Turborepo | `workspace` | repo | `package-manager/pnpm@1.1.1`, `build-orchestrator/turbo@generated` |
 | `pnpm-workspace` | pnpm · workspace | `workspace` | repo | `package-manager/pnpm@1.1.1` |
 | `postgres` | PostgreSQL | `database` | backing | `datastore/postgres@0.1.0` |
-| `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.0` |
+| `stitch` | Google Stitch | `design-tool` | design | `design-tool/stitch@0.1.1` |
 | `stylex` | StyleX | `stylesheet` | stylesheet | `stylesheet/stylex@0.2.2` |
 | `swift-package` | Swift · package | `language-bundle` | project | `language/swift@1.0.0`, `package-manager/swiftpm@0.3.2`, `toolchain-gate/swift-format@1.0.0`, `toolchain-gate/swiftlint@1.0.0` |
 | `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `app-framework/swiftui@1.0.0`, `package-manager/swiftpm@0.3.2`, `toolchain-gate/swift-format@1.0.0`, `toolchain-gate/swiftlint@1.0.0` |

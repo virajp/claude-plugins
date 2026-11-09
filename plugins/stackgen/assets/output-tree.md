@@ -15,7 +15,7 @@ is a plugin-manifest feature no project file can express, so no `.claude/`
 artifact and no project file can carry one. The need still travels as
 `language_facts` in the template payload for `/vwf:doctor` to read — that
 tells doctor *how* a server is provided and provides nothing itself. What
-actually provides one is the local plugin, which holds every MCP server too.
+actually provides one is the local plugin, which holds LSP servers only.
 
 The facts the template payload carries for its callers, all passed through
 from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
@@ -25,14 +25,12 @@ it, `lockfile`, the paths or globs doctor's resolve check reads.
 
 **`.mcp.json` is no longer written.** It was the second target from Wave D
 until stackgen's next major retired it, and the numbers below keep their names.
-A pack that needs a server still declares it — a curated registry of servers
-fails on **scaling**, since a list can only ever hold what someone curated and
-stackgen exists for the tail nobody curated — but every MCP server now lands in
-the local plugin, at user scope, because the pick is what a product commits and
-each machine gets the servers when its owner runs `/vwf:setup`. The one thing
-stackgen still does to a repo's `.mcp.json` is remove the keys an older lockfile
-recorded and the migration moved, behind its own consent line. It never copies a
-declaration out of that file.
+**No MCP server is materialized anywhere**: the user owns every MCP install. A
+pack that needs a server names it in its `conventions.md`'s `## MCP servers`
+section (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), the materializer
+records those lines in the lockfile's `required_mcp_servers`, and the
+agent asks the user to install a missing one. stackgen no longer touches a
+repo's `.mcp.json`, and it never copies a declaration out of that file.
 
 ```text
 .claude/
@@ -56,13 +54,13 @@ constraint bound to a glob is a rule. The kind definitions
 
 An LSP server can only be declared in a plugin manifest, so the one way to
 provide one is to **be** a plugin. stackgen generates `vwf-tools`, the one local
-plugin that holds every LSP server and every MCP server this machine's repos
-materialized, and registers it with Claude:
+plugin that holds every LSP server this machine's repos materialized — LSP
+servers only — and registers it with Claude:
 
 ```text
 ~/.claude/plugins/local/vwf-tools/
 └── .claude-plugin/
-    ├── plugin.json       # lspServers + mcpServers, union across the user's stacks
+    ├── plugin.json       # lspServers, union across the user's stacks
     ├── marketplace.json  # a single-plugin directory marketplace, also vwf-tools
     └── claims.json       # server key -> the absolute repo paths that claim it
 ```
@@ -81,8 +79,7 @@ one tier-3 migration first: write `vwf-tools`, register it, uninstall
 old directory. Declined, it writes nothing and comes back on the next run. The
 procedure is the stack-template skill's local-plugin reference.
 
-An `addon` pin is materialized only in the base repo, so its servers are claimed
-by the base repo's lockfile; they reach every repo on the machine anyway.
+An `addon` pin is materialized only in the base repo, and lands no server.
 
 The path and the plugin name are **fixed**, never constructed from the stack
 pin — one plugin per machine, holding the union.
@@ -104,9 +101,10 @@ generated LSP declaration **without** one is forbidden
 unconditionally in every session in every repo, which is exactly the
 objection user scope would otherwise deserve.
 
-**MCP rides the same mechanism.** A component declares a server under
-`user_mcp_servers:`, the only MCP key; `.mcp.json` is no longer a path a server
-can take.
+**MCP does not ride this mechanism.** The `user_mcp_servers:` key is retired
+and `.mcp.json` is no longer a path a server can take; an MCP server key left in
+the manifest by an older stackgen is removed by `/vwf:setup`'s machine cleanup,
+through the stack-template skill's `remove: key <name>`.
 
 **It merges, never owns.** The manifest is a union across every repo that
 materialized into it, so a landing adds its keys and leaves the rest. The claims
@@ -334,6 +332,8 @@ bootstrap: # what stackgen asked bootstrap for — absent when it asked for noth
   plugins:
     <name>@<marketplace>: { scope: user, source: <marketplace source>, components: [ <component ref>, … ] }
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
+required_mcp_servers: # each `## MCP servers` line of a landed component's conventions.md — a record; nothing installs it
+  - { name: <server name>, purpose: <one line>, install: <official URL>, optional: true, components: [ <component ref>, … ] } # optional: only on a line marked (optional)
 local_plugin: # the generated local plugin — absent when none was written
   path: ~/.claude/plugins/local/vwf-tools # fixed; a record only — removal uses the fixed path, never this value
   marketplace: vwf-tools # the name given to `claude plugin marketplace add`
@@ -341,25 +341,27 @@ local_plugin: # the generated local plugin — absent when none was written
   scope: user
   lsp_servers: # exact lspServers keys THIS repo contributed to the union
     - { name: <key>, packs: [ <component ref>, … ] }
-  mcp_servers: # exact mcpServers keys THIS repo contributed to the union
-    - { name: <key>, packs: [ <component ref>, … ] }
   registered: true # false when the manifest landed but registration was declined
 ```
 
 **Every item records its owners as a list**: a `local_plugin` server its
-`packs:`, a `bootstrap.plugins` entry its `components:`, a skill entry its
-`component:`. A `local_plugin` list of bare names, the old shape, is read with
-owners unknown and rewritten on the next sync; `/vwf:doctor` reads the owners
-from here and skips an entry whose owners are unknown.
+`packs:`, a `bootstrap.plugins` entry and a `required_mcp_servers` line its
+`components:`, a skill entry its `component:`. A lockfile with no
+`required_mcp_servers` key declares no server; `/stackgen:stackgen-sync` fills
+it when it updates a component to a version whose `conventions.md` has a
+`## MCP servers` section. A `local_plugin` list of bare names, the old
+shape, is read with owners unknown and rewritten on the next sync;
+`/vwf:doctor` reads the owners from here and skips an entry whose owners are
+unknown.
 
-**Lockfiles written earlier** may name `stackgen-lsp`, or carry a top-level
-`mcp_servers` list of `.mcp.json` keys. Both are rewritten by the migration
-(the stack-template skill's local-plugin reference); the sample above shows
-neither. With no `stackgen-lsp/` directory on the machine, the `local_plugin`
-names are rewritten with no prompt. A top-level key moves only when a shipped
-pack declares it, and with that pack's declaration; any other is reported and
-stays in `.mcp.json` and in the list. A declined `.mcp.json` key-removal line
-keeps the moved keys in that list, and the removal is offered again.
+**Lockfiles written earlier** may name `stackgen-lsp`, which the migration
+rewrites (the stack-template skill's local-plugin reference); with no
+`stackgen-lsp/` directory on the machine, the `local_plugin` names are
+rewritten with no prompt. They may also carry **MCP records** — a
+`local_plugin.mcp_servers` list, or a top-level `mcp_servers` list of
+`.mcp.json` keys. Every verb but `remove:` ignores an MCP record: it lands no
+server, adds no claim and reports nothing. `/vwf:setup`'s step 26 deletes them.
+The sample above shows none of these.
 
 Rules the lockfile enforces:
 
@@ -388,9 +390,9 @@ Rules the lockfile enforces:
   `remove` instruction; one the repo selected itself has no record and is
   never removed.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
-  this repo's claim on the keys under `local_plugin.lsp_servers` and
-  `local_plugin.mcp_servers`, and a key leaves the generated manifest only when
-  no repo claims it — another repo's
+  this repo's claim on the keys under `local_plugin.lsp_servers` (and, for
+  `remove:`, an older `local_plugin.mcp_servers`), and a key leaves the
+  generated manifest only when no repo claims it — another repo's
   keys stay. Only when that leaves the manifest with no servers at all is the
   plugin uninstalled, the marketplace removed and the directory deleted:
 

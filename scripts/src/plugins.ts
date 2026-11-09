@@ -51,10 +51,8 @@ export interface Manifest {
   readonly keywords?: unknown;
   readonly dependencies?: unknown;
   /**
-   * Read only by the technology-free guard, which needs a manifest's
-   * `command`/`args` as well as its prose: `"command": "pnpm"` sat in vwf's
-   * context7 entry for months because the guard globbed `.md` files and a
-   * manifest is not one.
+   * Read only by the checker, which refuses the key: a plugin declares no MCP
+   * server, and every server is the user's install.
    */
   readonly mcpServers?: unknown;
 }

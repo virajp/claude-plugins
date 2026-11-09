@@ -10,8 +10,10 @@ system and the screens, vwf imports both as contract, and every stage after that
 reads the imported contract instead of the canvas.
 
 The worked example is **Centwise**, a Flutter expense tracker for phones. One
-repo, one project, one platform — `mobile` — with Claude Design as the design
-tool, materialized by `stackgen`'s `claude-design` pack. At the end Centwise has
+repo, one project, one platform — `mobile` — with the terminal itself as the
+design tool, materialized by `stackgen`'s `claude-code` pack: the canvas is a
+committed `docs/design/<project>/` directory, authored in session by
+`/design-session` and reviewed in a browser on loopback. At the end Centwise has
 an imported design system, flow contracts whose screens were designed on the
 canvas and folded back, and one slice built and merged with its screens checked
 against those contracts by Flutter's own golden and accessibility tests.
@@ -37,17 +39,19 @@ claude plugin install vwf@virajp-plugins
 
 `stackgen` supplies the `dart-flutter` bundle — its Dart, Kotlin and Swift
 doctrine, and the language servers it declares — plus the `ux-gate` that renders
-Flutter screens, which matters at the end of the run, and the `claude-design`
-pack, without which `/vwf:design-system` has nothing to import from. Scopes and
+Flutter screens, which matters at the end of the run, and the `claude-code`
+design-tool pack, without which `/vwf:design-system` has nothing to import from.
+Scopes and
 upgrades: [the installer CLI](../../installer/usage.md#installing-plugins); the
 rest of this step is the spine's
 [Install the plugins](./single-repo.md#install-the-plugins).
 
-Then connect the canvas. Claude Design is a remote MCP server, and pinning the
-`claude-design` bundle lands it in `vwf-tools`, the local plugin stackgen
-generates on your machine, behind its own consent line; run `/mcp` and sign in
-once. Lovable and Stitch are packs of their
-own and bring different surfaces.
+There is no canvas to connect. The `claude-code` canvas is files in the repo,
+so there is no account, no server and nothing to sign in to; the one thing it
+needs is the `taste-skill` plugin, which `/design-session` authors through, and
+which you pick on the tools round in step 3. Lovable and Stitch are packs of
+their own and bring hosted canvases: a pack that reaches an MCP server names it
+in its conventions, and you install that server yourself.
 
 ### 2. /vwf:setup and /vwf:product
 
@@ -72,12 +76,14 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
   one, and the choice reaches further than it looks: it decides which standard
   flows the blueprint mandates, that screens land in `mobile.md` files, and
   which toolchain checks the built screens in step 9.
-- **Design tool** — `claude-design`, asked once per project that declares a
-  screen platform and recorded against that project. The menu preselects
-  `claude-code`, the terminal itself, so Centwise picks past it. It is a bundle
+- **Design tool** — `claude-code`, asked once per project that declares a
+  screen platform and recorded against that project. The menu preselects it,
+  so Centwise only confirms. It is a bundle
   slug, and the slug *is* the config token, so pinning it and writing the key
   are one act. A product with two UI projects can answer it twice with two
   different tools: [stackgen](../../plugins/stackgen.md).
+- **Tools** — `taste-skill`, on the last round, the `addon` axis. Nothing is
+  preselected there, and `/design-session` halts without it.
 
 On the stack menu Centwise pins `dart-flutter` on the project axis — the
 stackgen bundle serving mobile, tablet, desktop and the car from one codebase,
@@ -97,9 +103,10 @@ and the thirteen-foundation walk is unchanged from
 ```
 
 This is where the canvas takes over authoring. Before running it, Centwise's
-designer opens claude.ai/design and settles the design system there — semantic
-colors, type and spacing scales, motion, component behaviors. **vwf authors none
-of that.** The command resolves the project's tool, delegates the read to the
+designer runs `/design-session` for the project and settles the design system
+there — semantic colors, type and spacing scales, motion, component behaviors —
+then the logo, all written into `docs/design/centwise/`. **vwf authors none of
+that.** The command resolves the project's tool, delegates the read to the
 adapter, and distills what comes back into `docs/blueprint/design-system.md`.
 
 What that repo doc buys you is the reason the import exists: it is the offline
@@ -112,13 +119,14 @@ unknown is **elicited, never inferred**. Centwise answers two such questions —
 WCAG 2.2 AA as the conformance target, and a short anti-pattern list its design
 system never wrote down. A `design-system-reviewer` subagent then gates the doc:
 a *decision* hole comes back as a question, but a *visual* gap is canvas rework
-— you fix it in the design tool and import again. Because Claude Design stores
-design systems as real objects, Centwise's import is a read of an authoritative
-source rather than tokens reconstructed from generated code; tools without that
-storage return a snapshot instead, which is a difference worth knowing before
-you pick one.
+— you fix it in the design session and import again. Because the `claude-code`
+canvas keeps the design system as a file of its own, Centwise's import is a read
+of an authoritative source rather than tokens reconstructed from generated code;
+tools without that storage return a snapshot instead, which is a difference
+worth knowing before you pick one.
 
-The run ends by pinning the design system's identifier so the next import
+The run ends by pinning the design system's identifier — for `claude-code`, the
+canvas path `docs/design/centwise/design-system.md` — so the next import
 resolves without asking. Reference:
 [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system).
 
@@ -150,14 +158,16 @@ below.
 
 This writes a design brief per platform — for Centwise, one `mobile.md` under
 `docs/prompts/screens/` — and **the file is the deliverable**. vwf does not run
-it against the canvas; you paste it into the canvas chat yourself. The brief is
+it against the canvas; you hand it to `/design-session screens capture-expense`
+yourself, or paste it into a hosted tool's chat. The brief is
 always the flow's full screen blueprint rather than a change note, so re-running
 it after the contract moves gives the canvas something to reconcile against
 rather than a diff to interpret.
 
-It also maintains a conventions file for the platform's canvas project — the
-naming contract, the device frame, the standing tweaks — which you set as that
-canvas project's own CLAUDE.md. The naming contract the brief carries is the
+It also maintains a conventions file for the platform's canvas project,
+`CLAUDE--<platform>.md` beside the brief — the naming contract, the device
+frame, the standing tweaks — which a hosted tool takes as that canvas project's
+own CLAUDE.md. The naming contract the brief carries is the
 join key: break it on the canvas and the import has nothing to match on.
 
 Nothing that steers the *visual* design is in the brief. Tokens, type and
@@ -167,12 +177,16 @@ Reference: [`/vwf:screens`](../../plugins/vwf.md#vwfscreens).
 
 ### 7. Design on the canvas
 
-Centwise's designer pastes the brief, iterates in the canvas chat until the
-capture flow feels right, and in doing so decides things the contract left open
-— that the amount field takes focus on open, that the category picker is a sheet
-rather than a screen. Each platform's canvas project is pinned in
-`.config/vwf.yaml`; `import` resolves that pin before it matches any page — one
-canvas project per platform, never shared.
+Centwise's designer runs `/design-session screens capture-expense`, which
+writes one page per pinned screen code under
+`docs/design/centwise/screens/110-capture-expense--mobile/`, plus the stitched
+index page. Then `/design-session review capture-expense` serves the canvas from
+the repo on `127.0.0.1`, prints the URL and waits: the designer clicks an
+element, leaves a comment and presses **Done**, and the session applies every
+open comment and lists what changed. In doing so the designer decides things the
+contract left open — that the amount field takes focus on open, that the
+category picker is a sheet rather than a screen. The comments are committed
+beside the screens, so the review is diffable like the rest of the canvas.
 
 ### 8. /vwf:screens import
 
@@ -180,7 +194,8 @@ canvas project per platform, never shared.
 /vwf:screens import capture-expense
 ```
 
-The import reads the designed pages back as data and diffs them against the
+The import finds the designed pages by the naming contract alone, reads them
+back as data and diffs them against the
 Screens contract at three levels: the screens themselves, the journey, and the
 stitched index page. Every difference becomes one question — accept, reject, or
 adapt — and every accepted one is handed to
@@ -194,7 +209,8 @@ nobody had specified is rejected, because it is product scope and belongs in the
 blueprint conversation, not in a screen. What to do with each kind of difference
 is [what to accept from a canvas diff](#what-to-accept-from-a-canvas-diff)
 below. The import also offers to fold conventions the designer discovered back
-into the repo-side conventions file — the one edit it makes on its own.
+into the repo-side conventions file, `CLAUDE--mobile.md` — the one edit it makes
+on its own, and the only conventions file it reads.
 
 ### 9. /vwf:mockups, when you want them
 
@@ -265,10 +281,11 @@ feedback, rather than through any tool-specific call. See
 
 The choice is recorded per registry project, so a product with a marketing site
 and a phone app can answer it twice. The tokens the adapter supports today are
-`claude-code`, `claude-design`, `lovable` and `stitch` — the first is the
-terminal itself, with a committed `docs/design/<project>/` directory as its
-canvas, and the one the menu preselects — and they differ in two ways that
-matter downstream.
+`claude-code`, `lovable` and `stitch` — the first is the terminal itself, with a
+committed `docs/design/<project>/` directory as its canvas, and the one the menu
+preselects; the other two are hosted canvases, each reaching an MCP server you
+install yourself when its pack asks — and they differ in two ways that matter
+downstream.
 
 The first is whether the tool **stores** a design system or the adapter has to
 reconstruct one from what the tool generated. A stored system is authoritative
@@ -281,8 +298,8 @@ screens without codes rather than guessing, and you match them by hand.
 
 Support for a tool is a `design-tool` pack inside `stackgen`, not a vwf change
 and not a new plugin — so "my tool isn't listed" is a small contribution, not a
-fork. Four ship today: `claude-code`, `claude-design`, `lovable` and `stitch`.
-What each reads and how each authenticates:
+fork. Three ship today: `claude-code`, `lovable` and `stitch`. What each reads
+and how each authenticates:
 [stackgen](../../plugins/stackgen.md).
 
 ### Design first, or review the renders

@@ -81,6 +81,7 @@ export function check(repoRoot: string): Finding[] {
   const findings: Finding[] = [];
   for (const plugin of plugins) {
     findings.push(...checkManifest(plugin));
+    findings.push(...checkManifestMcpServers(plugin));
     findings.push(...checkDependencies(plugin, dirs));
     findings.push(...checkHookScripts(plugin));
     findings.push(...checkSkillScripts(plugin));
@@ -98,7 +99,6 @@ export function check(repoRoot: string): Finding[] {
   findings.push(...checkStackAdapters(plugins));
   findings.push(...checkBundleDefaults(plugins));
   findings.push(...checkVwfIsTechnologyFree(plugins));
-  findings.push(...checkPackRunners(plugins));
   return findings;
 }
 
@@ -681,6 +681,11 @@ const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
     "a machine value is found by bootstrap's task, or set in conf.d/zz-repo",
   ],
   ["conditional", "no pack used it; every config/ path lands"],
+  [
+    "user_mcp_servers",
+    "a pack names a server it needs in a `## MCP servers` section of its "
+    + "conventions.md, and the user installs it",
+  ],
 ]);
 
 /** Every landed tree directly under `assets`, plugin-relative. */
@@ -1491,11 +1496,10 @@ const TOOL_TOKENS = [
   //   sentence that calls an interface lovable — a guard that fails later, for a
   //   reason unrelated to what it guards.
   //
-  // `claude-design` is distinctive, and it is also the token that actually
-  // caused the bug this entry exists for: vwf reached that one tool's MCP server
-  // by hardcoded prefix, leaving the other two advertised and silently
-  // non-functional. The prefix itself is guarded separately below, which is the
-  // part that generalises to all three.
+  // `claude-design` is a retired token. Standalone Claude Design closes on
+  // 2026-12-14 and its pack was removed on 2026-11-09; the token stays here so
+  // vwf prose cannot prescribe it again. Any MCP server prefix is guarded
+  // separately below, independent of this list.
   "claude-design",
 ];
 
@@ -1534,14 +1538,15 @@ const ENUMERATION_WINDOW = 100;
 /**
  * Tokens that prove an enumeration without being banned themselves.
  *
- * `lovable` and `stitch` are the other two values of the `design` config key, so
- * their presence beside `claude-design` is exactly what makes a passage a
- * vocabulary rather than a recommendation — but neither can go in TOOL_TOKENS,
- * because both are ordinary English words (see the note there). Keeping the
- * evidence set wider than the prohibition set is what lets a token be recognised
- * as enumerated by a peer that is not itself policed.
+ * `claude-code`, `lovable` and `stitch` are the values of the `design` config
+ * key, so their presence beside a banned token is exactly what makes a passage
+ * a vocabulary rather than a recommendation — but none goes in TOOL_TOKENS:
+ * `lovable` and `stitch` are ordinary English words (see the note there), and
+ * `claude-code` names the host itself. Keeping the evidence set wider than the
+ * prohibition set is what lets a token be recognised as enumerated by a peer
+ * that is not itself policed.
  */
-const ENUMERATION_PEERS = ["lovable", "stitch"];
+const ENUMERATION_PEERS = ["claude-code", "lovable", "stitch"];
 
 /**
  * Drop fenced code blocks. A fence is a worked example of a config file, and a
@@ -1571,7 +1576,7 @@ const anchored = (token: string) => new RegExp(`(^|[^a-z0-9-])${token}([^a-z0-9]
  *
  * The distinction that matters: naming ONE tool tells the reader what to use;
  * listing the alternatives describes the domain of a config key vwf owns. The
- * design-adapter contract has to say the value is one of `claude-design`,
+ * design-adapter contract has to say the value is one of `claude-code`,
  * `lovable` or `stitch` — that is the vocabulary, not a recommendation.
  *
  * So an occurrence is exempt when at least one OTHER token sits within
@@ -1596,110 +1601,19 @@ export function prescribes(body: string, token: string): boolean {
 }
 
 /**
- * A `${VAR}` or `${VAR:-default}` expansion, which Claude Code performs in an
- * MCP server's `command`, `args`, `env`, `url` and `headers`.
+ * A plugin declares no MCP server. Every server is the user's install, so an
+ * `mcpServers` key in any plugin manifest is refused outright.
  */
-const EXPANSION_RE = /\$\{[^}]*\}/g;
-
-/**
- * Every stdio invocation a server map declares — a manifest's `mcpServers` or a
- * pack's `user_mcp_servers:` — as one string per server.
- *
- * `type: http` servers have no `command` and contribute nothing: an http entry
- * carries no runner for the guard to read.
- */
-function invocations(servers: unknown): string[] {
-  if (typeof servers !== "object" || servers === null) {
+function checkManifestMcpServers(plugin: Plugin): Finding[] {
+  if (plugin.manifest.mcpServers === undefined) {
     return [];
   }
-  return Object.values(servers as Record<string, unknown>).flatMap((server) => {
-    if (typeof server !== "object" || server === null) {
-      return [];
-    }
-    const { command, args } = server as { command?: unknown; args?: unknown };
-    if (typeof command !== "string") {
-      return [];
-    }
-    const argv = asArray(args).filter((a) => typeof a === "string");
-    return [[command, ...argv].join(" ")];
-  });
-}
-
-/**
- * The manifest half of the technology-free guard: a runner vwf picked *for* the
- * user.
- *
- * The prose rule cannot be reused verbatim here, and the difference is the whole
- * point. A manifest has to name something executable — `sh` is a tool name too —
- * so the bar is not "names no tool" but **"the name is overridable"**. vwf's
- * context7 entry declared `"command": "pnpm"`, which a bun user cannot satisfy
- * and which fails as a dead MCP server rather than as a missing prerequisite;
- * the same entry written as `${CONTEXT7_RUNNER:-pnpm dlx}` keeps pnpm as the
- * recommendation while letting `bunx`, `npx -y` or an absolute path answer.
- *
- * So expansions are elided before the token scan. A token surviving that is one
- * no environment variable can displace, which is the actual defect.
- */
-function runnerFindings(servers: unknown, scope: string, owner: string): Finding[] {
-  const findings: Finding[] = [];
-  for (const invocation of invocations(servers)) {
-    const fixed = invocation.toLowerCase().replaceAll(EXPANSION_RE, " ");
-    const hits = TOOL_TOKENS.filter((token) => anchored(token).test(fixed));
-    if (hits.length > 0) {
-      findings.push({
-        scope,
-        message: `hardcodes ${hits.map((h) => `"${h}"`).join(", ")} in the `
-          + `"${invocation}" MCP server invocation — the dependency is ${owner}'s, `
-          + `the runner is the user's. Put it behind a \${VAR:-default} `
-          + `expansion so the recommendation stays and another runner still `
-          + `works; a fixed one fails as a dead server, not as a missing `
-          + `prerequisite.`,
-      });
-    }
-  }
-  return findings;
-}
-
-function checkManifestRunners(vwf: Plugin): Finding[] {
-  return runnerFindings(
-    vwf.manifest.mcpServers,
-    "vwf:.claude-plugin/plugin.json",
-    "vwf",
-  );
-}
-
-/**
- * The same bar over every stackgen pack's `user_mcp_servers:`, which is where
- * the context7 entry lives since it left vwf's manifest. A pack that does not
- * parse is reported by `checkPackConfigTier`, so it is skipped here.
- */
-function checkPackRunners(plugins: readonly Plugin[]): Finding[] {
-  const findings: Finding[] = [];
-  const stackgen = plugins.find((p) => p.dir === "stackgen");
-  if (stackgen === undefined) {
-    return findings;
-  }
-  for (const file of stackgen.files) {
-    if (!/^stacks\/.+\/pack\.yaml$/.test(file.path)) {
-      continue;
-    }
-    let document: unknown;
-    try {
-      document = parseYaml(readText(file.absolute));
-    } catch {
-      continue;
-    }
-    if (isPlainObject(document)) {
-      findings.push(
-        ...runnerFindings(
-          document.user_mcp_servers,
-          `stackgen:${file.path}`,
-          "the pack",
-        ),
-      );
-    }
-  }
-  return findings;
+  return [{
+    scope: `${plugin.dir}:.claude-plugin/plugin.json`,
+    message: "declares `mcpServers` — a plugin declares no MCP server; "
+      + "every server is the user's install, and an agent that needs one asks "
+      + "the user to install it",
+  }];
 }
 
 /**
@@ -1720,8 +1634,6 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
   if (vwf === undefined) {
     return findings;
   }
-
-  findings.push(...checkManifestRunners(vwf));
 
   for (const file of vwf.files) {
     if (file.path.startsWith("stacks/")) {
@@ -1745,34 +1657,36 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     }
     const body = stripFences(readText(file.absolute).toLowerCase());
 
-    // vwf talks to NO design tool: it calls three fixed adapter skill names and
-    // the adapter resolves which tool answers. Reaching a design tool's own MCP
-    // server skips that entirely, and does it for exactly one tool — which is
-    // how `feedback canvas` came to work for `claude-design` and silently do
-    // nothing for the other two tokens the menu advertises.
+    // vwf reaches NO MCP server, whoever installed it: it calls the fixed
+    // adapter skill names and the adapter resolves which tool answers, and a
+    // server is the user's install. Reaching a server by prefix skips that
+    // entirely, and does it for exactly one server — which is how `feedback
+    // canvas` came to work for `claude-design` and silently do nothing for the
+    // other design tools the menu advertises.
     //
-    // Generalized twice. It used to match `mcp__plugin_design-tools_`, the
-    // prefix a plugin-declared server got. That plugin is gone and servers now
-    // land in the generated `vwf-tools` local plugin, which scopes them
-    // `mcp__plugin_vwf-tools_<server>__`. All three spellings are matched: a
-    // repo upgrading from an earlier version can still carry an old one in its
-    // prose, `mcp__<server>__` among them.
-    const designMcp = TOOL_TOKENS
-      .filter((token) =>
-        body.includes(`mcp__plugin_design-tools_${token}`)
-        || body.includes(`mcp__plugin_vwf-tools_${token}__`)
-        || new RegExp(`mcp__${token}__`).test(body)
-      );
-    if (designMcp.length > 0) {
+    // Matched by prefix, independent of TOOL_TOKENS, so a server name no token
+    // list knows is caught too: the old plugin-scoped
+    // `mcp__plugin_design-tools_`, the `vwf-tools` local plugin's
+    // `mcp__plugin_vwf-tools_`, and the bare `mcp__<server>__`.
+    const mcpPrefixes = [
+      ...new Set(
+        body.match(
+          /mcp__plugin_vwf-tools_[a-z0-9_-]*|mcp__plugin_design-tools_[a-z0-9_-]*|mcp__[a-z0-9_-]+__/g,
+        ) ?? [],
+      ),
+    ];
+    if (mcpPrefixes.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,
-        message: `reaches the ${designMcp.map((t) => `"${t}"`).join(", ")} MCP `
-          + `server directly — vwf talks to no design tool, it calls the three `
-          + `fixed adapter skill names and lets the adapter resolve which tool `
-          + `answers (assets/design-adapter.md). Reaching one tool's server `
-          + `makes every other configured tool silently return nothing.`,
+        message:
+          `reaches an MCP server directly (${
+            mcpPrefixes.map((p) => `"${p}"`).join(", ")
+          }) — vwf reaches no MCP server; it calls the fixed adapter skills, `
+          + `and a server is the user's install.`,
       });
     }
+    // The tokens named inside a reported prefix, kept out of the generic rule.
+    const designMcp = TOOL_TOKENS.filter((token) => mcpPrefixes.some((p) => p.includes(token)));
 
     // A token already reported above is not reported again by the generic rule.
     // Both would fire on the same line — an MCP tool name reads as prescription

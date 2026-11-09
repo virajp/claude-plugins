@@ -1,7 +1,7 @@
 # Design Adapter Contract
 
-vwf is **decoupled from any particular design tool**. It does not call
-claude.ai/design, Lovable, Stitch, or anything else — it exchanges two
+vwf is **decoupled from any particular design tool**. It does not call the
+claude-code canvas, Lovable, Stitch, or anything else — it exchanges two
 **normalized payloads** with the design adapter.
 
 The split is deliberate and asymmetric:
@@ -42,8 +42,8 @@ reused rather than reinvented: a fixed name in the repo, resolved at
 materialization time, never assembled at run time.
 
 The third name is the newest and was added to close a real hole: `/vwf:feedback
-canvas` used to reach one specific tool's MCP server by hardcoded prefix, so two
-of the three tokens this contract advertises were **silently non-functional** for
+canvas` used to reach one specific tool's MCP server by hardcoded prefix, so
+every other token this contract advertised was **silently non-functional** for
 it. A broken menu entry is worse than a naming violation, because nothing
 distinguishes it from a tool that had nothing to say.
 
@@ -53,7 +53,7 @@ distinguishes it from a tool that had nothing to say.
 # .config/vwf.yaml
 projects:
   website: { design: lovable }
-  mobile: { design: claude-design }
+  mobile: { design: claude-code }
 ```
 
 One design tool **per registry project**, not per product: a product may design
@@ -258,7 +258,7 @@ This is the one payload that may legitimately come back empty-handed, and the
 distinction is load-bearing in **both** directions:
 
 - `n/a` means *this tool has no such surface* — vwf reports it plainly and stops.
-  It is not a gap, not a finding, and nothing to fix. Only one of the four
+  It is not a gap, not a finding, and nothing to fix. Only one of the three
   supported tokens has a review conversation at all, so this is the common
   answer rather than the rare one.
 - `ERROR:` means *the surface exists and could not be read* — unreachable,
@@ -305,7 +305,9 @@ plugin and not a new vwf code path. vwf changes not at all.
 5. Unrecoverable fields are `null` with a line in `notes`. Never invent a screen
    code, a token value, or a component the tool did not actually report.
 6. Auth is the pack's business — tools differ (OAuth, an API key, an MCP
-   connection), and vwf deliberately knows nothing about it. Where the tool is
-   reached over MCP, the pack declares the server and the materializer writes it
-   into the `vwf-tools` local plugin, user scope, behind its tier-3 consent line
-   — not into the project's `.mcp.json`.
+   connection), and vwf deliberately knows nothing about it. No design-tool
+   pack lands an MCP server: the server is the user's to install. A tool
+   reached over MCP names its server in the `## MCP servers` section of the
+   pack's conventions — the name, what it is for, its install page — and a
+   skill that needs it and finds it missing asks the user to install it under
+   that name, and waits.

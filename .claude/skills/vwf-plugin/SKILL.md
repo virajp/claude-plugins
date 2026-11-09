@@ -19,7 +19,8 @@ subagents they delegate to, the shared doctrine in `assets/` (the `docs/memory/`
 file store's protocol among it), the five `/vwf:execute` action-log hooks and
 the `/vwf:execute` progress pane (one TypeScript hooks module). It declares
 **no**
-MCP server: Context7 is a stackgen `addon` pack. It names **no** technology — no
+MCP server: the user installs any MCP server, and the agent asks for it. It
+names **no** technology — no
 stack templates, no language list;
 what each axis offers comes from a stack plugin behind the stack-adapter
 contract, and `p:plugins:check`'s technology-free guard enforces it.
@@ -54,7 +55,8 @@ declared in `plugin.json` with `"marketplace": "virajp-plugins"`, which
 into stackgen. `andrej-karpathy-skills` is **vendored** rather than depended on,
 with provenance under `vendor/`; `mempalace` was vendored too and is now
 removed; `markdown` was **absorbed**, and `context7` was too until it left vwf's
-manifest for a stackgen `addon` pack. The reasoning is [`dependencies.md`][de].
+manifest, became a stackgen `addon` pack, and was removed on 2026-11-09 — the
+user installs it. The reasoning is [`dependencies.md`][de].
 
 ## Foundations & ordering
 

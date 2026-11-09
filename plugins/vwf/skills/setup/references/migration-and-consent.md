@@ -26,15 +26,27 @@ choice and the reason) and not re-proposed on later runs. It settles the
 proposal, not the finding: `/vwf:doctor` keeps reporting the
 `iac` own-repo case as a persistent warning.
 
-**`config_format` 24 → 25 takes one question and one consent line.** The
-question is the yes/no the [format lineage](format-lineage.md) row for 25
-states, about the MCP server vwf's manifest shipped, asked before the plan is
-shown, and its answer is part of what the plan lists. The consent line is one
-row of the plan: the `addons:` list and the `backing_template` entries it
-removes. A decline is not recorded under `enforcement:` and is offered again on
-the next migrate pass, because the stamp stays at 24. What the migration does to
-the lockfile and to `.mcp.json` is stackgen's, under stackgen's own consent, in
-the materialize pass that follows.
+**`config_format` 24 → 25 takes one consent line and no question.** The
+consent line is one row of the plan: the `addons:` list, the
+`backing_template` entries it removes, and each repo where the stack adapter's
+`remove:` takes the `capability-provider/notion` component. A decline is not
+recorded under `enforcement:` and is offered again on the next migrate pass,
+because the stamp stays at 24. What the materialize pass that follows does to
+the lockfile is stackgen's, under stackgen's own consent.
+
+**`config_format` 25 → 26 takes one question and one consent per part.** The
+question is the [format lineage](format-lineage.md) row for 26's re-pin: one
+MCQ naming every project pinned to `claude-design`, offering claude-code (the
+default, with `taste-skill` offered for `addons:`, yes the default), lovable
+and stitch, asked before the plan is shown; its answer applies to every project
+it names. Each repo-part row of the plan is consented on its own, and setup
+passes that consent to each `remove:` call it makes, so the stack adapter asks
+no second time. A declined row is not recorded under `enforcement:`: it writes
+nothing, the stamp stays at 25, and the next migrate pass offers only the rows
+that remain. The machine part is one more consent, asked on every
+`/vwf:setup` run while this machine's stack plugin manifest holds an MCP server
+key: it lists every key and the other repos that claim one, and a decline
+writes nothing and is offered again on the next run.
 
 **Idempotent re-run:** this governs the migrate pipeline's doc reconciliation,
 not structural change. Detect what already conforms and reconcile only what
