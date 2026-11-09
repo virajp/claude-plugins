@@ -1,0 +1,8 @@
+/security-review engine, loop U5 round 1, range 756dbd06..91c9c81a (excluding docs/plans).
+Note: the engine's own invocation diffed the main checkout's develop against origin/HEAD, not this range; its analysis sub-task was run over the range itself, with the engine's prompt and exclusions.
+
+No findings.
+
+- scripts/src/check.ts: no new attack surface; checkManifestMcpServers only tests for an mcpServers key; the MCP-prefix scan is a regex over Markdown the checker already reads; no command execution, path handling or new YAML parsing; the removed runner guard is superseded by RETIRED_PACK_KEYS refusing user_mcp_servers.
+- Skill prose: narrows what agents may install; packs name an MCP server and install page only; the Context7 halt asks the user; tier-3 consent narrowed to LSP.
+- New consented line (materializer.md ~410, stackgen-stack-template SKILL.md ~110): skips the verb's own consent only when /vwf:setup passes it under a consent it already asked; a trust-boundary point to keep, not a flaw.
