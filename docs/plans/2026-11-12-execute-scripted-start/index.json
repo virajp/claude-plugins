@@ -1,0 +1,728 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Execute starts with one script, without the doctor skill",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "solo",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-13 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "Run node plugins/vwf/skills/doctor/scripts/checks.mjs read-only from the main checkout of this repo.",
+        "pass": "It prints one JSON object that parses and exits 0 or 1 (never 2); every row names its rule, severity and remedy, and its project or null for a repo-level row."
+      },
+      {
+        "id": "K2",
+        "check": "Run node plugins/vwf/skills/execute/scripts/start.mjs in a scratch repo under the session scratchpad with a bare origin, an APPROVED plan row and folder, with VWF_LOG_ROOT and CLAUDE_CODE_SESSION_ID set to scratch values: once on a fresh claim, once with a competing commit on origin/develop that changes the same row.",
+        "pass": "Fresh: the row reads RUNNING on origin/develop, the folder run key is set, the checkout is back on its branch with its stash popped, exit 0. Conflict: the checkout is restored, nothing is pushed, the named-folder run exits 1 with the refusal."
+      },
+      {
+        "id": "K3",
+        "check": "claude plugin validate --strict plugins/vwf",
+        "pass": "Exit 0 with no error."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "New behaviour: /vwf:execute starts with one script and no doctor skill, doctor runs the same checks script, and the iac decline key is defined."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual describes the scripted start; no site code changes."
+    },
+    {
+      "id": "stackgen",
+      "level": "NONE",
+      "reason": "No stackgen file changes."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No installer file changes."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Queue verbs and the YAML reader in plan.mjs",
+      "wave": 1,
+      "file": "01-queue-verbs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/plan-management/scripts/plan.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/queue.mjs",
+        "scripts/src/plan-yaml.test.ts",
+        "scripts/src/plan-queue.test.ts",
+        "scripts/src/fixtures/plan-queue/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Skill and asset prose for the scripted start",
+      "wave": 4,
+      "file": "02-skill-prose.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/SKILL.md",
+        "plugins/vwf/skills/execute/references/claim.md",
+        "plugins/vwf/skills/execute/references/setup.md",
+        "plugins/vwf/skills/execute/references/preflight.md",
+        "plugins/vwf/skills/execute/references/action-log.md",
+        "plugins/vwf/skills/execute/workflows/folder.md",
+        "plugins/vwf/skills/execute/workflows/next.md",
+        "plugins/vwf/skills/execute/workflows/all.md",
+        "plugins/vwf/skills/plan-management/SKILL.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/assets/delivery-pipeline.md",
+        "plugins/vwf/assets/vwf-config.md",
+        "plugins/vwf/assets/topologies/repo.md",
+        "plugins/vwf/assets/topologies/monorepo.md",
+        "plugins/vwf/assets/topologies/multi-repo.md",
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/assets/capability-vocabulary.md",
+        "plugins/vwf/assets/membership.md",
+        "plugins/vwf/skills/plan/SKILL.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/skills/setup/references/migration-and-consent.md"
+      ],
+      "depends_on": [
+        "U3",
+        "U4"
+      ],
+      "waits": "It cites start.mjs (U4, wave 3) and checks.mjs (U3, wave 2) by CLAUDE_PLUGIN_ROOT path; the checker fails a reference to a missing file.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "The blocking checks script",
+      "wave": 2,
+      "file": "03-checks-script.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/scripts/checks.mjs",
+        "plugins/vwf/skills/doctor/scripts/lib/**",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/fixtures/doctor-checks/**"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "It imports plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs, which U1 creates.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "The execute start script",
+      "wave": 3,
+      "file": "04-start-script.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/scripts/start.mjs",
+        "scripts/src/execute-start.test.ts",
+        "scripts/src/fixtures/execute-start/**"
+      ],
+      "depends_on": [
+        "U1",
+        "U3"
+      ],
+      "waits": "It imports the queue verbs from U1's lib/queue.mjs and the checks from U3's checks.mjs.",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Review: the three scripts and the skill prose",
+      "wave": 5,
+      "file": "05-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U2",
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U6",
+      "title": "Docs",
+      "wave": 6,
+      "file": "06-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/**",
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/skills/vwf-plugin/**",
+        ".claude/docs/**",
+        "docs/memory/decisions/2026-11-12-execute-scripted-start.md",
+        "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Gates",
+      "wave": 7,
+      "file": "07-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        ".claude-plugin/marketplace.json",
+        "plugins/stackgen/stacks/inventory.md"
+      ],
+      "depends_on": [
+        "U6"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W5",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W6",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W7",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": ".claude-plugin/marketplace.json",
+      "why": "generated by p:plugins:marketplace; regenerating mid-wave races",
+      "owner": "U7"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/stackgen/stacks/inventory.md",
+      "why": "generated by p:plugins:inventory",
+      "owner": "U7"
+    },
+    {
+      "id": "S3",
+      "file": "site/src/content/docs/**, CLAUDE.md, readme.md, .claude/**",
+      "why": "human-facing docs that several units' changes falsify",
+      "owner": "U6"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Is the claim (stash, checkout, pull, two plan.mjs set calls, the queue commit, push, rejected-push loop) scripted in this plan?",
+      "ruling": "In this plan.",
+      "rejected": "A separate parked plan; out of scope.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Does the start script also do Resolve?",
+      "ruling": "Yes, one start script. It also does the format test and the next pick. The session question and the resume questions (open QUESTION gaps and unanswered question events) stay with the model, because they ask the user.",
+      "rejected": "Checks and claim only; a separate parked plan.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "Where does the code live?",
+      "ruling": "Split by owner. plan.mjs gains the verbs pick, resolve and claim (logic in plan-management/scripts/lib/queue.mjs). The checks live in doctor/scripts/checks.mjs with doctor/scripts/lib/. execute/scripts/start.mjs imports both, adds the format test, the log start and the phase markers, and prints one JSON result. The model makes one call.",
+      "rejected": "All in start.mjs (plan-management stops being the one implementation of its procedures); separate model calls (three or four turns).",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How does a script read YAML?",
+      "ruling": "An own subset reader, plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs: block maps and lists, flow lists and maps, comments, single- and double-quoted scalars, multi-line plain scalars, | and >- block scalars, and frontmatter between --- fences. It throws a named error on anchors, aliases, tags, and a multi-document file. Tested against fake config files shaped on the schemas (D24).",
+      "rejected": "Vendor a YAML library into plugins/vwf/vendor/; shell out to yq.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "What happens to the non-blocking doctor findings in a run?",
+      "ruling": "Drop them. The run's gap list no longer carries doctor rows. The LSP gaps that preflight.md writes itself (unavailable; no consent.lsp key) stay.",
+      "rejected": "Script the cheap non-blocking checks into gap rows.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "How do the blocking rules stay one source?",
+      "ruling": "Doctor runs the script. For the findings checks.mjs covers, doctor calls it and reports its rows; the prose points to the script as the source and keeps the reasons. Each row carries its severity, because the same check is a degradation while an axis reads unresolved.",
+      "rejected": "Two cross-linked copies; a separate parked plan.",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Which key records a declined iac extraction?",
+      "ruling": "enforcement.rules.topology/iac-own-repo/<project>: { waived: true, reason: <one line> }. vwf-config.md, the topology assets and setup's decline step name exactly that key; setup writes it.",
+      "rejected": "A loose match on any enforcement.rules key that contains iac.",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "The folder has no projects key. How does the script find the plan's projects?",
+      "ruling": "From the units' owns: match each owns path to the registry project whose path is the longest prefix of it. No match, or no registry, gives the base repo's own scope (no project names, repo-level checks only).",
+      "rejected": "release_levels ids; a new projects key in the folder schema.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "The rules the survey found unstated, settled with one answer each.",
+      "ruling": "(a) mise: an axis is pinned when it holds a slug or a non-empty list on template, backing_template, deploy_template, repo.stack.template, design, cicd or stylesheet; unresolved, [] and addons do not count. A capability is claimed when harness.<cap> is true or {present: true}. (b) Materialized: for each adapter in stacks:, read <target repo>/.claude/<adapter>/lock.yaml; the pin is materialized when an entries row has slug equal to the pin's slug or path .claude/<adapter>/templates/<slug>.md. Strip an axis prefix (project/, repo/) from a pin to get the slug. Strip a sha256: prefix before a hash compare. (c) The file-not-listed membership half checks only the repo the run started in. (d) A bundle or template with no platforms: covers the whole axis. (e) LSP: the mapping is the lockfile's local_plugin.lsp_servers ({name, packs: [language/<token>]}). A server is present when its key is in the lspServers of the local plugin's .claude-plugin/plugin.json and claude plugin list --json shows that plugin enabled, at project scope for the base path first, else at user scope. Disabled counts as missing. A language with no mapping is unavailable. (f) The integration branch is develop on remote origin; the script refuses with a clear message when origin/develop does not exist. (g) The full rejected-push loop of plan-index.md, every exit restoring the checkout.",
+      "rejected": "Asking each; leaving them to the units.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Where do the start phase markers come from?",
+      "ruling": "The phase doctor is renamed checks. start.mjs writes phase.start and phase.end for checks and for claim itself, each at its true boundary. setup.md gets explicit log lines for phase.start/phase.end of worktree and of preflight. No consumer reads the phase names.",
+      "rejected": "Keep the name doctor; leave the markers to the model.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Is a review unit needed?",
+      "ruling": "Yes. The plan lands three runnable scripts. One review unit after the last script unit and before the docs unit covers every earlier unit.",
+      "rejected": "No review unit; the wave review only.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Execution mode.",
+      "ruling": "solo (amended by D36): after U2 moved to wave 4, no wave has two edit units. Original ruling, void: teams, because wave 1 had U1 and U2.",
+      "rejected": "solo.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Reversals of standing rules.",
+      "ruling": "Confirmed by the user: (1) D46 of the unpinned-bootstrap gap said plan and execute run doctor and behaviour stays; execute no longer runs doctor, so it no longer runs the unpinned bootstrap dry-run. (2) A critical dependency advisory no longer stops /vwf:execute; it still stops /vwf:plan and /vwf:setup. The release gate is osv-scanner through code:sec and release.yml. (3) Execute no longer carries non-blocking doctor findings into the run's gap list. The docs unit writes one decisions doc.",
+      "rejected": "Keep any of the three.",
+      "units": [
+        "U2",
+        "U6"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "The plan-folder template forces the unit kinds.",
+      "ruling": "Approved by the user: every unit of a change plan is edit (the scripts are tested by their vitest suites and the wave review, with no TDD or coverage gate); the review unit over edit units runs the security half only (/security-review and the security reviewer); the last two units are the fixed docs unit and the fixed gates unit.",
+      "rejected": "code units (not available to a change plan in this release).",
+      "units": [
+        "U5",
+        "U7"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "The start script's contract.",
+      "ruling": "node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/start.mjs <folder|next>, run from any directory inside the base repo or a member; it resolves the base per membership.md. It prints one JSON object on stdout and nothing else there; progress and warnings go to stderr. Keys: result (ready, refused, blocked, nothing), mode (fresh, resume or null), folder, kind, priority, has_code_unit, has_covers, projects, findings (each {rule, severity, project, subject, message, remedy}), lsp (each {language, project, state: present, missing or unavailable}), open_questions (resume only: the open QUESTION gap ids and the question events with no answer), claim (the D17 claim result, {claimed: true, commit} or {claimed: false, reason}, or null), message (one line for the user). Exit 0 on ready, 1 on refused, blocked or nothing, 2 on a usage or internal error. The order: format test; for next, the pick; Resolve and the fresh-run refusals; log start (fresh or resume); phase checks; on any blocking row, result blocked and no claim; phase claim when the mode is fresh or the resume's row reads APPROVED. On a lost claim under next: log end with outcome claim-lost, then re-pick; under a named folder: result refused.",
+      "rejected": "Text output; several commands.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "The checks script's contract.",
+      "ruling": "node ${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs [--projects a,b] [--repo <dir>] prints one JSON object {base, projects, findings, lsp} with the same row shapes as D15. Exit 0 when no row is blocking, 1 when one is, 2 on a usage or internal error. It exports runChecks({cwd, projects}) for start.mjs. It covers exactly: not onboarded, membership both directions and member url, missing mise, a custom pin, template platform coverage, iac inside another repo with the D7 decline, pinned not materialized, unknown language, binaries and probes (the hash gate, mise x -- sh -c with the command as one argument, 30-second cap), and the LSP state. Severities follow stack-checks.md: blocking, degraded, missing, unavailable, info. No audit, no drift, no network, no bootstrap dry-run.",
+      "rejected": "Text output; doctor-wide scope.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "The queue verbs' contract.",
+      "ruling": "plan.mjs pick prints JSON {pick: {folder, kind, priority}} exit 0, or {nothing: [{folder, waits}]} exit 1. plan.mjs resolve <folder> prints {runnable, entries: [{entry, kind, satisfied, reason}]} exit 0 runnable, 1 not. plan.mjs claim <folder> runs the plan-index.md claim procedure (git fetch, read the tip, stash when dirty, checkout develop, pull --ff-only, set the row RUNNING and the folder run key, git add the two files, mise x -- git commit -m 'docs: plan queue — <basename> running', push, the rejected-push loop, restore) and prints {claimed: true, commit} exit 0 or {claimed: false, reason} exit 1. A member-repo folder's run edit is a direct commit on that member's develop with the same message. All three read the tip of origin/develop, never the working copy. Unclaim and completion stay model procedures.",
+      "rejected": "Scripting unclaim and completion now.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Rulings review G1: on a resume, which folder copy does start.mjs read, and how does it know the resume is this machine's?",
+      "ruling": "The worktree is the evidence. When the row at the tip reads RUNNING, read run.worktree from the main checkout copy. If that worktree exists on this machine, read status, gaps and the log from the worktree copy of the folder: mode resume, and log start uses --folder <the worktree copy>. If it does not exist, result refused with the folder.md message: another session is running it; re-run once it lands, or make the plan-management unclaim request when that run is gone.",
+      "rejected": "start.mjs refuses every RUNNING row and the model applies the resume rules.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings review G2: the order and the failure rule of a member-repo claim.",
+      "ruling": "Base first: the row in the base is the claim. Then the member commit of the folder run key runs the same procedure in the member checkout (stash when dirty, checkout develop, pull --ff-only, commit, push, the rejected-push loop, restore). If the member push still fails, claim returns {claimed: false, reason} and start.mjs returns refused; the message names the failure and the plan-management unclaim <folder> request, because the row is already RUNNING.",
+      "rejected": "Member first, with a revert commit when the row loses.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings review G3: how a runner under an all override passes a shared worktree path to the claim.",
+      "ruling": "start.mjs and plan.mjs claim take --worktree <repo-relative path>. Without it, the default <dir>/<plan name> applies. all.md says the runner passes the shared path from the override.",
+      "rejected": "start.mjs reads the override from the folder overrides list (recorded only after the claim).",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings review G4: who closes the action log after a stop that follows the log start, and with which outcome.",
+      "ruling": "start.mjs closes it. On blocked: event stop, then end --outcome blocked. On a lost claim (a named folder, or before a re-pick under next): event stop, then end --outcome claim-lost. A refusal before the log start writes nothing to the log. action-log.md adds claim-lost to its outcome list.",
+      "rejected": "Start the log only after the checks and the claim succeed.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings review G5: which claude plugin list --json entries mean the local LSP plugin is enabled.",
+      "ruling": "Parked by the user: bootstrap will install LSP servers, which makes detection simple. Until then checks.mjs and start.mjs check no LSP. The lsp key is dropped from the D15 and D16 contracts and D9 (e) is void. preflight.md loses its LSP rule and gets one line: the LSP check waits on the bootstrap work (docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md). A run with a code unit proceeds without an LSP gate until then.",
+      "rejected": "Count enabled or projectEnabled; count enabled only; keep a model LSP step for code-unit plans.",
+      "units": [
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Rulings review G6: how D8 joins member-relative owns paths to base-relative registry paths.",
+      "ruling": "Prefix each owns path with the member path from members: (relative to the base), then match against the registry paths. A folder in the base uses its owns as they are.",
+      "rejected": "Scope a member folder to every project the member projects: list names.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Rulings review G7: the YAML fixtures copied a company repo config into this public repo.",
+      "ruling": "Use ONLY fake data (the user). Every fixture of U1, U3 and U4 holds invented names, paths, hosts and URLs, shaped on the schemas; no file is copied from a real repo. Kept check K1 runs against this repo only.",
+      "rejected": "Byte copies of real configs; a redacted copy of a real config.",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Rulings review G8: under next, the picked plan fails a fresh-run refusal or validate.",
+      "ruling": "Stop with refused, naming the picked folder and the refusal, the same as a named folder. Only a lost claim re-picks (D15).",
+      "rejected": "Skip the plan and re-pick.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Rulings review R2 G1: log.mjs start prints to stdout and exits on failure, so an in-process call breaks D15.",
+      "ruling": "start.mjs spawns node log.mjs start|event|end ... as a child process and captures its stdout and stderr; a non-zero exit is a warning on start.mjs stderr. log.mjs does not change, and U4 does not own it.",
+      "rejected": "Refactor log.mjs exports to return and throw.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Rulings review R2 G2: which copy start.mjs reads when the main checkout is on another branch.",
+      "ruling": "Every row and folder value (status, units, run.worktree, requires) comes from the origin/develop tip through git show. The local working-copy folder is used only as the --folder of a fresh log start; when it is absent or its index.json differs from the tip, result refused: check out develop and pull, then re-run. A resume log start uses the worktree copy (D18). start.mjs switches no branch outside the claim.",
+      "rejected": "Require the main checkout on develop and read the working copy for everything.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Rulings review R2 G3: passages that say execute reads consent.lsp, made false by D22.",
+      "ruling": "Keep asking. /vwf:plan keeps its LSP question and keeps writing consent.lsp, so the answer is ready when the parked check returns. U2 owns plugins/vwf/skills/plan/SKILL.md and plugins/vwf/assets/plan-interview.md and changes only the passages that say execute reads the key: they say execute does not read it until the parked work lands (docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md). U6 fixes site plugins/vwf.md:2140-2142 the same way.",
+      "rejected": "Stop asking the LSP question until the parked work lands.",
+      "units": [
+        "U2",
+        "U6"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Rulings review R2 G4: the severity of not-onboarded and early.",
+      "ruling": "Any reachable .config/vwf.yaml counts as onboarded, stamped or not. not-onboarded (no config reachable) and early (a config, no registry) are info rows; execute does not stop on either. With no registry, the project checks are skipped and the repo-level checks run. This repo (config with only after_landing) gives exit 0.",
+      "rejected": "not-onboarded is blocking.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Rulings review R2 G5: a member push failure after the base row is RUNNING, under next.",
+      "ruling": "Not a lost claim: the row is this session's and RUNNING. Result refused under next and under a named folder alike, with the plan-management unclaim <folder> request in the message; no re-pick. Log: event stop, then end --outcome claim-failed. action-log.md adds claim-failed to its outcome list.",
+      "rejected": "Treat it as a lost claim and re-pick.",
+      "units": [
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Rulings review R2 G6, G9, G10: consistency fixes with one answer.",
+      "ruling": "G6: the D15 claim object is the D17 claim result as it is; the pushed key is removed; claimed is true only after its push lands. G9: the planner wrote docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md, so the hand-off commit carries it with the folder. G10: D4 reads tested against fake config files shaped on the schemas (D24).",
+      "rejected": "none (no second consistent answer)",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Rulings review R2 G7: a commit or push failure other than a same-row conflict.",
+      "ruling": "Undo and refuse. Drop the local claim commit (git reset --soft HEAD~1, then git checkout HEAD -- on the two files), restore the checkout, return {claimed: false, reason} with the git error. start.mjs returns refused under next and a named folder alike, with no re-pick; its log closes with event stop and end --outcome claim-failed. The clean-rebase retry of a rejected push is capped at 3 attempts, then the same refusal.",
+      "rejected": "Retry the push up to 3 times with a wait, then refuse.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Rulings review R2 G8: a conflicted git stash pop at the end of the claim.",
+      "ruling": "The claim already landed: return {claimed: true, commit, warning}. On a failed pop, run git reset --merge so the tree is back at HEAD; git keeps the stash entry. The warning, and start.mjs message, name the stash (vwf plan queue <folder>) and say to apply it by hand. The run continues in its own worktree.",
+      "rejected": "start.mjs refuses until the stash is resolved, leaving a RUNNING row that needs the unclaim request.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Rulings review R3 G1-G7, G8 first half, G9: consistency fixes with one answer.",
+      "ruling": "G1: reset --soft HEAD~1 runs only when the claim commit exists; when the commit fails, restore the two files with git checkout HEAD --, restore the checkout, return {claimed: false, reason}. G2: the row and run.worktree come from the origin/develop tip (D27); on a resume, status, gaps and units come from the worktree copy (D18). G3: an APPROVED row is always a fresh run; the tip copy of a folder reads APPROVED after an unclaim. G4: a member folder is read from the member origin/develop tip, the fresh log start uses the member working copy, an uncloned member is the absent-target-repo refusal. G5: U2 owns plugins/vwf/assets/templates/plan-folder.md and changes only lines 380-383 under D28. G6: K2 sets scratch VWF_LOG_ROOT and CLAUDE_CODE_SESSION_ID. G7: U1 and U4 add the D20 --worktree flag to edits and tests. G8a: the archived-folder test and the covers docs are read from the tip (git ls-tree, git show), never from disk. G9: a repo-level row has project null.",
+      "rejected": "none (no second consistent answer)",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Rulings review R3 G8 second half: a required cycle plan whose folder is in an uncloned member.",
+      "ruling": "No network read. The entry is unsatisfied with the reason: member <name> is not cloned; clone it to resolve this requirement. The plan is not runnable until the member is cloned.",
+      "rejected": "A shallow fetch of the folder from the member remote URL.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Rulings review R4 G1: U2 cites scripts that later waves create, and checkRootRefs fails a missing file.",
+      "ruling": "Move U2 after U4: U1 wave 1, U3 wave 2, U4 wave 3, U2 wave 4, the review wave 5, docs wave 6, gates wave 7. Execution mode becomes solo (D12 amended).",
+      "rejected": "U2 beside U4 in wave 3 (its commit would depend on an uncommitted file of U4).",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Rulings review R4 G2-G8: consistency fixes with one answer.",
+      "ruling": "G2: the claim result has a kind field: {claimed: false, kind: lost|member-failed|failed, reason}; start.mjs reads kind, never reason. G3: U2 owns plugins/vwf/skills/setup/references/migration-and-consent.md and names the D7 key at line 24. G4: D22 governs preflight.md; the LSP sentence of D5 is void. G5: the D8 match is by path segment; a project at the repo root (.) matches every path as the shortest prefix. G6: an absent projects means the whole repo (doctor); [] means repo-level checks only; start.mjs always passes the D8 list. G7: start.mjs refuses a resume when another session marker under active/ names this plan log. G8: the D27 comparison parses both copies as JSON and compares values.",
+      "rejected": "none (no second consistent answer)",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
