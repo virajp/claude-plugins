@@ -724,5 +724,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/all-2026-11-13-0218",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-12-execute-scripted-start.jsonl"
+  }
 }
