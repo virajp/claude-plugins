@@ -8,6 +8,9 @@
 //   node plan.mjs remove <file> <path>
 //   node plan.mjs rewave <file> <unit>=<wave>...
 //   node plan.mjs validate <file>
+//   node plan.mjs pick
+//   node plan.mjs resolve <folder>
+//   node plan.mjs claim <folder> [--worktree <path>]
 //
 // `get` prints the value at the path as JSON; --raw prints a string without
 // quotes; no path prints the whole file. Its <file> may be `-`, which reads
@@ -50,6 +53,21 @@
 // the original, so an error leaves the file as it was. A write is
 // JSON.stringify(value, null, 2) plus one newline, in the file's own key order.
 //
+// `pick`, `resolve` and `claim` are the queue verbs (lib/queue.mjs), run from
+// any directory inside the base repo or a member; each reads the plan index at
+// the tip of origin/develop, never the working copy, and prints one JSON
+// object on stdout. `pick` prints {pick: {folder, kind, priority}}, exit 0, or
+// {nothing: [{folder, waits}]}, exit 1. `resolve` prints {runnable, entries:
+// [{entry, kind, satisfied, reason}]}, exit 0 when runnable, else 1. `claim`
+// runs the claim procedure of references/plan-index.md in the base's main
+// checkout — the row RUNNING and the folder's run, one commit pushed to
+// develop; a member folder's run is a second commit on that member's develop —
+// and prints {claimed: true, commit[, warning]}, exit 0, or {claimed: false,
+// kind, reason[, warning]}, exit 1, kind lost, member-failed or failed.
+// --worktree sets run.worktree in place of <dir>/<plan name>. For pick and
+// resolve, a repo with no origin/develop or a folder with no row (resolve):
+// exit 2. For all three, no vwf repo: exit 2.
+//
 // Exit 0 on success. Exit 1 on a validation error, one finding per line on
 // stderr as `<file>: <path>: <message>`. Exit 2 on a usage error, a path the
 // file cannot answer, or a missing or unparsable file.
@@ -78,6 +96,14 @@ import {
   isPlanIndex,
   validate,
 } from "./lib/schema.mjs";
+import {
+  claim,
+  pick,
+  QueueError,
+  resolve,
+  resolveBase,
+} from "./lib/queue.mjs";
+import { YamlError } from "./lib/yaml.mjs";
 
 const USAGE = `usage:
   plan.mjs get <file> [<path>] [--raw]
@@ -86,6 +112,9 @@ const USAGE = `usage:
   plan.mjs remove <file> <path>
   plan.mjs rewave <file> <unit>=<wave>...
   plan.mjs validate <file>
+  plan.mjs pick
+  plan.mjs resolve <folder>
+  plan.mjs claim <folder> [--worktree <path>]
 `;
 
 function usage(message) {
@@ -262,7 +291,60 @@ function parseArgs(verb, rest) {
   }
 }
 
+// The queue verbs: one JSON object on stdout, exit 0 or 1 by the answer.
+function queue(verb, rest) {
+  let folder;
+  let worktree;
+  if (verb === "pick") {
+    if (rest.length > 0) {
+      usage("pick takes no arguments");
+    }
+  } else {
+    folder = rest[0];
+    if (folder === undefined || folder.startsWith("--")) {
+      usage(`${verb} needs a folder`);
+    }
+    const extra = rest.slice(1);
+    if (verb === "claim" && extra.length === 2 && extra[0] === "--worktree") {
+      worktree = extra[1];
+      if (worktree === "" || worktree.startsWith("--")) {
+        usage("--worktree needs a repo-relative path");
+      }
+    } else if (extra.length > 0) {
+      usage(
+        verb === "claim"
+          ? "claim takes a folder and at most --worktree <path>"
+          : `${verb} takes one folder`,
+      );
+    }
+  }
+  try {
+    const base = resolveBase(process.cwd());
+    const result = verb === "pick"
+      ? pick({ base })
+      : verb === "resolve"
+      ? resolve({ base, folder })
+      : claim({ base, folder, worktree });
+    process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
+    const ok = verb === "pick"
+      ? result.pick !== undefined
+      : verb === "resolve"
+      ? result.runnable
+      : result.claimed;
+    process.exit(ok ? 0 : 1);
+  } catch (e) {
+    if (e instanceof QueueError || e instanceof YamlError) {
+      process.stderr.write(`plan.mjs ${verb}: ${e.message}\n`);
+      process.exit(2);
+    }
+    throw e;
+  }
+}
+
 const [verb, ...rest] = process.argv.slice(2);
+if (verb === "pick" || verb === "resolve" || verb === "claim") {
+  queue(verb, rest);
+}
 const { args, flags } = parseArgs(verb, rest);
 const file = args[0];
 if (file === undefined) {

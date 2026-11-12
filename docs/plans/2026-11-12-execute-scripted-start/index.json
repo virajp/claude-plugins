@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-13 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-13 02:21 in .worktrees/all-2026-11-13-0218"
   },
   "consent": {
     "merge": true,
@@ -92,11 +92,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-12T20:51:45.995Z",
+      "ended": "2026-11-12T21:01:30.462Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U2",
@@ -267,8 +267,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-12T20:51:45.961Z",
       "ended": ""
     },
     {
@@ -723,7 +723,12 @@
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-13-0218"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-13-0218",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-12-execute-scripted-start.jsonl"

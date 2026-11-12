@@ -1,0 +1,28 @@
+# A fake docs/blueprint/registry.yaml — invented names only.
+vwf_registry: 2
+
+projects:
+  - name: api
+    role: backend
+    platforms: [ service, worker ]
+    path: ../example-api/services/api
+    capabilities: [ http-api, datastore ]
+    threat_notes: [
+      "an external caller sends a forged token",
+      "a webhook replays an old event",
+    ]
+    depends_on: []
+    doc_unit: entity
+  - name: app
+    role: frontend
+    platforms:
+      - mobile
+      - tablet
+    path: ../example-app
+    capabilities: []
+    depends_on: [ api ]
+  - name: infra
+    role: system
+    platforms: [ iac ]
+    path: .
+    depends_on: []

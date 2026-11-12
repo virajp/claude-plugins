@@ -1,0 +1,36 @@
+# A fake .claude/stackgen/lock.yaml — invented names and hashes only.
+entries:
+  - path: .claude/templates/example-service.md
+    slug: example-service
+    component: app-framework/example-framework
+    source: pack/app-framework/example-framework@1.2.0
+    hash: 0f1e2d3c4b5a69788796a5b4c3d2e1f00f1e2d3c4b5a69788796a5b4c3d2e1f0
+  - path: .config/mise/tasks/test/example
+    slug: example-service
+    component: language/typescript
+    source: generated
+    hash: "sha256:a1b2c3d4e5f60718293a4b5c6d7e8f90a1b2c3d4e5f60718293a4b5c6d7e8f90"
+    mode: "755"
+bootstrap:
+  tools:
+    example-tool: [ language/typescript ]
+  plugins:
+    example-plugin@example-market: {
+      scope: user,
+      source: example/market,
+      components: [ app-framework/example-framework ],
+    }
+settings_keys: []
+required_mcp_servers:
+  - {
+      name: example-docs,
+      purpose: reads the example docs,
+      install: "https://example.com/mcp",
+      optional: true,
+      components: [ language/typescript ],
+    }
+local_plugin:
+  path: ~/.claude/plugins/local/vwf-tools
+  lsp_servers:
+    - name: example-ls
+      packs: [ language/typescript ]
