@@ -1,0 +1,4 @@
+/security-review — loop U5-late2, round 1, range f6bb44be..08b89e1a
+
+No high-confidence vulnerabilities found.
+The fix delta is one markdown file (plugins/vwf/assets/vwf-config.md); documentation is excluded from findings.
