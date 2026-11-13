@@ -1,0 +1,38 @@
+# An invented multi-repo base, shaped on assets/vwf-config.md.
+config_format: 26
+blueprint_format: 25
+
+product:
+  name: harbor
+
+topology: multi-repo
+linkage: siblings
+stacks: [ stackgen ]
+
+members:
+  - name: dock-app
+    path: ../dock-app
+    url: git@forge.example.test:harbor/dock-app.git
+    projects: [ dock-app ]
+  - name: dock-absent
+    path: ../dock-absent
+    url: git@forge.example.test:harbor/dock-absent.git
+    projects: [ dock-absent ]
+
+repo:
+  stack:
+    template: unresolved
+
+projects:
+  dock-app:
+    stack:
+      template: project/kite-app
+      backing_template: []
+      deploy_template: []
+      languages: [ kite ]
+  dock-absent:
+    stack:
+      template: project/kite-app
+      backing_template: []
+      deploy_template: []
+      languages: [ kite ]

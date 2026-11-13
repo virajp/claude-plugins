@@ -160,11 +160,11 @@
         "U1"
       ],
       "waits": "It imports plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs, which U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-12T21:08:15.243Z",
+      "ended": "2026-11-13T06:18:32.214Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -273,8 +273,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-12T21:08:15.208Z",
       "ended": ""
     },
     {
@@ -693,6 +693,26 @@
         "U2",
         "U3",
         "U4"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q1: In checks.mjs, when .config/vwf.yaml has no stacks: key (or stacks: []), does a pinned project template count as pinned-not-materialized (blocking), or is the materialized check skipped?",
+      "ruling": "Skip the check. When .config/vwf.yaml has no stacks: key, or stacks: [], checks.mjs walks no pin and the materialized check passes. Reason: execute runs almost every day, so its start checks must stay few; a check that only catches a repo that is new or not set up properly belongs in /vwf:doctor, not in execute, where it costs time and tokens on every run.",
+      "rejected": "blocking not-materialized (implemented now) — no adapter can hold the pin, so execute stops on such a repo",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Q2: checks.mjs counts a language token as known only when the materialized template lists it (language_facts or optional_languages); stack-checks.md also counts a token an installed language plugin declares. Keep the narrower rule, or also read installed plugins?",
+      "ruling": "As the user gave it: \"A `unknown language` must ask user whether to continue or stop and let the user decide\". Reading: checks.mjs keeps the narrow rule (the template languages only, no read of installed plugins), but an unknown-language row does not block execute by itself. Execute asks the user, per questions.md, whether to continue or stop, and follows the answer. Doctor keeps its full rule.",
+      "rejected": "none",
+      "units": [
+        "U3",
+        "U4",
+        "U2"
       ]
     }
   ],

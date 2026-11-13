@@ -1,0 +1,38 @@
+# An invented single-repo product, shaped on assets/vwf-config.md.
+config_format: 26
+blueprint_format: 25
+
+product:
+  name: lumen
+
+topology: repo
+stacks: [ stackgen ]
+
+repo:
+  stack:
+    template: repo/lumen-workspace
+    tools: []
+
+projects:
+  orbit-api:
+    stack:
+      template: project/kite-service
+      backing_template: []
+      deploy_template: []
+      languages: [ kite ]
+      frameworks: []
+      dependencies: []
+    cicd: lumen-ci
+  orbit-infra:
+    stack:
+      template: unresolved
+      backing_template: unresolved
+      deploy_template: []
+      languages: []
+
+harness:
+  dev: true
+  e2e_local: false
+
+enforcement:
+  rules: {}
