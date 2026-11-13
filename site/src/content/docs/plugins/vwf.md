@@ -2410,7 +2410,10 @@ Then the script **claims the row**: the folder's row is set `RUNNING`, and the
 folder's `run` to the
 worktree and [action log](#the-action-log) paths the run will use, in one
 commit — `docs: plan queue — <folder> running` — pushed on the integration
-branch from the main checkout, before any worktree exists. When the main
+branch from the main checkout, before any worktree exists. The session passes
+the integration branch to the script as `--branch`; the script never assumes a
+name. A repo with no remote is supported: the script reads the local branch,
+and the claim commit stays local. When the main
 checkout has uncommitted changes, the claim sets them aside in a stash named
 `vwf plan queue <folder>` and restores that stash, found by its SHA, once the
 claim lands; if it cannot, the run continues in its own worktree and the result

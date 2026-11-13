@@ -1,12 +1,16 @@
 // The queue verbs of plan.mjs: pick, resolve and claim, over the plan index
-// at the tip of origin/develop (references/plan-index.md, *Resolution*,
+// at the tip of the work branch (references/plan-index.md, *Resolution*,
 // *Reading the queue* and *Writing a row — the claim*).
 //
-// Every read of a row, a folder's index.json, an archived folder or a covers
-// doc is `git show` / `git ls-tree` of origin/develop, never the working copy.
-// The integration branch is develop on remote origin; a repo without
-// origin/develop is refused. Every git call is an argument array, never a
-// shell string; the claim commit runs `mise x -- git commit`.
+// The caller names the work branch: `branches.base` for the base repo,
+// `branches.member` for every member repo. The tip of a repo is
+// origin/<branch> when the repo has an origin remote, else the local branch
+// <branch>; a repo without that ref is refused, and a member read with no
+// member branch is refused. Every read of a row, a folder's index.json, an
+// archived folder or a covers doc is `git show` / `git ls-tree` of the tip,
+// never the working copy. Every git call is an argument array, never a shell
+// string; the claim commit runs `mise x -- git commit`. In a repo with no
+// origin, the claim commit stays local: no fetch, no pull, no push.
 //
 // pick    → { pick: { folder, kind, priority } } | { nothing: [{ folder, waits }] }
 // resolve → { runnable, entries: [{ entry, kind, satisfied, reason }] }
@@ -35,8 +39,6 @@ export class QueueError extends Error {
 }
 
 export const REMOTE = "origin";
-export const INTEGRATION = "develop";
-const TIP = `${REMOTE}/${INTEGRATION}`;
 const INDEX = "docs/plans/index.json";
 const PLAN = join(import.meta.dirname, "..", "plan.mjs");
 /** The clean-rebase retries of a rejected push before the claim refuses. */
@@ -110,42 +112,64 @@ export function resolveBase(cwd) {
   }
 }
 
-/** The tip reader of one repo: one fetch, then git show / ls-tree. */
+/** Whether `dir` has an origin remote. */
+export function hasRemote(dir) {
+  return git(dir, ["remote", "get-url", REMOTE]).ok;
+}
+
+/**
+ * The tip of `branch` in `dir`: { remote, ref, full }. ref is origin/<branch>
+ * with an origin remote, else <branch>; full is its refs/ name.
+ */
+export function tipRef(dir, branch) {
+  const remote = hasRemote(dir);
+  return remote
+    ? { remote, ref: `${REMOTE}/${branch}`, full: `refs/remotes/${REMOTE}/${branch}` }
+    : { remote, ref: branch, full: `refs/heads/${branch}` };
+}
+
+/** The tip reader of one repo: one fetch when it has a remote, then git show / ls-tree. */
 class Tip {
-  constructor(dir) {
+  constructor(dir, branch, flag) {
     this.dir = dir;
+    this.branch = branch;
+    this.flag = flag;
     this.fetched = false;
+    this.ref = branch ? tipRef(dir, branch).ref : null;
   }
 
-  /** Fetch once; throws QueueError when origin/develop does not exist. */
+  /** Fetch once; throws QueueError with no branch, or when the tip does not exist. */
   ready() {
-    if (!this.fetched) {
+    if (!this.branch) {
+      throw new QueueError(`${this.dir} is a member repo; pass ${this.flag} <name>`);
+    }
+    const t = tipRef(this.dir, this.branch);
+    if (t.remote && !this.fetched) {
       must(this.dir, ["fetch", REMOTE]);
       this.fetched = true;
     }
-    if (!git(this.dir, ["rev-parse", "--verify", "--quiet", `refs/remotes/${TIP}`]).ok) {
-      throw new QueueError(
-        `${TIP} does not exist in ${this.dir}; the integration branch is ${INTEGRATION} on ${REMOTE}`,
-      );
+    if (!git(this.dir, ["rev-parse", "--verify", "--quiet", t.full]).ok) {
+      throw new QueueError(`${t.ref} does not exist in ${this.dir}; the work branch is ${this.branch}`);
     }
   }
 
   show(path) {
     this.ready();
-    const r = git(this.dir, ["show", `${TIP}:${path}`]);
+    const r = git(this.dir, ["show", `${this.ref}:${path}`]);
     return r.ok ? r.out : null;
   }
 
   exists(path) {
     this.ready();
-    return git(this.dir, ["ls-tree", "--name-only", TIP, "--", path]).out !== "";
+    return git(this.dir, ["ls-tree", "--name-only", this.ref, "--", path]).out !== "";
   }
 }
 
 /** The repos a queue read can reach: the base and its members. */
 class Product {
-  constructor(base) {
+  constructor(base, branches) {
     this.base = base;
+    this.branches = branches ?? {};
     this.tips = new Map();
     const config = readYaml(join(base, ".config", "vwf.yaml"));
     this.members = Array.isArray(config?.members) ? config.members : [];
@@ -153,7 +177,12 @@ class Product {
 
   tip(dir) {
     if (!this.tips.has(dir)) {
-      this.tips.set(dir, new Tip(dir));
+      this.tips.set(
+        dir,
+        dir === this.base
+          ? new Tip(dir, this.branches.base, "--branch")
+          : new Tip(dir, this.branches.member, "--member-branch"),
+      );
     }
     return this.tips.get(dir);
   }
@@ -183,6 +212,11 @@ class Product {
       .filter((d) => d !== undefined);
   }
 
+  /** The base tip's ref, for messages. */
+  get ref() {
+    return this.tip(this.base).ref;
+  }
+
   /** The plan index at the tip, or null when the tip has none. */
   index() {
     const text = this.tip(this.base).show(INDEX);
@@ -192,7 +226,7 @@ class Product {
     try {
       return JSON.parse(text);
     } catch (e) {
-      throw new QueueError(`${TIP}:${INDEX} is not valid JSON (${e.message})`);
+      throw new QueueError(`${this.ref}:${INDEX} is not valid JSON (${e.message})`);
     }
   }
 }
@@ -215,7 +249,7 @@ function coversSatisfied(product, folderDoc, entry) {
   for (const doc of covers) {
     const text = product.tip(product.base).show(doc);
     if (text === null) {
-      return { satisfied: false, reason: `${entry}: covers doc ${doc} is not at ${TIP}` };
+      return { satisfied: false, reason: `${entry}: covers doc ${doc} is not at ${product.ref}` };
     }
     let fm;
     try {
@@ -257,7 +291,7 @@ function resolveEntry(product, rows, raw) {
         entry,
         kind: "cycle",
         satisfied: false,
-        reason: `${entry}: ${row.folder}/index.json is not at ${TIP} of ${repo.dir}`,
+        reason: `${entry}: ${row.folder}/index.json is not at ${product.tip(repo.dir).ref} of ${repo.dir}`,
       };
     }
     return { entry, kind: "cycle", ...coversSatisfied(product, doc, entry) };
@@ -313,21 +347,21 @@ function entriesOf(product, rows, row) {
 }
 
 /** The D17 resolve result for one named folder. */
-export function resolve({ base, folder }) {
-  const product = new Product(base);
+export function resolve({ base, folder, branches }) {
+  const product = new Product(base, branches);
   const index = product.index();
   const id = basename(folder);
   const row = index?.plans?.find?.((r) => r && r.id === id);
   if (!row) {
-    throw new QueueError(`no row for ${id} in ${TIP}:${INDEX}`);
+    throw new QueueError(`no row for ${id} in ${product.ref}:${INDEX}`);
   }
   const entries = entriesOf(product, index.plans, row);
   return { runnable: entries.every((e) => e.satisfied), entries };
 }
 
 /** The D17 pick result: the first runnable APPROVED row, or what each waits on. */
-export function pick({ base }) {
-  const product = new Product(base);
+export function pick({ base, branches }) {
+  const product = new Product(base, branches);
   const index = product.index();
   const rows = Array.isArray(index?.plans) ? index.plans : [];
   const runnable = [];
@@ -390,11 +424,13 @@ function planSet(cwd, file, path, value, json) {
 const rejected = (err) => /\[rejected\]|non-fast-forward|fetch first|failed to push/.test(err);
 
 /**
- * Steps 1 to 8 of *Writing a row — the claim* in one checkout: stash, develop,
- * pull, `edit`, add, commit, push with the rejected-push loop, restore.
+ * Steps 1 to 8 of *Writing a row — the claim* in one checkout: stash, the work
+ * branch, pull, `edit`, add, commit, push with the rejected-push loop, restore.
+ * With no origin remote there is no pull and no push: the commit stays local.
  * `edit` returns null, { lost: reason } or { failed: reason }.
  */
-function land(dir, id, files, edit) {
+function land(dir, id, files, edit, work) {
+  const remote = hasRemote(dir);
   const message = `docs: plan queue — ${id} running`;
   const branch = git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
   const origin = branch.ok ? branch.out : must(dir, ["rev-parse", "HEAD"]);
@@ -441,17 +477,19 @@ function land(dir, id, files, edit) {
       }
       stashed = sha;
     }
-    if (origin !== INTEGRATION) {
-      const c = git(dir, ["checkout", INTEGRATION]);
+    if (origin !== work) {
+      const c = git(dir, ["checkout", work]);
       if (!c.ok) {
-        result = { claimed: false, kind: "failed", reason: `git checkout ${INTEGRATION} failed: ${c.err}` };
+        result = { claimed: false, kind: "failed", reason: `git checkout ${work} failed: ${c.err}` };
         return;
       }
     }
-    const pull = git(dir, ["pull", "--ff-only", REMOTE, INTEGRATION]);
-    if (!pull.ok) {
-      result = { claimed: false, kind: "failed", reason: `git pull --ff-only failed: ${pull.err}` };
-      return;
+    if (remote) {
+      const pull = git(dir, ["pull", "--ff-only", REMOTE, work]);
+      if (!pull.ok) {
+        result = { claimed: false, kind: "failed", reason: `git pull --ff-only failed: ${pull.err}` };
+        return;
+      }
     }
     const edited = edit();
     if (edited !== null) {
@@ -477,8 +515,12 @@ function land(dir, id, files, edit) {
       result = { claimed: false, kind: "failed", reason: `the claim commit failed: ${err}` };
       return;
     }
+    if (!remote) {
+      result = { claimed: true, commit: must(dir, ["rev-parse", "HEAD"]) };
+      return;
+    }
     for (let retries = 0;; retries++) {
-      const push = git(dir, ["push", REMOTE, INTEGRATION]);
+      const push = git(dir, ["push", REMOTE, work]);
       if (push.ok) {
         result = { claimed: true, commit: must(dir, ["rev-parse", "HEAD"]) };
         return;
@@ -497,7 +539,7 @@ function land(dir, id, files, edit) {
         };
         return;
       }
-      const rebase = git(dir, ["pull", "--rebase", REMOTE, INTEGRATION]);
+      const rebase = git(dir, ["pull", "--rebase", REMOTE, work]);
       if (rebase.ok) {
         continue;
       }
@@ -505,7 +547,7 @@ function land(dir, id, files, edit) {
       git(dir, ["rebase", "--abort"]);
       drop(true);
       if (conflicted.includes(files[0])) {
-        git(dir, ["pull", "--ff-only", REMOTE, INTEGRATION]);
+        git(dir, ["pull", "--ff-only", REMOTE, work]);
         result = {
           claimed: false,
           kind: "lost",
@@ -557,14 +599,14 @@ function stashShas(dir) {
 }
 
 /**
- * The D17 claim: the row RUNNING and the folder's run, committed and pushed
- * on develop in the base's main checkout; a member folder's run is a second
- * direct commit on that member's develop (D19). `worktree` overrides the
- * default <dir>/<plan name> (D20).
+ * The D17 claim: the row RUNNING and the folder's run, committed on the base's
+ * work branch in its main checkout, and pushed when the repo has an origin; a
+ * member folder's run is a second direct commit on that member's work branch
+ * (D19). `worktree` overrides the default <dir>/<plan name> (D20).
  */
-export function claim({ base, folder, worktree }) {
+export function claim({ base, folder, worktree, branches }) {
   const id = basename(folder);
-  const product = new Product(base);
+  const product = new Product(base, branches);
   let row;
   try {
     row = product.index()?.plans?.find?.((r) => r && r.id === id);
@@ -575,13 +617,13 @@ export function claim({ base, folder, worktree }) {
     throw e;
   }
   if (!row) {
-    return { claimed: false, kind: "failed", reason: `no row for ${id} in ${TIP}:${INDEX}` };
+    return { claimed: false, kind: "failed", reason: `no row for ${id} in ${product.ref}:${INDEX}` };
   }
   if (row.status === "RUNNING") {
-    return { claimed: false, kind: "lost", reason: `${id} is already RUNNING at ${TIP}` };
+    return { claimed: false, kind: "lost", reason: `${id} is already RUNNING at ${product.ref}` };
   }
   if (row.status !== "APPROVED") {
-    return { claimed: false, kind: "failed", reason: `${id} is ${row.status} at ${TIP}, not APPROVED` };
+    return { claimed: false, kind: "failed", reason: `${id} is ${row.status} at ${product.ref}, not APPROVED` };
   }
   const repo = product.repoOf(row);
   if (repo.dir === undefined) {
@@ -621,11 +663,11 @@ export function claim({ base, folder, worktree }) {
       return { failed: err };
     }
     return member ? null : setRun(base);
-  });
+  }, product.branches.base);
   if (!baseResult.claimed || !member) {
     return baseResult;
   }
-  const memberResult = land(folderDir, id, [folderIndex], () => setRun(folderDir));
+  const memberResult = land(folderDir, id, [folderIndex], () => setRun(folderDir), product.branches.member);
   if (!memberResult.claimed) {
     const out = {
       claimed: false,

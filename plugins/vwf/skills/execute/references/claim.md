@@ -7,11 +7,16 @@ checkout (any directory inside the base repo or a member; the script resolves th
 base per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`):
 
 ```sh
-node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/start.mjs <folder|next> [--worktree <repo-relative path>] [--continue-unknown-language]
+node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/start.mjs <folder|next> --branch <integration> [--member-branch <integration>] [--worktree <repo-relative path>] [--continue-unknown-language]
 ```
 
 `<folder|next>` is the argument: a folder or its `index.json`, or `next`. A runner
-under `all` passes the folder it was handed. `--worktree` sets the folder's
+under `all` passes the folder it was handed. `--branch` is necessary: the base
+repo's integration branch, as `vwf:git-workflow` resolves it — the script never
+assumes a name. `--member-branch` is the member repos' integration branch,
+necessary only when the run reads a member — a folder whose row names a
+`target_repo`, or a `requires` entry found only in a member; without it that read
+is refused. `--worktree` sets the folder's
 `run.worktree` in place of the default `<dir>/<plan name>`; a runner under an `all`
 override passes the shared worktree's path ([all.md](../workflows/all.md)).
 `--continue-unknown-language` is passed only on the re-run below, after the user
@@ -37,8 +42,11 @@ In order, it:
 A fresh run takes its checks before its log start, so a stop before the claim leaves
 no log run open; its checks markers follow the log start and carry the true times.
 Every row and folder value comes from the tip of the integration branch, never the
-working copy. A fresh run's working copy of the folder must equal that tip, or the
-run is refused: check out the integration branch and pull, then re-run.
+working copy: `origin/<integration>` when the repo has an `origin` remote, else the
+local `<integration>` branch. A repo with no remote is supported: nothing is
+fetched, pulled or pushed there, and the claim is a local commit. A fresh run's
+working copy of the folder must equal that tip, or the run is refused: check out
+the integration branch and pull, then re-run.
 
 ## The result
 
@@ -123,7 +131,8 @@ These are the **two** edits the run makes in the main checkout: the row, set
 `RUNNING`, and the folder's `run`, set to
 `{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}`
 — the worktree this run will use and its log, the `~` literal. One commit,
-`docs: plan queue — <folder> running`, pushed on the integration branch. When the
+`docs: plan queue — <folder> running`, on the integration branch, pushed when the
+repo has an `origin` remote. When the
 folder lives in a member repo, its `run` edit is a second, direct commit on that
 repo's integration branch, with the same message, after the base's; its `<repo>`
 and worktree are that repo's. They are made in the main checkout on purpose:

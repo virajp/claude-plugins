@@ -94,8 +94,12 @@ The verbs below point at its sections rather than restate them.
 - `plan.mjs pick`, `plan.mjs resolve <folder>` and
   `plan.mjs claim <folder> [--worktree <path>]` are the **queue verbs**: the
   `next` pick, the resolution of a folder's `requires` and the claim, each run
-  from any directory inside the base repo or a member, each reading the plan
-  index at the tip of `origin/develop`, never the working copy, and each
+  from any directory inside the base repo or a member. Each takes
+  `--branch <integration>`, necessary — the base repo's integration branch, as
+  `vwf:git-workflow` resolves it — and `--member-branch <integration>`, the
+  member repos' one, necessary only when the verb reads a member. Each reads the
+  plan index at the tip of that branch — `origin/<integration>` with an
+  `origin` remote, else the local branch — never the working copy, and each
   printing one JSON object. `pick` prints `{pick: {folder, kind, priority}}`,
   exit 0, or `{nothing: [{folder, waits}]}`, exit 1. `resolve` prints
   `{runnable, entries: [{entry, kind, satisfied, reason}]}`, exit 0 when

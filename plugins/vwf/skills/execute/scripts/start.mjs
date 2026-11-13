@@ -1,8 +1,14 @@
 #!/usr/bin/env node
 // The start of one /vwf:execute run, in one call.
 //
-//   node start.mjs <folder|next> [--worktree <repo-relative path>]
+//   node start.mjs <folder|next> --branch <name> [--member-branch <name>]
+//                  [--worktree <repo-relative path>]
 //                  [--continue-unknown-language]
+//
+// --branch names the base repo's work branch and is necessary;
+// --member-branch names every member repo's work branch, necessary only when
+// the run reads a member. The tip of a repo is origin/<branch> when the repo
+// has an origin remote, else the local <branch>.
 //
 // Run from any directory inside the base repo or a member; the base is
 // resolved per assets/membership.md. In order: the format test; for next, the
@@ -28,7 +34,7 @@
 //
 // Exit 0 on ready, 1 on refused, blocked or nothing, 2 on a usage or internal
 // error (nothing on stdout then). Every row and folder value comes from the
-// origin/develop tip; the working copy is only a fresh log start's --folder,
+// tip of the work branch; the working copy is only a fresh log start's --folder,
 // and must equal the tip. A log call never stops the run: log.mjs runs as a
 // child process and a failed call is a warning here. A refusal before the log
 // start writes nothing to the log.
@@ -41,19 +47,19 @@ import { isDeepStrictEqual } from "node:util";
 import { ChecksError, runChecks } from "../../doctor/scripts/lib/index.mjs";
 import {
   claim,
-  INTEGRATION,
   pick,
   QueueError,
   REMOTE,
   resolve,
   resolveBase,
+  tipRef,
 } from "../../plan-management/scripts/lib/queue.mjs";
 import { validateFolder } from "../../plan-management/scripts/lib/schema.mjs";
 import { parseYaml, YamlError } from "../../plan-management/scripts/lib/yaml.mjs";
 
-const USAGE = "usage: node start.mjs <folder|next> [--worktree <repo-relative path>] [--continue-unknown-language]";
+const USAGE = "usage: node start.mjs <folder|next> --branch <name> [--member-branch <name>] "
+  + "[--worktree <repo-relative path>] [--continue-unknown-language]";
 const LOG = join(import.meta.dirname, "log.mjs");
-const TIP = `${REMOTE}/${INTEGRATION}`;
 const INDEX = "docs/plans/index.json";
 const ROOT = process.env.VWF_LOG_ROOT || join(homedir(), "Library", "Caches", "vwf");
 const SESSION = process.env.CLAUDE_CODE_SESSION_ID || "nosession";
@@ -90,19 +96,42 @@ function readJsonFile(file) {
 
 const fetched = new Set();
 
-/** A file's text at origin/develop of `dir`, or null; refuses without that branch. */
-function tipShow(dir, path) {
-  if (!fetched.has(dir)) {
+/** The work branches: base for the base repo, member for every member repo. */
+let branches = { base: undefined, member: undefined };
+let baseDir;
+
+/** The work branch of `dir`, or a Refusal when a member has none. */
+function branchOf(dir) {
+  if (dir === baseDir) {
+    return branches.base;
+  }
+  if (branches.member === undefined) {
+    throw new Refusal(`${dir} is a member repo; pass --member-branch <name>`);
+  }
+  return branches.member;
+}
+
+/** The tip of `dir`: fetched once when the repo has an origin remote. */
+function tipOf(dir) {
+  const branch = branchOf(dir);
+  const t = tipRef(dir, branch);
+  if (t.remote && !fetched.has(dir)) {
     const f = git(dir, ["fetch", REMOTE]);
     if (!f.ok) {
       warn(`git fetch ${REMOTE} failed in ${dir}: ${f.err}`);
     }
     fetched.add(dir);
   }
-  if (!git(dir, ["rev-parse", "--verify", "--quiet", `refs/remotes/${TIP}`]).ok) {
-    throw new Refusal(`${TIP} does not exist in ${dir}; the integration branch is ${INTEGRATION} on ${REMOTE}`);
+  return { ...t, branch };
+}
+
+/** A file's text at the tip of `dir`, or null; refuses without that ref. */
+function tipShow(dir, path) {
+  const t = tipOf(dir);
+  if (!git(dir, ["rev-parse", "--verify", "--quiet", t.full]).ok) {
+    throw new Refusal(`${t.ref} does not exist in ${dir}; the work branch is ${t.branch}`);
   }
-  const r = git(dir, ["show", `${TIP}:${path}`]);
+  const r = git(dir, ["show", `${t.ref}:${path}`]);
   return r.ok ? r.out : null;
 }
 
@@ -114,7 +143,7 @@ function tipJson(dir, path) {
   try {
     return JSON.parse(text);
   } catch (e) {
-    throw new Refusal(`${TIP}:${path} in ${dir} is not valid JSON (${e.message})`);
+    throw new Refusal(`${tipOf(dir).ref}:${path} in ${dir} is not valid JSON (${e.message})`);
   }
 }
 
@@ -342,7 +371,8 @@ function resolveFolder(base, config, arg) {
     }
   }
   const folder = row?.folder ?? relative(base, isAbsolute(arg) ? arg : resolvePath(base, arg));
-  const notCommitted = `${id} is not on ${INTEGRATION}: run the planner again on it, or commit and push it by hand, then re-launch`;
+  const tip = tipOf(repoDir);
+  const notCommitted = `${id} is not on ${tip.branch}: run the planner again on it, or commit${tip.remote ? " and push" : ""} it by hand, then re-launch`;
   const tipDoc = tipJson(repoDir, `${folder}/index.json`);
   if (tipDoc === null) {
     throw new Refusal(notCommitted);
@@ -358,7 +388,7 @@ function resolveFolder(base, config, arg) {
   if (row === null) {
     throw new Refusal(`${id} is not in the plan index; re-run the planner's hand-off, or add the row by hand`);
   }
-  const resolved = resolve({ base, folder });
+  const resolved = resolve({ base, folder, branches });
   if (!resolved.runnable) {
     throw new Refusal(
       `${id} is not runnable: ${resolved.entries.filter((e) => !e.satisfied).map((e) => entryText(rows, e)).join("; ")}`,
@@ -402,7 +432,7 @@ function resolveFolder(base, config, arg) {
     };
   }
   if (row.status !== "APPROVED") {
-    throw new Refusal(`${id}'s row reads ${row.status} at ${TIP}: nothing to run`);
+    throw new Refusal(`${id}'s row reads ${row.status} at ${tipOf(base).ref}: nothing to run`);
   }
 
   // A fresh run (D34 G3): the working copy must equal the tip (D27).
@@ -410,7 +440,7 @@ function resolveFolder(base, config, arg) {
   const local = readJsonFile(join(folderDir, "index.json"));
   if (local === null || !isDeepStrictEqual(local, tipDoc)) {
     throw new Refusal(
-      `the working copy of ${folder} is ${local === null ? "absent" : `not the one at ${TIP}`}: check out ${INTEGRATION} and pull, then re-run`,
+      `the working copy of ${folder} is ${local === null ? "absent" : `not the one at ${tip.ref}`}: check out ${tip.branch}${tip.remote ? " and pull" : ""}, then re-run`,
     );
   }
   validated(tipDoc, folderDir);
@@ -429,17 +459,27 @@ function parseArgs(argv) {
     throw new UsageError(USAGE);
   }
   let worktree;
+  let branch;
+  let memberBranch;
   let continueUnknown = false;
+  const value = (i) => rest[i + 1] && !rest[i + 1].startsWith("--");
   for (let i = 0; i < rest.length; i++) {
-    if (rest[i] === "--worktree" && worktree === undefined && rest[i + 1] && !rest[i + 1].startsWith("--")) {
+    if (rest[i] === "--worktree" && worktree === undefined && value(i)) {
       worktree = rest[++i];
+    } else if (rest[i] === "--branch" && branch === undefined && value(i)) {
+      branch = rest[++i];
+    } else if (rest[i] === "--member-branch" && memberBranch === undefined && value(i)) {
+      memberBranch = rest[++i];
     } else if (rest[i] === "--continue-unknown-language" && !continueUnknown) {
       continueUnknown = true;
     } else {
       throw new UsageError(USAGE);
     }
   }
-  return { target, worktree, continueUnknown };
+  if (branch === undefined) {
+    throw new UsageError(USAGE);
+  }
+  return { target, worktree, branch, memberBranch, continueUnknown };
 }
 
 function result(over) {
@@ -472,8 +512,10 @@ function oldFormat(base, target) {
   return dirs.some((d) => existsSync(join(d, "index.md")) && !existsSync(join(d, "index.json")));
 }
 
-function start({ target, worktree, continueUnknown }) {
+function start({ target, worktree, branch, memberBranch, continueUnknown }) {
   const base = resolveBase(process.cwd());
+  baseDir = base;
+  branches = { base: branch, member: memberBranch };
   if (oldFormat(base, target)) {
     return result({ message: MIGRATE });
   }
@@ -486,7 +528,7 @@ function start({ target, worktree, continueUnknown }) {
     if (target === "next") {
       let p;
       try {
-        p = pick({ base });
+        p = pick({ base, branches });
       } catch (e) {
         if (e instanceof QueueError) {
           return result({ message: e.message });
@@ -596,7 +638,7 @@ function start({ target, worktree, continueUnknown }) {
     }
 
     log(f.logCwd, ["event", "phase.start", "--phase", "claim"]);
-    const c = claim({ base, folder, worktree });
+    const c = claim({ base, folder, worktree, branches });
     log(f.logCwd, ["event", "phase.end", "--phase", "claim"]);
     if (c.claimed) {
       const message = c.warning

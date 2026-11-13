@@ -98,7 +98,13 @@ function git(cwd: string, ...args: string[]) {
   return r.stdout.trim();
 }
 
+/** Runs plan.mjs; a queue verb with no --branch gets --branch develop. */
 function plan(cwd: string, args: string[], extra: NodeJS.ProcessEnv = {}) {
+  const queue = ["pick", "resolve", "claim"].includes(args[0] ?? "") && !args.includes("--branch");
+  return planRaw(cwd, queue ? [...args, "--branch", "develop"] : args, extra);
+}
+
+function planRaw(cwd: string, args: string[], extra: NodeJS.ProcessEnv = {}) {
   const r = spawnSync("node", [SCRIPT, ...args], {
     cwd,
     env: { ...env, ...extra },
@@ -617,5 +623,106 @@ describe("origin/develop absent", () => {
     expect(r.status).toBe(1);
     expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
     expect(r.json.reason).toMatch(/origin\/develop does not exist/);
+  });
+
+  it("reads origin/main with --branch main", () => {
+    const r = plan(base, ["pick", "--branch", "main"]);
+    expect(r.status).toBe(1);
+    expect(r.json).toEqual({ nothing: [] });
+  });
+});
+
+describe("the branch flags", () => {
+  const ID = "2026-11-10-example-change";
+  const FOLDER = `docs/plans/${ID}`;
+  const MESSAGE = `docs: plan queue — ${ID} running`;
+
+  /** A repo at `dir` with one commit on `branch`: the plan index and `rows`' folders. */
+  function local(dir: string, branch: string, rows: Json[], config = "after_landing: []\n") {
+    git(root, "init", "-q", "-b", branch, dir);
+    write(join(dir, ".config", "vwf.yaml"), config);
+    write(join(dir, "docs", "plans", "index.json"), `${JSON.stringify({ format: 1, plans: rows }, null, 2)}\n`);
+    for (const r of rows) {
+      if (!r.target_repo) {
+        changeFolder(dir, r.folder);
+      }
+    }
+    git(dir, "add", "-A");
+    git(dir, "commit", "-q", "-m", "seed");
+  }
+
+  it.each([
+    ["pick", ["pick"]],
+    ["resolve", ["resolve", FOLDER]],
+    ["claim", ["claim", FOLDER]],
+  ])("refuses %s with no --branch as a usage error", (_, args) => {
+    seed([row(ID)]);
+    const r = planRaw(base, args);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/needs --branch <name>/);
+  });
+
+  it("refuses --branch with no name", () => {
+    seed([row(ID)]);
+    expect(planRaw(base, ["pick", "--branch"]).status).toBe(2);
+  });
+
+  it("claims on origin/main in a main-only repo", () => {
+    const s = join(root, "seed");
+    git(root, "clone", "-q", origin, s);
+    git(s, "symbolic-ref", "HEAD", "refs/heads/main");
+    write(join(s, ".config", "vwf.yaml"), "after_landing: []\n");
+    write(join(s, "docs", "plans", "index.json"), `${JSON.stringify({ format: 1, plans: [row(ID)] }, null, 2)}\n`);
+    changeFolder(s, FOLDER);
+    git(s, "add", "-A");
+    git(s, "commit", "-q", "-m", "seed");
+    git(s, "push", "-q", "origin", "main");
+    git(root, "clone", "-q", "-b", "main", origin, base);
+    expect(plan(base, ["pick", "--branch", "main"]).json).toEqual({
+      pick: { folder: FOLDER, kind: "change", priority: 10 },
+    });
+    const r = plan(base, ["claim", FOLDER, "--branch", "main"]);
+    expect(r.status).toBe(0);
+    expect(git(origin, "log", "-1", "--format=%s", "main")).toBe(MESSAGE);
+  });
+
+  it("reads and claims on the local branch in a repo with no origin", () => {
+    local(base, "main", [row(ID)]);
+    expect(plan(base, ["pick", "--branch", "main"]).json).toEqual({
+      pick: { folder: FOLDER, kind: "change", priority: 10 },
+    });
+    const r = plan(base, ["claim", FOLDER, "--branch", "main"]);
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+    expect(r.json).toEqual({ claimed: true, commit: git(base, "rev-parse", "main") });
+    expect(git(base, "log", "-1", "--format=%s", "main")).toBe(MESSAGE);
+    const index = JSON.parse(git(base, "show", "main:docs/plans/index.json"));
+    expect(index.plans[0]).toMatchObject({ status: "RUNNING", started: NOW });
+    expect(git(base, "remote")).toBe("");
+  });
+
+  it("refuses a local branch that does not exist in a repo with no origin", () => {
+    local(base, "main", [row(ID)]);
+    const r = plan(base, ["pick"]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/develop does not exist .*; the work branch is develop/);
+  });
+
+  it("needs --member-branch to claim a member folder, then commits on its branch", () => {
+    const member = join(root, "example-api");
+    const memberRow = row(ID, { target_repo: "example-api" });
+    local(member, "trunk", []);
+    changeFolder(member, FOLDER);
+    git(member, "add", "-A");
+    git(member, "commit", "-q", "-m", "the folder");
+    local(base, "develop", [memberRow], "members:\n  - name: example-api\n    path: ../example-api\n");
+    const without = plan(base, ["claim", FOLDER]);
+    expect(without.status).toBe(1);
+    expect(without.json).toMatchObject({ claimed: false, kind: "failed" });
+    expect(without.json.reason).toMatch(/is a member repo; pass --member-branch <name>/);
+    const r = plan(base, ["claim", FOLDER, "--member-branch", "trunk"]);
+    expect(r.status).toBe(0);
+    expect(git(base, "log", "-1", "--format=%s", "develop")).toBe(MESSAGE);
+    expect(git(member, "log", "-1", "--format=%s", "trunk")).toBe(MESSAGE);
   });
 });

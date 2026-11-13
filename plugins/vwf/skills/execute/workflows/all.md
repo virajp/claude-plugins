@@ -102,7 +102,7 @@ Once the run-level questions above are answered, each iteration, in order:
    *resource cap*. The hook pauses a running runner the same way it pauses execute today, and that runner returns `STOPPED`. A
    runner's own context is not measured, only the session's figures the hook reads. The 5-hour and 7-day figures are
    account-wide.
-2. **Pick**. Run `plan.mjs pick` (the loop's re-pick: it picks and claims nothing; the runner's `start.mjs` claims). Exit 1,
+2. **Pick**. Run `plan.mjs pick --branch <integration>`, with `--member-branch` as [claim.md](../references/claim.md) says (the loop's re-pick: it picks and claims nothing; the runner's `start.mjs` claims). Exit 1,
    `{nothing: [{folder, waits}]}` → the loop ends, stop reason each `APPROVED` row and what it waits on, or that the index is
    absent or holds no rows. On a pick, `{pick: {folder, kind, priority}}`, print one line: the folder, its `kind` and its
    `priority`. Print nothing of the other rows.
@@ -176,7 +176,7 @@ A runner is the orchestrator `SKILL.md` describes, for the one folder it was han
 after-landing steps. It covers every stop too, each the stop those files already define. What differs is only this:
 
 - **The folder is given**. The runner resolves the folder it was handed, as `/vwf:execute <folder>` would: one
-  `start.mjs <folder>` call. Under a `shared worktree: <branch>` override it passes that worktree's repo-relative path
+  `start.mjs <folder> --branch <integration>` call, the flags as [claim.md](../references/claim.md) says. Under a `shared worktree: <branch>` override it passes that worktree's repo-relative path
   as `--worktree`, so the claim's `run.worktree` names the shared worktree. It never runs `next` or `all`, and takes no second plan
   when its own lands or stops.
 - **Its plan runs `solo`**, whatever the folder's `execution` reads. A runner can start teammates, but it ends its turn before their reports arrive. The reason in the `execution` event is

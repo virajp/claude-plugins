@@ -8,9 +8,10 @@
 //   node plan.mjs remove <file> <path>
 //   node plan.mjs rewave <file> <unit>=<wave>...
 //   node plan.mjs validate <file>
-//   node plan.mjs pick
-//   node plan.mjs resolve <folder>
-//   node plan.mjs claim <folder> [--worktree <path>]
+//   node plan.mjs pick --branch <name> [--member-branch <name>]
+//   node plan.mjs resolve <folder> --branch <name> [--member-branch <name>]
+//   node plan.mjs claim <folder> --branch <name> [--member-branch <name>]
+//                       [--worktree <path>]
 //
 // `get` prints the value at the path as JSON; --raw prints a string without
 // quotes; no path prints the whole file. Its <file> may be `-`, which reads
@@ -55,18 +56,22 @@
 //
 // `pick`, `resolve` and `claim` are the queue verbs (lib/queue.mjs), run from
 // any directory inside the base repo or a member; each reads the plan index at
-// the tip of origin/develop, never the working copy, and prints one JSON
+// the tip of the work branch, never the working copy, and prints one JSON
 // object on stdout. `pick` prints {pick: {folder, kind, priority}}, exit 0, or
 // {nothing: [{folder, waits}]}, exit 1. `resolve` prints {runnable, entries:
 // [{entry, kind, satisfied, reason}]}, exit 0 when runnable, else 1. `claim`
 // runs the claim procedure of references/plan-index.md in the base's main
-// checkout — the row RUNNING and the folder's run, one commit pushed to
-// develop; a member folder's run is a second commit on that member's develop —
+// checkout — the row RUNNING and the folder's run, one commit on the work
+// branch, pushed when the repo has an origin remote; a member folder's run is a
+// second commit on the member's work branch —
 // and prints {claimed: true, commit[, warning]}, exit 0, or {claimed: false,
 // kind, reason[, warning]}, exit 1, kind lost, member-failed or failed.
-// --worktree sets run.worktree in place of <dir>/<plan name>. For pick and
-// resolve, a repo with no origin/develop or a folder with no row (resolve):
-// exit 2. For all three, no vwf repo: exit 2.
+// --branch names the base repo's work branch and is necessary; --member-branch
+// names every member repo's work branch, necessary only when a verb reads a
+// member. The tip is origin/<branch> when the repo has an origin remote, else
+// the local <branch>. --worktree sets run.worktree in place of <dir>/<plan
+// name>. For pick and resolve, a repo with no tip or a folder with no row
+// (resolve): exit 2. For all three, no vwf repo: exit 2.
 //
 // Exit 0 on success. Exit 1 on a validation error, one finding per line on
 // stderr as `<file>: <path>: <message>`. Exit 2 on a usage error, a path the
@@ -112,9 +117,9 @@ const USAGE = `usage:
   plan.mjs remove <file> <path>
   plan.mjs rewave <file> <unit>=<wave>...
   plan.mjs validate <file>
-  plan.mjs pick
-  plan.mjs resolve <folder>
-  plan.mjs claim <folder> [--worktree <path>]
+  plan.mjs pick --branch <name> [--member-branch <name>]
+  plan.mjs resolve <folder> --branch <name> [--member-branch <name>]
+  plan.mjs claim <folder> --branch <name> [--member-branch <name>] [--worktree <path>]
 `;
 
 function usage(message) {
@@ -293,38 +298,42 @@ function parseArgs(verb, rest) {
 
 // The queue verbs: one JSON object on stdout, exit 0 or 1 by the answer.
 function queue(verb, rest) {
-  let folder;
-  let worktree;
-  if (verb === "pick") {
-    if (rest.length > 0) {
-      usage("pick takes no arguments");
-    }
-  } else {
-    folder = rest[0];
-    if (folder === undefined || folder.startsWith("--")) {
-      usage(`${verb} needs a folder`);
-    }
-    const extra = rest.slice(1);
-    if (verb === "claim" && extra.length === 2 && extra[0] === "--worktree") {
-      worktree = extra[1];
-      if (worktree === "" || worktree.startsWith("--")) {
-        usage("--worktree needs a repo-relative path");
+  const flags = { "--branch": undefined, "--member-branch": undefined, "--worktree": undefined };
+  const args = [];
+  for (let i = 0; i < rest.length; i++) {
+    const a = rest[i];
+    if (a in flags) {
+      const v = rest[i + 1];
+      if (flags[a] !== undefined || (a === "--worktree" && verb !== "claim")) {
+        usage(`${verb} takes ${a} at most once${a === "--worktree" ? ", and only claim takes it" : ""}`);
       }
-    } else if (extra.length > 0) {
-      usage(
-        verb === "claim"
-          ? "claim takes a folder and at most --worktree <path>"
-          : `${verb} takes one folder`,
-      );
+      if (v === undefined || v === "" || v.startsWith("--")) {
+        usage(a === "--worktree" ? "--worktree needs a repo-relative path" : `${a} needs a branch name`);
+      }
+      flags[a] = v;
+      i++;
+    } else if (a.startsWith("--")) {
+      usage(`${verb} takes no ${a}`);
+    } else {
+      args.push(a);
     }
   }
+  if (flags["--branch"] === undefined) {
+    usage(`${verb} needs --branch <name>`);
+  }
+  const folder = args[0];
+  if (verb === "pick" ? args.length > 0 : args.length !== 1) {
+    usage(verb === "pick" ? "pick takes no folder" : `${verb} takes one folder`);
+  }
+  const worktree = flags["--worktree"];
+  const branches = { base: flags["--branch"], member: flags["--member-branch"] };
   try {
     const base = resolveBase(process.cwd());
     const result = verb === "pick"
-      ? pick({ base })
+      ? pick({ base, branches })
       : verb === "resolve"
-      ? resolve({ base, folder })
-      : claim({ base, folder, worktree });
+      ? resolve({ base, folder, branches })
+      : claim({ base, folder, worktree, branches });
     process.stdout.write(`${JSON.stringify(result, null, 2)}\n`);
     const ok = verb === "pick"
       ? result.pick !== undefined

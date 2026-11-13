@@ -276,7 +276,8 @@ plan**: the row in
 `docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
 worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run
 will use, in a commit pushed on the integration branch, before any worktree
-exists. That pushed row is what makes a second session safe: another
+exists. In a repo with no remote, the commit stays local and nothing is pushed.
+That pushed row is what makes a second session safe: another
 `/vwf:execute next` or `all` running at the same time sees the row taken and
 picks something else, and if two sessions race for the same row, the push that
 lands second is rejected, so that session re-reads the queue and re-picks — or,

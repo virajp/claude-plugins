@@ -183,22 +183,27 @@ a landing are each a read or a write of this file, and every step of them is
 one plain git command or one `plan.mjs` call. The pick, the resolution of a
 `requires` list and the claim are scripted: `plan.mjs pick`, `plan.mjs resolve
 <folder>` and `plan.mjs claim <folder> [--worktree <path>]` implement the steps
-below, which stay the rule they implement. The unclaim and the completion stay
+below, which stay the rule they implement. Each takes `--branch <integration>`,
+necessary, and `--member-branch <integration>` for the member repos, necessary
+only when it reads a member; neither has a default. The unclaim and the completion stay
 procedures the model follows step by step. Both procedures run in the
 **main checkout of the base repo**, never in a worktree. The index is the base
 repo's, as the backlog project is — a run started in a member repo addresses
 the base's file, resolved the way `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`
 resolves it. `<integration>` below is the branch `vwf:git-workflow` resolves
-as the integration branch; this contract never assumes its name.
+as the integration branch; this contract never assumes its name. A repo with no
+`origin` remote is supported: its tip is the local `<integration>` branch, and
+every fetch, pull and push below is skipped there — the claim is a local commit.
 
 Both run after `plan-management`'s format test, which reads the local
 checkout: a repo still in the old format stops there, before either begins.
 
 ### Reading the queue
 
-1. `git fetch origin`.
+1. `git fetch origin`, when the repo has an `origin` remote.
 2. Read the rows at the integration branch's tip, never the working copy —
-   `git show origin/<integration>:docs/plans/index.json`, piped into
+   `git show origin/<integration>:docs/plans/index.json` (`<integration>:` with
+   no remote), piped into
    `plan.mjs get - plans`. The working copy may be stale, dirty, or checked
    out on another branch; the tip is what every other session pushed to.
 3. No file at the tip — `git show` fails on the path — or an empty list → say

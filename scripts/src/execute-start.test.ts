@@ -65,7 +65,13 @@ function git(cwd: string, ...args: string[]) {
   return r.stdout.trim();
 }
 
+/** Runs start.mjs; a call with arguments and no --branch gets --branch develop. */
 function start(args: string[], extra: NodeJS.ProcessEnv = {}, cwd = base) {
+  const add = args.length > 0 && !args.includes("--branch");
+  return startRaw(add ? [...args, "--branch", "develop"] : args, extra, cwd);
+}
+
+function startRaw(args: string[], extra: NodeJS.ProcessEnv = {}, cwd = base) {
   const r = spawnSync("node", [START, ...args], {
     cwd,
     env: { ...env, ...extra },
@@ -351,10 +357,29 @@ describe("the refusals", () => {
     expect(r.status).toBe(2);
     expect(r.json).toBeNull();
     expect(start(["next", "--continue-unknown-language", "--continue-unknown-language"]).status).toBe(2);
+    expect(startRaw(["next"]).status).toBe(2);
+    expect(startRaw(["next", "--branch"]).status).toBe(2);
+  });
+
+  it("refuses a branch that does not exist on origin", () => {
+    seed({ rows: [row(A)] });
+    const r = start([`docs/plans/${A}`, "--branch", "main"]);
+    expect(r.status).toBe(1);
+    expect(r.json.message).toMatch(/origin\/main does not exist .*; the work branch is main/);
   });
 });
 
 describe("a fresh run", () => {
+  it("claims on the local branch in a repo with no origin", () => {
+    seed({ rows: [row(A)] });
+    git(base, "remote", "remove", "origin");
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(0);
+    expect(r.json).toMatchObject({ result: "ready", mode: "fresh" });
+    expect(git(base, "log", "-1", "--format=%s", "develop")).toBe(`docs: plan queue — ${A} running`);
+    expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe("seed");
+  });
+
   it("is ready: the row RUNNING and pushed, run set, the phases in order", () => {
     seed({ rows: [row(A)] });
     const r = start([`docs/plans/${A}`, "--worktree", ".worktrees/shared"]);
