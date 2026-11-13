@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-13 02:21 in .worktrees/all-2026-11-13-0218"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-13 — 5300fbdf..2c53f2cc (15 commits on all-2026-11-13-0218)"
   },
   "consent": {
     "merge": true,
