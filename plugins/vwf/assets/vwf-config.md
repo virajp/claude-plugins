@@ -536,9 +536,12 @@ earlier than 65/90/80), never loosen.
   changes, which is exactly the case this file's stamp rule anticipates, and the
   first config bump since `11` to ship without a paired blueprint bump.
 
-  Readers treat a `custom` pin, or a token no installed plugin declares, as `13`
-  drift **and** as a blocking `/vwf:doctor` finding — the drift says the repo is
-  behind, the blocking finding says vwf will not build against it meanwhile.
+  Readers treat a `custom` pin as `13` drift **and** as a blocking `/vwf:doctor`
+  finding — the drift says the repo is behind, the blocking finding says vwf
+  will not build against it meanwhile. A token the pinned template does not
+  list is the `unknown` finding instead — a degradation that `/vwf:doctor`
+  reports and on which `/vwf:execute` asks continue or stop; `/vwf:setup` alone
+  stops on it (assets/stack-vocabulary.md).
 
 - **`14 → 15` migration** (performed by `/vwf:setup`): **a
   multi-repo product stops having to be a submodule
