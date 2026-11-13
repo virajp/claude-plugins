@@ -51,6 +51,14 @@ disable-model-invocation: false
   commit
 - Check `no-commit-to-branch` hook in `.config/pre-commit-config.yaml` before
   committing to any branch
+- **Never a direct commit on `develop` or `main`.** Both are protected
+  branches. A change to one — a plan-queue row, a planner's approved folder,
+  anything — is made in its own worktree on its own local branch, committed
+  there, merged into the branch, and the worktree and branch removed; when
+  pre-commit refuses the merge, a pull request instead, and the caller waits
+  for it to merge. The script `scripts/land.mjs` does this, and every vwf
+  caller uses it — no other script commits, cuts a branch or adds a worktree
+  on a protected branch. [Protected-branch writes](references/protected-branch.md)
 
 ## Caller Preferences
 
@@ -77,13 +85,14 @@ never `--amend` after a hook failure, never retry with `--no-verify`.
 
 ## References
 
-The two branches most runs never take. Read one only when the step below routes
-you into it — a run that lands in an existing worktree and stops at a commit
-needs neither.
+The branches most runs never take. Read one only when the step below, or a
+caller's write to a protected branch, routes you into it — a run that lands in
+an existing worktree and stops at a commit needs none of them.
 
 | Reference                                     | When to read                                                                                               |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
 | [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (git worktree add, submodules, mise init) |
+| [Protected-branch writes](references/protected-branch.md) | Whenever a change must reach `develop` or `main` outside a worktree's own landing — a plan-queue row, a planner's folder — through `scripts/land.mjs` |
 | [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two landing options (submodule order, push, the `pr` path, teardown, stale sweep) |
 
 ---

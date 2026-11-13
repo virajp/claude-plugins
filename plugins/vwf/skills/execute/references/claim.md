@@ -51,12 +51,12 @@ the integration branch and pull, then re-run.
 ## The result
 
 It prints one JSON object on stdout, and nothing else there; progress and warnings
-go to stderr. Exit 0 on `ready`; 1 on `refused`, `blocked` or `nothing`; 2 on a
+go to stderr. Exit 0 on `ready`; 1 on `pending`, `refused`, `blocked` or `nothing`; 2 on a
 usage or internal error, with nothing on stdout — report the stderr line and stop.
 
 | Key              | Holds                                                                                              |
 | ---------------- | -------------------------------------------------------------------------------------------------- |
-| `result`         | `ready`, `refused`, `blocked` or `nothing`                                                         |
+| `result`         | `ready`, `pending` (the claim waits on a pull request), `refused`, `blocked` or `nothing`          |
 | `mode`           | `fresh`, `resume`, or `null` when no folder was resolved                                           |
 | `folder`         | the folder, repo-relative                                                                          |
 | `kind`           | the row's `kind`, `cycle` or `change`                                                              |
@@ -66,7 +66,7 @@ usage or internal error, with nothing on stdout — report the stderr line and s
 | `projects`       | the plan's projects the checks were scoped to                                                      |
 | `findings`       | each `{rule, severity, project, subject, message, remedy}`: the `blocking` rows and the `unknown-language` rows; `project` is `null` on a repo-level row |
 | `open_questions` | `null` on a fresh run; on a resume, `{gaps, events}`: the ids of the open `QUESTION` gaps, and the `question` events with no `answer` |
-| `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the stash could not be applied, or was applied but kept undropped) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed`; `null` when no claim ran |
+| `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the stash could not be applied, or was applied but kept undropped) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed`, or `pr` with `url`, `branch` and `repo` on a pending claim; `null` when no claim ran |
 | `message`        | one line for the user                                                                              |
 
 Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
@@ -74,13 +74,15 @@ Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
 ## Acting on the result
 
 - **`ready`** → print `message`, and continue to [Setup](setup.md). A `claim`
-  `warning` names the stash the claim kept (`vwf plan queue <folder>`, by SHA):
+  `warning` names the stash the claim kept (`vwf land vwf-claim-<plan name>`, by SHA):
   print it, and say to apply that stash by hand when the apply failed, or to
   drop it by hand when it was applied but moved before it could be dropped; the
   run continues in its own worktree. On a resume with a non-empty
   `open_questions`, ask each per [questions.md](questions.md) before Setup —
   each gap id and each event under its own id, once, per *No one to answer*
   there.
+- **`pending`** → print `message`, wait for the claim's pull request, then go on
+  as *The claim* below says: to Setup on `MERGED`, a stop on `CLOSED`.
 - **`refused`** → print `message` and stop. It names the refusal and its fix, in
   the words of [folder.md](../workflows/folder.md). Under `next` it names the picked
   folder too.
@@ -127,15 +129,19 @@ nothing to the log.
 
 ### The claim
 
-These are the **two** edits the run makes in the main checkout: the row, set
-`RUNNING`, and the folder's `run`, set to
+These are the **two** edits the claim lands on the integration branch: the row,
+set `RUNNING`, and the folder's `run`, set to
 `{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}`
 — the worktree this run will use and its log, the `~` literal. One commit,
-`docs: plan queue — <folder> running`, on the integration branch, pushed when the
-repo has an `origin` remote. When the
-folder lives in a member repo, its `run` edit is a second, direct commit on that
-repo's integration branch, with the same message, after the base's; its `<repo>`
-and worktree are that repo's. They are made in the main checkout on purpose:
+`docs: plan queue — <folder> running`, and **never a direct commit**: the claim is
+a protected-branch write of `vwf:git-workflow`
+(`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`) — its
+own worktree and local branch `vwf-claim-<plan name>`, the commit there, merged
+into the integration branch, pushed when the repo has an `origin` remote, the
+worktree and branch removed. When the folder lives in a member repo, its `run`
+edit is a second such write on that repo's integration branch, with the same
+message, after the base's; its `<repo>` and worktree are that repo's. They land on
+the integration branch, before the run's worktree exists, on purpose:
 
 - The pushed row is what another session's `next` reads, so a claim that lived only
   on the run branch would claim nothing.
@@ -143,14 +149,29 @@ and worktree are that repo's. They are made in the main checkout on purpose:
 - The run branch must never carry `docs/plans/index.json`, or two plans landing in
   parallel would conflict on it.
 
-A claim that does not land is one of two outcomes, and `start.mjs` closes the log
-for each with an `event stop` and an `end`:
+A claim the hooks refuse to merge is **pending**, not failed. `start.mjs` returns
+`result` `pending`, exit 1, with `claim` `{claimed: false, kind: "pr", url, branch,
+repo, reason}`: the claim branch is pushed and a pull request is open. The log stays
+open. Wait for the pull request per *Waiting on a pull request* in
+`protected-branch.md` — one background watch, the URL told to the user in one line:
+
+- `MERGED` → `node ${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/scripts/land.mjs finish
+  <claim.repo> --branch <claim.branch> --into <integration>`, then go on to Setup as
+  on `ready`. The row is `RUNNING` at the tip.
+- `CLOSED` → the claim did not land: log `event stop --reason "claim pull request
+  closed"` and `end --outcome claim-failed`, report it, and stop.
+
+A runner under `all` cannot be notified, so it waits with the watch in the
+foreground, as `protected-branch.md` says for a subagent.
+
+A claim that does not land otherwise is one of two outcomes, and `start.mjs` closes
+the log for each with an `event stop` and an `end`:
 
 - **Lost** (`kind` `lost`): another session claimed the row first. Under `next`,
   `start.mjs` ends the log with `--outcome claim-lost` and picks again on its own;
   under a named folder, the result is `refused`.
-- **Failed** (`kind` `failed` or `member-failed`): a commit or push failed for
-  another reason, the claim commit undone. The result is `refused` under `next` and
+- **Failed** (`kind` `failed` or `member-failed`): a commit, merge or push failed
+  for another reason; the claim's worktree and branch are removed. The result is `refused` under `next` and
   a named folder alike, with no re-pick, and the log ends with
   `--outcome claim-failed`. A `member-failed` claim leaves the base row `RUNNING`:
   its `message` names the `plan-management unclaim <folder>` request, which the

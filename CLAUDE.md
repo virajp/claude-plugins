@@ -48,8 +48,9 @@ Each row below is loaded **on demand** — follow the link when you need more th
 the summary here. The `.claude/skills/` rows also auto-apply the moment you edit
 the tree they govern; `release` is a slash command; a change to this repo is
 planned with `/vwf:plan` (a blueprint slice) or `/vwf:change-plan` (anything
-else), each of which **commits and pushes the approved folder** on the branch it
-was planned on together with its row in `docs/plans/index.json`, the **one plan
+else), each of which **lands the approved folder** on the integration branch
+through git-workflow's `land.mjs` together with its row in
+`docs/plans/index.json`, the **one plan
 index**, created once with the Write tool and validated, every later change made
 through `plan.mjs set`, `append` or `remove`, and a folder's waves renumbered by
 the planner through `plan.mjs rewave`, after `plan.mjs set` gives each unit
@@ -63,7 +64,8 @@ that index alone, of either kind, and picks the runnable plan with the lowest
 each in its own `execute-runner` subagent, until one stops — which refuses a
 folder that is not on that branch, and starts with one script call, `start.mjs`,
 that runs its start checks and claims the row `RUNNING`
-with a pushed commit before it cuts a worktree — the same commit writing the
+with a commit landed through `land.mjs` — never a direct commit — before it
+cuts a worktree — the same commit writing the
 folder's `run`, the worktree and action-log paths — and marks it `COMPLETE` once
 the merge lands (archiving the folder there and re-pointing the row when no gap
 is open; leaving it live when one is, archived once you ask) — each plan folder

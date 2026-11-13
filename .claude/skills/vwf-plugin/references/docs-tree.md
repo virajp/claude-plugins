@@ -47,8 +47,9 @@ of rows per `skills/plan-management/references/plan-index.md` — keys `id`,
 `folder`, `kind`, `title`, `target_repo`, `priority`, `status`, `gaps` (`null`
 until landing, then `{open, moved_to}`, `moved_to` naming the later plan whose
 `gaps_of` takes them), `requires`, `backlog`, `backlog_pieces`, statuses
-`APPROVED`/`RUNNING`/`COMPLETE` only, every edit a direct commit on the
-integration branch — the queue `/vwf:execute next` and `/vwf:execute all` read
+`APPROVED`/`RUNNING`/`COMPLETE` only, every edit landed on the
+integration branch through git-workflow's `land.mjs`, never a direct commit —
+the queue `/vwf:execute next` and `/vwf:execute all` read
 with no `kind` filter. Each JSON file is created once with the Write tool — a
 folder's `index.json` by its planner, `docs/plans/index.json` by
 `plan-management`'s `add` when it is absent — and validated with

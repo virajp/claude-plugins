@@ -189,12 +189,13 @@ rather than asks: `10` for a plan that requires nothing still active, `10` more
 than the highest `priority` value among the plans it requires otherwise, so a
 chain runs in order. Any backlog item the plan covers, finished or a piece, is
 marked `planned` with this folder added to its `Planned in:` list — an edit to
-the project on the forge, nothing in the tree — and the folder and the index are
-**committed and pushed on the branch you are on** — in place, no worktree,
-nothing merged. That is not housekeeping: the next step runs in a worktree cut
-from the integration branch, and it can only see a folder that is already
-committed there. A folder left untracked ends up swept into some later commit of
-the run instead. Only then does it **check that nothing is left to plan**:
+the project on the forge, nothing in the tree — and the folder and the index
+**land on the integration branch**: never a direct commit, but a worktree and a
+local branch of their own, one commit there, merged in and pushed, then removed
+(a pull request instead, when pre-commit refuses the merge). That is not
+housekeeping: the next step runs in a worktree cut from the integration branch,
+and it can only see a folder that is already committed there. Only then does it
+**check that nothing is left to plan**:
 [`/vwf:backlog unplanned`](../../plugins/vwf.md#vwfbacklog) at the highest
 priority among the plan's backlog ids — or, with none, the highest priority any
 open item carries — plus any piece of your request not yet planned. When it
@@ -258,8 +259,9 @@ than you typing it, it first asks whether to start a new session or continue in
 the current one — only you can promise a clean window.
 
 It refuses a folder that is not committed on the integration branch, which after
-a normal approval it always is. If you wrote or moved one by hand, commit and
-push it first — or re-run `/vwf:change-plan` on it — then re-launch. It also
+a normal approval it always is. If you wrote or moved one by hand, land it
+first with `/vwf:git-workflow`'s `land.mjs` — or re-run `/vwf:change-plan` on
+it — then re-launch. It also
 stops, before it changes anything, on a repo still in the old markdown plan
 format — a `docs/plans/index.md` — and points you to the
 [migration guide](https://github.com/virajp/claude-plugins/blob/main/docs/plans/migrate.md);
@@ -275,12 +277,15 @@ re-runs the script with `--continue-unknown-language`. Then it **claims the
 plan**: the row in
 `docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
 worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run
-will use, in a commit pushed on the integration branch, before any worktree
-exists. In a repo with no remote, the commit stays local and nothing is pushed.
-That pushed row is what makes a second session safe: another
-`/vwf:execute next` or `all` running at the same time sees the row taken and
-picks something else, and if two sessions race for the same row, the push that
-lands second is rejected, so that session re-reads the queue and re-picks — or,
+will use, in one commit landed on the integration branch before any worktree
+exists — through its own short-lived worktree and branch, merged in, never a
+direct commit. If pre-commit refuses that merge, a pull request opens instead,
+and the session waits for it to merge before it goes on. In a repo with no
+remote, nothing is pushed. That landed row is what makes a second session
+safe: another `/vwf:execute next` or `all` running at the same time sees the
+row taken and picks something else, and if two sessions race for the same row,
+the one that lands second conflicts on it, so that session re-reads the queue
+and re-picks — or,
 for a named folder, stops and tells you another session has it. A `RUNNING` row
 is never taken over, however long it has sat there; if the session that claimed
 it is gone, ask the session to unclaim it — its worktree must be gone first —
@@ -336,7 +341,7 @@ every item it landed a piece of `Partially done` — the item stays open, with a
 line recording which plan landed on it — archives the folder to
 `docs/plans/archived/` (a landing with a gap still open leaves the folder live
 instead, to be archived when you ask), and lands per the consent you recorded.
-Once the merge is in, one more commit on the integration branch sets the plan's
+Once the merge is in, one more commit, landed the same way, sets the plan's
 row to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE`
 row that no waiting plan still requires — the queue only ever holds what is
 waiting, running, or still needed. The same commit raises the plan's release

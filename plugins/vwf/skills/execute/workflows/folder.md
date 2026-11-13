@@ -177,11 +177,11 @@ the id to the list its Parked lines say it belongs on.
 
 ## The folder is already committed
 
-The folder arrives committed on the integration branch. The planner commits and
-pushes it at hand-off, so the worktree Setup step 1 cuts sees it from its first
-commit. The script refuses a folder that is not on that branch; nothing sweeps it
-into a unit commit. The message says to run the planner again on it, or to commit
-and push it by hand, then re-launch.
+The folder arrives committed on the integration branch. The planner lands it at
+hand-off through git-workflow's protected-branch write, so the worktree Setup step 1
+cuts sees it from its first commit. The script refuses a folder that is not on that
+branch; nothing sweeps it into a unit commit. The message says to run the planner
+again on it, or to land it by hand with git-workflow's `land.mjs`, then re-launch.
 
 Then, on `ready`, continue with [claim.md](../references/claim.md)'s *Acting on the
 result*.

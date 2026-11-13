@@ -545,27 +545,35 @@ In this order.
    list of `index.json` names ids, invoke
    `/vwf:backlog planned <ids> <folder>` with the ids of both lists — that
    skill edits the project, not a file; this one never does either.
-3. **Commit and push the folder** through `vwf:git-workflow`, invoked with
-   these declared preferences, so it asks nothing:
-   - **work in place on the current branch, no worktree** — its Step 1 "if
-     declined" path. Say why: the run's worktree is cut from the integration
-     branch, so it can see the folder only once the folder is committed there;
-     a folder still untracked at hand-off gets swept into some later wave's
-     commit. The index row rides the same commit for the same
-     reason — it is a direct commit on the branch, never a worktree's
-   - **stage exactly the plan folder**, `docs/plans/index.json` and each
-     parked record this interview wrote to `docs/memory/gaps/`, and nothing
-     else — the `plan-management` edit rides this commit and that
-     skill never commits; step 2 changed nothing in the tree
-   - **commit** with type `docs` and the message
-     `docs: plan — <slice> — approved, awaiting execution`
-   - **push to the branch's upstream** after the commit, setting the upstream
-     when the branch has none. The approve in §6 is the explicit request
-     git-workflow's push rule wants; do not ask again
+3. **Land the folder on the integration branch** through `vwf:git-workflow`'s
+   protected-branch write, never a direct commit
+   (`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`)
+   — the run's worktree is cut from the integration branch, so it can see the
+   folder only once the folder lands there, and the index row lands with it:
+   - `node ${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/scripts/land.mjs open <repo>
+     --into <integration> --name vwf-approve-<slice>`, `<integration>` the
+     integration branch as git-workflow resolves it
+   - **move** into that worktree, at the same paths, exactly the plan folder
+     and each parked record this interview wrote to `docs/memory/gaps/`, so
+     the main checkout no longer carries them; then the row — read it from the
+     main checkout with `plan.mjs get docs/plans/index.json plans.<basename>`,
+     append it in the worktree with
+     `plan.mjs append docs/plans/index.json plans --json '<row>'`, and restore
+     the main checkout's index with `git checkout -- docs/plans/index.json`
+     (when the tip has no `docs/plans/index.json` yet, move the file instead).
+     Nothing else goes in — the `plan-management` edit rides this write and
+     that skill never commits; step 2 changed nothing in the tree
+   - `land.mjs close <worktree> --into <integration> --message "docs: plan —
+     <slice> — approved, awaiting execution"`. The approve in §6 is the
+     explicit request git-workflow's push rule wants; do not ask again
+   - a `pr` result waits on its pull request per that reference, then runs
+     `land.mjs finish`; a `conflict` or `failed` result is reported with the
+     worktree path, and the hand-off stops — the folder is not on the
+     integration branch yet
 
-   Under `multi-repo` the folder and the index are two repos: two commits,
+   Under `multi-repo` the folder and the index are two repos: two writes,
    the member's (the folder) first, the base's (the index row and each
-   parked record) last, both pushed. The backlog project is the base's —
+   parked record) last. The backlog project is the base's —
    resolved from the base's remote
    — so a member session addresses the same project and commits nothing for
    it.

@@ -86,8 +86,10 @@ reads the index with no `kind` filter, or `execute all`, which repeats `next`
 and hands each pick to an `execute-runner` subagent, one at a time, until one
 stops — starts with one script call in the main checkout, `start.mjs` (the
 format test, the pick or resolve, `checks.mjs`'s blocking checks, the log start
-and the claim, no doctor skill), which claims it `RUNNING` with a
-pushed commit before cutting a worktree — the same commit writing the folder's
+and the claim, no doctor skill), which claims it `RUNNING` through
+git-workflow's `land.mjs` (its own worktree and branch, merged in, never a
+direct commit; a pull request when pre-commit refuses the merge) before cutting
+a worktree — the same commit writing the folder's
 `run`, the worktree and action-log paths — runs each unit by its `kind` (a
 `code` unit through TDD and the coverage gate, a `review` row through the two
 engines plus the code and security reviewers over the branch delta since the

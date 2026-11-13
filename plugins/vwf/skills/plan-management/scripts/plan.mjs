@@ -61,11 +61,14 @@
 // {nothing: [{folder, waits}]}, exit 1. `resolve` prints {runnable, entries:
 // [{entry, kind, satisfied, reason}]}, exit 0 when runnable, else 1. `claim`
 // runs the claim procedure of references/plan-index.md in the base's main
-// checkout — the row RUNNING and the folder's run, one commit on the work
-// branch, pushed when the repo has an origin remote; a member folder's run is a
-// second commit on the member's work branch —
+// checkout — the row RUNNING and the folder's run, landed on the work branch
+// through git-workflow's land (a worktree and branch, a commit, a merge, a push
+// when the repo has an origin remote, then clean-up), never a direct commit; a
+// member folder's run is a second landing on the member's work branch —
 // and prints {claimed: true, commit[, warning]}, exit 0, or {claimed: false,
-// kind, reason[, warning]}, exit 1, kind lost, member-failed or failed.
+// kind, reason[, warning]}, exit 1, kind lost, member-failed or failed — or kind
+// pr, with url, branch and repo, when the hooks refused the merge and a pull
+// request was opened instead.
 // --branch names the base repo's work branch and is necessary; --member-branch
 // names every member repo's work branch, necessary only when a verb reads a
 // member. The tip is origin/<branch> when the repo has an origin remote, else

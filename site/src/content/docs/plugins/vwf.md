@@ -2226,12 +2226,15 @@ so each one answered here is a question the run never has to ask. Then the
 repo's `docs/plans/index.json` — the folder, `kind` `cycle`, the title, the
 target repo, the derived priority, `APPROVED`, the basenames it requires, the
 backlog ids; the backlog ids are marked `planned`, an edit to the project and
-nothing in the tree; and the folder plus the index are **committed and pushed**
-through [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are standing
-on, in place and with no worktree, because the fresh session's worktree is cut
-from the integration branch and can see the folder only once it is committed
-there. Under `multi-repo` the folder lands in the member whose code it changes
-and the row in the base — two commits, both pushed. Only then does it **check
+nothing in the tree; and the folder plus the index **land on the integration
+branch** through [`/vwf:git-workflow`](#vwfgit-workflow)'s protected-branch
+write — never a direct commit: a worktree and a local branch of their own, one
+commit there, merged into the integration branch and pushed, the worktree and
+branch removed, or a pull request when pre-commit refuses the merge — because
+the fresh session's worktree is cut from the integration branch and can see the
+folder only once it lands there. Under `multi-repo` the folder lands in the
+member whose code it changes and the row in the base — two writes. Only then
+does it **check
 that nothing is left to plan**, through [`/vwf:backlog unplanned`](#vwfbacklog):
 the **check priority** is the highest priority among the folder's backlog ids,
 or, with none, the highest priority any open item carries, and an item is
@@ -2306,9 +2309,10 @@ goes through `plan.mjs set`, `append`, `remove` or `rewave`, one field or one
 list entry for each write, except `rewave`, which moves units and rebuilds
 `waves` in one write, and reads through `plan.mjs get`. The planner adds the row
 at hand-off; this skill
-flips it; every edit is a direct commit on the integration branch from the main
-checkout, never a worktree's, so the run branch never carries the file and two
-plans landing in parallel cannot conflict on it.
+flips it; every edit lands on the integration branch through
+`/vwf:git-workflow`'s protected-branch write, never as a direct commit and
+never on a run branch, so the run branch never carries the file and two plans
+landing in parallel cannot conflict on it.
 
 `next` reads that index, at the integration branch's tip, with **no `kind`
 filter**, and takes the `APPROVED` row of lowest `priority` whose every
@@ -2409,22 +2413,29 @@ question is asked only, recorded nowhere, and never asked again on a resume.
 Then the script **claims the row**: the folder's row is set `RUNNING`, and the
 folder's `run` to the
 worktree and [action log](#the-action-log) paths the run will use, in one
-commit — `docs: plan queue — <folder> running` — pushed on the integration
-branch from the main checkout, before any worktree exists. The session passes
-the integration branch to the script as `--branch`; the script never assumes a
-name. A repo with no remote is supported: the script reads the local branch,
-and the claim commit stays local. When the main
-checkout has uncommitted changes, the claim sets them aside in a stash named
-`vwf plan queue <folder>` and restores that stash, found by its SHA, once the
-claim lands; if it cannot, the run continues in its own worktree and the result
-names the stash for you to apply or drop by hand.
-That pushed row is what makes a second session safe beside this one; a rejected
-push means the plan was claimed first, so `next` re-picks and a named run stops.
+commit — `docs: plan queue — <folder> running` — landed on the integration
+branch before any worktree exists. The claim is never a direct commit: it is a
+protected-branch write of [`/vwf:git-workflow`](#vwfgit-workflow) — its own
+worktree and local branch, the commit there, merged into the integration branch
+and pushed, the worktree and branch removed. When pre-commit refuses that
+merge, the claim branch is pushed and a pull request opened instead; the
+script returns `pending`, and the session waits for the pull request to merge
+before it goes on. The session passes the integration branch to the script as
+`--branch`; the script never assumes a name. A repo with no remote is
+supported: the script reads the local branch, and nothing is pushed. When the
+main checkout has uncommitted changes, the merge sets them aside in a stash and
+restores it, found by its SHA, once the claim lands; if it cannot, the run
+continues in its own worktree and the result names the stash for you to apply
+or drop by hand.
+That landed row is what makes a second session safe beside this one; a
+conflict on the row means the plan was claimed first, so `next` re-picks and a
+named run stops.
 A folder that `plan.mjs validate` rejects, a `DRAFT` folder, a `COMPLETE` one,
 an unsatisfied `requires`, a folder with no row, one whose row another session
-holds, and a folder not committed on the integration branch (the planner commits
-and pushes it at hand-off, so the answer is to run that again on it, or to
-commit and push it by hand, then re-launch) are each refused with the reason;
+holds, and a folder not committed on the integration branch (the planner lands
+it at hand-off, so the answer is to run that again on it, or to land it by hand
+with `/vwf:git-workflow`'s `land.mjs`, then re-launch) are each refused with the
+reason;
 `BLOCKED` or `RUNNING` is a resume, which reads each unit's `status` and
 `commit` in the folder's `index.json` and picks up at the first unit that is not
 done.
@@ -2747,8 +2758,9 @@ that project's key in `.config/releases.yaml` to the entry's level when it is
 higher — the order is `NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR`
 stays `MAJOR` — and never lowers one; an absent key or file reads `NONE`, and
 only a release step clears a key. The run bumps no version. The file is written
-on the integration branch after the merge, never on the run branch, so two runs
-landing at once do not conflict on it. **Where the folder ends up depends on the
+in the completion's protected-branch write after the merge, never on the run
+branch, so two runs landing at once do not conflict on it. **Where the folder
+ends up depends on the
 gap list.** Each entry of the folder's `gaps` list carries a `state`, `open` or
 `closed`. The run writes `closed` only for what it settled itself with no ruling
 owed — an Owns widened and the fix applied, a finding a later round or the
@@ -3097,7 +3109,7 @@ is no old-format copy of this skill or of `execute`.
 | Verb                               | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         | Called by                                                                                       |
 | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | `add <folder>`                     | The hand-off: `plan.mjs validate` green, status `APPROVED`, the priority derived, the row appended to the `plans` list (`kind` from the folder's `type`, `started` and `ended` empty, `gaps` `null`), and each `gaps_of` row's `gaps` set to `open` `0` with this folder added to `moved_to`                                                                                                                                                                                                                                                                                                                 | `plan`, `change-plan`                                                                           |
-| `claim <folder>`                   | In the main checkout, on the integration branch: the row `APPROVED` → `RUNNING`, and the folder's `run` set to the worktree and action-log paths in the same commit; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                                          | `execute`, before the worktree is cut                                                           |
+| `claim <folder>`                   | In a protected-branch write, landed on the integration branch: the row `APPROVED` → `RUNNING`, and the folder's `run` set to the worktree and action-log paths in the same commit; a row already `RUNNING`, or absent, is refused                                                                                                                                                                                                                                                                                                                                                                            | `execute`, before the worktree is cut                                                           |
 | `unclaim <folder>`                 | Releases a stale claim: refuses while the worktree the folder names still exists (naming `git worktree remove <path>` as your proof the run is gone), asks once, then resets the row and the folder's status to `APPROVED`, and the folder's `run` to `{}`, in the main checkout and reports the commit — `docs: plan queue — <folder> unclaimed` — and the stale branch, which it never deletes                                                                                                                                                                                                             | a session, on your word — `execute`'s resume report names the request when the worktree is gone |
 | `status <folder> <state> [detail]` | The folder's status alone — `status.state` `RUNNING`, `BLOCKED`, `COMPLETE` or `APPROVED`, and `status.detail`; never mirrored to the row                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `execute`, at start, pause, block and landing                                                   |
 | `complete <folder>`                | After the merge: the row `COMPLETE` and its `gaps` count, its `folder` re-pointed under `archived/` when the folder was moved, then the sweep                                                                                                                                                                                                                                                                                                                                                                                                                                                                | `execute`, in the main checkout                                                                 |

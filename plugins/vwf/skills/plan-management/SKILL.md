@@ -51,7 +51,11 @@ verb below names the commit its edit rides: the planner's approval commit for
 `claim` and `complete`, the same-shaped `… unclaimed` commit of whoever asked
 for `unclaim`, `/vwf:execute`'s final `docs:` commit in the worktree for the
 landing's `status` and `archive`, and the git-workflow commit of the session
-that asked for a standalone `archive`.
+that asked for a standalone `archive`. Every one of those commits that lands on
+the integration branch outside a run's worktree is a protected-branch write
+(`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`):
+the verb's edits are made in that write's worktree, never in the main
+checkout, and never as a direct commit.
 
 ## The files
 
@@ -137,20 +141,23 @@ plans as a function of what happens to be cloned.
 
 ## Where each verb runs
 
-The index is edited **only in the main checkout, on the integration branch** —
-a run branch never touches it, which is what lets two sessions land in
+The index reaches the integration branch **only through `vwf:git-workflow`'s
+protected-branch write** — its own worktree and local branch, one commit,
+merged in, cleaned up, never a direct commit
+(`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`).
+A run branch never touches it, which is what lets two sessions land in
 parallel without a conflict on it; the contract's *Writing a row* is the
-procedure, one plain git command per step — `claim`, `unclaim` and `complete`
-are the verbs that edit it. `claim` and `unclaim` also edit one key of the
-folder there, its `run` — the worktree and log paths, written at claim and
-reset to `{}` at unclaim — in the same commit as the row: the worktree does
-not exist yet at claim, and no longer exists at unclaim. A folder's `status`
+procedure — `claim`, `unclaim` and `complete` are the verbs that edit it, and
+they edit it in that write's worktree. `claim` and `unclaim` also edit one key
+of the folder there, its `run` — the worktree and log paths, written at claim
+and reset to `{}` at unclaim — in the same commit as the row: the run's
+worktree does not exist yet at claim, and no longer exists at unclaim. A folder's `status`
 and the move are edited **wherever the folder is** — a worktree during a run,
-the main checkout otherwise. A verb that edits both, invoked from a worktree,
-does the folder half and says the row is left for the landing's `complete`.
-`unclaim` is the one verb that edits both halves in the main checkout: by its
-own precondition the run's worktree no longer exists, so the folder is only
-there.
+a protected-branch write's worktree otherwise. A verb that edits both,
+invoked from a run's worktree, does the folder half and says the row is left
+for the landing's `complete`. `unclaim` is the one verb that edits both halves
+outside a run: by its own precondition the run's worktree no longer exists, so
+it edits both in its protected-branch write's worktree.
 
 ## The format test
 
@@ -230,16 +237,15 @@ The edit rides the planner's approval commit.
 
 `plan.mjs claim <folder> [--worktree <path>]` implements it; the text below is
 the rule the verb implements. The contract's *Writing a row — the claim*: in
-the main checkout, on the integration branch, pull, and set the folder's row
-from `APPROVED` to
+a protected-branch write's worktree, cut from the integration branch's tip,
+set the folder's row from `APPROVED` to
 `RUNNING` — `set docs/plans/index.json plans.<basename>.status RUNNING`, the
 row's `status` alone — `plan.mjs` stamps the row's `started` in the same
-write; `kind` and `target_repo` are never edited. Report the
-edit for the caller's `docs: plan queue — <folder> running` commit and push; a
-rejected push is the caller's to handle per that procedure — a clean rebase
-pushes again, a conflict means another session may have claimed first, and
-the caller re-picks or stops. A row already `RUNNING`, or absent, is refused
-in one line.
+write; `kind` and `target_repo` are never edited. The write lands as
+`docs: plan queue — <folder> running`; a conflict on the index means another
+session claimed first, and the caller re-picks or stops; a merge the hooks
+refuse becomes a pull request the claim waits on. A row already `RUNNING`, or
+absent, is refused in one line.
 
 After the row, in the same checkout, write the folder's run paths with one
 `set <folder>/index.json run --json '{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}'`:
@@ -257,13 +263,11 @@ After the row, in the same checkout, write the folder's run paths with one
 
 Both files ride the claim commit. This reverses the older rule that the row
 is the one edit the run makes in the main checkout. When the folder lives in
-a member repo, the `run` edit is a direct commit on that repo's integration
-branch, beside the base repo's claim commit and with the same message;
-`worktree` is relative to that repo and `<repo>` is its name. The base comes
-first: the row in the base is the claim. Then the member commit runs the same
-procedure in the member checkout — stash when dirty, check out the integration
-branch, pull, commit, push, the rejected-push loop, restore. If the member push
-still fails, the claim returns `{claimed: false, kind: member-failed, reason}`:
+a member repo, the `run` edit is a second protected-branch write, on that
+repo's integration branch, beside the base repo's claim and with the same
+message; `worktree` is relative to that repo and `<repo>` is its name. The
+base comes first: the row in the base is the claim. If the member write does
+not land, the claim returns `{claimed: false, kind: member-failed, reason}`:
 the base row is already `RUNNING`, so the reason names the failure and the
 `plan-management unclaim <folder>` request, which the person makes. The claim
 edits the folder's `run` key only — its `status` is still the run's, set in the
@@ -276,10 +280,10 @@ The reverse of `claim`, for a claim whose run is gone: the row back from
 longer exists. It releases a claim; it never takes one — a `RUNNING` row is
 still never stolen, and `next` still never picks one.
 
-**Where.** The main checkout, on the integration branch, after
-`git pull --ff-only` — the same procedure `claim` follows (the contract's
-*Writing a row*), including the stash-if-dirty step and the push-rejection
-handling.
+**Where.** A protected-branch write's worktree, cut from the integration
+branch's tip — the same procedure `claim` follows (the contract's *Writing a
+row*), including its conflict and pull-request handling. The checks below read
+the main checkout; the edits are made in the write's worktree.
 
 **Precondition — the row.** The folder's row must read `RUNNING`. Anything
 else is a one-line refusal naming what was found: `APPROVED` — nothing to
@@ -321,10 +325,9 @@ on the integration branch it usually still does; otherwise set
 paths, `set <folder>/index.json run --json '{}'`. The log file stays where it
 is: a later claim writes the same `log` path, and the next run appends to it.
 
-**The report.** The edit for the caller's
-`docs: plan queue — <folder> unclaimed` commit, plus the branch note when the
-branch exists. The caller commits and pushes on the integration branch, the
-way `claim`'s commit lands.
+**The report.** The write lands as
+`docs: plan queue — <folder> unclaimed`, through `land.mjs close`, the way
+`claim`'s lands; report it, plus the branch note when the branch exists.
 
 ### `status <folder> <state> [detail]`
 
@@ -346,8 +349,9 @@ caller's next commit in whatever checkout the folder sits.
 
 ### `complete <folder>`
 
-The contract's *Writing a row — the completion* plus *The sweep*: in the main
-checkout, on the integration branch, after the merge has landed, count the
+The contract's *Writing a row — the completion* plus *The sweep*: in a
+protected-branch write's worktree, cut from the integration branch's tip after
+the merge has landed, count the
 entries of the folder's `gaps` list whose `state` is `open` —
 `plan.mjs get <folder>/index.json gaps` — and on the row:
 
@@ -361,8 +365,9 @@ entries of the folder's `gaps` list whose `state` is `open` —
   live path otherwise;
 
 then run the sweep. Report the edit for the caller's
-`docs: plan queue — <folder> complete` commit and push; a rejected push
-re-applies the same row until it lands, and never re-picks.
+`docs: plan queue — <folder> complete` write (`land.mjs close`); a conflict on
+the index re-applies the same row in a new write until it lands, and never
+re-picks.
 
 ### `archive [folder] [--force]`
 
@@ -479,8 +484,8 @@ Then set **only the status** of the moved `index.json`:
 Nothing else in the folder changes — not a unit file, not a run field, not
 the `consent`.
 
-Then **the folder's row**, per *Where each verb runs*. When this verb runs in
-the main checkout, apply the landing edit to the row in the base repo's
+Then **the folder's row**, per *Where each verb runs*. When this verb runs
+outside a run — in its protected-branch write's worktree — apply the landing edit to the row in the base repo's
 `docs/plans/index.json` — the same edit `complete` makes: set the row's
 `status` to `COMPLETE` — already so on a plan `/vwf:execute` landed with open
 gaps and left live — its `gaps` to `{"open": <n>, "moved_to": []}` when it is
