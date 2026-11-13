@@ -63,6 +63,33 @@ if [ -n "$RACE" ] && [ -f "$RACE" ]; then sh "$RACE" >/dev/null 2>&1; rm -f "$RA
 exit $status
 `;
 
+/**
+ * A `git` that, on a call whose arguments start with $STUB_MATCH, first runs
+ * the $STUB_RACE script once, and skips the call itself when $STUB_SKIP is
+ * set; every other call goes to the real git.
+ */
+const GIT_STUB = (real: string) => `#!/bin/sh
+case "$*" in
+  "$STUB_MATCH"*)
+    if [ -n "$STUB_RACE" ] && [ -f "$STUB_RACE" ]; then
+      race="$STUB_RACE.run"; mv "$STUB_RACE" "$race"; sh "$race" >/dev/null 2>&1; rm -f "$race"
+    fi
+    if [ -n "$STUB_SKIP" ]; then exit 0; fi
+    ;;
+esac
+exec "${real}" "$@"
+`;
+
+/** Runs plan.mjs with the git stub ahead of the real git on PATH. */
+function stubbed(cwd: string, args: string[], stub: NodeJS.ProcessEnv) {
+  const dir = join(root, "stub");
+  mkdirSync(dir, { recursive: true });
+  const real = spawnSync("sh", ["-c", "command -v git"], { env, encoding: "utf8" }).stdout.trim();
+  writeFileSync(join(dir, "git"), GIT_STUB(real));
+  chmodSync(join(dir, "git"), 0o755);
+  return plan(cwd, args, { ...stub, PATH: `${dir}:${env.PATH}` });
+}
+
 function git(cwd: string, ...args: string[]) {
   const r = spawnSync("git", args, { cwd, env, encoding: "utf8" });
   if (r.status !== 0) {
@@ -448,6 +475,56 @@ describe("claim", () => {
     expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
     expect(readExists(join(base, "foreign.txt"))).toBe(false);
     expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual(["On develop: another session"]);
+  });
+
+  it("keeps its stash and warns when the stack moves before the drop", () => {
+    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
+    writeFileSync(join(base, "notes.md"), "edited\n");
+    const race = join(root, "race.sh");
+    writeFileSync(
+      race,
+      `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session" -- foreign.txt\n`,
+    );
+    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "rev-parse stash@{", STUB_RACE: race });
+    expect(r.status).toBe(0);
+    const ours = git(base, "stash", "list", "--format=%H %gs")
+      .split("\n")
+      .find((l) => l.endsWith(`plan queue ${ID}`));
+    expect(ours).toBeDefined();
+    const sha = ours!.split(" ")[0];
+    expect(r.json.warning).toContain(sha);
+    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
+      "On develop: another session",
+      `On develop: vwf plan queue ${ID}`,
+    ]);
+    expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
+  });
+
+  it("refuses when another stash lands on top before it reads refs/stash", () => {
+    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
+    writeFileSync(join(base, "notes.md"), "edited\n");
+    const race = join(root, "race.sh");
+    writeFileSync(race, `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session"\n`);
+    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "rev-parse refs/stash", STUB_RACE: race });
+    expect(r.status).not.toBe(0);
+    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
+    expect(r.json.reason).toContain(`"vwf plan queue ${ID}"`);
+    expect(r.json.reason).toContain(git(base, "rev-parse", "refs/stash"));
+    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
+      "On develop: another session",
+      `On develop: vwf plan queue ${ID}`,
+    ]);
+    expect(claimed().row.status).not.toBe("RUNNING");
+  });
+
+  it("refuses when the stash push creates no entry", () => {
+    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
+    writeFileSync(join(base, "notes.md"), "edited\n");
+    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "stash push", STUB_SKIP: "1" });
+    expect(r.status).not.toBe(0);
+    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
+    expect(r.json.reason).toMatch(/created no new stash entry.*in the stash under "vwf plan queue/);
+    expect(claimed().row.status).not.toBe("RUNNING");
   });
 
   it("claims from another branch and checks it out back", () => {

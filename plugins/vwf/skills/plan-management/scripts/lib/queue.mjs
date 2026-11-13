@@ -411,18 +411,35 @@ function land(dir, id, files, edit) {
 
   (() => {
     if (git(dir, ["status", "--porcelain"]).out !== "") {
+      const before = git(dir, ["rev-parse", "-q", "--verify", "refs/stash"]);
       const s = git(dir, ["stash", "push", "-u", "-m", tag]);
       if (!s.ok) {
         result = { claimed: false, kind: "failed", reason: `git stash push failed: ${s.err}` };
         return;
       }
       // The stash stack is shared by every worktree and session: hold this
-      // entry by its SHA, never by stash@{0}.
-      stashed = stashEntries(dir).find((e) => e.tagged(tag))?.sha ?? null;
-      if (stashed === null) {
-        result = { claimed: false, kind: "failed", reason: `the stash "${tag}" is not on the stash list` };
+      // entry by the SHA refs/stash names right after the push, never by
+      // stash@{0} or by its tag.
+      const after = git(dir, ["rev-parse", "refs/stash"]);
+      const sha = after.ok ? after.out : null;
+      if (sha === null || (before.ok && before.out === sha)) {
+        result = {
+          claimed: false,
+          kind: "failed",
+          reason: `git stash push "${tag}" created no new stash entry; any changes it took are in the stash under "${tag}" — check git stash list`,
+        };
         return;
       }
+      const subject = git(dir, ["log", "-1", "--format=%s", sha]);
+      if (!subject.ok || !subject.out.endsWith(`: ${tag}`)) {
+        result = {
+          claimed: false,
+          kind: "failed",
+          reason: `another stash (${sha}) landed on top of "${tag}" before it could be read; your changes are in the stash under "${tag}" — apply it by hand`,
+        };
+        return;
+      }
+      stashed = sha;
     }
     if (origin !== INTEGRATION) {
       const c = git(dir, ["checkout", INTEGRATION]);
@@ -512,9 +529,17 @@ function land(dir, id, files, edit) {
   if (stashed !== null) {
     const apply = git(dir, ["stash", "apply", stashed]);
     if (apply.ok) {
-      const n = stashEntries(dir).findIndex((e) => e.sha === stashed);
+      const n = stashShas(dir).indexOf(stashed);
       if (n !== -1) {
-        git(dir, ["stash", "drop", `stash@{${n}}`]);
+        // Another session may push or pop between the lookup and the drop:
+        // read stash@{n} again and drop it only while it is still this entry.
+        const at = git(dir, ["rev-parse", `stash@{${n}}`]);
+        if (at.ok && at.out === stashed) {
+          git(dir, ["stash", "drop", `stash@{${n}}`]);
+        } else {
+          const note = `the stash moved before it could be dropped; the applied stash "${tag}" (${stashed}) is kept — drop it by hand`;
+          result.warning = result.warning ? `${result.warning}; ${note}` : note;
+        }
       }
     } else {
       git(dir, ["reset", "--merge"]);
@@ -525,18 +550,10 @@ function land(dir, id, files, edit) {
   return result;
 }
 
-/** The shared stash stack, newest first: each entry's SHA and reflog subject. */
-function stashEntries(dir) {
-  const list = git(dir, ["stash", "list", "--format=%H %gs"]);
-  if (!list.ok || list.out === "") {
-    return [];
-  }
-  return list.out.split("\n").map((line) => {
-    const space = line.indexOf(" ");
-    const sha = line.slice(0, space);
-    const subject = line.slice(space + 1);
-    return { sha, tagged: (tag) => subject.endsWith(`: ${tag}`) };
-  });
+/** The shared stash stack, newest first: each entry's SHA. */
+function stashShas(dir) {
+  const list = git(dir, ["stash", "list", "--format=%H"]);
+  return list.ok && list.out !== "" ? list.out.split("\n") : [];
 }
 
 /**

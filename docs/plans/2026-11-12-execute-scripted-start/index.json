@@ -94,9 +94,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-12T20:51:45.995Z",
-      "ended": "2026-11-13T07:59:31.037Z",
-      "commit": "5300fbdf",
-      "rounds": 2
+      "ended": "2026-11-13T08:04:52.303Z",
+      "commit": "d66fd210",
+      "rounds": 3
     },
     {
       "id": "U2",
@@ -208,7 +208,7 @@
       "started": "2026-11-13T07:48:53.874Z",
       "ended": "",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
         "from": "03b0f818",
         "to": "692ae0bf"
@@ -789,6 +789,15 @@
       "rejected": "Leave them",
       "units": [
         "U2"
+      ]
+    },
+    {
+      "id": "D48",
+      "decision": "Q11: H7 — U5 security round 2 raised two low findings on the queue.mjs stash fix (drop by stash@{n} after lookup; lookup by tag after push); the count rose 1 to 2. What should the run do?",
+      "ruling": "Fix both once more. Take the pushed stash SHA from refs/stash right after the push; check stash@{n} SHA again just before the drop and warn instead of dropping on a mismatch; the not-found message says the changes are in the stash. Then one more security round over that fix.",
+      "rejected": "Accept both as residual",
+      "units": [
+        "U1"
       ]
     }
   ],
