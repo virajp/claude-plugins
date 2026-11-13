@@ -94,9 +94,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-12T20:51:45.995Z",
-      "ended": "2026-11-12T21:01:30.462Z",
+      "ended": "2026-11-13T07:59:31.037Z",
       "commit": "5300fbdf",
-      "rounds": 3
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -140,7 +140,7 @@
       "status": "green",
       "started": "2026-11-13T07:14:49.164Z",
       "ended": "2026-11-13T07:46:57.472Z",
-      "commit": "",
+      "commit": "692ae0bf",
       "rounds": 4
     },
     {
@@ -204,14 +204,14 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-13T07:48:53.874Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "03b0f818",
+        "to": "692ae0bf"
       }
     },
     {
@@ -289,14 +289,14 @@
     },
     {
       "id": "W4",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-13T07:14:49.092Z",
-      "ended": ""
+      "ended": "2026-11-13T07:48:46.058Z"
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-13T07:48:53.799Z",
       "ended": ""
     },
     {

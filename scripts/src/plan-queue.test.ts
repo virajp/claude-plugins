@@ -434,6 +434,22 @@ describe("claim", () => {
     expect(git(origin, "show", "--name-only", "--format=", "develop")).not.toMatch(/notes|scratch/);
   });
 
+  it("restores its own stash when another is pushed on top of it", () => {
+    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
+    writeFileSync(join(base, "notes.md"), "edited\n");
+    const race = join(root, "race.sh");
+    writeFileSync(
+      race,
+      `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session"\n`,
+    );
+    const r = plan(base, ["claim", FOLDER], { RACE: race });
+    expect(r.status).toBe(0);
+    expect(r.json.warning).toBeUndefined();
+    expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
+    expect(readExists(join(base, "foreign.txt"))).toBe(false);
+    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual(["On develop: another session"]);
+  });
+
   it("claims from another branch and checks it out back", () => {
     seed([row(ID)]);
     git(base, "checkout", "-q", "-b", "feature");

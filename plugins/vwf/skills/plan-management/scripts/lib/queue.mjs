@@ -398,7 +398,8 @@ function land(dir, id, files, edit) {
   const message = `docs: plan queue — ${id} running`;
   const branch = git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
   const origin = branch.ok ? branch.out : must(dir, ["rev-parse", "HEAD"]);
-  let stashed = false;
+  const tag = `vwf plan queue ${id}`;
+  let stashed = null;
   let result;
 
   const drop = (committed) => {
@@ -410,12 +411,18 @@ function land(dir, id, files, edit) {
 
   (() => {
     if (git(dir, ["status", "--porcelain"]).out !== "") {
-      const s = git(dir, ["stash", "push", "-u", "-m", `vwf plan queue ${id}`]);
+      const s = git(dir, ["stash", "push", "-u", "-m", tag]);
       if (!s.ok) {
         result = { claimed: false, kind: "failed", reason: `git stash push failed: ${s.err}` };
         return;
       }
-      stashed = true;
+      // The stash stack is shared by every worktree and session: hold this
+      // entry by its SHA, never by stash@{0}.
+      stashed = stashEntries(dir).find((e) => e.tagged(tag))?.sha ?? null;
+      if (stashed === null) {
+        result = { claimed: false, kind: "failed", reason: `the stash "${tag}" is not on the stash list` };
+        return;
+      }
     }
     if (origin !== INTEGRATION) {
       const c = git(dir, ["checkout", INTEGRATION]);
@@ -502,15 +509,34 @@ function land(dir, id, files, edit) {
       result.warning = `could not check out ${origin} again: ${back.err}`;
     }
   }
-  if (stashed) {
-    const pop = git(dir, ["stash", "pop"]);
-    if (!pop.ok) {
+  if (stashed !== null) {
+    const apply = git(dir, ["stash", "apply", stashed]);
+    if (apply.ok) {
+      const n = stashEntries(dir).findIndex((e) => e.sha === stashed);
+      if (n !== -1) {
+        git(dir, ["stash", "drop", `stash@{${n}}`]);
+      }
+    } else {
       git(dir, ["reset", "--merge"]);
-      const note = `git stash pop failed in ${dir}; the stash "vwf plan queue ${id}" is kept — apply it by hand`;
+      const note = `git stash apply ${stashed} failed in ${dir}; the stash "${tag}" (${stashed}) is kept — apply it by hand`;
       result.warning = result.warning ? `${result.warning}; ${note}` : note;
     }
   }
   return result;
+}
+
+/** The shared stash stack, newest first: each entry's SHA and reflog subject. */
+function stashEntries(dir) {
+  const list = git(dir, ["stash", "list", "--format=%H %gs"]);
+  if (!list.ok || list.out === "") {
+    return [];
+  }
+  return list.out.split("\n").map((line) => {
+    const space = line.indexOf(" ");
+    const sha = line.slice(0, space);
+    const subject = line.slice(space + 1);
+    return { sha, tagged: (tag) => subject.endsWith(`: ${tag}`) };
+  });
 }
 
 /**
