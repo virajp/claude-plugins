@@ -158,6 +158,16 @@ function seed({ rows, build = () => {}, config = "after_landing: []\n", skip = [
   git(root, "clone", "-q", "-b", "develop", origin, other);
 }
 
+/** A pre-merge-commit hook in `repo` that refuses every merge, and a `gh` stub that opens a pull request. */
+function refuseMerges(repo: string) {
+  const hook = join(repo, ".git", "hooks", "pre-merge-commit");
+  writeFileSync(hook, "#!/bin/sh\necho 'Refuse a direct commit to a protected branch' >&2\nexit 1\n");
+  chmodSync(hook, 0o755);
+  const gh = join(root, "bin", "gh");
+  writeFileSync(gh, "#!/bin/sh\necho https://example.com/pr/7\n");
+  chmodSync(gh, 0o755);
+}
+
 function atOrigin(path: string): Json {
   return JSON.parse(git(origin, "show", `develop:${path}`));
 }
@@ -370,6 +380,18 @@ describe("the refusals", () => {
 });
 
 describe("a fresh run", () => {
+  it("is pending when the hooks refuse the claim's merge, the log left open", () => {
+    seed({ rows: [row(A)] });
+    refuseMerges(base);
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ result: "pending", mode: "fresh" });
+    expect(r.json.claim).toMatchObject({ kind: "pr", url: "https://example.com/pr/7" });
+    expect(r.json.message).toMatch(/waits on its pull request https:\/\/example.com\/pr\/7/);
+    expect(trail(A)).not.toContain("end");
+    expect(rowAtOrigin(A).status).toBe("APPROVED");
+  });
+
   it("claims on the local branch in a repo with no origin", () => {
     seed({ rows: [row(A)] });
     git(base, "remote", "remove", "origin");

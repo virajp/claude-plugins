@@ -211,7 +211,7 @@ breaks either, names one id on both lists, or names a `source` id on neither.
 
 19. **Present the shape** per the planner's gate step and ask once: approve,
     revise or abandon. Only an explicit approve writes the folder, and the
-    hand-off commits and pushes it and sets `status.state` to `APPROVED`. It
+    hand-off lands it on the integration branch and sets `status.state` to `APPROVED`. It
     asks no second yes.
 20. **The rulings review.** At self-review, once the planner's own checks are
     fixed and while the folder is still `DRAFT` — `status.state` reads

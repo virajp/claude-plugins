@@ -95,7 +95,7 @@ The three statuses:
 | ---------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `add`      | `/vwf:plan`, `/vwf:change-plan` | appends the row, `APPROVED`, `gaps` `null`, and sets the `gaps` of each row its `gaps_of` names to `{"open": 0, "moved_to": [… <basename>]}`, in the planner's hand-off commit                                                                                                                                                        |
 | `claim`    | `/vwf:execute`                  | sets `RUNNING` — before the worktree is cut — and the folder's `run` to the run's worktree and log paths; the commit `docs: plan queue — <folder> running`                                                                                                                                                                            |
-| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` and the folder's `run` back to `{}` — the one reverse edit, in the main checkout, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                     |
+| `unclaim`  | a session, on the user's word   | sets `APPROVED` back from `RUNNING` and the folder's `run` back to `{}` — the one reverse edit, in a protected-branch write, once the run's worktree is gone and the user consents; invoked by a session on the user's word, never by `/vwf:execute`; the commit `docs: plan queue — <folder> unclaimed`                                     |
 | `complete` | `/vwf:execute`                  | sets `COMPLETE` and the `gaps` count after the merge lands, re-pointing `folder` under `archived/` when the landing archived the folder (an empty gap list and no completion warning from `archive`) and leaving it at the live path otherwise — `archive` re-points it later — then runs the **sweep**; the commit `docs: plan queue — <folder> complete` |
 | `archive`  | a session, on the user's word   | applies the landing edit to one folder's row, in the commit of the session that asked; a folder with no row gets none; after a move, prunes the action logs of archived plans older than 30 days                                                                                                                                      |
 
@@ -113,8 +113,11 @@ waits on leaves the queue once its folder is archived; that folder is the
 record. A `COMPLETE` row whose `folder` is a live path is never swept — it is
 how the `archive` verb finds the folder it has yet to move.
 
-**Every edit is a direct commit on the integration branch, made in the main
-checkout, never in a worktree.** The run branch never touches this file, so two
+**Every edit lands on the integration branch through `vwf:git-workflow`'s
+protected-branch write** (`git-workflow/references/protected-branch.md`): its
+own worktree and local branch, cut from the integration branch's tip, one
+commit there, merged into the integration branch, the worktree and branch
+removed — never a direct commit. The run branch never touches this file, so two
 parallel landings cannot conflict on it. The claim and the unclaim also carry
 one edit of the folder's own `index.json` — its `run` key, set to the run's
 worktree and log paths at the claim and back to `{}` at the unclaim. The
@@ -125,7 +128,8 @@ three commit messages:
 - the landing: `docs: plan queue — <folder> complete`
 
 `/vwf:plan`'s and `/vwf:change-plan`'s rows ride their own approval commits,
-and the `archive` verb's edit rides the commit of the session that asked.
+and the `archive` verb's edit rides the commit of the session that asked —
+each one a protected-branch write too, never a direct commit.
 
 ## Resolution
 
@@ -186,8 +190,9 @@ one plain git command or one `plan.mjs` call. The pick, the resolution of a
 below, which stay the rule they implement. Each takes `--branch <integration>`,
 necessary, and `--member-branch <integration>` for the member repos, necessary
 only when it reads a member; neither has a default. The unclaim and the completion stay
-procedures the model follows step by step. Both procedures run in the
-**main checkout of the base repo**, never in a worktree. The index is the base
+procedures the model follows step by step. Every write is started from the
+**main checkout of the base repo**, and made in the protected-branch write's
+own worktree (*Writing a row*), never in a run's worktree. The index is the base
 repo's, as the backlog project is — a run started in a member repo addresses
 the base's file, resolved the way `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`
 resolves it. `<integration>` below is the branch `vwf:git-workflow` resolves
@@ -247,49 +252,27 @@ what each row status means for a named run.
 
 ### Writing a row — the claim, and the completion
 
-The two edits the executor makes in the main checkout at the claim: the row,
-and the folder's `run` — the worktree and log paths (`plan-management`'s
-`claim`, which `plan.mjs claim` runs). When the folder lives in a member repo,
-the base comes first — the row in the base is the claim — and then the member
-commit of the folder's `run` runs steps 1 to 8 in the member checkout. If the
-member push still fails, the claim returns `{claimed: false, kind:
-member-failed, reason}`, the reason naming the failure and the
-`plan-management unclaim <folder>` request, because the row is already
-`RUNNING`. A commit or push failure other than a same-row conflict undoes the
-local claim commit, when it exists, restores the checkout, and returns
-`{claimed: false, kind: failed, reason}`; the clean-rebase retry of a rejected
-push is capped at 3 attempts, then the same refusal. A failed `git stash
-apply` at step 8 leaves the landed claim standing: `git reset --merge`, the
-stash kept, and `{claimed: true, commit, warning}` naming it by tag and SHA. An
-apply that succeeds but finds `stash@{n}` no longer that SHA when it comes to
-drop it — another session pushed or popped in between — leaves the claim
-standing too: the applied stash kept, and a warning that the stash moved before
-it could be dropped, to drop it by hand. This reverses the
-older rule that the row was the one edit the run made there (approved
-2026-10-24): a reader of the folder now finds a running
-plan's worktree and action log without searching. `unclaim` follows the
-same procedure with the reverse edits — the row from `RUNNING` back to
-`APPROVED`, and `run` back to `{}` — and the push-rejection rule applies
-unchanged. Record two facts
-before touching anything: the branch the checkout is on, and whether a stash
-was taken.
+The claim, the unclaim and the completion each land one commit on the
+integration branch, and each takes the same path: `vwf:git-workflow`'s
+protected-branch write, `scripts/land.mjs`
+(`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`) —
+never a direct commit. `plan.mjs claim` calls that script's library itself;
+the unclaim and the completion run its verbs. The edits are made **in the
+write's worktree**, never in the main checkout, so the main checkout's own
+changes are never swept into the commit.
 
-1. When the checkout is dirty — `git status --porcelain` prints anything —
-   `git stash push -u -m "vwf plan queue <folder>"`, and hold the entry by the
-   SHA `refs/stash` names right after the push — never by `stash@{0}` or by
-   its tag, since the stack is shared by every worktree and session. Two
-   refusals, each `{claimed: false, kind: failed, reason}` and each saying the
-   changes are in the stash under the tag: `refs/stash` unchanged from before
-   the push — the push created no new stash entry — and an entry whose subject
-   is not the tag — another stash landed on top before it could be read.
-2. When the checkout is not on `<integration>` — `git checkout <integration>`.
-3. `git pull --ff-only`.
-4. Edit the one row, each change one `plan.mjs set` on
-   `docs/plans/index.json`:
-   - **Claim** — `plans.<basename>.status` from `APPROVED` to `RUNNING`;
-     then `set <folder>/index.json run --json` with the worktree and log
-     paths, as `plan-management`'s `claim` derives them.
-   - **Unclaim** — `plans.<basename>.status` from `RUNNING` back to
+1. `land.mjs open <base> --into <integration> --name <name>`, `<name>`
+   `vwf-claim-<plan name>`, `vwf-unclaim-<plan name>` or
+   `vwf-complete-<plan name>`. It cuts the worktree from the tip, so the row
+   read there is the tip's row.
+2. In that worktree, re-read the row and edit it, each change one
+   `plan.mjs set` on `docs/plans/index.json`:
+   - **Claim** — the row must still read `APPROVED`, else the claim is lost
+     (`land.mjs abandon`); `plans.<basename>.status` to `RUNNING`, then
+     `set <folder>/index.json run --json` with the worktree and log paths, as
+     `plan-management`'s `claim` derives them.
+   - **Unclaim** — the row must still read `RUNNING`, else `abandon` and
+     report that the row changed; `plans.<basename>.status` back to
      `APPROVED`, once the verb's liveness check and the user's consent have
      passed; then the folder's status as that verb says, and
      `set <folder>/index.json run --json '{}'`.
@@ -306,53 +289,54 @@ was taken.
      whose `folder` is still a live path is one `archive` has yet to move, and
      the sweep leaves it alone until `archive`'s own landing edit re-points
      it.
-5. `git add -- docs/plans/index.json` — that file, plus
-   `<folder>/index.json` for a claim or an unclaim; nothing else the
-   checkout carries rides this commit. The one other exception is a completion
-   whose folder's `release_levels` list raised a key: `/vwf:execute` stages
-   `.config/releases.yaml` too, per its release-levels write, and nothing
-   else.
-6. `mise x -- git commit -m "docs: plan queue — <folder> running"` for a
-   claim, `… — <folder> unclaimed` for an unclaim, `… — <folder> complete`
-   for a completion. `<folder>` is the basename.
-7. `git push`. On a **rejected push**, loop:
-   - `git pull --rebase`.
-   - The rebase is clean → another session changed a different row. `git push`
-     again. For a claim the pick stands: a claim only ever flips `APPROVED` to
-     `RUNNING`, and no such flip can make a satisfied `requires` unsatisfied.
-   - The rebase conflicts on `docs/plans/index.json` → read it as the same
-     row. `git rebase --abort`, then drop the commit —
-     `git reset --soft HEAD~1`, then
-     `git checkout HEAD -- docs/plans/index.json` — with
-     `<folder>/index.json` beside it for a claim or an unclaim — which
-     restores the files in both the index and the tree from the commit before
-     the edit — then
-     `git pull --ff-only`. Then, by kind of edit:
-     - A **completion** re-applies the same row from step 4 and pushes again —
-       a completion never re-picks; it repeats until the push lands, then
-       reaches step 8. When it carried `.config/releases.yaml`, that file is
-       restored from the new tip the same way and its levels raised again.
-     - A **claim** goes to step 8 first — the checkout is restored before
-       anything else is decided — and then back to *Reading the queue*: for
-       `next`, a re-pick, which either starts this procedure over at step 1
-       for the next candidate or stops with nothing runnable; for a named
-       folder, a row now `RUNNING` under another session is refused by the
-       executor. Neither exit skips step 8.
-     - An **unclaim** goes to step 8 and stops: the same row changed under
-       it — the run landed, or another session released it — so the verb
-       reports that and the user asks again after reading the queue.
-8. **Restore the checkout — every path ends here**, the landed push, the
-   dropped claim and the refusal alike. When the checkout was on another
-   branch — `git checkout -`. When a stash was taken — `git stash apply
-   <sha>`, then find its `stash@{n}` by SHA. Found, read `stash@{n}` again:
-   still that SHA, `git stash drop stash@{n}`; another entry, keep it and
-   warn. Not in the stash list at all, drop nothing and warn nothing.
+
+   The worktree carries `docs/plans/index.json`, plus `<folder>/index.json`
+   for a claim or an unclaim, and nothing else. The one exception is a
+   completion whose folder's `release_levels` list raised a key:
+   `/vwf:execute` writes `.config/releases.yaml` in the same worktree, per its
+   release-levels write.
+3. `land.mjs close <worktree> --into <integration> --message <message>`:
+   `docs: plan queue — <folder> running` for a claim, `… — <folder> unclaimed`
+   for an unclaim, `… — <folder> complete` for a completion. `<folder>` is the
+   basename. It commits, merges, pushes, and restores the main checkout and
+   its stash; a rejected push is pulled and merged again, up to 3 times.
+4. By its result:
+   - `landed: true` → done.
+   - `kind: "conflict"` on `docs/plans/index.json` → another session changed
+     the same row first. `land.mjs abandon <worktree>`, then by kind of edit:
+     - A **completion** starts again at step 1 — a completion never re-picks;
+       it repeats until it lands.
+     - A **claim** is lost: for `next`, a re-pick through *Reading the
+       queue*; for a named folder, a row now `RUNNING` under another session
+       is refused by the executor.
+     - An **unclaim** stops: the same row changed under it — the run landed,
+       or another session released it — so the verb reports that and the
+       user asks again after reading the queue.
+   - `kind: "pr"` → the hooks refused the merge and a pull request is open.
+     The write waits on it, per *Waiting on a pull request* in
+     `protected-branch.md`; on `MERGED`, `land.mjs finish`, then go on as on
+     `landed: true`. A claim waiting so reports `pending`
+     (`/vwf:execute`'s `references/claim.md`).
+   - `kind: "failed"`, or a conflict on another file → `land.mjs abandon`,
+     and the write is refused with the reason.
+
+When the folder lives in a member repo, the claim's base write comes first —
+the row in the base is the claim — and then the folder's `run` is a second
+write in the member repo, the same steps with `--into` the member's
+integration branch. If that write does not land, the claim returns
+`{claimed: false, kind: member-failed, reason}`, the reason naming the failure
+and the `plan-management unclaim <folder>` request, because the row is already
+`RUNNING`. A stash in the main checkout that cannot be applied or dropped
+leaves the landed write standing, with a `warning` naming the stash by tag and
+SHA. This reverses the older rule that the row was the one edit the run made
+there (approved 2026-10-24): a reader of the folder now finds a running plan's
+worktree and action log without searching.
 
 Every command is one plain call; none of them is `--force`, `reset --hard` or
-`--no-verify`, which `vwf:git-workflow` forbids everywhere. The push carries no
-plan-folder edit save the claim's and the unclaim's `run` key, and no worktree
-commit: the run branch never touches `docs/plans/index.json`, which is what
-lets two sessions land in parallel without a conflict on it.
+`--no-verify`, which `vwf:git-workflow` forbids everywhere. The write carries
+no plan-folder edit save the claim's and the unclaim's `run` key, and no run
+branch commit: the run branch never touches `docs/plans/index.json`, which is
+what lets two sessions land in parallel without a conflict on it.
 
 ### The sweep
 

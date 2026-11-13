@@ -43,19 +43,22 @@ Then act on that consent:
     it, and the loop's exit removes it unless the run ends on a `STOPPED` plan.
   - A merge conflict is a hard halt: abort, keep the worktree, invoke
     `plan-management status <folder> BLOCKED "<the conflicting files>"` there, and report the files.
-  - When step 4 returns from the merge and push, invoke `plan-management complete <folder>` in the main
-    checkout. It sets the row's `status` `COMPLETE` and its `gaps` to the count of `open` entries in the
+  - When step 4 returns from the merge and push, open the completion's protected-branch write —
+    `node ${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/scripts/land.mjs open <base> --into <integration> --name
+    vwf-complete-<plan name>` (`git-workflow/references/protected-branch.md`) — and invoke
+    `plan-management complete <folder>` in that write's worktree, never as a direct commit. It sets the row's `status` `COMPLETE` and its `gaps` to the count of `open` entries in the
     consolidated gap list. It re-points the row's `folder` under `archived/` when step 3 moved the folder, and
     leaves it at the live path otherwise. It runs the sweep, per *Writing a row — the completion*
     and *The sweep* in `plan-index.md`.
-  - Before that commit is made, make the **release-levels write** below in the same checkout, right after
-    `complete` edits the row. That is the commit `docs: plan queue — <folder> complete`, on the integration
-    branch, in the main checkout, carrying the row and the raised levels together. A rejected push re-applies the
-    same row and the same raise until it lands, and never re-picks.
+  - Before that commit is made, make the **release-levels write** below in the same worktree, right after
+    `complete` edits the row. Then `land.mjs close <worktree> --into <integration> --message "docs: plan queue —
+    <folder> complete"` lands the row and the raised levels together. A conflict on the index abandons the write
+    and makes it again, the same row and the same raise, until it lands, and never re-picks. A `pr` result waits
+    on the pull request per that reference, then runs `land.mjs finish`.
 - **no** → stop with the worktree path and the branch name, and say the branch is ready to land by hand. Say too
   that the index row stays `RUNNING` until the hand merge is followed by asking the session to archive the folder.
-  That request is `plan-management archive <folder>`, run in the main checkout. It moves the folder, and applies the
-  same row edit and sweep. No typed command does this. Ask nothing further.
+  That request is `plan-management archive <folder>`, made in a protected-branch write's worktree, never as a
+  direct commit. It moves the folder, and applies the same row edit and sweep. No typed command does this. Ask nothing further.
 
 ## The release-levels write — on a merged landing only
 
@@ -63,8 +66,8 @@ The run bumps no version. It records how far each project it changed must move. 
 bumps, tags and clears the key.
 
 The verbs of `plan-management` never commit, so this skill, the caller that owns the completion commit, writes the file
-itself. It writes in the main checkout, on the integration branch, after the merge. The write comes right after
-`complete` edits the row, and before the commit.
+itself. It writes in the completion's protected-branch write's worktree, after the merge. The write comes right
+after `complete` edits the row, and before `land.mjs close`.
 
 1. Read the folder's `release_levels`: `plan.mjs get docs/plans/archived/<basename>/index.json release_levels` when
    step 3 archived it, at its live path otherwise. An empty list, `[]`, is the old-shape case, which only a migrated
@@ -81,16 +84,16 @@ itself. It writes in the main checkout, on the integration branch, after the mer
    # Pending release levels, written by /vwf:execute at landing.
    # Each key is cleared by the release step that releases the project.
    ```
-5. When a key changed, stage `.config/releases.yaml` together with `docs/plans/index.json`. Both go into the one
+5. When a key changed, `.config/releases.yaml` lands with `docs/plans/index.json` in the one
    `docs: plan queue — <folder> complete` commit, by the procedure *Writing a row* in `plan-index.md`. This commit is
-   **the one exception to that procedure's staging step, "that file alone"**. The completion commit carries the levels
-   file too, and nothing else. When nothing changed, the commit carries the row alone. There is no separate
-   release-levels commit.
-6. On a rejected push whose rebase conflicts, the procedure drops the commit and pulls. Restore `.config/releases.yaml`
-   from the new tip as it restores the index. Then re-apply the row, and the levels from step 2, re-read at the
-   new tip and raised again. Then push again. Two runs landing at once thus both keep the higher level.
+   **the one exception to that procedure's rule that the write carries the index alone**. The completion commit
+   carries the levels file too, and nothing else. When nothing changed, the commit carries the row alone. There is
+   no separate release-levels commit.
+6. On a conflict, the procedure abandons the write and opens a new one from the new tip. Re-apply the row, and the
+   levels from step 2, re-read at the new tip and raised again. Then close again. Two runs landing at once thus both
+   keep the higher level.
 
-Writing on the integration branch after the merge, never on the run branch, keeps two concurrent runs from conflicting on
+Writing through a protected-branch write after the merge, never on the run branch, keeps two concurrent runs from conflicting on
 the file at merge time. When the branch did **not** merge — `no`, or a merge conflict — write nothing.
 
 ## When a landing condition fails

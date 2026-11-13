@@ -207,7 +207,7 @@ whole way to production before the single hand-off in step 3:
   is the durable record; feedback pre-surveys nothing for it. Deferred → write
   it as a `docs/memory/gaps/` record that says no blueprint doc owns it, so
   memory is then the only record. Then `/vwf:change-plan <request>`,
-  which commits and pushes the folder, then follow `/vwf:change-plan`'s own
+  which lands the folder on the integration branch, then follow `/vwf:change-plan`'s own
   ending.
 
 ### 3. Persist & commit

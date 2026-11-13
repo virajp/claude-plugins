@@ -9,12 +9,16 @@
 // member branch is refused. Every read of a row, a folder's index.json, an
 // archived folder or a covers doc is `git show` / `git ls-tree` of the tip,
 // never the working copy. Every git call is an argument array, never a shell
-// string; the claim commit runs `mise x -- git commit`. In a repo with no
-// origin, the claim commit stays local: no fetch, no pull, no push.
+// string. The claim is never a direct commit on the work branch: it lands
+// through git-workflow's land (scripts/lib/land.mjs) — a worktree and local
+// branch, a commit, a merge, a push, the worktree and branch removed; a merge
+// the hooks refuse becomes a pull request. In a repo with no origin there is
+// no fetch, no pull and no push.
 //
 // pick    → { pick: { folder, kind, priority } } | { nothing: [{ folder, waits }] }
 // resolve → { runnable, entries: [{ entry, kind, satisfied, reason }] }
 // claim   → { claimed: true, commit[, warning] }
+//         | { claimed: false, kind: pr, url, branch, repo, reason[, warning] }
 //         | { claimed: false, kind: lost|member-failed|failed, reason[, warning] }
 
 import { spawnSync } from "node:child_process";
@@ -28,6 +32,7 @@ import {
   join,
   resolve as resolvePath,
 } from "node:path";
+import { abandon, close, LandError, open, worktreeDir } from "../../../git-workflow/scripts/lib/land.mjs";
 import { parseFrontmatter, parseYaml } from "./yaml.mjs";
 
 /** A refusal that is not a queue answer; plan.mjs exits 2 on it. */
@@ -41,8 +46,6 @@ export class QueueError extends Error {
 export const REMOTE = "origin";
 const INDEX = "docs/plans/index.json";
 const PLAN = join(import.meta.dirname, "..", "plan.mjs");
-/** The clean-rebase retries of a rejected push before the claim refuses. */
-const PUSH_RETRIES = 3;
 
 function git(cwd, args) {
   const r = spawnSync("git", args, { cwd, encoding: "utf8" });
@@ -399,13 +402,6 @@ export function planName(id) {
   return m ? m[1] : id;
 }
 
-/** The worktree directory git-workflow picks: .worktrees unless only worktrees exists. */
-function worktreeDir(repo) {
-  return !existsSync(join(repo, ".worktrees")) && existsSync(join(repo, "worktrees"))
-    ? "worktrees"
-    : ".worktrees";
-}
-
 /** The repo's name as log.mjs derives it, from the git common dir. */
 function repoName(repo) {
   return basename(dirname(must(repo, ["rev-parse", "--path-format=absolute", "--git-common-dir"])));
@@ -421,188 +417,66 @@ function planSet(cwd, file, path, value, json) {
   return r.status === 0 ? null : (r.stderr || r.error?.message || "plan.mjs set failed").trim();
 }
 
-const rejected = (err) => /\[rejected\]|non-fast-forward|fetch first|failed to push/.test(err);
-
 /**
- * Steps 1 to 8 of *Writing a row — the claim* in one checkout: stash, the work
- * branch, pull, `edit`, add, commit, push with the rejected-push loop, restore.
- * With no origin remote there is no pull and no push: the commit stays local.
- * `edit` returns null, { lost: reason } or { failed: reason }.
+ * One claim commit on `into` of `dir`, through git-workflow's land: a worktree
+ * and local branch cut from the tip, `edit(worktree)` there, then close —
+ * commit, merge, push, clean up. `edit` returns null, { lost: reason } or
+ * { failed: reason }. A conflict on `contested` is a lost claim.
  */
-function land(dir, id, files, edit, work) {
-  const remote = hasRemote(dir);
-  const message = `docs: plan queue — ${id} running`;
-  const branch = git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
-  const origin = branch.ok ? branch.out : must(dir, ["rev-parse", "HEAD"]);
-  const tag = `vwf plan queue ${id}`;
-  let stashed = null;
-  let result;
-
-  const drop = (committed) => {
-    if (committed) {
-      git(dir, ["reset", "--soft", "HEAD~1"]);
+function landClaim(dir, into, id, contested, edit) {
+  const fail = (reason) => ({ claimed: false, kind: "failed", reason });
+  let opened;
+  try {
+    opened = open({ repo: dir, into, name: `vwf-claim-${planName(id)}` });
+  } catch (e) {
+    if (e instanceof LandError) {
+      return fail(e.message);
     }
-    git(dir, ["checkout", "HEAD", "--", ...files]);
+    throw e;
+  }
+  const drop = () => {
+    try {
+      abandon({ worktree: opened.worktree });
+      return null;
+    } catch (e) {
+      return e.message;
+    }
   };
-
-  (() => {
-    if (git(dir, ["status", "--porcelain"]).out !== "") {
-      const before = git(dir, ["rev-parse", "-q", "--verify", "refs/stash"]);
-      const s = git(dir, ["stash", "push", "-u", "-m", tag]);
-      if (!s.ok) {
-        result = { claimed: false, kind: "failed", reason: `git stash push failed: ${s.err}` };
-        return;
-      }
-      // The stash stack is shared by every worktree and session: hold this
-      // entry by the SHA refs/stash names right after the push, never by
-      // stash@{0} or by its tag.
-      const after = git(dir, ["rev-parse", "refs/stash"]);
-      const sha = after.ok ? after.out : null;
-      if (sha === null || (before.ok && before.out === sha)) {
-        result = {
-          claimed: false,
-          kind: "failed",
-          reason: `git stash push "${tag}" created no new stash entry; any changes it took are in the stash under "${tag}" — check git stash list`,
-        };
-        return;
-      }
-      const subject = git(dir, ["log", "-1", "--format=%s", sha]);
-      if (!subject.ok || !subject.out.endsWith(`: ${tag}`)) {
-        result = {
-          claimed: false,
-          kind: "failed",
-          reason: `another stash (${sha}) landed on top of "${tag}" before it could be read; your changes are in the stash under "${tag}" — apply it by hand`,
-        };
-        return;
-      }
-      stashed = sha;
-    }
-    if (origin !== work) {
-      const c = git(dir, ["checkout", work]);
-      if (!c.ok) {
-        result = { claimed: false, kind: "failed", reason: `git checkout ${work} failed: ${c.err}` };
-        return;
-      }
-    }
-    if (remote) {
-      const pull = git(dir, ["pull", "--ff-only", REMOTE, work]);
-      if (!pull.ok) {
-        result = { claimed: false, kind: "failed", reason: `git pull --ff-only failed: ${pull.err}` };
-        return;
-      }
-    }
-    const edited = edit();
-    if (edited !== null) {
-      drop(false);
-      result = edited.lost
-        ? { claimed: false, kind: "lost", reason: edited.lost }
-        : { claimed: false, kind: "failed", reason: edited.failed };
-      return;
-    }
-    const add = git(dir, ["add", "--", ...files]);
-    if (!add.ok) {
-      drop(false);
-      result = { claimed: false, kind: "failed", reason: `git add failed: ${add.err}` };
-      return;
-    }
-    const commit = spawnSync("mise", ["x", "--", "git", "commit", "-m", message], {
-      cwd: dir,
-      encoding: "utf8",
+  const edited = edit(opened.worktree);
+  if (edited !== null) {
+    const left = drop();
+    const out = edited.lost ? { claimed: false, kind: "lost", reason: edited.lost } : fail(edited.failed);
+    return left === null ? out : { ...out, warning: left };
+  }
+  const r = close({ worktree: opened.worktree, into, message: `docs: plan queue — ${id} running` });
+  const keep = (out) => (r.warning ? { ...out, warning: r.warning } : out);
+  if (r.landed) {
+    return keep({ claimed: true, commit: r.commit });
+  }
+  if (r.kind === "pr") {
+    return keep({
+      claimed: false,
+      kind: "pr",
+      url: r.url,
+      branch: r.branch,
+      repo: dir,
+      reason: r.reason ?? `the merge into ${into} was refused; the claim waits on its pull request`,
     });
-    if (commit.status !== 0) {
-      drop(false);
-      const err = `${commit.stderr ?? ""}${commit.stdout ?? ""}`.trim() || commit.error?.message;
-      result = { claimed: false, kind: "failed", reason: `the claim commit failed: ${err}` };
-      return;
-    }
-    if (!remote) {
-      result = { claimed: true, commit: must(dir, ["rev-parse", "HEAD"]) };
-      return;
-    }
-    for (let retries = 0;; retries++) {
-      const push = git(dir, ["push", REMOTE, work]);
-      if (push.ok) {
-        result = { claimed: true, commit: must(dir, ["rev-parse", "HEAD"]) };
-        return;
-      }
-      if (!rejected(push.err)) {
-        drop(true);
-        result = { claimed: false, kind: "failed", reason: `git push failed: ${push.err}` };
-        return;
-      }
-      if (retries >= PUSH_RETRIES) {
-        drop(true);
-        result = {
-          claimed: false,
-          kind: "failed",
-          reason: `git push was rejected after ${PUSH_RETRIES} clean-rebase retries: ${push.err}`,
-        };
-        return;
-      }
-      const rebase = git(dir, ["pull", "--rebase", REMOTE, work]);
-      if (rebase.ok) {
-        continue;
-      }
-      const conflicted = git(dir, ["diff", "--name-only", "--diff-filter=U"]).out.split("\n");
-      git(dir, ["rebase", "--abort"]);
-      drop(true);
-      if (conflicted.includes(files[0])) {
-        git(dir, ["pull", "--ff-only", REMOTE, work]);
-        result = {
-          claimed: false,
-          kind: "lost",
-          reason: `another session changed the same row of ${files[0]} first`,
-        };
-      } else {
-        result = { claimed: false, kind: "failed", reason: `git pull --rebase failed: ${rebase.err}` };
-      }
-      return;
-    }
-  })();
-
-  // Step 8: every path ends here.
-  const now = git(dir, ["symbolic-ref", "--short", "-q", "HEAD"]);
-  if ((now.ok ? now.out : "") !== origin) {
-    const back = git(dir, ["checkout", origin]);
-    if (!back.ok) {
-      result.warning = `could not check out ${origin} again: ${back.err}`;
-    }
   }
-  if (stashed !== null) {
-    const apply = git(dir, ["stash", "apply", stashed]);
-    if (apply.ok) {
-      const n = stashShas(dir).indexOf(stashed);
-      if (n !== -1) {
-        // Another session may push or pop between the lookup and the drop:
-        // read stash@{n} again and drop it only while it is still this entry.
-        const at = git(dir, ["rev-parse", `stash@{${n}}`]);
-        if (at.ok && at.out === stashed) {
-          git(dir, ["stash", "drop", `stash@{${n}}`]);
-        } else {
-          const note = `the stash moved before it could be dropped; the applied stash "${tag}" (${stashed}) is kept — drop it by hand`;
-          result.warning = result.warning ? `${result.warning}; ${note}` : note;
-        }
-      }
-    } else {
-      git(dir, ["reset", "--merge"]);
-      const note = `git stash apply ${stashed} failed in ${dir}; the stash "${tag}" (${stashed}) is kept — apply it by hand`;
-      result.warning = result.warning ? `${result.warning}; ${note}` : note;
-    }
-  }
-  return result;
-}
-
-/** The shared stash stack, newest first: each entry's SHA. */
-function stashShas(dir) {
-  const list = git(dir, ["stash", "list", "--format=%H"]);
-  return list.ok && list.out !== "" ? list.out.split("\n") : [];
+  const left = drop();
+  const out = r.kind === "conflict" && r.files.includes(contested)
+    ? { claimed: false, kind: "lost", reason: `another session changed the same row of ${contested} first` }
+    : fail(r.reason);
+  const warning = [r.warning, left].filter(Boolean).join("; ");
+  return warning ? { ...out, warning } : out;
 }
 
 /**
- * The D17 claim: the row RUNNING and the folder's run, committed on the base's
- * work branch in its main checkout, and pushed when the repo has an origin; a
- * member folder's run is a second direct commit on that member's work branch
- * (D19). `worktree` overrides the default <dir>/<plan name> (D20).
+ * The D17 claim: the row RUNNING and the folder's run, landed on the base's
+ * work branch through git-workflow's land — never a direct commit; a member
+ * folder's run is a second landing on that member's work branch (D19). A
+ * merge the hooks refuse returns kind pr: the claim waits on that pull
+ * request. `worktree` overrides the default <dir>/<plan name> (D20).
  */
 export function claim({ base, folder, worktree, branches }) {
   const id = basename(folder);
@@ -646,38 +520,41 @@ export function claim({ base, folder, worktree, branches }) {
 
   const setRun = (dir) => {
     if (!existsSync(join(dir, folderIndex))) {
-      return { failed: `${folderIndex} is not in ${dir} after the pull` };
+      return { failed: `${folderIndex} is not at the tip of ${dir}` };
     }
     const err = planSet(dir, folderIndex, "run", run, true);
     return err === null ? null : { failed: err };
   };
 
-  const baseResult = land(base, id, member ? [INDEX] : [INDEX, folderIndex], () => {
-    const current = readJson(readFileSync(join(base, INDEX), "utf8"));
+  const baseResult = landClaim(base, product.branches.base, id, INDEX, (wt) => {
+    const current = readJson(readFileSync(join(wt, INDEX), "utf8"));
     const now = current?.plans?.find?.((r) => r && r.id === id);
     if (!now || now.status !== "APPROVED") {
-      return { lost: `${id} is ${now ? now.status : "gone"} after the pull` };
+      return { lost: `${id} is ${now ? now.status : "gone"} at the tip` };
     }
-    const err = planSet(base, INDEX, `plans.${id}.status`, "RUNNING", false);
+    const err = planSet(wt, INDEX, `plans.${id}.status`, "RUNNING", false);
     if (err !== null) {
       return { failed: err };
     }
-    return member ? null : setRun(base);
-  }, product.branches.base);
+    return member ? null : setRun(wt);
+  });
   if (!baseResult.claimed || !member) {
     return baseResult;
   }
-  const memberResult = land(folderDir, id, [folderIndex], () => setRun(folderDir), product.branches.member);
+  const memberResult = landClaim(folderDir, product.branches.member, id, folderIndex, setRun);
+  const warning = [baseResult.warning, memberResult.warning].filter(Boolean).join("; ");
+  if (memberResult.kind === "pr") {
+    const out = { ...memberResult, reason: `the row is RUNNING at ${baseResult.commit}; ${memberResult.reason}` };
+    return warning ? { ...out, warning } : out;
+  }
   if (!memberResult.claimed) {
     const out = {
       claimed: false,
       kind: "member-failed",
       reason: `the row is RUNNING at ${baseResult.commit}, but the member run commit failed: ${memberResult.reason}; make the plan-management unclaim ${id} request`,
     };
-    const warning = [baseResult.warning, memberResult.warning].filter(Boolean).join("; ");
     return warning ? { ...out, warning } : out;
   }
-  const warning = [baseResult.warning, memberResult.warning].filter(Boolean).join("; ");
   return warning
     ? { claimed: true, commit: baseResult.commit, warning }
     : { claimed: true, commit: baseResult.commit };

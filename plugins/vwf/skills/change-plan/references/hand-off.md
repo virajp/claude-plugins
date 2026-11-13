@@ -12,23 +12,30 @@ Run these in order.
 2. **Mark the backlog items planned.** When `backlog` or `backlog_pieces` names
    ids, invoke `/vwf:backlog planned <ids> <folder>` with the ids of both lists.
    That skill edits the project, not a file.
-3. **Commit and push the folder** through `vwf:git-workflow`. Invoke it with
-   these declared preferences, so it asks nothing:
-   - **Work in place on the current branch, no worktree** — its Step 1 "if
-     declined" path. Say why: the run's worktree is cut from the integration
-     branch, so it sees the folder only once it is committed there. A folder
-     still untracked at hand-off gets swept into some later wave's commit. The
-     index row rides the same commit for the same reason, a direct commit on the
-     branch, never a worktree's.
-   - **Stage exactly the plan folder**, `docs/plans/index.json` and each parked
-     record this interview wrote to `docs/memory/gaps/`, and nothing else. The `plan-management` edit rides this commit, because that skill
-     never commits. Step 2 changed nothing in the tree.
-   - **Commit** with type `docs` and the message
-     `docs: change plan — <name> — approved, awaiting execution`.
-   - **Push to the branch's upstream** after the commit, setting the upstream
-     when the branch has none. The approve in §5 is the explicit request
-     git-workflow's push rule wants, so do not ask again. Push nowhere but the
-     branch you stand on, and merge nothing.
+3. **Land the folder on the integration branch** through `vwf:git-workflow`'s
+   protected-branch write, never a direct commit
+   (`${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/references/protected-branch.md`).
+   Say why: the run's worktree is cut from the integration branch, so it sees
+   the folder only once it lands there, and the index row lands with it.
+   - `node ${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/scripts/land.mjs open <repo>
+     --into <integration> --name vwf-approve-<name>`, `<integration>` the
+     integration branch as git-workflow resolves it.
+   - **Move** into that worktree, at the same paths, exactly the plan folder
+     and each parked record this interview wrote to `docs/memory/gaps/`, so the
+     main checkout no longer carries them. Then the row: read it from the main
+     checkout with `plan.mjs get docs/plans/index.json plans.<basename>`, append
+     it in the worktree with
+     `plan.mjs append docs/plans/index.json plans --json '<row>'`, and restore
+     the main checkout's index with `git checkout -- docs/plans/index.json`.
+     When the tip has no `docs/plans/index.json` yet, move the file instead.
+     Nothing else goes in. The `plan-management` edit rides this write, because
+     that skill never commits. Step 2 changed nothing in the tree.
+   - `land.mjs close <worktree> --into <integration> --message "docs: change
+     plan — <name> — approved, awaiting execution"`. The approve in §5 is the
+     explicit request git-workflow's push rule wants, so do not ask again.
+   - A `pr` result waits on its pull request per that reference, then runs
+     `land.mjs finish`. A `conflict` or `failed` result: report it with the
+     worktree path, and stop; the folder is not on the integration branch yet.
 
 ## Check that nothing at this priority is left to plan
 

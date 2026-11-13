@@ -253,8 +253,9 @@ the Markdown docs surface it absorbed. Both planners write the same plan folder
 — `/vwf:plan` for a blueprint slice, and beside that arc the ad-hoc
 `/vwf:change-plan` for work with no blueprint slice behind it (tooling, CI,
 docs, a refactor) — an `index.json` holding every structured fact, an `index.md`
-holding the prose, and one file per unit — which each commits and pushes at
-hand-off with a row in `docs/plans/index.json`, the one plan index, so the fresh
+holding the prose, and one file per unit — which each lands on the integration
+branch at hand-off with a row in `docs/plans/index.json`, the one plan index, so
+the fresh
 session can see it. One node script, `plan.mjs`, reads, validates and writes
 both JSON files; a repo still on the old markdown format is pointed to the
 migration guide, `docs/plans/migrate.md`, and nothing runs until it is migrated.

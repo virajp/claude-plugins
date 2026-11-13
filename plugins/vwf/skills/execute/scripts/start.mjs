@@ -20,7 +20,7 @@
 // started and ended. It prints one JSON object on stdout and
 // nothing else there; progress and warnings go to stderr:
 //
-//   {result: ready|refused|blocked|nothing, mode: fresh|resume|null, folder,
+//   {result: ready|pending|refused|blocked|nothing, mode: fresh|resume|null, folder,
 //    kind, priority, has_code_unit, has_covers, projects, findings,
 //    open_questions, claim, message}
 //
@@ -32,7 +32,12 @@
 // it is {gaps: [ids of open QUESTION gaps], events: [question events with no
 // answer]}. claim is the plan.mjs claim result, or null.
 //
-// Exit 0 on ready, 1 on refused, blocked or nothing, 2 on a usage or internal
+// pending: the hooks refused the claim's merge, so git-workflow's land opened a
+// pull request (claim.kind pr, claim.url, claim.branch, claim.repo). The log
+// stays open: execute waits for the pull request, then runs land.mjs finish and
+// goes on as on ready when it merged, or ends the log when it closed.
+//
+// Exit 0 on ready, 1 on pending, refused, blocked or nothing, 2 on a usage or internal
 // error (nothing on stdout then). Every row and folder value comes from the
 // tip of the work branch; the working copy is only a fresh log start's --folder,
 // and must equal the tip. A log call never stops the run: log.mjs runs as a
@@ -372,7 +377,7 @@ function resolveFolder(base, config, arg) {
   }
   const folder = row?.folder ?? relative(base, isAbsolute(arg) ? arg : resolvePath(base, arg));
   const tip = tipOf(repoDir);
-  const notCommitted = `${id} is not on ${tip.branch}: run the planner again on it, or commit${tip.remote ? " and push" : ""} it by hand, then re-launch`;
+  const notCommitted = `${id} is not on ${tip.branch}: run the planner again on it, or land it by hand with git-workflow's land.mjs, then re-launch`;
   const tipDoc = tipJson(repoDir, `${folder}/index.json`);
   if (tipDoc === null) {
     throw new Refusal(notCommitted);
@@ -645,6 +650,16 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
         ? `${folder}: claimed at ${c.commit}; warning: ${c.warning}`
         : `${folder}: claimed at ${c.commit}`;
       return result({ ...base_, result: "ready", projects, findings, claim: c, message });
+    }
+    if (c.kind === "pr") {
+      return result({
+        ...base_,
+        result: "pending",
+        projects,
+        findings,
+        claim: c,
+        message: `${folder}: the claim waits on its pull request ${c.url ?? `(open one for ${c.branch})`}: ${c.reason}`,
+      });
     }
     if (c.kind === "lost") {
       stop(`claim lost: ${c.reason}`, "claim-lost");

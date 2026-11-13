@@ -181,6 +181,16 @@ function seed(rows: Json[], build: (seed: string) => void = () => {}, config = "
   git(root, "clone", "-q", "-b", "develop", origin, other);
 }
 
+/** A pre-merge-commit hook in `repo` that refuses every merge, and a `gh` stub that opens a pull request. */
+function refuseMerges(repo: string) {
+  const hook = join(repo, ".git", "hooks", "pre-merge-commit");
+  writeFileSync(hook, "#!/bin/sh\necho 'Refuse a direct commit to a protected branch' >&2\nexit 1\n");
+  chmodSync(hook, 0o755);
+  const gh = join(root, "bin", "gh");
+  writeFileSync(gh, "#!/bin/sh\necho https://example.com/pr/7\n");
+  chmodSync(gh, 0o755);
+}
+
 function readExists(file: string) {
   try {
     readFileSync(file);
@@ -417,6 +427,8 @@ describe("claim", () => {
   const ID = "2026-11-10-example-change";
   const FOLDER = `docs/plans/${ID}`;
   const MESSAGE = `docs: plan queue — ${ID} running`;
+  /** The stash tag git-workflow's land sets aside the main checkout's changes under. */
+  const TAG = "vwf land vwf-claim-example-change";
   const RUN = { worktree: ".worktrees/example-change", log: `~/Library/Caches/vwf/base/${ID}.jsonl` };
 
   function claimed() {
@@ -431,9 +443,12 @@ describe("claim", () => {
     expect(r.stderr).toBe("");
     expect(r.status).toBe(0);
     expect(r.json).toEqual({ claimed: true, commit: git(base, "rev-parse", "HEAD") });
+    expect(git(origin, "log", "-1", "--format=%P", "develop").split(" ")).toHaveLength(2);
     expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe(MESSAGE);
-    expect(git(origin, "show", "--name-only", "--format=", "develop").split("\n").sort())
+    expect(git(origin, "show", "--name-only", "--format=", "develop^2").split("\n").sort())
       .toEqual([`${FOLDER}/index.json`, "docs/plans/index.json"]);
+    expect(git(base, "branch", "--list", "vwf-claim-*")).toBe("");
+    expect(git(base, "worktree", "list").split("\n")).toHaveLength(1);
     const { row: claimedRow, run } = claimed();
     expect(claimedRow).toMatchObject({ status: "RUNNING", started: NOW, ended: "" });
     expect(run).toEqual(RUN);
@@ -475,7 +490,7 @@ describe("claim", () => {
       race,
       `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session"\n`,
     );
-    const r = plan(base, ["claim", FOLDER], { RACE: race });
+    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "pull --ff-only", STUB_RACE: race });
     expect(r.status).toBe(0);
     expect(r.json.warning).toBeUndefined();
     expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
@@ -495,13 +510,13 @@ describe("claim", () => {
     expect(r.status).toBe(0);
     const ours = git(base, "stash", "list", "--format=%H %gs")
       .split("\n")
-      .find((l) => l.endsWith(`plan queue ${ID}`));
+      .find((l) => l.endsWith(TAG));
     expect(ours).toBeDefined();
     const sha = ours!.split(" ")[0];
     expect(r.json.warning).toContain(sha);
     expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
       "On develop: another session",
-      `On develop: vwf plan queue ${ID}`,
+      `On develop: ${TAG}`,
     ]);
     expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
   });
@@ -514,11 +529,11 @@ describe("claim", () => {
     const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "rev-parse refs/stash", STUB_RACE: race });
     expect(r.status).not.toBe(0);
     expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
-    expect(r.json.reason).toContain(`"vwf plan queue ${ID}"`);
+    expect(r.json.reason).toContain(`"${TAG}"`);
     expect(r.json.reason).toContain(git(base, "rev-parse", "refs/stash"));
     expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
       "On develop: another session",
-      `On develop: vwf plan queue ${ID}`,
+      `On develop: ${TAG}`,
     ]);
     expect(claimed().row.status).not.toBe("RUNNING");
   });
@@ -529,7 +544,7 @@ describe("claim", () => {
     const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "stash push", STUB_SKIP: "1" });
     expect(r.status).not.toBe(0);
     expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
-    expect(r.json.reason).toMatch(/created no new stash entry.*in the stash under "vwf plan queue/);
+    expect(r.json.reason).toMatch(/created no new stash entry.*in the stash under "vwf land/);
     expect(claimed().row.status).not.toBe("RUNNING");
   });
 
@@ -579,6 +594,23 @@ describe("claim", () => {
     expect(git(base, "rev-parse", "HEAD")).not.toBe(before);
   });
 
+  it("opens a pull request when the hooks refuse the merge, claiming nothing yet", () => {
+    seed([row(ID)]);
+    refuseMerges(base);
+    const r = plan(base, ["claim", FOLDER]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({
+      claimed: false,
+      kind: "pr",
+      url: "https://example.com/pr/7",
+      branch: "vwf-claim-example-change",
+      repo: base,
+    });
+    expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe("seed");
+    expect(git(origin, "log", "-1", "--format=%s", "vwf-claim-example-change")).toBe(MESSAGE);
+    expect(git(base, "status", "--porcelain")).toBe("");
+  });
+
   it("refuses a row already RUNNING at the tip as lost", () => {
     seed([row(ID, { status: "RUNNING", started: NOW })]);
     const r = plan(base, ["claim", FOLDER]);
@@ -591,8 +623,9 @@ describe("claim", () => {
     const r = plan(base, ["claim", FOLDER], { MISE_FAIL: "1" });
     expect(r.status).toBe(1);
     expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
-    expect(r.json.reason).toMatch(/the claim commit failed/);
+    expect(r.json.reason).toMatch(/the commit failed/);
     expect(git(base, "status", "--porcelain")).toBe("");
+    expect(git(base, "branch", "--list", "vwf-claim-*")).toBe("");
     expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe("seed");
   });
 });
