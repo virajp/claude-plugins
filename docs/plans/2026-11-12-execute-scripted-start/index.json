@@ -95,7 +95,7 @@
       "status": "green",
       "started": "2026-11-12T20:51:45.995Z",
       "ended": "2026-11-13T08:04:52.303Z",
-      "commit": "d66fd210",
+      "commit": "db5ee5ab",
       "rounds": 3
     },
     {
@@ -139,9 +139,9 @@
       "waits": "It cites start.mjs (U4, wave 3) and checks.mjs (U3, wave 2) by CLAUDE_PLUGIN_ROOT path; the checker fails a reference to a missing file.",
       "status": "green",
       "started": "2026-11-13T07:14:49.164Z",
-      "ended": "2026-11-13T07:46:57.472Z",
+      "ended": "2026-11-13T08:09:09.696Z",
       "commit": "692ae0bf",
-      "rounds": 4
+      "rounds": 5
     },
     {
       "id": "U3",
@@ -204,14 +204,14 @@
         "U4"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-13T07:48:53.874Z",
-      "ended": "",
+      "ended": "2026-11-13T08:05:48.682Z",
       "commit": "",
-      "rounds": 2,
+      "rounds": 3,
       "range": {
         "from": "03b0f818",
-        "to": "692ae0bf"
+        "to": "db5ee5ab"
       }
     },
     {
@@ -847,6 +847,13 @@
       "unit": "U6",
       "stage": "",
       "text": "U2 DOCS FALSIFIED: plugins/vwf/skills/architecture/references/stack-menu.md:234 defines unknown as a token no plugin declares; no unit owned the file · U6 Owns widened to it (D40, D47)",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U1",
+      "stage": "",
+      "text": "U5 round 3 [low] queue.mjs:537: a stash push or pop from another session between the stash@{n} re-check and git stash drop could still drop the wrong entry (recoverable from the reflog); git stash drop takes no SHA · settled by D48, which ruled a re-check before the drop with a warning on mismatch, and one more round; the reviewer approved the round",
       "state": "closed"
     }
   ],

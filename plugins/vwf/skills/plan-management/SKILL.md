@@ -100,7 +100,8 @@ The verbs below point at its sections rather than restate them.
   exit 0, or `{nothing: [{folder, waits}]}`, exit 1. `resolve` prints
   `{runnable, entries: [{entry, kind, satisfied, reason}]}`, exit 0 when
   runnable, else 1. `claim` prints `{claimed: true, commit}`, exit 0 — a
-  `warning` beside it when the stash did not pop — or
+  `warning` beside it when the stash could not be applied, or was applied
+  but kept undropped — or
   `{claimed: false, kind, reason}`, exit 1, `kind` one of `lost`,
   `member-failed`, `failed`. `/vwf:execute` reaches all three through its
   `start.mjs`. `unclaim` and `complete` stay procedures the model follows.

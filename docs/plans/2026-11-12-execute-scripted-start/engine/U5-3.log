@@ -1,0 +1,4 @@
+/security-review — loop U5, round 3, range d66fd210..db5ee5ab (queue.mjs fix delta)
+
+No high-confidence vulnerabilities found.
+Rejected: command injection (array args); wrong stash applied (SHA from refs/stash, subject checked, apply by SHA); wrong entry dropped (residual read-then-drop window, theoretical race, warns on mismatch); work loss on new failure paths (kept in stash); path traversal (no paths built).

@@ -58,7 +58,7 @@ usage or internal error, with nothing on stdout — report the stderr line and s
 | `projects`       | the plan's projects the checks were scoped to                                                      |
 | `findings`       | each `{rule, severity, project, subject, message, remedy}`: the `blocking` rows and the `unknown-language` rows; `project` is `null` on a repo-level row |
 | `open_questions` | `null` on a fresh run; on a resume, `{gaps, events}`: the ids of the open `QUESTION` gaps, and the `question` events with no `answer` |
-| `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the stash did not pop) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed`; `null` when no claim ran |
+| `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the stash could not be applied, or was applied but kept undropped) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed`; `null` when no claim ran |
 | `message`        | one line for the user                                                                              |
 
 Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
@@ -66,11 +66,13 @@ Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
 ## Acting on the result
 
 - **`ready`** → print `message`, and continue to [Setup](setup.md). A `claim`
-  `warning` names the stash the claim could not pop (`vwf plan queue <folder>`):
-  print it, and say to apply that stash by hand; the run continues in its own
-  worktree. On a resume with a non-empty `open_questions`, ask each per
-  [questions.md](questions.md) before Setup — each gap id and each event under its
-  own id, once, per *No one to answer* there.
+  `warning` names the stash the claim kept (`vwf plan queue <folder>`, by SHA):
+  print it, and say to apply that stash by hand when the apply failed, or to
+  drop it by hand when it was applied but moved before it could be dropped; the
+  run continues in its own worktree. On a resume with a non-empty
+  `open_questions`, ask each per [questions.md](questions.md) before Setup —
+  each gap id and each event under its own id, once, per *No one to answer*
+  there.
 - **`refused`** → print `message` and stop. It names the refusal and its fix, in
   the words of [folder.md](../workflows/folder.md). Under `next` it names the picked
   folder too.

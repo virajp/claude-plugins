@@ -253,9 +253,13 @@ member-failed, reason}`, the reason naming the failure and the
 `RUNNING`. A commit or push failure other than a same-row conflict undoes the
 local claim commit, when it exists, restores the checkout, and returns
 `{claimed: false, kind: failed, reason}`; the clean-rebase retry of a rejected
-push is capped at 3 attempts, then the same refusal. A conflicted `git stash
-pop` at step 8 leaves the landed claim standing: `git reset --merge`, the stash
-kept, and `{claimed: true, commit, warning}` naming it. This reverses the
+push is capped at 3 attempts, then the same refusal. A failed `git stash
+apply` at step 8 leaves the landed claim standing: `git reset --merge`, the
+stash kept, and `{claimed: true, commit, warning}` naming it by tag and SHA. An
+apply that succeeds but finds `stash@{n}` no longer that SHA when it comes to
+drop it — another session pushed or popped in between — leaves the claim
+standing too: the applied stash kept, and a warning that the stash moved before
+it could be dropped, to drop it by hand. This reverses the
 older rule that the row was the one edit the run made there (approved
 2026-10-24): a reader of the folder now finds a running
 plan's worktree and action log without searching. `unclaim` follows the
@@ -266,8 +270,13 @@ before touching anything: the branch the checkout is on, and whether a stash
 was taken.
 
 1. When the checkout is dirty — `git status --porcelain` prints anything —
-   `git stash push -u -m "vwf plan queue <folder>"` and remember that a stash
-   was taken.
+   `git stash push -u -m "vwf plan queue <folder>"`, and hold the entry by the
+   SHA `refs/stash` names right after the push — never by `stash@{0}` or by
+   its tag, since the stack is shared by every worktree and session. Two
+   refusals, each `{claimed: false, kind: failed, reason}` and each saying the
+   changes are in the stash under the tag: `refs/stash` unchanged from before
+   the push — the push created no new stash entry — and an entry whose subject
+   is not the tag — another stash landed on top before it could be read.
 2. When the checkout is not on `<integration>` — `git checkout <integration>`.
 3. `git pull --ff-only`.
 4. Edit the one row, each change one `plan.mjs set` on
@@ -329,7 +338,10 @@ was taken.
        reports that and the user asks again after reading the queue.
 8. **Restore the checkout — every path ends here**, the landed push, the
    dropped claim and the refusal alike. When the checkout was on another
-   branch — `git checkout -`. When a stash was taken — `git stash pop`.
+   branch — `git checkout -`. When a stash was taken — `git stash apply
+   <sha>`, then find its `stash@{n}` by SHA. Found, read `stash@{n}` again:
+   still that SHA, `git stash drop stash@{n}`; another entry, keep it and
+   warn. Not in the stash list at all, drop nothing and warn nothing.
 
 Every command is one plain call; none of them is `--force`, `reset --hard` or
 `--no-verify`, which `vwf:git-workflow` forbids everywhere. The push carries no
