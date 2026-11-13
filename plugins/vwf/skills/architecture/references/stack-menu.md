@@ -211,11 +211,13 @@ plugin owning that language declares.
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
 must resolve to a template an installed plugin ships, and every `languages` token
-to one an installed plugin declares — or to a **materialized** template whose
-payload carries `language_facts` for it (the materialized-template variant in
-`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). A materializing adapter's menu
-may include its one open entry — *generate for an uncovered technology*, pinned
-as `generated/<technology-slug>` — which is a legitimate pick, not a free-text
+is known only when the pinned template lists it, in its `language_facts` or its
+`optional_languages` (the materialized-template variant in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). An unknown token is a
+degradation in `/vwf:doctor` and `/vwf:execute`; only `/vwf:setup` stops on it.
+A materializing adapter's menu may include its one open entry — *generate for
+an uncovered technology*, pinned as `generated/<technology-slug>` — which is a
+legitimate pick, not a free-text
 escape: the pin only resolves once the consent-gated materialization lands, and
 that materialization is **`/vwf:setup`'s**, never this command's. Architecture
 records the pin and hands off at its last step; setup's materialize pass invokes
@@ -231,9 +233,11 @@ plugin"), or **defer the axis** and carry on defining the product. Before
 `config_format` 16 only the first two existed, so an empty menu was a halt; the
 third is what makes it a postponement instead. Never record a free-text axis,
 never write `template: custom` (retired in `config_format` 14), and never
-record a language token no plugin declares — each of those writes a config
-`/vwf:doctor` blocks on immediately, which is a worse outcome than the halt
-because it arrives one command later. Why the menu is closed at all is in
+record a language token the pinned template does not list — each of those
+writes a config `/vwf:setup` stops on immediately (a free-text or `custom` pin
+is blocking in `/vwf:doctor` too; an unknown token is a degradation there),
+which is a worse outcome than the halt because it arrives one command later.
+Why the menu is closed at all is in
 `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`.
 
 A pick off the menu needs no justification and gets **no** `enforcement` entry.

@@ -33,9 +33,10 @@ A manifest declares **no install-time eligibility at all** — no scope, no opt-
 flag, and no `requires`. Scope is whichever `--scope` the user passes to
 `claude plugin install`; there is no default set to be in or out of. `requires`
 was a hard install gate the retired CLI enforced over the dependency-expanded
-set; a missing binary now surfaces as a `/vwf:doctor` **blocking** finding
-instead, which is the trade taken on the grounds that doctor already halts
-`setup` and `execute` on it.
+set; a missing binary now surfaces as a **blocking** finding of the start
+checks (`checks.mjs`, which `/vwf:doctor` reports too) instead, which is the
+trade taken on the grounds that those checks already halt `setup` and
+`execute` on it.
 
 Skills, agents, and hooks are **auto-discovered by directory convention** and
 are never listed in the manifest:

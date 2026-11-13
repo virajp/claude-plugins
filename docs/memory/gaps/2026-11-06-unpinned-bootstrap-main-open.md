@@ -24,6 +24,9 @@ Ruling D46 (user, 2026-11-05):
   content-tied trust (mise gives none).
 - `/vwf:plan` and `/vwf:execute` also run doctor, so an unattended pipeline can
   run unpinned bootstrap. Doctor discloses this and behavior stays.
+- 2026-11-13: since plan `2026-11-12-execute-scripted-start` (D13),
+  `/vwf:execute` no longer runs doctor, so only doctor full mode, `/vwf:plan`
+  and `/vwf:setup` run the dry-run. The gap stays open.
 
 Open: the fix is a reviewed-commit pin in bootstrap. The request is written at
 `docs/prompts/2026-11-05-reviewed-commit-pin.md` in the bootstrap repo, and the

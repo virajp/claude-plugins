@@ -211,8 +211,10 @@ documentation.
 
 The union of what the installed stack plugins declare **is** the vocabulary.
 There is no free-text pin and no *other (describe)* escape: a project the menu
-cannot cover halts, and a language nothing claims is a blocking finding that
-stops `setup` and `execute`. That refusal is deliberate — a stack nothing
+cannot cover halts, and a language the pinned template does not list is
+*unknown*: `setup` stops on it, `/vwf:doctor` reports it, and `/vwf:execute`
+asks you to continue or stop before it claims the plan. That refusal is
+deliberate — a stack nothing
 defines supplies no conventions to plan against, no harness to build against and
 no UX gate, so a run against it would lose every guarantee while reporting
 itself healthy. See [stack templates](../../plugins/vwf.md#stack-templates).

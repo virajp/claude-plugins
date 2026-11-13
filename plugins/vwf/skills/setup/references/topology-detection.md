@@ -53,13 +53,14 @@ its facts marked `unknown`. Detection is **recognition**, and recognising a
 language vwf has no plugin for is a legitimate scan result — it is what lets
 setup describe the repo accurately instead of refusing to look at it.
 
-**It does not follow that the repo is onboarded.** `unknown` is a **blocking**
-finding, so the shared spine's `/vwf:doctor` run halts on it: vwf's stack menu is
-closed to what the installed plugins declare, and it will not plan or build
-against a language none of them covers
+**It does not follow that the repo is onboarded.** `/vwf:doctor` reports an
+`unknown` language as a **degradation**, and `/vwf:setup` alone stops on it, by
+its own rule, once the project's `template` is pinned: a token is known only
+when the pinned template lists it, and vwf will not plan or build against a
+language no template covers
 ([stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md)). Detection
-records the fact; the gate decides what it means. Onboarding completes once a
-plugin declaring that language is installed.
+records the fact; the gate decides what it means. Onboarding completes once the
+project pins a template that lists that language.
 
 ## Role and platforms
 

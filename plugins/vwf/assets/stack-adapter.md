@@ -38,9 +38,10 @@ someone else's repo, never to tell them what to use. Any third case is a bug.
 
 Everything else that reads a repo — topology detection, harness detection —
 resolves through the installed stack plugins instead. A signal no plugin claims
-is recorded as `unknown`, which lets a **scan** finish on its other evidence but
-is a **blocking** finding the moment vwf is asked to plan or build: the menu is
-closed to what the installed plugins define
+is recorded as `unknown`, which lets a **scan** finish on its other evidence. It
+is a **degraded** finding in `/vwf:doctor`, `/vwf:plan` and `/vwf:execute`
+(execute asks whether to continue or stop), and only `/vwf:setup` stops on it:
+the menu is closed to what the installed plugins define
 (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
 
 ## Configuration

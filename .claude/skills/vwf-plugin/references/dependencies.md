@@ -62,7 +62,8 @@ set and refused the install — explicitly not overridable by `--force`. That ga
 stayed retired when the CLI's plugin installs came back as a thin wrapper.
 
 **Doctor does not fully replace it, and the gap is worth stating precisely.** Of
-the binaries vwf shells out to, `/vwf:doctor` blocks on **`mise` conditionally**
+the binaries vwf shells out to, `/vwf:doctor` — and `/vwf:execute`'s start
+checks, the same `checks.mjs` rows — blocks on **`mise` conditionally**
 — since `config_format` 16 a missing `mise` is blocking only once some axis in
 the repo is pinned or some harness capability is claimed, and a degradation
 before that, since a repo with no stack has no toolchain to resolve. A missing

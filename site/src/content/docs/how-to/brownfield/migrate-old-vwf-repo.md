@@ -201,8 +201,9 @@ Each of these is a genuine stop, and each is explained where it is enforced.
   `/vwf:doctor` with its remedy, and the stamp still moves to 24.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
 - **A stack pin no installed plugin defines is blocking** — the likeliest reason
-  an old repo halts here, since free-text pins have been retired and a language
-  nothing claims counts as unknown.
+  an old repo halts here, since free-text pins have been retired — and setup
+  stops on a language the pinned template does not list, which counts as
+  unknown (`/vwf:doctor` only reports it).
   [Stack templates](../../plugins/vwf.md#stack-templates)
 - **A pin whose template was never landed is blocking too**, reported as
   *pinned, not materialized* rather than as an unknown language — the state an

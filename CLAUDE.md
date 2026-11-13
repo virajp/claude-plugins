@@ -61,7 +61,8 @@ the one executor, `/vwf:execute <folder>` — or `/vwf:execute next`, which read
 that index alone, of either kind, and picks the runnable plan with the lowest
 `priority` value, or `/vwf:execute all`, which runs every runnable plan in turn,
 each in its own `execute-runner` subagent, until one stops — which refuses a
-folder that is not on that branch, runs `/vwf:doctor`, claims the row `RUNNING`
+folder that is not on that branch, and starts with one script call, `start.mjs`,
+that runs its start checks and claims the row `RUNNING`
 with a pushed commit before it cuts a worktree — the same commit writing the
 folder's `run`, the worktree and action-log paths — and marks it `COMPLETE` once
 the merge lands (archiving the folder there and re-pointing the row when no gap

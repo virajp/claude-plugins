@@ -139,9 +139,9 @@
       "waits": "It cites start.mjs (U4, wave 3) and checks.mjs (U3, wave 2) by CLAUDE_PLUGIN_ROOT path; the checker fails a reference to a missing file.",
       "status": "green",
       "started": "2026-11-13T07:14:49.164Z",
-      "ended": "2026-11-13T08:09:09.696Z",
-      "commit": "e0d11987",
-      "rounds": 5
+      "ended": "2026-11-13T08:20:54.190Z",
+      "commit": "08b89e1a",
+      "rounds": 6
     },
     {
       "id": "U3",
@@ -230,7 +230,8 @@
         "docs/memory/decisions/2026-11-12-execute-scripted-start.md",
         "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md",
         "plugins/vwf/skills/setup/references/topology-detection.md",
-        "plugins/vwf/skills/architecture/references/stack-menu.md"
+        "plugins/vwf/skills/architecture/references/stack-menu.md",
+        "plugins/vwf/assets/stack-adapter.md"
       ],
       "depends_on": [
         "U1",
@@ -240,11 +241,11 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-13T08:11:03.706Z",
+      "ended": "2026-11-13T08:20:54.293Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -301,8 +302,8 @@
     },
     {
       "id": "W6",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-13T08:11:03.637Z",
       "ended": ""
     },
     {
@@ -821,10 +822,10 @@
       "ended": "2026-11-13T08:10:37.155Z"
     },
     "reconcile": {
-      "state": "running",
-      "detail": "",
+      "state": "green",
+      "detail": "no covers: stamps skipped; persisted docs/memory/decisions/2026-11-13-execute-start-checks-stay-few.md in Reconcile commit f6bb44be",
       "started": "2026-11-13T08:10:37.397Z",
-      "ended": ""
+      "ended": "2026-11-13T08:10:57.640Z"
     }
   },
   "gaps": [
@@ -854,6 +855,13 @@
       "unit": "U1",
       "stage": "",
       "text": "U5 round 3 [low] queue.mjs:537: a stash push or pop from another session between the stash@{n} re-check and git stash drop could still drop the wrong entry (recoverable from the reflog); git stash drop takes no SHA · settled by D48, which ruled a re-check before the drop with a warning on mismatch, and one more round; the reviewer approved the round",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U6",
+      "stage": "",
+      "text": "R6 rule-5: plugins/vwf/assets/stack-adapter.md:39 says an unclaimed signal is a blocking finding when vwf plans or builds; no unit owned the file · U6 Owns widened to it (D40, D44)",
       "state": "closed"
     }
   ],
