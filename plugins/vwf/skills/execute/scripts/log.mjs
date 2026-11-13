@@ -703,7 +703,8 @@ function report(ev, kinds) {
     }`,
   );
 
-  // Phases: each phase.start closed by the next phase.end with the same keys.
+  // Phases: each phase.start closed by the next phase.end with the same keys,
+  // timed from a marker's started/ended when it carries them, else its ts.
   const key = (e) => [e.phase, e.wave, e.unit, e.loop, e.round].join("|");
   const open = new Map();
   const phases = [];
@@ -715,16 +716,16 @@ function report(ev, kinds) {
       const s = open.get(key(e));
       open.delete(key(e));
       phases.push([
-        s ? at(s.ts) : "?",
+        s ? at(s.started ?? s.ts) : "?",
         e.phase,
         e.wave ?? "",
         e.unit ?? "",
-        s ? fmt(ms(e.ts) - ms(s.ts)) : "?",
+        s ? fmt(ms(e.ended ?? e.ts) - ms(s.started ?? s.ts)) : "?",
       ]);
     }
   }
   for (const s of open.values()) {
-    phases.push([at(s.ts), s.phase, s.wave ?? "", s.unit ?? "", "open"]);
+    phases.push([at(s.started ?? s.ts), s.phase, s.wave ?? "", s.unit ?? "", "open"]);
   }
   phases.sort((a, b) => String(a[0]).localeCompare(String(b[0])));
   if (phases.length) {

@@ -163,7 +163,7 @@
       "status": "green",
       "started": "2026-11-12T21:08:15.243Z",
       "ended": "2026-11-13T06:18:32.214Z",
-      "commit": "",
+      "commit": "976c108a",
       "rounds": 2
     },
     {
@@ -176,18 +176,20 @@
       "owns": [
         "plugins/vwf/skills/execute/scripts/start.mjs",
         "scripts/src/execute-start.test.ts",
-        "scripts/src/fixtures/execute-start/**"
+        "scripts/src/fixtures/execute-start/**",
+        "plugins/vwf/skills/execute/scripts/log.mjs",
+        "scripts/src/execute-log.test.ts"
       ],
       "depends_on": [
         "U1",
         "U3"
       ],
       "waits": "It imports the queue verbs from U1's lib/queue.mjs and the checks from U3's checks.mjs.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-13T06:23:56.582Z",
+      "ended": "2026-11-13T07:13:33.369Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U5",
@@ -273,14 +275,14 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-12T21:08:15.208Z",
-      "ended": ""
+      "ended": "2026-11-13T06:23:56.416Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-13T06:23:56.516Z",
       "ended": ""
     },
     {
@@ -714,6 +716,42 @@
         "U4",
         "U2"
       ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q3: checks.mjs reports an unknown language as degraded even for a pinned project; doctor shows checks.mjs findings as they come (D6). How should doctor (U2) handle that finding?",
+      "ruling": "Same rule as script. /vwf:doctor uses the checks.mjs unknown-language finding as it is: the template languages only, no read of installed plugins. Doctor does not re-rate it and the finding shape does not change. stack-checks.md and the doctor text (U2) drop the \"installed plugin declares it\" half and the blocking-once-pinned severity for this check. Correction to D39: its line \"Doctor keeps its full rule\" was the loop reading, not the user words; the user did not say it, and it does not stand. Context for every later question: execute runs almost every day, so its start checks stay few; setup-shape checks belong in /vwf:doctor.",
+      "rejected": "Doctor re-rates the finding with its full rule; Add a marker field (narrow: true) to the finding",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Q4: when the start checks find an unknown language and nothing blocking, should start.mjs claim before execute asks continue or stop?",
+      "ruling": "Ask before claim. Add a --continue-unknown-language flag to start.mjs. Without it, when an unknown-language row is the only finding that stops the start, start.mjs returns before the claim (no claim, no log start that needs undoing). Execute asks the user continue or stop. On continue, execute runs start.mjs again with the flag, and it claims. On stop, nothing to unclaim.",
+      "rejected": "Claim now, as built",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Q5: D41 makes start.mjs run the checks before the log start on a fresh run; may the checks phase markers be written after the log start, carrying the real times?",
+      "ruling": "Keep the markers, written after the log starts with started/ended fields. Right after the log starts, start.mjs writes the checks phase markers with started and ended fields that hold the real times of the checks. One code path; real times kept.",
+      "rejected": "Run the checks first only when the flag is absent (two code paths); Drop the fresh-run checks markers",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q6: D42 checks markers carry real started/ended times, but log.mjs summary times phases from ts alone and D26 keeps log.mjs unchanged. Should log.mjs summary use started/ended when a marker carries them?",
+      "ruling": "Yes. Widen a unit Owns to log.mjs and its test so log.mjs summary uses a marker started/ended before ts, and action-log.md documents the fields. This overrides D26 for this one change.",
+      "rejected": "No, keep the fields as a record only (log.mjs unchanged, the summary shows about 0 ms)",
+      "units": [
+        "U4"
+      ]
     }
   ],
   "stages": {
@@ -742,7 +780,15 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U4",
+      "stage": "",
+      "text": "log.mjs summary ignored the started/ended fields D42 puts on fresh checks markers; no unit owned log.mjs · U4 Owns widened to log.mjs and execute-log.test.ts under D43",
+      "state": "closed"
+    }
+  ],
   "overrides": [
     {
       "id": "O1",

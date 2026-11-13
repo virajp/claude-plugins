@@ -758,6 +758,25 @@ describe("log.mjs summary", () => {
     );
   });
 
+  it("times a phase from its markers' started and ended when they carry them", () => {
+    const file = startRun();
+    const now = Date.now();
+    const started = new Date(now - 47_000).toISOString();
+    const ended = new Date(now - 5_000).toISOString();
+    log(["event", "phase.start", "--phase", "checks", "--started", started]);
+    log(["event", "phase.end", "--phase", "checks", "--ended", ended]);
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/PHASES[\s\S]*checks\s+42s/);
+  });
+
+  it("times a phase from ts when its markers carry no started or ended", () => {
+    const file = startRun();
+    log(["event", "phase.start", "--phase", "checks"]);
+    log(["event", "phase.end", "--phase", "checks"]);
+    const s = log(["summary", file]);
+    expect(s.stdout).toMatch(/PHASES[\s\S]*checks\s+0s/);
+  });
+
   const ask = (id: string, text = "Which owner?") =>
     log(
       ["event", "question"],
