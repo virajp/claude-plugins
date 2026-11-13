@@ -13,7 +13,7 @@ user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
-  depends-on: [plan-management, backlog, git-workflow, doctor, docs-sync, handoff, code-review, security-review]
+  depends-on: [plan-management, backlog, git-workflow, docs-sync, handoff, code-review, security-review]
 ---
 
 # execute
@@ -79,7 +79,11 @@ context window, and this session has already used part of it.
 - **Continue in this session** → run here, from the format test on.
 
 **The format test**. Whatever the argument is — a folder, `next` or `all` — look
-at the base repo's local checkout before any other step.
+at the base repo's local checkout before any other step. For a folder and
+`next`, `start.mjs` runs it as its first step ([claim.md](references/claim.md))
+and returns `refused` with the migration message below; under `all`, the loop
+applies it itself before its first pick. The session question above stays
+first, and stays the model's.
 
 - The repo is in the **old format** whenever `docs/plans/index.md` exists, with
   or without `docs/plans/index.json` (a migration stopped half way).
@@ -159,7 +163,7 @@ Read the *cycle plans only* rows on a plan with `covers`, and never otherwise.
 | Session question                          | user, only when the model invoked it       | [SKILL.md](SKILL.md)                                       | always    |
 | Run-level questions                       | user, once, only under `all`               | [all.md](workflows/all.md)                                 | sometimes |
 | Resolve: read the folder, refuse early    | auto                                       | [folder.md](workflows/folder.md)                           | always    |
-| Start the log, run doctor, claim the row  | auto                                       | [claim.md](references/claim.md)                            | always    |
+| Start: one script, checks and claim       | auto                                       | [claim.md](references/claim.md)                            | always    |
 | Format check, recall, setup               | auto                                       | [setup.md](references/setup.md)                            | always    |
 | Waves                                     | auto                                       | [waves.md](references/waves.md)                            | always    |
 | Questions                                 | user, when the plan is silent              | [questions.md](references/questions.md)                    | sometimes |

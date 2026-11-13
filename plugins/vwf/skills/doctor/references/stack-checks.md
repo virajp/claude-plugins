@@ -3,12 +3,23 @@
 Read this before running §3. It covers the three per-project stack checks:
 languages (LSP + toolchain + binaries), frameworks and dependencies against each
 manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
-language no installed plugin claims, a materialized `binaries` entry missing
-from `PATH` or whose declared probe exits non-zero — each blocking once the
-project's `template` is pinned, a degradation while it reads `unresolved`) and
-§5 (a `custom` template pin, a missing `mise`, an `iac` project inside another
-repo the user has not declined to extract). The package manager's lockfile is
-looked for where the pack's `lockfile:` fact says, when it declares one (§5).
+materialized `binaries` entry missing from `PATH` or whose declared probe exits
+non-zero — blocking once the project's `template` is pinned, a degradation
+while it reads `unresolved` — and a pin not materialized) and §5 (a `custom`
+template pin, a missing `mise`, an `iac` project inside another repo the user
+has not declined to extract, a template that does not cover its project's
+platforms). An unknown language is a degradation, never blocking (§3);
+`/vwf:setup` alone stops on it, by its own rule. The
+package manager's lockfile is looked for where the pack's `lockfile:` fact
+says, when it declares one (§5).
+
+**These checks are one script.** The findings `/vwf:execute` stops or asks on —
+pinned not materialized, an unknown language and binaries with their probes
+(§3), a `custom` pin, template platform coverage, the `iac` own-repo rule and
+`mise` (§5) — are implemented by
+`${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs` (*The checks script* in
+`SKILL.md`), which doctor runs and reports as it comes. Each rule below names
+its row's `rule` id; the text keeps the reason, and the script is the source.
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
@@ -26,13 +37,13 @@ unresolved` is deferral while `deploy_template: []` is a completed decision.
 Treat them as opposites: `[]` is checked as an answer, `unresolved` is not
 checked at all.
 
-**Two findings this file otherwise raises as blocking are conditional on it**,
+**Findings this file otherwise raises as blocking are conditional on it**,
 because a product nobody has chosen a stack for yet would otherwise halt `setup`
 and `execute` on day one:
 
 | Finding                | Blocking when                                                | Degradation when                                     |
 | ---------------------- | ------------------------------------------------------------ | ---------------------------------------------------- |
-| **unknown language** (§3) | that project's `template` is **pinned**                     | that project's `template` reads `unresolved`         |
+| **unknown language** (§3) | never — the template's languages alone decide it            | always, pinned or `unresolved`                       |
 | **missing `mise`** (§5)   | any axis in the repo is pinned, or any harness capability is claimed | no axis is pinned anywhere and no capability is claimed |
 | **pinned, not materialized** (§3) | that project's `template` is a slug, the adapter materializes, and the target repo's `.claude/stackgen/lock.yaml` does not name the slug | never — the axis was answered |
 
@@ -51,20 +62,20 @@ decides a pin rather than landing it.
 ## 3. Languages — LSP and toolchain
 
 **Before the token walk, once per project.** A project whose `template` is a
-slug, whose adapter is a **materializing** one, and whose target repo carries
-no materialized entry for that slug in its `.claude/stackgen/lock.yaml` is
-**pinned, not materialized — `/vwf:setup` materializes it**: raise that
-finding, name the repo in it, and **skip the token walk for that project**.
-The languages it would check come from the payload the repo lacks, so every
-token would otherwise be reported as a stack vwf has no template for when the
-template is pinned and merely absent from disk — they are not unknown there,
-they are **unread**. It is **blocking**, on the third row of the table above,
-and its remedy is that one line: one finding per project, never one per
-token. Resolve the target repo as the member whose `projects:` list holds
-this project, at that member's `path` relative to the base root; a project no
-member claims lives in the current repo. A project carrying `languages: []`
-is reached here exactly as one carrying tokens is: what this state is read
-from is the pin and the lockfile, never the token list.
+slug, whose adapter is a **materializing** one, and whose target repo carries no
+materialized entry for that slug in its `.claude/stackgen/lock.yaml` is
+**pinned, not materialized — `/vwf:setup` materializes it** (`checks.mjs` row
+`not-materialized`): raise that finding, name the repo in it, and **skip the
+token walk for that project**. The languages it would check come from the
+payload the repo lacks, so every token would otherwise be reported as a stack
+vwf has no template for when the template is pinned and merely absent from disk
+— they are not unknown there, they are **unread**. It is **blocking**, on the
+third row of the table above, and its remedy is that one line: one finding per
+project, never one per token. Resolve the target repo as the member whose
+`projects:` list holds this project, at that member's `path` relative to the
+base root; a project no member claims lives in the current repo. A project
+carrying `languages: []` is reached here exactly as one carrying tokens is: what
+this state is read from is the pin and the lockfile, never the token list.
 
 For each project, for each token in `stack.languages`, resolve its row in the
 stack vocabulary. A project whose `template` reads `unresolved` records
@@ -74,31 +85,33 @@ whole section reports `not checked — no stack resolved` for it:
 - **LSP** — the row names a plugin. Check it is active
   (`claude plugin list --scope project`, falling back to user scope). Missing →
   finding, with `/plugin` as the remedy. Row says `none` → report *no LSP
-  available in this marketplace* and move on. **No installed plugin declares
-  the token, but the project's pin resolves to a materialized template whose
-  payload carries `language_facts` for it** (the materialized escape,
+  available in this marketplace* and move on. **Whether a token is known is
+  the template's alone** (`checks.mjs` row `unknown-language`): no installed
+  plugin is read for it.
+  **The project's pin resolves to a materialized template whose payload carries
+  `language_facts` for the token** (the materialized escape,
   `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the **target
   repo's** own `.claude/` tree, resolved as the gate above → the language is
-  **known**: verify against those facts instead — the LSP per how the facts say
-  it is provided, which for a stack stackgen materialized is a server in its
-  generated `vwf-tools` local plugin, the mise tool and manifest per the fact
-  values, `n/a` accepted silently as an answer. **A token declared only under
-  a template's `optional_languages:` counts as declared** — the template admits
+  **known**: verify against those facts — the LSP per how the facts say it is
+  provided, which for a stack stackgen materialized is a server in its generated
+  `vwf-tools` local plugin, the mise tool and manifest per the fact values,
+  `n/a` accepted silently as an answer. **A token declared only under a
+  template's `optional_languages:` counts as declared** — the template admits
   it, which is what this test asks. Say so in the report, though: an optional
   token carries no language facts of its own, so its LSP/toolchain/manifest rows
   read **unverified** rather than passing. Known-but-unverified is an honest
   third answer, and quietly reporting it as a pass would be the drift this check
-  exists to catch. **No installed plugin declares the
-  token and no materialized facts cover it** → report **unknown language**.
-  **Blocking once this project's `template` is pinned**: nothing else can be
-  checked for the token, and a stack vwf has no template for is one it cannot
-  plan or build against. **A degradation while that `template` reads
-  `unresolved`** — a project in that state should carry no tokens at all, and
-  one that does cannot be blocked on a plugin that has not been chosen yet
-  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). Either way the remedy is
-  two lines — install the stack plugin that declares the language, or write one
-  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) — never a suggestion to
-  drop the token, which would only hide the project.
+  exists to catch. **No materialized template of the project lists the token,
+  under `language_facts` or `optional_languages`** → report **unknown
+  language**, a **degradation**, never blocking, whether the `template` is
+  pinned or reads `unresolved`: nothing else can be checked for the token, and
+  whether that stops a run is the user's call — `/vwf:execute` asks whether to
+  continue or stop on it, and `/vwf:setup` stops on it once the `template` is
+  pinned, by its own rule. Doctor reports the `checks.mjs` row as it comes and
+  never re-rates it. The remedy is two lines — install the stack plugin that
+  declares the language, or write one
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`) — never a suggestion to drop
+  the token, which would only hide the project.
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
   tool pins (`.config/mise/conf.d/*/mise*.toml`, `.local` variants excluded) or
   resolves on `PATH`. Missing → finding; the pins are bootstrap's, so the
@@ -132,10 +145,11 @@ whole section reports `not checked — no stack resolved` for it:
   `PATH`, where `command -v` would pass. A map with no `probe` is a bare name.
   Either finding carries the remedy that installs the binary (for
   `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it).
-  **Blocking once this project's `template` is pinned** — mise will not supply
-  it, so the skip above would otherwise hide it and the build fails on first
-  run. **A degradation while that `template` reads `unresolved`** — the same
-  severity for a failed probe as for a missing name.
+  **Blocking once this project's `template` is pinned** (`checks.mjs` row
+  `binary`) — mise will not supply it, so the skip above would otherwise hide
+  it and the build fails on first run. **A degradation while that `template`
+  reads `unresolved`** — the same severity for a failed probe as for a missing
+  name.
 
 Report per language, not per project — one missing Dart LSP is one finding even
 when three projects declare `dart`.
@@ -188,8 +202,9 @@ claude-design — re-pin to claude-code, lovable or stitch with `/vwf:setup`. An
 axis reading
 `unresolved` is not a pin: report the degradation above and resolve nothing. A
 **`custom` pin is
-`13` drift and blocking**: the value was retired in `config_format` 14, and it
-names a stack with no `conventions` for `plan` and `execute` to read and no
+`13` drift and blocking** (`checks.mjs` row `custom-pin`): the value was
+retired in `config_format` 14, and it names a stack with no `conventions` for
+`plan` and `execute` to read and no
 `harness` block to check against — remedy `/vwf:setup`, which
 walks the axis back through the menu. A project whose
 platforms ship through a store rather than to a deploy target (`mobile`,
@@ -305,32 +320,35 @@ Three rules keep it honest:
 the `iac` platform, resolve its `path` and check which repo's working tree it
 falls in (`git -C <path> rev-parse --show-toplevel`). If that resolves to
 another project's repo — the monorepo it sits inside, or the multi-repo **base**
-itself rather than a member — it is a **blocking** finding: `setup` and
-`execute` both halt on it. The rule and its rationale are in
-`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`. The remedy is the extraction
-`/vwf:setup` writes up as a recommendation; doctor reports and
-stops there, as with every other structural change. An `iac` project that is
-already its own repo — an independent one, a submodule, or a sibling member —
-passes silently.
+itself rather than a member — it is a **blocking** finding (`checks.mjs` row
+`iac-own-repo`): `setup` and `execute` both halt on it. The rule and its
+rationale are in `${CLAUDE_PLUGIN_ROOT}/assets/topologies/`. The remedy is the
+extraction `/vwf:setup` writes up as a recommendation; doctor reports and stops
+there, as with every other structural change. An `iac` project that is already
+its own repo — an independent one, a submodule, or a sibling member — passes
+silently.
 
 **Unless the extraction is a recorded decline.** A decline written under
-`enforcement:` downgrades this finding to a **degradation**: still reported,
-every run, but no longer blocking, so neither `setup` nor `execute` halts on it.
-The decline settles the *proposal*, never the *fact* — a product that chose to
-keep its `iac` project where it is should keep being told what it costs, and
-silencing the finding would leave the most privileged repo in the product
-looking clean.
+`enforcement:`, at exactly
+`enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`
+— the key `/vwf:setup` writes — downgrades this finding to a **degradation**:
+still reported, every run, but no longer blocking, so neither `setup` nor
+`execute` halts on it. The decline settles the *proposal*, never the *fact* — a
+product that chose to keep its `iac` project where it is should keep being told
+what it costs, and silencing the finding would leave the most privileged repo in
+the product looking clean.
 
 **A project's template must cover its platforms.** Since format 22 a
 project-axis template declares the platforms it serves in its own frontmatter,
 and a project declares its own in the registry. Every platform the project
 declares must appear in its pinned template's list; one that does not is
-**blocking**, since `plan` and `execute` would size that surface against
-conventions written for something else. A project whose `template` reads
-`unresolved` has no list to check against: report `not checked — no stack
-resolved` and move on. The common case is a project that was
-`fullstack` before the migration and is now `[service, webapp]` — check the pin
-rather than assuming the migration got it right.
+**blocking** (`checks.mjs` row `platform-coverage`), since `plan` and `execute`
+would size that surface against conventions written for something else. A
+project whose `template` reads `unresolved` has no list to check against: report
+`not checked — no stack resolved` and move on. The common case is a project that
+was `fullstack` before the migration and is now `[service, webapp]` — check the
+pin rather than assuming the migration got it right.
 
 **A viewport override must name something real.** A product may override a
 device screen platform's default canvas viewport per project, at
@@ -364,13 +382,14 @@ no OS known.
 runner (every worktree init, pre-commit and merge goes through it) and the
 toolchain manager the §3 checks resolve against. Missing from `PATH` →
 **blocking once any axis in the repo is pinned or any harness capability is
-claimed**, remedy `curl https://mise.run | sh`. With **no** axis pinned anywhere
-and no capability claimed, it is a **degradation**: there is no toolchain to
-manage and no harness task to run, so halting `setup` and `execute` over it
-would block a product on day one for a stack nobody has chosen yet. A repo with
-neither `.config/mise.toml` nor `.config/mise/conf.d/` is the same finding one
-level up, at the same severity: report it and nudge `/vwf:setup reshape`, the
-repo-shape remedy, since bootstrap is what installs the mise config.
+claimed** (`checks.mjs` row `mise`), remedy `curl https://mise.run | sh`. With
+**no** axis pinned anywhere and no capability claimed, it is a **degradation**:
+there is no toolchain to manage and no harness task to run, so halting `setup`
+and `execute` over it would block a product on day one for a stack nobody has
+chosen yet. A repo with neither `.config/mise.toml` nor `.config/mise/conf.d/`
+is the same finding one level up, at the same severity: report it and nudge
+`/vwf:setup reshape`, the repo-shape remedy, since bootstrap is what installs
+the mise config.
 Setup materializes no tooling itself — `/vwf:init` does, by running
 bootstrap's readme prompt, and fetches no bundle.
 **A repo is shaped when `.config/bootstrap.toml` exists** — the values file

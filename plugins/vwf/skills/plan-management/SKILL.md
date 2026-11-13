@@ -90,7 +90,20 @@ The verbs below point at its sections rather than restate them.
   the first green validate — never an executor write: a run never renumbers
   waves. The plan index has no waves, and `rewave` refuses it;
 - `plan.mjs validate <file>` examines a file against its schema and prints
-  `<file>: valid`.
+  `<file>: valid`;
+- `plan.mjs pick`, `plan.mjs resolve <folder>` and
+  `plan.mjs claim <folder> [--worktree <path>]` are the **queue verbs**: the
+  `next` pick, the resolution of a folder's `requires` and the claim, each run
+  from any directory inside the base repo or a member, each reading the plan
+  index at the tip of `origin/develop`, never the working copy, and each
+  printing one JSON object. `pick` prints `{pick: {folder, kind, priority}}`,
+  exit 0, or `{nothing: [{folder, waits}]}`, exit 1. `resolve` prints
+  `{runnable, entries: [{entry, kind, satisfied, reason}]}`, exit 0 when
+  runnable, else 1. `claim` prints `{claimed: true, commit}`, exit 0 — a
+  `warning` beside it when the stash did not pop — or
+  `{claimed: false, kind, reason}`, exit 1, `kind` one of `lost`,
+  `member-failed`, `failed`. `/vwf:execute` reaches all three through its
+  `start.mjs`. `unclaim` and `complete` stay procedures the model follows.
 
 A path is dot-separated keys, and a segment after a list chooses the entry by
 its `id` — `plans.<basename>.status`, `units.U3.status`, `gaps.G2.state`. A
@@ -210,8 +223,10 @@ The edit rides the planner's approval commit.
 
 ### `claim <folder>`
 
-The contract's *Writing a row — the claim*: in the main checkout, on the
-integration branch, pull, and set the folder's row from `APPROVED` to
+`plan.mjs claim <folder> [--worktree <path>]` implements it; the text below is
+the rule the verb implements. The contract's *Writing a row — the claim*: in
+the main checkout, on the integration branch, pull, and set the folder's row
+from `APPROVED` to
 `RUNNING` — `set docs/plans/index.json plans.<basename>.status RUNNING`, the
 row's `status` alone — `plan.mjs` stamps the row's `started` in the same
 write; `kind` and `target_repo` are never edited. Report the
@@ -239,8 +254,14 @@ Both files ride the claim commit. This reverses the older rule that the row
 is the one edit the run makes in the main checkout. When the folder lives in
 a member repo, the `run` edit is a direct commit on that repo's integration
 branch, beside the base repo's claim commit and with the same message;
-`worktree` is relative to that repo and `<repo>` is its name. The claim edits
-the folder's `run` key only — its `status` is still the run's, set in the
+`worktree` is relative to that repo and `<repo>` is its name. The base comes
+first: the row in the base is the claim. Then the member commit runs the same
+procedure in the member checkout — stash when dirty, check out the integration
+branch, pull, commit, push, the rejected-push loop, restore. If the member push
+still fails, the claim returns `{claimed: false, kind: member-failed, reason}`:
+the base row is already `RUNNING`, so the reason names the failure and the
+`plan-management unclaim <folder>` request, which the person makes. The claim
+edits the folder's `run` key only — its `status` is still the run's, set in the
 worktree.
 
 ### `unclaim <folder>`
@@ -513,6 +534,7 @@ nothing runs no prune, and `/vwf:execute` never runs it itself.
 
 ### `next`
 
+`plan.mjs pick` implements it; the text below is the rule the verb implements.
 The contract's *The pick* and *Reading the queue*, as written there: fetch,
 read the `plans` list at the integration branch's tip —
 `git show origin/<integration>:docs/plans/index.json` piped into
@@ -528,9 +550,10 @@ rows.
 
 ### `resolve <folder>`
 
-The contract's *Resolution*, applied to the `requires` list of one folder's
-`index.json`. For each entry, matched by **basename** against the rows and the
-archived folders, the test its kind takes:
+`plan.mjs resolve <folder>` implements it; the text below is the rule the verb
+implements. The contract's *Resolution*, applied to the `requires` list of one
+folder's `index.json`. For each entry, matched by **basename** against the rows
+and the archived folders, the test its kind takes:
 
 - a **cycle** requirement — every doc in the `covers` list of that plan's
   `index.json` reads `implementation: complete` in the base repo's blueprint;
@@ -576,9 +599,9 @@ carrying the procedure:
 | `/vwf:plan`, `/vwf:change-plan` | at the gate, over the `requires` list decided at interview item 12 | `priority <requires…>`             |
 | `/vwf:plan`, `/vwf:change-plan` | at self-review, checking `requires`                                | `resolve <folder>`                 |
 | `/vwf:plan`, `/vwf:change-plan` | at hand-off, once the folder is approved                           | `add <folder>`                     |
-| `/vwf:execute`                  | in its `next` and `all` modes, picking the plan                    | `next`                             |
-| `/vwf:execute`                  | at preflight, on the named folder                                  | `resolve <folder>`                 |
-| `/vwf:execute`                  | before the worktree is cut                                         | `claim <folder>`                   |
+| `/vwf:execute`                  | in its `next` and `all` modes, picking the plan                    | `plan.mjs pick` (via `start.mjs` under `next`) |
+| `/vwf:execute`                  | at Resolve, on the folder, through `start.mjs`                     | `plan.mjs resolve <folder>`        |
+| `/vwf:execute`                  | before the worktree is cut, through `start.mjs`                    | `plan.mjs claim <folder>`          |
 | `/vwf:execute`                  | at every status change — start, pause, block, landing              | `status <folder> <state> [detail]` |
 | `/vwf:execute`                  | on a green landing with no open gap, declaring *do not ask*        | `archive <folder>`                 |
 | `/vwf:execute`                  | after the merge lands                                              | `complete <folder>`                |

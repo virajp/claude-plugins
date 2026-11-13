@@ -121,12 +121,13 @@ in [membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md).
 A project with `platforms: [iac]` is **always its own repo** — here that means
 its own member, never a directory inside another member and never a directory in
 the base. This is the one structural rule vwf enforces rather than offers:
-`/vwf:doctor` raises a violation as **blocking**, and
-`/vwf:setup` writes up the extraction as a recommendation — one
-you may decline under `enforcement:`, which leaves the finding standing as a
-warning reported every run instead of a halt. The reasoning —
-blast radius, credentials, lifecycle, cadence — is in [monorepo](monorepo.md),
-where the rule is most surprising.
+`/vwf:doctor` raises a violation as **blocking**, and `/vwf:setup` writes up the
+extraction as a recommendation — one you may decline under `enforcement:` — the
+key `enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`, which `/vwf:setup`
+writes — which leaves the finding standing as a warning reported every run
+instead of a halt. The reasoning — blast radius, credentials, lifecycle, cadence
+— is in [monorepo](monorepo.md), where the rule is most surprising.
 
 Multi-repo pays almost nothing for it: the shape already is a group of repos, so
 an IaC member is one more entry. A product that acquires an `iac` project while

@@ -137,11 +137,11 @@
         "U4"
       ],
       "waits": "It cites start.mjs (U4, wave 3) and checks.mjs (U3, wave 2) by CLAUDE_PLUGIN_ROOT path; the checker fails a reference to a missing file.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-13T07:14:49.164Z",
+      "ended": "2026-11-13T07:46:57.472Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 4
     },
     {
       "id": "U3",
@@ -188,7 +188,7 @@
       "status": "green",
       "started": "2026-11-13T06:23:56.582Z",
       "ended": "2026-11-13T07:13:33.369Z",
-      "commit": "",
+      "commit": "4afec7da",
       "rounds": 3
     },
     {
@@ -228,7 +228,9 @@
         ".claude/skills/vwf-plugin/**",
         ".claude/docs/**",
         "docs/memory/decisions/2026-11-12-execute-scripted-start.md",
-        "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md"
+        "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md",
+        "plugins/vwf/skills/setup/references/topology-detection.md",
+        "plugins/vwf/skills/architecture/references/stack-menu.md"
       ],
       "depends_on": [
         "U1",
@@ -281,14 +283,14 @@
     },
     {
       "id": "W3",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-13T06:23:56.516Z",
-      "ended": ""
+      "ended": "2026-11-13T07:14:49.026Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-13T07:14:49.092Z",
       "ended": ""
     },
     {
@@ -752,6 +754,42 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q7: stack-vocabulary.md:27-41 and setup/SKILL.md:299-303 say an unknown language is blocking and halts setup and execute; D40 made it degraded for doctor. How do they read now?",
+      "ruling": "Setup still stops. /vwf:setup keeps its own blocking rule for an unknown language: setup is the one-time place for setup-shape checks. Reword stack-vocabulary.md:27-41 and setup/SKILL.md:299-303 so that setup stops, but /vwf:execute and /vwf:doctor only report the finding as degraded (execute asks continue-or-stop per D41). Keep the closed-menu reasoning for setup.",
+      "rejected": "Reword both to the degraded rule everywhere; Leave both as they are",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q8: the D41 continue-or-stop question is asked before the claim, with no log and no folder write yet. How is it recorded, and how does an all-runner relay it?",
+      "ruling": "Ask only, record nothing. The pre-claim continue-or-stop question writes no log event and no decisions entry. A runner returns OUTCOME: QUESTION; on continue, execute runs start.mjs again with --continue-unknown-language.",
+      "rejected": "Record it after the claim",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q9: on a resume, start.mjs returns ready with unknown-language rows. Ask continue-or-stop again?",
+      "ruling": "Do not ask on a resume. When the row already reads RUNNING, the fresh run already asked and the claim shows the user chose continue; the resume continues with no question.",
+      "rejected": "Ask again, and on stop end --outcome blocked",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D47",
+      "decision": "Q10: stack-vocabulary.md:27-28 and 44-61 say a token is known when an installed stack plugin declares it; reword to the template-only rule of D40?",
+      "ruling": "Reword them to the template-only rule. stack-vocabulary.md:27-28 and 44-61 say a language is known only when the pinned template lists it, so the file matches doctor, checks.mjs and setup. Where a later passage only restates a rule that D38-D46 already settle, apply the settled rule and do not ask.",
+      "rejected": "Leave them",
+      "units": [
+        "U2"
+      ]
     }
   ],
   "stages": {
@@ -786,6 +824,20 @@
       "unit": "U4",
       "stage": "",
       "text": "log.mjs summary ignored the started/ended fields D42 puts on fresh checks markers; no unit owned log.mjs · U4 Owns widened to log.mjs and execute-log.test.ts under D43",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U6",
+      "stage": "",
+      "text": "R4 rule-5: plugins/vwf/skills/setup/references/topology-detection.md:56 says unknown language is blocking and doctor halts setup on it; no unit owned the file · U6 Owns widened to it, DOCS FALSIFIED handed to U6 (D40, D44)",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U6",
+      "stage": "",
+      "text": "U2 DOCS FALSIFIED: plugins/vwf/skills/architecture/references/stack-menu.md:234 defines unknown as a token no plugin declares; no unit owned the file · U6 Owns widened to it (D40, D47)",
       "state": "closed"
     }
   ],

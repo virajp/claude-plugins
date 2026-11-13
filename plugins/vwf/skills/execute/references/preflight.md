@@ -3,7 +3,8 @@
 ## Validate (Resolve, every plan)
 
 Preflight starts with the folder's file, before any other read of it, on a fresh run and a resume
-alike. It runs after the format test in `SKILL.md` found the new format:
+alike. It runs after the format test in `SKILL.md` found the new format, inside `start.mjs`
+([claim.md](claim.md)), as this call does:
 
 ```sh
 node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json
@@ -12,8 +13,8 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <fol
 Below, `plan.mjs` names that script, as in [the plan files](plan-files.md). Exit 0 prints
 `<folder>/index.json: valid`, and the run reads on.
 
-Any other exit is a **refusal**. Print every finding it wrote to stderr, one
-`<file>: <path>: <message>` line each, and stop: before the claim, before the worktree, writing nothing.
+Any other exit is a **refusal**: `start.mjs` returns `refused`, its `message` every finding,
+`<path>: <message>` each, and the run stops: before the claim, before the worktree, writing nothing.
 The fix depends on the run:
 
 - On a fresh run, the planner named by the folder's `type` corrects the folder and re-approves it.
@@ -61,35 +62,17 @@ A `teams` run has the same permission rule as a `solo` one, and asks the user th
 
 Read this at Setup step 2 **only when the plan has a `code` unit**, a `units` entry whose `kind` is `code`. A plan of
 `edit` units alone writes no code, so neither branch below applies to it. There, a missing LSP server is a line in the
-final report, and no conventions are fetched. A `blocking` doctor finding is a hard halt handled in
+final report, and no conventions are fetched. A `blocking` row of the start result's `findings` is a hard halt handled in
 [claim.md](claim.md), not here, whatever the plan's units.
 
-### The LSP rule (Setup step 2)
+### The LSP check (Setup step 2)
 
-This applies **only when `doctor` reports a missing LSP server**. A clean preflight, or one whose only findings are
-non-LSP, never needs it.
+The LSP check waits on the bootstrap work (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`). Until it lands,
+this step checks no LSP server and reads no `consent.lsp`, and a run with a `code` unit proceeds without an LSP gate.
 
-The question was asked once, at `/vwf:plan`'s stack gate. Its answer is the folder's `consent.lsp.<language>`, reading
-`installed` or `proceed without`: `plan.mjs get <folder>/index.json consent.lsp`. The answer is in the folder, so this
-run reads it and never re-asks it:
-
-- **`installed`, and the server is still missing** → halt with the remedy: the plan was approved on a promise that did
-  not hold. Name the language. Say to install the server through `/plugin` (Discover), or to set it to `proceed without`
-  in the folder — `plan.mjs set <folder>/index.json consent.lsp.<language> "proceed without"` — then re-launch
-  `/vwf:execute <folder>`.
-- **`proceed without`** → say so in the final report and continue. Degraded type-safety is a known condition of the run,
-  not a gap.
-- **No key for the flagged language**, or no `consent.lsp` at all → treat it as `proceed without`. Append one `open` entry
-  to the folder's `gaps`, `unit` `""` and `stage` `preflight`. Its text says that the plan did not carry the LSP answer for
-  `<language>`, and that the run proceeded without the server. Then one `log.mjs event gap` with the same `id`, `unit`, `stage`, `text` and
-  `state`, per [the plan files](plan-files.md).
-- A language doctor reports as **unavailable** (no LSP ships in this marketplace) is not gated: there is nothing to install.
-  Append it to `gaps`, then one `log.mjs event gap` of the same entry, and proceed.
-- A language doctor reports as **unknown** is not handled here at all. No installed plugin declares it, so it is a `blocking`
-  finding and a hard halt in [claim.md](claim.md). It is not a missing LSP: it is a stack vwf has no template, conventions or
-  harness for, and there is nothing to proceed without.
-
-Note everything else doctor reports, and carry it into the run's gap list; do not block on it.
+A language the start result's `findings` row reports as **unknown** (`rule` `unknown-language`) is not handled here at
+all. It is not a missing LSP: it is a stack vwf has no template, conventions or harness for. The user already chose to
+continue or stop on it, in [claim.md](claim.md).
 
 ### Stack conventions (Setup step 3)
 
@@ -111,6 +94,6 @@ the repo reads the base's `.claude/` tree for a member's project, and finds the 
 - A failed fetch halts for the opposite reason: the preflight already proved each pin resolves, so a failure now is the plugin
   being unreachable.
 
-Report them distinguishably — a question nobody answered is not a plugin that broke. Note that `/vwf:doctor` will not have caught
-the first, since it reports deferral as a degradation by design. Either way, code written to conventions nobody read is the thing
+Report them distinguishably — a question nobody answered is not a plugin that broke. Note that the start checks
+(`checks.mjs`) will not have caught the first, since they never block on a deferred axis, by design. Either way, code written to conventions nobody read is the thing
 this whole gate exists to prevent.

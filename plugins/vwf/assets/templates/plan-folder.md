@@ -379,8 +379,10 @@ The rules for each key — JSON has no comments, so they sit here:
   `/vwf:execute all`" — and `false` otherwise, written unasked when the plan
   touches no such plugin. `lsp` *(cycle)* holds one key per language
   `/vwf:doctor` flagged without a server, `installed` or `proceed without`,
-  answered at `/vwf:plan`'s stack gate — what `/vwf:execute`'s preflight reads
-  instead of asking; `{}` when none was flagged.
+  answered at `/vwf:plan`'s stack gate. `/vwf:execute` does not read it until
+  its parked LSP check lands
+  (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`), and never asks
+  it; `{}` when none was flagged.
 - **`gates`** — the exact commands confirmed in the interview, one string per
   line; `[]` for none. `unit`: `/vwf:execute` runs every line once before each
   commit it makes on a unit's behalf — the unit's own commit and each fix

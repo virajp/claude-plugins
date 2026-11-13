@@ -22,9 +22,12 @@ action. A docs tool that moves source is one that can break a build it cannot
 test, and a repo split is the least reversible thing setup could do.
 
 A decline is recorded in `.config/vwf.yaml` under `enforcement:` (with the
-choice and the reason) and not re-proposed on later runs. It settles the
-proposal, not the finding: `/vwf:doctor` keeps reporting the
-`iac` own-repo case as a persistent warning.
+choice and the reason) and not re-proposed on later runs. A declined `iac`
+extraction is exactly
+`enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`. It settles the proposal, not
+the finding: `/vwf:doctor` keeps reporting the `iac` own-repo case as a
+persistent warning.
 
 **`config_format` 24 → 25 takes one consent line and no question.** The
 consent line is one row of the plan: the `addons:` list, the

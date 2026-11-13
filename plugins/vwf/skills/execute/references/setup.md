@@ -50,12 +50,23 @@ Then follow the Resume steps of [blocking and resume](blocking.md):
 - The earlier attempt's fields stay. A unit run again continues its `rounds`.
 
 This is how a run paused at a resource cap (`/vwf:handoff`, then
-`/vwf:execute <folder>` in a fresh session) picks up where it left off. The resumed
-run's action log is `log.mjs start --mode resume --folder <the worktree copy of the folder>`,
-which appends a new `run.start` and `plan.snapshot` to the same file the folder's
-`run.log` names. Never read the log to decide where to resume.
+`/vwf:execute <folder>` in a fresh session) picks up where it left off. `start.mjs`
+starts the resumed run's action log with `log.mjs start --mode resume --folder <the
+worktree copy of the folder>`, which appends a new `run.start` and `plan.snapshot` to
+the same file the folder's `run.log` names. Never read the log to decide where to resume.
 
 ## Setup
+
+`start.mjs` has already logged the `checks` and `claim` phases. Setup logs its own
+two, each call from the directory the step runs in, per
+[the action log](action-log.md):
+
+- `log.mjs event phase.start --phase worktree` before step 1, from the main
+  checkout, and `log.mjs event phase.end --phase worktree` once step 1 is done,
+  from the worktree;
+- `log.mjs event phase.start --phase preflight` before step 2, and
+  `log.mjs event phase.end --phase preflight` once its gate lines are green, both
+  from the worktree.
 
 1. **Worktree**. Invoke `/vwf:git-workflow` to create the dedicated worktree, passing
    the declared preferences:
@@ -74,7 +85,8 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
 
    **Under an `all` override**, the dispatch prompt's overrides block names a
    `shared worktree: <branch>`, per [`all` and runner mode](../workflows/all.md). Then cut
-   no worktree of the plan's name.
+   no worktree of the plan's name: the runner passed that worktree's path to
+   `start.mjs --worktree`, so the claim's `run.worktree` already names it.
    - When a worktree on that branch exists, reuse it. Stop when it is not clean. Then
      bring it up to date with a plain `git merge <integration branch>` run inside it,
      where the plan before it landed. Treat a conflict as the hard halt
@@ -97,19 +109,15 @@ which appends a new `run.start` and `plan.snapshot` to the same file the folder'
      so the worktree is of the **target member**. The base's writes go to the base checkout as a second working tree. These are Reconcile's
      `implementation:` stamps, and the docs unit's edits to the base's own docs. Commit the two separately, **base repo
      last** — a half-finished run never leaves a doc claiming work that has not landed.
-2. **Preflight (nothing here asks — its answers are in the folder)**. Doctor already ran
-   before the claim, per [claim.md](claim.md). Its blocking findings already halted the
-   run. This step reads the rest of its report.
+2. **Preflight (nothing here asks — its answers are in the folder)**. The start checks
+   already ran before the claim, in `start.mjs` ([claim.md](claim.md)); a blocking row
+   stopped the run there.
 
-   **When the plan has a `code` unit, read the LSP findings against the plan's
-   `consent.lsp`**. Note everything else doctor reports, and carry it into the run's gap
-   list; do not block on it. A missing LSP server was a question at `/vwf:plan`'s stack
-   gate, and its answer is `consent.lsp.<language>`. This run reads it and never re-asks it:
-   follow the LSP rule in [the `code`-unit preflight](preflight.md) when doctor reports
-   one. On a plan of `edit` units alone, a missing LSP server is a line in the final
-   report and nothing more.
+   **The LSP check waits on the parked bootstrap work**
+   (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`): this step checks no LSP
+   server, and a run with a `code` unit proceeds without an LSP gate until then.
 
-   Then run every line of the folder's `gates.unit` and `gates.wave`, in that order,
+   Run every line of the folder's `gates.unit` and `gates.wave`, in that order,
    once, from the worktree root. Run what is written and infer nothing. A gate the plan
    does not name is not this run's to invent, however obvious it looks in the tree.
    `gates.plan` does not run here; it runs once, at the end.
