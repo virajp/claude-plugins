@@ -803,27 +803,27 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.259Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.052Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.155Z"
     },
     "reconcile": {
-      "state": "pending",
+      "state": "running",
       "detail": "",
-      "started": "",
+      "started": "2026-11-13T08:10:37.397Z",
       "ended": ""
     }
   },
