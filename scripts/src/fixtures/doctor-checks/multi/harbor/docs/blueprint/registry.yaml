@@ -1,0 +1,16 @@
+# An invented registry, shaped on assets/templates/registry.yaml.
+vwf_registry: 2
+
+projects:
+  - name: dock-app
+    role: frontend
+    platforms: [ mobile ]
+    path: ../dock-app
+    capabilities: []
+    depends_on: []
+  - name: dock-absent
+    role: frontend
+    platforms: [ mobile ]
+    path: ../dock-absent
+    capabilities: []
+    depends_on: []

@@ -180,7 +180,11 @@ worktree is cut; a rejected push means re-pull and re-pick.
 
 The `next` pick, the claim at the start of a run, and the `COMPLETE` row after
 a landing are each a read or a write of this file, and every step of them is
-one plain git command or one `plan.mjs` call. Both procedures run in the
+one plain git command or one `plan.mjs` call. The pick, the resolution of a
+`requires` list and the claim are scripted: `plan.mjs pick`, `plan.mjs resolve
+<folder>` and `plan.mjs claim <folder> [--worktree <path>]` implement the steps
+below, which stay the rule they implement. The unclaim and the completion stay
+procedures the model follows step by step. Both procedures run in the
 **main checkout of the base repo**, never in a worktree. The index is the base
 repo's, as the backlog project is — a run started in a member repo addresses
 the base's file, resolved the way `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`
@@ -240,8 +244,24 @@ what each row status means for a named run.
 
 The two edits the executor makes in the main checkout at the claim: the row,
 and the folder's `run` — the worktree and log paths (`plan-management`'s
-`claim`). This reverses the older rule that the row was the one edit the run
-made there (approved 2026-10-24): a reader of the folder now finds a running
+`claim`, which `plan.mjs claim` runs). When the folder lives in a member repo,
+the base comes first — the row in the base is the claim — and then the member
+commit of the folder's `run` runs steps 1 to 8 in the member checkout. If the
+member push still fails, the claim returns `{claimed: false, kind:
+member-failed, reason}`, the reason naming the failure and the
+`plan-management unclaim <folder>` request, because the row is already
+`RUNNING`. A commit or push failure other than a same-row conflict undoes the
+local claim commit, when it exists, restores the checkout, and returns
+`{claimed: false, kind: failed, reason}`; the clean-rebase retry of a rejected
+push is capped at 3 attempts, then the same refusal. A failed `git stash
+apply` at step 8 leaves the landed claim standing: `git reset --merge`, the
+stash kept, and `{claimed: true, commit, warning}` naming it by tag and SHA. An
+apply that succeeds but finds `stash@{n}` no longer that SHA when it comes to
+drop it — another session pushed or popped in between — leaves the claim
+standing too: the applied stash kept, and a warning that the stash moved before
+it could be dropped, to drop it by hand. This reverses the
+older rule that the row was the one edit the run made there (approved
+2026-10-24): a reader of the folder now finds a running
 plan's worktree and action log without searching. `unclaim` follows the
 same procedure with the reverse edits — the row from `RUNNING` back to
 `APPROVED`, and `run` back to `{}` — and the push-rejection rule applies
@@ -250,8 +270,13 @@ before touching anything: the branch the checkout is on, and whether a stash
 was taken.
 
 1. When the checkout is dirty — `git status --porcelain` prints anything —
-   `git stash push -u -m "vwf plan queue <folder>"` and remember that a stash
-   was taken.
+   `git stash push -u -m "vwf plan queue <folder>"`, and hold the entry by the
+   SHA `refs/stash` names right after the push — never by `stash@{0}` or by
+   its tag, since the stack is shared by every worktree and session. Two
+   refusals, each `{claimed: false, kind: failed, reason}` and each saying the
+   changes are in the stash under the tag: `refs/stash` unchanged from before
+   the push — the push created no new stash entry — and an entry whose subject
+   is not the tag — another stash landed on top before it could be read.
 2. When the checkout is not on `<integration>` — `git checkout <integration>`.
 3. `git pull --ff-only`.
 4. Edit the one row, each change one `plan.mjs set` on
@@ -313,7 +338,10 @@ was taken.
        reports that and the user asks again after reading the queue.
 8. **Restore the checkout — every path ends here**, the landed push, the
    dropped claim and the refusal alike. When the checkout was on another
-   branch — `git checkout -`. When a stash was taken — `git stash pop`.
+   branch — `git checkout -`. When a stash was taken — `git stash apply
+   <sha>`, then find its `stash@{n}` by SHA. Found, read `stash@{n}` again:
+   still that SHA, `git stash drop stash@{n}`; another entry, keep it and
+   warn. Not in the stash list at all, drop nothing and warn nothing.
 
 Every command is one plain call; none of them is `--force`, `reset --hard` or
 `--no-verify`, which `vwf:git-workflow` forbids everywhere. The push carries no

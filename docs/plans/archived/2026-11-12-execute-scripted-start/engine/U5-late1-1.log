@@ -1,0 +1,4 @@
+/security-review — loop U5-late1, round 1, range db5ee5ab..e0d11987
+
+No high-confidence vulnerabilities found.
+The fix delta is markdown prose only (plan-index.md, plan-management SKILL.md, execute claim.md); documentation is excluded from findings.

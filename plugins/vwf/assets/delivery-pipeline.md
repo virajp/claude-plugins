@@ -119,7 +119,7 @@ literally named `production`).
   and the doctrine behind it ships with whichever plugin claims the axis.
 - **`/vwf:doctor`** runs the same audit per project ahead of any pipeline: a
   critical advisory reports as a **blocking** finding (halting `/vwf:plan` and
-  `/vwf:execute` like any other), high/moderate as information — so a release
+  `/vwf:setup`), high/moderate as information — so a release
   the pipeline would fail on rule 8 is visible before the release act, not
   during it.
 - **`/vwf:plan`** injects a `test:load` harness-capability preflight step (per

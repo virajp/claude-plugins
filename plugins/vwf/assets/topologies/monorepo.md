@@ -49,9 +49,11 @@ rule vwf **enforces**: `/vwf:doctor` raises a violation as a **blocking** findin
 and `/vwf:setup` writes up the extraction as a recommendation. Everything else on
 this page is a menu.
 
-Declining it under `enforcement:` is honoured, and honoured honestly: the
-finding drops to a warning `/vwf:doctor` reports every run, so nothing halts and
-nothing is hidden either.
+Declining it under `enforcement:` — the key
+`enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`, which `/vwf:setup` writes — is
+honoured, and honoured honestly: the finding drops to a warning `/vwf:doctor`
+reports every run, so nothing halts and nothing is hidden either.
 
 The rest of the topology model is deliberately unenforced — a repo shape is a
 tradeoff with no universally right answer, so vwf presents the three and records

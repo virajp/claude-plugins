@@ -1,0 +1,13 @@
+# An invented lockfile, shaped on stackgen's assets/output-tree.md.
+# TEMPLATE_HASH is replaced with the template's sha256 when the test copies it.
+entries:
+  - path: .claude/stackgen/templates/kite-service.md
+    slug: kite-service
+    component: language/kite
+    source: pack/language/kite@1.0.0
+    hash: sha256:TEMPLATE_HASH
+  - path: .claude/skills/kite/SKILL.md
+    slug: kite-service
+    component: language/kite
+    source: pack/language/kite@1.0.0
+    hash: sha256:0000

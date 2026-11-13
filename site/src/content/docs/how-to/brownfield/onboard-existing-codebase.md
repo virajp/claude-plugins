@@ -34,8 +34,9 @@ claude plugin install vwf@virajp-plugins
 The commands and scopes are the same as the greenfield run —
 [install the plugins](../greenfield/single-repo.md#install-the-plugins) — but
 the ordering matters more here, because the repo already has languages in it. A
-language nothing on the menu declares is recorded honestly by detection and then
-**blocks** the doctor run inside setup's own spine, which halts the onboard.
+language the pinned template does not list is recorded honestly by detection,
+reported by doctor as unknown, and then **stops** setup's own spine, which
+halts the onboard.
 Bookable is TypeScript throughout, so stackgen's `language/typescript` bundle
 covers both apps and the shared package, its `postgres` bundle answers the API's
 backing axis, and its design-tool pack answers the import that `apps/web` will

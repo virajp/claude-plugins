@@ -1,0 +1,4 @@
+/security-review — loop U5, round 2, range 692ae0bf..d66fd210 (queue.mjs fix delta)
+
+No high-confidence vulnerabilities found.
+Rejected: command injection (array args); wrong stash on duplicate tag (theoretical race); no stash created plus leftover same-tag stash (<8/10); drop by stash@{n} after fresh lookup (theoretical race); endsWith tag match (': ' prefix guards); reset --merge after failed apply (stash kept, SHA in warning).

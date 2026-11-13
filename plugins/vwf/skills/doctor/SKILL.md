@@ -28,7 +28,7 @@ than to any one project, so **§§6–8 run in full on every invocation**, scope
 or not — and their references are read every run, not just when no argument was
 given.
 Narrowing them is how a scoped run comes back clean while a blocking finding
-sits unread, and `/vwf:setup` / `/vwf:execute`
+sits unread, and `/vwf:setup` / `/vwf:plan`
 halt on a blocking finding they were never told about.
 
 The one argument that is not a project name is **`baseline`** — a named
@@ -103,25 +103,27 @@ nothing. With no `prefer:`, doctor offers as §9 says.
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule.
 - **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
-  LSP shipped in this marketplace is reported as *unavailable* with no
-  suggested command; only a language that *has* a plugin and isn't installed
-  is a *missing* finding. Both presuppose an installed plugin **declares** the
-  language. One that no plugin declares at all is *unknown*, and unknown is
-  **blocking once that project's `template` is pinned** — vwf's stack menu is
-  closed to what the installed plugins define
-  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). While the project axis
-  reads `unresolved` it is a **degradation** instead: the plugin that would
-  claim the token is exactly what has not been chosen yet. And a pin whose
-  adapter materializes but never landed the payload in its target repo is
-  *not materialized* — the decision exists and the artifact does not, which
-  is blocking on the pin and remedied by `/vwf:setup`, whose materialize pass
-  lands it, never by `/vwf:architecture`, which would only re-decide a pin
-  that is already answered (§3).
+  LSP shipped in this marketplace is reported as *unavailable* with no suggested
+  command; only a language that *has* a plugin and isn't installed is a
+  *missing* finding. Both presuppose the language is **known**. One that no
+  materialized template of its project lists — under `language_facts` or
+  `optional_languages`, no installed plugin read — is *unknown*, and unknown is
+  a **degradation**, never blocking, whether the project's `template` is pinned
+  or reads `unresolved`: `checks.mjs` reports it so, and doctor reports that
+  finding as it comes (§3). `/vwf:execute` asks the user whether to continue or
+  stop on it; `/vwf:setup` alone stops on it, by its own rule. vwf's stack menu
+  is still closed to what the installed plugins define
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). And a pin whose adapter
+  materializes but never landed the payload in its target repo is *not
+  materialized* — the decision exists and the artifact does not, which is
+  blocking on the pin and remedied by `/vwf:setup`, whose materialize pass lands
+  it, never by `/vwf:architecture`, which would only re-decide a pin that is
+  already answered (§3).
 - **Never halt.** Doctor always finishes and reports, even when everything is
   broken — a mandate is expressed as a **blocking finding**, never as doctor
-  stopping early. Callers decide what a finding means: `setup`, `plan` and
-  `execute` all halt on `blocking`, and `execute` additionally gates on the LSP
-  check — `plan` does not, since planning compiles nothing.
+  stopping early. Callers decide what a finding means: `setup` and `plan` halt
+  on `blocking`. `execute` no longer runs doctor: it halts on the blocking rows
+  of `checks.mjs`, which its `start.mjs` runs (*The checks script* below).
 
 ---
 
@@ -156,7 +158,8 @@ while the same command run inside the member reports an un-onboarded repo, or
 the reverse — which is the whole failure the two-file contract exists to
 prevent. A **missing `url:`** on a member is blocking too: the absent-member
 clone offer has nothing to clone from without it, and that only surfaces on the
-day someone needs the repo.
+day someone needs the repo. `checks.mjs` implements both (its `membership` and
+`member-url` rows; *The checks script* below).
 
 **Presence is not a finding.** Detect which members are cloned here and say so
 plainly in the report, but never as drift: a twenty-repo product with three
@@ -175,6 +178,33 @@ ships (`assets/blueprint-format`, and the schema version in the vwf-config
 asset). Drift → report the delta and name the remedy in terms of what setup
 does: the stamp is behind, and `/vwf:setup` will reconcile the
 tree to the current format. It is never doctor's job to migrate.
+
+### The checks script
+
+The blocking checks are one script, the source of their findings:
+
+```sh
+node ${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs [--projects a,b] [--repo <dir>]
+```
+
+It covers exactly: not onboarded and early (both `info`), membership both
+directions and the member url, a missing `mise`, a `custom` pin, template
+platform coverage, an `iac` project inside another repo with its recorded
+decline, pinned not materialized, an unknown language, and binaries with their
+probes. It prints one JSON object, `{base, projects, findings}`, each finding
+`{rule, severity, project, subject, message, remedy}` — `project` `null` on a
+repo-level row, `severity` one of `blocking`, `degraded`, `missing`,
+`unavailable`, `info`. Exit 0 when no row is `blocking`, 1 when one is, 2 on a
+usage or internal error. `--projects` scopes the project checks, `--projects ""`
+runs the repo-level checks alone, and no flag checks every registry project. It
+runs no audit, no drift check, no network read, no bootstrap dry-run and no LSP
+check.
+
+Doctor runs it once per full run, scoped as this run is (§1's membership rows
+included), and reports its rows as they come, under the finding kinds of §9: it
+never re-rates a row. The references
+keep each rule's reason; the script is its implementation. `/vwf:execute` runs
+the same checks through its `start.mjs`, never doctor.
 
 ### 3–8. The checks
 
@@ -200,8 +230,9 @@ content. `baseline` never runs it.
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
 run the ecosystem's own audit command against each project's lockfile — the
 package manager's, whatever it is; doctor names no tool beyond it. A
-**critical** advisory reports as **blocking** — the same class callers halt
-on; high/moderate advisories report as information. An advisory waived
+**critical** advisory reports as **blocking** — the same class `/vwf:plan` and
+`/vwf:setup` halt on (`/vwf:execute` does not run the audit); high/moderate
+advisories report as information. An advisory waived
 per-advisory under `enforcement.rules`
 (`pipeline/dependency-audit/<advisory-id>`, per the delivery-pipeline asset)
 reports as **degraded** with its waiver's date, never re-escalated. A project
@@ -244,8 +275,8 @@ One table, findings first, grouped by kind — **blocking** (something *mandator
 is absent or misplaced, or the stack is one no installed plugin defines: an
 `iac` project
 inside another repo whose extraction the user has **not** declined on the
-record, `mise`, an **unknown** language and a `binaries` name missing from
-`PATH` or failing its declared probe — the last three **conditionally**, once a
+record, `mise` and a `binaries` name missing from
+`PATH` or failing its declared probe — the last two **conditionally**, once a
 stack axis is pinned (§5, §3) — a project whose pinned template its adapter
 never **materialized** in that project's target repo (§3) — the pin is an answer
 and the payload absent, a `custom` template pin, a project whose template does
@@ -273,7 +304,8 @@ with the remedy to fix the value; never blocking),
 **missing** (something declared has no install — including a **`B`**-kind
 capability a project declares that none of its `backing_template` pins provides,
 which is never blocking; §5), **unavailable** (nothing shipped here to install),
-**unknown** (no installed plugin declares it — blocking once the axis is pinned,
+**unknown** (no materialized template of its project lists it — the
+`checks.mjs` row as it comes, a degradation, never blocking,
 listed separately so the remedy reads as *install or write the plugin*, never
 *install this one*), **pinned, not materialized** (§3's neighbour to that one
 and never folded into it: the token *is* declared, by a template the adapter
@@ -323,16 +355,18 @@ the repo as it stands, and the next run checks it again.
 **Callers.** `/vwf:setup`'s shared spine runs this over the whole repo, right
 after it writes the config, and records what it finds. `/vwf:plan` runs it
 scoped to its dependency chain's projects, once the chain is approved and before
-its survey. `/vwf:execute` runs it scoped to the plan's projects. **All three
-halt on any `blocking` finding** — the mandated tooling is what the pipeline is
-built on, and the stack menu is what its conventions and harness come from, so
-proceeding without either produces a run that fails later and less clearly, or
-one that fails to fail at all. The LSP findings are `/vwf:plan`'s question: at
-its stack gate it asks, per flagged language, whether to install now or proceed
-without, and records the answer as `consent.lsp.<language>` in the plan
-folder's `index.json` (`installed` or `proceed without`). `/vwf:execute` halts
-on `blocking` alone and reads that key; it never asks. `/vwf:recall` calls the
-`baseline` invocation alone, at session start, and prints its result as one
-shape-drift line per remedy — it never runs doctor whole, never reads the forge,
-and runs no mise task and no bootstrap code, so it does not report config drift.
-Full mode does.
+its survey. `/vwf:execute` no longer runs doctor: it runs `checks.mjs` through
+its `start.mjs`, scoped to the plan's projects, and halts on its `blocking`
+rows. **All three halt on a `blocking` finding** — the mandated tooling is what
+the pipeline is built on, and the stack menu is what its conventions and harness
+come from, so proceeding without either produces a run that fails later and less
+clearly, or one that fails to fail at all. The LSP findings are `/vwf:plan`'s
+question: at its stack gate it asks, per flagged language, whether to install
+now or proceed without, and records the answer as `consent.lsp.<language>` in
+the plan folder's `index.json` (`installed` or `proceed without`).
+`/vwf:execute` does not read that key until its LSP check returns
+(`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`); it never asks.
+`/vwf:recall` calls the `baseline` invocation alone, at session start, and
+prints its result as one shape-drift line per remedy — it never runs doctor
+whole, never reads the forge, and runs no mise task and no bootstrap code, so it
+does not report config drift. Full mode does.

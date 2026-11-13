@@ -1,0 +1,11 @@
+/security-review — loop U5, round 1, range 03b0f818..692ae0bf (filtered to the row's code files)
+
+No high-confidence vulnerabilities found.
+
+Rejected candidates:
+- plugins/vwf/skills/doctor/scripts/lib/stack.mjs:342 sh -c probe (confidence 4): the probe string comes from a committed template behind the lockfile hash gate. The hash proves the template is unchanged, not who wrote it. Not new attack surface: doctor already documented running declared probes behind the same gate, and the executor runs repo-authored gate lines and mise tasks by design.
+- plugins/vwf/skills/plan-management/scripts/lib/queue.mjs:167 and plugins/vwf/skills/doctor/scripts/lib/membership.mjs:53, member path outside the repo (confidence 3): at worst a plan-file claim commit with the user's own git and hooks; no trust boundary crossed, no code runs.
+- plugins/vwf/skills/doctor/scripts/lib/stack.mjs:123-137, lockfile-controlled path read (confidence 2): the file is read and hashed only.
+- plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs, deserialization (confidence 1): no eval or dynamic code; __proto__ keys rejected.
+- plugins/vwf/skills/plan-management/scripts/lib/queue.mjs:396-500, git procedure: every exit path restores the checkout; no force push, no --no-verify; the stash is tagged.
+- plugins/vwf/skills/execute/scripts/start.mjs and log.mjs: array arguments; paths from trusted CLI flags.

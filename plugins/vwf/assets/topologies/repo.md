@@ -37,8 +37,10 @@ IaC one beside it — which makes it a small multi-repo product, not a single
 repo. This is
 the one structural rule vwf enforces rather than offers: `/vwf:doctor` raises a
 violation as **blocking**, and `/vwf:setup` writes up the extraction as a
-recommendation. Decline it on the record under `enforcement:` and the finding
-stays, as a warning reported every run rather than a halt.
+recommendation. Decline it on the record under `enforcement:` — the key
+`enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`, which `/vwf:setup` writes —
+and the finding stays, as a warning reported every run rather than a halt.
 The reasoning — blast radius, credentials, lifecycle, cadence — is in
 [monorepo](monorepo.md), and holds identically here; a smaller product does not
 make an accidental teardown of the live environment smaller.

@@ -265,9 +265,14 @@ format — a `docs/plans/index.md` — and points you to the
 [migration guide](https://github.com/virajp/claude-plugins/blob/main/docs/plans/migrate.md);
 migrate, then re-run the same command.
 
-The first thing it does is run **`/vwf:doctor`** in your main checkout: a
-blocking finding stops the run there, before it has claimed anything, so the fix
-and a re-launch need no clean-up. Then it **claims the plan**: the row in
+Its whole start is one script call in your main checkout, `start.mjs`: it
+resolves the plan, runs the start checks — the blocking checks `/vwf:doctor`
+runs too, without the audit, the drift checks or the doctor skill — and claims
+it. A blocking finding stops the run there, before it has claimed anything, so
+the fix and a re-launch need no clean-up. An unknown language alone stops it
+before the claim too, and the session asks you to continue or stop; continue
+re-runs the script with `--continue-unknown-language`. Then it **claims the
+plan**: the row in
 `docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
 worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run
 will use, in a commit pushed on the integration branch, before any worktree

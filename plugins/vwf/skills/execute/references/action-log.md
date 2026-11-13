@@ -54,13 +54,16 @@ the worktree stay the record a resume reads for everything else.
 Each item is one point in the run and the call made there. Fill the names in angle brackets from the run.
 
 - **Once the folder is read and not refused:** `start --folder <folder> --mode fresh`, `<folder>` the copy the run read.
-  On a resume, the call is `start --folder <the worktree copy of the folder> --mode resume`.
+  On a resume, the call is `start --folder <the worktree copy of the folder> --mode resume`. `start.mjs` makes this call
+  ([claim.md](claim.md)), not you.
   - The value of `--mode` is `fresh` or `resume` only. Another value exits 2 and writes nothing.
   - The `start` call reads `<folder>/index.json`. It appends one `plan.snapshot` event, `{folder, units}`, right after
     `run.start`.
   - The `units` value is that file's `units` list, which is where a unit's `kind` comes from.
 - **Each phase, before and after:** `event phase.start --phase <phase>` and `event phase.end --phase <phase>`, with the
-  same keys on both.
+  same keys on both. A marker may carry its true time as an optional field, `--started <ISO time>` on a `phase.start`
+  and `--ended <ISO time>` on a `phase.end`, when it is written after the boundary it marks: a fresh run's `checks`
+  markers, which `start.mjs` writes right after the log start, carry the real times of checks that ran before it.
 - **The execution mode, once decided, and again if the run falls back:** `event execution --mode <solo|teams> --reason "<why>"`,
   per [preflight.md](preflight.md). Drop `--reason` when the mode is what the plan recorded.
 - **Every gate line:** `run --tier <tier> --unit <id> --wave <n> -- <the gate line>`, the tier one of `unit`, `wave`,
@@ -80,13 +83,16 @@ Each item is one point in the run and the call made there. Fill the names in ang
 - **Each answer, once it is recorded in the folder's `decisions`:** `event answer`, its JSON on stdin (below), its
   `decision` the `D<n>` of that entry.
 - **A stop** — a pause, a block, a refusal after `start`: `event stop --reason "<why>" --resume "/vwf:execute <folder>"`,
-  then `end --outcome paused` or `end --outcome blocked`.
+  then `end --outcome paused` or `end --outcome blocked`. `start.mjs` closes a stop of its own the same way: a block on
+  the checks with `end --outcome blocked`, a lost claim with `end --outcome claim-lost` (before a re-pick under `next`),
+  and a claim that failed otherwise with `end --outcome claim-failed`.
 - **The landing, after the last after-landing step:** `end --outcome complete`, or `end --outcome ready` when
   `consent.merge` read `false`.
 
-The phases, in run order: `doctor`, `claim`, `worktree`, `preflight`, `wave` (with `--wave <n>`), `acceptance`, `ux`,
-`reconcile`, `final-waves`, `plan-gate`, `land`, `after-landing`. A review row's loop sits inside its wave's phase, and is
-logged by its rounds.
+The phases, in run order: `checks`, `claim`, `worktree`, `preflight`, `wave` (with `--wave <n>`), `acceptance`, `ux`,
+`reconcile`, `final-waves`, `plan-gate`, `land`, `after-landing`. `start.mjs` writes the first two; Setup writes
+`worktree` and `preflight` ([setup.md](setup.md)). A review row's loop sits inside its wave's phase, and is logged by
+its rounds.
 
 `run` runs the command with its output where it would have gone. It then logs the command line, its exit code and its
 duration, and exits with the command's own code. So wrapping a gate line changes nothing about how its result is read. Put
@@ -174,7 +180,8 @@ appends to the same file, then repeat the call.
 This reports each run of the plan, one `run.start` to the next, and the totals. The pause from a run's last line to the next `run.start` is
 not counted. For each, it prints:
 
-- the phases with their durations;
+- the phases with their durations, each timed from a marker's `started` and `ended` when it carries them, else from its
+  `ts`;
 - every agent with its start, duration and what spawned it;
 - the total agent time, the wall time the agents covered, the peak number at once and the parallel factor;
 - the gates by tier and the commits;

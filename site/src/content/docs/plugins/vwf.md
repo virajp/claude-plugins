@@ -696,8 +696,8 @@ blueprint doc may not.
 **vwf names no language, but the menu is closed.** A language token is whatever
 a template declares, and the facts the tooling acts on — which LSP server covers
 it, which manifest identifies it, which mise tool installs it — come from the
-**language plugin** that owns it. vwf holds no table of its own; the union of
-what the installed plugins declare **is** the vocabulary. `/vwf:doctor` reads
+template that lists it. vwf holds no table of its own; the project's pinned,
+materialized template **is** the vocabulary. `/vwf:doctor` reads
 the block back and checks the repo agrees: an LSP server and toolchain per
 declared language, every binary a materialized template's `binaries` fact names
 resolving on `PATH` — or, where the entry carries a `probe`, that command
@@ -709,28 +709,31 @@ the package-manager pack's `lockfile` fact names — harness task names, health
 paths. It reports drift in both directions, including a framework doing obvious
 structural work that your config never mentions.
 
-A language no installed plugin claims is reported as *unknown*, and since
-`config_format` **14** that is a **blocking** finding: `/vwf:setup` and
-`/vwf:execute` both halt on it. Since **16** the severity follows the pin: while
-the project's `template` reads `unresolved` an unclaimed token is only a
-**degradation** — the plugin that would claim it is exactly what has not been
-chosen yet — and such a project legally records `languages: []`. The moment the
-axis is pinned, unknown is blocking again. There is likewise no *other
+A language the project's pinned template does not list — under
+`language_facts` or `optional_languages`, whatever plugin is installed — is
+reported as *unknown*. `/vwf:doctor` reports it as a **degradation**, and
+`/vwf:execute`'s start checks stop before the claim to ask you whether to
+continue or stop; **`/vwf:setup` alone stops on it**, once the project's
+`template` is pinned, since setup is the one-time place for the setup-shape
+checks. While the `template` reads `unresolved` the token is only reported —
+the template that would list it is exactly what has not been chosen yet — and
+such a project legally records `languages: []`. There is likewise no *other
 (describe)* option and no `template: custom` — an axis nothing on the menu fits
 has three ways forward, none of them a free-text pin. vwf is an opinionated
 workflow that plans against a template's conventions, builds against its harness
-and gates a UI slice on its UX contract; a stack no plugin defines supplies none
+and gates a UI slice on its UX contract; a stack no template defines supplies
+none
 of those, so a run against it would lose every guarantee *while reporting itself
-healthy*. Many stacks are supported — every one of them defined by a plugin.
+healthy*. Many stacks are supported — every one of them defined by a template.
 
-The one second door is the **materialized escape**: a materializing adapter (the
+That template is the one door: a materializing adapter (the
 [`stackgen`](./stackgen.md) plugin) can land a template directly in the repo's
 committed `.claude/` tree through consent-gated, reviewer-gated generation, and
 a language whose pin carries that template's emitted `language_facts` (LSP
 provision, mise tool, manifest, and an optional `binaries` list — executables
 mise does not manage, each a name looked up on `PATH` or a name with a `probe`
 command) is *known* — doctor verifies against the facts instead of a language
-plugin. A token with neither stays blocking; nothing about the escape re-opens
+plugin. A token it does not list stays unknown; nothing about the door re-opens
 free text.
 
 That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
@@ -2130,15 +2133,17 @@ paths, the ruling it carries and the gate lines it must pass.
 
 Four guardrails keep a plan from building on a gap — which is what keeps
 `execute`'s run-time questions to what the plan missed: it **halts unless the
-blueprint coverage stamp reads complete**; it **halts on a stack no installed
-plugin defines, and on one nobody has chosen yet** — once the chain is resolved
-it runs `/vwf:doctor` scoped to the chain's projects and stops on any blocking
-finding, and it stops outright on an axis reading `unresolved`, naming it and
+blueprint coverage stamp reads complete**; it **halts on a stack no template
+defines, and on one nobody has chosen yet** — once the chain is resolved it runs
+`/vwf:doctor` scoped to the chain's projects and stops on any blocking finding
+(an unknown language is reported and planning continues), and it stops outright
+on an axis reading `unresolved`, naming it and
 pointing at `/vwf:architecture`, because a plan's units are sized against the
 selected templates' conventions and an undefined or unchosen stack has none (a
 **missing LSP server** is asked here, once — install now, or proceed without —
-and recorded in `consent.lsp` of the folder's `index.json`, so `execute` reads
-the answer and does not ask it again); it resolves the slice's **dependency
+and recorded in `consent.lsp` of the folder's `index.json`; `execute` does not
+read it until its parked LSP check returns, and never asks it); it resolves the
+slice's **dependency
 chain** — every flow or entity the slice stands on whose `implementation:` stamp
 isn't `complete` becomes **its own plan**, planned dependency-first behind its
 own gate and linked by the `covers`/`requires` lists of `index.json` (a genuine
@@ -2388,13 +2393,28 @@ re-dispatched. Plain `/vwf:execute <folder>` and `next` are unchanged. Under
 reviewers at two, the docs-sync surveyor at three — which is the default nesting
 limit.
 
-The first thing it does, named or picked, is run **`/vwf:doctor`** in the main
-checkout, scoped to the plan's projects: a `blocking` finding halts the run
-there, with no claim, no worktree and no status edit to undo. Then it **claims
-the row**: the folder's row is set `RUNNING`, and the folder's `run` to the
+**The start is one script call**, `start.mjs`, from the main checkout: the
+format test, the `next` pick or the named folder's resolve and refusals, the
+action-log start, the **start checks** and the claim, printed as one JSON
+result. It no longer runs the `/vwf:doctor` skill. The start checks are
+`checks.mjs`, the script doctor runs for its blocking findings, scoped to the
+plan's projects — the registry projects its units' `owns` fall under, or the
+repo-level checks alone when none matches; they run no dependency audit, no
+drift check and no bootstrap dry-run. A `blocking` row halts the run there,
+with no claim, no worktree and no status edit to undo. An **unknown language**
+is not blocking: when it is the only finding, the script stops before the claim
+and execute asks you to continue or stop. Continue re-runs the script with
+`--continue-unknown-language`, which claims; stop leaves nothing to undo. The
+question is asked only, recorded nowhere, and never asked again on a resume.
+Then the script **claims the row**: the folder's row is set `RUNNING`, and the
+folder's `run` to the
 worktree and [action log](#the-action-log) paths the run will use, in one
 commit — `docs: plan queue — <folder> running` — pushed on the integration
-branch from the main checkout, before any worktree exists.
+branch from the main checkout, before any worktree exists. When the main
+checkout has uncommitted changes, the claim sets them aside in a stash named
+`vwf plan queue <folder>` and restores that stash, found by its SHA, once the
+claim lands; if it cannot, the run continues in its own worktree and the result
+names the stash for you to apply or drop by hand.
 That pushed row is what makes a second session safe beside this one; a rejected
 push means the plan was claimed first, so `next` re-picks and a named run stops.
 A folder that `plan.mjs validate` rejects, a `DRAFT` folder, a `COMPLETE` one,
@@ -2412,16 +2432,16 @@ has `covers` — a cycle plan, whose blueprint-bound steps run — and whether i
 check, the acceptance and UX pass, the blueprint reconcile, gap reconciliation
 and the chain forward, each skip recorded `skipped` in the folder's `stages`
 with its reason, and never silent; a plan of
-`edit` units alone skips the LSP rule, the stack-conventions fetch, and the
+`edit` units alone skips the stack-conventions fetch, and the
 per-unit memory recall and persist that only a `code` unit takes — an `edit`
 unit's ruling is in its file. Nothing else differs by kind: the claim, the
 worktree, the wave loop, the review, the gate, the report and the landing are
 the same for both.
 
-Then the preflight, which reads the rest of doctor's report. When a
-`code` unit is planned, a missing LSP server was `plan`'s question, and the
-answer is the folder's `consent.lsp`, which this run reads and never re-asks; on
-`edit` units alone it is a line in the final report. Then every line of
+Then the preflight. The run checks no LSP server and reads no `consent.lsp`
+until its parked LSP check returns, with bootstrap installing the servers; a
+run with a `code` unit proceeds without an LSP gate until then. Then every line
+of
 the folder's unit gate and wave gate, once, before the first unit — what is
 written and nothing inferred; a red line
 here is the branch's, not the plan's, and is reported as such rather than worked
@@ -2820,7 +2840,8 @@ never by its arguments. `SessionEnd` appends `session.end` and releases the
 session. They cost nothing outside a run: the hook exits at once unless a run
 has marked its session as logging. The orchestrator logs what only it knows,
 through the execute skill's `log.mjs`: a snapshot of the plan's units at each
-start, each phase from doctor to the after-landing steps, every gate line — run
+start, each phase from the start checks to the after-landing steps, every gate
+line — run
 through the script, so its duration and exit code are measured rather than
 reported — every commit, each review round with its range and finding counts,
 each change to a unit's or a stage's status, commit, rounds or range, each gap
@@ -3884,7 +3905,7 @@ start step 1; it runs none of them.)
 #    (per chained plan, in order;
 #    /vwf:execute all runs the whole chain, one runner per plan)
 /vwf:execute next
-#    → runs /vwf:doctor, claims the row, cuts a worktree
+#    → one start script: checks, claims the row; then cuts a worktree
 #    → per code unit: code (TDD) → commit
 #    → a hole the plan left → one question to you, its answer in decisions
 #    → the plan's review row, first in its wave: engines → review ‖ security

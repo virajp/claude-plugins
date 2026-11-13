@@ -98,7 +98,7 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
       package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
       languages: [
         <token>,
-      ] # CLOSED vocabulary — the union of what the INSTALLED stack plugins declare (assets/stack-vocabulary.md); vwf holds no table of its own. At least one, EXCEPT while `template` reads `unresolved` — a project whose language nobody has chosen yet records `[]`, and that is the one legal empty. Drives doctor's LSP + toolchain checks. A token no plugin declares is doctor's `unknown` finding — BLOCKING once this project's `template` is pinned, a degradation while it reads `unresolved` (assets/stack-vocabulary.md) — never a recorded-and-ignored value
+      ] # CLOSED vocabulary — the languages the PINNED project template lists (assets/stack-vocabulary.md); vwf holds no table of its own. At least one, EXCEPT while `template` reads `unresolved` — a project whose language nobody has chosen yet records `[]`, and that is the one legal empty. Drives doctor's LSP + toolchain checks. A token the pinned template does not list is the `unknown` finding — a degradation that `/vwf:doctor` reports and on which `/vwf:execute` asks continue or stop; `/vwf:setup` alone stops on it (assets/stack-vocabulary.md) — never a recorded-and-ignored value
       frameworks: [] # open, lowercase-kebab; 0..n. What the code is written against
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
       os: # OPTIONAL — which OPERATING SYSTEM the pinned template targets on each platform, copied by /vwf:setup from the template payload's `os:` field, filtered to the platforms this project declares in the registry. Each value is a token from the OS vocabulary in assets/standard-flows.md for that platform, the first being the primary. An absent key, or an absent platform in it, reads as NO OS KNOWN — the platform's generic canvas frame, as before the key existed. Additive, so it carries no config_format bump. Read by the design.viewports resolution below, through which the canvas picks each platform's OS frames
@@ -126,7 +126,7 @@ harness: # workspace-level capability inventory (see the harness contract)
 
 enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `enforcement.stacks` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `enforcement.stacks` block reads as drift — structure migrates into `topology` + `topology_reason`, `enforcement.stacks` into projects.<name>.stack (its reason into `note`). The TOP-LEVEL `stacks:` above is a different key — the adapter roster — and is current.
-  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md)
+  rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md); topology/iac-own-repo/<project> records a declined extraction of that iac project into its own repo — written by `setup` on the user's consent, it downgrades the own-repo finding to a degradation that `/vwf:doctor` reports every run without halting; `/vwf:execute`'s start checks do not surface it (assets/topologies/)
   kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a hygiene file this repo chose not to land, written by `/vwf:init` (consented, in its single plan) when the user struck that file's create row from the plan; a pack file recorded earlier stays recorded and is still skipped; a file bootstrap writes is never recorded. The path is BASE-RELATIVE: a file in the base is spelled from the base root, and a file inside a member repo takes that member's path as prefix — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
 # NO `answers:` block since FORMAT 23. A repo's answers live in its `.config/bootstrap.toml`, written by bootstrap; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, see `22 → 23` below
@@ -536,9 +536,12 @@ earlier than 65/90/80), never loosen.
   changes, which is exactly the case this file's stamp rule anticipates, and the
   first config bump since `11` to ship without a paired blueprint bump.
 
-  Readers treat a `custom` pin, or a token no installed plugin declares, as `13`
-  drift **and** as a blocking `/vwf:doctor` finding — the drift says the repo is
-  behind, the blocking finding says vwf will not build against it meanwhile.
+  Readers treat a `custom` pin as `13` drift **and** as a blocking `/vwf:doctor`
+  finding — the drift says the repo is behind, the blocking finding says vwf
+  will not build against it meanwhile. A token the pinned template does not
+  list is the `unknown` finding instead — a degradation that `/vwf:doctor`
+  reports and on which `/vwf:execute` asks continue or stop; `/vwf:setup` alone
+  stops on it (assets/stack-vocabulary.md).
 
 - **`14 → 15` migration** (performed by `/vwf:setup`): **a
   multi-repo product stops having to be a submodule

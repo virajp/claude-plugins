@@ -1,8 +1,12 @@
 # `<plan-folder>` — resolve and refuse early
 
-This runs after the format test in `SKILL.md`. The `next` form and a runner reach it with
-the folder they hold. The `/vwf:execute all` form does not: when the argument is `all`,
-this session is the loop, not an orchestrator. It follows
+This runs after the format test in `SKILL.md`, inside the one start call,
+`start.mjs` ([claim.md](../references/claim.md)). The script makes every refusal
+below and returns it as `result` `refused` with the refusal in `message`; the model
+prints it and stops. What stays the model's is the resume's open questions, below.
+The `next` form and a runner reach it with the folder they hold. The
+`/vwf:execute all` form does not: when the argument is `all`, this session is the
+loop, not an orchestrator. It follows
 [`all` and runner mode](all.md) and nothing here. A runner reads `SKILL.md` and
 runs it for its one folder, in the *Runner mode* of all.md, as if that folder
 had been named.
@@ -15,16 +19,16 @@ one with its target repo (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). The
 file's shape is `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`,
 and `plan-management` is its one writer.
 
-Read the index; do not walk the members. Under `multi-repo` most are not on this
-machine, so a walk reports what happens to be cloned.
+The script reads the index; it does not walk the members. Under `multi-repo` most
+are not on this machine, so a walk reports what happens to be cloned.
 
-Halt if no approved plan exists: "No approved plan found. Run `/vwf:plan` or
+It halts if no approved plan exists: "No approved plan found. Run `/vwf:plan` or
 `/vwf:change-plan` first."
 
-**Halt if the target repo is absent**. Report the missing repo and the command
+**It halts if the target repo is absent**, reporting the missing repo and the command
 that fetches it, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`:
 `git submodule update --init <path>` under submodule linkage,
-`git clone <url> <path>` under siblings. Then stop; the run clones nothing. The
+`git clone <url> <path>` under siblings. Then the run stops; it clones nothing. The
 person fetches it and re-runs `/vwf:execute <folder>`. Unlike `plan` and `doctor`,
 there is no honest partial result — you cannot write code into a repo you do not
 have.
@@ -36,10 +40,14 @@ Resolve the argument to `<folder>/index.json`, a folder shaped by
 only. A single-file plan from an earlier release is not an input: finish it on
 the release that wrote it, or re-plan it.
 
-1. Run `plan.mjs validate <folder>/index.json`, per
-   [the preflight reads](../references/preflight.md). A red result is a refusal
-   that prints every finding, on a fresh run and a resume alike.
-2. Read with `plan.mjs get`:
+Every value is read at the integration branch's tip, through `git show`, never the
+working copy; on a resume, the folder's status, units and gaps come from the copy
+in the run's worktree (below).
+
+1. `start.mjs` validates the folder, as `plan.mjs validate <folder>/index.json`
+   does, per [the preflight reads](../references/preflight.md). A red result is a
+   refusal that prints every finding, on a fresh run and a resume alike.
+2. The run reads with `plan.mjs get`, from Setup on:
    - `type`, `covers` when present, and `requires`.
    - `source`: the ids of the backlog items the plan was made for. Each sits on
      one of the next two lists.
@@ -49,14 +57,13 @@ the release that wrote it, or re-plan it.
      `/vwf:backlog partial`. Each of these three lists is `[]` when the plan
      covers no such item.
    - `status`, `consent`, `units`, `gaps` and `stages`.
-3. Hold two facts from this read for every gate below:
-   - **has `covers`**: a cycle plan, whose blueprint-bound steps run.
-   - **has a `code` unit**: one or more `units` entries whose `kind` is `code`.
-4. Read the folder's **row** in the base repo's `docs/plans/index.json`, at the
-   integration branch's tip. Read it as `plan-index.md`'s *Reading the queue* does:
-   `git show <remote>/<integration branch>:docs/plans/index.json` piped into
-   `plan.mjs get - plans.<basename>`. A `get` that finds no such id, or an origin
-   tree with no `docs/plans/index.json`, means no row.
+3. The start result holds two facts for every gate below:
+   - **has `covers`** (`has_covers`): a cycle plan, whose blueprint-bound steps run.
+   - **has a `code` unit** (`has_code_unit`): one or more `units` entries whose
+     `kind` is `code`.
+4. `start.mjs` reads the folder's **row** in the base repo's `docs/plans/index.json`,
+   at the integration branch's tip, as `plan-index.md`'s *Reading the queue* does.
+   A tip with no such id, or with no `docs/plans/index.json`, means no row.
 
 Below, *Status* is `status.state`, and *the status line* is `status.detail`.
 
@@ -66,13 +73,16 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
 
 ## Act on the status and the row
 
+The script acts on the status and the row as follows; each stop is a `refused`
+result.
+
 - **Status `DRAFT`** → stop: "not approved; run the planner that wrote it to
   finish it" — `/vwf:plan` for `type` `vwf-plan`, `/vwf:change-plan` for `type`
   `vwf-change-plan`.
 - **Status `COMPLETE`** → stop: nothing to do.
-- **Invoke `plan-management resolve <folder>`**, `plan-index.md`'s *Resolution*, by
-  the test each entry's kind takes. Anything but *runnable* → stop, and name each
-  entry it returned with the reason it gave.
+- **Resolve the `requires` list**, as `plan.mjs resolve <folder>` does,
+  `plan-index.md`'s *Resolution*, by the test each entry's kind takes. Anything but
+  *runnable* → stop, naming each entry that blocks with the reason it gave.
   - For a **cycle** entry short of its stamps, halt with:
 
     > "Prerequisite plan `<folder>` has not been executed and merged (`<doc>` is
@@ -93,25 +103,35 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
     plan index nor archived; fix the folder's `requires` list".
 - **Status `APPROVED` with no row at all** → stop: "not in the plan index; re-run
   the planner's hand-off, or add the row by hand".
-- **Status `APPROVED` with a `RUNNING` row** → a claim another session holds. Stop
-  and name it. Only the session that holds the row resumes it. It is claimed
+- **A `RUNNING` row whose worktree is not on this machine** → a claim another
+  session holds. The script reads `run.worktree` from the tip copy of the folder;
+  when that worktree does not exist here, or another session's run marker names
+  this plan's log, it stops: "another session is running <folder>; re-run once it
+  lands, or make the `plan-management unclaim <folder>` request when that run is
+  gone". Only the session that holds the row resumes it. It is claimed
   afresh only once the user has asked the session to unclaim it. That is
   `plan-management`'s `unclaim <folder>`, which refuses while the run's worktree
   still exists. Execute stops here, and never invokes the verb from this refusal.
-- **Status `BLOCKED` or `RUNNING`** → a **resume**, per the Resume check in
+- **A `RUNNING` row whose worktree exists on this machine** → a **resume**: `mode`
+  `resume`, the folder's status, units and gaps read from the worktree copy, per the
+  Resume check in
   [setup.md](../references/setup.md) and
   [blocking and resume](../references/blocking.md).
   - The worktree named in the status line exists, and the run starts at the first
     unit that is not `green`.
   - The ruling a block asked for must now be in the plan: in the unit file, or in
-    a `decisions` entry an answer appended. First ask every open gap whose text
-    starts `QUESTION Q<n>: ` and every `question` event of the action log with no
-    `answer` event, each under its own id and once, per *No one to answer* in
+    a `decisions` entry an answer appended. The start result's `open_questions`
+    lists every open gap whose text starts `QUESTION Q<n>: ` (`gaps`) and every
+    `question` event of the action log with no `answer` event (`events`). The model
+    asks each first, under its own id and once, per *No one to answer* in
     [questions.md](../references/questions.md). If the status line still reads
     the same `UNRESOLVED:` with no answer recorded, stop and say which ruling is
     missing.
-  - The row is expected to read `RUNNING` already, and is left alone. A row reading
-    `APPROVED` was unclaimed, and the run claims it again in
+  - An `unknown-language` row in the result is not asked about: the fresh run
+    asked, and the claim shows the user chose continue (*An unknown language* in
+    [claim.md](../references/claim.md)).
+  - The row reads `RUNNING` already, and is left alone. A row reading `APPROVED`
+    is always a fresh run: an unclaimed plan is claimed again in
     [claim.md](../references/claim.md).
   - A resume runs what its folder says and takes none of the fresh-run refusals
     below. A folder written before review rows existed was reviewed per unit, and
@@ -121,11 +141,13 @@ A **`- Bnn:` Parked line** is a line under the `## Parked` heading of the folder
     fix: edit the folder in the worktree with `plan.mjs` (write a `NN-review.md`
     and `append` its `units` entry), then re-launch.
 - **Status `APPROVED` with an `APPROVED` row** → a fresh run, with the refusals
-  below.
+  below. Its working copy of the folder must equal the tip copy, or the script
+  stops: "check out the integration branch and pull, then re-run".
 
 ## The fresh-run refusals
 
-Read three refusals off the folder here, before the claim. Each stops the run.
+The script reads three refusals off the folder here, before the claim. Each stops
+the run.
 The fix for each is to amend the folder and re-approve the plan — execute runs
 what is written and infers no review row. A review row covers a unit when its `depends_on` names
 it, directly or transitively through units it names.
@@ -157,8 +179,9 @@ the id to the list its Parked lines say it belongs on.
 
 The folder arrives committed on the integration branch. The planner commits and
 pushes it at hand-off, so the worktree Setup step 1 cuts sees it from its first
-commit. Refuse a folder that is not on that branch; do not sweep it into a unit
-commit. Stop and say to run the planner again on it, or to commit and push it by
-hand, then re-launch.
+commit. The script refuses a folder that is not on that branch; nothing sweeps it
+into a unit commit. The message says to run the planner again on it, or to commit
+and push it by hand, then re-launch.
 
-Then continue with [claim.md](../references/claim.md).
+Then, on `ready`, continue with [claim.md](../references/claim.md)'s *Acting on the
+result*.

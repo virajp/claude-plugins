@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-13 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-13 — 5300fbdf..2c53f2cc (15 commits on all-2026-11-13-0218)"
   },
   "consent": {
     "merge": true,
@@ -92,11 +92,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-12T20:51:45.995Z",
+      "ended": "2026-11-13T08:04:52.303Z",
+      "commit": "db5ee5ab",
+      "rounds": 3
     },
     {
       "id": "U2",
@@ -137,11 +137,11 @@
         "U4"
       ],
       "waits": "It cites start.mjs (U4, wave 3) and checks.mjs (U3, wave 2) by CLAUDE_PLUGIN_ROOT path; the checker fails a reference to a missing file.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-13T07:14:49.164Z",
+      "ended": "2026-11-13T08:20:54.190Z",
+      "commit": "08b89e1a",
+      "rounds": 6
     },
     {
       "id": "U3",
@@ -160,11 +160,11 @@
         "U1"
       ],
       "waits": "It imports plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs, which U1 creates.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-12T21:08:15.243Z",
+      "ended": "2026-11-13T06:18:32.214Z",
+      "commit": "976c108a",
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -176,18 +176,20 @@
       "owns": [
         "plugins/vwf/skills/execute/scripts/start.mjs",
         "scripts/src/execute-start.test.ts",
-        "scripts/src/fixtures/execute-start/**"
+        "scripts/src/fixtures/execute-start/**",
+        "plugins/vwf/skills/execute/scripts/log.mjs",
+        "scripts/src/execute-log.test.ts"
       ],
       "depends_on": [
         "U1",
         "U3"
       ],
       "waits": "It imports the queue verbs from U1's lib/queue.mjs and the checks from U3's checks.mjs.",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-13T06:23:56.582Z",
+      "ended": "2026-11-13T07:13:33.369Z",
+      "commit": "4afec7da",
+      "rounds": 3
     },
     {
       "id": "U5",
@@ -202,14 +204,14 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-13T07:48:53.874Z",
+      "ended": "2026-11-13T08:05:48.682Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 3,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "03b0f818",
+        "to": "db5ee5ab"
       }
     },
     {
@@ -226,7 +228,10 @@
         ".claude/skills/vwf-plugin/**",
         ".claude/docs/**",
         "docs/memory/decisions/2026-11-12-execute-scripted-start.md",
-        "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md"
+        "docs/memory/gaps/2026-11-06-unpinned-bootstrap-main-open.md",
+        "plugins/vwf/skills/setup/references/topology-detection.md",
+        "plugins/vwf/skills/architecture/references/stack-menu.md",
+        "plugins/vwf/assets/stack-adapter.md"
       ],
       "depends_on": [
         "U1",
@@ -236,11 +241,11 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-13T08:11:03.706Z",
+      "ended": "2026-11-13T08:20:54.293Z",
+      "commit": "cbd1a525",
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -257,55 +262,55 @@
         "U6"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-13T08:23:50.574Z",
+      "ended": "2026-11-13T08:28:23.577Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-12T20:51:45.961Z",
+      "ended": "2026-11-12T21:08:04.324Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-12T21:08:15.208Z",
+      "ended": "2026-11-13T06:23:56.416Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-13T06:23:56.516Z",
+      "ended": "2026-11-13T07:14:49.026Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-13T07:14:49.092Z",
+      "ended": "2026-11-13T07:48:46.058Z"
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-13T07:48:53.799Z",
+      "ended": "2026-11-13T08:10:16.267Z"
     },
     {
       "id": "W6",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-13T08:11:03.637Z",
+      "ended": "2026-11-13T08:23:39.691Z"
     },
     {
       "id": "W7",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-13T08:23:50.506Z",
+      "ended": "2026-11-13T08:28:49.162Z"
     }
   ],
   "shared_files": [
@@ -694,36 +699,178 @@
         "U3",
         "U4"
       ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q1: In checks.mjs, when .config/vwf.yaml has no stacks: key (or stacks: []), does a pinned project template count as pinned-not-materialized (blocking), or is the materialized check skipped?",
+      "ruling": "Skip the check. When .config/vwf.yaml has no stacks: key, or stacks: [], checks.mjs walks no pin and the materialized check passes. Reason: execute runs almost every day, so its start checks must stay few; a check that only catches a repo that is new or not set up properly belongs in /vwf:doctor, not in execute, where it costs time and tokens on every run.",
+      "rejected": "blocking not-materialized (implemented now) — no adapter can hold the pin, so execute stops on such a repo",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Q2: checks.mjs counts a language token as known only when the materialized template lists it (language_facts or optional_languages); stack-checks.md also counts a token an installed language plugin declares. Keep the narrower rule, or also read installed plugins?",
+      "ruling": "As the user gave it: \"A `unknown language` must ask user whether to continue or stop and let the user decide\". Reading: checks.mjs keeps the narrow rule (the template languages only, no read of installed plugins), but an unknown-language row does not block execute by itself. Execute asks the user, per questions.md, whether to continue or stop, and follows the answer. Doctor keeps its full rule.",
+      "rejected": "none",
+      "units": [
+        "U3",
+        "U4",
+        "U2"
+      ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q3: checks.mjs reports an unknown language as degraded even for a pinned project; doctor shows checks.mjs findings as they come (D6). How should doctor (U2) handle that finding?",
+      "ruling": "Same rule as script. /vwf:doctor uses the checks.mjs unknown-language finding as it is: the template languages only, no read of installed plugins. Doctor does not re-rate it and the finding shape does not change. stack-checks.md and the doctor text (U2) drop the \"installed plugin declares it\" half and the blocking-once-pinned severity for this check. Correction to D39: its line \"Doctor keeps its full rule\" was the loop reading, not the user words; the user did not say it, and it does not stand. Context for every later question: execute runs almost every day, so its start checks stay few; setup-shape checks belong in /vwf:doctor.",
+      "rejected": "Doctor re-rates the finding with its full rule; Add a marker field (narrow: true) to the finding",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Q4: when the start checks find an unknown language and nothing blocking, should start.mjs claim before execute asks continue or stop?",
+      "ruling": "Ask before claim. Add a --continue-unknown-language flag to start.mjs. Without it, when an unknown-language row is the only finding that stops the start, start.mjs returns before the claim (no claim, no log start that needs undoing). Execute asks the user continue or stop. On continue, execute runs start.mjs again with the flag, and it claims. On stop, nothing to unclaim.",
+      "rejected": "Claim now, as built",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Q5: D41 makes start.mjs run the checks before the log start on a fresh run; may the checks phase markers be written after the log start, carrying the real times?",
+      "ruling": "Keep the markers, written after the log starts with started/ended fields. Right after the log starts, start.mjs writes the checks phase markers with started and ended fields that hold the real times of the checks. One code path; real times kept.",
+      "rejected": "Run the checks first only when the flag is absent (two code paths); Drop the fresh-run checks markers",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q6: D42 checks markers carry real started/ended times, but log.mjs summary times phases from ts alone and D26 keeps log.mjs unchanged. Should log.mjs summary use started/ended when a marker carries them?",
+      "ruling": "Yes. Widen a unit Owns to log.mjs and its test so log.mjs summary uses a marker started/ended before ts, and action-log.md documents the fields. This overrides D26 for this one change.",
+      "rejected": "No, keep the fields as a record only (log.mjs unchanged, the summary shows about 0 ms)",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q7: stack-vocabulary.md:27-41 and setup/SKILL.md:299-303 say an unknown language is blocking and halts setup and execute; D40 made it degraded for doctor. How do they read now?",
+      "ruling": "Setup still stops. /vwf:setup keeps its own blocking rule for an unknown language: setup is the one-time place for setup-shape checks. Reword stack-vocabulary.md:27-41 and setup/SKILL.md:299-303 so that setup stops, but /vwf:execute and /vwf:doctor only report the finding as degraded (execute asks continue-or-stop per D41). Keep the closed-menu reasoning for setup.",
+      "rejected": "Reword both to the degraded rule everywhere; Leave both as they are",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q8: the D41 continue-or-stop question is asked before the claim, with no log and no folder write yet. How is it recorded, and how does an all-runner relay it?",
+      "ruling": "Ask only, record nothing. The pre-claim continue-or-stop question writes no log event and no decisions entry. A runner returns OUTCOME: QUESTION; on continue, execute runs start.mjs again with --continue-unknown-language.",
+      "rejected": "Record it after the claim",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q9: on a resume, start.mjs returns ready with unknown-language rows. Ask continue-or-stop again?",
+      "ruling": "Do not ask on a resume. When the row already reads RUNNING, the fresh run already asked and the claim shows the user chose continue; the resume continues with no question.",
+      "rejected": "Ask again, and on stop end --outcome blocked",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D47",
+      "decision": "Q10: stack-vocabulary.md:27-28 and 44-61 say a token is known when an installed stack plugin declares it; reword to the template-only rule of D40?",
+      "ruling": "Reword them to the template-only rule. stack-vocabulary.md:27-28 and 44-61 say a language is known only when the pinned template lists it, so the file matches doctor, checks.mjs and setup. Where a later passage only restates a rule that D38-D46 already settle, apply the settled rule and do not ask.",
+      "rejected": "Leave them",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D48",
+      "decision": "Q11: H7 — U5 security round 2 raised two low findings on the queue.mjs stash fix (drop by stash@{n} after lookup; lookup by tag after push); the count rose 1 to 2. What should the run do?",
+      "ruling": "Fix both once more. Take the pushed stash SHA from refs/stash right after the push; check stash@{n} SHA again just before the drop and warn instead of dropping on a mismatch; the not-found message says the changes are in the stash. Then one more security round over that fix.",
+      "rejected": "Accept both as residual",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.259Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.052Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-13T08:10:37.155Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
-      "started": "",
-      "ended": ""
+      "state": "green",
+      "detail": "no covers: stamps skipped; persisted docs/memory/decisions/2026-11-13-execute-start-checks-stay-few.md in Reconcile commit f6bb44be",
+      "started": "2026-11-13T08:10:37.397Z",
+      "ended": "2026-11-13T08:10:57.640Z"
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U4",
+      "stage": "",
+      "text": "log.mjs summary ignored the started/ended fields D42 puts on fresh checks markers; no unit owned log.mjs · U4 Owns widened to log.mjs and execute-log.test.ts under D43",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U6",
+      "stage": "",
+      "text": "R4 rule-5: plugins/vwf/skills/setup/references/topology-detection.md:56 says unknown language is blocking and doctor halts setup on it; no unit owned the file · U6 Owns widened to it, DOCS FALSIFIED handed to U6 (D40, D44)",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U6",
+      "stage": "",
+      "text": "U2 DOCS FALSIFIED: plugins/vwf/skills/architecture/references/stack-menu.md:234 defines unknown as a token no plugin declares; no unit owned the file · U6 Owns widened to it (D40, D47)",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U1",
+      "stage": "",
+      "text": "U5 round 3 [low] queue.mjs:537: a stash push or pop from another session between the stash@{n} re-check and git stash drop could still drop the wrong entry (recoverable from the reflog); git stash drop takes no SHA · settled by D48, which ruled a re-check before the drop with a warning on mismatch, and one more round; the reviewer approved the round",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U6",
+      "stage": "",
+      "text": "R6 rule-5: plugins/vwf/assets/stack-adapter.md:39 says an unclaimed signal is a blocking finding when vwf plans or builds; no unit owned the file · U6 Owns widened to it (D40, D44)",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-13-0218"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-13-0218",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-12-execute-scripted-start.jsonl"

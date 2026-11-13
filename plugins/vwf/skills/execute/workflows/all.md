@@ -102,9 +102,10 @@ Once the run-level questions above are answered, each iteration, in order:
    *resource cap*. The hook pauses a running runner the same way it pauses execute today, and that runner returns `STOPPED`. A
    runner's own context is not measured, only the session's figures the hook reads. The 5-hour and 7-day figures are
    account-wide.
-2. **Pick**. Invoke `plan-management next`. Nothing runnable → the loop ends, stop reason the message the verb returns. That is each
-   `APPROVED` row and what it waits on, or that the index is absent or holds no rows. On a pick, print one line: the folder, its
-   `kind` and its `priority`. Print nothing of the other rows.
+2. **Pick**. Run `plan.mjs pick` (the loop's re-pick: it picks and claims nothing; the runner's `start.mjs` claims). Exit 1,
+   `{nothing: [{folder, waits}]}` → the loop ends, stop reason each `APPROVED` row and what it waits on, or that the index is
+   absent or holds no rows. On a pick, `{pick: {folder, kind, priority}}`, print one line: the folder, its `kind` and its
+   `priority`. Print nothing of the other rows.
 3. **Dispatch one runner**. Make one `Agent` call, `subagent_type: "vwf:execute-runner"` (the `execute-runner` agent). Start its `description` with `run-<n>` for
    the iteration's number, and give it no `name`: with agent teams on, a `name` makes the runner a teammate, and a teammate's named agents fail. Never pass `isolation: "worktree"`: the runner cuts its own, per Setup, or reuses the shared one. The prompt
    is two paths and the overrides block, and nothing else:
@@ -174,7 +175,9 @@ The exit asks nothing.
 A runner is the orchestrator `SKILL.md` describes, for the one folder it was handed, in a fresh context of its own. Everything in `SKILL.md` and the files it routes to **holds as written**. That covers the refusals, the claim, the worktree, the waves, the gates, the landing and the
 after-landing steps. It covers every stop too, each the stop those files already define. What differs is only this:
 
-- **The folder is given**. The runner resolves the folder it was handed, as `/vwf:execute <folder>` would. It never runs `next` or `all`, and takes no second plan
+- **The folder is given**. The runner resolves the folder it was handed, as `/vwf:execute <folder>` would: one
+  `start.mjs <folder>` call. Under a `shared worktree: <branch>` override it passes that worktree's repo-relative path
+  as `--worktree`, so the claim's `run.worktree` names the shared worktree. It never runs `next` or `all`, and takes no second plan
   when its own lands or stops.
 - **Its plan runs `solo`**, whatever the folder's `execution` reads. A runner can start teammates, but it ends its turn before their reports arrive. The reason in the `execution` event is
   *runner under all*.
@@ -195,9 +198,16 @@ after-landing steps. It covers every stop too, each the stop those files already
   - on a resume reading *no one can answer*, does *No one to answer* of [questions.md](../references/questions.md) itself and returns
     `STOPPED`.
 
+  One question differs: the continue-or-stop of an unknown language, asked before the claim (*An unknown language* in
+  [claim.md](../references/claim.md)). It records nothing: no log is open, so it takes no `log.mjs next-question` id and no
+  `question` event — its id is one past the highest `Q<n>` in the folder's `decisions` and `gaps` text, its owner `setup` — and
+  its answer writes no `answer` event and no `decisions` entry, from a `SendMessage` resume or an `Answers:` block alike. On
+  continue, the runner runs `start.mjs` again with `--continue-unknown-language`; on stop, or *no one can answer*, it returns
+  `STOPPED`, nothing claimed.
+
   A runner never resumes one of its agents with `SendMessage`: that agent's reply goes to the top session, which the runner cannot read.
   When the runner invokes a skill that could prompt, it passes the answer in the invocation:
-  - the declared preferences those files name for `/vwf:git-workflow`, `/vwf:doctor` and `plan-management archive`;
+  - the declared preferences those files name for `/vwf:git-workflow` and `plan-management archive`;
   - at a resource-cap pause, `/vwf:handoff prefer: the one thread is this plan's run`.
 
   Nothing answers a skill that asks regardless: the runner stops, `DETAIL:` naming the skill and its question.

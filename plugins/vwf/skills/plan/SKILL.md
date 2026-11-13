@@ -154,12 +154,13 @@ and **halt on any `blocking`
 finding** — report it with its remedy and stop. An absent, declined project is
 skipped rather than blocking: it is already recorded as a blind spot, and
 halting on a repo the user chose not to clone would override the consent they
-just gave. A stack no installed plugin
-defines (an **unknown** language, a `custom` template pin) is the finding this
-gate exists for: a plan's units are sized against the selected templates'
-conventions, and when there is no template there are no conventions — the plan
-would read as ordinary while resting on nothing
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
+just gave. A `custom` template pin is the
+finding this gate exists for: a plan's units are sized against the selected
+templates' conventions, and when there is no template there are no conventions
+— the plan would read as ordinary while resting on nothing
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). An **unknown** language —
+one the pinned template does not list — is a `degraded` row in doctor's report,
+not a blocking one: report it and continue (`/vwf:setup` alone stops on it).
 
 **An `unresolved` axis halts too, and doctor is not what catches it** — doctor
 reports deferral as a degradation, deliberately, since defining a product with
@@ -182,8 +183,10 @@ Three things about its placement and scope, each deliberate:
   language doctor reports without an LSP server, ask once (MCQ — *install now*
   / *proceed without*) and hold the answer for the folder's `index.json` as
   `consent.lsp.<language>`, `installed` or `proceed without` (interview item
-  9a). An absent toolchain is asked here, once, and recorded — `execute` reads
-  the key and never asks it again. A language doctor reports as
+  9a). An absent toolchain is asked here, once, and recorded. `execute` does
+  not read the key until its parked LSP check lands
+  (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`), and never asks
+  it. A language doctor reports as
   *unavailable* (no LSP ships in this marketplace) has nothing to install and
   is not asked; note it.
 

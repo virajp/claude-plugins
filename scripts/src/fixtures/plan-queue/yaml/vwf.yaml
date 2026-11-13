@@ -1,0 +1,80 @@
+# A fake .config/vwf.yaml of a multi-repo product — invented names only.
+config_format: 26
+blueprint_format: 25
+
+product:
+  name: example-product
+
+blueprint:
+  coverage: complete
+  remaining: []
+
+topology: multi-repo
+topology_reason: the api and the app ship on their own release trains, so
+  each keeps its own repo and its own history
+linkage: siblings
+
+stacks: [ stackgen ]
+addons: []
+
+members:
+  - name: example-api
+    path: ../example-api # relative to the base root
+    url: git@example.com:example/api.git
+    projects: [ api, worker ]
+  - name: example-app
+    path: ../example-app
+    url: "https://example.com/example/app.git"
+    projects: [ app ]
+
+repo:
+  stack:
+    template: repo/example-repo
+    package_manager: pnpm
+    tools: []
+
+projects:
+  api:
+    stack:
+      template: project/example-service
+      backing_template: [
+        example-postgres,
+        example-auth,
+      ]
+      deploy_template: []
+      languages: [ typescript ]
+      frameworks: []
+      dependencies: []
+      note: picked for the example team's existing
+        experience with it
+    cicd: example-ci
+    coverage_target: 90
+  app:
+    stack:
+      template: unresolved
+      backing_template: unresolved
+      deploy_template: [ example-store ]
+      languages: []
+    design: example-canvas
+    stylesheet: example-tokens
+
+harness:
+  dev: true
+  local_stack: { present: true }
+  health: false
+  "test:load": false
+
+enforcement:
+  rules:
+    topology/iac-own-repo/infra: {
+      waived: true,
+      reason: "kept beside the api: one deploy",
+    }
+  kept_files: {}
+
+pipeline:
+  coverage_target: 100
+  review_round_cap: 4
+  models: {}
+
+after_landing: []

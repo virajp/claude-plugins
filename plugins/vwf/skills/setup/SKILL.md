@@ -297,9 +297,13 @@ point, since a stamp written before validation describes a tree nothing checked:
    **Halt on a `blocking` finding, and revert the stamp** — delete
    `.config/vwf.yaml` if this run created it, else `git checkout --` it — so no
    stamped-but-unrunnable artifact survives the halt. Report the finding with
-   its remedy. A language no installed stack plugin declares is the blocking
-   kind an otherwise-onboarded repo reaches: say plainly that the menu is closed
-   to what the installed plugins define
+   its remedy. **Halt the same way on an unknown language** (doctor's
+   `unknown-language` row) of a project whose `template` is pinned: doctor and
+   `/vwf:execute` only report it, as a degradation, but setup is the one-time
+   place for the setup-shape checks, so setup alone stops on it
+   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). It is the stop an
+   otherwise-onboarded repo reaches: say plainly that the menu is closed to what
+   the installed plugins define
    (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), and never invent a template to
    get past it.
 
@@ -315,9 +319,9 @@ point, since a stamp written before validation describes a tree nothing checked:
    finishes.
 
    **One exception.** A **declined `iac` extraction** recorded under
-   `enforcement:` is a settled choice, not an unmet mandate: the finding stays,
-   as a warning reported every run, and neither setup nor `/vwf:execute` halts
-   on it.
+   `enforcement.rules.topology/iac-own-repo/<project>` is a settled choice,
+   not an unmet mandate: the finding stays, as a warning reported every run,
+   and neither setup nor `/vwf:execute` halts on it.
 4. **Approval gate & commit.** Summarize everything created and updated, plus
    the recommendations, and wait for approval. On approval commit via
    `/vwf:git-workflow` with an `ops:` or `docs:` message.
@@ -342,8 +346,12 @@ setup moves no source file. A repo whose layout differs from its topology
 template's grouping, and an `iac` project sitting inside another project's repo,
 both end the run as **written recommendations** in the report — each naming the
 target layout (`references/workspace-structure.md`) and why it is worth the
-work. Recording a decline under `enforcement:` stops the proposal recurring, not
-the finding: `/vwf:doctor` keeps reporting it as a warning,
+work. A declined `iac` extraction is recorded, on the user's consent, as
+`enforcement.rules.topology/iac-own-repo/<project>`, set to
+`{ waived: true, reason: <one line> }`
+in `.config/vwf.yaml` — setup writes exactly that key, the one `/vwf:doctor` and
+`/vwf:execute`'s start checks read. Recording a decline stops the proposal
+recurring, not the finding: `/vwf:doctor` keeps reporting it as a warning,
 which is the honest state of a repo that chose its own shape.
 
 **Persist the decisions.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write the

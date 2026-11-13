@@ -1,7 +1,8 @@
 # Stack Vocabulary
 
-The **shape of a language fact** — what vwf needs to know about any language, and
-what it does when no installed plugin claims one. vwf holds no list of languages.
+The **shape of a language fact** — what vwf needs to know about any language,
+and what it does when the pinned template lists none. vwf holds no list of
+languages.
 Frameworks and dependencies are open: any lowercase-kebab token is valid, because
 no useful check exists for them beyond presence in a manifest.
 
@@ -9,7 +10,7 @@ no useful check exists for them beyond presence in a manifest.
 
 **vwf names no language.** A language token is whatever a stack template
 declares, and the facts `/vwf:doctor` checks are supplied by the
-**language plugin** that owns it, never by a table here. This file defines only
+**pinned template** that lists it, never by a table here. This file defines only
 what such a fact consists of:
 
 | Field        | Means                                                                    |
@@ -24,51 +25,56 @@ A language whose toolchain does not come from mise has none; a language with no
 LSP in this marketplace is reported as *unavailable here* rather than *missing*,
 because there is no install command to suggest.
 
-**What is not open is the set of tokens.** vwf holds no list, but the union of
-what the installed stack plugins declare **is** the list. A token outside it is
-reported as `unknown`, and `unknown` is **blocking**: `doctor` raises it, and
-`/vwf:setup` and `/vwf:execute` both halt on it.
+**What is not open is the set of tokens.** vwf holds no list: the template its
+project pins **is** the list. A token is **known** only when that pinned,
+materialized template lists it, under `language_facts` or
+`optional_languages`; no installed plugin is read. A token it does not list is
+reported as `unknown`. **`/vwf:setup` stops on it**: setup is the one-time
+place for the setup-shape checks. `/vwf:doctor` and `/vwf:execute` only report
+it, as a **degradation** — `/vwf:execute` asks the user whether to continue or
+stop on it.
 
-**Why blocking rather than a graceful degrade.** vwf is an opinionated workflow
+**Why setup stops rather than degrading.** vwf is an opinionated workflow
 — it plans against a template's conventions, builds against its harness, and
-gates a UI slice on its UX contract. A language no plugin claims supplies none of
-those, so a run against it loses every one of those guarantees *while reporting
-itself healthy*. That is worse than a refusal, because the run looks exactly like
-every other run. The menu is deliberately closed: many options, all of them
-defined by a plugin here. "Works with anything" is not a goal vwf has.
+gates a UI slice on its UX contract. A language no template lists supplies none
+of those, so a run against it loses every one of those guarantees *while
+reporting itself healthy*. That is worse than a refusal, because the run looks
+exactly like every other run. The menu is deliberately closed: many options, all
+of them defined by a template here. "Works with anything" is not a goal vwf has.
 
-Adding a language means **shipping a plugin for it**, which is what supplies the
-rows this file used to hardcode. It does not mean editing vwf. Until that plugin
-exists, vwf declines the repo rather than half-running against it.
+Adding a language means **a template that lists it**, whose facts supply the
+rows this file used to hardcode. It does not mean editing vwf. Until the
+project's pinned template lists it, `/vwf:setup` declines the repo rather than
+half-running against it.
 
-**The materialized escape.** There is a second way a token is known, added for
-adapters that materialize templates into the repo (the materialized-template
-variant in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`): a language is
-**known** when the project's pin resolves to a materialized template whose
-payload carries **`language_facts`** for that token — the same three facts a
-language plugin would supply (how the LSP is provided, the mise tool, the
-manifest), plus one only a materializer carries, the optional `binaries` —
+**Where the facts come from.** A template is read as materialized into the repo
+(the materialized-template variant in
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`): a language is **known** when
+the project's pin resolves to a materialized template whose payload lists the
+token. Under **`language_facts`** it carries the facts for that token — how the
+LSP is provided, the mise tool, the manifest, and the optional `binaries` —
 executables the stack needs on `PATH` that mise does not manage, absent
 meaning none, each a bare name or a `{ name, probe }` map whose probe must
 exit 0 — four language facts in all, emitted into the template when it was
 materialized. Beside them the payload may carry one fact that is not per
 language: `lockfile:`, where the package manager's lockfile may sit — five
-facts in all.
-`/vwf:doctor` then verifies the repo against those facts instead of against a
-language plugin, and `n/a` in a fact is an answer, not an absence. The escape
-changes nothing about the closed menu: the facts entered the config through a
-consent-gated materialization, not through free text. A token with **neither**
-a claiming plugin **nor** materialized facts stays `unknown`.
+facts in all. A token listed only under **`optional_languages`** is known but
+carries no facts of its own, so its rows read *unverified* rather than passing.
+`/vwf:doctor` verifies the repo against those facts, and `n/a` in a fact is an
+answer, not an absence. The facts entered the config through a consent-gated
+materialization, not through free text. A token the pinned template lists under
+**neither** key stays `unknown`, whatever plugin is installed.
 
-**Unknown is blocking, but only once the project has a stack.** Since
+**Setup stops on unknown, but only once the project has a stack.** Since
 `config_format` 16 a project's `template` may read `unresolved` — deferred, not
 yet chosen (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis
 states"). A project in that state records `languages: []` and there is no token
-to be unknown; if it carries tokens anyway, an unclaimed one is a **degradation**
-rather than a blocking finding, because the plugin that would claim it is
-exactly what has not been chosen yet. The moment the project axis is pinned, the
-rule reverts: unknown is **blocking**, and `setup` and `execute` halt on it. The
-severity follows the pin, never the calendar.
+to be unknown; if it carries tokens anyway, an unlisted one is a **degradation**
+even to setup, because the template that would list it is exactly what has not
+been chosen yet. The moment the project axis is pinned, the rule reverts:
+`setup` stops on it. `doctor` and `execute` report it as a degradation either
+way, and `execute` asks continue or stop. Setup's rule follows the pin, never
+the calendar.
 
 ## The eight axes
 

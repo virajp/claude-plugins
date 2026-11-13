@@ -1,0 +1,16 @@
+# An invented registry, shaped on assets/templates/registry.yaml.
+vwf_registry: 2
+
+projects:
+  - name: orbit-api
+    role: backend
+    platforms: [ service ]
+    path: apps/orbit-api
+    capabilities: []
+    depends_on: []
+  - name: orbit-infra
+    role: system
+    platforms: [ iac ]
+    path: infra/orbit
+    capabilities: []
+    depends_on: []
