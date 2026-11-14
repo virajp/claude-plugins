@@ -1,0 +1,666 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R3a — the plugins use the bootstrap contract, and releases move to releases.toml",
+  "requires": [
+    "2026-11-14-bootstrap-drift-fix"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-14 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnF over plugins/ for '.config/bootstrap.toml' and for '.config/releases.yaml'.",
+        "pass": "No hit, except: a branch, landing or merge_model passage in plugins/vwf/skills/git-workflow/**, plugins/vwf/skills/init/** or plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md, which R3b owns (D14); a history row (plugins/vwf/skills/setup/references/format-lineage.md, a migration note that names the old form as the old form); and the D5 move in plugins/vwf/skills/execute/references/land.md, plugins/vwf/skills/execute/references/final-report.md and plugins/vwf/skills/plan-management/references/plan-index.md (D36, D38). Each such hit is listed with its reason in the run report."
+      },
+      {
+        "id": "K2",
+        "check": "grep -rnF over plugins/vwf/skills/init/ for 'docs/sync/index.md' and for 'Copy this prompt'; grep -rnF over plugins/ for 'setup:configs --dry-run'.",
+        "pass": "No hit (D7, D6)."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "vwf needs bootstrap 4.0.0 with contract 1: init drives the bootstrap CLI, doctor reads check and sync, and execute writes release levels through bootstrap config. A repo on bootstrap 3 stops."
+    },
+    {
+      "id": "stackgen",
+      "level": "MAJOR",
+      "reason": "stackgen needs bootstrap 4.0.0 with contract 1: the handoff runs bootstrap catalog and add tool."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes the bootstrap contract and releases.toml."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The contract assets and the 4.0.0 check",
+      "wave": 1,
+      "file": "01-contract-assets.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/bootstrap-contract.md",
+        "plugins/stackgen/assets/bootstrap-contract.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "init drives the bootstrap CLI",
+      "wave": 2,
+      "file": "02-init.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/init/SKILL.md",
+        "plugins/vwf/skills/init/references/**",
+        "plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "doctor, setup and recall read the contract",
+      "wave": 2,
+      "file": "03-doctor-setup.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/skills/setup/references/migrate-pipeline.md",
+        "plugins/vwf/skills/setup/references/onboard-pipeline.md",
+        "plugins/vwf/skills/recall/SKILL.md",
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/vwf-config.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "execute writes release levels through bootstrap config",
+      "wave": 2,
+      "file": "04-release-levels.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/SKILL.md",
+        "plugins/vwf/skills/execute/references/land.md",
+        "plugins/vwf/skills/execute/references/reconcile.md",
+        "plugins/vwf/skills/execute/references/final-report.md",
+        "plugins/vwf/skills/execute/references/preflight.md",
+        "plugins/vwf/skills/execute/references/rules.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md",
+        "plugins/vwf/skills/change-plan/references/gates-consent.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/vwf/assets/templates/plan-folder.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "stackgen calls the bootstrap CLI",
+      "wave": 2,
+      "file": "05-stackgen.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/stackgen/skills/stackgen-sync/SKILL.md",
+        "plugins/stackgen/assets/ids.md",
+        "plugins/stackgen/skills/stackgen-stack-template/SKILL.md",
+        "plugins/stackgen/assets/pack-format.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Docs",
+      "wave": 3,
+      "file": "06-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/**",
+        ".claude/skills/**",
+        "site/src/content/docs/**"
+      ],
+      "depends_on": [
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ],
+      "waits": "docs-sync reads the delta of wave 2",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Gates",
+      "wave": 4,
+      "file": "07-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U6"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-2 unit falsifies passages in the same docs",
+      "owner": "U6"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/vwf/assets/bootstrap-contract.md and plugins/stackgen/assets/bootstrap-contract.md",
+      "why": "U2 to U5 cite them",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How is R3 planned?",
+      "ruling": "Three plans (Recommended): R3a (the contract and releases.toml), R3b (git-workflow over the git:* tasks, with the core-branch rulings of docs/memory/gaps/2026-11-14-one-or-two-core-branches-parked.md), R3c (virajp-plugins). This folder is R3a.",
+      "rejected": "R3c only now; one plan.",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "The order and the requires chain of the three plans.",
+      "ruling": "R3a → R3b → R3c (Recommended): each plan requires the one before it, and R3a requires P0 (2026-11-14-bootstrap-drift-fix), which edits the same files.",
+      "rejected": "R3c first; each requires P0 only.",
+      "units": []
+    },
+    {
+      "id": "D3",
+      "decision": "R3a must not run before bootstrap@4.0.0, and requires cannot name a bootstrap plan.",
+      "ruling": "U1 checks contract (Recommended): U1 first runs bootstrap contract --json. If it fails, or data.versions has no 1, U1 returns a QUESTION and edits nothing. index.md also states the wait.",
+      "rejected": "An index.md note only; keep the plan DRAFT.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How do the skills find that a repo is shaped?",
+      "ruling": "config get repo.format (Recommended): bootstrap config get repo.format --json. ok true means shaped. Code 2 means not shaped or the old form; the error text tells which. It needs no clone and no fetch.",
+      "rejected": "describe --json; check --json.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "Who moves an existing .config/releases.yaml?",
+      "ruling": "execute, at first sight (Recommended): at a landing, if .config/releases.yaml exists, execute sets each of its keys with bootstrap config set releases.<p> <level>, deletes the file, and commits both in the landing commit. No user step.",
+      "rejected": "/vwf:setup migrate; by hand.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "What replaces doctor's shape checks (shaped, the branches, merge_model, setup:configs --dry-run)?",
+      "ruling": "check + sync --dry-run (Recommended): doctor calls bootstrap check --json and bootstrap sync --json --dry-run. Each check finding and each planned change is a drift row, never blocking, as shape drift is today. Doctor's own branch and merge_model reads go.",
+      "rejected": "check --json only; keep doctor's own reads.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "How does /vwf:init use bootstrap?",
+      "ruling": "Drive the CLI (Recommended): init runs bootstrap init --json --dry-run, asks the user each pending question, gives the answers as --answer <tool>.<key>=<value>, then runs bootstrap init --json --yes. The readme prompt goes. The gate is the D4 shaped test.",
+      "rejected": "Keep the readme prompt and change only the gate.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "What do the skills do when the bootstrap CLI is absent, or contract --json has no version 1?",
+      "ruling": "Doctor blocks, skills stop (Recommended): /vwf:doctor reports a blocking finding with the install hint. Any other skill that needs a bootstrap fact stops with the same hint. No skill falls back to a file read.",
+      "rejected": "Fall back to file reads.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Does R3a change stackgen's handoff?",
+      "ruling": "R3a: CLI calls (Recommended): the handoff runs bootstrap catalog --json to find the tools, then bootstrap add tool <t> --json --dry-run, shows the plan, and runs it again with --yes after the user's consent. R3c then adds virajp-plugins and the plugin values on top.",
+      "rejected": "Leave it to R5.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "This repo's release tasks read .config/releases.yaml.",
+      "ruling": "Hand step (Recommended): out of scope. index.md lists a hand step: switch the release tasks and p:releases:test to bootstrap config get and unset releases.<p> after R3a lands, before the next release.",
+      "rejected": "A unit in R3a.",
+      "units": []
+    },
+    {
+      "id": "D11",
+      "decision": "The release levels.",
+      "ruling": "vwf, stackgen MAJOR (Recommended): vwf MAJOR, stackgen MAJOR, site MINOR, installer NONE. A new required tool version is a break for the user.",
+      "rejected": "vwf, stackgen MINOR.",
+      "units": []
+    },
+    {
+      "id": "D12",
+      "decision": "Stated by the planner, confirmed at the shape gate: the scope edges.",
+      "ruling": "R3a leaves every branch, landing and merge_model passage and git-workflow to R3b; virajp-plugins, the pnpx text and the hand removal of plugins to R3c; topology and the vwf.yaml keys to R4; packs to R5. No review unit: the plan changes prose only.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D13",
+      "decision": "Stated by the planner, confirmed at the shape gate: one contract asset per plugin.",
+      "ruling": "U1 writes plugins/vwf/assets/bootstrap-contract.md and plugins/stackgen/assets/bootstrap-contract.md, because ${CLAUDE_PLUGIN_ROOT} names only its own plugin. Each holds the contract check, the D4 shaped test, how to read the envelope, and the D8 stop.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Round 1 gap 1: D6 removes doctor's branch and merge_model reads, but D12 keeps every branch passage for R3b.",
+      "ruling": "D6 wins for doctor: U3 removes doctor's own branch and merge_model checks, because bootstrap check validates the branches. The forge rows (default branch, protection) stay for R3b. D12 and the K1 exception narrow to git-workflow, init and the hygiene CONTRIBUTING.md.",
+      "rejected": "Keep doctor's branch checks for R3b.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Round 1 gap 2: config set exits 2 on an old-form repo, which stops every later landing.",
+      "ruling": "/vwf:execute runs the D4 shaped test at its start, before the claim. Code 2 stops it with bootstrap's own errors text (Run bootstrap init). Hand step: run bootstrap init in this repo after bootstrap 4.0.0, before the R3b run.",
+      "rejected": "execute runs bootstrap init itself; stop only at the landing.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 1 gap 3: code 2 also means both forms present (R1a D29) or a broken folder (R1a D88).",
+      "ruling": "Each skill shows the envelope's errors messages as bootstrap gives them, and stops. No skill writes text of its own per case.",
+      "rejected": "A message per case.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 1 gap 4: check --json can fail before any stage, exit 5 offline, or give warnings and skipped stages.",
+      "ruling": "None is blocking. A failure before the stages gives one drift row with the errors text. Code 5 gives one row: not checked: the clone is stale and offline. A warning finding gives a drift row marked as a warning. A skipped stage gives no row.",
+      "rejected": "A failure of check is blocking.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 1 gap 5: stackgen-stack-template/SKILL.md:237-239 and assets/pack-format.md:61 name a fresh clone and docs/sync/vwf.md.",
+      "ruling": "U5 owns both files and applies D9 to them.",
+      "rejected": "Leave them to R5.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 1 gap 6: bootstrap/docs/design/cli.md does not yet describe the contract.",
+      "ruling": "U1 to U5 cite the approved bootstrap plans (R1a 02-migration-config-verb.md and the R1b folder 2026-11-14-contract-commands), and cli.md as it is after 4.0.0.",
+      "rejected": "Cite cli.md only.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 1 gap 7: stack-checks.md:551 (docs/sync) and :567-572 (the dry-run) are not cited.",
+      "ruling": "U3 Edit 2 adds both passages.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 2 gap 1: D15's start check contradicts D38 of docs/memory/decisions/2026-11-12-execute-scripted-start.md (execute's start checks stay few; setup checks are doctor's).",
+      "ruling": "Keep D38. D15's start check is removed: execute adds no start check. /vwf:doctor reports an old-form repo as blocking (D26), and the landing stops safely (D25). D15 keeps only its hand step: run bootstrap init in this repo after bootstrap 4.0.0, before the R3b run.",
+      "rejected": "A shaped test at execute's start.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 2 gap 2: setup's own no-drift test (setup/SKILL.md:119-121) runs setup:configs --dry-run.",
+      "ruling": "It becomes: bootstrap sync --json --dry-run lists no change, the same green test as init. U3 cites the passage.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 2 gap 3: bootstrap init makes no commit and needs a git repository (verified: cli/internal/core/core.go:114).",
+      "ruling": "The commit step of init makes the first commit, through git-workflow, on the branch that git init made. The core branches after that are R3b's.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Round 2 gap 4: after init --json --yes, new data.plan.pending items can remain.",
+      "ruling": "Ask the new questions, then run the command again. After 3 rounds, stop and list the questions that are still open.",
+      "rejected": "Stop at once.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 2 gap 5: a config set can fail after the merge, with part of the keys written.",
+      "ruling": "The config set calls run first in the completion worktree. If one fails, abandon that worktree with land.mjs, so the partial releases.toml goes with it. The row stays as it is (merged, not COMPLETE). Stop with the hint and the resume command.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 2 gap 6: in doctor, does code 2 from the shaped test stop or give a drift row?",
+      "ruling": "Doctor gives one blocking row with the errors text, and skips check and sync on that repo. D16's stop applies to the other skills, not to doctor.",
+      "rejected": "A drift row.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 2 gap 7: some cited lines are missing.",
+      "ruling": "U3 adds doctor/SKILL.md:290,299; U5 adds materializer.md:109,339 and ids.md:63 (commit_scopes, read with config get repo.commits); U2 adds readme-and-license.md:68-69 (repo_name).",
+      "rejected": "",
+      "units": [
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Round 3 gap 1: after a config set fails post-merge, nothing defines what the resume does with an already-merged branch.",
+      "ruling": "Before the merge, in the run's worktree, execute runs bootstrap config get releases.<id> --json for each release_levels entry. A failure there stops the run before the merge, and the normal resume applies. If a set still fails after the merge, the stop is a hand step: the report prints the exact config set lines and the completion command. This narrows D25.",
+      "rejected": "A new resume path in start.mjs.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Round 3 gap 2: the set calls carry no --json, but D16 and D25 show the envelope's errors.",
+      "ruling": "Each set and get call carries --json. A key changed when the get before and the get after differ; execute reads no field of the set output.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 3 gap 3: final-report.md:26 reports from and to, but set prints only the level kept.",
+      "ruling": "from is the D28 get before the merge; to is a get after the set.",
+      "rejected": "Drop from.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 3 gap 4: land.md step 1 exits early on an empty release_levels list.",
+      "ruling": "The D5 move runs whenever .config/releases.yaml exists, before that early exit.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 3 gap 5: land.md step 6 re-applies the write at a new tip; U4 rewrote only steps 2-5.",
+      "ruling": "Step 6 runs the D5 move and the set calls again at the new tip. They are safe to repeat, because set keeps the higher level. U4 owns step 6 too.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 3 gap 6: init/references/existing-repo.md:95 runs setup:configs --dry-run.",
+      "ruling": "U2 Edit 2 names it (D6).",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Round 4 gap 1: U4 bullet 1 still reads the set output, with no --json.",
+      "ruling": "Rewrite bullet 1 to match D29: --json on every call; a change is judged by get before against get after.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Round 4 gap 2: the D8 bullet of U4 gives a different stop for a set that fails after the merge.",
+      "ruling": "D25 and D28 apply: abandon the worktree, show bootstrap's errors, print the hand step. The D8 bullet narrows to: stop with the asset's hint.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Round 4 gap 3: the from level read before the merge can differ from the value at the completion tip.",
+      "ruling": "from is a config get in the completion worktree before each set, at every tip, D32 retries included. The read before the merge (D28) only proves that the contract works. The final report lists each key that D5 moved as: moved from .config/releases.yaml: <key> <level>. This replaces D30's from.",
+      "rejected": "from is the read before the merge.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Round 4 gap 4: the asset says every --json write needs --yes or --dry-run.",
+      "ruling": "The asset limits that rule to add, remove, replace, init and detect, as R1b D4 and D21 say. config set, config unset and sync need neither flag.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Round 4 gap 5: Edit 3 of U4 names the D5 deletion in plan-index.md, but K1 allows the old path only in land.md.",
+      "ruling": "Widen the K1 exception and U4's Verification to plan-index.md.",
+      "rejected": "Avoid the path in plan-index.md.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Round 4 gap 6: D17 tests checks is [], but bootstrap D37 sets data to null after an early failure.",
+      "ruling": "For check: ok false and checks [] (R1b D32). For sync: data null. Each gives one drift row with the errors text.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}

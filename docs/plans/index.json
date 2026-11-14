@@ -17,6 +17,23 @@
         "B118"
       ],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-14-bootstrap-contract",
+      "folder": "docs/plans/2026-11-14-bootstrap-contract",
+      "kind": "change",
+      "title": "R3a — the plugins use the bootstrap contract, and releases move to releases.toml",
+      "target_repo": null,
+      "priority": 20,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-14-bootstrap-drift-fix"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
