@@ -1,0 +1,443 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R3c — vwf repos add the virajp-plugins tool, and the plugin handoff goes through bootstrap config",
+  "requires": [
+    "2026-11-14-git-over-tasks"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-15 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnF over plugins/, CLAUDE.md, readme.md, installer/CLAUDE.md, .claude/ and site/src/content/docs/ for each of: 'claude-plugins@latest --all', '[claude.plugins', 'plugins […]', 'remove <scope> plugins', 'add <scope> plugins'.",
+        "pass": "No hit, except a passage that names the old form on purpose as the old form (a migration note). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "init adds the virajp-plugins bootstrap tool to the base repo, and doctor checks the vwf plugin at any scope and the tool's ignore lines."
+    },
+    {
+      "id": "stackgen",
+      "level": "MINOR",
+      "reason": "The plugin handoff writes the claude tool's values through bootstrap config and runs setup:ai."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual describes the declarative setup:ai and the virajp-plugins tool."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/ code; installer/CLAUDE.md is not shipped."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "init adds the virajp-plugins tool to the base repo",
+      "wave": 1,
+      "file": "01-init.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/init/SKILL.md",
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/init/references/existing-repo.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "doctor checks the vwf plugin and the virajp-plugins tool",
+      "wave": 1,
+      "file": "02-doctor.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/doctor/references/harness-and-memory.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "stackgen's plugin handoff goes through bootstrap config and setup:ai",
+      "wave": 1,
+      "file": "03-stackgen-plugins.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Docs",
+      "wave": 2,
+      "file": "04-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        "installer/CLAUDE.md",
+        ".claude/docs/**",
+        ".claude/skills/**",
+        "site/src/content/docs/**"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U6"
+      ],
+      "waits": "docs-sync reads the delta of wave 1",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Gates",
+      "wave": 3,
+      "file": "05-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "vwf ignore lines come from the virajp-plugins tool",
+      "wave": 1,
+      "file": "06-ignore-lines.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/references/memory-tree.md",
+        "plugins/vwf/skills/handoff/SKILL.md",
+        "plugins/vwf/skills/git-workflow/references/worktree-setup.md",
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/skills/mockups/SKILL.md",
+        "plugins/vwf/skills/blueprint/references/screen-review.md",
+        "plugins/vwf/assets/memory.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, installer/CLAUDE.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-1 unit falsifies passages in the same docs",
+      "owner": "U4"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where does /vwf:init add the virajp-plugins tool?",
+      "ruling": "Base repo only (Recommended): only the base repo holds docs/memory and docs/plans, and the vwf plugin is at user scope, so one entry is enough. Member repos do not get the tool. init uses R3a's calls: bootstrap add tool virajp-plugins --json --dry-run, then --yes, inside its one consent.",
+      "rejected": "Base and every member.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "A repo shaped before R3c has no virajp-plugins tool. How is it found and fixed?",
+      "ruling": "The user: \"check for `virajp-plugins` using claude as the user may have installed it at machine level instead of repo level\"; then \"Plugin ok, ignore lines drift (Recommended)\": doctor reads claude plugin list --json. vwf@virajp-plugins installed at any scope passes the plugin check; installed at no scope is blocking. A base repo with no virajp-plugins tool in bootstrap describe --json data.tools is one drift row (not blocking) for the missing .gitignore lines, with the fix /vwf:setup reshape, whose init pass adds the tool.",
+      "rejected": "Doctor blocks on the tool; doctor drift only on the tool with no plugin check; a hand step.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "How does stackgen's handoff add and remove a pack's Claude plugin?",
+      "ruling": "config set/unset + setup:ai (Recommended): add with bootstrap config set tools.claude.plugins.<scope>.\"<plugin>@<marketplace>\" '\"<source>\"' --json, then mise run setup:ai. Remove with config unset of that key, then setup:ai, which uninstalls a project-scope plugin it recorded. A user-scope plugin stays installed, and the report says so.",
+      "rejected": "Set only; the user runs setup:ai.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "The release levels.",
+      "ruling": "vwf, stackgen MINOR (Recommended): vwf MINOR, stackgen MINOR, site PATCH, installer NONE. R3a's MAJOR already wins for the next release.",
+      "rejected": "vwf, stackgen MAJOR.",
+      "units": []
+    },
+    {
+      "id": "D5",
+      "decision": "Stated by the planner, confirmed at the shape gate: the docs.",
+      "ruling": "setup:ai is declarative (bootstrap R2c): it installs what the claude tool lists, vwf through the virajp-plugins tool; it removes the project plugins it recorded; it updates only with --update; it makes no pnpx call. The installer stays the one-shot for a person. No review unit: the plan changes prose only.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Round 1 gap 1: in a repo with no claude tool, config set tools.claude... exits 2 and there is no setup:ai task.",
+      "ruling": "Before the config set, the handoff adds the claude tool with R3a's bootstrap add tool claude --json --dry-run, then --yes, inside the same consent.",
+      "rejected": "Stop.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Round 1 gap 2: config set succeeds, then setup:ai exits 1.",
+      "ruling": "Keep the written key, commit it, and record the plugin in the lockfile: the key is the desired state. Report the failure; the next setup:ai tries again. On a removal the key stays unset, and R2c keeps the plugin in its record until an uninstall succeeds (R2c D13).",
+      "rejected": "Undo the key with unset.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Round 1 gap 3: the base repo is unshaped or describe --json fails.",
+      "ruling": "Doctor skips the missing-tool row, as R3a D26 and D17 do; doctor already reports the shape problem.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Round 1 gap 4: contract 1 does not prove that R2c shipped.",
+      "ruling": "init and doctor read bootstrap catalog --json. If the catalog has no virajp-plugins tool, init skips the add with a warning, and doctor gives a note, not a row. Released 4.0.0 contains R2c (bootstrap R1b D16), so only a local build can lack it.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Round 1 gap 5: the form of the --update run in the docs.",
+      "ruling": "Use bootstrap's own form, mise run setup:ai --update: R2c declares the flag in the task's #USAGE, and mise accepts a declared flag with no --. Not verified by a run.",
+      "rejected": "mise run setup:ai -- --update.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Round 2 gap 1: eight passages say bootstrap's git tool syncs vwf's ignore lines; no unit owns them.",
+      "ruling": "A new unit U6, wave 1, owns seven of them (setup/references/memory-tree.md, handoff/SKILL.md, git-workflow/references/worktree-setup.md, setup/SKILL.md, mockups/SKILL.md, blueprint/references/screen-review.md, assets/memory.md) and changes only that sentence: the virajp-plugins tool gives the lines. The eighth, doctor/references/harness-and-memory.md, is U2's (D12).",
+      "rejected": "Accept the stale text.",
+      "units": [
+        "U6",
+        "U2"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Round 2 gap 2: harness-and-memory.md:25-26 reports a missing docs/memory/handoff/ ignore line; D2 adds a second row for the same cause.",
+      "ruling": "Doctor gives one row. When the virajp-plugins tool is missing, the memory check does not report its line, because the tool row covers it. U2 owns harness-and-memory.md and also fixes its source sentence (D11).",
+      "rejected": "Two rows.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Round 2 gap 3: claude plugin list --json also lists other repos' project installs (projectPath) and disabled plugins (enabled false).",
+      "ruling": "Count only an enabled vwf@virajp-plugins at user scope, or at project or local scope whose projectPath is this repo.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Round 2 gap 4: D7 does not cover a failure of config set, config unset or add tool claude --yes.",
+      "ruling": "The handoff stops before setup:ai and shows bootstrap's errors (R3a D16). It commits nothing for that plugin step. A failed set writes nothing (R1a D27), so nothing is undone.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Round 2 gap 5: CLAUDE.md 298 and 429-431 do not describe a pnpx call.",
+      "ruling": "The facts text is corrected. U4 changes CLAUDE.md about line 298 to the declarative setup:ai (D5), and about lines 429-431 to a pack's plugin through bootstrap config and setup:ai (D3).",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 3 gap 1: init/references/new-repo.md:125 says the ignore file is bootstrap's git tool, a ninth passage.",
+      "ruling": "U1 changes it: vwf's lines come from the virajp-plugins tool (D11).",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 3 gap 2: what the subtraction read returns in a repo with no claude tool.",
+      "ruling": "config get of an unset tools.* key, or of a tool that is not selected, prints null and exits 0 (R1a D50). null reads as an empty list, so each plugin goes on as a delta. Any non-zero exit stops the handoff before the consent, with bootstrap's errors.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 3 gap 3: D7 says the handoff commits the key; D14 and step 8 say it commits nothing.",
+      "ruling": "The handoff commits nothing itself. In D7, the written key joins the materializer's one commit, as step 8 says. In D14, the handoff writes nothing for that plugin step.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 4 gap 1: materializer.md:107-109 sends Claude plugins through docs/sync/vwf.md; no R3c unit owns it.",
+      "ruling": "U3 also owns plugins/stackgen/skills/stackgen-stack-template/references/materializer.md, for that passage only (D3).",
+      "rejected": "Accept it as stale.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 4 gap 2: claude plugin list --json has enabled and projectEnabled, and a projectPath can be a worktree.",
+      "ruling": "An entry counts when enabled is true and either its scope is user, or its projectPath is this repo's main checkout or one of its worktrees (git worktree list). This narrows D13.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 4 gap 4: R2c D19 records a hand-installed project plugin once it is listed; after stackgen's unset, setup:ai uninstalls it. Round 4 gap 3 (the --update form) was verified on 2026-11-15 with mise 2026.11.7: a #USAGE-declared flag works with and without --, so D10 stands.",
+      "ruling": "When stackgen adds plugins, it also subtracts each plugin that claude plugin list --json already shows installed at that scope for this repo (the D20 match), so stackgen never takes over a hand install.",
+      "rejected": "Accept the uninstall.",
+      "units": [
+        "U3"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
