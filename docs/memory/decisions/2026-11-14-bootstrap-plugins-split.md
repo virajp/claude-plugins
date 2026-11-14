@@ -24,7 +24,8 @@ text in the `bootstrap` repo and in the `claude-plugins` repo.
 ## The contract (D1, D2, CT2)
 
 - The plugins call the installed `bootstrap` CLI. Each command has `--json`
-  and a contract version. Contract v1 ships inside bootstrap 3.0.0.
+  and a contract version. Contract v1 ships inside bootstrap 4.0.0 (see
+  Amendments).
 - Commands: `contract`, `describe` (tools, members, LSP, ports), `config`
   (`get`, `set`, `unset`, `show`), `catalog`, `add` and `remove` (tool,
   plugin), `init --values`, `check`, `lsp`.
@@ -114,14 +115,50 @@ file, for example `repo.branches.main.landing` or `releases.vwf`. Reads take
 | Phase | Repo           | Content                                                                |
 | ----- | -------------- | ---------------------------------------------------------------------- |
 | P0    | claude-plugins | Fix the drift against today's bootstrap key names, paths and verbs     |
-| R1    | bootstrap      | Config folder, `config` verb, contract v1, task ports (3.0.0)          |
+| R1a   | bootstrap      | Config folder, key schema, `config` verb                               |
+| R1b   | bootstrap      | Contract v1: `contract`, `describe`, `catalog`, `--json` envelope      |
+| R1c   | bootstrap      | Task ports as no-op defaults                                           |
 | R2    | bootstrap      | `git:*` tasks, LSP blocks and check, `virajp-plugins` tool, `setup:ai` |
-| —     | bootstrap      | Release 3.0.0, with the user's consent                                 |
+| —     | bootstrap      | Release 4.0.0, with the user's consent                                 |
 | R3    | claude-plugins | Plugins use the contract; `git-workflow` over `git:*`                  |
 | R4    | claude-plugins | `vwf.yaml` format 27 and its migration                                 |
 | R5    | claude-plugins | Stack without packs                                                    |
 | R6    | both           | One release in each repo; each plan carries its own docs               |
 
 A vwf plan runs only in its own repo, and `requires` cannot name a plan in the
-other repo. R3 starts only after the bootstrap 3.0.0 release. The user
+other repo. R3 starts only after the bootstrap 4.0.0 release. The user
 confirms that release by hand.
+
+## Amendments 2026-11-14 (R1a and R1b planning)
+
+These rulings come from the plan folders `docs/plans/2026-11-14-config-folder`
+(R1a) and `docs/plans/2026-11-14-contract-commands` (R1b) in the bootstrap
+repo. The phase table and the release references above match them.
+
+- **The release (R1a D1, D36; R1b D16).** 3.0.0 (the selection model) and
+  3.1.0 (the TUI) ship first. R1a, R1b, R1c and R2 then land before one
+  `bootstrap@4.0.0` tag; until then the user tests with a local binary. R3
+  waits for 4.0.0. R1b D16 reverses R1a D69 (tag 4.0.0 at once after R1a),
+  and R1a D92 records that in R1a.
+- **R1 is three plans (R1a D2).** R1a: the `.config/bootstrap/` folder, the key
+  schema and the `config` verb. R1b: the contract commands. R1c: the task
+  ports as no-op defaults. R1b and R1c each require R1a.
+- **`settings` (R1a D3).** The old engine-settings command becomes
+  `bootstrap settings`; `bootstrap config get|set|unset|show` is the
+  repo-config verb.
+- **Overrides (R1a D5).** The `[tools.*]` overrides move into `tools.toml`,
+  under `[overrides.tools.*]`.
+- **`releases.toml` (R1a D10).** R1a defines its schema, but does not move
+  `.config/releases.yaml`. R3 switches vwf and the release tasks to
+  `bootstrap config`, and its migration moves the file.
+- **The envelope (R1b D1, D7, D12).** Every `--json` command prints one
+  compact object on stdout: `contract`, `command`, `ok`, `code`, `data`,
+  `errors`, `warnings`. Human lines go to stderr, and the exit code equals
+  `code`. The contract version is an integer: an additive change keeps it, and
+  a break raises it.
+- **`describe` (R1b D10).** It reports the repo facts, tools, members and
+  ports, with no LSP field. R2 adds the field.
+- **The clone cache (R1b D5, D6).** `config set`, `config unset`, `catalog`
+  and `describe` fetch when the last fetch is more than 30 minutes old. If the
+  fetch fails, they use a clone less than 7 days old, else they exit 5. This
+  reverses the 7-day skip of R1a D23 and D52.
