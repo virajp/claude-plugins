@@ -51,6 +51,23 @@
       ],
       "backlog": [],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-14-virajp-plugins-tool",
+      "folder": "docs/plans/2026-11-14-virajp-plugins-tool",
+      "kind": "change",
+      "title": "R3c — vwf repos add the virajp-plugins tool, and the plugin handoff goes through bootstrap config",
+      "target_repo": null,
+      "priority": 40,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-14-git-over-tasks"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
