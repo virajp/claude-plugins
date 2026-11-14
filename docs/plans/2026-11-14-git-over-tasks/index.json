@@ -1,0 +1,612 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R3b — git-workflow and land.mjs over bootstrap's git:* tasks, with the core branches",
+  "requires": [
+    "2026-11-14-bootstrap-contract"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-14 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- pnpm vitest run scripts/src/git-land.test.ts"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnF over plugins/ for each of: 'code:merge', 'setup:worktree', 'merge_model', '[branch.', 'read_merge_model'.",
+        "pass": "No hit, except a history row (plugins/vwf/skills/setup/references/format-lineage.md, or a migration note that names the old form as the old form). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "land.mjs and git-workflow call bootstrap's git:* tasks, the integration branch comes from repo.core_branches, and a landing with no git:merge task now stops."
+    },
+    {
+      "id": "stackgen",
+      "level": "NONE",
+      "reason": "No unit touches plugins/stackgen/."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes the git:* tasks, the landing key and the core branches."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "land.mjs calls the git:* tasks",
+      "wave": 1,
+      "file": "01-land-mjs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/git-workflow/scripts/land.mjs",
+        "plugins/vwf/skills/git-workflow/scripts/lib/land.mjs",
+        "scripts/src/git-land.test.ts",
+        "scripts/src/plan-queue.test.ts",
+        "scripts/src/execute-start.test.ts",
+        "plugins/vwf/skills/plan-management/scripts/lib/queue.mjs",
+        "plugins/vwf/skills/execute/scripts/start.mjs",
+        "plugins/vwf/skills/plan-management/scripts/plan.mjs"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "git-workflow reads the landing key and calls the git:* tasks",
+      "wave": 1,
+      "file": "02-git-workflow.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/git-workflow/SKILL.md",
+        "plugins/vwf/skills/git-workflow/references/landing.md",
+        "plugins/vwf/skills/git-workflow/references/worktree-setup.md",
+        "plugins/vwf/skills/git-workflow/references/protected-branch.md",
+        "plugins/vwf/skills/execute/references/claim.md",
+        "plugins/vwf/skills/plan-management/SKILL.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "init and readme: the landing key, git:* names, two CONTRIBUTING variants",
+      "wave": 1,
+      "file": "03-init.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/init/SKILL.md",
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/init/references/readme-and-license.md",
+        "plugins/vwf/skills/init/assets/hygiene/**",
+        "plugins/vwf/skills/readme/references/steps.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "doctor's forge rule and the pipeline seed use the core branches",
+      "wave": 1,
+      "file": "04-doctor-pipeline.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/blueprint/SKILL.md",
+        "plugins/vwf/assets/delivery-pipeline.md",
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/assets/templates/conventions.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Review: land.mjs over the git:* tasks",
+      "wave": 2,
+      "file": "05-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "reviews U1's committed land.mjs and its tests",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U6",
+      "title": "Docs",
+      "wave": 3,
+      "file": "06-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/**",
+        ".claude/skills/**",
+        "site/src/content/docs/**"
+      ],
+      "depends_on": [
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ],
+      "waits": "docs-sync reads the delta of waves 1 and 2",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Gates",
+      "wave": 4,
+      "file": "07-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U6"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-1 unit falsifies passages in the same docs",
+      "owner": "U6"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "What uses bootstrap's git:* tasks?",
+      "ruling": "land.mjs too: land.mjs calls git:worktree:create and git:merge:<b>, and git-workflow's landings call git:merge:<b> and git:worktree:create/setup/delete. A dirty main checkout then stops every landing, plan bookkeeping commits included, until the user commits or stashes their own changes.",
+      "rejected": "Prose landings only; land.mjs keeps its own merge and stash code.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "The release levels.",
+      "ruling": "vwf MAJOR (Recommended): vwf MAJOR, stackgen NONE, site MINOR, installer NONE.",
+      "rejected": "vwf MINOR.",
+      "units": []
+    },
+    {
+      "id": "D3",
+      "decision": "The core-branch rulings parked for R3 (docs/memory/gaps/2026-11-14-one-or-two-core-branches-parked.md), restated against the contract.",
+      "ruling": "The integration branch is develop when develop is in repo.core_branches (bootstrap config get repo.core_branches --json), else main. With both, work moves feature → develop → main; with one, each feature lands on that branch. A core branch that exists only on origin gets a local branch that tracks origin/<branch>. The user's words: \"If there's a develop branch then make changes on develop branch only and keep remote in sync so that other contributors don't run the same plan on their machine. In case develop branch does not exist and main does then use main with same rules\". init gets two CONTRIBUTING.md variants (two branches, one branch). The pipeline seed shows each repo's core branches with a preselected stage/prod pair, and the user confirms. Doctor: the forge default branch is drift only when it names a branch that is not a core branch or does not exist.",
+      "rejected": "",
+      "units": [
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "Stated by the planner, confirmed at the shape gate: the landing model.",
+      "ruling": "git-workflow reads bootstrap config get repo.branches.<b>.landing --json: pr, direct-merge or direct-commit (R1a D11, D17). read_merge_model and every merge_model or [branch.*] name go. The git:merge:<b> task applies the model itself; git-workflow reads it only to tell the user what a landing will do and to refuse a direct commit where the value is not direct-commit.",
+      "rejected": "",
+      "units": [
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "Stated by the planner, confirmed at the shape gate: land.mjs abandon.",
+      "ruling": "abandon keeps raw git worktree remove and git branch -D, because git:worktree:delete refuses a branch that is not merged into a core branch (R2a D22).",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Stated by the planner, confirmed at the shape gate: the land.mjs tests.",
+      "ruling": "scripts/src/git-land.test.ts writes stub git:merge:<b> and git:worktree:create tasks into each temp repo (mise file tasks under .config/mise/tasks/git/), which do the plain git step and log their arguments. No test uses the network or a real bootstrap.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Stated by the planner, confirmed at the shape gate: the scope edges.",
+      "ruling": "virajp-plugins is R3c; topology and members are R4; this repo's own .config/ files are the user's.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D8",
+      "decision": "Round 1 gap 1: plan-queue.test.ts:426-470 and execute-start.test.ts:383 run real claims through land.mjs in temp repos with no git:* tasks.",
+      "ruling": "U1 owns scripts/src/plan-queue.test.ts and scripts/src/execute-start.test.ts and adds the D6 stub tasks to them.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Round 1 gap 2: the git:merge task prints plain text; how does close tell a merge from a PR or a conflict?",
+      "ruling": "close reads the result from git after the task. Exit 0 with the branch merged into <into> (git merge-base --is-ancestor) is landed. Exit 0 with the branch not merged is a PR, with its URL from gh pr view <branch> --json url when gh is present, else no URL. A non-zero exit is failed, with the end of the task's output as the reason. The hooks-to-PR fallback and the push retry of land.mjs go: the task decides those.",
+      "rejected": "Parse the task's text; add --json to the bootstrap task.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Round 1 gap 3: a new refused kind breaks the JSON results that queue.mjs and start.mjs handle.",
+      "ruling": "No new kind. A failed task, a dirty main checkout included, is the kind failed with the task's message. This replaces the refused result of U1's first ruling.",
+      "rejected": "A new refused kind.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Round 1 gap 4: finish is not ruled.",
+      "ruling": "finish keeps raw git (git worktree remove, then delete the branch), as abandon does (D5), because git:worktree:delete refuses a branch that a squash-merged PR leaves unmerged.",
+      "rejected": "git:worktree:delete.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Round 1 gap 5: git-workflow/references/protected-branch.md, execute/references/claim.md:69,77 and plan-management/SKILL.md:111 describe the stash and the old merge, and no unit owns them.",
+      "ruling": "U2 owns the three files and applies D1, D3 and D9 to them.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Round 1 gap 6: doctor stack-checks.md:546 (c) Branches reports a missing develop as drift.",
+      "ruling": "R3a D14 already removes doctor's own branch checks. U4 removes any (c) text that R3a leaves.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Round 1 gap 7: setup/SKILL.md:95 and assets/templates/conventions.md:115 assume develop.",
+      "ruling": "U4 owns both files and applies D3.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Round 2 gap 1: on a conflict, git:merge exits 1 and leaves the main checkout mid-merge (bootstrap merge, about line 386); queue.mjs:467 needs the conflict kind.",
+      "ruling": "After a non-zero exit, if MERGE_HEAD exists in the main checkout, close collects the conflict files (git diff --name-only --diff-filter=U), runs git merge --abort, and returns the kind conflict with the files.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 2 gap 2: the task merges locally, then its push fails, leaving an unpushed merge commit on <into>.",
+      "ruling": "After a non-zero exit, if <into> is ahead of origin/<into>, close runs git reset --keep origin/<into> in the main checkout, as the old land.mjs did, and returns failed.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 2 gap 3: --from origin/<into> needs a remote.",
+      "ruling": "With an origin, open fetches first and passes --from origin/<into>. With no origin, it passes --from <into> and does not fetch.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 2 gap 4: run from the main checkout, the task's hook pass checks the main checkout's tree, not the branch.",
+      "ruling": "close runs the git:merge task from the branch's worktree. The task changes to the main worktree by itself for the merge (bootstrap merge, about line 298). This replaces 'in the main checkout' of D1 for close.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 2 gap 5: the task calls have no -- separator.",
+      "ruling": "mise run git:worktree:create -- <name> --from <base> --no-setup, and mise run git:merge:<into> -- <branch>.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 2 gap 6: plan-index.md:302,315,329-330, queue.mjs:15,478 and start.mjs:35 describe the stash, the push retry and the PR fallback.",
+      "ruling": "U1 owns plugins/vwf/skills/plan-management/scripts/lib/queue.mjs and plugins/vwf/skills/execute/scripts/start.mjs; U2 owns plugins/vwf/skills/plan-management/references/plan-index.md.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 2 gap 7: execute-start.test.ts:383 expects pending when hooks refuse the claim merge; under D9 that is failed.",
+      "ruling": "start.mjs stops on failed and reports the reason. U1 changes the test to expect that stop.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 3 gap 1: U1's D1 text still says in the main checkout and has no --.",
+      "ruling": "U1's D1 text is rewritten to match D18 and D19.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 3 gap 2: run from the branch worktree (D18), the task checks that worktree for dirt, not the main checkout (bootstrap merge, about lines 316-330).",
+      "ruling": "Correct D1 and D10: the main checkout's uncommitted changes stay uncommitted and are never part of the merge; a landing stops only when git refuses the checkout or the merge. The D10 test case makes the branch's worktree dirty, which gives failed.",
+      "rejected": "A dirty main checkout always stops a landing.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Round 3 gap 3: after a conflict or a failed push, the main checkout stays on <into>.",
+      "ruling": "close records the main checkout's branch before the task. After the D15 abort or the D16 reset, it checks out that branch again if it changed.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 3 gap 4: R2a's create runs git worktree add -b with no --no-track, so a branch from origin/<into> tracks it, and a direct merge refuses it for unpushed commits (bootstrap merge, about line 338).",
+      "ruling": "After create, open runs git branch --unset-upstream <name>, so the branch is local only; the merge library accepts a local branch.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 3 gap 5: if <name> exists only on origin, create --from is a usage error (R2a D13).",
+      "ruling": "open checks origin/<name> first. If it exists, open returns failed with that reason and does not call create.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 3 gap 6: after a squash-merged PR, git:worktree:delete exits 1 because the branch is not merged.",
+      "ruling": "git-workflow runs git:worktree:delete. If it exits 1 and gh pr view <branch> --json state gives MERGED, it runs the git branch -D command that the task printed. Otherwise it reports the failure and stops.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Round 3 gap 7: the review skips queue.mjs and start.mjs.",
+      "ruling": "U5 reviews both files too.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Round 4 gap 1: U6 and the vwf release reason still say a dirty main checkout stops a landing.",
+      "ruling": "Both are rewritten to match D23.",
+      "rejected": "",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 4 gap 2: with no origin the branch has no upstream, so git branch --unset-upstream exits 128.",
+      "ruling": "open runs the D25 call only when the branch has an upstream.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 4 gap 3: reset --keep origin/<into> also drops the user's own unpushed commits on <into>.",
+      "ruling": "close records the tip of <into> before the task; D16 resets to that tip, not to origin/<into>.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 4 gap 4: the tests' fake mise runs only what follows --, so it never reaches the stub tasks.",
+      "ruling": "The fake mise also runs 'run git:<x> -- <args>' as the stub file .config/mise/tasks/git/<x> (colons become slashes), and keeps its old behaviour for every other call.",
+      "rejected": "Use the real mise in the tests.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 4 gap 5: plan.mjs:70 says kind pr when the hooks refused the merge; no unit owns it.",
+      "ruling": "U1 owns plugins/vwf/skills/plan-management/scripts/plan.mjs, for that text only (D9).",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Round 4 gap 6: landing.md:36,52 merges directly when no merge task exists.",
+      "ruling": "The fallback goes. After R3a and bootstrap 4.0.0 every shaped repo has the git:merge:<b> ports; a missing task stops the landing with the contract asset's hint.",
+      "rejected": "Keep the fallback.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Round 4 gap 8: on a PR result, does close keep the branch?",
+      "ruling": "Yes: on a PR result, close removes the worktree and keeps the branch, which the PR needs.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
