@@ -1,0 +1,544 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "P0 — fix the plugins' drift against today's bootstrap",
+  "requires": [],
+  "source": [
+    "B118"
+  ],
+  "backlog": [
+    "B118"
+  ],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-14 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "Copy the read_merge_model function from the landed plugins/vwf/skills/git-workflow/SKILL.md into a temp script. Run it from a scratch folder inside the run's worktree (docs/scratchpad/k1-new/, which git ignores, so the repo's mise pins of yq apply) whose .config/bootstrap.toml holds [tools.git.branch.develop] merge_model = \"pr\" and [tools.git.branch.main] merge_model = \"direct\". Then run it from docs/scratchpad/k1-old/, whose file holds only the old [branch.develop] merge_model = \"pr\". Remove both folders after.",
+        "pass": "The first folder prints pr for develop and direct for main. The second folder prints direct for develop (new key only, D4). A yq or mise error, or a non-zero return, is a fail."
+      },
+      {
+        "id": "K2",
+        "check": "grep -rnF over plugins/, .claude/skills/, .claude/docs/, CLAUDE.md, CONTRIBUTING.md, readme.md and site/src/content/docs/ for each of: '[branch.', \"'.branch[\" (with the leading quote, the old yq expression), '[claude.plugins', 'add tools', 'remove tools', '--depth 1', 'repo-sync:', 'would chmod', 'would update', 'code:precommit --all', '[overrides.gitignore]', 'tools/packs.toml'.",
+        "pass": "No hit, except a hit in a passage that names the old form on purpose as the old form (a migration note). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "Fixes git-workflow's merge-model read (a pr branch landed direct), the dry-run drift parsers and the plan gate line."
+    },
+    {
+      "id": "stackgen",
+      "level": "PATCH",
+      "reason": "Fixes the bootstrap handoff: clone paths, instruction verbs, clone flag and key names."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "Corrects the manual's key names, handoff verbs and plan gate line."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "git-workflow reads the current merge-model key",
+      "wave": 1,
+      "file": "01-git-workflow.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/git-workflow/SKILL.md",
+        "plugins/vwf/skills/git-workflow/references/landing.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "init, setup and doctor: current keys and dry-run output",
+      "wave": 1,
+      "file": "02-init-setup-doctor.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/init/SKILL.md",
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md",
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "stackgen's bootstrap handoff matches docs/sync/vwf.md",
+      "wave": 1,
+      "file": "03-stackgen-handoff.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md",
+        "plugins/stackgen/assets/ids.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Planners write code:precommit with no --all",
+      "wave": 1,
+      "file": "04-plan-gate-line.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/skills/change-plan/references/gates-consent.md",
+        "plugins/vwf/skills/change-plan/references/recall-survey.md",
+        "plugins/vwf/skills/plan/references/plan-doc.md",
+        "plugins/vwf/agents/plan-rulings-reviewer.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Docs",
+      "wave": 2,
+      "file": "05-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "CONTRIBUTING.md",
+        "readme.md",
+        ".claude/docs/**",
+        ".claude/skills/**",
+        "site/src/content/docs/**",
+        "docs/memory/gaps/2026-11-06-gate-line-all-flag-undeclared-open.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Gates",
+      "wave": 3,
+      "file": "06-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "several units falsify passages in the same docs",
+      "owner": "U5"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where does P0 run?",
+      "ruling": "One plan, in claude-plugins only. Every stale key, path, verb and flag is in this repo; bootstrap needs no change for P0.",
+      "rejected": "A plan in each repo.",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "The uncommitted DRAFT plan 2026-11-13-one-or-two-core-branches owns 9 of the files P0 edits. What happens to it?",
+      "ruling": "Retire it into R3 (Recommended): Delete the draft folder now. Write a parked record so that R3 picks up its rulings (one or two core branches, no hard-coded develop). P0 then owns the files alone. The folder was moved out of the repo, and docs/memory/gaps/2026-11-14-one-or-two-core-branches-parked.md holds its rulings.",
+      "rejected": "Keep it and revise it after P0; fold its work into P0.",
+      "units": []
+    },
+    {
+      "id": "D3",
+      "decision": "Do the drift checks of init, setup and doctor, which parse the old repo-sync dry-run output, belong to P0?",
+      "ruling": "Include in P0 (Recommended): It is the same kind of drift: today the checks detect nothing. The fix is prose in 4 places (init SKILL.md, setup SKILL.md, doctor stack-checks.md). R3 replaces it later with `bootstrap check --json`.",
+      "rejected": "Leave for R3.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "git-workflow reads the merge model with yq '.branch[B].merge_model'. Repos in the old [branch.<b>] form exist until a bootstrap sync migrates them. What does the new read do?",
+      "ruling": "New key only: Read only `[tools.git.branch.<b>]`. A repo in the old form reads as `direct` until a bootstrap sync migrates it, which is today's silent behavior.",
+      "rejected": "New key with the old key as a fallback.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "This repo's release docs (CLAUDE.md, the release skill, ci-and-releases.md) name [branch.main].merge_model, and so do the four p:*release tasks that the user edits by hand. What does P0 do with these docs?",
+      "ruling": "Update docs; you edit tasks (Recommended): P0 changes the docs to `[tools.git.branch.main]`. The plan's index.md lists the four task files and `.config/bootstrap.toml` as a hand step for you, so the docs and the tasks match once you edit them.",
+      "rejected": "Leave the docs unchanged.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Is a review unit needed?",
+      "ruling": "No. No unit lands runnable code: every owned file is prose, a template or a skill reference. The yq function in git-workflow is a snippet an agent runs from prose, and K1 proves it.",
+      "rejected": "A security-review unit over wave 1.",
+      "units": []
+    },
+    {
+      "id": "D7",
+      "decision": "Execution mode.",
+      "ruling": "teams (Recommended): wave 1 has four edit units, and U1 and U2 state the same key rule ([tools.git.branch.<b>].merge_model, absent reads as direct) in different files, so they can align the wording.",
+      "rejected": "solo.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "What is the plan gate line?",
+      "ruling": "mise x -- mise run code:precommit, with no --all. bootstrap's code-precommit task (repo/tools/pre-commit/tasks/code-precommit) and this repo's synced copy declare no flag and always run pre-commit with --all-files. This finishes B118 and closes the gap docs/memory/gaps/2026-11-06-gate-line-all-flag-undeclared-open.md.",
+      "rejected": "Keep --all; ask bootstrap to declare the flag.",
+      "units": [
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "bootstrap removed [overrides.gitignore] (migration M34). What does init's prose say instead?",
+      "ruling": "Lines to add go into the repo's .gitignore directly; lines to remove from the shared .gitignore become [tools.git.files.\".gitignore\"] entries with \"$mode\" = \"remove\" in .config/bootstrap.toml.",
+      "rejected": "None; this is a fact of bootstrap.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "The handoff reads docs/sync/tools/<tool>.md for each tool. Is that path valid?",
+      "ruling": "Yes, with one exception: the claude tool's doc is docs/sync/tools/claude-tool.md. The handoff says so where it names the path.",
+      "rejected": "None; this is a fact of bootstrap.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Verification that the orchestrator keeps.",
+      "ruling": "yq probe + stale grep (Recommended): K1 and K2 in gates.keeps. A real PR landing needs a forge, so it is not in the run.",
+      "rejected": "Also a scratch-repo landing with a bare local remote.",
+      "units": []
+    },
+    {
+      "id": "D12",
+      "decision": "Landing consent.",
+      "ruling": "Yes, merge and push: a fully green run merges to develop and pushes without a further prompt.",
+      "rejected": "Ask before the merge.",
+      "units": []
+    },
+    {
+      "id": "D13",
+      "decision": "End an all run after P0 lands?",
+      "ruling": "No, continue: the run continues with the old skills loaded until it ends.",
+      "rejected": "End the run and ask for a restart.",
+      "units": []
+    },
+    {
+      "id": "D14",
+      "decision": "How do the drift checks read the new dry-run output of the bootstrap CLI?",
+      "ruling": "By exit code and stderr. The CLI prints a last line, the headline: 'Dry run: no file would change' or 'Dry run: <n> file(s) would change', after a glyph or an [OK] tag. Exit 0 with 'Dry run: no file would change' and no 'bootstrap_commit would change to' line is no drift. Exit 0 with a headline of one or more files, or a 'bootstrap_commit would change to' line, is drift; the list lines (would change, would add, would seed, would remove) are the detail. Any other exit code is drift unknown, with the last stderr line as the reason; code 2 with 'run bootstrap init' means the values file is in an old form. Source: bootstrap docs/design/cli.md, section 'The output of a run', and cli/internal/repo/repo.go (the report writes to stderr).",
+      "rejected": "Match any line that contains 'would change' (the no-drift headline contains it too).",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Rulings review gap 1: the dry run exits 0 but prints no \"Dry run:\" headline (old repo-sync engine, or a stop before the file loop). What do init, setup and doctor report?",
+      "ruling": "Drift unknown (Recommended): Drift unknown, with the reason \"no Dry run headline: the repo's setup:configs runs an older sync engine; run bootstrap init\". It is never green and never a guessed drift row.",
+      "rejected": "Fall back to the old repo-sync rule when no headline is printed.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Rulings review gap 2: D3 said \"4 places\" but names 3 parser passages. What does D3 mean?",
+      "ruling": "3 passages (Recommended): D3 means the three parser passages. doctor SKILL.md:290 stays unchanged, because the new list lines still begin with `would`. The plan records the correction.",
+      "rejected": "Also reword doctor SKILL.md:290 to name the new words.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Rulings review gap 3: docs-sync can flag a passage in a .claude/docs or .claude/skills file that U5 does not own. What does U5 do?",
+      "ruling": "Own all .claude docs (Recommended): Widen U5's owns to `.claude/docs/**` and `.claude/skills/**`, which S1 already gives it. U5 can then fix any falsified passage there. No other unit edits those trees.",
+      "rejected": "Report only, and leave the passage for a later plan.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Rulings review gap 4: site vwf.md:3483-3484 says the plan gate needs --all because code:precommit alone checks only uncommitted files. What does U5 do?",
+      "ruling": "Rewrite the reason (Recommended): U5 rewrites the sentence the same way U4 rewrites gates-consent.md and plan-doc.md: the plan gate runs the full hook pass over every file, because the task always runs pre-commit with --all-files and takes no flag. The same applies to any such sentence in ad-hoc-change.md.",
+      "rejected": "Delete the sentence and keep only the gate line.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings review gap 5: U5 edits dprint-formatted files. How does it make them pass the code:format check?",
+      "ruling": "dprint on owned files (Recommended): U5 may run `mise x -- dprint fmt <file>` on each file it changed, never on the whole tree and never `code:format --fix`. Then the unit gate must pass.",
+      "rejected": "Re-pad and re-wrap by hand only.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings review gap 6: only `bootstrap init` migrates an old-form .config/bootstrap.toml (`sync` stops with code 2). When a unit names the remedy for an old-form repo in prose, what does it say?",
+      "ruling": "Name bootstrap init (Recommended): Any prose that names the migration says \"run bootstrap init\", the words bootstrap itself prints. D4's ruling (new key only) does not change.",
+      "rejected": "Name no remedy.",
+      "units": [
+        "U1",
+        "U2",
+        "U5"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings review gap 7: the planners propose a gate line only when `mise tasks ls` lists it, but code:precommit is a hidden task. Fix the condition in P0?",
+      "ruling": "Fix it in U4 (Recommended): U4 changes the condition to `mise tasks ls --hidden` in gates-consent.md and plan-doc.md, so hidden tasks such as code:precommit count.",
+      "rejected": "Leave the condition out of scope.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings review round 2, gap 1: the repo root CONTRIBUTING.md:30 names [branch.<branch>].merge_model. No unit owns it. What happens?",
+      "ruling": "U5 owns it (Recommended): Add CONTRIBUTING.md to U5's owns and to K2's scan. U5 changes it to `[tools.git.branch.<branch>]`, the same as CLAUDE.md (D5).",
+      "rejected": "Leave it out of scope.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Rulings review round 2, gap 2: git-workflow SKILL.md:156-158 and site vwf.md:3796-3797 say code:precommit checks only the working tree's changed files, but it always runs --all-files. What happens?",
+      "ruling": "U1 and U5 rewrite (Recommended): U1 rewrites SKILL.md:156-158 and U5 rewrites vwf.md:3796-3797: code:precommit runs every hook over every file of the tree, with no flag. Nothing else in those passages changes.",
+      "rejected": "Leave both passages out of scope.",
+      "units": [
+        "U1",
+        "U5"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Rulings review round 2, gap 3: with BOOTSTRAP_VERBOSE=1 the dry run prints verbose words, and D14 can miss a commit-only change. What do the checks do?",
+      "ruling": "Unset it for the run (Recommended): The checks run `env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`, so the output is always the non-verbose form that D14 reads. One parser stays.",
+      "rejected": "Accept both forms of output.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Rulings review round 2, gap 4: on a non-zero exit, what text does the check use as the reason for drift unknown?",
+      "ruling": "bootstrap's error + fix (Recommended): Report the exit code, the last bootstrap error line (it starts with `✗` or `[ERROR]`) and its fix line (`→ …`) when one follows, word for word. With no such line, report the last stderr line. The check does not guess the cause from the code; this replaces the \"code 2 means old form\" clause of D14.",
+      "rejected": "Report the last stderr line only.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Rulings review round 3, gaps 1, 2, 3, 6 and 7 (one correct answer each, stated by the planner).",
+      "ruling": "(1) K2 greps for the old yq expression with its leading quote, so the new line .tools.git.branch[ is no hit. (2) K1 runs in scratch folders inside the run worktree under docs/scratchpad/, where the repo pins yq; a yq or mise error is a fail. (3) p:plugins:local is not in the plan after_landing, because .config/vwf.yaml after_landing runs it after every green landing (change-plan gates-consent.md: do not propose a command already there). (6) The check matches the headline as the start of the last line after the glyph or [OK] tag, so count suffixes such as \" · 161 unchanged\" do not matter. (7) The init SKILL.md parser passage is lines 424-432.",
+      "rejected": "(3) Record p:plugins:local as a plan after-landing step, which would run it twice.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Rulings review round 3, gap 4: recall-survey.md:59 lists gates with `mise tasks`, which hides code:precommit. Widen U4 to fix it too?",
+      "ruling": "Widen U4 (Recommended): U4 also owns change-plan/references/recall-survey.md and changes line 59 to `mise tasks ls --hidden`, the same rule as D21.",
+      "rejected": "Leave recall-survey.md out of scope.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Rulings review round 3, gap 5: which mentions of `mise run setup:configs --dry-run` become `env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`?",
+      "ruling": "Only the 3 run lines (Recommended): Only the line each check executes: init SKILL.md:411, setup SKILL.md:119, doctor stack-checks.md:570. The other mentions name the task in prose and stay as they are (D16 already keeps doctor SKILL.md:290).",
+      "rejected": "Every mention, about 17, across init, doctor, stack-adapter.md, existing-repo.md and the site.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Rulings review round 3, gap 8: how does U5 close the gap record 2026-11-06-gate-line-all-flag-undeclared-open.md?",
+      "ruling": "Precedent, keep name (Recommended): Follow the precedent's words: the first line says \"resolved 2026-11-14 by 2026-11-14-bootstrap-drift-fix (B118)\" in place of \"open\" and \"| not fixed\". Keep the file name, so the link in the archived plan still works.",
+      "rejected": "Rename the file to -resolved, which breaks the archived plan's link.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Rulings review round 4, gap 1: code:precommit checks only tracked files. How do the D23 rewrites (git-workflow SKILL.md:156-158, site vwf.md:3796-3798) describe it?",
+      "ruling": "Say tracked files only (Recommended): The rewrite says: it runs every hook over every file git tracks, with no flag; a new file is checked once it is `git add`-ed, or by the commit hook at commit. The clause \"nothing has to be staged\" is corrected to match.",
+      "rejected": "Keep D23 wording and accept an open gap.",
+      "units": [
+        "U1",
+        "U5"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Rulings review round 4, gap 2: the setup SKILL.md parser passage starts mid-line 129.",
+      "ruling": "The planner states the one correct answer: U2 cites setup SKILL.md lines 129-133 and replaces only the text after \"holds now.\" on line 129.",
+      "rejected": "None.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Rulings review round 4, gap 3: plan-rulings-reviewer.md:69 checks gate tasks with `mise tasks`, which hides code:precommit. Widen U4 to fix it?",
+      "ruling": "Widen U4 (Recommended): U4 also owns plugins/vwf/agents/plan-rulings-reviewer.md and changes line 69 to `mise tasks ls --hidden`, the same rule as D21 and D27.",
+      "rejected": "Leave the agent file and accept an open gap.",
+      "units": [
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}

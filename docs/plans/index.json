@@ -1,4 +1,22 @@
 {
   "format": 1,
-  "plans": []
+  "plans": [
+    {
+      "id": "2026-11-14-bootstrap-drift-fix",
+      "folder": "docs/plans/2026-11-14-bootstrap-drift-fix",
+      "kind": "change",
+      "title": "P0 — fix the plugins' drift against today's bootstrap",
+      "target_repo": null,
+      "priority": 10,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [],
+      "backlog": [
+        "B118"
+      ],
+      "backlog_pieces": []
+    }
+  ]
 }
