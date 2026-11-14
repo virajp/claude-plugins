@@ -34,6 +34,23 @@
       ],
       "backlog": [],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-14-git-over-tasks",
+      "folder": "docs/plans/2026-11-14-git-over-tasks",
+      "kind": "change",
+      "title": "R3b — git-workflow and land.mjs over bootstrap's git:* tasks, with the core branches",
+      "target_repo": null,
+      "priority": 30,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-14-bootstrap-contract"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
