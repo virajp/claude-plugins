@@ -68,6 +68,23 @@
       ],
       "backlog": [],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-15-config-format-27",
+      "folder": "docs/plans/2026-11-15-config-format-27",
+      "kind": "change",
+      "title": "R4a — vwf.yaml format 27: product, topology, members and environments move to repo.toml",
+      "target_repo": null,
+      "priority": 50,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-14-virajp-plugins-tool"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
