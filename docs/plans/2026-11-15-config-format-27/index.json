@@ -1,0 +1,654 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R4a — vwf.yaml format 27: product, topology, members and environments move to repo.toml",
+  "requires": [
+    "2026-11-14-virajp-plugins-tool"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-15 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- pnpm vitest run"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "claude plugin test plugins/vwf"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnF over plugins/vwf/ for each of: 'vwf-membership', 'linkage', 'production_env', 'product.name'.",
+        "pass": "No hit, except a history row (plugins/vwf/skills/setup/references/format-lineage.md, or the 26-to-27 migration step that names the old keys as the old keys). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "config_format 27 moves product, topology, members and environments to bootstrap repo.toml; setup migrates every vwf repo."
+    },
+    {
+      "id": "stackgen",
+      "level": "PATCH",
+      "reason": "stackgen-sync names bootstrap's [home] back-link in place of vwf-membership.yaml."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes config_format 27 and its migration."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The schema and the membership assets",
+      "wave": 1,
+      "file": "01-assets.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/vwf-config.md",
+        "plugins/vwf/assets/membership.md",
+        "plugins/vwf/assets/topologies/**",
+        "plugins/vwf/assets/templates/flow.md",
+        "plugins/vwf/assets/templates/registry.yaml",
+        "plugins/vwf/assets/delivery-pipeline.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/harness.md",
+        "plugins/vwf/assets/memory.md",
+        "plugins/vwf/assets/principles/interface-segregation.md",
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/agents/blueprint-reviewer.md",
+        "plugins/vwf/assets/bootstrap-contract.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "setup migrates format 26 to 27",
+      "wave": 1,
+      "file": "02-setup.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "The writers and readers of product, topology and environments",
+      "wave": 1,
+      "file": "03-readers.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/architecture/**",
+        "plugins/vwf/skills/blueprint-authoring/references/flow-contract.md",
+        "plugins/vwf/skills/product-foundations/references/disaster-recovery.md",
+        "plugins/vwf/skills/plan/SKILL.md",
+        "plugins/vwf/skills/verify/SKILL.md",
+        "plugins/vwf/skills/readme/references/steps.md",
+        "plugins/vwf/skills/documentation-standards/references/diagrams.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "The scripts read members through bootstrap config",
+      "wave": 1,
+      "file": "04-scripts.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/scripts/**",
+        "plugins/vwf/skills/execute/scripts/start.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/queue.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/execute-start.test.ts",
+        "scripts/src/plan-queue.test.ts",
+        "scripts/src/plan-yaml.test.ts",
+        "scripts/src/fixtures/doctor-checks/**",
+        "scripts/src/fixtures/plan-queue/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "The progress pane reads members from repo.toml",
+      "wave": 1,
+      "file": "05-monitor.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/hooks/monitor/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "The prose readers of members",
+      "wave": 1,
+      "file": "06-prose.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/references/**",
+        "plugins/vwf/skills/execute/workflows/folder.md",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/skills/plan-management/SKILL.md",
+        "plugins/vwf/skills/plan-management/references/plan-index.md",
+        "plugins/vwf/skills/init/**",
+        "plugins/vwf/skills/git-workflow/SKILL.md",
+        "plugins/stackgen/skills/stackgen-sync/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Review: the scripts and the progress pane",
+      "wave": 2,
+      "file": "07-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U4",
+        "U5"
+      ],
+      "waits": "reviews the committed code of U4 and U5",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U8",
+      "title": "Docs",
+      "wave": 3,
+      "file": "08-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/**",
+        ".claude/skills/**",
+        "site/src/content/docs/**"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U6",
+        "U7"
+      ],
+      "waits": "docs-sync reads the delta of waves 1 and 2",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U9",
+      "title": "Gates",
+      "wave": 4,
+      "file": "09-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U8"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-1 unit falsifies passages in the same docs",
+      "owner": "U8"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/vwf/assets/vwf-config.md (the format 27 schema)",
+      "why": "U2 to U6 cite the key mappings it states",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where does the removal of the pack pins (stack.template, repo.stack.template) go?",
+      "ruling": "Keep pins until R5 (Recommended): R4 keeps stack.template and repo.stack.template; R5 removes them with the packs.",
+      "rejected": "Remove them in R4; merge R4 and R5.",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "How is R4 planned?",
+      "ruling": "Two plans, two formats (Recommended): R4a (this folder): format 27, the moves to repo.toml. R4b: format 28, the stack slim and the harness removal. R5 removes the pins in format 29. Each plan has its own migration step.",
+      "rejected": "One plan, format 27.",
+      "units": []
+    },
+    {
+      "id": "D3",
+      "decision": "The 26-to-27 migration when repo.toml already holds a value.",
+      "ruling": "Same: drop; differ: ask (Recommended): set each value with bootstrap config set when repo.toml has none. When both hold the same value, only remove it from vwf.yaml. When they differ, ask the user which to keep, one key at a time. Then remove the keys from vwf.yaml in the same commit.",
+      "rejected": "repo.toml wins; vwf.yaml wins.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "What replaces .config/vwf-membership.yaml?",
+      "ruling": "[home], folder walks up (Recommended): a member reads bootstrap config get repo.home --json. A folder member has no [home] (bootstrap R1a D55), so vwf walks up the parent folders to the first repo whose repo.members lists this folder. The migration deletes vwf-membership.yaml in each present member once its back-link resolves.",
+      "rejected": "Keep vwf-membership.yaml.",
+      "units": [
+        "U1",
+        "U2",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How does the progress pane find the members?",
+      "ruling": "Read repo.toml directly (Recommended): a recorded exception to the rule that plugins never read .config/bootstrap/: the pane only reads [members.*] and [home] from .config/bootstrap/repo.toml, with a small TOML read, and writes nothing.",
+      "rejected": "execute writes a cache; base plans only.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "The release levels.",
+      "ruling": "vwf MAJOR (Recommended): vwf MAJOR, stackgen PATCH (D15, D28), site MINOR, installer NONE.",
+      "rejected": "vwf MINOR.",
+      "units": []
+    },
+    {
+      "id": "D7",
+      "decision": "Stated by the planner, confirmed at the shape gate: the key mappings.",
+      "ruling": "product.name → repo.product_name; topology, topology_reason → repo.topology, repo.topology_reason; each members[] entry becomes repo.members.<name>, keyed by its name: path → folder, url → url, linkage → type (submodule → submodule, siblings → sibling) (D29); members[].projects → projects.<p>.repo = the member name, in vwf.yaml (a project of the base repo has no repo key); environments.<env>.<project> → repo.deploy.<env>.<project>; production_env → repo.release_env; .config/vwf-membership.yaml → [home] (D4). Every reader uses bootstrap config get, except the pane (D5).",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Stated by the planner, confirmed at the shape gate: the review and the gates.",
+      "ruling": "One review unit over U4 and U5, which change node scripts and the TypeScript pane. The plan gate runs pnpm vitest run and claude plugin test plugins/vwf, the pane's local gate (the plugin-authoring skill).",
+      "rejected": "",
+      "units": [
+        "U7",
+        "U9"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Round 1 gap 1: the fixtures under scripts/src/fixtures/doctor-checks/multi/** and fixtures/plan-queue/yaml/vwf.yaml are not owned.",
+      "ruling": "U4 also owns scripts/src/fixtures/doctor-checks/** and scripts/src/fixtures/plan-queue/**.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Round 1 gap 2: execute setup.md:101-108, reconcile.md:21,26, preflight.md:86 and start.mjs:327 branch on the product's one linkage.",
+      "ruling": "Each member takes its path from its own type: a submodule member takes today's submodule path; a sibling member takes today's siblings path; a folder member is its own repo inside the base folder and takes the siblings path, with its folder as its path.",
+      "rejected": "",
+      "units": [
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Round 1 gap 3: R1a's init wrote each old member as type sibling. What does 'differ' compare?",
+      "ruling": "Compare each member, field by field. One case is a known result of R1a's init and is set quietly to submodule: linkage is submodule, .gitmodules lists the path, and repo.toml says sibling. Every other difference asks the user.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Round 1 gap 4: a member can have no url, and R1a does not say that set takes a whole table.",
+      "ruling": "Set one field at a time: bootstrap config set repo.members.<name>.<field> <value> --json. A missing url comes from .gitmodules (submodule) or git -C <folder> remote get-url origin; if neither gives one, ask the user.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Round 1 gap 5: a listed project with no projects.<p> entry, or two members listing the same project.",
+      "ruling": "No entry: create projects.<p>.repo with the member name, and report it. The same project under two members: stop that repo's step and ask which member owns it.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Round 1 gap 6: the pane's exception is not recorded in the rule's own file.",
+      "ruling": "U1 also owns plugins/vwf/assets/bootstrap-contract.md (from R3a) and adds the D5 exception there.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Round 1 gap 7: plugins/stackgen/skills/stackgen-sync/SKILL.md:87 names .config/vwf-membership.yaml.",
+      "ruling": "U6 also owns that file, for the D4 back-link only. stackgen goes from NONE to PATCH.",
+      "rejected": "Accept it as stale.",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 1 gap 8: does a script run bare bootstrap or mise x -- bootstrap?",
+      "ruling": "Bare bootstrap from PATH, as R3a D8 says; the test stub on PATH covers it.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 2 gap 1: D10 made a folder member its own repo, but bootstrap R1a D55 (03-members.md:34) makes it part of a monorepo tree.",
+      "ruling": "A folder member is a folder of the base repo's tree. It has no separate worktree, clone or landing; its work is the base repo's work. This corrects D10 for folder members, and removes the walk-up of D4: a folder member's base is the git top level.",
+      "rejected": "A folder member is its own repo.",
+      "units": [
+        "U1",
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 2 gap 2: in a member with no .config/bootstrap/, config get repo.home exits 2.",
+      "ruling": "With D17, no walk-up exists. In a submodule or sibling member, exit 2 is a refusal with bootstrap's errors text.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 2 gap 3: [home] is written only when setup:configs runs from the base repo with BOOTSTRAP_HOME and BOOTSTRAP_MEMBER (bootstrap R1a D62, D63).",
+      "ruling": "The fix line for an unresolved back-link is: from the base repo, run setup:configs with the member's flag (--<member>).",
+      "rejected": "run bootstrap sync in that member.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 2 gap 4: who commits the deletion of vwf-membership.yaml in a member?",
+      "ruling": "Each member commits its own deletion through git-workflow, members first, as init's commit order does; the base commits the submodule pointer in its own step commit.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 2 gap 5: a config set of product_name or members says a sync reads the key.",
+      "ruling": "After the sets, the step runs bootstrap sync --json in that repo and commits its output in the same step commit.",
+      "rejected": "Leave it as drift.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 2 gap 6: D16 cites R3a D8 for the bare bootstrap call.",
+      "ruling": "The citation is R3a's contract asset (R3a U1, D3). D16 itself decides the bare call for the scripts.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 2 gap 7: an absent binary prints no envelope.",
+      "ruling": "An absent binary gives the contract asset's install hint (R3a D8); a present binary gives its envelope's errors.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Round 3 gap 1: D12 sets one field at a time, but a new member has no table to set a field in.",
+      "ruling": "A new member is set as one whole table: bootstrap config set repo.members.<name> '<JSON table>' --json. An existing member is set field by field (D12).",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 3 gap 2: how a script tells a base repo from a member.",
+      "ruling": "A repo is a member when its repo.home has a value; with null it acts as a base. Doctor reports, as drift, each listed member whose own repo.home is null, with the D19 fix.",
+      "rejected": "",
+      "units": [
+        "U4",
+        "U5",
+        "U6"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 3 gap 3: a member with no .config/bootstrap/.",
+      "ruling": "The report says: run bootstrap init in the member, then setup:configs --<member> from the base.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 3 gap 4: the Out of scope line names stackgen whole, but D15 edits one stackgen line.",
+      "ruling": "Out of scope: stackgen, except the D15 back-link.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D28",
+      "decision": "Round 3 gap 5: D6 says stackgen NONE, but D15 makes it PATCH.",
+      "ruling": "D6 reads stackgen PATCH (D15).",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D29",
+      "decision": "Round 3 gap 6: D7 mapped members[].name, .path, .url onto .folder, .url, .type out of order.",
+      "ruling": "Each members[] entry becomes repo.members.<name>, keyed by its name: path → folder, url → url, linkage → type (submodule → submodule, siblings → sibling).",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 3 gap 7: what /vwf:architecture writes as a member's type.",
+      "ruling": "/vwf:architecture writes submodule or sibling from the user's link answer, folder for a member folder inside the base repo's tree that is not a submodule, and projects.<p>.repo for each project that it places in a member.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 4 gap 1: D4 deletes the member files after the base step, but D20 commits the members first.",
+      "ruling": "Each member commits the deletion of its vwf-membership.yaml first; then the base makes its step commit, with the new submodule pointers. This corrects the order of D4.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 4 gap 2: a member that kept vwf-membership.yaml keeps it after the fix, because the 26 to 27 step does not run again.",
+      "ruling": "Doctor reports, as drift, a vwf-membership.yaml in a member whose repo.home resolves. On consent, doctor deletes it and commits the deletion through git-workflow.",
+      "rejected": "setup deletes it on its next run.",
+      "units": [
+        "U4",
+        "U6"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 4 gap 3: in a base or single repo with no .config/bootstrap/, config get exits 2; D18 decides exit 2 only for a member.",
+      "ruling": "The script stops with bootstrap's errors text (R3a D8). The pane is unchanged: with no repo.toml it reads the repo as a base.",
+      "rejected": "Read the repo as having no members.",
+      "units": [
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
