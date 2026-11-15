@@ -17,7 +17,7 @@ Read it from the materializer (step 1 and step 5), from
 bootstrap tool from memory.** It reads the tools from a fresh clone of
 bootstrap, and it gives its instructions to bootstrap's
 `docs/sync/vwf.md`, which edits the file and runs the sync. A tool name that
-is not a folder of the clone's `tools/` is never sent.
+is not a folder of the clone's `repo/tools/` is never sent.
 
 ## Steps
 
@@ -27,20 +27,21 @@ is not a folder of the clone's `tools/` is never sent.
    `_scripts/helpers`, and they fail without it. Name the remedy —
    `/vwf:setup reshape`, which adopts bootstrap — and return.
 
-2. **Clone bootstrap.** A shallow clone into a temporary directory,
-   removed when the handoff ends:
+2. **Clone bootstrap.** A clone with no file content until read, into a
+   temporary directory, removed when the handoff ends:
 
    ```bash
    tmp=$(mktemp -d)
-   git clone --quiet --depth 1 https://github.com/virajp/bootstrap.git "$tmp"
+   git clone --quiet --filter=blob:none https://github.com/virajp/bootstrap.git "$tmp"
    ```
 
    A failed clone stops the handoff line, not the landing set: the plan
    names the failure, and every other line lands.
 
-3. **Choose the tools.** Read `tools/packs.toml`, each
-   `tools/<tool>/tools.toml` and each `docs/sync/tools/<tool>.md` in the
-   clone — the last says when its tool is relevant. For each component of
+3. **Choose the tools.** Read `repo/packs.toml`, each
+   `repo/tools/<tool>/tools.toml` and each `docs/sync/tools/<tool>.md` in
+   the clone (the claude tool's is `docs/sync/tools/claude-tool.md`) — the
+   last says when its tool is relevant. For each component of
    the composition, choose the tools that its `pack.yaml` facts
    (`languages`, `package_manager`, `lockfile`, the `mise_tool` and
    `binaries` facts) and its conventions call for. A tool that a chosen
@@ -57,15 +58,15 @@ is not a folder of the clone's `tools/` is never sent.
 
 5. **Subtract what the repo has.** A tool that `.config/bootstrap.toml`
    already selects — its own `[tools.<tool>]` table, or through a pack —
-   and a plugin it already lists under `[claude.plugins.<scope>]` get no
-   instruction. What is left is the delta.
+   and a plugin it already lists under `[tools.claude.plugins.<scope>]` get
+   no instruction. What is left is the delta.
 
 6. **Write the instructions** in the format of `docs/sync/vwf.md` in the
    clone — one instruction for each verb and scope, each with its
    `reason:` line naming the components:
 
    ```text
-   bootstrap: add tools [<tool>, …]
+   bootstrap: add [<tool>, …]
    reason: stackgen pinned <slug> (<component ref>, …)
    ```
 
@@ -95,7 +96,7 @@ is not a folder of the clone's `tools/` is never sent.
 
 When a pack leaves the composition, find each tool and plugin in the
 lockfile's `bootstrap:` block whose list of components holds only that
-pack's components. Send `bootstrap: remove tools […]` and
+pack's components. Send `bootstrap: remove […]` and
 `bootstrap: remove <scope> plugins […]` for those, through steps 2, 7, 8
 and 10, then drop their records. A tool or plugin that another component
 still needs keeps its record, without the removed components. A tool with

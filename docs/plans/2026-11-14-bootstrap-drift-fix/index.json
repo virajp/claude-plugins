@@ -104,10 +104,10 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-15T12:08:20.564Z",
-      "ended": "",
-      "commit": "",
+      "ended": "2026-11-15T12:15:52.798Z",
+      "commit": "05872512",
       "rounds": 2
     },
     {
