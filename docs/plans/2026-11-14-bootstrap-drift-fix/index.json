@@ -174,10 +174,10 @@
         "U4"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-15T12:16:49.621Z",
-      "ended": "",
-      "commit": "",
+      "ended": "2026-11-15T12:20:13.476Z",
+      "commit": "076e23f0",
       "rounds": 1
     },
     {
@@ -208,9 +208,9 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-15T12:16:49.547Z",
-      "ended": ""
+      "ended": "2026-11-15T12:20:13.560Z"
     },
     {
       "id": "W3",
