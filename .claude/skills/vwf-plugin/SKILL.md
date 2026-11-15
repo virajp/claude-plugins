@@ -464,7 +464,8 @@ checkout, a submodule its outermost superproject), its config layers (shipped
 defaults, then `~/.config/claude-status/config.json` whole, then `projectName`
 alone from the repo's `.config/claude-status.json`) and its colour resolve; the
 terminal draws them as claude-status's powerline, every other surface as
-`borderStyle: "round"` boxes with the private-use glyphs dropped. Then the
+text in each segment's `bg` color, a dim `·` between, with the private-use
+glyphs dropped. Then the
 plan's colored `Text` glyphs, its name, its open gaps and a `Monitor`
 `Button`, since a desktop `Button` draws one plain label; the last live plan
 stays with its final status until its row points under `docs/plans/archived/`

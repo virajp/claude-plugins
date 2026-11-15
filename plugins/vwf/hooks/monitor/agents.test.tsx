@@ -765,11 +765,16 @@ test(
     world(on);
     await $.session.start({ cwd: MAIN, surface: "desktop", isInteractive: true });
     const band = await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]);
-    // The desktop drops the Nerd Font glyph and draws a rounded block in claude-status's colors.
-    expect(await band.find({ type: "Text", text: /^repo$/ })).toBeDefined();
+    // The desktop drops the Nerd Font glyph and draws the name as text in the
+    // segment's color, with no box behind it.
+    const names = await band.findAll({ type: "Text", text: /^repo$/ });
+    expect(names.find((one) => one.props?.color !== undefined)?.props).toMatchObject({
+      color: "#98971a",
+      bold: true,
+    });
     const boxes = await band.findAll({ type: "Box" });
-    const block = boxes.find((one) => one.props?.borderStyle === "round");
-    expect(block?.props).toMatchObject({ backgroundColor: "#98971a", borderColor: "#98971a" });
+    expect(boxes.some((one) => one.props?.backgroundColor !== undefined || one.props?.borderStyle !== undefined))
+      .toBe(false);
     expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({ label: "Monitor" });
     expect(await band.find({ type: "Text", text: /^▰$/ })).toBe(undefined);
     await band.unmount();
