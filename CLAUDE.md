@@ -379,7 +379,11 @@ that folder's `index.json` — the copy in the run's worktree, else the main
 checkout's; `plan.mjs` stamps every `started` and `ended` as it sets a status —
 and from the plan's action log only each unit's agent, the log's freshness,
 which tells a live run from a paused one, and the open questions — a `question`
-event with no later `answer` — which show a run waiting for your answer. One
+event with no later `answer` — which show a run waiting for your answer. In any
+git repository its row above the prompt also names the project and the worktree
+as [claude-status](https://claude-status.virajp.dev) does, with a port of its
+logic in `hooks/monitor/project.ts` that reads claude-status's config files when
+they exist — the one place vwf knows that tool's name. One
 more script ships as a **stackgen pack payload** copied into a target repo
 rather than discovered here, covered by the [`stackgen-plugin`][sg] skill. The
 three host rules that bite any command hook — BSD `sed`, never in

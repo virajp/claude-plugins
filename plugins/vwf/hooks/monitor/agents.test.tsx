@@ -145,6 +145,8 @@ function world(on: On, init: Partial<World> = {}): World {
     closed: [],
     ...init,
   };
+  // The repo is a git checkout: the row above the prompt names it.
+  w.files[`${MAIN}/.git/HEAD`] ??= "ref: refs/heads/main\n";
   const ok = (stdout: string, exitCode = 0) => ({
     value: {
       exitCode,
@@ -172,6 +174,9 @@ function world(on: On, init: Partial<World> = {}): World {
     return ok("", 128);
   });
   on("fs.stat", (_, e) => {
+    if (Object.keys(w.files).some((one) => one.startsWith(`${e.path}/`))) {
+      return { value: { kind: "dir", size: 0, mtimeMs: 0, isLink: false } };
+    }
     const text = w.files[e.path];
     if (text === undefined) {
       throw new Error("ENOENT");
@@ -694,7 +699,7 @@ const BAND = {
 } as const;
 
 test(
-  "the row above the prompt follows the live plan with no opening, and shows Monitor alone with none",
+  "the row above the prompt follows the live plan with no opening, and shows the project and Monitor with none",
   async ($, on) => {
     const clock = mock.clock(on, { now: NOW });
     on("session.end", () => ({ sessionId: SESSION }));
@@ -739,17 +744,118 @@ test(
 );
 
 test(
-  "a repo with no plan index has no row above the prompt",
+  "outside a git repository there is no row above the prompt",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    const w = world(on, { cwd: "/elsewhere" });
+    delete w.files[`${MAIN}/.git/HEAD`];
+    await $.session.start({ cwd: "/elsewhere", surface: "desktop", isInteractive: true });
+    // The hook passes the band on: no project, no plan and no Monitor.
+    const band = await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]).catch(() => undefined);
+    expect(await band?.find({ key: "vwf-chip" })).toBe(undefined);
+    expect(await band?.find({ type: "Text" })).toBe(undefined);
+    await band?.unmount();
+  },
+);
+
+test(
+  "a git repo with no plan index shows its project block and Monitor",
   async ($, on) => {
     mock.clock(on, { now: NOW });
     world(on);
     await $.session.start({ cwd: MAIN, surface: "desktop", isInteractive: true });
-    let isPassed = false;
-    await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]).catch(() => {
-      // The hook passed, and in a test nothing sits beneath it.
-      isPassed = true;
+    const band = await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]);
+    // The desktop drops the Nerd Font glyph and draws a rounded block in claude-status's colors.
+    expect(await band.find({ type: "Text", text: /^repo$/ })).toBeDefined();
+    const boxes = await band.findAll({ type: "Box" });
+    const block = boxes.find((one) => one.props?.borderStyle === "round");
+    expect(block?.props).toMatchObject({ backgroundColor: "#98971a", borderColor: "#98971a" });
+    expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({ label: "Monitor" });
+    expect(await band.find({ type: "Text", text: /^▰$/ })).toBe(undefined);
+    await band.unmount();
+  },
+);
+
+test(
+  "in a worktree the terminal draws the project and worktree blocks as a powerline",
+  async ($, on) => {
+    mock.clock(on, { now: NOW });
+    const tree = `${MAIN}/.worktrees/feat`;
+    world(on, {
+      cwd: tree,
+      files: {
+        [`${MAIN}/.git/config`]: "[remote \"origin\"]\n\turl = git@github.com:acme/widget.git\n",
+        [`${MAIN}/.git/worktrees/feat/HEAD`]: "ref: refs/heads/feat\n",
+        [`${MAIN}/.git/worktrees/feat/commondir`]: "../..\n",
+        [`${tree}/.git`]: `gitdir: ${MAIN}/.git/worktrees/feat\n`,
+      },
     });
-    expect(isPassed).toBe(true);
+    await $.session.start({ cwd: tree, surface: "terminal", isInteractive: true });
+    const band = await $.ui.mount({ ...BAND, surface: "terminal" } as unknown as Parameters<typeof $.ui.mount>[0]);
+    expect((await band.find({ type: "Text", text: /^ \u{f09b} acme\/widget $/u }))?.props).toMatchObject({
+      color: "#fbf1c7",
+      backgroundColor: "#98971a",
+      bold: true,
+    });
+    expect((await band.find({ type: "Text", text: /^ \u{1f332} \u{f07b} feat $/u }))?.props).toMatchObject({
+      color: "#3c3836",
+      backgroundColor: "#d79921",
+    });
+    // The cap, then between the blocks the separator in the first block's color
+    // over the second's, then the closing one in the last block's color.
+    const seps = (await band.findAll({ type: "Text", text: /^[\u{e0b6}\u{e0b0}]$/u })).map((one) => one.props);
+    expect(seps).toMatchObject([
+      { color: "#98971a" },
+      { color: "#98971a", backgroundColor: "#d79921" },
+      { color: "#d79921" },
+    ]);
+    await band.unmount();
+  },
+);
+
+test(
+  "a landed plan keeps its chip with its open gaps until its folder is archived",
+  async ($, on) => {
+    const clock = mock.clock(on, { now: NOW });
+    const withGap = (text: string) => {
+      const value = JSON.parse(text);
+      value.gaps = [{ id: "G1", unit: "U1", stage: "", text: "a gap", state: "open" }];
+
+      return JSON.stringify(value);
+    };
+    const w = world(on, {
+      files: {
+        [`${MAIN}/docs/plans/index.json`]: plans([B, "RUNNING"]),
+        [`${MAIN}/docs/plans/${B}/index.json`]: withGap(plan(B, ["running"])),
+        [logOf(B)]: line("run.start", { mode: "fresh", session: "other" }),
+      },
+    });
+    await $.session.start({ cwd: MAIN, surface: "desktop", isInteractive: true });
+    const band = await $.ui.mount(BAND as unknown as Parameters<typeof $.ui.mount>[0]);
+    expect(await band.find({ type: "Text", text: /^b-plan$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^ · 1 gap$/ })).toBeDefined();
+    // It lands with its gap open: the chip stays.
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([B, "COMPLETE"]);
+    w.files[`${MAIN}/docs/plans/${B}/index.json`] = withGap(plan(B, ["green"], undefined, {
+      state: "COMPLETE",
+      detail: "",
+    }));
+    await clock.advance(5500);
+    expect(await band.find({ type: "Text", text: /^Complete$/ })).toBeDefined();
+    expect(await band.find({ type: "Text", text: /^ · 1 gap$/ })).toBeDefined();
+    // It is archived: the chip goes, and the project block and Monitor stay.
+    const archived = w.files[`${MAIN}/docs/plans/${B}/index.json`]!;
+    delete w.files[`${MAIN}/docs/plans/${B}/index.json`];
+    w.files[`${MAIN}/docs/plans/archived/${B}/index.json`] = archived;
+    w.files[`${MAIN}/docs/plans/index.json`] = plans([B, "COMPLETE"]).replace(
+      `docs/plans/${B}`,
+      `docs/plans/archived/${B}`,
+    );
+    await clock.advance(5500);
+    expect(await band.find({ type: "Text", text: /^b-plan$/ })).toBe(undefined);
+    expect(await band.find({ type: "Text", text: /^repo$/ })).toBeDefined();
+    expect((await band.find({ key: "vwf-chip" }))?.props).toMatchObject({ label: "Monitor" });
+    await band.unmount();
   },
 );
 

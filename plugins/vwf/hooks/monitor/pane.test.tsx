@@ -22,6 +22,7 @@ const unit = (id: string, title: string, wave: number, status: string) => ({
   ended: status === "pending" ? "" : "2026-10-25T09:50:00.000Z",
 });
 const FILES: Record<string, string> = {
+  [`${MAIN}/.git/HEAD`]: "ref: refs/heads/main\n",
   [`${MAIN}/docs/plans/index.json`]: JSON.stringify({
     format: 1,
     plans: [{
@@ -111,6 +112,9 @@ async function openPane(
     },
   }));
   on("fs.stat", (_, e) => {
+    if (Object.keys(FILES).some((one) => one.startsWith(`${e.path}/`))) {
+      return { value: { kind: "dir", size: 0, mtimeMs: 1, isLink: false } };
+    }
     const text = FILES[e.path];
     if (text === undefined) {
       throw new Error("ENOENT");

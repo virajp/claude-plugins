@@ -454,23 +454,30 @@ whole-percent
 `Box` parts on one axis (the engine refuses a fractional percent) with the unit
 id as the `Button`, and a `role: "dismiss"` Close; `drawList` draws the plan
 list
-on all surfaces, `drawChip` draws the `AbovePrompt` band from the `monitorLive`
-state, which
-`refreshLive` reads on its own 5 s timer in every session, separate from what
-the
-pane shows; the last live plan stays with its final status until `session.end`
-says `clear`: colored `Text` glyphs and the plan's name beside a `Monitor`
-`Button`,
-since a desktop `Button` draws one plain label, or the button alone, a
+on all surfaces, `drawChip` draws the `AbovePrompt` band from the
+`monitorIdentity` and `monitorLive` states, which `refreshLive` reads on its own
+5 s timer in every session, separate from what the pane shows; outside a git
+repository there is no band. On the left, `project.ts` gives the project block
+and, in a folder under one that matches `worktreePattern`, the worktree block: a
+port of claude-status's `git.rs` identity (a linked worktree names its main
+checkout, a submodule its outermost superproject), its config layers (shipped
+defaults, then `~/.config/claude-status/config.json` whole, then `projectName`
+alone from the repo's `.config/claude-status.json`) and its colour resolve; the
+terminal draws them as claude-status's powerline, every other surface as
+`borderStyle: "round"` boxes with the private-use glyphs dropped. Then the
+plan's colored `Text` glyphs, its name, its open gaps and a `Monitor`
+`Button`, since a desktop `Button` draws one plain label; the last live plan
+stays with its final status until its row points under `docs/plans/archived/`
+or `session.end` says `clear`. A
 `notify` in `register.tsx` raises the toast and the status
 line
 when a followed run changes, and
 `pane.test.tsx` mounts it on both. `plan.ts` beside it holds the parsers, the
 queue order and the
 replay, and strips terminal control characters from plan and log text before it
-renders; `plan.test.ts`, `pane.test.tsx`, `refresh.test.tsx` and
-`agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,
-`monitorQuiet`, `monitorViewing`, `monitorLive`, `monitorHasPlans`) sit under
+renders; `plan.test.ts`, `project.test.ts`, `pane.test.tsx`, `refresh.test.tsx`
+and `agents.test.tsx` are its tests. Its `$.state` keys (`monitorRun`,
+`monitorQuiet`, `monitorViewing`, `monitorLive`, `monitorIdentity`) sit under
 the plugin name `vwf` and are
 declared in `types/index.d.ts`, which the manifest's `types` key names. It ties
 an agent to a unit through the log: the Agent call's `tool.start` summary names
