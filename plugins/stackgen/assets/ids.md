@@ -60,8 +60,8 @@ project id; the `p:<id>:*` group takes the project id. A single-project
 repo whose name happens to spell its project id is a coincidence, not a
 rule, and nothing may read one to infer the other.
 
-The commit scopes are bootstrap's `commit_scopes`, in the same file. A
-plugin writes neither value.
+The commit scopes are bootstrap's `[tools.git].commit_scopes`, in the same
+file. A plugin writes neither value.
 
 ## Who applies it
 

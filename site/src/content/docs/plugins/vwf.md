@@ -1149,7 +1149,7 @@ and `/vwf:doctor`'s Forge state predicate reads it back from there. The
 protection
 is the same on both branches, always: **no force-push and no deletion**; then
 **per
-branch, from `[branch.<branch>].merge_model` in that repo's
+branch, from `[tools.git.branch.<branch>].merge_model` in that repo's
 `.config/bootstrap.toml`** — where the value is `pr`, additionally **a pull
 request
 required** (no approval count); where it is `direct` the merge tasks push the
@@ -1389,7 +1389,8 @@ either way; a declined row stays, and `/vwf:doctor` reports it as drift. Palace
 data on disk is never read, moved or deleted. The graphify and mempalace tool
 files — `.graphifyignore`, the `graphify-refresh` hook, the `pipx` pins, the
 `MEMPALACE_*` variables, the `graphify-out/` excludes — are not vwf's to remove:
-bootstrap's migration M24 or its `remove tools` instruction does, and doctor
+bootstrap's migration M24 or its `bootstrap: remove […]` instruction does, and
+doctor
 names that remedy.
 
 **`config_format` 25 adds `addons:`** and keeps what the repo has: `notion`
@@ -3498,10 +3499,11 @@ things are always agreed before anything is written:
   commit; the **wave gate**, run once after every wave; and the **plan gate**,
   run once over the finished tree. When the repo has them, the proposal is
   `mise x -- mise run code:format`, `mise x -- mise run code:lint` and
-  `mise x -- mise run code:precommit --all`, in that order: the cheap check
-  runs most often, and the full hook pass runs once, over every file — the
-  plan gate runs over the committed tree, where `code:precommit` alone checks
-  only uncommitted files. A folder with no plan gate runs its
+  `mise x -- mise run code:precommit`, in that order: the cheap check runs
+  most often, and the full hook pass runs once, over every file — the plan
+  gate runs the full hook pass over every file of the finished tree, because
+  `code:precommit` always runs pre-commit with `--all-files` and takes no
+  flag. A folder with no plan gate runs its
   wave gate once more at the end. `/vwf:execute` runs what is written and
   nothing it infers. Every unit gate and wave gate line has to be green
   **before wave 1**, since those gates run as the preflight too — so a check
@@ -3814,12 +3816,15 @@ submodule work and pointer updates), then removing it. It never pushes without
 your explicit request.
 
 Two details follow the task contract [`/vwf:init`](#vwfinit) lays down. The
-pre-commit gate runs **before staging**, over the working tree's changed files,
-so a fixup folds into the same commit instead of needing one of its own — the
+pre-commit gate runs **before staging**, running every hook over every file git
+tracks, with no flag — a new file is checked once it is `git add`-ed, or by the
+commit hook at commit — so a fixup folds into the same commit instead of needing
+one of its own — the
 sequence is `code:precommit`, then stage, then commit. And landing runs through
 `code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which obey
 the repo's landing model **per destination** —
-`[branch.develop].merge_model` for the first, `[branch.main].merge_model` for
+`[tools.git.branch.develop].merge_model` for the first,
+`[tools.git.branch.main].merge_model` for
 the
 second, in `.config/bootstrap.toml`: under `direct` they merge locally and
 push with `--follow-tags`, under `pr` they push the branch and open a pull

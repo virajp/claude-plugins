@@ -120,9 +120,10 @@ retired on 2026-10-23 with the pack keys they fed.
 (`setup:deps`, `code:format`, `code:lint`), pre-commit hooks and secrets setup
 of a repo are **bootstrap**'s — a separate repo, selected in
 `.config/bootstrap.toml` and synced by `mise run setup:configs`. The
-materializer reads a fresh shallow clone of bootstrap to choose the tools a
+materializer reads a fresh blobless clone (`--filter=blob:none`) of bootstrap to
+choose the tools a
 composition needs, from each component's `pack.yaml` facts and conventions, and
-sends `add tools` and `add user plugins` instructions through bootstrap's
+sends `add` and `add user plugins` instructions through bootstrap's
 `docs/sync/vwf.md`, behind their own consent line. It never edits
 `.config/bootstrap.toml` and never names a bootstrap tool from memory; it
 records what it asked for in the lockfile's `bootstrap:` block, so removal sends

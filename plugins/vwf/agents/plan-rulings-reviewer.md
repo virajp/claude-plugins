@@ -66,10 +66,10 @@ tree.
       unit's `owns`, and outside the docs unit's reach, is a gap naming the
       `file:line`.
 - [ ] **Gates and order.** Each gate line runs as written — the task exists
-      (`mise tasks`), its flags exist, a `mise run <task>` with flags carries
-      the `--` separator. A commit order a checker, a generator or a
-      pre-commit hook will refuse — one unit's commit that is invalid until a
-      later unit lands — is a gap.
+      (`mise tasks ls --hidden`), its flags exist, a `mise run <task>` with
+      flags carries the `--` separator. A commit order a checker, a generator
+      or a pre-commit hook will refuse — one unit's commit that is invalid
+      until a later unit lands — is a gap.
 - [ ] **Unverified outside facts.** A ruling that rests on a fact about a tool,
       a registry, a platform or an upstream file — a release asset exists, a
       flag is accepted, a default value — that the survey facts do not record

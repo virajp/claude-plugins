@@ -675,7 +675,7 @@ than something that rides the landing:
   The repo selects bootstrap's tools in `.config/bootstrap.toml`, and
   `mise run setup:configs` syncs their files. The materializer reads a fresh
   clone of bootstrap to choose the tools a composition needs, and sends
-  `add tools` and `add user plugins` instructions through bootstrap's
+  `add` and `add user plugins` instructions through bootstrap's
   `docs/sync/vwf.md`, behind their own consent line; it never edits
   `.config/bootstrap.toml` itself, and it records what it asked for in the
   lockfile's `bootstrap:` block. A pack names its own Claude plugin in a

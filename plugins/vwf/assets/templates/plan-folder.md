@@ -87,7 +87,7 @@ A change plan:
   "gates": {
     "unit": ["mise x -- mise run code:format"],
     "wave": ["mise x -- mise run code:lint"],
-    "plan": ["mise x -- mise run code:precommit --all"],
+    "plan": ["mise x -- mise run code:precommit"],
     "keeps": [
       { "id": "K1", "check": "<what a diff cannot prove>", "pass": "<its pass condition>" }
     ]

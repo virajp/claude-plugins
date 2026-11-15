@@ -307,11 +307,12 @@ user-facing reference is `site/src/content/docs/installer/`, published at
 **`develop` takes the work; `main` is what users read** — Claude resolves the
 marketplace against the default branch, so `main` stays default and PRs target
 `develop`. `main` is merge-only, enforced by pre-commit locally and a ruleset
-remotely. The landing model is **per branch** — `[branch.<branch>].merge_model`
+remotely. The landing model is **per branch** —
+`[tools.git.branch.<branch>].merge_model`
 in `.config/bootstrap.toml`, `direct` or `pr`, a missing file or key reading
 `direct`. A release task bumps, commits on `develop`, merges to `main` with
 `code:merge:main`, and only then tags — so `main` stays merge-only; that full
-sequence refuses unless `[branch.main].merge_model` is `direct`.
+sequence refuses unless `[tools.git.branch.main].merge_model` is `direct`.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:

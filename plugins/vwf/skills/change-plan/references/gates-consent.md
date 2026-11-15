@@ -12,16 +12,16 @@ them from the survey's gate list: the repo's task runner tasks, the capabilities
 the `harness:` stamp records, and the checks CI already runs over the touched
 trees. Confirm them.
 
-| List         | `/vwf:execute` runs it                   | Default, when `mise tasks ls` lists it    |
-| ------------ | ---------------------------------------- | ----------------------------------------- |
-| `gates.unit` | once before each unit's commit           | `mise x -- mise run code:format`          |
-| `gates.wave` | once before wave 1, and after every wave | `mise x -- mise run code:lint`            |
-| `gates.plan` | once over the finished tree              | `mise x -- mise run code:precommit --all` |
+| List         | `/vwf:execute` runs it                   | Default, when `mise tasks ls --hidden` lists it |
+| ------------ | ---------------------------------------- | ----------------------------------------------- |
+| `gates.unit` | once before each unit's commit           | `mise x -- mise run code:format`                |
+| `gates.wave` | once before wave 1, and after every wave | `mise x -- mise run code:lint`                  |
+| `gates.plan` | once over the finished tree              | `mise x -- mise run code:precommit`             |
 
 - The cheap check runs most often, and the full hook pass runs once.
-- The plan gate takes `--all` because it runs over the finished, committed tree.
-  Without it, `code:precommit` checks only uncommitted files, and on a clean
-  tree it checks nothing.
+- The plan gate runs the full hook pass over every file of the finished tree,
+  because `code:precommit` always runs pre-commit with `--all-files`; it takes
+  no flag.
 - Put a check that runs the whole hook pass or a slow test suite in the plan
   gate, not the wave gate.
 - A check that only holds once a particular unit has landed is not a wave-gate

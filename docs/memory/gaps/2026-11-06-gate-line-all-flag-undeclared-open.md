@@ -1,7 +1,7 @@
-GAP 2026-11-05 ★2 | plan gate line code:precommit --all | open — planners write
-`--all`, but the synced task no longer declares that flag and always runs
-`--all-files` — the gate still passes, but earlier plans rested on a declared
-flag | not fixed
+GAP 2026-11-05 ★2 | plan gate line code:precommit --all | resolved 2026-11-14
+by 2026-11-14-bootstrap-drift-fix (B118) — planners write `--all`, but the
+synced task no longer declares that flag and always runs `--all-files` — the
+gate still passes, but earlier plans rested on a declared flag
 
 **Source plan** `2026-11-05-change-plan-pilot`, `2026-10-26-plan-mjs-rewave`,
 `2026-10-25-action-log-per-plan`
@@ -16,6 +16,5 @@ History:
 - Today `.config/mise/tasks/code/precommit` (synced from bootstrap) has no usage
   line for `--all`. It always runs `pre-commit run --all-files`.
 
-Open: the planner text and the template still write `--all`. The flag reaches
-the script as an unused argument. Fix the source in the template and the
-planners, or ask bootstrap to declare the flag.
+Resolved: the planners and the template write `code:precommit` with no flag,
+and the planners read the task list with `mise tasks ls --hidden`.

@@ -181,7 +181,8 @@ on one further consent for the whole product: it sets each eligible repo's
 default
 branch on the forge, protects `develop` and `main` there — no force-push, no
 deletion, and a pull request required on each branch whose
-`[branch.<branch>].merge_model` reads `pr`; a branch already protected in any
+`[tools.git.branch.<branch>].merge_model` reads `pr`; a branch already protected
+in any
 form
 is left exactly as it is — and reaches the backlog skill's missing-project
 procedure for the base. Those three are the only forge settings it touches; a
