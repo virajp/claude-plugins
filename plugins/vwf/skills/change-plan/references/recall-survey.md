@@ -56,9 +56,9 @@ request:
   `docs/blueprint/registry.yaml` when the repo has one. Otherwise take the
   repo's top-level directories as the projects.
 - The gates that already cover those trees: the task runner's list
-  (`mise tasks`), the `harness:` stamp in `.config/vwf.yaml` when one is stamped
-  (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` is the vocabulary), and the CI
-  workflow files.
+  (`mise tasks ls --hidden`), the `harness:` stamp in `.config/vwf.yaml` when
+  one is stamped (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` is the
+  vocabulary), and the CI workflow files.
 - The docs that describe the current behaviour: the README, `CLAUDE.md`,
   `docs/`, and any per-project README or home doc.
 - The third-party dependencies each tree already has — a unit can then reuse
