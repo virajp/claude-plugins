@@ -163,6 +163,25 @@ repo. The phase table and the release references above match them.
   fetch fails, they use a clone less than 7 days old, else they exit 5. This
   reverses the 7-day skip of R1a D23 and D52.
 
+## Amendments 2026-11-15 (R1c and R2c)
+
+These rulings come from the bootstrap plan folders
+`docs/plans/2026-11-14-task-ports` (R1c) and
+`docs/plans/2026-11-14-plugins-setup-ai` (R2c).
+
+- **The test ports (R1c D1, D2).** R1c makes `test`, `test:e2e` and
+  `test:golden` exist: the mise tool ships a dispatcher for each, which runs
+  the `NN-<name>` parts of a tool or of the repo, and prints one line and
+  exits 0 with no part. R2 adds the `git:*` ports and `code:lsp:check`.
+- **No deploy port (R1c D5).** `p:<id>:deploy` is not a port of every
+  shaped repo: it exists for an id only when a task for that id exists, which
+  `describe` reports. This amends the port list of the contract section.
+- **No plugin verb (R2c D2, D6).** `add` and `remove` take a tool only.
+  The `claude` tool declares plugins in its `plugins.user` and
+  `plugins.project` keys, and `mise run setup:ai` installs them;
+  `bootstrap add tool virajp-plugins` adds the vwf plugin entries. This
+  amends the command list of the contract section.
+
 ## Amendment 2026-11-15 (R5 brainstorm)
 
 The user stopped the first R5 interview: "packs go" was read as "bundles go
