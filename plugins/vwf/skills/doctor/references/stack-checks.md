@@ -532,7 +532,7 @@ either — and check, **in the repo the id belongs to**, for each project whose
 pinned pack ships `p/_project/` tasks — read from the pack's tree as (a) locates
 it — that a task directory `.config/mise/tasks/p/<slug>/` exists. A project with
 no such pack is not a finding. Commit scopes are not checked here: they are
-bootstrap's `commit_scopes`, and (d) covers them.
+bootstrap's `[tools.git].commit_scopes`, and (d) covers them.
 
 Each miss is one drift row naming the repo, the project and the slug that was
 expected, remedy `/vwf:setup`. The reverse direction is a row too: a
@@ -567,23 +567,35 @@ config as it does, and the trust gate of mise is not tied to file content, so a
 repo trusted once runs whatever its `setup:configs` task holds on the branch
 checked out now.
 
-In a trusted repo, from its root, run `mise run setup:configs --dry-run`,
+In a trusted repo, from its root, run
+`env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`,
 bootstrap's own done-check. This explicit dry-run writes nothing in the
 repository, but it does run code: the repo's own `setup:configs` task, which
 refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and executes
 the `main` branch of bootstrap from that clone, with no pin. It is the only
-bootstrap command doctor runs. Judge it by
-its exit code and its stderr, where it prints its lines, each with the prefix
-`repo-sync:`. After that prefix, a line that starts with `would` — `would
-update`, `would remove`, `would chmod`, `would set bootstrap_commit` — is a
-change; a line that reads `unchanged`, `kept seed` or `skip` is not:
+bootstrap command doctor runs. Judge it by its exit code and its stderr. Its
+last line is the headline, after a glyph or an `[OK]` tag:
+`Dry run: no file would change` or `Dry run: <n> file(s) would change`,
+matched as the start of that line, so count suffixes such as
+` · 161 unchanged` after it change nothing. Above it, the list lines —
+`would change`, `would add`, `would seed`, `would remove` — name the files,
+and an info line `bootstrap_commit would change to <commit>` names a new
+commit:
 
-- **Exit 0 and no `would` line** — no drift, and no row.
-- **Exit 0 and a `would` line** — one drift row naming the repo, with those
-  lines under it, remedy `/vwf:setup reshape`.
-- **Exit 5, or any other failure** — drift **unknown**: one `warning` naming the
-  repo and the reason, the exit status and the last line on stderr. It is never
-  a drift row and never a guessed one.
+- **Exit 0, `Dry run: no file would change` and no
+  `bootstrap_commit would change to` line** — no drift, and no row.
+- **Exit 0 with a headline of one or more files, or a
+  `bootstrap_commit would change to` line** — one drift row naming the repo,
+  with those list and info lines under it, remedy `/vwf:setup reshape`.
+- **Exit 0 and no `Dry run:` headline** — drift **unknown**: one `warning`
+  naming the repo, the reason "no Dry run headline: the repo's setup:configs
+  runs an older sync engine; run bootstrap init", and the exit status.
+- **Any exit code other than 0** — drift **unknown**: one `warning` naming the
+  repo and the reason, the exit status and the last bootstrap error line (it
+  starts with `✗` or `[ERROR]`) with its fix line (`→ …`) when one follows,
+  word for word, or, with no such line, the last line on stderr.
+
+Drift unknown is never a drift row and never a guessed one.
 
 This covers every file bootstrap syncs, so none of them is hashed here.
 
@@ -671,13 +683,13 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) Merge model.** In **each** repo, read `merge_model` of every `[branch.*]`
-table in that repo's own `.config/bootstrap.toml`. A value other than `direct`
-or `pr` is one `warning` naming the repo, the table and the value, remedy: fix
-the value in `.config/bootstrap.toml`. The repo's merge tasks read any such value
-as `direct`, so what breaks quietly is the repo that meant `pr` and has been
-landing that branch locally ever since. An absent key means `direct`, bootstrap's
-own default, and is no row.
+**(f) Merge model.** In **each** repo, read `merge_model` of every
+`[tools.git.branch.*]` table in that repo's own `.config/bootstrap.toml`. A
+value other than `direct` or `pr` is one `warning` naming the repo, the table
+and the value, remedy: fix the value in `.config/bootstrap.toml`. The repo's
+merge tasks read any such value as `direct`, so what breaks quietly is the
+repo that meant `pr` and has been landing that branch locally ever since. An
+absent key means `direct`, bootstrap's own default, and is no row.
 
 **(g) Forge state.** The one sub-check that reads the **remote** rather than
 the checkout. `/vwf:init`'s **forge pass** — run once for the product, after
@@ -722,9 +734,9 @@ allowed to read. Otherwise, three checks:
   branch. Where protection exists but lacks one of the rules the pass would
   have set — **no force-push and no deletion**, always; **a pull request
   required** when that branch's own value reads `pr` —
-  `[branch.develop].merge_model` for `develop`, `[branch.main].merge_model` for
-  `main`, in that repo's `.config/bootstrap.toml`, a missing file or key reading
-  `direct` (on
+  `[tools.git.branch.develop].merge_model` for `develop`,
+  `[tools.git.branch.main].merge_model` for `main`, in that repo's
+  `.config/bootstrap.toml`, a missing file or key reading `direct` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and
   `required_pull_request_reviews`; on GitLab `allow_force_push` and a

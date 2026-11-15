@@ -408,7 +408,8 @@ told `docs/sync` to commit its sync or to leave it for review; the commit step
 reads which it was.
 
 **Green, per repo, once the step ends.** Green means the repository has
-`.config/bootstrap.toml` and `mise run setup:configs --dry-run` shows no change.
+`.config/bootstrap.toml` and
+`env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run` shows no change.
 Here, once the step ends, that dry-run runs code inside `init`'s one consent: it
 writes nothing in the repo, but the repo's own `setup:configs` task refreshes
 bootstrap's clone under `~/.cache/bootstrap` and executes the `main` branch of
@@ -421,21 +422,32 @@ run in that repo, lists a path inside the repo, and every such line reads
 **drift unknown**, with the reason `repo not trusted by mise`. That check is a
 limit, not a safeguard: it stops only a clone mise has never run.
 
-Read that command by its exit code and its **stderr**, where it prints each line
-with the prefix `repo-sync:`:
+Read that command by its exit code and its **stderr**. Its last line is the
+headline, after a glyph or an `[OK]` tag: `Dry run: no file would change` or
+`Dry run: <n> file(s) would change`, matched as the start of that line, so count
+suffixes such as ` · 161 unchanged` after it change nothing. Above it, the list
+lines — `would change`, `would add`, `would seed`, `would remove` — name the
+files, and an info line `bootstrap_commit would change to <commit>` names a new
+commit:
 
-- After that prefix, a line that starts with `would` — `would update`,
-  `would remove`, `would chmod`, `would set bootstrap_commit` — is a change.
-  Lines that read `unchanged`, `kept seed` or `skip` are not.
-- Exit 0 and no `would` line is **no drift**: green.
-- A `would` line is **drift**: not green.
-- Exit 5, or any other failure, is **drift unknown**: not green.
+- Exit 0, `Dry run: no file would change` and no
+  `bootstrap_commit would change to` line is **no drift**: green.
+- Exit 0 with a headline of one or more files, or a
+  `bootstrap_commit would change to` line, is **drift**: not green, and the
+  report lists those lines.
+- Exit 0 with no `Dry run:` headline is **drift unknown**: not green, with the
+  reason "no Dry run headline: the repo's setup:configs runs an older sync
+  engine; run bootstrap init".
+- Any exit code other than 0 is **drift unknown**: not green, with the reason
+  the exit code, the last bootstrap error line (it starts with `✗` or
+  `[ERROR]`) and its fix line (`→ …`) when one follows, word for word, or,
+  with no such line, the last line on stderr.
 
 **Then `.config/stackgen.yaml`.** In each repository, base and each member, that
 has the file and is green, delete it with plain `rm`, on the line the one plan
 carried for it. The deletion rides `init`'s own commit in that repository. `init`
 reads no value from the file and carries none over: bootstrap's `docs/sync`
-decides `[branch.*].merge_model` during adoption, members stay in
+decides `[tools.git.branch.*].merge_model` during adoption, members stay in
 `.config/vwf.yaml`, and the forge is read live. A repository that is not green
 keeps the file, and the report names it with its reason.
 

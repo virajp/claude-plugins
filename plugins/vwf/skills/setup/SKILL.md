@@ -116,7 +116,8 @@ it that carries `.config/stackgen.yaml` or an older layout —
 that marked it. Second, is it **current**, evaluated **per repo** on that repo's
 own artifacts by two predicates under **"The repo shape against its baseline"**
 in `/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
-drift**: `mise run setup:configs --dry-run`, run in that repo, shows no change.
+drift**: `env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`, run in
+that repo, shows no change.
 This explicit dry-run writes nothing in the repository, but it runs code: the
 repo's own `setup:configs` task, which refreshes bootstrap's clone under
 `~/.cache/bootstrap` and executes the `main` branch of bootstrap from that clone
@@ -126,11 +127,20 @@ such line reads `trusted`. A parent's line does not count. Otherwise drift is
 unknown, with the reason `repo not trusted by mise`. That check is a limit, not
 a safeguard: it stops only a clone mise has never run, and the trust gate of
 mise is not tied to file content, so a repo trusted once runs whatever its task
-holds now. The dry-run prints on
-stderr, each line prefixed `repo-sync:`; after the prefix, a line
-starting `would` is a change, and `unchanged`, `kept seed` or `skip` are not.
-No `would` line and exit 0 is no drift. A listed change is drift. Exit 5 or any
-other failure is unknown too. **Unknown**, either way: say setup could not check
+holds now. The dry-run prints on stderr; its last line is the headline, after
+a glyph or an `[OK]` tag, matched as the start of that line:
+`Dry run: no file would change` or `Dry run: <n> file(s) would change`, count
+suffixes such as ` · 161 unchanged` aside. Exit 0,
+`Dry run: no file would change` and no `bootstrap_commit would change to`
+line is no drift. Exit 0 with a headline of one or more files, or a
+`bootstrap_commit would change to` line, is drift; the list lines —
+`would change`, `would add`, `would seed`, `would remove` — name the files.
+Exit 0 with no `Dry run:` headline is unknown too, with the reason
+"no Dry run headline: the repo's setup:configs runs an older sync engine; run
+bootstrap init". Any exit code other than 0 is unknown too, with the reason the
+exit code, the last bootstrap error line (it starts with `✗` or `[ERROR]`) and
+its fix line (`→ …`) when one follows, word for word, or, with no such line,
+the last line on stderr. **Unknown**, either way: say setup could not check
 drift in that repo, with the reason, and continue as current. **Forge state**:
 the default branch as chosen, both branches protected, and the base's backlog project present,
 read from the forge when its CLI is on `PATH` and logged in, else not checked.

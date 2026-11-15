@@ -253,7 +253,7 @@ each with its remedy:
 | a `memory:` block (`memory.wing`) in `.config/vwf.yaml` | plain `/vwf:setup` — its migrate pipeline's `23 → 24` step |
 | a `mempalace.yaml`, at any depth | the same `/vwf:setup` step |
 | a `docs/memory/planning/`, `docs/memory/runs/` or `docs/memory/doctor/` folder | the same `/vwf:setup` step |
-| a `.graphifyignore` | bootstrap's migration M24, or its `remove tools` instruction |
+| a `.graphifyignore` | bootstrap's migration M24, or its `bootstrap: remove […]` instruction |
 | a `code:graph` task | the same bootstrap remedy |
 | a `graphify-refresh` hook in the pre-commit config | the same bootstrap remedy |
 | a `post-commit` or `post-merge` entry in `default_install_hook_types` that no remaining hook in that config uses | the same bootstrap remedy |

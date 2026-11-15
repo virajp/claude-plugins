@@ -124,9 +124,10 @@ rather than filled here. Every other occurrence is the origin URL, per the table
 
 Retired. The ignore file is bootstrap's git tool, a shared superset — a pattern
 for a tree the repo never produces matching nothing — so no language template is
-fetched and none is asked for, by `init` or by a pack. A repo's own ignore lines
-are `[overrides.gitignore]` in its `.config/bootstrap.toml`, which `docs/sync`
-keeps; `init` reads and writes neither.
+fetched and none is asked for, by `init` or by a pack. A line the repo adds goes
+into its `.gitignore` directly; a line of the shared `.gitignore` the repo drops
+is a `[tools.git.files.".gitignore"]` entry with `"$mode" = "remove"` in its
+`.config/bootstrap.toml`; `init` reads and writes neither.
 
 ## 6 — The project ids
 
@@ -372,8 +373,9 @@ built from these reads, in this order:
   the record, and doctor's Forge state predicate reads it back from there.
 - **The protection, each of `main` and `develop` the repo has, always**: no
   force-push and no deletion. Then **per branch, from that branch's own value** —
-  `merge_model` of `[branch.develop]` for `develop` and of `[branch.main]` for
-  `main`, in that repo's `.config/bootstrap.toml`, a missing file or key reading
+  `merge_model` of `[tools.git.branch.develop]` for `develop` and of
+  `[tools.git.branch.main]` for `main`, in that repo's
+  `.config/bootstrap.toml`, a missing file or key reading
   `direct`: where the value is **`pr`**, additionally **require a pull request**,
   with no approval count, because the landing model says that branch lands through
   a request, so a direct push to it is exactly what the forge should refuse.
