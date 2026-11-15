@@ -1,0 +1,676 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R4b — vwf.yaml format 28: the slim stack, capabilities from tasks, project folders and languages from bootstrap",
+  "requires": [
+    "2026-11-15-config-format-27"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-15 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- pnpm vitest run"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "claude plugin test plugins/vwf"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnE over plugins/vwf/ for: backing_template|deploy_template|package_manager|stack\\.languages|^harness:",
+        "pass": "No hit, except a passage that names an earlier format as history (D23): plugins/vwf/skills/setup/references/format-lineage.md, the 27-to-28 migration step, and the history passages of plugins/vwf/assets/vwf-config.md; and the pack payload shape in plugins/vwf/assets/stack-adapter.md (D32). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "config_format 28 slims the project stack, drops the workspace harness and repo.stack other than its pin, and moves the project folder to bootstrap (blueprint_format 26); setup migrates every vwf repo."
+    },
+    {
+      "id": "stackgen",
+      "level": "PATCH",
+      "reason": "stackgen reads services and deploy in place of backing_template and deploy_template."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes config_format 28 and its migration."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The format 28 schema and the assets",
+      "wave": 1,
+      "file": "01-assets.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/vwf-config.md",
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/assets/harness.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/capability-vocabulary.md",
+        "plugins/vwf/assets/templates/registry.yaml",
+        "plugins/vwf/assets/examples/blueprint/registry.yaml",
+        "plugins/vwf/assets/topologies/monorepo.md",
+        "plugins/vwf/agents/execute-acceptance-verifier.md",
+        "plugins/vwf/agents/plan-surveyor.md",
+        "plugins/vwf/agents/execute-ux-reviewer.md",
+        "plugins/vwf/assets/blueprint-format",
+        "plugins/vwf/agents/architecture-writer.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "setup migrates format 27 to 28",
+      "wave": 1,
+      "file": "02-setup.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "The prose readers",
+      "wave": 1,
+      "file": "03-readers.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/architecture/**",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/**",
+        "plugins/vwf/skills/plan/references/delta-checks.md",
+        "plugins/vwf/skills/change-plan/references/recall-survey.md",
+        "plugins/vwf/skills/change-plan/references/gates-consent.md",
+        "plugins/vwf/skills/verify/SKILL.md",
+        "plugins/vwf/skills/execute/SKILL.md",
+        "plugins/vwf/skills/execute/references/**",
+        "plugins/vwf/skills/blueprint/**",
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/git-workflow/references/worktree-setup.md",
+        "plugins/vwf/skills/execute/workflows/folder.md",
+        "plugins/vwf/skills/execute/workflows/all.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "The scripts",
+      "wave": 1,
+      "file": "04-scripts.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/scripts/**",
+        "plugins/vwf/skills/execute/scripts/start.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/queue.mjs",
+        "plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/execute-start.test.ts",
+        "scripts/src/plan-queue.test.ts",
+        "scripts/src/plan-yaml.test.ts",
+        "scripts/src/fixtures/doctor-checks/**",
+        "scripts/src/fixtures/plan-queue/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "stackgen reads the new key names",
+      "wave": 1,
+      "file": "05-stackgen.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/stackgen-stack-template/**",
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/assets/pack-format.md",
+        "plugins/stackgen/assets/taxonomy.md",
+        "plugins/stackgen/assets/kinds.md",
+        "plugins/stackgen/assets/contracts/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Review: the scripts",
+      "wave": 2,
+      "file": "06-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "reviews the committed code of U4",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U7",
+      "title": "Docs",
+      "wave": 3,
+      "file": "07-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/",
+        ".claude/skills/",
+        "site/src/content/docs/"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6"
+      ],
+      "waits": "docs-sync reads the delta of waves 1 and 2",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U8",
+      "title": "Gates",
+      "wave": 4,
+      "file": "08-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U7"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-1 unit falsifies passages in the same docs",
+      "owner": "U7"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/vwf/assets/vwf-config.md (the format 28 schema)",
+      "why": "U2 to U5 cite it",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How R4 splits.",
+      "ruling": "Two plans, two formats: R4a is format 27; this plan, R4b, is format 28.",
+      "rejected": "One plan, one format.",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "The workspace harness block goes; bootstrap describe reports only the ports test:e2e and test:golden.",
+      "ruling": "Derive from tasks (Recommended): a capability is present when its task exists; ports from bootstrap describe, the other names from mise tasks ls in the repo. No record in vwf.yaml.",
+      "rejected": "Keep the non-port keys; ask bootstrap for more ports first.",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "bootstrap has no per-tool projects list (ST2).",
+      "ruling": "Bootstrap plan first: bootstrap R2d (docs/plans/2026-11-15-projects in bootstrap) adds [projects.<name>] with folder in repo.toml, a projects list per tool, found by detect, and a category per tool in describe. It ships in bootstrap 4.0.0.",
+      "rejected": "Repo-wide for now; keep the keys in format 28.",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "registry.yaml path duplicates bootstrap's project folder.",
+      "ruling": "Move it in R4b (Recommended): the migration sets repo.projects.<name>.folder from registry path, path leaves registry.yaml (a blueprint_format bump), and every reader gets the folder with bootstrap config get.",
+      "rejected": "A separate plan; keep both.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "The values of backing_template and deploy_template.",
+      "ruling": "Rename only (Recommended): backing_template → services, deploy_template → deploy; the slug values stay; R5 decides what an entry means without packs.",
+      "rejected": "Plain names now.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "What a language is in format 28.",
+      "ruling": "The bootstrap tool name (Recommended): a language is a linked bootstrap tool of category languages (node, go, ...). stack-vocabulary.md and the readers use that name; the known/unknown check against a template's language_facts moves to R5 with the packs.",
+      "rejected": "Map tool to token; defer languages to R5.",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "How the 27 to 28 migration treats languages and package_manager.",
+      "ruling": "Detect, then drop (Recommended): set repo.projects.<name>.folder from registry path; run bootstrap detect --json and, on the user's yes, detect --add --yes; report each project with no linked language tool, with the fix (bootstrap add tool <t>); then remove both keys.",
+      "rejected": "Detect, stop on a gap.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Stated by the planner, confirmed at the shape gate: the format 28 schema.",
+      "ruling": "projects.<p>.stack keeps template (until R5), frameworks, dependencies, services, deploy, os, note; it loses languages and package_manager. repo.stack keeps only template. The workspace harness block goes; projects.<p>.harness.health stays.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Stated by the planner, confirmed at the shape gate: the language and package-manager read.",
+      "ruling": "bootstrap describe --json, run in the repo that holds the project: the data.tools entries of category languages or package-managers whose projects list names the project.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Stated by the planner, confirmed at the shape gate: the capability read.",
+      "ruling": "A port capability is describe data.ports[].present; any other capability is a task name in mise tasks ls --json. harness.md maps each capability to its task name.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Stated by the planner, confirmed at the shape gate: the registry.",
+      "ruling": "blueprint_format 26 and vwf_registry 3 remove path. A project's folder is bootstrap config get repo.projects.<name>.folder --json, run in its repo: projects.<p>.repo (R4a), else the base repo.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Stated by the planner, confirmed at the shape gate: the 27 to 28 step, per repo.",
+      "ruling": "Set the project folders (D4); detect (D7); report a project with no linked language tool; rename the two keys; remove languages, package_manager, repo.stack.package_manager, repo.stack.tools and harness; set config_format 28 and blueprint_format 26; run bootstrap sync --json; commit as R4a does (members first). A failed bootstrap call stops that repo's step with bootstrap's errors.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Stated by the planner, confirmed at the shape gate: stackgen.",
+      "ruling": "stackgen's readers use services and deploy. Pack data (a pack's languages: frontmatter, its package-manager facts) stays until R5.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Stated by the planner, confirmed at the shape gate: the release levels.",
+      "ruling": "vwf MAJOR, stackgen PATCH, site MINOR, installer NONE.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D15",
+      "decision": "Stated by the planner, confirmed at the shape gate: the gates.",
+      "ruling": "The gates of R4a. K1 greps plugins/vwf/ for backing_template, deploy_template, package_manager, stack.languages and a top-level harness: key.",
+      "rejected": "",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 1 gap 1: plugins/vwf/assets/blueprint-format holds 25, and no unit owns it.",
+      "ruling": "U1 owns it and sets it to 26.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 1 gap 2: agents/architecture-writer.md writes the registry path and vwf_registry: 2, unowned.",
+      "ruling": "U1 owns it; the agent writes no path and writes vwf_registry: 3.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 1 gap 3: does the unknown-language rule stay now?",
+      "ruling": "Remove the unknown-language rule (doctor lib/stack.mjs) and start.mjs --continue-unknown-language now: template tokens and bootstrap tool names cannot be compared. Doctor reports a project with no linked language tool as drift. The per-language walk uses the tool name. U3 also owns execute/workflows/folder.md and all.md.",
+      "rejected": "Keep it until R5.",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 1 gap 4: the task name of each capability, and the command.",
+      "ruling": "Fixed names: dev → dev; e2e_local → port test:e2e; local_stack → stack:up; e2e_staging → test:e2e:staging; goldens → port test:golden; test:load → test:load; screenshots → screenshots. health stays per project (projects.<p>.harness.health). The command is mise tasks ls --json --no-global --hidden (bootstrap R1b D27). A non-canonical name is no longer supported; the migration reports each one the old harness block recorded, so the user renames that task.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 1 gap 5: the registry path is base-relative, the folder repo-relative.",
+      "ruling": "Strip the holding member's folder prefix; a path equal to it becomes '.'. A path outside every repo stops that repo's step with a question. A name that is not kebab case stops the step with a report. An existing entry at another folder asks which to keep (R4a D3). An entry at the same folder under another name takes vwf's name: set the new name, move its tool links (config set tools.<t>.projects), then unset the old name.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 1 gap 6: the iac rule resolves project.path from the base.",
+      "ruling": "An iac project whose folder in its own repo is not '.' is not its own repo: that is the finding, with the same waiver.",
+      "rejected": "Drop the rule.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 1 gap 7: do the doctor tests run the real mise?",
+      "ruling": "No: the tests stub mise on PATH, as bootstrap is stubbed.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 2 gap 1: vwf-config.md history passages of formats 13, 15, 16 and 19 name the old keys; K1 and U1 have different exceptions.",
+      "ruling": "K1 and U1 share one exception: a passage that names an earlier format as history is an allowed hit; the run report lists each one.",
+      "rejected": "Rewrite the history.",
+      "units": [
+        "U1",
+        "U8"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Round 2 gap 2: which repo runs mise tasks ls and the describe port read.",
+      "ruling": "The repo that holds the project whose platform needs the capability.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 2 gap 3: a missing mise or a failed mise tasks ls; needsMise loses its harness input.",
+      "ruling": "A failed mise call is a refusal, as a failed bootstrap call is. needsMise (doctor lib/stack.mjs) keys on the pins alone.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 2 gap 4: a registry project with no repo.projects.<name>.",
+      "ruling": "A drift row for that project, with the fix bootstrap config set repo.projects.<name> '{\"folder\":\"<path>\"}' --json; start.mjs skips that project.",
+      "rejected": "Refuse the whole run.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 2 gap 5: some projects have no language tool by nature.",
+      "ruling": "No drift row when every platform of the project is iac, cicd or misc; the migration report (D12 step 3) skips them the same way.",
+      "rejected": "",
+      "units": [
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Round 3 gap 1: drift is not a doctor severity; rows use blocking, degraded and info.",
+      "ruling": "The D18 row (no linked language tool) and the D26 row (no repo.projects.<name>) are both degraded. A degraded row never stops /vwf:execute.",
+      "rejected": "",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Round 3 gap 2: the JSON paths of bootstrap describe --json (data.tools shape, projects, ports) are not fixed by the bootstrap plans; a stub cannot catch a wrong path.",
+      "ruling": "Before U4 writes code, it runs the real bootstrap describe --json (4.0.0, from the hand step) in a scratch repo, and records in its DECIDED line the exact paths of the tool category, the tool projects and the port presence. The stub copies that real shape.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 3 gap 3: members migrate first; a failed member step still lets the base step remove the registry path, so a re-run loses that member's folders.",
+      "ruling": "The base repo's step 6 and its stamps run only after every member step succeeds. If a member step fails, the base step stops too.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 3 gap 4: /vwf:architecture runs config set repo.projects.<name> for a new project whose folder does not exist yet; bootstrap check then exits 2 (R2d D10).",
+      "ruling": "Architecture writes the entry only when the folder exists. Otherwise the plan unit that creates the folder also runs the config set, and plan/references/delta-checks.md says so. Until then the D26 degraded row reports the missing entry.",
+      "rejected": "Create the folder at architecture time.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 4 gap 1: K1 flags package_manager: and harness: in the template payload block of stack-adapter.md; that is pack data that stays until R5 (D13).",
+      "ruling": "K1 and U1 also excuse the pack payload shape in stack-adapter.md; the run report lists each excused line. R5 removes those keys.",
+      "rejected": "Drop the lines now.",
+      "units": [
+        "U1",
+        "U8"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 4 gap 2: the migration meets a registry project whose path folder does not exist yet.",
+      "ruling": "Step 1 skips the config set for that project; the migration report shows the fix line bootstrap config set repo.projects.<name> '{\"folder\":\"<path>\"}' --json. The D26 degraded row reports the missing entry until the folder exists.",
+      "rejected": "Run config set anyway.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Round 4 gap 3: under D30 a member repo absent on this machine can never complete its step.",
+      "ruling": "An absent member stops the migration with a report that names the member to clone. The base repo stays at format 27 until that member is present.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
