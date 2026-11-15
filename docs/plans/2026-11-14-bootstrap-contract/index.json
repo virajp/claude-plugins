@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-14 by the user"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at wave 1 — U1 unresolved: Q1 bootstrap 4.0.0 (contract 1) not installed, D40 stop until it is; U2, U3, U4, U5, U6, U7 skipped (depend on U1); worktree .worktrees/all-2026-11-15-1730"
   },
   "consent": {
     "merge": true,
@@ -79,11 +79,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "unresolved",
+      "started": "2026-11-15T12:28:29.898Z",
+      "ended": "2026-11-15T12:31:30.354Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -101,9 +101,9 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.435Z",
       "commit": "",
       "rounds": 0
     },
@@ -128,9 +128,9 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.515Z",
       "commit": "",
       "rounds": 0
     },
@@ -157,9 +157,9 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.596Z",
       "commit": "",
       "rounds": 0
     },
@@ -182,9 +182,9 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.676Z",
       "commit": "",
       "rounds": 0
     },
@@ -209,9 +209,9 @@
         "U5"
       ],
       "waits": "docs-sync reads the delta of wave 2",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.758Z",
       "commit": "",
       "rounds": 0
     },
@@ -227,9 +227,9 @@
         "U6"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
+      "status": "skipped",
       "started": "",
-      "ended": "",
+      "ended": "2026-11-15T12:31:30.841Z",
       "commit": "",
       "rounds": 0
     }
@@ -237,9 +237,9 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "failed",
+      "started": "2026-11-15T12:28:29.823Z",
+      "ended": "2026-11-15T12:31:30.917Z"
     },
     {
       "id": "W2",
@@ -632,6 +632,15 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q1: bootstrap contract 1 is not installed (bootstrap 3.2.0; contract --json exits 2). Stop the run until bootstrap 4.0.0 is installed?",
+      "ruling": "Stop the run — nothing is edited; the plan resumes with /vwf:execute docs/plans/2026-11-14-bootstrap-contract once bootstrap 4.0.0 is installed.",
+      "rejected": "Continue with a local bootstrap build you name — U1 runs the D3 check again against that build, then writes both contract assets",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
@@ -660,8 +669,21 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "",
+      "text": "STOPPED: Q1 — bootstrap 4.0.0 (contract 1) is not installed; answer D40: stop until it is installed, then /vwf:execute docs/plans/2026-11-14-bootstrap-contract",
+      "state": "open"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-15-1730; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-15-1730",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-14-bootstrap-contract.jsonl"
