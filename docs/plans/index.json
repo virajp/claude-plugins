@@ -28,8 +28,8 @@
       "title": "R3a — the plugins use the bootstrap contract, and releases move to releases.toml",
       "target_repo": null,
       "priority": 20,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-15T12:27:14.963Z",
       "ended": "",
       "gaps": null,
       "requires": [
