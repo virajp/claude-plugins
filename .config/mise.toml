@@ -19,3 +19,6 @@ minimum_release_age = "10h"
 MEMBERS = ""
 # Repository name, used for identification within the toolchain
 REPO_NAME = "claude-plugins"
+
+[tools]
+pnpm = "latest"
