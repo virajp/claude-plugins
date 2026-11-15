@@ -35,7 +35,8 @@ same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
 `p:release`, `p:plugins:release`, `p:i:release`, `p:site:release` and
 `deps-update.yml` all still push directly.
 
-**The landing model is per branch.** `[branch.<branch>].merge_model` in
+**The landing model is per branch.** `[tools.git.branch.<branch>].merge_model`
+in
 `.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
 push) or `pr` (push and open a pull request), read by `code:merge:develop` and
 `code:merge:main`. A missing file or key is `direct`, which is what this repo
@@ -56,7 +57,8 @@ commit, one merge, then each `--tag-only` — and `/release` calls it. The bump 
 an ordinary `develop` commit that reaches `main` by merge, so the
 `no-commit-to-branch` hook is never skipped; under a `pr` merge model
 `code:merge:main` only opens a PR, so every full run, `--ci` and `p:release`
-refuse unless `[branch.main].merge_model` in `.config/bootstrap.toml` is
+refuse unless `[tools.git.branch.main].merge_model` in `.config/bootstrap.toml`
+is
 `direct`, a
 missing file or key reading `direct` — the
 fallback is `--no-commit`, the PR landed by hand, then `--tag-only`. The targets

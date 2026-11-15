@@ -117,7 +117,7 @@ worth answering carefully; a third thing is stated rather than asked:
   repo's own task list and its `harness:` stamp, in three tiers: the **unit
   gate** runs once before each unit's commit, the **wave gate** once after every
   wave, and the **plan gate** once over the finished tree. When your repo has
-  them, the proposal is `code:format`, `code:lint` and `code:precommit --all`,
+  them, the proposal is `code:format`, `code:lint` and `code:precommit`,
   in that order, so the cheap check runs most often and the full hook pass runs
   once, over every file. Relay's wave gate is its lint task and the workflow
   linter, and its plan gate adds its test task. `/vwf:execute` runs **what is
