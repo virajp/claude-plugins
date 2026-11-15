@@ -162,3 +162,43 @@ repo. The phase table and the release references above match them.
   and `describe` fetch when the last fetch is more than 30 minutes old. If the
   fetch fails, they use a clone less than 7 days old, else they exit 5. This
   reverses the 7-day skip of R1a D23 and D52.
+
+## Amendment 2026-11-15 (R5 brainstorm)
+
+The user stopped the first R5 interview: "packs go" was read as "bundles go
+too". A brainstorm on 2026-11-15 replaced the R5 line of the Ownership section
+("Stack: packs go") and the "every `*_template` key" removal of the format 27
+section with these rulings. Background:
+`docs/memory/gaps/2026-11-15-r5-stack-without-packs-parked.md`.
+
+- **Bundles stay (B1).** A bundle is the curated unit a consumer picks. It is
+  never mandatory. It lists bootstrap `tools` and knowledge `packs`.
+- **Repo bundles (B2).** A user who picks no shipped bundle composes one with
+  architecture: bootstrap tools, shipped packs and generated packs. stackgen
+  saves it as `.claude/stackgen/bundles/<slug>.md` in the repo.
+- **Tool knowledge (B3).** The 18 `language`, `package-manager` and
+  `toolchain-gate` packs stop being packs. Their conventions, skills and hook
+  stay in stackgen, keyed by the bootstrap tool name, and apply when a project
+  links that tool. bootstrap ships no model prose. `ux-gate` and the
+  `docs/blueprint/` references move to vwf.
+- **Knowledge packs (B4).** The other packs stay, without the data bootstrap
+  owns (`lsp_servers`, `mise_tool`, `binaries`, `package_manager`,
+  `lockfile`). Their task files ship as `NN-<name>` parts.
+- **Tools at setup (B5).** `/vwf:setup`'s materialize pass runs
+  `bootstrap add tool` for each missing bundle tool and `bootstrap detect
+  --add`, on consent.
+- **LSP (B6).** stackgen copies `bootstrap lsp --json` into `vwf-tools`.
+- **Design adapters (B7).** The `design-tool` kind goes. stackgen keeps the
+  adapters outside the packs and installs them into `vwf-tools`: one skill per
+  role at the fixed names, plus `references/<tool>.md` for each tool a repo
+  picks.
+- **Addons (B8).** The `addon` kind goes. An addon is a Claude plugin that
+  `bootstrap add plugin` installs; `addons:` stays in `vwf.yaml`.
+- **Templates stay (B9).** `stack.template` and `repo.stack.template` name a
+  bundle, shipped or repo. No `vwf.yaml` format 29.
+- **Existing repos (B10).** `stackgen-sync` converts tool-pack rows of
+  `lock.yaml` to tool-knowledge rows and moves pack task files to `NN-` parts.
+- **The generator stays (B11)** for each stack item no pack covers.
+- **Doctor (B12).** The language check examines that each tool of the bundle
+  is linked to the project.
+- **Two plans (B13).** R5a: stackgen and the repo tooling. R5b: vwf.

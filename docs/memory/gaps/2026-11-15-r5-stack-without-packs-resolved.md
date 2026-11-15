@@ -1,7 +1,7 @@
 GAP 2026-11-15 ★4 | phase:R5, plugin:stackgen, skill:architecture,
 skill:setup, skill:doctor | "stack without packs" mixes up packs and bundles;
-the design needs a brainstorm before a plan | parked: R5 interview stopped by
-the user
+the design needs a brainstorm before a plan | resolved 2026-11-15 by the
+brainstorm amendment of the split record (B1-B13)
 
 **Source** The R5 interview of `/vwf:change-plan`, 2026-11-15, after R4b
 (`docs/plans/2026-11-15-config-format-28`) landed. No R5 folder was written.

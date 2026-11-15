@@ -102,6 +102,23 @@
       ],
       "backlog": [],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-15-stack-bundles-tools",
+      "folder": "docs/plans/2026-11-15-stack-bundles-tools",
+      "kind": "change",
+      "title": "R5a — stackgen bundles over bootstrap tools: tool knowledge, slim packs, design tools in vwf-tools",
+      "target_repo": null,
+      "priority": 70,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-15-config-format-28"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
