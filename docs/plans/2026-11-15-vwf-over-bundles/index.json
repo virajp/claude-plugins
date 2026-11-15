@@ -1,0 +1,681 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R5b — vwf over stackgen bundles: architecture composes, setup adds tools and addons through bootstrap, doctor examines the links",
+  "requires": [
+    "2026-11-15-stack-bundles-tools"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-15 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- pnpm vitest run",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnE over plugins/vwf/ for: language_facts|optional_languages|lsp_servers|bootstrap add plugin|\\.claude/skills/design-import",
+        "pass": "No hit, except a passage that names an earlier format as history (R4b D23) and the lock key local_plugin.lsp_servers (R5a D41). Each such hit is listed with its reason in the run report."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MAJOR",
+      "reason": "The design wrappers call vwf-tools with the project name; setup adds bundle tools and declares addons through bootstrap; doctor drops the pack-fact checks and adds the tool-link, LSP and design-tool rows."
+    },
+    {
+      "id": "stackgen",
+      "level": "MINOR",
+      "reason": "The menu payload and the materialized entry carry the bundle tools; addons.yaml gains plugin, marketplace and repo; typescript names no vwf path."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes architecture, setup, doctor and the design adapters over bundles."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U1",
+      "title": "The adapter assets",
+      "file": "01-assets.md",
+      "owns": [
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/design-adapter.md",
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/assets/vwf-config.md"
+      ]
+    },
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U2",
+      "title": "Architecture picks or composes a bundle",
+      "file": "02-architecture.md",
+      "owns": [
+        "plugins/vwf/skills/architecture/"
+      ]
+    },
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U3",
+      "title": "Setup materializes bundles over bootstrap tools",
+      "file": "03-setup.md",
+      "owns": [
+        "plugins/vwf/skills/setup/"
+      ]
+    },
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U4",
+      "title": "Doctor over bundles and bootstrap tools",
+      "file": "04-doctor.md",
+      "owns": [
+        "plugins/vwf/skills/doctor/",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/fixtures/doctor-checks/"
+      ]
+    },
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U5",
+      "title": "The design wrappers call vwf-tools",
+      "file": "05-design.md",
+      "owns": [
+        "plugins/vwf/skills/import-screens/references/delegate.md",
+        "plugins/vwf/skills/import-design-system/references/delegate.md",
+        "plugins/vwf/skills/import-conversations/references/delegate.md",
+        "plugins/vwf/skills/design-system/references/import.md",
+        "plugins/vwf/skills/import-screens/SKILL.md",
+        "plugins/vwf/skills/import-design-system/SKILL.md",
+        "plugins/vwf/skills/import-conversations/SKILL.md",
+        "plugins/vwf/skills/design-system/SKILL.md"
+      ]
+    },
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U6",
+      "title": "The typescript wording and the split record",
+      "file": "06-fixes.md",
+      "owns": [
+        "plugins/stackgen/tools/typescript/conventions.md",
+        "plugins/stackgen/tools/typescript/skills/typescript/references/config-and-env.md",
+        "docs/memory/decisions/2026-11-14-bootstrap-plugins-split.md",
+        "plugins/stackgen/tools/typescript/tool.yaml",
+        "plugins/stackgen/stacks/inventory.md"
+      ]
+    },
+    {
+      "id": "U10",
+      "title": "stackgen: the menu, the materialized entry and addons",
+      "wave": 1,
+      "file": "10-stackgen.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/",
+        "plugins/stackgen/assets/"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U6",
+        "U10"
+      ],
+      "waits": "reviews the committed delta of wave 1",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "review",
+      "model": "opus",
+      "wave": 2,
+      "id": "U7",
+      "title": "Review: wave 1",
+      "file": "07-review.md",
+      "owns": [],
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "depends_on": [
+        "U7"
+      ],
+      "waits": "docs-sync reads the delta of waves 1 and 2",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 3,
+      "id": "U8",
+      "title": "Docs",
+      "file": "08-docs.md",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/",
+        ".claude/skills/",
+        "site/src/content/docs/"
+      ]
+    },
+    {
+      "depends_on": [
+        "U8"
+      ],
+      "waits": "runs the gates over the whole delta",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 4,
+      "id": "U9",
+      "title": "Gates",
+      "file": "09-gates.md",
+      "owns": []
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "every wave-1 unit falsifies passages in the same docs",
+      "owner": "U8"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/vwf/assets/stack-adapter.md and design-adapter.md",
+      "why": "U2, U3 and U5 cite the contracts",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where ux-gate lives after R5.",
+      "ruling": "ux-gate stays in stackgen tools/typescript as the web stack UX adapter, at its fixed name; the reviewer is unchanged. The docs/blueprint/environment.md mentions in tools/typescript become the repo environment catalog. Reverses the ux-gate part of B3 and R5a D15.",
+      "rejected": "Move it to vwf as vwf:ux-gate.",
+      "units": [
+        "U1",
+        "U6"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "What stack.template names.",
+      "ruling": "A bundle, shipped or a repo bundle in .claude/stackgen/bundles/ (B9); no format change.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "How vwf calls a design adapter.",
+      "ruling": "Each wrapper calls vwf-tools:<role> with the project name first (R5a D27, D32); the repo .claude/skills copy is not read; a missing skill or reference stops with /vwf:setup.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U5"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How an addon is installed (bootstrap has no add plugin verb).",
+      "ruling": "Setup sets tools.claude.plugins.project.<plugin>@<marketplace> to the owner/repo of addons.yaml with bootstrap config set, unsets a dropped one, and runs mise run setup:ai. Corrects B8.",
+      "rejected": "plugins.user.",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "How architecture decides the stack.",
+      "ruling": "The menu shows bundles, repo bundles, design tools, addons and compose; compose asks tools (bootstrap catalog), packs and uncovered items, calls stackgen-stack-menu compose, and records the slug; no pick keeps unresolved.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Who runs the stackgen-sync conversion of old rows.",
+      "ruling": "Setup materialize, first, on consent, when lock.yaml has a pack row of a removed kind; doctor reports such a row as degraded with /vwf:setup.",
+      "rejected": "Doctor remedy only.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Who adds and links the bundle tools.",
+      "ruling": "Setup materialize, before the stack-template call: bootstrap add tool for each missing tool, then bootstrap detect --add, on one consent line.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "The doctor checks.",
+      "ruling": "Remove binaries, probes and lockfile facts; LSP matches bootstrap lsp --json; versions cover tool rows; new degraded rows for unlinked bundle tools, a missing design-tool reference in vwf-tools, an addon absent from plugins.project, and old pack rows.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "The split record after R5b.",
+      "ruling": "The amendment background path names the -resolved gap record; B3 and B8 get the D1 and D4 corrections.",
+      "rejected": "",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Release levels.",
+      "ruling": "vwf MAJOR, stackgen MINOR (D23, D24), site MINOR, installer NONE.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D11",
+      "decision": "A review unit.",
+      "ruling": "Yes, U7: doctor scripts change.",
+      "rejected": "",
+      "units": [
+        "U7"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Execution mode.",
+      "ruling": "teams: wave 1 holds seven edit units with disjoint paths.",
+      "rejected": "solo.",
+      "units": []
+    },
+    {
+      "id": "D13",
+      "decision": "Gates and keeps.",
+      "ruling": "Unit code:format; wave code:lint, vitest, p:plugins:check; plan code:precommit, vitest, p:plugins:check, p:site:check; U9 checks the marketplace and the inventory. K1 greps plugins/vwf for removed pack data names.",
+      "rejected": "",
+      "units": [
+        "U9"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Round 1 gap 1: the four wrapper SKILL.md files name the repo skill; no unit owned them.",
+      "ruling": "They join U5's owns and name vwf-tools:<role> with the fix /vwf:setup.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Round 1 gap 2: addons.yaml has one source field; setup needs a marketplace name and an owner/repo.",
+      "ruling": "U6 owns plugins/stackgen/assets/addons.yaml; each entry has name, summary, plugin, marketplace, repo and design_tools; source goes.",
+      "rejected": "Derive the marketplace from the repo name.",
+      "units": [
+        "U3",
+        "U10"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Round 1 gap 3: config set tools.claude.* exits 2 when claude is not selected.",
+      "ruling": "Setup adds claude with bootstrap add tool on the same consent line as the bundle tools.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Round 1 gap 4: what a dropped addon is.",
+      "ruling": "Each plugins.project key that matches an addons.yaml entry not in addons: is unset; every other key stays.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Round 1 gap 5: detect --add links nothing in an empty project folder.",
+      "ruling": "When detect proposes no link of a bundle tool to its project, setup sets tools.<t>.projects with bootstrap config set.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Round 1 gap 6: the reworded typescript entry keeps version 1.0.0, so sync never delivers it.",
+      "ruling": "U6 bumps tools/typescript/tool.yaml to 1.0.1 and regenerates stacks/inventory.md (D21).",
+      "rejected": "",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Round 1 gap 7: config-and-env.md also names a bare environment.md.",
+      "ruling": "Reword those mentions too.",
+      "rejected": "",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "The inventory pre-commit hook watches tools/ after R5a, so U6s commit fails if U9 regenerates the inventory later (as R5a D21).",
+      "ruling": "U6 owns stacks/inventory.md and regenerates it as its last step; U9 only checks.",
+      "rejected": "U9 regenerates.",
+      "units": [
+        "U6",
+        "U9"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 2 gaps 1 and 2: Out of scope named two stackgen files; R5a's menu and asset prose describe addons.yaml source and bootstrap add plugin, and no unit owned them.",
+      "ruling": "A new wave-1 unit U10 owns plugins/stackgen/skills/ and plugins/stackgen/assets/ (addons.yaml moves from U6) and rewords the addon passages; Out of scope lists the stackgen paths R5b owns.",
+      "rejected": "",
+      "units": [
+        "U10"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 2 gap 3: setup and doctor need a bundle's tools, and a shipped bundle lives in the stackgen plugin.",
+      "ruling": "The menu payload carries each bundle's tools (setup reads them before materializing); the materialized entry .claude/stackgen/templates/<slug>.md carries the same tools in its frontmatter (doctor reads it).",
+      "rejected": "",
+      "units": [
+        "U3",
+        "U4",
+        "U10",
+        "U1"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Round 2 gap 3: doctor must map an addon name to its plugins.project key.",
+      "ruling": "An addons.yaml name equals its plugin; doctor looks for a key <name>@<marketplace>.",
+      "rejected": "",
+      "units": [
+        "U4",
+        "U10",
+        "U1"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 2 gap 4: bootstrap refuses projects for a root_only tool or an unlisted project.",
+      "ruling": "Setup and doctor skip root_only tools (selected is enough) and projects with no repo.projects entry (R4b D26 reports them).",
+      "rejected": "",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 2 gap 5: config get tools.claude.* fails when claude is not selected.",
+      "ruling": "Doctor reports the addon row as degraded with /vwf:setup, not a refusal.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 2 gap 6: materialize.md sends addons as landing entries and removes them with a stack-template call.",
+      "ruling": "Addons leave the landing list and that removal call goes; D4 and D17 replace them.",
+      "rejected": "",
+      "units": [
+        "U3",
+        "U1"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Round 3 gap 1: stack-adapter.md keeps the old payloads and the old addon section.",
+      "ruling": "U1 adds the bundle tools and the addon plugin, marketplace and repo to the payload schemas, and rewrites the addon section to plugins.project and setup:ai.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Round 3 gap 2: neither catalog nor describe exposes root_only.",
+      "ruling": "Only tools of category languages or package-managers (from describe) get project links, as bootstrap R2d D30; any other bundle tool only needs to be selected.",
+      "rejected": "Treat exit 2 as a skip.",
+      "units": [
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 3 gap 3: setup:ai does not exist without the claude tool.",
+      "ruling": "Run setup:ai only when claude is selected and this run set or unset a plugins.project key.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 3 gap 4: doctor cannot read an addon's marketplace.",
+      "ruling": "Doctor matches any plugins.project key that starts with <name>@.",
+      "rejected": "Read the menu payload.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 4 gap 1: claude is added only with a bundle landing.",
+      "ruling": "Step 4 asks its own consent to add claude when it is not selected and step 2 did not add it.",
+      "rejected": "",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 4 gap 2: a materialized entry from before R5b has no tools key.",
+      "ruling": "A degraded row with the fix /vwf:setup, never a refusal and never an empty list.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Round 4 gap 3: config set may not accept a sub-key of the plugins.project default (R1a D21).",
+      "ruling": "Setup reads the plugins.project map with config get, edits it, and writes the whole map back with config set tools.claude.plugins.project '<JSON object>'; this covers the D17 unset.",
+      "rejected": "Set and unset single sub-keys.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Round 4 gap 4: 'the servers the repo needs' is undefined.",
+      "ruling": "Every server of data.servers of bootstrap lsp --json run in that repo, as R5a D9 copies them.",
+      "rejected": "",
+      "units": [
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
