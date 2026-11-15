@@ -34,14 +34,15 @@ disable-model-invocation: false
   submodule work and pointer updates), then remove it (Step 4)
 - **How a branch lands is the repo's choice, not this skill's.** The repo sets
   it **per destination**, in the repository's `.config/bootstrap.toml`:
-  `merge_model` of `[branch.develop]` for a branch landing on `develop`, of
-  `[branch.main]` for `develop` landing on `main`, each `direct` (the default)
-  or `pr`. `direct` merges the branch to the destination and pushes, as it
-  always has; `pr` pushes the branch and opens a pull request instead, merging
-  nothing locally. The two task names are the same in both modes —
-  `mise x -- mise run code:merge:develop <branch>` reads the first key when it
-  runs, `mise x -- mise run code:merge:main` the second. Step 4 reads the mode
-  for the destination it is about to land on before it offers its options
+  `merge_model` of `[tools.git.branch.develop]` for a branch landing on
+  `develop`, of `[tools.git.branch.main]` for `develop` landing on `main`, each
+  `direct` (the default) or `pr`. `direct` merges the branch to the destination
+  and pushes, as it always has; `pr` pushes the branch and opens a pull request
+  instead, merging nothing locally. The two task names are the same in both
+  modes — `mise x -- mise run code:merge:develop <branch>` reads the first key
+  when it runs, `mise x -- mise run code:merge:main` the second. Step 4 reads
+  the mode for the destination it is about to land on before it offers its
+  options
 - **The merge tasks refuse a dirty tree** — untracked files, uncommitted
   changes, or unpushed commits on the branch each stop the merge before it
   touches git. That is not a nuisance: whatever is uncommitted at merge time is
@@ -153,13 +154,14 @@ populates its submodules, **2c** runs the init task.
 
 Work from the **repository root**.
 
-1. `code:precommit` — run the hooks **before you stage**. The task reads the
-   working tree's changed files, staged and unstaged, so nothing has to be
-   staged for it to see your work — and running it first is what folds a
-   formatter's reflow and a linter's fix into the very commit you are about to
-   write, instead of into a second "fix hooks" commit that means nothing to
-   anyone reading the history. Guard it with the same `have_task` check Step 2c
-   uses; **skip silently** when the task is absent.
+1. `code:precommit` — run the hooks **before you stage**. The task runs every
+   hook over every file git tracks, with no flag, so a change to a tracked file
+   needs no staging for it to be seen; a new file is checked once it is
+   `git add`-ed, or by the commit hook at commit — and running it first is what
+   folds a formatter's reflow and a linter's fix into the very commit you are
+   about to write, instead of into a second "fix hooks" commit that means
+   nothing to anyone reading the history. Guard it with the same `have_task`
+   check Step 2c uses; **skip silently** when the task is absent.
 
    **Run it twice.** The task fails when a hook fails, and a hook that *fixed*
    a file fails by design — that is how pre-commit reports "I changed something,
@@ -209,9 +211,10 @@ it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 
 **Read the landing mode before you ask.** What the merge tasks do is the repo's
-setting, held **per destination** — `merge_model` of `[branch.develop]` for a
-branch landing on `develop`, of `[branch.main]` for `code:merge:main`, in
-`.config/bootstrap.toml` — so resolve the one for the destination you are about
+setting, held **per destination** — `merge_model` of
+`[tools.git.branch.develop]` for a branch landing on `develop`, of
+`[tools.git.branch.main]` for `code:merge:main`, in `.config/bootstrap.toml` —
+so resolve the one for the destination you are about
 to land on, from the root of the repository that lands; the base repo and each
 member have their own file. `pr` means `pr`; any other value, a missing key or
 a missing file means `direct` — the same reading the merge tasks take:
@@ -220,7 +223,7 @@ a missing file means `direct` — the same reading the merge tasks take:
 read_merge_model() {   # $1 is the destination: develop or main
   local model
   if [ ! -f .config/bootstrap.toml ]; then echo direct; return 0; fi
-  model=$(B="$1" mise x -- yq -p toml -o yaml '.branch[strenv(B)].merge_model // "direct"' .config/bootstrap.toml) || return 1
+  model=$(B="$1" mise x -- yq -p toml -o yaml '.tools.git.branch[strenv(B)].merge_model // "direct"' .config/bootstrap.toml) || return 1
   if [ "$model" = pr ]; then echo pr; else echo direct; fi
 }
 read_merge_model develop

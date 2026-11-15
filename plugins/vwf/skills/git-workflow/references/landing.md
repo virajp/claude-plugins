@@ -15,8 +15,9 @@ pointers current — then remove it. Order matters:
 
 1. **Land each changed submodule.** For every submodule with work on this
    branch, run its own merge task from the submodule directory (this commits and
-   pushes the submodule's branch, under `merge_model` of `[branch.develop]` in
-   that member's own `.config/bootstrap.toml` — the destination is `develop`).
+   pushes the submodule's branch, under `merge_model` of
+   `[tools.git.branch.develop]` in that member's own `.config/bootstrap.toml` —
+   the destination is `develop`).
    Repeat per changed submodule:
 
    ```bash
@@ -37,8 +38,8 @@ pointers current — then remove it. Order matters:
    the main worktree and `git push`. The task pushes for you; only the manual
    path needs the push spelled out. The task reads the key for its destination
    from the outer repo's own `.config/bootstrap.toml`: `code:merge:develop`
-   reads `merge_model` of `[branch.develop]`, `code:merge:main` reads
-   `merge_model` of `[branch.main]`.
+   reads `merge_model` of `[tools.git.branch.develop]`, `code:merge:main` reads
+   `merge_model` of `[tools.git.branch.main]`.
 
 4. **Remove the worktree.** From the main checkout — where step 3 already ran
    the outer merge — run `git worktree remove <path>`.
@@ -69,10 +70,11 @@ locally, and the branch lands only when someone merges that request.
 
 - **Step 1 is unchanged.** Each submodule member is its own repo with its own
   `.config/bootstrap.toml`, so it lands under its **own** `merge_model` of
-  `[branch.develop]` — a member set to `direct` merges and pushes as before even
-  when the outer repo is `pr` for `develop`, and a member set to `pr` opens its
-  own request and stops, which means the outer pointer cannot advance until it
-  is merged. Report that and stop rather than working around it.
+  `[tools.git.branch.develop]` — a member set to `direct` merges and pushes as
+  before even when the outer repo is `pr` for `develop`, and a member set to
+  `pr` opens its own request and stops, which means the outer pointer cannot
+  advance until it is merged. Report that and stop rather than working around
+  it.
 - **Step 2 still happens.** Commit the moved gitlinks on **this branch** before
   the push, so the pointer travels in the pull request instead of waiting for a
   merge that will not happen here.

@@ -13,8 +13,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-14 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-15T17:34 in .worktrees/all-2026-11-15-1730"
   },
   "consent": {
     "merge": true,
@@ -81,11 +81,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-15T12:08:20.523Z",
       "ended": "",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U2",
@@ -104,11 +104,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-15T12:08:20.564Z",
       "ended": "",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -123,11 +123,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-15T12:08:20.605Z",
       "ended": "",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U4",
@@ -145,11 +145,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-15T12:08:20.648Z",
       "ended": "",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U5",
@@ -202,8 +202,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-15T12:08:20.482Z",
       "ended": ""
     },
     {
@@ -510,6 +510,13 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D33",
+      "decision": "Q1: The shared worktree init task setup:worktree failed at setup:deps:node (no package manager selected in .config/bootstrap.toml), leaving no node_modules; how should the run proceed?",
+      "ruling": "Install from the lockfile — run pnpm install --frozen-lockfile in the worktree, then continue; nothing in the tree changes.",
+      "rejected": "Continue without node deps; Stop",
+      "units": []
     }
   ],
   "stages": {
@@ -539,7 +546,12 @@
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-15-1730; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-15-1730",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-14-bootstrap-drift-fix.jsonl"
