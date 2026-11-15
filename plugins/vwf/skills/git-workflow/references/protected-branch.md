@@ -38,7 +38,9 @@ node land.mjs finish <repo dir> --branch <branch name> --into <branch>
 - **`open`** fetches, then cuts `<repo>/.worktrees/<name>` (or `worktrees/`,
   by the rule in [worktree setup](worktree-setup.md)) on the new local branch
   `<name>`, from `origin/<branch>`, or the local `<branch>` with no remote.
-  It refuses a branch or a worktree path that already exists. It prints
+  `<repo>` is the main checkout of the repo `<repo dir>` is in; for a
+  submodule, that is the submodule's own work tree (the `core.worktree` of
+  its git dir), never the superproject. It refuses a branch or a worktree path that already exists. It prints
   `{worktree, branch, into, base}`. The caller now edits files **in that
   worktree**, never in the main checkout.
 - **`close`** stages every change in the worktree, commits it with
