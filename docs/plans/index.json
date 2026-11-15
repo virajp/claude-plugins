@@ -119,6 +119,23 @@
       ],
       "backlog": [],
       "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-15-vwf-over-bundles",
+      "folder": "docs/plans/2026-11-15-vwf-over-bundles",
+      "kind": "change",
+      "title": "R5b — vwf over stackgen bundles: architecture composes, setup adds tools and addons through bootstrap, doctor examines the links",
+      "target_repo": null,
+      "priority": 80,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [
+        "2026-11-15-stack-bundles-tools"
+      ],
+      "backlog": [],
+      "backlog_pieces": []
     }
   ]
 }
