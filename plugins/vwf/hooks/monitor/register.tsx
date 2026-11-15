@@ -43,6 +43,7 @@ import {
   questionLines,
   WAITING,
 } from "./view";
+import { identityOf } from "./project";
 
 const PANE = "vwf-monitor";
 const SKILL = "vwf:execute";
@@ -53,7 +54,7 @@ const run = atom({ plugin: "vwf", key: "monitorRun" } as const, null);
 const isQuiet = atom({ plugin: "vwf", key: "monitorQuiet" } as const, true);
 const viewing = atom({ plugin: "vwf", key: "monitorViewing" } as const, null);
 const live = atom({ plugin: "vwf", key: "monitorLive" } as const, null);
-const hasPlans = atom({ plugin: "vwf", key: "monitorHasPlans" } as const, false);
+const identity = atom({ plugin: "vwf", key: "monitorIdentity" } as const, null);
 
 type $ = EngineInterface;
 
@@ -132,14 +133,22 @@ async function dismiss($: $) {
 }
 
 /**
- * Reads what the row above the prompt shows, whatever the pane shows: the plan
- * that reads RUNNING and is live or paused, whoever runs it. Of several, this
+ * Reads what the row above the prompt shows, whatever the pane shows: the
+ * project and worktree blocks, as claude-status names them, and the plan that
+ * reads RUNNING and is live or paused, whoever runs it. Of several, this
  * session's, then a live one, then the latest started. With none, the last one
- * stays with its final status until a /clear, so that the row keeps the result.
+ * stays with its final status until its folder is archived or a /clear.
  */
 async function refreshLive($: $) {
   const now = await $.clock.now();
   const cwd = await $.session.cwd();
+  const found = await identityOf(cwd, await $.env.get("HOME"), {
+    kind: (path) => $.fs.stat(path).then((one) => one.kind, () => undefined),
+    read: (path) => $.fs.read(path).catch(() => undefined),
+  });
+  if (JSON.stringify(await read($, identity)) !== JSON.stringify(found)) {
+    await update($, identity, () => found);
+  }
   const base = (await baseOf($, cwd)) ?? cwd;
   const text = (await stat($, `${base}/docs/plans/index.md`)) === undefined
     ? await $.fs.read(`${base}/docs/plans/index.json`).catch(() => undefined)
@@ -168,18 +177,20 @@ async function refreshLive($: $) {
   const best = plans.sort((a, b) => rank(b) - rank(a) || (time(b.row.started) ?? 0) - (time(a.row.started) ?? 0))[0];
   const last = await read($, live);
   let chip = best === undefined ? last : chipProps(best, now);
-  if (best === undefined && last !== null && text !== undefined) {
+  if (text === undefined) {
+    chip = null;
+  } else if (best === undefined && last !== null) {
     const one = await loadNamed($, base, rows, last.folder);
     if (one.kind === "plan") {
-      // Unclaimed: it did not end, and nothing is left to report.
-      chip = one.plan.phase === "not-run" ? null : chipProps(one.plan, now);
+      // Unclaimed: it did not end, and nothing is left to report. Archived:
+      // the plan is done with, and the row lets it go.
+      chip = one.plan.phase === "not-run" || one.plan.folder.startsWith("docs/plans/archived/")
+        ? null
+        : chipProps(one.plan, now);
     }
   }
   if (JSON.stringify(await read($, live)) !== JSON.stringify(chip)) {
     await update($, live, () => chip);
-  }
-  if ((await read($, hasPlans)) !== (text !== undefined)) {
-    await update($, hasPlans, () => text !== undefined);
   }
 }
 
@@ -1062,14 +1073,22 @@ export const register: Register = (on) => {
     return <Text dimColor>· {e.props.tool}</Text>;
   });
 
-  // The row above the prompt: the live plan and Monitor, or Monitor alone. A
-  // question takes the band, and a repo with no plan index has no row.
+  // The row above the prompt: the project and worktree blocks, the live plan,
+  // and Monitor. A question takes the band, and outside a git repository there
+  // is no row.
   on("ui.render", { component: "AbovePrompt" }, async ($, e, next) => {
-    if (e.props.hasSurvey || !(await read($, hasPlans))) {
+    const blocks = await read($, identity);
+    if (e.props.hasSurvey || blocks === null) {
       return next(e);
     }
 
-    return drawChip($.ui.resolve(e), await read($, live), () => openFromChip($));
+    return drawChip(
+      $.ui.resolve(e),
+      e.surface === "terminal",
+      blocks,
+      await read($, live),
+      () => openFromChip($),
+    );
   });
 
   on("ui.render", { component: "Pane", requestId: PANE }, async ($, e) => {

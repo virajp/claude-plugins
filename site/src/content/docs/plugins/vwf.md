@@ -2931,17 +2931,37 @@ resume command** button. If the surface cannot copy, a toast says so, and you
 can
 read the command in the pane.
 
-**The row above the prompt.** In the terminal and the desktop app, in a repo
-with a `docs/plans/index.json`, a small row sits directly above the prompt, with
-no command to start it. While a plan reads `RUNNING` and is live or paused, in
-any session, the row shows that plan: one colored glyph per unit, its name, the
-units finished, the current wave, `Waiting for your answer` or `Paused`, and the
-elapsed time. With several, it shows this session's, then a live one, then the
-latest started. The **Monitor** button opens the pane on that plan. When the
-plan ends and no other plan is live, the row keeps its last status, such as
-`Complete` or `Blocked`, until you run `/clear`. If no plan was live in the
-session, the row is the button alone, which opens the pane as `/vwf-monitor`
-does. A question takes that band, and the row returns after your answer.
+**The row above the prompt.** In the terminal and the desktop app, in any git
+repository, a small row sits directly above the prompt, with no command to
+start it. Outside a git repository there is no row.
+
+- **The project.** On the left, the row names the project the way the
+  [claude-status](https://claude-status.virajp.dev) status line does: the
+  `origin` path on GitHub or GitLab, else `parent/base` of the main checkout.
+  A linked worktree names its main checkout, and a submodule names the
+  outermost superproject. In a folder under one that matches
+  `worktreePattern`, a second block shows the worktree's subpath.
+- **Its config.** The row reads claude-status's config files when they exist:
+  `~/.config/claude-status/config.json`, then `projectName` alone from the
+  repo's `.config/claude-status.json`. It takes the name, the glyphs, the
+  colors of the `project` and `worktree` segments, the palette, the
+  `worktreePattern` and the powerline glyphs from them. Without claude-status,
+  it uses claude-status's shipped defaults.
+- **How it draws.** The terminal draws the blocks as claude-status's powerline.
+  The desktop app has no Nerd Font, so it draws each block as a rounded box and
+  drops the Nerd Font glyphs.
+- **The plan.** While a plan reads `RUNNING` and is live or paused, in any
+  session, the row shows that plan: one colored glyph per unit, its name, the
+  units finished, the current wave, `Waiting for your answer` or `Paused`, the
+  number of open gaps, and the elapsed time. With several, it shows this
+  session's, then a live one, then the latest started. When the plan ends and
+  no other plan is live, the row keeps its last status, such as `Complete` or
+  `Blocked`, and its open gaps, until its folder moves to
+  `docs/plans/archived/` or you run `/clear`.
+- **Monitor.** The **Monitor** button on the right opens the pane on the plan
+  the row shows, else as `/vwf-monitor` does.
+
+A question takes that band, and the row returns after your answer.
 
 **The plan list.** One row per row of the plan index: running plans; then the
 plans ready to run, numbered, in the order `/vwf:execute next` picks them; then

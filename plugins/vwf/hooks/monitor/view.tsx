@@ -5,6 +5,8 @@ import type {
 
 import type {
   AgentRun,
+  Block,
+  Identity,
   LiveChip,
   PlanRun,
   QueueRow,
@@ -14,6 +16,7 @@ import {
   nameOf,
   time,
 } from "./plan";
+import { withoutPrivateUse } from "./project";
 
 /** The elements of every surface that the two views draw with. */
 type Ui = Pick<ElementTable, "Box" | "Text" | "Button">;
@@ -719,47 +722,123 @@ export function chipProps(plan: PlanRun, now: number): LiveChip {
     word,
     color: FILL[badgeOf(plan, false).color]!,
     took: span(startedAt, time(plan.row.ended) ?? (isEnded ? undefined : now)),
+    gaps: state.gaps.length,
   };
 }
 
+/** A block's glyph and text, joined as claude-status joins a segment's. */
+const blockText = (block: Block) => [block.glyph, block.text].filter((one) => one !== "").join(" ");
+
 /**
- * The row above the prompt: the live plan in colored text, if there is one,
- * beside a Monitor button. The glyphs sit outside the Button, since a desktop
- * Button draws one plain label.
+ * The project and worktree blocks. The terminal draws them as claude-status's
+ * powerline: a cap in the first block's color, each block padded, a separator
+ * between two blocks (the thin one in `thinFg` when their backgrounds match),
+ * and a closing separator. A graphical surface has no Nerd Font, so it draws
+ * each block as a rounded box, its private-use glyphs dropped.
  */
-export function drawChip(ui: Ui, chip: LiveChip | null, open: () => unknown) {
+function drawBlocks(ui: Ui, isTerminal: boolean, identity: Identity) {
+  const { Box, Text } = ui;
+  const blocks = [identity.project, ...(identity.worktree === undefined ? [] : [identity.worktree])];
+  if (!isTerminal) {
+    return blocks.map((block, i) => {
+      const text = withoutPrivateUse(blockText(block));
+
+      return text === "" ? null : (
+        <Box
+          key={`block-${i}`}
+          flexShrink={0}
+          backgroundColor={block.bg}
+          borderStyle="round"
+          borderColor={block.bg}
+          paddingX="xs"
+        >
+          <Text color={block.fg} bold={block.bold}>{text}</Text>
+        </Box>
+      );
+    });
+  }
+  const first = blocks[0]!;
+  const last = blocks[blocks.length - 1]!;
+
+  return [
+    <Box key="blocks" flexShrink={0}>
+      <Text>
+        <Text key="cap" color={first.bg}>{identity.cap}</Text>
+        {blocks.flatMap((block, i) => {
+          const next = blocks[i + 1];
+          const seg = (
+            <Text key={`block-${i}`} color={block.fg} backgroundColor={block.bg} bold={block.bold}>
+              {` ${blockText(block)} `}
+            </Text>
+          );
+          if (next === undefined) {
+            return [seg];
+          }
+
+          return [
+            seg,
+            next.bg === block.bg
+              ? <Text key={`sep-${i}`} color={identity.thinFg} backgroundColor={next.bg}>{identity.sepThin}</Text>
+              : <Text key={`sep-${i}`} color={block.bg} backgroundColor={next.bg}>{identity.sep}</Text>,
+          ];
+        })}
+        <Text key="end" color={last.bg}>{identity.sep}</Text>
+      </Text>
+    </Box>,
+  ];
+}
+
+/**
+ * The row above the prompt: the project and worktree blocks, then the live
+ * plan in colored text, if there is one, and a Monitor button on the right.
+ * The glyphs sit outside the Button, since a desktop Button draws one plain
+ * label.
+ */
+export function drawChip(
+  ui: Ui,
+  isTerminal: boolean,
+  identity: Identity,
+  chip: LiveChip | null,
+  open: () => unknown,
+) {
   const { Box, Text, Button } = ui;
 
   return (
     <Box
       flexDirection="row"
-      justifyContent={chip === null ? "flex-end" : "space-between"}
+      justifyContent="space-between"
       alignItems="center"
       gap="sm"
     >
-      {chip !== null && (
-        <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
-          <Box flexShrink={0}>
-            <Text>
-              {chip.glyphs.map((color, i) =>
-                color === null
-                  ? <Text key={`glyph-${i}`} dimColor>▰</Text>
-                  : <Text key={`glyph-${i}`} color={color}>▰</Text>
-              )}
-            </Text>
+      <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
+        {drawBlocks(ui, isTerminal, identity)}
+        {chip !== null && (
+          <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
+            <Box flexShrink={0}>
+              <Text>
+                {chip.glyphs.map((color, i) =>
+                  color === null
+                    ? <Text key={`glyph-${i}`} dimColor>▰</Text>
+                    : <Text key={`glyph-${i}`} color={color}>▰</Text>
+                )}
+              </Text>
+            </Box>
+            <Box flexShrink={1} overflow="hidden">
+              <Text wrap="truncate">{chip.name}</Text>
+            </Box>
+            <Box flexShrink={0}>
+              <Text>
+                <Text key="count" dimColor>{`${chip.count} `}</Text>
+                <Text key="word" color={chip.color}>{chip.word}</Text>
+                {chip.gaps > 0 && (
+                  <Text key="gaps" color={FILL["yellow"]}>{` · ${chip.gaps} gap${chip.gaps === 1 ? "" : "s"}`}</Text>
+                )}
+                <Text key="took" dimColor>{` ${chip.took}`}</Text>
+              </Text>
+            </Box>
           </Box>
-          <Box flexShrink={1} overflow="hidden">
-            <Text wrap="truncate">{chip.name}</Text>
-          </Box>
-          <Box flexShrink={0}>
-            <Text>
-              <Text key="count" dimColor>{`${chip.count} `}</Text>
-              <Text key="word" color={chip.color}>{chip.word}</Text>
-              <Text key="took" dimColor>{` ${chip.took}`}</Text>
-            </Text>
-          </Box>
-        </Box>
-      )}
+        )}
+      </Box>
       <Box flexShrink={0}>
         <Button key="vwf-chip" label="Monitor" onPress={open} />
       </Box>

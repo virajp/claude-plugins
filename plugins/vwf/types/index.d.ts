@@ -37,6 +37,24 @@ export type LiveChip = {
   word: string;
   color: string;
   took: string;
+  /** The folder's open gaps; the row shows the count when it is above 0. */
+  gaps: number;
+};
+
+/** One block of the row above the prompt: its glyph, its text, and its colors as `#rrggbb`. */
+export type Block = { glyph: string; text: string; fg: string; bg: string; bold: boolean };
+
+/** The project and worktree blocks, as claude-status draws its `project` and `worktree` segments. */
+export type Identity = {
+  project: Block;
+  /** Only in a folder under one that matches claude-status's `worktreePattern`. */
+  worktree?: Block;
+  /** The powerline glyphs: the cap before the first block, the separators after each. */
+  cap: string;
+  sep: string;
+  sepThin: string;
+  /** The color of `sepThin`, between two blocks of one background. */
+  thinFg: string;
 };
 
 /** One opening of the pane, by /vwf:execute or /vwf-monitor. */
@@ -237,10 +255,10 @@ declare module "claude-code" {
       monitorRun: Run | null;
       monitorQuiet: boolean;
       monitorViewing: string | null;
-      /** The live plan, whoever runs it, else the last one, until a /clear. */
+      /** The live plan, whoever runs it, else the last one, until it is archived or a /clear. */
       monitorLive: LiveChip | null;
-      /** This repo has a docs/plans/index.json: the Monitor button shows. */
-      monitorHasPlans: boolean;
+      /** The project and worktree blocks of the session's folder; null outside a git repository. */
+      monitorIdentity: Identity | null;
     };
   }
 }
