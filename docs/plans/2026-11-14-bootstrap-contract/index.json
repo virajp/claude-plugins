@@ -662,5 +662,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/all-2026-11-15-1730",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-14-bootstrap-contract.jsonl"
+  }
 }
