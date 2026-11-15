@@ -1027,7 +1027,7 @@ export const register: Register = (on) => {
     const closed = await next(e);
     if (e.id === PANE) {
       isOpen = false;
-      if (e.origin === "person") {
+      if (e.origin.kind === "person") {
         $.ui.status(undefined);
       }
     }
