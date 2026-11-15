@@ -734,28 +734,27 @@ const blockText = (block: Block) => [block.glyph, block.text].filter((one) => on
  * powerline: a cap in the first block's color, each block padded, a separator
  * between two blocks (the thin one in `thinFg` when their backgrounds match),
  * and a closing separator. A graphical surface has no Nerd Font, so it draws
- * each block as a rounded box, its private-use glyphs dropped.
+ * each block as text in the segment's background color, the blocks apart by a
+ * dim dot, its private-use glyphs dropped.
  */
 function drawBlocks(ui: Ui, isTerminal: boolean, identity: Identity) {
   const { Box, Text } = ui;
   const blocks = [identity.project, ...(identity.worktree === undefined ? [] : [identity.worktree])];
   if (!isTerminal) {
-    return blocks.map((block, i) => {
-      const text = withoutPrivateUse(blockText(block));
+    const texts = blocks
+      .map((block) => ({ block, text: withoutPrivateUse(blockText(block)) }))
+      .filter((one) => one.text !== "");
 
-      return text === "" ? null : (
-        <Box
-          key={`block-${i}`}
-          flexShrink={0}
-          backgroundColor={block.bg}
-          borderStyle="round"
-          borderColor={block.bg}
-          paddingX="xs"
-        >
-          <Text color={block.fg} bold={block.bold}>{text}</Text>
-        </Box>
-      );
-    });
+    return [
+      <Box key="blocks" flexShrink={0}>
+        <Text>
+          {texts.flatMap(({ block, text }, i) => [
+            ...(i === 0 ? [] : [<Text key={`sep-${i}`} dimColor>{" · "}</Text>]),
+            <Text key={`block-${i}`} color={block.bg} bold={block.bold}>{text}</Text>,
+          ])}
+        </Text>
+      </Box>,
+    ];
   }
   const first = blocks[0]!;
   const last = blocks[blocks.length - 1]!;
@@ -812,6 +811,7 @@ export function drawChip(
     >
       <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
         {drawBlocks(ui, isTerminal, identity)}
+        {!isTerminal && chip !== null && <Text dimColor>·</Text>}
         {chip !== null && (
           <Box flexDirection="row" alignItems="center" gap="xs" flexShrink={1} overflow="hidden">
             <Box flexShrink={0}>

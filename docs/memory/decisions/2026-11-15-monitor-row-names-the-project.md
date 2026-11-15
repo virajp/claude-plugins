@@ -45,9 +45,12 @@ All three were confirmed by the user on 2026-11-15.
 5. **The layout.** The terminal draws claude-status's powerline: the cap, the
    separators, the closing separator. Rejected: two plain blocks; the worktree
    inside the project block.
-6. **The desktop app.** Rounded boxes (`borderStyle: "round"`), the Nerd Font
-   glyphs dropped, because the app has no Nerd Font. Rejected: the same glyphs
-   everywhere.
+6. **The desktop app.** The Nerd Font glyphs dropped, because the app has no
+   Nerd Font. Each block is bold text in the segment's `bg` color, with a dim
+   `·` between the blocks and before the plan. Rejected: the same glyphs
+   everywhere. Revised the same day: the first build drew rounded boxes, and
+   the user found them ugly, twice as tall as the row and loud. Rejected then:
+   a tinted pill; a compact solid block.
 7. **The end of the chip.** When its folder is archived, or at a `/clear`.
    Rejected: archive only.
 8. **The gaps.** The folder's open gaps, as `· N gaps` in yellow after the

@@ -2948,8 +2948,8 @@ start it. Outside a git repository there is no row.
   `worktreePattern` and the powerline glyphs from them. Without claude-status,
   it uses claude-status's shipped defaults.
 - **How it draws.** The terminal draws the blocks as claude-status's powerline.
-  The desktop app has no Nerd Font, so it draws each block as a rounded box and
-  drops the Nerd Font glyphs.
+  The desktop app has no Nerd Font, so it drops the Nerd Font glyphs and draws
+  each block as bold text in the segment's color, with a dim `·` between them.
 - **The plan.** While a plan reads `RUNNING` and is live or paused, in any
   session, the row shows that plan: one colored glyph per unit, its name, the
   units finished, the current wave, `Waiting for your answer` or `Paused`, the
