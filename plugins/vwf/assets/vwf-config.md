@@ -36,8 +36,8 @@ neither `/vwf:init` nor `/vwf:doctor` raises it again. **Formats 21 and 22**
 carried a
 top-level `answers:` block — the secrets provider, and the forge and the
 dependency bot per repo; **format 23 retired it**: a repo's answers live in its
-own `.config/bootstrap.toml`, written by bootstrap, and the dependency-bot key
-retired with the bot config it chose. Format 22
+own `.config/bootstrap/`, written by the bootstrap CLI, and the dependency-bot
+key retired with the bot config it chose. Format 22
 also retired the editor axis and the editor-key record format 20 added: vwf
 ships, asks about and composes no editor configuration. Since
 **blueprint-format 6** this file replaces the old stamp at
@@ -129,7 +129,7 @@ enforcement: # vwf's enforcement opt-outs
   rules: {} # <rule-id>: { waived: true, reason: <one line> } — e.g. standard-flows/<project>/<slug> waives a mandatory standard flow (assets/standard-flows.md); standard-entities/<project>/<slug> waives a mandatory standard entity (assets/standard-entities.md); baseline/<rule>[/<unit>] waives an engineering-baseline rule product-wide or scoped (assets/engineering-baseline.md; boundary-validation never product-wide); pipeline/<rule>[/<unit>] waives a delivery-pipeline rule (assets/delivery-pipeline.md); topology/iac-own-repo/<project> records a declined extraction of that iac project into its own repo — written by `setup` on the user's consent, it downgrades the own-repo finding to a degradation that `/vwf:doctor` reports every run without halting; `/vwf:execute`'s start checks do not surface it (assets/topologies/)
   kept_files: {} # FORMAT 18. <path>: { reason: <one line> } — a hygiene file this repo chose not to land, written by `/vwf:init` (consented, in its single plan) when the user struck that file's create row from the plan; a pack file recorded earlier stays recorded and is still skipped; a file bootstrap writes is never recorded. The path is BASE-RELATIVE: a file in the base is spelled from the base root, and a file inside a member repo takes that member's path as prefix — this one block on the base records every repo's keeps, since a member carries only its back-link and no `.config/vwf.yaml` of its own. NOT a rule id and never under `rules:` — a path names no catalogued rule. Read by `init`, which never re-offers a recorded path, and by `/vwf:doctor`, whose content-drift check skips it; an absent block reads as empty, so a repo that has kept nothing records nothing
 
-# NO `answers:` block since FORMAT 23. A repo's answers live in its `.config/bootstrap.toml`, written by bootstrap; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, see `22 → 23` below
+# NO `answers:` block since FORMAT 23. A repo's answers live in its `.config/bootstrap/`, written by the bootstrap CLI; the per-repo dependency-bot key retired with nothing to replace it. A leftover block is format drift, see `22 → 23` below
 
 pipeline: # bounded knobs — see the hard floor below
   coverage_target: 100 # default coverage gate (per-project override above)
@@ -730,8 +730,8 @@ earlier than 65/90/80), never loosen.
 - **`22 → 23` migration**: **the `answers:` block is retired, and nothing else
   in this file moves.** When this format shipped, its two live values moved into
   each repo's own `.config/stackgen.yaml`, written by the renderer that has
-  since been deleted. A repo's answers now live in its `.config/bootstrap.toml`,
-  written by bootstrap, whose `docs/sync/migrate.md` maps the old keys. The
+  since been deleted. A repo's answers now live in its `.config/bootstrap/`,
+  written by the bootstrap CLI, which moves the old keys there. The
   per-repo dependency-bot key is dropped with nothing to replace it: the bot
   config it chose is no longer shipped. `members:` and `linkage:` stay here.
 

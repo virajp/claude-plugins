@@ -49,10 +49,11 @@ the repo cannot support. Their absence is the **structure-pending** state, which
 
 The repo shape — the toolchain manager's config and task library, the repo
 gates, the hygiene files — belongs to bootstrap and `/vwf:init`, not setup.
-Step 0 only **checks** for it — `.config/bootstrap.toml`, the values file
-bootstrap writes — and offers init when it is missing, when the repo is on the
-old layout, and when it is there but the repo has fallen **behind its
-baseline**, on doctor's predicates.
+Step 0 only **checks** for it — the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, which asks bootstrap,
+through `bootstrap config`, for the repo's values in `.config/bootstrap/` —
+and offers init when the test refuses the repo, and when it passes but the
+repo has fallen **behind its baseline**, on doctor's predicates.
 On a multi-repo product both questions are asked of the base **and of every
 locally-present member**, and the one offer covers whichever of them came back
 unshaped or behind.

@@ -107,62 +107,49 @@ product rather than the one repo it is standing in, and an **absent** member is
 a blind spot, never a finding. On a single-repo product the set is one repo and
 everything below reads as it always did.
 
-First, is the shape **there**: in **each** repo of that set,
-`.config/bootstrap.toml` exists — the values file bootstrap writes. No pack
-slug is checked: a repo is shaped when that file is there. A repo **without**
-it that carries `.config/stackgen.yaml` or an older layout —
-`.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root
-`.config/mise.dev.toml` — is **on the old layout**: name the repo and the files
-that marked it. Second, is it **current**, evaluated **per repo** on that repo's
-own artifacts by two predicates under **"The repo shape against its baseline"**
-in `/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
-drift**: `env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`, run in
-that repo, shows no change.
-This explicit dry-run writes nothing in the repository, but it runs code: the
-repo's own `setup:configs` task, which refreshes bootstrap's clone under
-`~/.cache/bootstrap` and executes the `main` branch of bootstrap from that clone
-with no pin. Run it only when mise lists this repo as trusted:
-`mise trust --show`, run in that repo, lists a path inside the repo, and every
-such line reads `trusted`. A parent's line does not count. Otherwise drift is
-unknown, with the reason `repo not trusted by mise`. That check is a limit, not
-a safeguard: it stops only a clone mise has never run, and the trust gate of
-mise is not tied to file content, so a repo trusted once runs whatever its task
-holds now. The dry-run prints on stderr; its last line is the headline, after
-a glyph or an `[OK]` tag, matched as the start of that line:
-`Dry run: no file would change` or `Dry run: <n> file(s) would change`, count
-suffixes such as ` · 161 unchanged` aside. Exit 0,
-`Dry run: no file would change` and no `bootstrap_commit would change to`
-line is no drift. Exit 0 with a headline of one or more files, or a
-`bootstrap_commit would change to` line, is drift; the list lines —
-`would change`, `would add`, `would seed`, `would remove` — name the files.
-Exit 0 with no `Dry run:` headline is unknown too, with the reason
-"no Dry run headline: the repo's setup:configs runs an older sync engine; run
-bootstrap init". Any exit code other than 0 is unknown too, with the reason the
-exit code, the last bootstrap error line (it starts with `✗` or `[ERROR]`) and
-its fix line (`→ …`) when one follows, word for word, or, with no such line,
-the last line on stderr. **Unknown**, either way: say setup could not check
-drift in that repo, with the reason, and continue as current. **Forge state**:
+Setup reaches bootstrap only through its CLI, by the rules of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, which owns the contract
+check, the shaped test and the envelope. Run the contract check first; when it
+fails, stop with that asset's install hint, word for word.
+First, is the shape **there**: in **each** repo of that set, the shaped test
+passes — `bootstrap config get repo.format --json` prints an envelope with
+`ok` true. No pack slug is checked. On code 2 the repo is **unshaped**: show
+the envelope's `errors` messages as bootstrap gives them — they say whether
+the repo is not shaped, on the old form, has both forms or has a broken
+folder — and write no text of setup's own per case. Second, is it
+**current**, evaluated **per repo** on that repo's own artifacts by two
+predicates under **"The repo shape against its baseline"** in
+`/vwf:doctor`'s stack-checks reference, named here by title. **Bootstrap
+drift**: `bootstrap sync --json --dry-run`, run in that repo, lists no change
+— an empty `data.plan.changes`, and no item of `data.plan.files` whose `kind`
+is `changed`, `new`, `seeded` or `removed`. It writes nothing in the
+repository. Each such item is drift, named by its `path`. A run that fails
+before its plan (`data` `null`) is unknown, with the envelope's `errors`
+messages as the reason; code 5 is unknown, with the reason
+`the clone is stale and offline`.
+**Unknown**, either way: say setup could not check drift in that repo, with
+the reason, and continue as current. **Forge state**:
 the default branch as chosen, both branches protected, and the base's backlog project present,
 read from the forge when its CLI is on `PATH` and logged in, else not checked.
-Doctor owns both predicates. Its Pack versions, Project ids, Branches and
+Doctor owns both predicates. Its Pack versions, Project ids and
 Content drift rows are not part of this check. Every repo shaped and holding
 both predicates — say so in one line, naming the repos checked, and read on.
 
 **Otherwise some repo needs init, and setup offers it — once, for the whole
-product.** A repo with no `.config/bootstrap.toml` and no old-layout file is
-**unshaped**: say what is absent. Either predicate failing in a repo, that repo
+product.** A repo the shaped test refuses is **unshaped**, in bootstrap's
+words. Either predicate failing in a repo, that repo
 is **behind its baseline**: name which, in the words doctor's rows use. The
-offer fires when **any** repo in the set is unshaped, on the old layout or
+offer fires when **any** repo in the set is unshaped or
 behind, and it names **which repos** and what each of them showed — a base that
 is current while one member is behind is still an offer, because the shape is
-per repo and the product is shaped only when all of them are. All three causes
-reach the same offer — init is what runs bootstrap, which lays the shape down
-and brings it forward, and bootstrap's `docs/sync/migrate.md` maps an old
-layout's keys — and on a yes invoke `/vwf:init`, which surveys the base and
-every member and shapes them in one run of its own, and continue once it
-returns. init is **skill-invoked**: hidden from the
-`/` menu and called from here alone, so this offer and `reshape` above are the
-only two ways it is reached. A **decline** is a recorded deferral on the terms
+per repo and the product is shaped only when all of them are. Both causes
+reach the same offer — init is what runs bootstrap, which lays the shape down,
+brings it forward and moves an old form to the new one — and on a yes
+invoke `/vwf:init`, which surveys the base and every member and shapes them
+in one run of its own, and continue once it returns. init is
+**skill-invoked**: hidden from the `/` menu and called from here alone, so
+this offer and `reshape` above are the only two ways it is reached. A
+**decline** is a recorded deferral on the terms
 in [the onboard pipeline](references/onboard-pipeline.md), named with its
 unlock (`/vwf:setup reshape`, run whenever), and the run continues to the mode
 table. setup never materializes a bundle itself and never halts on an unshaped
@@ -263,10 +250,10 @@ setup lists the servers for the user to install by hand.
 The pass ends with **a second shape check** — the same two questions Step 0
 asked, is the shape *there* and is it *current*, over the same set of repos,
 after everything the pass wrote. It exists because Step 0 runs before the pass:
-a change the pass's bootstrap handoff made to `.config/bootstrap.toml` is drift
-Step 0 could not see, and without this check it would wait for the next run.
-Evaluate the repos by the same doctor predicates; on any repo unshaped, on the
-old layout or
+a change the pass's bootstrap handoff made to the repo's bootstrap values is
+drift Step 0 could not see, and without this check it would wait for the next
+run.
+Evaluate the repos by the same doctor predicates; on any repo unshaped or
 behind, make the offer exactly as Step 0's paragraph makes it — the drifted
 repos, what each showed, the one question, `/vwf:init` on a yes, a recorded
 deferral on a decline — and continue. Every repo clean, print nothing: a clean

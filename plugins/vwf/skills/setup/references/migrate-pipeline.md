@@ -28,10 +28,11 @@ Four sources define it, and none of them is a history:
    nothing wrote that key before `config_format` 18.
    **`config_format` 22 → 23** — the top-level `answers:` block retiring
    ([format lineage](format-lineage.md)) — is **not** an entry here. Nothing
-   reads the block: a repo's answers live in its `.config/bootstrap.toml`,
-   written by bootstrap. A config still carrying the block keeps it, and its
-   stamp, and the report says the block can be removed by hand; a config
-   without the block takes the 23 stamp with the rest.
+   reads the block: a repo's answers live in its `.config/bootstrap/`,
+   read and written through `bootstrap config`. A config still carrying the
+   block keeps it, and its stamp, and the report says the block can be
+   removed by hand; a config without the block takes the 23 stamp with the
+   rest.
    **`config_format` 21 → 22** retires the editor axis, as entries of their
    own: a config carrying `answers.editor` or `enforcement.editor_keys` loses
    each key, with nothing to convert, since both only decided whether an
