@@ -141,7 +141,7 @@ Read each `sometimes` file where it applies, and never upfront.
 | `<folder>/engine/<loop-id>-<round>.log`, each engine's output | written at a `review` row; committed with the folder | this skill |
 | `<log root>/active/<session id>`, the session's run marker | written by `log.mjs`; deleted by `log.mjs` and the `SessionEnd` hook | this skill and its hooks |
 | `~/Library/Caches/vwf/<repo>/<folder basename>.jsonl`, the action log                                                 | append only                  | this skill and its hooks      |
-| `.config/releases.yaml`                                                                                               | raised on a merged landing   | this skill; the release step clears |
+| The release levels in `.config/bootstrap/releases.toml`, through `bootstrap config` only                              | raised on a merged landing   | this skill; the release step clears |
 | `docs/memory/decisions/`, `docs/memory/problems/`, `docs/memory/gaps/`                                                | read; decisions written      | the memory rule               |
 | `docs/scratchpad/<project>/renders/` in the main checkout                                                             | written by `renders.mjs`     | this skill                    |
 | `.config/vwf.yaml`                                                                                                    | read; `harness:` at Reconcile | the repo                     |

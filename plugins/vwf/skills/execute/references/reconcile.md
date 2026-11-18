@@ -42,8 +42,8 @@ skipped**:
    `${CLAUDE_PLUGIN_ROOT}/skills/docs-sync/SKILL.md`. It applies its findings, plus every
    `DOCS FALSIFIED:` line the units returned.
 2. **The gates unit** runs the generators the plan names, and passes the full wave gate. It bumps
-   no version. A release level is recorded at the landing, in `.config/releases.yaml`. The release
-   step a person runs bumps the version.
+   no version. A release level is recorded at the landing, in `.config/bootstrap/releases.toml`,
+   through `bootstrap config`. The release step a person runs bumps the version.
 
 Each runs the wave loop in full: dispatch, wave review, unit gate, wave gate, commit.
 

@@ -176,7 +176,8 @@ and the wave reviewer can send messages to each other; `code` units and
     `NONE` included, each with its reason. It shows the levels at the gate,
     as it shows the priority; the user may change a level there, and nothing
     else changes it. The plan never bumps a version and never releases: at
-    landing `/vwf:execute` raises each level in `.config/releases.yaml` (the
+    landing `/vwf:execute` raises each level in
+    `.config/bootstrap/releases.toml`, through `bootstrap config` (the
     highest wins), and a release is cut later, by hand.
     - **18a. End an `all` run after landing.** Asked only when the plan's
       `owns` include a plugin the run itself loads — a plugin installed in the
