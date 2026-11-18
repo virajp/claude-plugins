@@ -228,11 +228,11 @@
         "U6"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.841Z",
+      "status": "green",
+      "started": "2026-11-18T09:35:48.756Z",
+      "ended": "2026-11-18T09:37:10.118Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -256,9 +256,9 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-18T09:35:48.604Z",
+      "ended": "2026-11-18T09:37:10.414Z"
     }
   ],
   "shared_files": [
