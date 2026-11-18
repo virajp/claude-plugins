@@ -1,0 +1,520 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Doctor and execute run bootstrap's LSP check, and consent.lsp is retired",
+  "requires": [
+    "docs/plans/2026-11-15-vwf-over-bundles",
+    "docs/plans/2026-11-18-gates-all"
+  ],
+  "source": [
+    "B150"
+  ],
+  "backlog": [
+    "B150"
+  ],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-18 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format --all"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint --all",
+      "mise x -- pnpm vitest run",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "In this repo, where mise run code:lsp:check passes: node plugins/vwf/skills/doctor/scripts/checks.mjs --projects \"\"",
+        "pass": "The JSON shows no row with rule lsp-check, and the exit code is 0."
+      },
+      {
+        "id": "K2",
+        "check": "command grep -rnE 'consent\\.lsp|proceed without|lsp-check-parked' plugins/vwf site/src/content/docs .claude/skills/vwf-plugin",
+        "pass": "No hit, except: the comment and the enum line of plan-management/scripts/lib/schema.mjs (the validator still accepts an old consent.lsp value, D5); the cycle-only-key rule of assets/templates/plan-folder.md, which names consent.lsp as an old optional key; a sentence of site/src/content/docs/plugins/vwf.md that names consent.lsp as retired or says the validator refuses it on a change plan; plugins/vwf/skills/execute/references/rules.md (cannot proceed without a human decision), which is not the consent value. The run report lists each allowed hit with its reason."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "MINOR",
+      "reason": "/vwf:doctor reports each LSP server that bootstrap's code:lsp:check cannot resolve, /vwf:execute stops a plan with a code unit on such a row, and /vwf:plan no longer asks the LSP question."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual describes the LSP check and drops consent.lsp."
+    },
+    {
+      "id": "stackgen",
+      "level": "NONE",
+      "reason": "No unit touches plugins/stackgen/."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Doctor reports the LSP check",
+      "wave": 1,
+      "file": "01-doctor-lsp.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/scripts/**",
+        "plugins/vwf/skills/doctor/SKILL.md",
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/fixtures/doctor-checks/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Retire consent.lsp",
+      "wave": 1,
+      "file": "02-retire-consent-lsp.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/plan-management/scripts/lib/schema.mjs",
+        "plugins/vwf/skills/plan-management/scripts/plan.mjs",
+        "scripts/src/plan-script.test.ts",
+        "plugins/vwf/skills/plan/SKILL.md",
+        "plugins/vwf/skills/plan/references/plan-doc.md",
+        "plugins/vwf/assets/plan-interview.md",
+        "plugins/vwf/assets/templates/plan-folder.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Execute stops a code-unit plan on an LSP row",
+      "wave": 2,
+      "file": "03-execute-lsp.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/scripts/start.mjs",
+        "scripts/src/execute-start.test.ts",
+        "plugins/vwf/skills/execute/references/preflight.md",
+        "plugins/vwf/skills/execute/references/setup.md",
+        "plugins/vwf/skills/execute/references/claim.md",
+        "plugins/vwf/skills/execute/references/final-report.md",
+        "plugins/vwf/skills/execute/references/action-log.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "its tests run the doctor checks of U1, which must make the lsp rows first",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Review: U1 to U3",
+      "wave": 3,
+      "file": "04-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U5",
+      "title": "Docs",
+      "wave": 4,
+      "file": "05-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/**",
+        ".claude/skills/vwf-plugin/**",
+        "CLAUDE.md",
+        "readme.md",
+        "docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md",
+        "docs/memory/gaps/2026-11-13-execute-lsp-check-resolved.md",
+        "docs/memory/decisions/2026-11-12-execute-scripted-start.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Gates",
+      "wave": 5,
+      "file": "06-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W5",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "site/src/content/docs/**, .claude/skills/vwf-plugin/**, CLAUDE.md, readme.md",
+      "why": "every human-facing doc belongs to the docs unit",
+      "owner": "U5"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Where does the LSP check run, so that /vwf:doctor and the start of /vwf:execute both report it?",
+      "ruling": "In the doctor checks that checks.mjs runs (plugins/vwf/skills/doctor/scripts/lib/). They run mise run code:lsp:check once, from the base repo root, and make one row for each output line of the form <server>: <command> not found - <fix>: rule lsp, severity degraded, project null, subject the server, message the line, remedy the fix after ' - '. /vwf:doctor and start.mjs get the same rows.",
+      "rejected": "The check in start.mjs only, with doctor prose for a hand run; orchestrator prose in preflight step 2 with no script.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "What happens when code:lsp:check cannot run?",
+      "ruling": "The user ruled: /vwf:execute must stop if the target repo does not have code:lsp:check, or if the check fails, and the user fixes it before the run continues. When mise tasks ls --hidden does not list code:lsp:check, the checks make one lsp row, subject code:lsp:check, remedy: run the bootstrap sync (bootstrap sync) so that the mise tool writes the task. When the task exits 2, or exits 1 with no not-found line, the checks make one lsp row, subject code:lsp:check, with the last stderr line of the task as the message and the remedy. Exit 0 makes no row.",
+      "rejected": "A degraded row with a gap LSP not verified, and the run continues.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "Which severity has an lsp row in /vwf:doctor?",
+      "ruling": "degraded. checks.mjs keeps exit 0 when only lsp rows are present, because a blocking row stops every plan, and the user ruled that only a plan with a code unit stops (D4).",
+      "rejected": "blocking.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "Which plans does an lsp row stop?",
+      "ruling": "The user ruled: only a plan with a code unit. start.mjs passes on every lsp row in findings. When has_code_unit is true and an lsp row is present, the result is blocked before the claim, and the message names each server and its remedy. When the plan has no code unit, the run continues, and the final report lists the lsp rows.",
+      "rejected": "Stop every plan (a blocking row).",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "With D4, the consent.lsp answer proceed without has no effect. What happens to consent.lsp?",
+      "ruling": "The user ruled: retire it. /vwf:plan no longer asks the LSP question (interview item 9a is removed) and writes no consent.lsp. The validator makes consent.lsp optional on a cycle plan and still refuses it on a change plan; an old folder that has it stays valid, and no script reads it. The template drops the key from its sample and its rules.",
+      "rejected": "Keep it as a record that execute never reads; keep item 9a with the one answer install now.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "How does an lsp row name what is missing?",
+      "ruling": "By its server name, as code:lsp:check prints it (for example dart-lsp). No map from server to language: only consent.lsp needed it, and D5 retires that key.",
+      "rejected": "Map each server to its languages through the extensionToLanguage of bootstrap lsp --json.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "How do the tests fake code:lsp:check?",
+      "ruling": "As scripts/src/doctor-checks.test.ts does today: a stub mise on a temporary PATH. The stub answers mise tasks ls --hidden and mise run code:lsp:check with fixture output and exit codes 0, 1 and 2, and a case where the task is absent.",
+      "rejected": "A real code:lsp:check run in the test.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Which plan must land first?",
+      "ruling": "requires docs/plans/2026-11-15-vwf-over-bundles (R5b). Its U4 owns plugins/vwf/skills/doctor/ and the doctor tests, and changes the doctor LSP rows to the lspServers of vwf-tools. This plan adds its rows on top of that. Priority 90 = 10 + 80.",
+      "rejected": "No requires (a merge conflict in the doctor scripts).",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Does the plan need a review unit?",
+      "ruling": "Yes, one review unit (U4) after U1 to U3, because the plan lands runnable code: the doctor checks, start.mjs and the validator. Over edit units it runs the security half only.",
+      "rejected": "No review unit.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Which execution mode?",
+      "ruling": "teams. Wave 1 holds two edit units (U1, U2), and the user confirmed teams.",
+      "rejected": "solo.",
+      "units": []
+    },
+    {
+      "id": "D11",
+      "decision": "What happens to the parked gap record docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md?",
+      "ruling": "U5 renames it to 2026-11-13-execute-lsp-check-resolved.md with plain mv, and changes the end of its header line to resolved <date> by 2026-11-18-lsp-check, in the form of the other resolved records (for example 2026-11-15-r5-stack-without-packs-resolved.md). Its body stays, with one Resolved: line at the end that states D2, D4 and D5.",
+      "rejected": "Delete the record.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Reversal: the parked gap and B150 said that installed stops the run, and proceed without writes a gap and continues.",
+      "ruling": "Reversed by the user on 2026-11-18: a missing server, a missing task or a failed check always stops a plan with a code unit (D2, D4), and consent.lsp is retired (D5). The docs unit names the reversal in the resolved gap record (D11).",
+      "rejected": "Restore the consent rule of the parked gap.",
+      "units": [
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Rulings review round 1 gaps 1 and 2: which failures make a code:lsp:check row, and which line does the row carry?",
+      "ruling": "Any failure of the check is one row with subject code:lsp:check: an exit code other than 0 with no not-found line, a non-zero exit of mise tasks ls --hidden, or a failed spawn. When mise is not on PATH, the present blocking mise row already stops the run, and no lsp row is added. The message and the remedy are the last stderr line that mise did not write (skip a line of the form [<task>] ERROR ...); when there is no such line, the message is code:lsp:check failed with exit <n> and the remedy is run mise run code:lsp:check and fix what it prints. Follows from the user ruling of D2.",
+      "rejected": "none",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Rulings review round 1 gap 3: on a resume the log start is already written when the checks run.",
+      "ruling": "On a resume blocked by an lsp row (D4), start.mjs calls stop(), a stop event plus a log end, as it does for a blocking row. On a fresh run it returns blocked with no log start and no claim.",
+      "rejected": "none",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Rulings review round 1 gaps 7 to 11: passages that no unit owned, and the allowed hits of K2.",
+      "ruling": "U3 also owns execute/references/claim.md (findings now also holds the lsp rows, and a blocked result can come from them) and final-report.md (it lists the lsp rows of a plan with no code unit). U2 also owns plan/references/plan-doc.md (its consent text names lsp). U5 also owns docs/memory/decisions/2026-11-12-execute-scripted-start.md and repoints its link to the renamed record. K2 allows the hits it lists.",
+      "rejected": "none",
+      "units": [
+        "U2",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Rulings review round 1 gap 5: in a multi-repo product, where does code:lsp:check run?",
+      "ruling": "The user ruled: in the base repo only. The checks run it once, from the base repo root. A member repo servers are not checked.",
+      "rejected": "Run it in the base and in each member repo that a project of the plan lives in.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Rulings review round 1 gap 6: R5b adds its own doctor LSP rows (a server missing from the lspServers of vwf-tools) with no fixed rule name. Which rows stop a code-unit plan?",
+      "ruling": "The user ruled: only this plan rows. Their rule name is lsp-check, which no R5b row may share. Where an earlier decision of this plan says rule lsp or an lsp row, read lsp-check. start.mjs stops only on lsp-check rows; the R5b rows stay as R5b rules them.",
+      "rejected": "start.mjs also stops on the R5b vwf-tools rows.",
+      "units": [
+        "U1",
+        "U3",
+        "U5"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Rulings review round 1 gap 4: a fresh run of a code-unit plan has an unknown-language row and an lsp-check row. Which comes first?",
+      "ruling": "The user ruled: the LSP stop first. start.mjs returns blocked on the lsp-check row before the unknown-language question, and its message also names the unknown-language rows. The user fixes the LSP, and the next run asks the question.",
+      "rejected": "Ask the unknown-language question first, and stop on the re-run with --continue-unknown-language.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings review round 2 gaps 1, 2, 3, 4, 6 and 7.",
+      "ruling": "Gap 1: when mise is not on PATH, the checks also add one lsp-check row with subject code:lsp:check (the mise row can be degraded, stack.mjs about line 55), so a code-unit plan stops (D2). Gaps 2 and 3: K2 allows the enum line of schema.mjs and a manual sentence that names consent.lsp as retired. Gap 4: a fresh run with a blocking row and an lsp-check row takes the present blocking path (log start, then stop()), and the message names both kinds of row. Gap 6: U1 also changes the header of doctor/scripts/lib/index.mjs (about line 2, LSP parked by D22). Gap 7: the message of a row is the line without its ANSI colour codes and its label prefix (helpers print_error). Each has one answer that follows from the rulings.",
+      "rejected": "none",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings review round 2 gap 8: code:lsp:check runs bootstrap lsp --json, which can fetch the bootstrap clone at each run (bootstrap docs/design/cli.md: commands outside the catalog reads fetch each time), but the doctor checks promise no network.",
+      "ruling": "The user ruled: accept it, and verify first. U1 first runs bootstrap lsp --json once with the network off (or with a failing fetch) and records in a DECIDED line what it does. The headers of checks.mjs and lib/index.mjs drop no network for this one call and name it. An offline failure is a normal lsp-check row and stops a code-unit plan (D2).",
+      "rejected": "Pin the call to the cached clone with BOOTSTRAP_CLONE; park a gap for bootstrap so that lsp follows the 30-minute fetch rule.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings review round 2 gap 5: plan/SKILL.md says, inside the LSP passage that U2 removes, An absent toolchain is asked here, once, and recorded. No key records that answer.",
+      "ruling": "The user ruled: remove the sentence with the LSP passage. A missing toolchain is a doctor row, and the blocking rows already stop /vwf:plan.",
+      "rejected": "Keep the toolchain question as its own sentence.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings review round 3 gaps 2, 3 and 4.",
+      "ruling": "Gap 2: the default mise stub of scripts/src/execute-start.test.ts (about lines 50-58) and of scripts/src/doctor-checks.test.ts lists code:lsp:check in tasks ls --hidden and passes it; MISE_FAIL spares the LSP calls. The present tests keep their results; only the new cases change the stub. Gap 3: when the exit status is null (a failed spawn or a signal), the message is code:lsp:check did not run: <the spawn error or the signal>, with the remedy of D13. Gap 4: U1 also removes no network read from doctor/SKILL.md (about line 204) and names the bootstrap lsp --json call there (D20). Each has one answer that follows from the rulings.",
+      "rejected": "none",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Rulings review round 3 gap 1: for a plan of edit units, an lsp-check row does not stop the run. Where is it recorded, so that the final report (rendered from the record, final-report.md about lines 3-7) can list it after a resume or a handoff?",
+      "ruling": "The user ruled: a log event. When the run continues with lsp-check rows (a plan with no code unit), start.mjs writes one free event lsp-check per row to the plan action log, after the log start, with the keys subject, message and remedy, in the form of log.mjs event <name> --key value. The final report reads those events. U3 also owns execute/references/action-log.md and names the event there.",
+      "rejected": "A closed gap entry in index.json per row; run the doctor checks again at the report.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Rulings review round 4 gaps 1 to 4.",
+      "ruling": "The user ruled each one. Gap 1: U1 adds lsp-check:degraded to the expected rule lists of the doctor tests that run with no mise on PATH (doctor-checks.test.ts about lines 189-190, 212-214, 223-224, 409-411); D22 (the present tests keep their results) applies only to the tests where mise is on PATH. Gap 2: each start, fresh or resume, writes the lsp-check events of its own check; the final report reads only the lsp-check events after the last log start. Gap 3: the spawn of mise run code:lsp:check has a timeout of 60 seconds (spawnSync timeout 60000); a timeout ends it by signal, which D22 makes a row (code:lsp:check did not run: SIGTERM). Gap 4: requires adds docs/plans/2026-11-18-gates-all, which edits plan-doc.md, plan-folder.md and action-log.md before this plan; the priority stays 90.",
+      "rejected": "Gap 1: no lsp-check row without mise. Gap 2: write the events on a fresh run only. Gap 3: 120 seconds; no timeout. Gap 4: rely on the priority order alone.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
