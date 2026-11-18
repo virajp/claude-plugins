@@ -258,7 +258,7 @@
     {
       "id": "D5",
       "decision": "Stated by the planner, confirmed at the shape gate: the docs.",
-      "ruling": "setup:ai is declarative (bootstrap R2c): it installs what the claude tool lists, vwf through the virajp-plugins tool; it removes the project plugins it recorded; it updates only with --update; it makes no pnpx call. The installer stays the one-shot for a person. No review unit: the plan changes prose only.",
+      "ruling": "setup:ai is declarative (bootstrap R2c): it installs what the claude tool lists, vwf through the virajp-plugins tool; it removes the project plugins it recorded; it updates only with --upgrade, which setup --upgrade passes; it makes no pnpx call. The installer stays the one-shot for a person. No review unit: the plan changes prose only.",
       "rejected": "",
       "units": [
         "U4"
@@ -304,8 +304,8 @@
     {
       "id": "D10",
       "decision": "Round 1 gap 5: the form of the --update run in the docs.",
-      "ruling": "Use bootstrap's own form, mise run setup:ai --update: R2c declares the flag in the task's #USAGE, and mise accepts a declared flag with no --. Not verified by a run.",
-      "rejected": "mise run setup:ai -- --update.",
+      "ruling": "Use bootstrap's own form, mise run setup:ai --upgrade: bootstrap 4.0.0 declares the flag in the task's #USAGE, and mise accepts a declared flag with no --. mise run setup --upgrade passes it. See D22.",
+      "rejected": "mise run setup:ai -- --upgrade.",
       "units": [
         "U4"
       ]
@@ -408,6 +408,15 @@
       "rejected": "Accept the uninstall.",
       "units": [
         "U3"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "2026-11-18 amendment, from the bootstrap prompt 2026-11-18-claude-plugins-bootstrap-4: bootstrap 4.0.0 names the update flag of setup:ai --upgrade, not --update (repo/tools/claude/tasks/setup-ai, #USAGE flag \"--upgrade\").",
+      "ruling": "Every text of this plan that names the flag uses --upgrade, and says that mise run setup --upgrade passes it. D5 and D10 carry the new name. D21 keeps --update as a record of its round 4 test.",
+      "rejected": "Keep --update.",
+      "units": [
+        "U4"
       ]
     }
   ],

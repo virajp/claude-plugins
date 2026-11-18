@@ -10,7 +10,7 @@ This file states each ruling in its final form. The ids point at the
 
 - **D5:** `setup:ai` is declarative (bootstrap R2c): it installs what the
   claude tool lists, vwf through the `virajp-plugins` tool; it removes the
-  project plugins it recorded; it updates only with `mise run setup:ai --update` (D10); it makes no
+  project plugins it recorded; it updates only with `mise run setup:ai --upgrade`, which `mise run setup --upgrade` passes (D10, D22); it makes no
   pnpx call. The installer stays the one-shot for a person.
 - **D1, D2:** init adds the `virajp-plugins` tool to the base repo; doctor
   checks the vwf plugin at any scope and reports a missing tool as drift.
