@@ -287,6 +287,51 @@ describe("abandon and finish", () => {
   });
 });
 
+describe("a submodule", () => {
+  /** A superproject at root/super whose submodule `sub` is a clone of origin; returns sub. */
+  function nested() {
+    seed(true);
+    const sup = join(root, "super");
+    git(root, "init", "-q", "-b", "develop", sup);
+    git(sup, "-c", "protocol.file.allow=always", "submodule", "add", "-q", "-b", "develop", origin, "sub");
+    git(sup, "commit", "-q", "-m", "add sub");
+    return { sup, sub: join(sup, "sub") };
+  }
+
+  it("open cuts the worktree in the submodule, not the superproject", () => {
+    const { sup, sub } = nested();
+    const r = land(["open", sub, "--into", "develop", "--name", "change-one"]);
+    expect(r.status).toBe(0);
+    expect(r.json.worktree).toBe(join(sub, ".worktrees", "change-one"));
+    expect(git(r.json.worktree, "rev-parse", "--path-format=absolute", "--git-common-dir")).toBe(
+      join(sup, ".git", "modules", "sub"),
+    );
+    expect(git(sup, "branch", "--list", "change-one")).toBe("");
+  });
+
+  it("close lands the change on the submodule's origin", () => {
+    const { sup, sub } = nested();
+    const r0 = land(["open", sub, "--into", "develop", "--name", "change-one"]);
+    writeFileSync(join(r0.json.worktree, "notes.md"), "two\n");
+    const r = land(["close", r0.json.worktree, "--into", "develop", "--message", "docs: change one"]);
+    expect(r.status).toBe(0);
+    expect(r.json.landed).toBe(true);
+    expect(git(origin, "show", "develop:notes.md")).toBe("two");
+    expect(readFileSync(join(sub, "notes.md"), "utf8")).toBe("two\n");
+    expect(existsSync(r0.json.worktree)).toBe(false);
+    expect(git(sup, "log", "-1", "--format=%s")).toBe("add sub");
+  });
+
+  it("abandon removes the submodule's worktree and branch", () => {
+    const { sub } = nested();
+    const r0 = land(["open", sub, "--into", "develop", "--name", "change-one"]);
+    const r = land(["abandon", r0.json.worktree]);
+    expect(r.status).toBe(0);
+    expect(existsSync(r0.json.worktree)).toBe(false);
+    expect(git(sub, "branch", "--list", "change-one")).toBe("");
+  });
+});
+
 describe("usage", () => {
   it.each([
     ["no verb", []],

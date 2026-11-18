@@ -21,7 +21,7 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { dirname, join } from "node:path";
+import { dirname, join, resolve } from "node:path";
 
 export const REMOTE = "origin";
 /** The clean retries of a rejected push before close refuses. */
@@ -66,9 +66,16 @@ export function hasRemote(dir) {
   return git(dir, ["remote", "get-url", REMOTE]).ok;
 }
 
-/** The main checkout of the repo `dir` is in: the parent of the git common dir. */
+/**
+ * The main checkout of the repo `dir` is in: the parent of the git common
+ * dir, unless that dir sets core.worktree. A submodule's common dir is
+ * <superproject>/.git/modules/<name>, whose parent is inside the
+ * superproject's git dir; its core.worktree names the submodule's work tree.
+ */
 export function mainCheckout(dir) {
-  return dirname(must(dir, ["rev-parse", "--path-format=absolute", "--git-common-dir"]));
+  const common = must(dir, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
+  const tree = git(dir, ["config", "--file", join(common, "config"), "core.worktree"]);
+  return tree.ok && tree.out !== "" ? resolve(common, tree.out) : dirname(common);
 }
 
 /** The worktree directory git-workflow picks: .worktrees unless only worktrees exists. */
