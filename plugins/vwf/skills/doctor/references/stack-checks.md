@@ -392,16 +392,21 @@ is the same finding one level up, at the same severity: report it and nudge
 the mise config.
 Setup materializes no tooling itself — `/vwf:init` does, by running
 bootstrap's readme prompt, and fetches no bundle.
-**A repo is shaped when `.config/bootstrap.toml` exists** — the values file
-bootstrap writes and a plugin never edits. A repo without it, carrying
-`.config/stackgen.yaml` or the older files —
-`.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml`, or a
-root `.config/mise.dev.toml` — is **shaped on the old layout**: one drift row
-naming the files found, remedy `/vwf:setup reshape`, whose init adopts
-bootstrap. A repo without it and carrying none of those is **not shaped**: one
-row, the same remedy. On either row no predicate below is evaluated in that
-repo. A leftover `repo-hygiene/repo-hygiene` lockfile record is the same
-old-layout row. That is
+**Doctor reaches bootstrap only through its CLI**, by the rules of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, which owns the contract
+check, the shaped test and the envelope and is not restated here. Run the
+contract check once per run, before any repo is read. When it fails, report
+one **blocking** finding carrying that asset's install hint word for word, and
+run neither the shaped test nor (d) in any repo.
+**A repo is shaped when the shaped test passes** — `bootstrap config get
+repo.format --json`, run in that repo, prints an envelope with `ok` true. On
+code 2 — the repo is not shaped, is on the old form, has both forms or has a
+broken folder, as the envelope's `errors` text says — report one **blocking**
+row naming the repo, with the `errors` messages as bootstrap gives them and no
+text of doctor's own per case, remedy `bootstrap migrate`, reached through
+`/vwf:setup reshape`. On that row no predicate below is evaluated in that
+repo, (d) included. A leftover `repo-hygiene/repo-hygiene` lockfile record in
+a shaped repo is one drift row, the same remedy. That is
 the coarsest form of one question — is this repo still shaped the way
 `/vwf:init` shapes one — and the section at the end of this file is the
 fuller version of the same check: this one fires when the shape is absent,
@@ -461,7 +466,9 @@ names projects that did not exist when the repo was shaped, and a fresh clone
 arrives with one branch. It drifts by moving, too — a pack-owned file the repo
 edited in place is no longer the file the pack ships. None of that stops the
 repo working, so **every finding here is `drift` or a `warning`, and none is
-blocking** — a repo behind its baseline is out of date, not broken.
+blocking** — a repo behind its baseline is out of date, not broken. The two
+blocking findings above — no contract, and a repo the shaped test refuses —
+come before this check and are not part of it.
 
 **Each row carries the remedy of whoever owns what it read**, and §9 prints each
 remedy once with the rows that led to it:
@@ -470,10 +477,9 @@ remedy once with the rows that led to it:
 | --- | --- |
 | `/stackgen:stackgen-sync` — a landed pack's delta, shown for consent | Pack versions, Content drift |
 | `/vwf:setup` — the packs not landed | a missing pack lockfile, Project ids |
-| `/vwf:setup reshape` — bootstrap and the forge | not shaped, shaped on the old layout, Branches, Bootstrap drift, Forge state |
-| fix the value in `.config/bootstrap.toml` | Merge model |
+| `/vwf:setup reshape` — bootstrap and the forge | the shaped test's row, Bootstrap drift, Forge state |
 
-**The seven run per repo** — the base and every **locally-present** member,
+**The five run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
 `.gitmodules` declares union the `members:` list the config carries, deduped
 on realpath. That step owns the rule and it is not restated here; a path only
@@ -485,9 +491,11 @@ both doors walk the members too, so one re-run covers that remedy's rows under
 every heading.
 
 **The local baseline predicates are every one but two**: (a) Pack versions, (b)
-Project ids, (c) Branches, (e) Content drift and (f) Merge model, which are what
-`/vwf:doctor baseline` evaluates. (d) Bootstrap drift, which executes code, and
-(g) Forge state, which reads the remote, run in full mode only.
+Project ids and (e) Content drift, which are what `/vwf:doctor baseline`
+evaluates. (d) Bootstrap drift, which runs bootstrap's whole check, and (g)
+Forge state, which reads the remote, run in full mode only. The letters (c)
+and (f) are retired: the branches and their landing values are bootstrap's to
+check, and (d) reports them.
 
 **An absent member is a blind spot, not a finding.** A member this machine
 does not carry is said in §5's output as `<member> — not present, not checked`
@@ -543,61 +551,33 @@ sub-directory of
 a rename a re-run performs. It is never "a pack moved", and never a reason to
 suspect the adapter.
 
-**(c) Branches.** In **each** repo, ask that repo for `refs/heads/develop` —
-`git show-ref --verify --quiet` — and the same for `refs/heads/main`. Either
-one missing is a drift row: work flows from a feature branch or a worktree to
-`develop`, and from `develop` to `main`, and the repo's own merge tasks refuse
-a destination branch that does not exist locally. The remedy is bootstrap's
-`docs/sync`, reached through `/vwf:setup reshape`. A repo with no commit yet has
-neither branch
-and reports one row saying that, not two — and a member is its own repository,
-so a base carrying both branches says nothing about the member beside it.
-
 **(d) Bootstrap drift.** Full mode only: `baseline`, and so `/vwf:recall`, never
-runs it. First, from the repo's root, run `mise trust --show`. Run the dry-run
-only when it lists a config of that repo and every one it lists there reads
-`trusted`; a line for a parent directory does not count, and a repo with no
-config listed is not trusted. Otherwise the dry-run does not run: drift is
-**unknown**, one `warning` naming the repo with the reason
-`repo not trusted by mise`.
+runs it. In each repo the shaped test passed, from its root, run
+`bootstrap check --json` and `bootstrap sync --json --dry-run`. Both read
+bootstrap's clone and write nothing in the repository; `check` validates the
+values folder, the branches and their landing values among its stages, and
+the dry run lists what a sync would change. They are the only bootstrap
+commands doctor runs beside the contract check and the shaped test. Judge
+each by its envelope, never by its human lines on stderr:
 
-That check is a limit, not a safeguard. It stops only a clone mise has never
-run: `mise run` runs a repo's task with no trust prompt and trusts the repo's
-config as it does, and the trust gate of mise is not tied to file content, so a
-repo trusted once runs whatever its `setup:configs` task holds on the branch
-checked out now.
+- **`check`** — each finding of a stage whose `status` is `fail` is one drift
+  row naming the repo, the stage and the finding's `message` (and its `path`
+  when it has one). A finding whose `severity` is `warning`, in any stage, is
+  one drift row marked as a warning. A `skipped` stage gives no row.
+- **`sync --dry-run`** — each item of `data.plan.changes` is one drift row
+  naming the repo and the item's `path`, with its `note` when it has one; and
+  each item of `data.plan.files` whose `kind` says the sync would write or
+  remove the file — `changed`, `new`, `seeded` or `removed` — is one drift row
+  naming the repo, the `path` and the `kind`. Any other `kind` gives no row.
+- **A failure before the stages** — `ok` false with `checks` `[]` for
+  `check`, `data` `null` for `sync` — is one drift row naming the repo and the
+  command, with the envelope's `errors` messages word for word.
+- **Code 5** — one row naming the repo and the command: `not checked: the
+  clone is stale and offline`.
 
-In a trusted repo, from its root, run
-`env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run`,
-bootstrap's own done-check. This explicit dry-run writes nothing in the
-repository, but it does run code: the repo's own `setup:configs` task, which
-refreshes bootstrap's clone of its `main` under `~/.cache/bootstrap` and executes
-the `main` branch of bootstrap from that clone, with no pin. It is the only
-bootstrap command doctor runs. Judge it by its exit code and its stderr. Its
-last line is the headline, after a glyph or an `[OK]` tag:
-`Dry run: no file would change` or `Dry run: <n> file(s) would change`,
-matched as the start of that line, so count suffixes such as
-` · 161 unchanged` after it change nothing. Above it, the list lines —
-`would change`, `would add`, `would seed`, `would remove` — name the files,
-and an info line `bootstrap_commit would change to <commit>` names a new
-commit:
-
-- **Exit 0, `Dry run: no file would change` and no
-  `bootstrap_commit would change to` line** — no drift, and no row.
-- **Exit 0 with a headline of one or more files, or a
-  `bootstrap_commit would change to` line** — one drift row naming the repo,
-  with those list and info lines under it, remedy `/vwf:setup reshape`.
-- **Exit 0 and no `Dry run:` headline** — drift **unknown**: one `warning`
-  naming the repo, the reason "no Dry run headline: the repo's setup:configs
-  runs an older sync engine; run bootstrap init", and the exit status.
-- **Any exit code other than 0** — drift **unknown**: one `warning` naming the
-  repo and the reason, the exit status and the last bootstrap error line (it
-  starts with `✗` or `[ERROR]`) with its fix line (`→ …`) when one follows,
-  word for word, or, with no such line, the last line on stderr.
-
-Drift unknown is never a drift row and never a guessed one.
-
-This covers every file bootstrap syncs, so none of them is hashed here.
+None of these rows is blocking, and every one takes the remedy
+`/vwf:setup reshape`. This covers every file bootstrap syncs, and the
+branches, so none of them is read or hashed here.
 
 **(e) Content drift.** A file a pack landed lives in the repo,
 where anything may edit it; what it holds *today* is the question (a) does
@@ -683,14 +663,6 @@ set from whatever happens to sit in `.config/` instead — anything not in the
 lockfile is not the adapter's, which is the rule the materialization itself
 lives by.
 
-**(f) Merge model.** In **each** repo, read `merge_model` of every
-`[tools.git.branch.*]` table in that repo's own `.config/bootstrap.toml`. A
-value other than `direct` or `pr` is one `warning` naming the repo, the table
-and the value, remedy: fix the value in `.config/bootstrap.toml`. The repo's
-merge tasks read any such value as `direct`, so what breaks quietly is the
-repo that meant `pr` and has been landing that branch locally ever since. An
-absent key means `direct`, bootstrap's own default, and is no row.
-
 **(g) Forge state.** The one sub-check that reads the **remote** rather than
 the checkout. `/vwf:init`'s **forge pass** — run once for the product, after
 the base lands, for a repo `/vwf:git-workflow` landed with a push that run, or
@@ -748,7 +720,7 @@ allowed to read. Otherwise, three checks:
   `direct` the require-PR rule is neither expected nor noted when present. A
   branch the
   forge does not carry reports `not on the forge — not checked` for that
-  branch: pushing it is `/vwf:git-workflow`'s, and (c) already says whether it
+  branch: pushing it is `/vwf:git-workflow`'s, and (d) already says whether it
   exists locally.
 - **Backlog project.** **Base only, once per product**, and printed under the
   base's section. Resolve it exactly as the backlog skill's GitHub reference

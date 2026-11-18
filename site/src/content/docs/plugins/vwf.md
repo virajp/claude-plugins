@@ -830,29 +830,29 @@ record.
 
 ## Commands
 
-| Command                                                       | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `/vwf:init`                                                   | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection), each in the mode its tree decides — `blank`, `source`, `shaped` or `old layout`; the shape comes from bootstrap, reached through its readme prompt; reached only through `/vwf:setup`                                                                                                                                                                           |
-| `/vwf:setup [reshape]`                                        | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                                                                                                                                                                                                                                                                                       |
-| `/vwf:product [note]`                                         | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| `/vwf:architecture`                                           | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `/vwf:design-system`                                          | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `/vwf:blueprint [flow]`                                       | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| `/vwf:mockups [flow]`                                         | Batch re-render of screen mockups on the production routes, served at one local URL per platform (blueprint passes render in-pass); `renders` serves execute's renders of the built app beside them                                                                                                                                                                                                                                                                                                                                                         |
-| `/vwf:screens <mode>`                                         | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `/vwf:plan [slice]`                                           | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `/vwf:execute <folder>`                                       | Run an approved plan folder of either kind in a fresh context, asking only what the plan missed — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan; `all` runs every runnable plan, each in its own runner, until one stops                                                                                                                                                              |
-| `/vwf:plan-management`                                        | Internal — the one writer of the plan queue: the index rows, every folder's status, the archive move, all through its `plan.mjs` script; called by the planners and `execute`, or when you ask to archive or list                                                                                                                                                                                                                                                                                                                                           |
-| `/vwf:doctor [project ... \| baseline] [prefer: report only]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, required binaries, manifests, harness, dependency audit, the `docs/memory/` store, leftovers of retired tools, the repo shape of every member, stamps. A full run's Bootstrap drift check is an explicit `mise run setup:configs --dry-run`, which executes bootstrap's `main` with no pin; `baseline` runs the local repo-shape predicates alone, file reads only, so it does not report config drift; a trailing `prefer: report only` reports the findings, offers no fix and asks nothing |
-| `/vwf:verify [env]`                                           | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
-| `/vwf:feedback [input]`                                       | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `/vwf:backlog [verb]`                                         | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| `/vwf:change-plan [what]`                                     | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| `/vwf:handoff [name] [prefer: …]`                             | Capture the session so work resumes in a fresh one — no name writes the reserved `next`; a trailing `prefer: the one thread is <text>` names the thread, so the skill does not ask for it                                                                                                                                                                                                                                                                                                                                                                   |
-| `/vwf:recall [name]`                                          | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation; prints shape-drift lines, from file reads only, when a repo has fallen behind                                                                                                                                                                                                                                                                                                                                                                                  |
-| `/vwf:readme`                                                 | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| `/vwf:docs-sync [range]`                                      | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `/vwf:git-workflow`                                           | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| Command                                                       | What it does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `/vwf:init`                                                   | Internal — shape the base repo **and every member repo** (config layout, task library, gates, hygiene files, a licence on a public repo, the forge's default branch and branch protection), each in the mode its tree decides — `blank`, `source`, `shaped` or `old layout`; the shape comes from bootstrap, through `bootstrap migrate`; reached only through `/vwf:setup`                                                                                                                                                                                            |
+| `/vwf:setup [reshape]`                                        | Onboard/migrate a repo into vwf's format; `reshape` runs the repo-shape pass alone, across every member (re-runnable)                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `/vwf:product [note]`                                         | The Phase −1 outcome contract — problem, users, goals, slice priority; an optional feedback note seeds the update questions                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `/vwf:architecture`                                           | Bootstrap or update the system shape + Project Registry                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `/vwf:design-system`                                          | Import the product's design system from its design tool into the contract (mandatory once UI exists)                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/vwf:blueprint [flow]`                                       | Sweep the full-product blueprint flow by flow to complete, coherent coverage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `/vwf:mockups [flow]`                                         | Batch re-render of screen mockups on the production routes, served at one local URL per platform (blueprint passes render in-pass); `renders` serves execute's renders of the built app beside them                                                                                                                                                                                                                                                                                                                                                                    |
+| `/vwf:screens <mode>`                                         | Two-way screen sync — `prompt <flow>` briefs the canvas, `import` folds designs back via blueprint                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| `/vwf:plan [slice]`                                           | Write a reviewable cycle-plan folder — a diff of blueprint vs code, deps chained as plans; interviews, records consent, commits and pushes it at hand-off                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `/vwf:execute <folder>`                                       | Run an approved plan folder of either kind in a fresh context, asking only what the plan missed — TDD per `code` unit, code + security review at each `review` row, waves and review per `edit` unit, E2E + UX when the plan covers a slice, then land per the plan's consent; `next` picks the queue's runnable plan; `all` runs every runnable plan, each in its own runner, until one stops                                                                                                                                                                         |
+| `/vwf:plan-management`                                        | Internal — the one writer of the plan queue: the index rows, every folder's status, the archive move, all through its `plan.mjs` script; called by the planners and `execute`, or when you ask to archive or list                                                                                                                                                                                                                                                                                                                                                      |
+| `/vwf:doctor [project ... \| baseline] [prefer: report only]` | Check the repo against `.config/vwf.yaml` — LSPs, toolchains, required binaries, manifests, harness, dependency audit, the `docs/memory/` store, leftovers of retired tools, the repo shape of every member, stamps. A full run's Bootstrap drift check is `bootstrap check --json` and `bootstrap sync --json --dry-run`; a missing bootstrap contract (4.1.0 or newer) is blocking; `baseline` runs the local repo-shape predicates alone, so it does not report config drift; a trailing `prefer: report only` reports the findings, offers no fix and asks nothing |
+| `/vwf:verify [env]`                                           | Post-deploy: health-check + re-run acceptance criteria against the environment                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `/vwf:feedback [input]`                                       | Route production feedback to the doc/command that fixes it (`canvas` harvests each project's design review chat)                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+| `/vwf:backlog [verb]`                                         | The prioritised list of work that cannot be picked up now — a GitHub Project named for the base repo, and this is its only writer                                                                                                                                                                                                                                                                                                                                                                                                                                      |
+| `/vwf:change-plan [what]`                                     | Plan an ad-hoc change — work with no blueprint slice behind it — into the same folder shape, for `/vwf:execute` to run                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
+| `/vwf:handoff [name] [prefer: …]`                             | Capture the session so work resumes in a fresh one — no name writes the reserved `next`; a trailing `prefer: the one thread is <text>` names the thread, so the skill does not ask for it                                                                                                                                                                                                                                                                                                                                                                              |
+| `/vwf:recall [name]`                                          | Resume from a handoff in a fresh session — no name resumes `next` and runs its continuation; prints shape-drift lines, from file reads only, when a repo has fallen behind                                                                                                                                                                                                                                                                                                                                                                                             |
+| `/vwf:readme`                                                 | Scan a repo and write or update its README against eight required sections                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `/vwf:docs-sync [range]`                                      | Reconcile the repo's human docs with a change that landed — README, CLAUDE.md, guides, app changelog                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `/vwf:git-workflow`                                           | Internal — worktree isolation, commits, merges                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 
 **Three are user-only** — `verify`, `mockups` and `recall` carry
 `disable-model-invocation: true`, so the model never fires them on its own; you
@@ -932,19 +932,22 @@ is the run: there is one survey, one plan with a section per repo, and one yes.
 
 **[bootstrap](https://github.com/virajp/bootstrap) owns the repo shape.** Every
 universal file — the tool configs, the mise files and the task library, the
-gates
-and hooks, the branch model, the secrets tools, the ignore and attribute files,
-the issue forms, the Claude plugins — and each repo's values file,
-`.config/bootstrap.toml`, are bootstrap's, and `init` writes none of them. It
-reaches them through one step, the **bootstrap step**, which gives the session
-bootstrap's own readme prompt. bootstrap's `docs/sync` then asks its own
-questions, every value in that file among them; `init` drafts no values and asks
-none of them. What `init` writes itself is its **hygiene assets** —
-`CONTRIBUTING.md`, a `SECURITY.md` unless you declined the security contact, and
-a
-`LICENSE` on a repo you called `public` unless you answered *none* — plus a
-two-line readme stub where there is no readme. Beside them it keeps one record,
-`enforcement.kept_files`, and runs one pass against the forge.
+gates and hooks, the branch model, the secrets tools, the ignore and attribute
+files, the issue forms, the Claude plugins — and each repo's values, in its
+`.config/bootstrap/` folder, are bootstrap's, and `init` writes none of them.
+vwf reaches bootstrap only through its CLI and its JSON contract, and needs
+bootstrap 4.1.0 or newer: `init` runs that contract check first, and stops with
+bootstrap's install hint when it fails. It reaches the repo's values through one
+step, the **bootstrap step**, in each repo, the base first: it runs
+`bootstrap migrate --json --dry-run`, asks you each question bootstrap lists,
+one at a time, and runs `bootstrap migrate --json --yes` with your answers as
+`--answer <tool>.<key>=<value>` — again with any new question, up to three
+rounds. `init` drafts no values of its own. What `init` writes itself is its
+**hygiene assets** — `CONTRIBUTING.md`, a `SECURITY.md` unless you declined the
+security contact, and a `LICENSE` on a repo you called `public` unless you
+answered *none* — plus a two-line readme stub where there is no readme. Beside
+them it keeps one record, `enforcement.kept_files`, and runs one pass against
+the forge.
 
 **Which repos it shapes, it resolves itself.** There is no argument and no flag,
 so the set is never one it was told. The base is resolved by the membership
@@ -975,38 +978,33 @@ handed down: init re-derives it. The first row that holds decides:
 
 | The repo carries                                                                                                               | Mode         |
 | ------------------------------------------------------------------------------------------------------------------------------ | ------------ |
-| `.config/bootstrap.toml`                                                                                                       | `shaped`     |
+| the shaped test: `bootstrap config get repo.format --json` answers `ok`                                                        | `shaped`     |
 | `.config/stackgen.yaml`, or `.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` | `old layout` |
 | none of those, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/`                    | `source`     |
 | none of those                                                                                                                  | `blank`      |
 
 `shaped` runs the existing-repo pipeline: the bootstrap step where the survey
 reads the repo as not green, then the survey's two passes, the plan, the apply.
-`old layout` runs the same pipeline with the bootstrap step always: bootstrap's
-`docs/sync` moves the old files onto its own layout, and `init` deletes
+`old layout` runs the same pipeline with the bootstrap step always:
+`bootstrap migrate` moves the old files onto its own layout, and `init` deletes
 `.config/stackgen.yaml` once the repo reads green. `source` and `blank` run the
 bootstrap step and the new-repo landing, plus the *Missing files* pass. A
-readme,
-a licence, `.gitignore`, `.gitattributes` and a docs tree make a repo no less
-blank — that is setup's definition, cited — and init's evidence is one item
-wider
-than setup's: a root tool config is not code, but it is a file bootstrap's
-`docs/sync` will have to migrate, so it resolves `source` here where setup calls
-the repo blank. Each repo is read on its **own** tree, so a base can come out
-`shaped` while a member beside it comes out `source` or `blank`, and each repo's
-section of the plan says which it got and the evidence that decided it.
+readme, a licence, `.gitignore`, `.gitattributes` and a docs tree make a repo no
+less blank — that is setup's definition, cited — and init's evidence is one item
+wider than setup's: a root tool config is not code, but it is a file
+`bootstrap migrate` will have to migrate, so it resolves `source` here where
+setup calls the repo blank. Each repo is read on its **own** tree, so a base can
+come out `shaped` while a member beside it comes out `source` or `blank`, and
+each repo's section of the plan says which it got and the evidence that decided
+it.
 
-**Green, per repo.** A repo is green when it has `.config/bootstrap.toml` and
-`mise run setup:configs --dry-run` shows no change. That dry-run writes nothing
-in
-the repo, but it runs code: the repo's own `setup:configs` task, which refreshes
-bootstrap's clone under `~/.cache/bootstrap` and executes the `main` branch of
-bootstrap from that clone with no pin. It runs only where mise lists the repo as
-trusted, a limit rather than a safeguard, since mise's trust gate is not tied to
-file content; an untrusted repo is *drift unknown*. On a `shaped` repo the
-survey
-runs this read before the one consent, as part of the explicit `/vwf:setup` run
-you started, and the resolved-set line says so before anything else happens.
+**Green, per repo.** A repo is green when it passes the shaped test and
+`bootstrap sync --json --dry-run` lists no change. That dry-run writes nothing
+in the repo; it fetches bootstrap's clone each run. A run that fails is *drift
+unknown*, with bootstrap's own `errors` text as the reason. On a `shaped` repo
+the survey runs this read before the one consent, as part of the explicit
+`/vwf:setup` run you started, and the resolved-set line says so before anything
+else happens.
 
 **A tree that is not clean stops the run.** Right after the resolved set, in
 every
@@ -1076,13 +1074,11 @@ writes
 nothing and names `/vwf:setup reshape` as the way back.
 
 **The apply order is the same in every mode**: the clone rows and the clean-tree
-check once more; the bootstrap step, once, for the base; the gate, under which a
-repo with no `.config/bootstrap.toml` after the step stops there, with no
-hygiene
-file, no commit and no forge pass, and the other repos continue; the hygiene
-files;
-`kept_files`; the commit step, members before the base; the forge pass; the
-report.
+check once more; the bootstrap step, in each repo that takes it, the base first;
+the gate, under which a repo that fails the shaped test after the step stops
+there, with no hygiene file, no commit and no forge pass, and the other repos
+continue; the hygiene files; `kept_files`; the commit step, members before the
+base; the forge pass; the report.
 
 **Your readme is moved, never rewritten.** `README.md` → `readme.md` is a move
 in
@@ -1199,43 +1195,34 @@ format.
 
 **When it runs again.** `init` is not a one-time bootstrap — it is what keeps a
 repo's *shape* in step with what bootstrap ships, and drift there is silent
-until
-the day a task is missing or a gate reads a config nobody filled. The way to ask
-for a re-run is `/vwf:setup reshape`, and it is owed **after bootstrap moves**
-(`mise run setup:configs --dry-run` shows a change), **after a member is added,
-removed or cloned on a machine that lacked it**, **on a fresh clone that reports
-drift**, **after the forge drifts** (the re-run's forge pass is idempotent: what
-still holds is reported and left alone, only what drifted is offered), and
-**whenever `/vwf:doctor` says so**.
+until the day a task is missing or a gate reads a config nobody filled. The way
+to ask for a re-run is `/vwf:setup reshape`, and it is owed **after bootstrap
+moves** (`bootstrap sync --json --dry-run` lists a change), **after a member is
+added, removed or cloned on a machine that lacked it**, **on a fresh clone that
+reports drift**, **after the forge drifts** (the re-run's forge pass is
+idempotent: what still holds is reported and left alone, only what drifted is
+offered), and **whenever `/vwf:doctor` says so**.
 
-Doctor's repo-shape check is what notices between runs, through seven
-predicates,
+Doctor's repo-shape check is what notices between runs, through five predicates,
 **per repo** — the base and every locally-present member, resolved the way
-`init`
-resolves them — with every row printed under the repo it was found in:
+`init` resolves them — with every row printed under the repo it was found in:
 
 - **Pack versions** — what the adapter's lockfile recorded against what it ships
   now.
 - **Project ids** — a project whose pinned pack ships `p/_project/` tasks has
   its
   task group, and a task group matches a registry id.
-- **Branches** — `develop` and `main` exist locally.
-- **Bootstrap drift** — `mise run setup:configs --dry-run` shows no change.
-  Doctor's
-  full mode runs it, in a repo mise trusts, and it is the one check that runs
-  code:
-  it writes nothing in the repo, but it executes bootstrap's `main` branch with
-  no
-  pin, and mise's trust gate is not tied to file content. A failure or an
-  untrusted
-  repo is a warning that drift is unknown, never a guessed row.
+- **Bootstrap drift** — `bootstrap check --json` finds nothing and
+  `bootstrap sync --json --dry-run` lists no change. Doctor's full mode runs
+  both; neither writes in the repo. `check` validates bootstrap's values, the
+  branches and how each lands; each failing finding, each warning (marked as
+  one) and each change or file the sync would write or remove is a drift row. A
+  run that fails before its stages is one row with bootstrap's `errors` text,
+  and a stale clone offline is one `not checked` row.
 - **Content drift** — every file a pack copied against the hash the lockfile
   records, a mismatch re-tested with every marked position spliced out. A file
   you
   recorded under `kept_files` is skipped.
-- **Merge model** — each `merge_model` in `.config/bootstrap.toml` is `direct`
-  or
-  `pr`, or a warning to fix the value.
 - **Forge state** — read from the forge where its CLI answers for the origin
   host:
   the default branch one of `develop` or `main`, each of the two branches
@@ -1249,15 +1236,15 @@ resolves them — with every row printed under the repo it was found in:
 
 Every one of these is `drift` or a warning and none is blocking — a repo behind
 its baseline is out of date, not broken. Each row carries its owner's remedy,
-each
-printed once: `/stackgen:stackgen-sync` for Pack versions and Content drift,
-`/vwf:setup` for a missing pack lockfile and Project ids, `/vwf:setup reshape`
-for bootstrap and
-the forge, and the fix in `.config/bootstrap.toml` for a merge model value. A
-repo
-with no `.config/bootstrap.toml` is one row of its own, `not shaped` or **shaped
-on the old layout**, and evaluates no predicate. A member this machine does not
-carry is a blind spot rather than a finding, reading `not present, not checked`.
+each printed once: `/stackgen:stackgen-sync` for Pack versions and Content
+drift, `/vwf:setup` for a missing pack lockfile and Project ids, and
+`/vwf:setup reshape` for bootstrap and the forge. Two findings come before the
+check and **are** blocking: no bootstrap contract — the `bootstrap` command
+absent, or older than 4.1.0 — reported with bootstrap's install hint, and a repo
+bootstrap's shaped test refuses, one row with bootstrap's own `errors` text (not
+shaped, the old form, or a broken folder), which evaluates no predicate. A
+member this machine does not carry is a blind spot rather than a finding,
+reading `not present, not checked`.
 
 Nobody has to remember that schedule. Four commands bring you to the door
 themselves, each **offering** a remedy and saying nothing when the check is
@@ -1269,13 +1256,10 @@ clean:
 - **`/stackgen:stackgen-sync`** — after a sync, by invoking `/vwf:setup reshape`
   in-session.
 - **`/vwf:recall`** — at session start, as printed lines from doctor's
-  `baseline`
-  alone: Pack versions, Project ids, Branches, Content drift and Merge model,
-  file
-  reads only, with no mise task and no bootstrap code. So recall does **not
-  report
-  config drift**; Bootstrap drift and Forge state stay doctor's full mode and
-  setup's Step 0.
+  `baseline` alone: Pack versions, Project ids and Content drift, with no mise
+  task and no bootstrap command but the contract check and the shaped test. So
+  recall does **not report config drift**; Bootstrap drift and Forge state stay
+  doctor's full mode and setup's Step 0.
 
 A second run on a shaped **product** with nothing to do produces an **empty
 plan**
@@ -1297,15 +1281,13 @@ entirely: `init` runs — surveying, showing its one plan, taking its own consen
 — its report prints verbatim, and setup stops. No validation, no stamp, no
 doctor, no commit; a re-shape writes exactly one key into `.config/vwf.yaml` —
 `enforcement.kept_files`, the record of a hygiene file you chose not to land —
-and nothing else in it (a repo's values go to its `.config/bootstrap.toml`,
-through
-bootstrap's `docs/sync`), so a user who wants both runs `/vwf:setup`
-again afterwards. It is also the line `/vwf:doctor` prints for a row about
-bootstrap or
-the forge state, so most runs of it arrive from a drift row — or from one of the
-commands that now offer it in-session: setup itself after its materialize pass,
-`/stackgen:stackgen-sync` after a re-sync, and `/vwf:recall`'s drift lines at
-session start (see [`/vwf:init`](#vwfinit), *When it runs again*). The shape
+and nothing else in it (a repo's values go to its `.config/bootstrap/` folder,
+through `bootstrap migrate`), so a user who wants both runs `/vwf:setup` again
+afterwards. It is also the line `/vwf:doctor` prints for a row about bootstrap
+or the forge state, so most runs of it arrive from a drift row — or from one of
+the commands that now offer it in-session: setup itself after its materialize
+pass, `/stackgen:stackgen-sync` after a re-sync, and `/vwf:recall`'s drift lines
+at session start (see [`/vwf:init`](#vwfinit), *When it runs again*). The shape
 pass includes init's **forge pass** — the default branch, the protection on
 `develop` and `main`, the base's backlog project — which is idempotent on a repo
 already set, so a reshape that arrives from a forge-state row sets only what
@@ -1316,46 +1298,37 @@ the product.
 **Step 0 begins with a shape check, before the mode fork**, and on a multi-repo
 product it asks its two things of **every repo** — the base and every member
 present on this machine, the same set `/vwf:doctor` evaluates. Is the shape
-*there* — that repo carries `.config/bootstrap.toml`, the values file bootstrap
-writes, no pack slug checked — and is it *current*, by two of the predicates
-`/vwf:doctor` owns, evaluated on that repo's own artifacts. **Bootstrap drift**
-is
-an explicit `mise run setup:configs --dry-run`: it writes nothing in the
-repository, but it runs code, the repo's own `setup:configs` task, which
-refreshes
-bootstrap's clone under `~/.cache/bootstrap` and executes the `main` branch of
-bootstrap from that clone with no pin. It runs only where mise lists the repo as
-trusted, and that is a limit rather than a safeguard: mise's trust gate is not
-tied
-to file content, so a repo trusted once runs whatever its task holds now. Where
-it
-cannot run or fails, setup says it could not check drift there, with the reason,
-and continues. **Forge state** — default branch, both branches protected, the
-base's backlog project — is read from the forge when its CLI is on `PATH` and
-logged in. A repo with no `.config/bootstrap.toml` that carries
-`.config/stackgen.yaml` or an older layout — `.config/mise/conf.d/tools.toml`,
-`.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` — is **on the
-old
-layout**: setup names the repo and the files that marked it, and `init`'s
-bootstrap
-step moves it. Any repo unshaped, on the old layout or behind, and setup says
-which repos are absent or behind and what each showed, and offers
-[`/vwf:init`](#vwfinit) **once for the whole product** — a base that is current
-while one member is behind is still an offer, because the shape is per repo and
-the product is shaped only when all of them are. `init` is what lays the shape
-down and what brings it forward, and it surveys and shapes every repo in one run
-of its own. That seam is why `init` stays model-invocable — and it is hidden
-from the `/` menu, so this offer and `reshape` above are the only two ways it is
-reached. An **absent** member is a blind spot, never a finding. Declining is a
-recorded deferral, not a halt: the repo shape and the vwf format are two
-different things, and a repo can be onboarded into one without the other. The
-check is not Step 0's alone: it **repeats once after the materialize pass**,
-so a change the pass's bootstrap handoff made is offered in the same run rather
-than the next — see [the second shape check](#the-second-shape-check) below.
-Setup
-itself never lands the baseline — bootstrap's sync and the hygiene assets are
-`init`'s. The **pinned** stacks are a different matter, and they are setup's:
-see [the materialize pass](#the-materialize-pass) below.
+*there* — that repo passes bootstrap's shaped test,
+`bootstrap config get repo.format --json`, no pack slug checked — and is it
+*current*, by two of the predicates `/vwf:doctor` owns, evaluated on that repo's
+own artifacts. Setup first runs bootstrap's contract check, and stops with
+bootstrap's install hint when the `bootstrap` command is absent or older than
+4.1.0. **Bootstrap drift** is `bootstrap sync --json --dry-run`: it writes
+nothing in the repository, and any change or file it would write or remove is
+drift. Where it fails, or the clone is stale and offline, setup says it could
+not check drift there, with the reason, and continues. **Forge state** — default
+branch, both branches protected, the base's backlog project — is read from the
+forge when its CLI is on `PATH` and logged in. A repo the shaped test refuses is
+**unshaped**: setup shows bootstrap's own `errors` text, which says whether the
+repo is not shaped, on the old form, has both forms or has a broken folder, and
+`init`'s bootstrap step, `bootstrap migrate`, moves it. Any repo unshaped, on
+the old layout or behind, and setup says which repos are absent or behind and
+what each showed, and offers [`/vwf:init`](#vwfinit) **once for the whole
+product** — a base that is current while one member is behind is still an offer,
+because the shape is per repo and the product is shaped only when all of them
+are. `init` is what lays the shape down and what brings it forward, and it
+surveys and shapes every repo in one run of its own. That seam is why `init`
+stays model-invocable — and it is hidden from the `/` menu, so this offer and
+`reshape` above are the only two ways it is reached. An **absent** member is a
+blind spot, never a finding. Declining is a recorded deferral, not a halt: the
+repo shape and the vwf format are two different things, and a repo can be
+onboarded into one without the other. The check is not Step 0's alone: it
+**repeats once after the materialize pass**, so a change the pass's bootstrap
+handoff made is offered in the same run rather than the next — see [the second
+shape check](#the-second-shape-check) below. Setup itself never lands the
+baseline — bootstrap's sync and the hygiene assets are `init`'s. The **pinned**
+stacks are a different matter, and they are setup's: see [the materialize
+pass](#the-materialize-pass) below.
 
 **Step 0 resolves one of three entry paths**, once, from what is on disk, and
 nothing after it re-derives the mode:
@@ -1465,19 +1438,14 @@ own lockfile, never the base's. Two members pinning the same slug each get their
 own copies.
 
 The stack plugin copies each pack's `config/` and hands the tools a pack needs
-to
-bootstrap, through bootstrap's `docs/sync/vwf.md`, behind its own consent line;
-it
-never edits `.config/bootstrap.toml` itself. A repo's secrets provider is
+to bootstrap, with `bootstrap add tool`, behind its own consent line; it never
+edits a file in `.config/bootstrap/` itself. A repo's secrets provider is
 bootstrap's, and a value only the machine that builds a repo can answer — the
 SwiftUI pack's Xcode version — is found by bootstrap's task or set by the repo
-in
-`.config/mise/conf.d/zz-repo/`, so `/vwf:setup` gathers neither. A pack dropped
-from
-a composition goes through the plugin's removal path, inside the same consent,
-and
-a dropped generated component (a `@generated` ref) loses only its recorded
-`.claude/` files.
+in `.config/mise/conf.d/zz-repo/`, so `/vwf:setup` gathers neither. A pack
+dropped from a composition goes through the plugin's removal path, inside the
+same consent, and a dropped generated component (a `@generated` ref) loses only
+its recorded `.claude/` files.
 
 Every landing sits behind the plugin's own consent line; a landing you decline
 leaves the pin untouched and is reported, an `unresolved` axis is skipped
@@ -1510,8 +1478,8 @@ silent.
 The materialize pass ends with **a second shape check** — the same two questions
 Step 0 asked, is the shape *there* and is it *current*, over the same set of
 repos, after everything the pass wrote. It exists because Step 0 runs before the
-pass: a change the pass's bootstrap handoff made to `.config/bootstrap.toml` is
-drift Step 0 could not see, and without this check it would wait for the next
+pass: a change the pass's bootstrap handoff made to the repo's bootstrap values
+is drift Step 0 could not see, and without this check it would wait for the next
 run. On any repo unshaped or behind, the offer is made exactly as Step 0 makes
 it — the drifted repos, what each showed, the one question, `/vwf:init` on a
 yes, a recorded deferral on a decline — and the run continues. Every repo clean,
@@ -2755,26 +2723,31 @@ row `COMPLETE` and **sweeps**: every `COMPLETE` row already under `archived/`
 that no `APPROVED` or `RUNNING` row still requires leaves the index, its
 archived folder being the record. The same commit carries the **release
 levels**: for each entry of the folder's `release_levels` list, the run raises
-that project's key in `.config/releases.yaml` to the entry's level when it is
-higher — the order is `NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR`
-stays `MAJOR` — and never lowers one; an absent key or file reads `NONE`, and
-only a release step clears a key. The run bumps no version. The file is written
-in the completion's protected-branch write after the merge, never on the run
-branch, so two runs landing at once do not conflict on it. **Where the folder
-ends up depends on the
-gap list.** Each entry of the folder's `gaps` list carries a `state`, `open` or
-`closed`. The run writes `closed` only for what it settled itself with no ruling
-owed — an Owns widened and the fix applied, a finding a later round or the
-closing pass resolved — and `open` for everything that still wants you: a
-recorded fact of the run such as a coverage short of target, a question no one
-could answer, or a `STOPPED:` answer. An answered question is no gap: it is a
-`decisions` entry. When you rule on an entry, set its `state` to `closed` —
-`plan.mjs set <folder>/index.json gaps.G<n>.state closed` — and record the
-ruling in the folder. When no entry is open, the landing moves the folder whole
-to `docs/plans/archived/` and the row's `folder` points there — it is finished
-and the archive is its record. When any gap is open, the folder stays live at
-its path as the working record of what needs reconciling, the row keeps the live
-path, and the report says to ask for the archive —
+that project's key in `.config/bootstrap/releases.toml` to the entry's level
+with `bootstrap config set releases.<id> <level> --json`, which keeps the higher
+— the order is `NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR` stays
+`MAJOR` — and never lowers one; only a release step clears a key. The run bumps
+no version and never reads or writes that file itself. Where an old
+`.config/releases.yaml` exists, the run moves each of its keys the same way and
+deletes it, in the same commit. Before the merge, it reads each key once with
+`bootstrap config get`, so a broken bootstrap stops the run before anything
+merges; a write that fails after the merge stops with the exact
+`bootstrap config set` lines to run by hand. The file is written in the
+completion's protected-branch write after the merge, never on the run branch, so
+two runs landing at once do not conflict on it. **Where the folder ends up
+depends on the gap list.** Each entry of the folder's `gaps` list carries a
+`state`, `open` or `closed`. The run writes `closed` only for what it settled
+itself with no ruling owed — an Owns widened and the fix applied, a finding a
+later round or the closing pass resolved — and `open` for everything that still
+wants you: a recorded fact of the run such as a coverage short of target, a
+question no one could answer, or a `STOPPED:` answer. An answered question is no
+gap: it is a `decisions` entry. When you rule on an entry, set its `state` to
+`closed` — `plan.mjs set <folder>/index.json gaps.G<n>.state closed` — and
+record the ruling in the folder. When no entry is open, the landing moves the
+folder whole to `docs/plans/archived/` and the row's `folder` points there — it
+is finished and the archive is its record. When any gap is open, the folder
+stays live at its path as the working record of what needs reconciling, the row
+keeps the live path, and the report says to ask for the archive —
 [`plan-management`](#vwfplan-management)'s `archive` verb — after
 reconciliation. The archive is asked not to prompt: when it raises a completion
 warning, the folder stays live, the row still goes `COMPLETE`, and the report
@@ -3528,10 +3501,11 @@ things are always agreed before anything is written:
 - **The release levels** — derived and stated, never asked, like the priority.
   Per project the units touch: `MAJOR` when the change breaks users, `MINOR` for
   new behaviour, `PATCH` for a fix, `NONE` when no user sees it, each with a
-  one-line reason, written as the folder's `release_levels` list and shown
-  at the hard gate, where you change a level you disagree with. No unit bumps a
-  version: `/vwf:execute` raises each level in `.config/releases.yaml` at
-  landing, and a later release, cut by hand, reads it.
+  one-line reason, written as the folder's `release_levels` list and shown at
+  the hard gate, where you change a level you disagree with. No unit bumps a
+  version: `/vwf:execute` raises each level in
+  `.config/bootstrap/releases.toml`, through `bootstrap config set`, at landing,
+  and a later release, cut by hand, reads it.
 - **End an `all` run after landing** — asked only when the units edit a plugin
   the session running `/vwf:execute all` has loaded, which keeps running its
   stale copy until restarted: `yes` ends an `all` run after this plan, reporting
@@ -3663,32 +3637,26 @@ summarizes where you left off, and offers to run the captured next prompt.
 
 Beside its format check, before it reads the handoff, `recall` also runs a
 **shape check**: `/vwf:doctor baseline`, the named invocation that evaluates the
-local repo-shape predicates — Pack versions, Project ids, Branches, Content
-drift
-and Merge model, file reads against the lockfile, the config and the tree, per
-repo
-of the product — and nothing else. No stack, health or memory check runs,
-nothing
-is written, the Forge state predicate is never read, and **no mise task and no
-bootstrap code runs**, since this runs at every session start. So `recall` does
-**not report config drift**: Bootstrap drift is `/vwf:doctor`'s full mode and
-setup's Step 0. Doctor answers one line per drifted repo with the titles that
-failed, and a repo with no `.config/bootstrap.toml` on its own line instead —
-`shaped on the old layout` where it carries `.config/stackgen.yaml` or the older
-mise files, `not shaped` where it carries none — and `recall` prints **one line
-per
-remedy**, with the rows that led to it: `/stackgen:stackgen-sync` for Pack
-versions and Content drift, `/vwf:setup` for a missing pack lockfile and Project
-ids, `/vwf:setup reshape` for Branches and a member not shaped or
-on
-the old layout, the fix in `.config/bootstrap.toml` for Merge model. It prints
-**nothing** when every repo is clean or the base has no
-`.config/bootstrap.toml`.
-It is an offer: `recall` never runs a remedy itself, and no line ever stops the
-recall. This is how a change made outside vwf — a pack bumped by hand, a member
-added, a folder renamed — is seen before the session builds on it; the other
-doors
-are listed under [`/vwf:init`](#vwfinit), *When it runs again*.
+local repo-shape predicates — Pack versions, Project ids and Content drift, file
+reads against the lockfile, the config and the tree, per repo of the product —
+and nothing else. No stack, health or memory check runs, nothing is written, the
+Forge state predicate is never read, and **no mise task and no bootstrap command
+runs** but the contract check and the shaped test, since this runs at every
+session start. So `recall` does **not report config drift**: Bootstrap drift is
+`/vwf:doctor`'s full mode and setup's Step 0. Doctor answers one line per
+drifted repo with the titles that failed, and a repo bootstrap's shaped test
+refuses on its own line instead, with bootstrap's own `errors` text, which names
+`bootstrap migrate` — and `recall` prints **one line per remedy**, with the rows
+that led to it: `/stackgen:stackgen-sync` for Pack versions and Content drift,
+`/vwf:setup` for a missing pack lockfile and Project ids, `/vwf:setup reshape`
+for a repo the shaped test refuses. It prints **nothing** when every repo is
+clean. A missing bootstrap contract — the `bootstrap` command absent or older
+than 4.1.0 — is the one stop: `recall` prints bootstrap's install hint and
+stops. Every other line is an offer: `recall` never runs a remedy itself, and no
+drift line stops the recall. This is how a change made outside vwf — a pack
+bumped by hand, a member added, a folder renamed — is seen before the session
+builds on it; the other doors are listed under [`/vwf:init`](#vwfinit), *When it
+runs again*.
 
 #### The `next` handoff
 

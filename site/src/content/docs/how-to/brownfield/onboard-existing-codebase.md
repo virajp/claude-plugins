@@ -78,52 +78,40 @@ memory tree, and a vwf section merged into the existing `CLAUDE.md` (merged, not
 overwritten).
 
 The repo's own tooling is **not** in that plan. Before the mode fork, setup
-checks whether the repo is *shaped* — whether it carries the
-`.config/bootstrap.toml` that bootstrap writes as it lands the toolchain config,
-the repo gates and the ignore files — and whether what is there is still current
-by two of the predicates `/vwf:doctor` owns: Bootstrap drift, an explicit
-`mise run setup:configs --dry-run` that writes nothing in the repo but executes
-bootstrap's `main` branch with no pin, and Forge state, reading the forge's
-default
-branch, branch protection and backlog project back where the forge CLI answers.
-It
-asks both of those of **every repo in the product**: the base and every member
+checks whether the repo is *shaped* — whether
+`bootstrap config get repo.format --json` answers `ok`, which it does once
+bootstrap has landed the toolchain config, the repo gates and the ignore files —
+and whether what is there is still current by two of the predicates
+`/vwf:doctor` owns: Bootstrap drift, a `bootstrap sync --json --dry-run` that
+writes nothing in the repo, and Forge state, reading the forge's default branch,
+branch protection and backlog project back where the forge CLI answers. It asks
+both of those of **every repo in the product**: the base and every member
 present on this machine, each read on its own artifacts. If anything is missing
-or
-behind in any of them it offers [`/vwf:init`](../../plugins/vwf.md#vwfinit)
-once,
-naming which repos showed what. `init` is what lays them down and what brings
-them
-forward.
-Bookable has a `Makefile`, a hand-rolled CI script, a `.pre-commit-config.yaml`
-and a `.husky/` directory, and nothing has ever been shaped, so the offer comes
-up. `init` decides each repo's mode from its tree: Bookable has no
-`.config/bootstrap.toml`, but it carries a `package.json` and a `src/`
-directory,
+or behind in any of them it offers [`/vwf:init`](../../plugins/vwf.md#vwfinit)
+once, naming which repos showed what. `init` is what lays them down and what
+brings them forward. Bookable has a `Makefile`, a hand-rolled CI script, a
+`.pre-commit-config.yaml` and a `.husky/` directory, and nothing has ever been
+shaped, so the offer comes up. `init` decides each repo's mode from its tree:
+Bookable is not shaped, but it carries a `package.json` and a `src/` directory,
 so it resolves to **`source`**. That mode runs the bootstrap step and the
-new-repo
-landing plus the *Missing files* pass. The bootstrap step gives the session
-bootstrap's readme prompt, and it is bootstrap's `docs/sync` that reads
-Bookable's
-`.pre-commit-config.yaml`, `.husky/` and `.gitignore` and asks its own questions
-about them. `init` itself lands only its hygiene files: a readme, a licence file
-under any spelling or a `SECURITY.md` already there is kept outright, and a
-create
-row you strike is recorded under `enforcement.kept_files`, in a stub
-`.config/vwf.yaml` `init` writes since setup has not made one yet, so it is
-never
-re-offered. (Had Bookable already been shaped once, it would carry
-`.config/bootstrap.toml` and resolve to **`shaped`**, whose survey reads whether
-the
-repo is green and takes the bootstrap step only where it is not.)
-Either way it shows **one** plan, with a section per repo naming the mode it
-got, and takes one consent for all of it before setup carries on. Declining is
-recorded as a deferral, with `/vwf:setup reshape` as the unlock, and the onboard
-continues — the repo shape and the vwf format are two different things. The
-offer comes back on its own: setup re-checks the shape once more after its
-materialize pass and on every re-run's Step 0. (A repo that was never shaped
-stays silent at `/vwf:recall`, whose drift lines are for a shaped repo that has
-fallen behind.)
+new-repo landing plus the *Missing files* pass. The bootstrap step runs
+`bootstrap migrate`, and it is bootstrap that reads Bookable's
+`.pre-commit-config.yaml`, `.husky/` and `.gitignore` and lists its own
+questions about them, which `init` asks you one at a time. `init` itself lands
+only its hygiene files: a readme, a licence file under any spelling or a
+`SECURITY.md` already there is kept outright, and a create row you strike is
+recorded under `enforcement.kept_files`, in a stub `.config/vwf.yaml` `init`
+writes since setup has not made one yet, so it is never re-offered. (Had
+Bookable already been shaped once, it would pass bootstrap's shaped test and
+resolve to **`shaped`**, whose survey reads whether the repo is green and takes
+the bootstrap step only where it is not.) Either way it shows **one** plan, with
+a section per repo naming the mode it got, and takes one consent for all of it
+before setup carries on. Declining is recorded as a deferral, with
+`/vwf:setup reshape` as the unlock, and the onboard continues — the repo shape
+and the vwf format are two different things. The offer comes back on its own:
+setup re-checks the shape once more after its materialize pass and on every
+re-run's Step 0. (A repo that was never shaped stays silent at `/vwf:recall`,
+whose drift lines are for a shaped repo that has fallen behind.)
 
 Two brownfield-only items appear in that plan. **Harness detection** records
 which verification capabilities the repo can already run: Bookable's `dev` task

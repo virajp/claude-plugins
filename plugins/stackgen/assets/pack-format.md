@@ -57,9 +57,9 @@ stacks/<type>/<slug>/
 **A pack ships no toolchain.** No tool pin, no gate, no gate config, no
 generic task (`setup:deps`, `code:format`, `code:lint`, `code:check`), no
 pre-commit hook, no ignore line and no editor setting: all of them are
-bootstrap's. A pack names no bootstrap tool either. The materializer reads
-a fresh clone of bootstrap to choose the tools a composition needs, and asks
-for them through bootstrap's own entry point — the stack-template skill's
+bootstrap's. A pack names no bootstrap tool either. The materializer
+chooses the tools a composition needs from `bootstrap catalog --json`, and
+asks for them with `bootstrap add tool` — the stack-template skill's
 bootstrap handoff. What a pack adds is what is specific to the repo, in
 `config/` (below).
 

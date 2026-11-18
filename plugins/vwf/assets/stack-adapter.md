@@ -482,9 +482,12 @@ side of the contract is three rules:
 **The adapter supplies bundles; the universal tools are
 [bootstrap](https://github.com/virajp/bootstrap)'s.** The repo's toolchain
 manager and the tools every repo carries are not a bundle any more: `/vwf:init`
-runs bootstrap's prompt, and a pack hands the tools it needs to bootstrap
-through the adapter. A repo is shaped when `.config/bootstrap.toml` exists, and
-`/vwf:doctor` finds drift with `mise run setup:configs --dry-run`.
+runs `bootstrap migrate`, and a pack hands the tools it needs to bootstrap
+through the adapter. A repo is shaped when the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` passes; a repo's answers
+live in `.config/bootstrap/`, written by the bootstrap CLI; and `/vwf:doctor`
+finds drift with `bootstrap check --json` and `bootstrap sync --json
+--dry-run`.
 
 ## The UX gate
 

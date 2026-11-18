@@ -19,9 +19,11 @@ once.
   invocation's `repo: <path>` line names, a path relative to the current
   repo's root. Every write below, and the lockfile, resolve under that
   root: read "the repo" throughout as that repo.
-- **The repo's `.config/bootstrap.toml`** — the tools and plugins it
-  already selects. Without it the landing set stops before anything is
-  written ([the bootstrap handoff](bootstrap-handoff.md), step 1).
+- **The repo's bootstrap tools** — the tools and plugins it already
+  selects, read with `bootstrap describe --json`. A repo that fails the
+  shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
+  stops the landing set before anything is written
+  ([the bootstrap handoff](bootstrap-handoff.md), step 1).
 
 ## Steps
 
@@ -105,12 +107,14 @@ once.
        toolchain gate, its config and its `code:lint:<tool>` or
        `code:format:<tool>` task are bootstrap's, asked for below.
    - **The bootstrap instructions** — the tools and the Claude plugins
-     the composition needs that the repo does not select yet, chosen from a
-     fresh clone of bootstrap and sent through its `docs/sync/vwf.md`.
+     the composition needs that the repo does not select yet, the tools
+     chosen from `bootstrap catalog --json` and sent with
+     `bootstrap add tool`, the plugins sent through bootstrap's
+     `docs/sync/vwf.md`.
      **The procedure is [the bootstrap handoff](bootstrap-handoff.md)**:
      steps 1 to 6 run here, step 7 is a consent line in step 3, and steps
      8 to 10 run in step 5. No pack names a bootstrap tool, and stackgen
-     never edits `.config/bootstrap.toml` itself.
+     never writes a file in `.config/bootstrap/` itself.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
      the `bootstrap:` block the handoff records. The
@@ -336,7 +340,7 @@ once.
 5. **Write and commit.** On approval: write the set, then, when the
    bootstrap line was consented, send its instructions — steps 8 to 10 of
    [the bootstrap handoff](bootstrap-handoff.md). A stop that
-   `docs/sync/vwf.md` reports is shown as it is; the files already written
+   bootstrap reports is shown as it is; the files already written
    stay, and the plan names the tools that are absent. Update the
    lockfile, then commit as **one commit**
    via the repo's git workflow (the vwf
@@ -391,7 +395,8 @@ lands no server, so on an entry whose `axis:` is `addon` the call is the plain
 read of the resolution order's step 1: it returns the payload from the entry
 and does nothing else — no gate, no write, no repo copy touched, no bootstrap
 instruction sent, nothing diffed. An addon's plugin, `addon/taste-skill`'s
-among them, reaches a machine through the committed `.config/bootstrap.toml`.
+among them, reaches a machine through the repo's committed
+`.config/bootstrap/`, which bootstrap writes.
 
 ## Removing a component
 
@@ -444,7 +449,7 @@ question. A call without one asks its own consent at step 3.
    [the removal](local-plugin.md#removal--by-subtraction) or
    [the bumped manifest](local-plugin.md#the-two-files) calls for and asking
    on its own terms. The `key` form deletes the key from the manifest and from
-   `claims.json` outright. A failed clone or a stop bootstrap reports is shown
+   `claims.json` outright. A failed call or a stop bootstrap reports is shown
    as it is, and that tool or plugin keeps its record, where sync's bootstrap
    delta finds it.
 5. **Update the lockfile and commit.** Drop the entries, the bootstrap records,

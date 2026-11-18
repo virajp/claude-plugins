@@ -1,14 +1,15 @@
 # The Existing-Repo Pipeline
 
-Read this in modes **`shaped`** — a target with a `.config/bootstrap.toml` — and
-**`old layout`** — a target with `.config/stackgen.yaml` or an older mise layout
-and no `.config/bootstrap.toml`. Something shaped this repo before, and the job
+Read this in modes **`shaped`** — a target that passes the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — and **`old layout`** — a
+target with `.config/stackgen.yaml` or an older mise layout that fails it.
+Something shaped this repo before, and the job
 is to reconcile `init`'s own files against what the repo now carries, without
 discarding a decision somebody made on purpose. SKILL.md's Step 0 decides the
 mode; this file never re-derives it. Everything else about the shape —
 the root files, the task names, the helper files, the ignore file, the hooks —
-is bootstrap's `docs/sync`, reached through SKILL.md's bootstrap step, and
-`init` reads none of it.
+is bootstrap's, reached through `bootstrap migrate` in SKILL.md's bootstrap
+step, and `init` reads none of it.
 
 **This file is also the home of the pass the other two modes borrow.** A
 **`source`** or **`blank`** repo takes the [new repo](new-repo.md) landing and
@@ -31,12 +32,12 @@ the same one consent; nothing about the set changes which pipeline a repo reads.
 
 Exhaustive before anything is printed, and it writes nothing in the repo. It
 starts with one read per `shaped` repo, whether it is green, by the read
-SKILL.md's bootstrap step states, its trust check included: where it is not, the
-bootstrap step is a row of that repo's section, and an `old layout` repo always
-carries that row. That read executes code before the one consent and refreshes
-bootstrap's clone under `~/.cache/bootstrap`, as SKILL.md's *The same read is
-what a survey does* states. Two read-only passes then run **per repo**: each
-reads, and reports on, the repo it is running in and no other.
+SKILL.md's bootstrap step states: where it is not, the bootstrap step is a row
+of that repo's section, and an `old layout` repo always carries that row. That
+read runs `bootstrap sync --json --dry-run` before the one consent, writes
+nothing in the repo and fetches bootstrap's clone, as SKILL.md's *The same
+read is what a survey does* states. Two read-only passes then run **per
+repo**: each reads, and reports on, the repo it is running in and no other.
 
 **An absent member is surveyed once its clone has run.** A member the resolution
 found and this machine does not have has nothing on disk to read, so its section
@@ -92,7 +93,7 @@ later run, and `/vwf:doctor` reads the same record to skip the file. The reason
 travels with it, in the user's own words where they gave one. The record is
 written in **every mode**, into the stub [new repo](new-repo.md)'s hygiene step
 describes where the base has no config file yet. Files bootstrap writes are never
-recorded here: its own `mise run setup:configs --dry-run` judges them.
+recorded here: its own `bootstrap sync --json --dry-run` judges them.
 
 **One record for the product, and it is the base's.** A member carries no
 `.config/vwf.yaml` of its own — its file is the back-link, and the base's is the
@@ -182,11 +183,11 @@ not list. A member cleared for cloning is cloned first, surveyed and its rows
 printed; a repo of the set that resolved to mode `blank` or `source` takes the
 [new repo](new-repo.md) pipeline in its turn, at the same point in the order.
 
-- **The bootstrap step** runs first, as SKILL.md states it — once for the base,
-  the prompt covering the members — and its gate decides which repos continue. A
-  repo with no `.config/bootstrap.toml` after it stops there, per SKILL.md, and
-  nothing below reaches it. `.config/stackgen.yaml` goes where the repo read
-  green.
+- **The bootstrap step** runs first, as SKILL.md states it — in each repo that
+  takes it, the base first, then each member — and its gate decides which repos
+  continue. A repo that fails the shaped test after it stops there, per
+  SKILL.md, and nothing below reaches it. `.config/stackgen.yaml` goes where
+  the repo read green.
 - **The readme move** is a `git mv`, so the history follows the file, and
   [new repo](new-repo.md)'s commit step places it. Made earlier, it would sit in
   the index and ride the sync commit. Its caller rewrites are plain edits, made

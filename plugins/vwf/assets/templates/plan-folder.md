@@ -405,9 +405,10 @@ The rules for each key — JSON has no comments, so they sit here:
   `MINOR`, a fix → `PATCH`, no user-visible change → `NONE` — and shown at
   the gate, where the user may change it; it is never a consent. The plan
   bumps no version and releases nothing: at landing `/vwf:execute` raises each
-  level in `.config/releases.yaml` — the highest wins, a key is never lowered —
-  and a release is cut later, by hand. An empty list is an old-shape folder: it
-  runs as written, and nothing is written to that file.
+  level in `.config/bootstrap/releases.toml`, through `bootstrap config` — the
+  highest wins, a key is never lowered — and a release is cut later, by hand.
+  An empty list is an old-shape folder: it runs as written, and no level is
+  set.
 - **`dependencies`** — one entry per new package: its name, what for, the
   existing thing it was preferred over, the unit that adds it — or `[]`. A
   unit adds nothing not listed here.

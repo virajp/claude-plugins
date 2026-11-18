@@ -59,8 +59,9 @@ one-line reason. Interview item 18 owns the mapping, and the template owns the
 `release_levels` entry shape. Item 18 is stated, as item 12's priority is.
 
 No unit bumps a version and no plan releases. `/vwf:execute` raises each level
-in `.config/releases.yaml` at landing — one key per project, the highest level
-wins. `/release` is a later hand step that reads that file.
+in `.config/bootstrap/releases.toml`, through `bootstrap config`, at landing —
+one key per project, the highest level wins. `/release` is a later hand step
+that reads those levels.
 
 ## (d) Ending an `all` run
 

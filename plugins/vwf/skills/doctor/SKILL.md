@@ -39,31 +39,34 @@ name either: it scopes nothing.
 ## The `baseline` invocation
 
 `/vwf:doctor baseline` evaluates the **local** baseline predicates of the
-repo-shape check — Pack versions, Project ids, Branches, Content drift and Merge
-model, **(a), (b), (c), (e) and (f)** in the stack-checks reference, the file
-reads against the lockfile, the config and the tree — **per repo**, the base
-and every locally-present member, and returns that result and **nothing else**.
+repo-shape check — Pack versions, Project ids and Content drift, **(a), (b)
+and (e)** in the stack-checks reference, the file reads against the lockfile,
+the config and the tree — **per repo**, the base and every locally-present
+member, and returns that result and **nothing else**.
 No stack, manifest, health, memory, leftovers or format-stamp check runs, §§1–4
 and §§6–8 are skipped entirely, and predicates **(d)** — Bootstrap drift — and
-**(g)** — Forge state — never run: this invocation runs no mise task and no
-bootstrap code and reads no forge, and is meant to be cheap enough to run at
+**(g)** — Forge state — never run: this invocation runs no mise task, no
+bootstrap command but the contract check and the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — which need no clone and
+fetch nothing — and reads no forge, and is meant to be cheap enough to run at
 every session start. So it does **not report config drift**: doctor's full mode
 is the place that does. It writes nothing and offers no remedy — the caller
 decides what to print.
 
 Its output is **one line per drifted repo**, naming the repo and the titles of
-the predicates that failed — `<repo>: Pack versions, Branches` — and no line for
-a repo that is clean. A repo with no `.config/bootstrap.toml` is reported on its
-own line and evaluates no predicate — **`shaped on the old layout`** where it
-carries `.config/stackgen.yaml` or the older mise files, **`not shaped`** where
-it carries none — since neither has the baseline these predicates read. An
+the predicates that failed — `<repo>: Pack versions, Content drift` — and no
+line for a repo that is clean. When the contract check fails, the one line is that
+asset's install hint, word for word, and no repo is evaluated. A repo the
+shaped test refuses (code 2) is reported on its own line, with the envelope's
+`errors` messages as bootstrap gives them, and evaluates no predicate, since
+it has no baseline these predicates read. An
 absent member is `not present, not checked`, exactly as §5
 reports it. Whether any of that is shown, and how, is the caller's: this is
 what **`/vwf:recall`** calls to print its shape-drift lines. Each row keeps the
 remedy the full run prints under §9: `/stackgen:stackgen-sync` for Pack versions
 and Content drift; `/vwf:setup` for a missing pack lockfile and Project ids;
-`/vwf:setup reshape` for Branches, not shaped and the old
-layout; a fixed value in `.config/bootstrap.toml` for Merge model.
+`/vwf:setup reshape` for the shaped test's line, which names `bootstrap migrate`
+as bootstrap's own text does.
 
 `$ARGUMENTS` is either project names or `baseline`, never both — `baseline`
 scopes nothing, since the repo-shape check is per repo, not per project. Either
@@ -83,10 +86,11 @@ form, or an argument with no names at all, can end with a `prefer:` preference.
 | Membership        | `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`                   |
 | Format stamp      | `${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`                |
 | Adapter lockfile  | `.claude/stackgen/lock.yaml`                                   |
-| Bootstrap values  | `.config/bootstrap.toml`                                       |
+| Bootstrap contract | `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`          |
 
 The last two are read for the repo-shape check in §5 and, like everything else
-in this table, are only ever read.
+in this table, are only ever read. A repo's bootstrap values are read through
+the bootstrap CLI, as the contract asset says, never from a file.
 
 ## Caller Preferences
 
@@ -214,18 +218,17 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, whether the repo is shaped (`.config/bootstrap.toml`) or still on the old layout, the two branches, `mise run setup:configs --dry-run` showing a change as drift (the one check here that runs code, stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — the `merge_model` values in `.config/bootstrap.toml`, and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, both branches' protection, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `docs/memory/` store's handoff ignore line |
 | **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
 
-**Full mode's drift check runs code.** Bootstrap drift (§5) is an explicit
-`mise run setup:configs --dry-run`, on a full run whoever starts it: a person, or
-a caller named at the end of this file. It writes nothing in the repository, but
-it executes the `main` branch of bootstrap with no pin, from bootstrap's clone
-under `~/.cache/bootstrap`, which it refreshes first, so what runs is whatever
-`main` holds at that moment. It runs only in a repo mise trusts, and that is a
-limit rather than a safeguard: the trust gate of mise is not tied to file
-content. `baseline` never runs it.
+**Full mode's drift check runs bootstrap.** Bootstrap drift (§5) is
+`bootstrap check --json` and `bootstrap sync --json --dry-run`, on a full run
+whoever starts it: a person, or a caller named at the end of this file. Neither
+writes in the repository; both read bootstrap's clone. Each `fail` finding,
+each planned change and each file the sync would write or remove is one drift
+row, never blocking. `baseline` never runs
+them.
 
 **Dependency audit (per in-scope project).** Alongside the manifest checks,
 run the ecosystem's own audit command against each project's lockfile — the
@@ -261,7 +264,7 @@ each with its remedy:
 | a `graphify-out/` exclude in any config | the same bootstrap remedy |
 | a `graphify-out/` directory at a checkout root | delete the directory (it is a generated graph; nothing reads it now) |
 | a `MEMPALACE_*` variable in any mise file | the same bootstrap remedy |
-| a `.config/stackgen.yaml` beside a `.config/bootstrap.toml` | a leftover values file from before bootstrap: delete it |
+| a `.config/stackgen.yaml` in a repo the shaped test passes | a leftover values file from before bootstrap: delete it |
 
 A row the user declined at the `23 → 24` step is still reported, every run:
 that step offers its rows by state on each migrate pass, which runs only while
@@ -281,13 +284,17 @@ stack axis is pinned (§5, §3) — a project whose pinned template its adapter
 never **materialized** in that project's target repo (§3) — the pin is an answer
 and the payload absent, a `custom` template pin, a project whose template does
 not cover every platform it declares, a broken membership link (§1), an unwaived
-**critical** dependency advisory (the audit check); callers must halt),
+**critical** dependency advisory (the audit check), no bootstrap contract — the
+install hint of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — and a
+repo its shaped test refuses, with the envelope's `errors` text (§5); callers
+must halt),
 **drift** (config and repo disagree — **including the whole repo-shape check
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id whose pinned
-pack ships `p/_project/` tasks with no task group, a repo not shaped or shaped
-on the old layout, a missing `develop` or `main`, a change
-`mise run setup:configs --dry-run` shows, with its `would` lines, a pack-copied
+pack ships `p/_project/` tasks with no task group, a `bootstrap check --json`
+finding or a `bootstrap sync --json --dry-run` change — a `warning` finding
+marked as one, a run that failed before its stages given with its `errors`
+text, and a clone stale and offline as `not checked` — a pack-copied
 file the repo edited away from the hash the lockfile recorded and still
 diverging once every marked position is spliced out,
 and — read from the forge, only where its CLI answers — a default branch that is
@@ -296,11 +303,7 @@ forge at all, or no backlog project for the base. Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a
 row. A repo behind its baseline still works, so none of those is ever blocking),
 **warning** (the repo-shape check could not judge a row, or read a value it cannot
-use: in full mode, a `setup:configs --dry-run` that failed, or did not run
-because the repo is not trusted by mise, so drift is unknown, with the reason; a
-`merge_model` in
-`.config/bootstrap.toml` other than `direct` or `pr`,
-with the remedy to fix the value; never blocking),
+use; never blocking),
 **missing** (something declared has no install — including a **`B`**-kind
 capability a project declares that none of its `backing_template` pins provides,
 which is never blocking; §5), **unavailable** (nothing shipped here to install),
@@ -340,8 +343,7 @@ read.
 remedies, named in that check's table — **across every repo**, since one re-run
 covers a member's drift as well as the base's — so print each remedy a single
 time with the rows that led to it underneath: `/vwf:setup` for the pack rows,
-`/vwf:setup reshape` for the bootstrap and forge rows, and the fix in
-`.config/bootstrap.toml` for a `merge_model` value. A
+and `/vwf:setup reshape` for the bootstrap and forge rows. A
 list repeating one command per row reads as several problems when it is one
 re-run, and hides how much of the baseline has moved. The two doors differ by
 what they reconcile: plain `/vwf:setup` reconciles
@@ -368,5 +370,6 @@ the plan folder's `index.json` (`installed` or `proceed without`).
 (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`); it never asks.
 `/vwf:recall` calls the `baseline` invocation alone, at session start, and
 prints its result as one shape-drift line per remedy — it never runs doctor
-whole, never reads the forge, and runs no mise task and no bootstrap code, so it
-does not report config drift. Full mode does.
+whole, never reads the forge, and runs no mise task and no bootstrap command
+but the contract check and the shaped test, so it does not report config drift.
+Full mode does.

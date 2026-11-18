@@ -23,8 +23,11 @@ resource-cap handoff. The record is the account that survived all three intact. 
 - **model downgrades**, named on the nodes that ran under them
 - the unit gate, wave gate, plan gate and orchestrator gate results
 - the release levels recorded: the folder's `release_levels` entries, and, once the landing has
-  written them, each key it raised in `.config/releases.yaml`, from and to. For a folder whose
-  `release_levels` is `[]`, the one line *old-shape folder — no release levels recorded*
+  written them, each key it raised in `.config/bootstrap/releases.toml` through `bootstrap config`,
+  from and to, and each key it moved, as *moved from `.config/releases.yaml`: `<key>` `<level>`*.
+  For a folder whose `release_levels` is `[]`, the one line *old-shape folder — no release levels
+  recorded*. When a `bootstrap config` call failed after the merge, the hand step: the exact
+  `config set` lines and the completion command, per *The release-levels write* in [land.md](land.md)
 - the execution mode the run used, from the action log's `execution` event, and the reason when it fell
   back from what the plan recorded
 - the worktree path

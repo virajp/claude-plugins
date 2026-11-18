@@ -234,9 +234,9 @@ drift. It adds no consent tier.
 - **The toolchain is not a slug, and not a pack's.** No `mise` or gates
   bundle exists, and no pack names a toolchain tool: the tool pins, the
   gates, their configs and the generic tasks are bootstrap's. The
-  materializer reads a fresh clone of bootstrap to find the tools a
-  composition needs, and asks for them through bootstrap's
-  `docs/sync/vwf.md` ([the bootstrap handoff](references/bootstrap-handoff.md)). No pre-commit
+  materializer finds the tools a composition needs with
+  `bootstrap catalog --json`, and asks for them with `bootstrap add tool`
+  ([the bootstrap handoff](references/bootstrap-handoff.md)). No pre-commit
   hook fragment is landed or merged.
 - **A `config/_<name>/` directory is pack-private and is never copied**
   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). It is payload a reader

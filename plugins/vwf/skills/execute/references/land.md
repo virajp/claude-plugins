@@ -37,7 +37,8 @@ The steps:
 
 Then act on that consent:
 
-- **yes** → hand off to `/vwf:git-workflow` step 4, *merge, push & clean up*. Pass **the declared preference
+- **yes** → first make the **release-levels read** below in the run's worktree. Then hand off to
+  `/vwf:git-workflow` step 4, *merge, push & clean up*. Pass **the declared preference
   that consent was recorded in the plan — do not ask again**.
   - Under an `all` shared-worktree override the option is *merge, push & keep worktree*. The next plan reuses
     it, and the loop's exit removes it unless the run ends on a `STOPPED` plan.
@@ -51,7 +52,9 @@ Then act on that consent:
     leaves it at the live path otherwise. It runs the sweep, per *Writing a row — the completion*
     and *The sweep* in `plan-index.md`.
   - Before that commit is made, make the **release-levels write** below in the same worktree, right after
-    `complete` edits the row. Then `land.mjs close <worktree> --into <integration> --message "docs: plan queue —
+    `complete` edits the row, and before the row edit is committed. When a `bootstrap config` call of that
+    write fails, abandon the write with `land.mjs`, so the partial `.config/bootstrap/releases.toml` goes with
+    it, and stop per that section's last step. Otherwise `land.mjs close <worktree> --into <integration> --message "docs: plan queue —
     <folder> complete"` lands the row and the raised levels together. A conflict on the index abandons the write
     and makes it again, the same row and the same raise, until it lands, and never re-picks. A `pr` result waits
     on the pull request per that reference, then runs `land.mjs finish`.
@@ -60,38 +63,57 @@ Then act on that consent:
   That request is `plan-management archive <folder>`, made in a protected-branch write's worktree, never as a
   direct commit. It moves the folder, and applies the same row edit and sweep. No typed command does this. Ask nothing further.
 
+## The release-levels read — before the merge
+
+On `yes`, before the hand-off to `/vwf:git-workflow` step 4, read the folder's `release_levels` and run, in the
+run's worktree, `bootstrap config get releases.<id> --json` for each entry. The read only proves that the contract
+works; its values are not the "from" level of the write. A failed call stops the run before the merge, with the
+`errors` messages of bootstrap's envelope as bootstrap gives them, per
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. The folder's status reads `BLOCKED` with that text, and the
+normal resume, `/vwf:execute <folder>`, applies. An empty `release_levels` list makes no call.
+
 ## The release-levels write — on a merged landing only
 
 The run bumps no version. It records how far each project it changed must move. A release step a person runs later
-bumps, tags and clears the key.
+bumps, tags and clears the key. The levels live in `.config/bootstrap/releases.toml`, read and written only through
+`bootstrap config`, per `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. This skill never reads or writes that
+file itself. Every call below carries `--json` and runs with the worktree as the current folder.
 
-The verbs of `plan-management` never commit, so this skill, the caller that owns the completion commit, writes the file
-itself. It writes in the completion's protected-branch write's worktree, after the merge. The write comes right
-after `complete` edits the row, and before `land.mjs close`.
+The verbs of `plan-management` never commit, so this skill, the caller that owns the completion commit, makes the
+write itself. It writes in the completion's protected-branch write's worktree, after the merge. The write comes right
+after `complete` edits the row, and before the row edit is committed with `land.mjs close`.
 
-1. Read the folder's `release_levels`: `plan.mjs get docs/plans/archived/<basename>/index.json release_levels` when
+1. **The move from `.config/releases.yaml`**. Whenever `.config/releases.yaml` exists in the worktree, before
+   anything else, even for an empty `release_levels` list: for each of its keys that is not `NONE`, run
+   `bootstrap config get releases.<key> --json`, then `bootstrap config set releases.<key> <level> --json`, then the
+   same get again. Then delete the file with `rm`. The final report lists each key moved as *moved from
+   `.config/releases.yaml`: `<key>` `<level>`*.
+2. Read the folder's `release_levels`: `plan.mjs get docs/plans/archived/<basename>/index.json release_levels` when
    step 3 archived it, at its live path otherwise. An empty list, `[]`, is the old-shape case, which only a migrated
-   folder can have. Write nothing. The final report says *old-shape folder — no release levels recorded*.
-2. Read `.config/releases.yaml`: one key per project, each `NONE`, `PATCH`, `MINOR` or `MAJOR`. An absent key reads
-   `NONE`; an absent file reads every key `NONE`.
-3. **Raise, never lower**. For each entry, the order is `NONE < PATCH < MINOR < MAJOR`. The entry's `id` (the project) names the key. When the entry's `level` is
-   higher than the key's current value, set the key to that `level`.
-   Otherwise leave it. `PATCH` after `MAJOR` stays `MAJOR`, and a `NONE` entry changes nothing. Only the release step
-   clears a key.
-4. When a key changed and the file is absent, create it with this two-line header comment above the keys:
+   folder can have. Set nothing. The final report says *old-shape folder — no release levels recorded*.
+3. **The sets**. For each entry whose `level` is not `NONE`, the entry's `id` (the project) names the key:
+   - `bootstrap config get releases.<id> --json` gives the "from" level;
+   - `bootstrap config set releases.<id> <level> --json` writes it. bootstrap keeps the higher of the old and the
+     new level, so a key is never lowered. Read no field of the set's output;
+   - the same get again gives the "to" level. A key changed when "from" and "to" differ. The final report lists
+     each changed key, from and to.
+4. **The commit**. When `.config/bootstrap/releases.toml` changed, or step 1 deleted `.config/releases.yaml`, the
+   one `docs: plan queue — <folder> complete` commit carries `docs/plans/index.json`,
+   `.config/bootstrap/releases.toml` and the deletion of `.config/releases.yaml` — each that changed — and nothing
+   else, by the procedure *Writing a row* in `plan-index.md`. This commit is **the one exception to that procedure's
+   rule that the write carries the index alone**. When nothing changed, the commit carries the row alone. There is no separate release-levels commit.
+5. **A failed call**. When a `bootstrap config` call fails, or the CLI is absent or has no contract 1, abandon the
+   write with `land.mjs`, so a partial `releases.toml` goes with it. The row stays as it is: merged, not `COMPLETE`.
+   Stop with the asset's hint, or with the `errors` messages of bootstrap's envelope as bootstrap gives them. The stop
+   is a hand step: the report prints the exact `bootstrap config set releases.<id> <level> --json` lines, the move of
+   step 1 when `.config/releases.yaml` exists, and the completion command, `plan-management complete <folder>` in a
+   protected-branch write's worktree.
+6. On a conflict, the procedure abandons the write and opens a new one from the new tip. Re-apply the row, and run
+   steps 1 to 3 again there — the move, and each get, set and get. They are safe to repeat, because a set keeps the
+   higher level, and "from" is read again at the new tip. Then close again. Two runs landing at once thus both keep
+   the higher level.
 
-   ```yaml
-   # Pending release levels, written by /vwf:execute at landing.
-   # Each key is cleared by the release step that releases the project.
-   ```
-5. When a key changed, `.config/releases.yaml` lands with `docs/plans/index.json` in the one
-   `docs: plan queue — <folder> complete` commit, by the procedure *Writing a row* in `plan-index.md`. This commit is
-   **the one exception to that procedure's rule that the write carries the index alone**. The completion commit
-   carries the levels file too, and nothing else. When nothing changed, the commit carries the row alone. There is
-   no separate release-levels commit.
-6. On a conflict, the procedure abandons the write and opens a new one from the new tip. Re-apply the row, and the
-   levels from step 2, re-read at the new tip and raised again. Then close again. Two runs landing at once thus both
-   keep the higher level.
+Only the release step clears a key; this skill never unsets one.
 
 Writing through a protected-branch write after the merge, never on the run branch, keeps two concurrent runs from conflicting on
 the file at merge time. When the branch did **not** merge — `no`, or a merge conflict — write nothing.

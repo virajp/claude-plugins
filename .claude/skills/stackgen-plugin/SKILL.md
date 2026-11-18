@@ -34,10 +34,12 @@ left in turn: every universal file a repo runs — the mise config and task
 library, dprint, taplo, pre-commit, gitleaks, grype, the house linter, git and
 the editor settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, the
 `setup:*` and `code:*` tasks with them, and `stackgen:tool-config`, which once
-rendered them, was removed on 2026-11-03. `/vwf:init` runs bootstrap's readme
-prompt, `/vwf:setup`'s materialize pass applies packs through the adapter, and
-`/vwf:doctor` judges drift through bootstrap's own
-`mise run setup:configs --dry-run`, in full mode and in setup's Step 0 only.
+rendered them, was removed on 2026-11-03. Both plugins reach bootstrap only
+through its CLI and JSON contract (bootstrap 4.1.0 or newer), per each plugin's
+`assets/bootstrap-contract.md`. `/vwf:init` runs `bootstrap migrate`,
+`/vwf:setup`'s materialize pass applies packs through the adapter, and
+`/vwf:doctor` judges drift through `bootstrap check --json` and
+`bootstrap sync --json --dry-run`, in full mode and in setup's Step 0 only.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not
 restate a count or a rule that an asset below already owns.
@@ -102,39 +104,38 @@ No bundle is fetched for a repo's baseline any more. The hygiene kind, its pack,
 its bundle and the `unconditional:` bundle key retired on 2026-09-27: the
 hygiene **config files** — `.gitignore`, `.gitattributes` and the issue forms —
 are bootstrap's, and the **prose files** — `CONTRIBUTING.md`, `SECURITY.md` and
-the licence texts — are `/vwf:init`'s own assets. `init` runs bootstrap's readme
-prompt once, for the base, and the prompt reaches the members, so a member is
-shaped on its own evidence; it makes no adapter fetch. A repo is shaped when it
-carries `.config/bootstrap.toml`; one with `.config/stackgen.yaml` or the old
-mise
-layout and no such file is **shaped on the old layout**, and bootstrap's
-`docs/sync/migrate.md` moves it through the same step. What setup *does* fetch
-is every **pinned** axis — its
-materialize pass invokes `-stack-template` once per `(repo, slug)`, with the
-`repo:` line naming the member — which is the one landing path
-`/vwf:architecture` no longer takes. The `repo:` line is the whole of the
-optional input beside the catalog paths: the `answers:` and `values:` maps
-retired on 2026-10-23 with the pack keys they fed.
+the licence texts — are `/vwf:init`'s own assets. `init` runs
+`bootstrap migrate` in each repo, the base first, then each member, so a member
+is shaped on its own evidence; it makes no adapter fetch. A repo is shaped when
+`bootstrap config get repo.format --json` answers `ok`; one with
+`.config/stackgen.yaml` or the old mise layout is **shaped on the old layout**,
+and `bootstrap migrate` moves it through the same step. What setup *does* fetch
+is every **pinned** axis — its materialize pass invokes `-stack-template` once
+per `(repo, slug)`, with the `repo:` line naming the member — which is the one
+landing path `/vwf:architecture` no longer takes. The `repo:` line is the whole
+of the optional input beside the catalog paths: the `answers:` and `values:`
+maps retired on 2026-10-23 with the pack keys they fed.
 
 **A pack ships no toolchain.** The tool pins, gates, gate configs, generic tasks
 (`setup:deps`, `code:format`, `code:lint`), pre-commit hooks and secrets setup
-of a repo are **bootstrap**'s — a separate repo, selected in
-`.config/bootstrap.toml` and synced by `mise run setup:configs`. The
-materializer reads a fresh blobless clone (`--filter=blob:none`) of bootstrap to
-choose the tools a
-composition needs, from each component's `pack.yaml` facts and conventions, and
-sends `add` and `add user plugins` instructions through bootstrap's
-`docs/sync/vwf.md`, behind their own consent line. It never edits
-`.config/bootstrap.toml` and never names a bootstrap tool from memory; it
-records what it asked for in the lockfile's `bootstrap:` block, so removal sends
-the matching `remove` and `stackgen-sync` diffs that block. A pack names its
-Claude plugin in a `## Claude plugins` section of its `conventions.md`. A repo
-with no `.config/bootstrap.toml` gets nothing landed — a pack's tasks source
-bootstrap's `_scripts/helpers` — and the remedy named is `/vwf:setup reshape`. A
-value only the machine can answer (`XCODE_VERSION`, `SIMULATOR_*`,
-`COMPILE_SDK`, `EMULATOR_IMAGE`) is found by bootstrap's tasks, or set by the
-repo in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml`. The
-procedure is `skills/stackgen-stack-template/references/bootstrap-handoff.md`.
+of a repo are **bootstrap**'s — a separate repo, selected through the
+`bootstrap` CLI and synced by `bootstrap sync`. The materializer reads
+`bootstrap catalog --json` to choose the tools a composition needs, from each
+component's `pack.yaml` facts and conventions, and adds them with
+`bootstrap add tool <t> --json --dry-run`, then `--yes`, behind their own
+consent line; a plugin a pack names still goes as an `add user plugins`
+instruction through bootstrap's `docs/sync/vwf.md`, read from a blobless clone.
+It never edits a file in `.config/bootstrap/` and never names a bootstrap tool
+from memory; it records what it asked for in the lockfile's `bootstrap:` block,
+so removal runs the matching `remove` and `stackgen-sync` diffs that block. A
+pack names its Claude plugin in a `## Claude plugins` section of its
+`conventions.md`. A repo bootstrap's shaped test refuses gets nothing landed — a
+pack's tasks source bootstrap's `_scripts/helpers` — and the remedy named is
+`/vwf:setup reshape`. A value only the machine can answer (`XCODE_VERSION`,
+`SIMULATOR_*`, `COMPILE_SDK`, `EMULATOR_IMAGE`) is found by bootstrap's tasks,
+or set by the repo in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml`. The procedure is
+`skills/stackgen-stack-template/references/bootstrap-handoff.md`.
 
 A bundle's frontmatter may also carry **`default: true`**, since 2026-09-15:
 `stackgen-stack-menu` copies it onto every entry whose bundle carries it and

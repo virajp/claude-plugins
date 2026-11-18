@@ -1,8 +1,9 @@
 # The New-Repo Pipeline
 
 Read this in mode **blank** and in mode **source** — the two modes of SKILL.md's
-table whose repo carries no `.config/bootstrap.toml` and no old layout, so
-nothing has landed there yet. Modes **shaped** and **old layout** are
+table whose repo fails the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` and carries no old
+layout, so nothing has landed there yet. Modes **shaped** and **old layout** are
 [existing repo](existing-repo.md)'s, which reaches the steps below every mode
 shares. Nothing here reads or moves a source file in either mode.
 
@@ -13,8 +14,8 @@ tree the next step has to undo.
 
 Everything below runs **once per repo that resolved to `blank` or `source`** —
 every such member first, in the resolved order, then the base — under that one
-plan and that one consent. The bootstrap step alone runs once, for the base, and
-covers them all.
+plan and that one consent. The bootstrap step alone runs in SKILL.md's order:
+in each repo that takes it, the base first, then each member.
 
 ## What these modes borrow
 
@@ -30,8 +31,9 @@ section.
 pass, that member on a member's.
 
 Where there is none, run a plain `git init` and stop there. No branch of `init`'s
-naming, no commit, no remote: bootstrap's `docs/sync` makes the first commit and
-the core branches.
+naming, no commit, no remote. `bootstrap migrate` needs this repository and
+makes no commit: the commit step below makes the first commit, through
+`/vwf:git-workflow`, on the branch `git init` made.
 
 Where a repository already exists, leave it alone here.
 
@@ -55,12 +57,16 @@ Report what was created and what was already there.
 
 ## 2 — The bootstrap step
 
-**SKILL.md's bootstrap step is this step**, the prompt quoted there word for
-word: once, for the base, after the clone rows and the clean-tree check. Its
-gate decides which repos reach the rest of this file, and its green read decides
+**SKILL.md's bootstrap step is this step**, as stated there:
+`bootstrap migrate --json --dry-run`, bootstrap's own questions asked one at a
+time, then `bootstrap migrate --json --yes` with the answers, in each repo that
+takes it, the base first, after the clone rows and the clean-tree check. Its
+gate — the shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
+— decides which repos reach the rest of this file, and its green read decides
 where `.config/stackgen.yaml` goes. The toolchain, the gates, the hooks, the
 branch model, the secrets tools and the record of the repo — its
-`.config/bootstrap.toml` — are all bootstrap's, and `init` passes nothing to them.
+`.config/bootstrap/` folder — are all bootstrap's, and `init` passes nothing to
+them but the user's answers.
 
 ## 3 — The hygiene assets
 
@@ -125,9 +131,10 @@ rather than filled here. Every other occurrence is the origin URL, per the table
 Retired. The ignore file is bootstrap's git tool, a shared superset — a pattern
 for a tree the repo never produces matching nothing — so no language template is
 fetched and none is asked for, by `init` or by a pack. A line the repo adds goes
-into its `.gitignore` directly; a line of the shared `.gitignore` the repo drops
-is a `[tools.git.files.".gitignore"]` entry with `"$mode" = "remove"` in its
-`.config/bootstrap.toml`; `init` reads and writes neither.
+into its `.gitignore` directly; the repo's own ignore lines — a line of the
+shared `.gitignore` it drops among them — are an override in its
+`.config/bootstrap/tools.toml`, set through `bootstrap config`; `init` reads and
+writes neither.
 
 ## 6 — The project ids
 
@@ -232,7 +239,8 @@ asked whatever the mode, and a repo shaped years ago is as entitled to its answe
 as a blank one.
 
 Per [hygiene assets](readme-and-license.md) — the stub from question 1 and the
-`repo_name` of the repo's `.config/bootstrap.toml`, the licence question 2a
+repo's `repo_name`, read with `bootstrap config get repo.repo_name --json`, the
+licence question 2a
 answered from the assets' licence texts, and the security contact 2b answered,
 spliced into the assets' security template, each on that reference's already-there
 rule, so a file the repo carries is kept and reported rather than written over.
@@ -250,13 +258,13 @@ rule of its own; every one of those is that skill's.
 
 **What bootstrap left, per repo.** Immediately after the bootstrap step, before
 `init` writes anything, read `git status --porcelain` in each repo the gate let
-through. The tree was clean before the step, so what it prints is **bootstrap's
-sync** — unless the user told `docs/sync` to commit it, in which case it prints
-nothing — and those paths, resolved member paths aside, are that repo's first
-commit. Then everything `init` wrote or deleted in that repo after that read is
-its second: the hygiene files, the `.config/vwf.yaml` stub or `kept_files` entry,
-the `.config/stackgen.yaml` deletion, and the readme rename with its caller
-rewrites.
+through. The tree was clean before the step, and `bootstrap migrate` makes no
+commit, so what it prints is **bootstrap's sync** — nothing where the step did
+not run there — and those paths, resolved member paths aside, are that repo's
+first commit. Then everything `init` wrote or deleted in that repo after that
+read is its second: the hygiene files, the `.config/vwf.yaml` stub or
+`kept_files` entry, the `.config/stackgen.yaml` deletion, and the readme rename
+with its caller rewrites.
 
 **The hand-over.** In each repo, **members before the base**, invoke
 `/vwf:git-workflow`, declaring per that skill's *Caller Preferences*:

@@ -224,8 +224,9 @@ The reason for each is on its line, and the correct action follows the semicolon
   it.
 - Run a generator outside the gates unit; leave it to that unit. A consented after-landing step is
   the one exception, and it is the orchestrator's because it may write outside the worktree.
-- Lower or clear a key in `.config/releases.yaml`, or write it anywhere but the release-levels write
-  on a merged landing; raise it there alone.
+- Lower, clear or unset a release level in `.config/bootstrap/releases.toml`, read or write that file
+  but through `bootstrap config`, or set a level anywhere but the release-levels write on a merged
+  landing; raise it there alone.
 - Take an assumption where the folder is silent; ask per [questions.md](questions.md). The session
   question and `all`'s run-level questions are asked before the run starts.
 - Write a lock file with Write, Edit, `sed` or a script, or let a unit do it. A lock file is the

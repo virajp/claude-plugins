@@ -50,37 +50,37 @@ the tree they govern; `release` is a slash command; a change to this repo is
 planned with `/vwf:plan` (a blueprint slice) or `/vwf:change-plan` (anything
 else), each of which **lands the approved folder** on the integration branch
 through git-workflow's `land.mjs` together with its row in
-`docs/plans/index.json`, the **one plan
-index**, created once with the Write tool and validated, every later change made
-through `plan.mjs set`, `append` or `remove`, and a folder's waves renumbered by
-the planner through `plan.mjs rewave`, after `plan.mjs set` gives each unit
-moving above wave 1 its `waits` reason — `/vwf:plan` printing the launch line
-only once `/vwf:backlog unplanned` finds nothing left to plan at its priority,
-else the next item to plan, and `/vwf:change-plan` always printing it, with the
-next item to plan above it when one is left — and run, in a fresh context, by
-the one executor, `/vwf:execute <folder>` — or `/vwf:execute next`, which reads
-that index alone, of either kind, and picks the runnable plan with the lowest
+`docs/plans/index.json`, the **one plan index**, created once with the Write
+tool and validated, every later change made through `plan.mjs set`, `append` or
+`remove`, and a folder's waves renumbered by the planner through
+`plan.mjs rewave`, after `plan.mjs set` gives each unit moving above wave 1 its
+`waits` reason — `/vwf:plan` printing the launch line only once
+`/vwf:backlog unplanned` finds nothing left to plan at its priority, else the
+next item to plan, and `/vwf:change-plan` always printing it, with the next item
+to plan above it when one is left — and run, in a fresh context, by the one
+executor, `/vwf:execute <folder>` — or `/vwf:execute next`, which reads that
+index alone, of either kind, and picks the runnable plan with the lowest
 `priority` value, or `/vwf:execute all`, which runs every runnable plan in turn,
 each in its own `execute-runner` subagent, until one stops — which refuses a
 folder that is not on that branch, and starts with one script call, `start.mjs`,
-that runs its start checks and claims the row `RUNNING`
-with a commit landed through `land.mjs` — never a direct commit — before it
-cuts a worktree — the same commit writing the
-folder's `run`, the worktree and action-log paths — and marks it `COMPLETE` once
-the merge lands (archiving the folder there and re-pointing the row when no gap
-is open; leaving it live when one is, archived once you ask) — each plan folder
-carries this repo's gate lines in three tiers (a unit gate before each unit
-commit, a wave gate after each wave, a plan gate once at the end),
-`mise run p:plugins:local` as an after-landing step, recorded `run` at the
-interview or dropped, and the release levels it derives per project, which
-`/vwf:execute` writes to `.config/releases.yaml` at landing: it runs the step on
-a green landing without a prompt, bumps no version, releases nothing, and at run
-time asks you only what the plan missed — one question at a time, the
-recommendation first, the answer recorded in the folder's `decisions` — beside
-the run-level questions `/vwf:execute all` asks once, before its first plan;
-every stop is a report with its resume command. A repo still on the old markdown
-plan format (a `docs/plans/index.md`) is stopped before any change and pointed
-to `docs/plans/migrate.md`.
+that runs its start checks and claims the row `RUNNING` with a commit landed
+through `land.mjs` — never a direct commit — before it cuts a worktree — the
+same commit writing the folder's `run`, the worktree and action-log paths — and
+marks it `COMPLETE` once the merge lands (archiving the folder there and
+re-pointing the row when no gap is open; leaving it live when one is, archived
+once you ask) — each plan folder carries this repo's gate lines in three tiers
+(a unit gate before each unit commit, a wave gate after each wave, a plan gate
+once at the end), `mise run p:plugins:local` as an after-landing step, recorded
+`run` at the interview or dropped, and the release levels it derives per
+project, which `/vwf:execute` writes to `.config/bootstrap/releases.toml`
+through `bootstrap config set` at landing, moving an old `.config/releases.yaml`
+there at first sight: it runs the step on a green landing without a prompt,
+bumps no version, releases nothing, and at run time asks you only what the plan
+missed — one question at a time, the recommendation first, the answer recorded
+in the folder's `decisions` — beside the run-level questions `/vwf:execute all`
+asks once, before its first plan; every stop is a report with its resume
+command. A repo still on the old markdown plan format (a `docs/plans/index.md`)
+is stopped before any change and pointed to `docs/plans/migrate.md`.
 
 | Read                                                         | For                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -260,10 +260,10 @@ in [`repo-shape.md`][repo].
 Two plugins ship. Each row's linked home is authoritative; the cells are an
 index.
 
-| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
-| ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the `docs/memory/` file store, the `/vwf:execute` action log (five command hooks and one append-only JSONL file per plan under `~/Library/Caches/vwf/`), and the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`). Ships **no** MCP server: the user installs any MCP server, and the agent asks for it. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a generator for the uncovered tail that researches with Context7 first when Context7 is installed, else the official documentation and the package registries, and never halts on or asks for Context7, the `addon` axis of optional tools (`taste-skill`) picked in `/vwf:architecture` and recorded in `addons:`, `vwf-tools`, the one local plugin holding every LSP server a repo materializes. It installs no MCP server: a pack that needs one names it in its `conventions.md`, and the user installs it. Every universal file a repo runs — the mise config and task library, the gates, the hooks, git, the editor settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, and a repo's values are its `.config/bootstrap.toml`. A pack ships no toolchain: its tool pins, gates and generic tasks are bootstrap's, which the materializer reads from a clone and asks for through bootstrap's `docs/sync/vwf.md`; a pack's `config/` payload is its `test/` and `p/_project/` tasks. `/vwf:init` reaches bootstrap through its readme prompt and writes its own hygiene assets. → [`stackgen-plugin`][sg] |
+| Plugin     | Is                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `vwf`      | The flagship: the Product → Blueprint → Plan → Execute workflow, its subagents, `init` (the repo-shape orchestrator, reached through `/vwf:setup`), the two planners `plan` and `change-plan`, one executor `execute`, writing and running one plan folder shape, the `docs/memory/` file store, the `/vwf:execute` action log (five command hooks and one append-only JSONL file per plan under `~/Library/Caches/vwf/`), and the `/vwf:execute` progress pane (a TypeScript hooks module, `/vwf-monitor`). Ships **no** MCP server: the user installs any MCP server, and the agent asks for it. Names **no** technology. Depends on `stackgen` alone. → [`vwf-plugin`][vwf]                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `stackgen` | The principles-driven stack materializer — shipped packs for the covered path, a generator for the uncovered tail that researches with Context7 first when Context7 is installed, else the official documentation and the package registries, and never halts on or asks for Context7, the `addon` axis of optional tools (`taste-skill`) picked in `/vwf:architecture` and recorded in `addons:`, `vwf-tools`, the one local plugin holding every LSP server a repo materializes. It installs no MCP server: a pack that needs one names it in its `conventions.md`, and the user installs it. Every universal file a repo runs — the mise config and task library, the gates, the hooks, git, the editor settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, and a repo's values are its `.config/bootstrap/` folder, reached only through the bootstrap CLI and its JSON contract (bootstrap 4.1.0 or newer). A pack ships no toolchain: its tool pins, gates and generic tasks are bootstrap's, which the materializer finds with `bootstrap catalog` and adds with `bootstrap add tool`, a plugin a pack names still asked for through bootstrap's `docs/sync/vwf.md`; a pack's `config/` payload is its `test/` and `p/_project/` tasks. `/vwf:init` drives `bootstrap migrate` and writes its own hygiene assets. → [`stackgen-plugin`][sg] |
 
 Full inventory, the native manifest shape, and the generated marketplace
 manifest: [`.claude/docs/plugins.md`][plug]. Authoring doctrine that applies to
@@ -280,9 +280,10 @@ to `blueprint` is done in full before planning.** The ad-hoc planner
 one plan index, and one executor, `execute`, runs both, each unit's `kind` in
 the folder's `index.json` deciding what runs over it. How `init` surveys, asks
 and adopts, what it records in `.config/vwf.yaml` — `enforcement.kept_files`
-alone; a repo's answers live in its own `.config/bootstrap.toml`, written by
-bootstrap — the materialize pass, the ordering gates, the skill and
-agent tables, and the dependency reasoning are the [`vwf-plugin`][vwf] skill.
+alone; a repo's answers live in its own `.config/bootstrap/` folder, written and
+read by the bootstrap CLI — the materialize pass, the ordering gates, the skill
+and agent tables, and the dependency reasoning are the [`vwf-plugin`][vwf]
+skill.
 
 ## The installer CLI
 
@@ -352,12 +353,15 @@ staged plugin loads in the next **restarted** session. Public second — the tag
 
 **No person and no plan bumps a version by hand**, and a tracked version moves
 only at release. A plan records each project's release level, and `/vwf:execute`
-raises it in `.config/releases.yaml` at landing. The release tasks read it: each
-bumps its project from the last tag at the higher of the recorded level and the
-one an untagged manifest implies, never below the manifest, and clears its own
-keys; `p:release` runs all three with one bump commit and one merge, then tags
-each. **Ask the user before running `p:release`, `p:plugins:release`,
-`p:i:release` or `p:site:release`** — always; no plan carries a release step.
+raises it at landing. The release tasks read it from `.config/releases.yaml`.
+After R3a, `/vwf:execute` writes the levels to
+`.config/bootstrap/releases.toml`; the release tasks read it once the user
+switches them. Each bumps its project from the last tag at the higher of the
+recorded level and the one an untagged manifest implies, never below the
+manifest, and clears its own keys; `p:release` runs all three with one bump
+commit and one merge, then tags each. **Ask the user before running `p:release`,
+`p:plugins:release`, `p:i:release` or `p:site:release`** — always; no plan
+carries a release step.
 
 The mise environment split, the four workflows and why `deps-update.yml`
 dispatches rather than calls `release.yml`, the supply-chain settings and the

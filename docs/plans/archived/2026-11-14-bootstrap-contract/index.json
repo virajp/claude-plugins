@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-14 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-18 — 6229ae4f 22f06cac 945957aa 7150ca02 16975459 c18832fa 8ccd725c 16067406 8038d73b 3dbc48ea "
   },
   "consent": {
     "merge": true,
@@ -32,7 +32,7 @@
       {
         "id": "K1",
         "check": "grep -rnF over plugins/ for '.config/bootstrap.toml' and for '.config/releases.yaml'.",
-        "pass": "No hit, except: a branch, landing or merge_model passage in plugins/vwf/skills/git-workflow/**, plugins/vwf/skills/init/** or plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md, which R3b owns (D14); a history row (plugins/vwf/skills/setup/references/format-lineage.md, a migration note that names the old form as the old form); and the D5 move in plugins/vwf/skills/execute/references/land.md, plugins/vwf/skills/execute/references/final-report.md and plugins/vwf/skills/plan-management/references/plan-index.md (D36, D38). Each such hit is listed with its reason in the run report."
+        "pass": "No hit, except: a branch, landing or merge_model passage in plugins/vwf/skills/git-workflow/**, plugins/vwf/skills/init/** or plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md, which R3b owns (D14); a history row (plugins/vwf/skills/setup/references/format-lineage.md, a migration note that names the old form as the old form); and the D5 move in plugins/vwf/skills/execute/references/land.md, plugins/vwf/skills/execute/references/final-report.md and plugins/vwf/skills/plan-management/references/plan-index.md (D36, D38). Also the (g) Protection passage of plugins/vwf/skills/doctor/references/stack-checks.md, left for R3b (D46). Each such hit is listed with its reason in the run report."
       },
       {
         "id": "K2",
@@ -79,11 +79,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-15T12:28:29.898Z",
+      "ended": "2026-11-18T08:16:53.448Z",
+      "commit": "c18832fa",
+      "rounds": 5
     },
     {
       "id": "U2",
@@ -101,11 +101,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-18T08:18:59.629Z",
+      "ended": "2026-11-18T08:35:59.541Z",
+      "commit": "3dbc48ea",
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -128,11 +128,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-18T08:18:59.925Z",
+      "ended": "2026-11-18T08:35:59.975Z",
+      "commit": "8038d73b",
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -157,11 +157,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-18T08:19:00.222Z",
+      "ended": "2026-11-18T08:36:00.398Z",
+      "commit": "16067406",
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -182,11 +182,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-18T08:19:00.518Z",
+      "ended": "2026-11-18T08:36:00.912Z",
+      "commit": "8ccd725c",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -200,7 +200,8 @@
         "readme.md",
         ".claude/docs/**",
         ".claude/skills/**",
-        "site/src/content/docs/**"
+        "site/src/content/docs/**",
+        "site/CLAUDE.md"
       ],
       "depends_on": [
         "U2",
@@ -209,11 +210,11 @@
         "U5"
       ],
       "waits": "docs-sync reads the delta of wave 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-18T09:26:02.660Z",
+      "ended": "2026-11-18T09:32:30.821Z",
+      "commit": "7150ca02",
+      "rounds": 3
     },
     {
       "id": "U7",
@@ -227,37 +228,37 @@
         "U6"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-18T09:35:48.756Z",
+      "ended": "2026-11-18T09:37:10.118Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-15T12:28:29.823Z",
+      "ended": "2026-11-18T08:18:31.809Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-18T08:18:59.476Z",
+      "ended": "2026-11-18T09:25:43.559Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-18T09:26:02.510Z",
+      "ended": "2026-11-18T09:35:36.293Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-18T09:35:48.604Z",
+      "ended": "2026-11-18T09:37:10.414Z"
     }
   ],
   "shared_files": [
@@ -632,36 +633,141 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q1: bootstrap contract 1 is not installed (bootstrap 3.2.0; contract --json exits 2). Stop the run until bootstrap 4.0.0 is installed?",
+      "ruling": "Stop the run — nothing is edited; the plan resumes with /vwf:execute docs/plans/2026-11-14-bootstrap-contract once bootstrap 4.0.0 is installed.",
+      "rejected": "Continue with a local bootstrap build you name — U1 runs the D3 check again against that build, then writes both contract assets",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Q2 (U1): bootstrap docs/design/cli.md defines exit code 3, a name bootstrap does not know, which add tool <name> can return; the unit file lists only 0, 1, 2 and 5. Add code 3 to the asset code table?",
+      "ruling": "Add code 3: a name bootstrap does not know. The table matches the CLI.",
+      "rejected": "Keep 0/1/2/5 only, as Edit 1.3 lists",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Q3 (U2): the init green dry-run is said to read the cached clone under the 30-minute fetch rule, but bootstrap cli.md 1032-1042 says that rule is for catalog reads only and sync fetches each run.",
+      "ruling": "Say that sync fetches bootstrap's clone each run; the docs match the CLI.",
+      "rejected": "Keep the plan wording",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q4 (U2): hygiene CONTRIBUTING.md lines 41-42 tell a reader to change a value through docs/sync, then mise run setup:configs (a retired verb).",
+      "ruling": "Rewrite those lines to bootstrap config set now; the branch model text itself stays for R3b.",
+      "rejected": "Leave it for R3b",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q5 (U3): D26/D8 say setup and recall stop on code 2 or a missing contract, but setup Step 0 offers init on an unshaped repo and recall never stops.",
+      "ruling": "On code 2 (not shaped), setup shows bootstrap's errors text and offers init, and recall shows the line and goes on. A missing contract (CLI absent or too old) still stops.",
+      "rejected": "Stop on code 2",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q6 (U3): sync --json --dry-run returns data.plan.changes and data.plan.files (with kind); D6/D22 read changes only.",
+      "ruling": "Drift counts every entry of data.plan.changes plus each data.plan.files entry whose kind says the sync would write or remove that file.",
+      "rejected": "changes only",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q7 (U3): stack-checks.md (g) Protection still reads merge_model from .config/bootstrap.toml.",
+      "ruling": "Leave it for R3b (D14 keeps the forge rows); K1 lists it as an exception with this reason.",
+      "rejected": "Read it through bootstrap config get now",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D47",
+      "decision": "Q8 (R2): bootstrap 4.1.0 renamed bootstrap init to bootstrap migrate (init stays a hidden alias; error hints say run bootstrap migrate). The assets and U2-U5 say bootstrap init.",
+      "ruling": "Rewrite to bootstrap migrate now in both contract assets and in U2-U5, including every claim about the errors text; the minimum version in the D8 hint becomes 4.1.0.",
+      "rejected": "Keep init and fix only the error-text claims; defer to a follow-up plan",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D48",
+      "decision": "Q9 (U1): the contract check passes on data.versions holding 1, so 4.0.0 passes, but migrate needs 4.1.0.",
+      "ruling": "The contract check also requires data.cli_version 4.1.0 or newer; a local build reporting dev passes. A 4.0.0 install stops at the check with the install hint.",
+      "rejected": "Keep the versions check alone",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.035Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.328Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.625Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: nothing to stamp or persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.919Z"
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "",
+      "text": "STOPPED: Q1 — bootstrap 4.0.0 (contract 1) is not installed; answer D40: stop until it is installed, then /vwf:execute docs/plans/2026-11-14-bootstrap-contract — closed 2026-11-18 per D40: bootstrap 4.0.0 (contract 1) is now installed; the run resumed",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U6",
+      "stage": "",
+      "text": "U6 reported DOCS FALSIFIED: site/CLAUDE.md:106,117 say /vwf:execute writes .config/releases.yaml; the file was in no unit Owns, so U6 Owns was widened to site/CLAUDE.md (rule 5).",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-15-1730; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-15-1730",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-14-bootstrap-contract.jsonl"

@@ -105,8 +105,10 @@ user's clock.
    `bootstrap:` block. A tool or plugin that the composition needs and
    the repo does not select is an `add`; one whose recorded components
    all left is a `remove`, on the terms of that file's Removal section.
-   A repo with no `.config/bootstrap.toml` is not shaped: report it, with
-   `/vwf:setup reshape` as the remedy, and offer no bootstrap line.
+   A repo that fails the shaped test of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` is not shaped:
+   report the `errors` messages as bootstrap gives them, and offer no
+   bootstrap line.
 
    A component's `config/` files diff on **exactly these terms** — same three
    states, same hashes, same per-component grain — with two things to carry

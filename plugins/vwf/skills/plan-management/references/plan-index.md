@@ -292,9 +292,10 @@ changes are never swept into the commit.
 
    The worktree carries `docs/plans/index.json`, plus `<folder>/index.json`
    for a claim or an unclaim, and nothing else. The one exception is a
-   completion whose folder's `release_levels` list raised a key:
-   `/vwf:execute` writes `.config/releases.yaml` in the same worktree, per its
-   release-levels write.
+   completion whose release-levels write changed a key or moved an old
+   file: `/vwf:execute` sets the levels in `.config/bootstrap/releases.toml`
+   through `bootstrap config` in the same worktree, and deletes a
+   `.config/releases.yaml` it moved there, per its release-levels write.
 3. `land.mjs close <worktree> --into <integration> --message <message>`:
    `docs: plan queue — <folder> running` for a claim, `… — <folder> unclaimed`
    for an unclaim, `… — <folder> complete` for a completion. `<folder>` is the

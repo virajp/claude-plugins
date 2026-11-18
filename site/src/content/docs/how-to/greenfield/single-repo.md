@@ -55,40 +55,34 @@ Restart Claude Code, then `cd` into the empty Relay repo.
 ```
 
 One command, and it does two things in order. **Step 0 runs first and finds no
-shape** — no `.config/bootstrap.toml` — so it
-says what is absent and offers [`init`](../../plugins/vwf.md#vwfinit), which is
-what lays it down. Say yes. `init` is not something you type: this offer and
-`/vwf:setup reshape` are the only two ways it is reached. Declining is legal and
-is recorded as a deferral, with `/vwf:setup reshape` as the unlock whenever you
-want it.
+shape** — `bootstrap config get repo.format --json` says the repo is not shaped
+— so it says what is absent and offers [`init`](../../plugins/vwf.md#vwfinit),
+which is what lays it down. Say yes. `init` is not something you type: this
+offer and `/vwf:setup reshape` are the only two ways it is reached. Declining is
+legal and is recorded as a deferral, with `/vwf:setup reshape` as the unlock
+whenever you want it.
 
 Relay's repo is empty — at most a readme, which is not evidence — so `init`
-resolves it to mode **`blank`**: no `.config/bootstrap.toml`, no old layout, no
-manifest, no source directory, no root tool config. (Had the repo already
-carried
-a `package.json` or a `src/` directory, the mode would be **`source`**: the same
+resolves it to mode **`blank`**: not shaped, no old layout, no manifest, no
+source directory, no root tool config. (Had the repo already carried a
+`package.json` or a `src/` directory, the mode would be **`source`**: the same
 landing, and a hygiene file already there is kept.) It asks at most three
-rounds:
-a one-line brief, whether Relay is **public or private** — proposed from what
-the
-forge says where the repo already has an `origin`, `private` otherwise — and,
-shaped by that answer, the licence, asked only for a public repo, and a security
-contact, an advisories-page URL for a public repo or a free email or internal
-URL
-for a private one. It then shows **one plan** and applies it on one yes. Relay
-is
-one repo, so each question is a single row; on a product with member repos the
-same rounds carry a row per repo where the answer can differ.
+rounds: a one-line brief, whether Relay is **public or private** — proposed from
+what the forge says where the repo already has an `origin`, `private` otherwise
+— and, shaped by that answer, the licence, asked only for a public repo, and a
+security contact, an advisories-page URL for a public repo or a free email or
+internal URL for a private one. It then shows **one plan** and applies it on one
+yes. Relay is one repo, so each question is a single row; on a product with
+member repos the same rounds carry a row per repo where the answer can differ.
 
-The plan's main step is **the bootstrap step**: `init` gives the session
-bootstrap's readme prompt, and bootstrap's `docs/sync` asks its own questions —
-the repo's values, how work lands on each branch, the secrets tools — and syncs
-the
-toolchain config, the task library grouped `setup:*` / `code:*` / `p:*`, the
+The plan's main step is **the bootstrap step**: `init` runs
+`bootstrap migrate --json --dry-run`, asks you each question bootstrap lists —
+the repo's values, how work lands on each branch, the secrets tools — one at a
+time, then runs `bootstrap migrate --json --yes` with your answers, which syncs
+the toolchain config, the task library grouped `setup:*` / `code:*` / `p:*`, the
 gates and hooks, the ignore files and the issue forms, recording the answers in
-Relay's `.config/bootstrap.toml`. `init` then lands its hygiene files, the
-licence
-Relay chose among them.
+Relay's `.config/bootstrap/` folder. `init` then lands its hygiene files, the
+licence Relay chose among them.
 
 It closes with the commit step, through `/vwf:git-workflow`: `init` asks once
 whether to **commit** or **commit and push**, and hands that skill bootstrap's

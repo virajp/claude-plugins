@@ -29,12 +29,12 @@ four. It also refuses backlog lists that disagree with each other or with Parked
 
 Read at Resolve, before the claim, on a fresh run and a resume alike. The folder's `release_levels` list holds
 one entry per project the units touch, `NONE` entries included. Each has `id` the project, `level` one of `NONE`,
-`PATCH`, `MINOR`, `MAJOR`, and its `reason`. The landing reads it to raise `.config/releases.yaml`, per *The release-levels
-write* in [land.md](land.md).
+`PATCH`, `MINOR`, `MAJOR`, and its `reason`. The landing reads it to raise the release levels in
+`.config/bootstrap/releases.toml`, through `bootstrap config`, per *The release-levels write* in [land.md](land.md).
 
 - **An empty list, `[]`** → the old-shape case, which only a migrated folder can have. The planners always write one
-  entry per project. This is **not a refusal**. Its units run as written, and the landing writes nothing to
-  `.config/releases.yaml`. The final report says *old-shape folder — no release levels recorded* in one line.
+  entry per project. This is **not a refusal**. Its units run as written, and the landing sets no release level in
+  `.config/bootstrap/releases.toml`. The final report says *old-shape folder — no release levels recorded* in one line.
 - **An entry whose `level` is not one of the four** → never reaches here: `validate` refused it above, naming the
   entry's path.
 

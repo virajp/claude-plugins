@@ -73,19 +73,24 @@ do); if the repo's blueprint format is behind what vwf ships, nudge `/vwf:setup`
 
 Beside the format check, and before `docs/memory/` is read in step 3, invoke
 `/vwf:doctor baseline` — the local baseline predicates of the repo-shape check,
-named by title and evaluated per repo, file reads only. Recall runs no mise task
-and no bootstrap code, never reads the forge and never runs doctor whole, so it
+named by title and evaluated per repo, file reads only, after the contract
+check and the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`.
+Recall runs no mise task and no bootstrap command but those two, never reads
+the forge and never runs doctor whole, so it
 does **not report config drift**: doctor's full mode is the place that does.
 When doctor reports drift, print **one line per remedy**, with the rows that led
 to it: `/stackgen:stackgen-sync` for Pack versions and Content drift;
 `/vwf:setup` for a missing pack lockfile and Project ids;
-`/vwf:setup reshape` for Branches, and a member not shaped or on the old layout;
-the fix in `.config/bootstrap.toml` for Merge model — e.g. *shape drift: base
-Pack versions, api Content drift — run `/stackgen:stackgen-sync`* and *shape drift: api
-Branches — run `/vwf:setup reshape`*. When every repo is clean, or the base has
-no `.config/bootstrap.toml` (`not shaped` or on the old layout in doctor's
-result), print **nothing**. This is an offer: recall never invokes a remedy
-itself — the user runs it — and no line ever stops the recall; it runs early so
+`/vwf:setup reshape` for a member the shaped test refuses, with bootstrap's
+`errors` text, which names `bootstrap migrate` — e.g. *shape drift: base
+Pack versions, api Content drift — run `/stackgen:stackgen-sync`*. When the
+shaped test refuses the base, print its line — bootstrap's `errors` text,
+which names `bootstrap migrate` — and go on. When every repo is clean, print
+**nothing**. A missing contract (the CLI absent or too old) is the one stop:
+print the contract asset's install hint, word for word, and stop the recall.
+Every other line is an offer: recall never invokes a remedy itself — the user
+runs it — and no drift line stops the recall; it runs early so
 a change made outside vwf is seen before the session builds on it.
 
 ### 3. Rebuild context
