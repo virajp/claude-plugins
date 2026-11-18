@@ -125,18 +125,14 @@ across every member — and is what `/vwf:doctor` prints when a shaped repo has
 fallen behind. You rarely have to remember it: `setup` re-checks the shape after
 its materialize pass, `/stackgen:stackgen-sync` after a re-sync, and
 `/vwf:recall` prints its drift lines at session start — each offers a remedy,
-none
-runs it unasked. A repo is shaped when it carries `.config/bootstrap.toml`,
-the values file [bootstrap](https://github.com/virajp/bootstrap) writes; one
-still
-on an older layout (`.config/stackgen.yaml`, or
-`.config/mise/conf.d/tools.toml` and its siblings) is named, and the reshape
-moves
-it onto bootstrap's. Those drift lines read files only and do not report config
-drift: `/vwf:doctor` run whole does, through an explicit
-`mise run setup:configs --dry-run`, which executes bootstrap's `main` branch
-with
-no pin.
+none runs it unasked. vwf and stackgen reach
+[bootstrap](https://github.com/virajp/bootstrap) only through its CLI and its
+JSON contract, and need bootstrap 4.1.0 or newer. A repo is shaped when
+`bootstrap config get repo.format --json` answers `ok`; one bootstrap refuses —
+not shaped, or on an older layout — is named with bootstrap's own words, and the
+reshape runs `bootstrap migrate` to move it onto bootstrap's. Those drift lines
+do not report config drift: `/vwf:doctor` run whole does, through
+`bootstrap check --json` and `bootstrap sync --json --dry-run`.
 
 Once a repo **is** shaped, bootstrap's `setup:ai` task takes the plugin side
 over. The
@@ -255,25 +251,25 @@ the Markdown docs surface it absorbed. Both planners write the same plan folder
 docs, a refactor) — an `index.json` holding every structured fact, an `index.md`
 holding the prose, and one file per unit — which each lands on the integration
 branch at hand-off with a row in `docs/plans/index.json`, the one plan index, so
-the fresh
-session can see it. One node script, `plan.mjs`, reads, validates and writes
-both JSON files; a repo still on the old markdown format is pointed to the
-migration guide, `docs/plans/migrate.md`, and nothing runs until it is migrated.
-One executor runs both: `/vwf:execute <folder>` runs a folder of either kind in
-a fresh context — a `code` unit through TDD and coverage, the code and security
-review at the plan's `review` rows, an `edit` unit through the wave review — and
-`/vwf:execute next` picks the runnable plan with the lowest `priority` value
-from that index, of either kind, and runs it, running each after-landing step
-the plan recorded `run` and asking you, at run time, only what the plan missed —
-one question at a time, the recommendation first, each answer recorded in the
-folder. No plan releases anything: each records a release level per project it
-changes, which the landing raises in `.config/releases.yaml`, and a release is
-always a hand step. `/vwf:execute all` runs every runnable plan in turn, highest
-priority first, each in its own `execute-runner` subagent, and stops at the
-first plan that stops — keeping one line per plan in the session, and asking its
-run-level questions (one shared worktree, deduped after-landing steps, landing a
-plan recorded not to merge) once, before the first plan; a question a runner
-meets is relayed to you and its answer sent back. Beside both sits
+the fresh session can see it. One node script, `plan.mjs`, reads, validates and
+writes both JSON files; a repo still on the old markdown format is pointed to
+the migration guide, `docs/plans/migrate.md`, and nothing runs until it is
+migrated. One executor runs both: `/vwf:execute <folder>` runs a folder of
+either kind in a fresh context — a `code` unit through TDD and coverage, the
+code and security review at the plan's `review` rows, an `edit` unit through the
+wave review — and `/vwf:execute next` picks the runnable plan with the lowest
+`priority` value from that index, of either kind, and runs it, running each
+after-landing step the plan recorded `run` and asking you, at run time, only
+what the plan missed — one question at a time, the recommendation first, each
+answer recorded in the folder. No plan releases anything: each records a release
+level per project it changes, which the landing raises in
+`.config/bootstrap/releases.toml` through `bootstrap config set`, and a release
+is always a hand step. `/vwf:execute all` runs every runnable plan in turn,
+highest priority first, each in its own `execute-runner` subagent, and stops at
+the first plan that stops — keeping one line per plan in the session, and asking
+its run-level questions (one shared worktree, deduped after-landing steps,
+landing a plan recorded not to merge) once, before the first plan; a question a
+runner meets is relayed to you and its answer sent back. Beside both sits
 `/vwf:backlog`, the sole writer of the backlog project on the repo's forge — a
 GitHub Project named for the base repo, the prioritised list of work that cannot
 be picked up now, which every planning and landing command calls to move an
@@ -331,18 +327,19 @@ merges-never-owns terms, behind their own consent line, and capped by a fixed
 allowlist of what may sit at a repo's root. The mise config, the file-based task
 library everything else runs through, the gates and their configs, the ignore
 and attribute files, the editor settings and the hooks belong to no pack: they
-are [bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init`
-reaches through bootstrap's own readme prompt, and the `setup:*` and `code:*`
-tasks are bootstrap's with them. A pack ships no toolchain at all: its tool
-pins, its gates and their configs, and its generic tasks are bootstrap's. The
-materializer reads a fresh clone of bootstrap to choose the tools a stack needs,
-and asks for them through bootstrap's own entry point, behind its own consent
-line; it never edits `.config/bootstrap.toml` itself. A value only the machine
-can answer — the Xcode a repo builds with — is found by bootstrap's task, or set
-by the repo in `.config/mise/conf.d/zz-repo/`. Language manifests and CI
-workflow files stay outside that fence: they declare what the project *is*, and
-no pack decides either. The packs, bundles and kinds that ship are inventoried
-in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
+are [bootstrap](https://github.com/virajp/bootstrap)'s, which `/vwf:init` drives
+through `bootstrap migrate`, and the `setup:*` and `code:*` tasks are
+bootstrap's with them. A pack ships no toolchain at all: its tool pins, its
+gates and their configs, and its generic tasks are bootstrap's. The materializer
+reads `bootstrap catalog` to choose the tools a stack needs, and adds them with
+`bootstrap add tool`, behind its own consent line; a plugin a pack names still
+goes through bootstrap's `docs/sync/vwf.md`. It never edits a file in
+`.config/bootstrap/` itself. A value only the machine can answer — the Xcode a
+repo builds with — is found by bootstrap's task, or set by the repo in
+`.config/mise/conf.d/zz-repo/`. Language manifests and CI workflow files stay
+outside that fence: they declare what the project *is*, and no pack decides
+either. The packs, bundles and kinds that ship are inventoried in
+[`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md), generated from
 the tree itself; the newest kind is `addon`, vwf's eighth axis — **optional
 tools**, `taste-skill` today, offered by a tools menu in `/vwf:architecture`
 with nothing preselected, recorded in the product-level `addons:` list of

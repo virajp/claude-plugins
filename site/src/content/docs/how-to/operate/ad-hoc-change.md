@@ -142,9 +142,9 @@ worth answering carefully; a third thing is stated rather than asked:
   disagree with. Relay's is `NONE` — CI plumbing, no user-visible change.
 
 A level is a record, not a release. No unit bumps a version; at landing the run
-raises each project's key in `.config/releases.yaml` — the highest level wins —
-and the release itself is always a later hand step, `/release` or your repo's
-own.
+raises each project's key in `.config/bootstrap/releases.toml` through
+`bootstrap config set` — the highest level wins — and the release itself is
+always a later hand step, `/release` or your repo's own.
 
 One more consent question is asked only when the plan edits a plugin your
 session itself has loaded: **End an `all` run after landing**. Say `yes` and a
@@ -341,19 +341,20 @@ every item it landed a piece of `Partially done` — the item stays open, with a
 line recording which plan landed on it — archives the folder to
 `docs/plans/archived/` (a landing with a gap still open leaves the folder live
 instead, to be archived when you ask), and lands per the consent you recorded.
-Once the merge is in, one more commit, landed the same way, sets the plan's
-row to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE`
-row that no waiting plan still requires — the queue only ever holds what is
-waiting, running, or still needed. The same commit raises the plan's release
-levels in `.config/releases.yaml`. Then it runs the after-landing steps, every
-one recorded `run`, in order and without a prompt, then each command your
-`.config/vwf.yaml` lists under `after_landing:` that the plan did not already
-run — where a step stages something, only a **restarted** session will pick it
-up. A step that fails stops the rest, and the report names it, its exit code and
-each step not run. If the branch did not merge, no step runs; the report lists
-each with its command, for after your hand merge. If the archive raises a
-completion warning, the folder stays live, the row still goes `COMPLETE`, and
-the report names the warning and the archive to ask for once it is settled.
+Once the merge is in, one more commit, landed the same way, sets the plan's row
+to `COMPLETE`, pointing at the archived folder, and drops every `COMPLETE` row
+that no waiting plan still requires — the queue only ever holds what is waiting,
+running, or still needed. The same commit raises the plan's release levels in
+`.config/bootstrap/releases.toml`, moving an old `.config/releases.yaml` there
+at first sight. Then it runs the after-landing steps, every one recorded `run`,
+in order and without a prompt, then each command your `.config/vwf.yaml` lists
+under `after_landing:` that the plan did not already run — where a step stages
+something, only a **restarted** session will pick it up. A step that fails stops
+the rest, and the report names it, its exit code and each step not run. If the
+branch did not merge, no step runs; the report lists each with its command, for
+after your hand merge. If the archive raises a completion warning, the folder
+stays live, the row still goes `COMPLETE`, and the report names the warning and
+the archive to ask for once it is settled.
 
 ## When it stops early
 
@@ -406,9 +407,9 @@ action logs of archived plans untouched for more than 30 days.
   adjacent it looks once the run is underway. That is what the next plan's
   recall is for.
 - **It will not release anything.** No plan carries a release step; the run
-  records each project's release level in `.config/releases.yaml` and bumps no
-  version. A release is `/release`, or your repo's own release step, run by
-  hand.
+  records each project's release level in `.config/bootstrap/releases.toml` and
+  bumps no version. A release is `/release`, or your repo's own release step,
+  run by hand.
 
 ## Where to go next
 

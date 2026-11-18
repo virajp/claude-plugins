@@ -671,25 +671,25 @@ than something that rides the landing:
   toolchain**: the tool pins, the gates, their configs, the generic tasks
   (`setup:deps`, `code:format`, `code:lint`), the pre-commit hooks and the
   ignore and editor files are
-  [bootstrap](https://github.com/virajp/bootstrap)'s.
-  The repo selects bootstrap's tools in `.config/bootstrap.toml`, and
-  `mise run setup:configs` syncs their files. The materializer reads a fresh
-  clone of bootstrap to choose the tools a composition needs, and sends
-  `add` and `add user plugins` instructions through bootstrap's
-  `docs/sync/vwf.md`, behind their own consent line; it never edits
-  `.config/bootstrap.toml` itself, and it records what it asked for in the
+  [bootstrap](https://github.com/virajp/bootstrap)'s. The repo selects
+  bootstrap's tools through the `bootstrap` CLI, and `bootstrap sync` writes
+  their files. The materializer reads `bootstrap catalog --json` to choose the
+  tools a composition needs, and adds them with
+  `bootstrap add tool <t> --json --dry-run`, then `--yes`, behind their own
+  consent line; a plugin a pack names still goes as an `add user plugins`
+  instruction through bootstrap's `docs/sync/vwf.md`. It never edits a file in
+  `.config/bootstrap/` itself, and it records what it asked for in the
   lockfile's `bootstrap:` block. A pack names its own Claude plugin in a
   `## Claude plugins` section of its `conventions.md`. A repo that has not
   adopted bootstrap gets nothing landed: the tasks a pack ships source
-  bootstrap's helpers. Everything else goes under `.config/`: a `config/`
-  tree landing a root path outside the **landable** tier of the fixed allowlist
-  is a pack authoring error the materializer refuses — that list also names the
-  root file vwf itself writes, `CLAUDE.md`, which may sit at a shaped root and
-  which no pack may land. Two **directories** are
-  allowlisted at that root, `.config/` and `.github/`, and a CI workflow inside
-  the second is refused outright. Mode is preserved, because a task file
-  arriving without its exec bit fails as an *unknown task* rather than as a
-  permission error.
+  bootstrap's helpers. Everything else goes under `.config/`: a `config/` tree
+  landing a root path outside the **landable** tier of the fixed allowlist is a
+  pack authoring error the materializer refuses — that list also names the root
+  file vwf itself writes, `CLAUDE.md`, which may sit at a shaped root and which
+  no pack may land. Two **directories** are allowlisted at that root, `.config/`
+  and `.github/`, and a CI workflow inside the second is refused outright. Mode
+  is preserved, because a task file arriving without its exec bit fails as an
+  *unknown task* rather than as a permission error.
 
 The need still travels as `language_facts` in the template payload for
 `/vwf:doctor` to verify; the local plugin is what actually provides the server.
@@ -830,23 +830,21 @@ Every universal file a repo runs is
 them: the mise config and its task library, the gates and their configs, the
 hooks, the branch model, the secrets tools, the ignore and attribute files, the
 editor settings, the issue forms and the Claude plugins, recorded in each repo's
-values file, `.config/bootstrap.toml`. The `setup:*` and `code:*` tasks are
-bootstrap's too, and their reference is bootstrap's own `docs/sync`, so this
-page
-does not restate them. On 2026-11-03 the `stackgen:tool-config` skill that once
-rendered all of this was removed.
+values, in its `.config/bootstrap/` folder. The `setup:*` and `code:*` tasks are
+bootstrap's too, and their reference is bootstrap's own docs, so this page does
+not restate them. stackgen and vwf reach bootstrap only through its CLI and its
+JSON contract, and need bootstrap 4.1.0 or newer. On 2026-11-03 the
+`stackgen:tool-config` skill that once rendered all of this was removed.
 
-[`/vwf:init`](./vwf.md#vwfinit) reaches bootstrap by giving the session
-bootstrap's readme prompt, once for the base repository; the prompt covers the
-submodules and the siblings, and bootstrap's `docs/sync` asks its own questions,
-every value in the values file among them. It first adopts a repo, and on a
-later
-`/vwf:setup reshape` brings an adopted repo up to date. A repo is shaped when it
-carries `.config/bootstrap.toml`, and it has drifted when
-`mise run setup:configs --dry-run` shows a change. Only bootstrap edits that
-file:
-a pack that needs a tool asks for it through bootstrap's `docs/sync/vwf.md`, and
-the materializer never writes the file itself.
+[`/vwf:init`](./vwf.md#vwfinit) reaches bootstrap by running
+`bootstrap migrate` in each repo, the base first: a dry run lists bootstrap's
+questions, init asks you each one, and the real run takes your answers. It first
+adopts a repo, and on a later `/vwf:setup reshape` brings an adopted repo up to
+date. A repo is shaped when `bootstrap config get repo.format --json` answers
+`ok`, and it has drifted when `bootstrap check --json` finds a problem or
+`bootstrap sync --json --dry-run` lists a change. Only bootstrap edits its
+values: a pack that needs a tool asks for it with `bootstrap add tool`, and the
+materializer never writes a bootstrap file itself.
 
 **The prose files are `/vwf:init`'s own assets**: `CONTRIBUTING.md`,
 `SECURITY.md` and the chosen `LICENSE` on a repo init was told is public. They
@@ -906,7 +904,7 @@ that segment, so an id carrying a dot silently loses everything after it.
 | ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
 | `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. The payload passes the bundle's `os:` map through as it stands. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. What bootstrap syncs carries no lockfile record and are never diffed here; a record whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report. The lockfile's `bootstrap:` block is diffed against the tools and plugins the current composition needs, read from a fresh bootstrap clone: an `add` or `remove` instruction for bootstrap's `docs/sync/vwf.md` is its own consent line. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync                                                                                |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. What bootstrap syncs carries no lockfile record and are never diffed here; a record whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report. The lockfile's `bootstrap:` block is diffed against the tools and plugins the current composition needs, read from `bootstrap catalog --json`: a `bootstrap add tool` or `remove tool` call, and a plugin instruction for bootstrap's `docs/sync/vwf.md`, is its own consent line. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync                                      |
 | `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of eight: `npm:`, `pypi:`, `pub:`, `action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo), `maven:` (group:artifact, a Gradle plugin as its marker coordinate) or `mise:` (backend:path, the full backend form only), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`, `spm:github.com/apple/swift-argument-parser@1.5.0`, `mise:aqua:realm/SwiftLint@0.57.0`) pinning what the advisory check runs against. Go, Cargo, Ruby and .NET tools have no prefix of their own and are reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or `mise:dotnet:…`; the mise backend decides which checks run, and a backend with no registry to ask warns at most — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere |
 | `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 

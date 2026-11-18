@@ -277,11 +277,13 @@ one: a stack's own gates are bootstrap's.
   such a component before the tag name is built). None of them runs in
   `plugins.yml` or in pre-commit — `site.yml` owns them.
 - **`p:release`** and its three parts, `p:plugins:release`, `p:i:release` and
-  `p:site:release` — each reads its own keys in `.config/releases.yaml`, bumps
-  from the project's last tag at the higher of the recorded level and the one an
-  untagged manifest implies, never below the manifest, commits on `develop`,
-  merges to `main` with `code:merge:main` and tags there; `p:release` runs the
-  three as one bump commit and one merge. Each of the three takes `--dry-run`,
+  `p:site:release` — each reads its own keys in `.config/releases.yaml` (After
+  R3a, `/vwf:execute` writes the levels to `.config/bootstrap/releases.toml`;
+  the release tasks read it once the user switches them), bumps from the
+  project's last tag at the higher of the recorded level and the one an untagged
+  manifest implies, never below the manifest, commits on `develop`, merges to
+  `main` with `code:merge:main` and tags there; `p:release` runs the three as
+  one bump commit and one merge. Each of the three takes `--dry-run`,
   `--no-commit` and `--tag-only`; `p:release` takes `--dry-run` alone. None runs
   in a gate; the ritual is `/release`.
 - **`p:releases:test`** — a bash table test of the sidecar's release-level

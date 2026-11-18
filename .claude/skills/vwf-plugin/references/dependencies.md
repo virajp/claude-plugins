@@ -31,21 +31,18 @@ since been removed outright — see Memory below.
 
 **stackgen is load-bearing at `init` and at `setup`, not only at
 `architecture`.** It is load-bearing at `setup` alone now: `/vwf:init` runs
-bootstrap's readme prompt, which lands the toolchain manager's config, the repo
-gates and the ignore and attribute files, then writes its own hygiene assets; it
-fetches nothing through the stack adapter. All of it lands **per repo** — the
-base
-and every member `init` resolved, each with its own `.config/bootstrap.toml` —
-so
-a member is shaped on its own evidence. `/vwf:setup` no longer fetches any of
-them: it checks that **each repo** carries `.config/bootstrap.toml`, and each
-repo's shape against doctor's Bootstrap drift and Forge state predicates, and
-offers `/vwf:init` once when any of them is missing or behind, which is why
-`init`
-is model-invocable and, being hidden from the `/` menu, reached no other way.
-The
-**binary** `mise` is a mandate `/vwf:doctor` blocks on once a stack axis is
-pinned.
+`bootstrap migrate` through the bootstrap CLI's JSON contract, which lands the
+toolchain manager's config, the repo gates and the ignore and attribute files,
+then writes its own hygiene assets; it fetches nothing through the stack
+adapter. All of it lands **per repo** — the base and every member `init`
+resolved, each with its own `.config/bootstrap/` folder — so a member is shaped
+on its own evidence. `/vwf:setup` no longer fetches any of them: it checks that
+**each repo** passes bootstrap's shaped test
+(`bootstrap config get repo.format --json`), and each repo's shape against
+doctor's Bootstrap drift and Forge state predicates, and offers `/vwf:init` once
+when any of them is missing or behind, which is why `init` is model-invocable
+and, being hidden from the `/` menu, reached no other way. The **binary** `mise`
+is a mandate `/vwf:doctor` blocks on once a stack axis is pinned.
 
 Setup is the third site, and the one that grew: since the consumer-gaps work
 `/vwf:architecture` records a pin and materializes nothing, and **`/vwf:setup`'s

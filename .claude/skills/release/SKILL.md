@@ -80,8 +80,10 @@ mise run p:release
 
 **No person and no plan bumps a version by hand.** A landing plan records a
 level per project — `NONE`, `PATCH`, `MINOR` or `MAJOR` — and `/vwf:execute`
-raises it in `.config/releases.yaml`, the highest level winning. The release
-tasks read that file:
+raises it at landing, the highest level winning. The release tasks read it from
+`.config/releases.yaml`. After R3a, `/vwf:execute` writes the levels to
+`.config/bootstrap/releases.toml`; the release tasks read it once the user
+switches them. The release tasks:
 
 - **The base is always the project's last tag** — `<name>-v*`, `installer-v*`,
   `site-v*` — never the manifest.

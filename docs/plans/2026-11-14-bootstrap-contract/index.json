@@ -200,7 +200,8 @@
         "readme.md",
         ".claude/docs/**",
         ".claude/skills/**",
-        "site/src/content/docs/**"
+        "site/src/content/docs/**",
+        "site/CLAUDE.md"
       ],
       "depends_on": [
         "U2",
@@ -209,11 +210,11 @@
         "U5"
       ],
       "waits": "docs-sync reads the delta of wave 2",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.758Z",
+      "status": "green",
+      "started": "2026-11-18T09:26:02.660Z",
+      "ended": "2026-11-18T09:32:30.821Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U7",
@@ -249,8 +250,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-18T09:26:02.510Z",
       "ended": ""
     },
     {
@@ -721,28 +722,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.035Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.328Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan reads no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.625Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: nothing to stamp or persist",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-18T09:26:01.919Z"
     }
   },
   "gaps": [
@@ -751,6 +752,13 @@
       "unit": "U1",
       "stage": "",
       "text": "STOPPED: Q1 — bootstrap 4.0.0 (contract 1) is not installed; answer D40: stop until it is installed, then /vwf:execute docs/plans/2026-11-14-bootstrap-contract — closed 2026-11-18 per D40: bootstrap 4.0.0 (contract 1) is now installed; the run resumed",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U6",
+      "stage": "",
+      "text": "U6 reported DOCS FALSIFIED: site/CLAUDE.md:106,117 say /vwf:execute writes .config/releases.yaml; the file was in no unit Owns, so U6 Owns was widened to site/CLAUDE.md (rule 5).",
       "state": "closed"
     }
   ],

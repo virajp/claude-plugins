@@ -311,15 +311,14 @@ Most of what a bundle materializes is plain files in your repo, which every
 collaborator gets with a `git pull`. The toolchain a stack needs — its tool
 pins, gates and their tasks — is not a pack's: stackgen asks
 [bootstrap](https://github.com/virajp/bootstrap) for those tools, behind its own
-consent line, and bootstrap's `mise run setup:configs` writes them. A **language
-server** cannot be — it is a plugin-manifest feature no project file can express
-— so stackgen writes one small local plugin on your machine, `vwf-tools`, which
-holds language servers only, and prints the two commands that register it,
-rather than running them. It installs no MCP server: those are yours. It is
-user-scoped, so it
-serves every repo you work in and **your collaborators get none of it**: their
-editor tooling is their own machine's business. Expect to do that once, and to
-be asked before it happens.
+consent line, through `bootstrap add tool`, and bootstrap's sync writes them. A
+**language server** cannot be — it is a plugin-manifest feature no project file
+can express — so stackgen writes one small local plugin on your machine,
+`vwf-tools`, which holds language servers only, and prints the two commands that
+register it, rather than running them. It installs no MCP server: those are
+yours. It is user-scoped, so it serves every repo you work in and **your
+collaborators get none of it**: their editor tooling is their own machine's
+business. Expect to do that once, and to be asked before it happens.
 
 ## See also
 

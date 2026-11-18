@@ -36,46 +36,45 @@ same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
 `deps-update.yml` all still push directly.
 
 **The landing model is per branch.** `[tools.git.branch.<branch>].merge_model`
-in
-`.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
+in `.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
 push) or `pr` (push and open a pull request), read by `code:merge:develop` and
 `code:merge:main`. A missing file or key is `direct`, which is what this repo
-holds. `/vwf:doctor`'s Merge model predicate warns on any other value.
+holds.
 
 **A release task bumps, commits and merges, then tags — and `main` stays
 merge-only.** No person and no plan bumps a version by hand: a landing plan
 records a level per project (`NONE`, `PATCH`, `MINOR`, `MAJOR`), and
-`/vwf:execute` raises it in `.config/releases.yaml`, the highest level winning.
-`p:plugins:release` (keys `vwf`, `stackgen`), `p:i:release` (`installer`) and
-`p:site:release` (`site`) each read only their own keys, run from `develop`,
-bump each project from its **last tag** at the higher of the recorded level and
-the level an untagged manifest implies against that tag — never below the
-manifest, which is the floor — clear their keys, commit on `develop`, push,
-merge `develop` into `main` with `code:merge:main`, tag on `main`, push, and go
-back to `develop`. `p:release` composes them — each `--no-commit`, one bump
-commit, one merge, then each `--tag-only` — and `/release` calls it. The bump is
-an ordinary `develop` commit that reaches `main` by merge, so the
-`no-commit-to-branch` hook is never skipped; under a `pr` merge model
-`code:merge:main` only opens a PR, so every full run, `--ci` and `p:release`
-refuse unless `[tools.git.branch.main].merge_model` in `.config/bootstrap.toml`
-is
-`direct`, a
-missing file or key reading `direct` — the
-fallback is `--no-commit`, the PR landed by hand, then `--tag-only`. The targets
-**skip past 13 and 17** rather than land on one — the bumped component stepped
-past the number, through the same guard `p:i:version` and `p:site:version` use,
-so `1.1.12` patched is `1.1.14` — and all three release tasks **refuse** to tag
-a version carrying such a component, before the tag name is built. This reverses
-the earlier rule that a release task only tags (2026-10-08): tagging only what
-had landed left every bump to a hand edit, which is what the recorded levels
-retire. The full ritual is the `release` skill.
+`/vwf:execute` raises it at landing, the highest level winning; the release
+tasks read it from `.config/releases.yaml`. After R3a, `/vwf:execute` writes the
+levels to `.config/bootstrap/releases.toml`; the release tasks read it once the
+user switches them. `p:plugins:release` (keys `vwf`, `stackgen`), `p:i:release`
+(`installer`) and `p:site:release` (`site`) each read only their own keys, run
+from `develop`, bump each project from its **last tag** at the higher of the
+recorded level and the level an untagged manifest implies against that tag —
+never below the manifest, which is the floor — clear their keys, commit on
+`develop`, push, merge `develop` into `main` with `code:merge:main`, tag on
+`main`, push, and go back to `develop`. `p:release` composes them — each
+`--no-commit`, one bump commit, one merge, then each `--tag-only` — and
+`/release` calls it. The bump is an ordinary `develop` commit that reaches
+`main` by merge, so the `no-commit-to-branch` hook is never skipped; under a
+`pr` merge model `code:merge:main` only opens a PR, so every full run, `--ci`
+and `p:release` refuse unless `[tools.git.branch.main].merge_model` in
+`.config/bootstrap.toml` is `direct`, a missing file or key reading `direct` —
+the fallback is `--no-commit`, the PR landed by hand, then `--tag-only`. The
+targets **skip past 13 and 17** rather than land on one — the bumped component
+stepped past the number, through the same guard `p:i:version` and
+`p:site:version` use, so `1.1.12` patched is `1.1.14` — and all three release
+tasks **refuse** to tag a version carrying such a component, before the tag name
+is built. This reverses the earlier rule that a release task only tags
+(2026-10-08): tagging only what had landed left every bump to a hand edit, which
+is what the recorded levels retire. The full ritual is the `release` skill.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
 its own tag** in the marketplace manifest, so shipping is a deliberate act:
 
 ```text
-a plan lands on develop                → /vwf:execute raises the level in .config/releases.yaml
+a plan lands on develop                → /vwf:execute raises the level in .config/bootstrap/releases.toml
 mise run p:plugins:local               → stages X.Y.Z+N, this machine only
 mise run p:release                     → bumps, commits, merges to main, creates + pushes the tags
 ```
