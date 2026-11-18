@@ -50,18 +50,19 @@ file and restates nothing.
 
 ## Where the two tokens land
 
-| Token              | Comes from                  | Lands in                                                        |
-| ------------------ | --------------------------- | --------------------------------------------------------------- |
-| The **project id** | the project's name, slugged | `p/<id>/`, run as `p:<id>:…`                                    |
-| The **repo name**  | bootstrap's own derivation  | `repo_name` in `.config/bootstrap.toml`, which bootstrap writes |
+| Token              | Comes from                  | Lands in                                                            |
+| ------------------ | --------------------------- | ------------------------------------------------------------------- |
+| The **project id** | the project's name, slugged | `p/<id>/`, run as `p:<id>:…`                                        |
+| The **repo name**  | bootstrap's own derivation  | `repo_name`, read with `bootstrap config get repo.repo_name --json` |
 
 The two are **independent**. `repo_name` is the repo's own and never a
 project id; the `p:<id>:*` group takes the project id. A single-project
 repo whose name happens to spell its project id is a coincidence, not a
 rule, and nothing may read one to infer the other.
 
-The commit scopes are bootstrap's `[tools.git].commit_scopes`, in the same
-file. A plugin writes neither value.
+The commit scopes are bootstrap's too, read with
+`bootstrap config get repo.commits.scopes --json`. A plugin writes neither
+value.
 
 ## Who applies it
 
