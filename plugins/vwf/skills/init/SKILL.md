@@ -2,7 +2,7 @@
 name: init
 description: Hand a new or existing repo, and every member repo it has, to
   bootstrap for the repo shape — tool configs, mise, gates, hooks, branch model,
-  secrets tools, Claude plugins — through bootstrap's readme prompt, then land
+  secrets tools, Claude plugins — through the bootstrap CLI's migrate, then land
   init's own hygiene files, the kept_files record and the forge pass. Surveys
   the whole product, shows one plan with a section per repo, applies on one
   consent. Stack-agnostic; it writes no tool config of its own. Invoked by
@@ -35,11 +35,13 @@ can know about. Run `init` first on a repo that has neither.
 **bootstrap owns the repo shape.** Every universal file — the tool configs, the
 mise files and the task library, the gates and hooks, the branch model, the
 secrets tools, the ignore and attributes files, the Claude plugins — and each
-repo's values file, `.config/bootstrap.toml`, are bootstrap's, and `init` writes
-none of them. It reaches them through one step, the bootstrap step below, which
-gives the session bootstrap's own readme prompt. bootstrap's `docs/sync` then
-asks its own questions, including every value in that file; `init` drafts no
-values block and asks none of them.
+repo's values, in its `.config/bootstrap/` folder, written by the bootstrap
+CLI, are bootstrap's, and `init` writes none of them. It reaches them through
+one step, the bootstrap step below, which runs `bootstrap migrate` per
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and reads a value only
+through `bootstrap config get`, never from a file. The questions are
+bootstrap's own, listed by its dry run; `init` relays each one to the user and
+drafts no values block of its own.
 
 What `init` writes itself comes from one place: its own **hygiene assets** under
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`. Beside them it keeps one
@@ -66,7 +68,7 @@ reconciled against them.
   the `enforcement` block alone, per [new repo](references/new-repo.md)'s
   hygiene step, which `/vwf:setup`'s migration and fill passes complete later.
   A file bootstrap writes is never recorded in `kept_files`: bootstrap's own
-  `mise run setup:configs --dry-run` judges it. The one other file `init`
+  `bootstrap sync --json --dry-run` judges it. The one other file `init`
   touches is `.config/stackgen.yaml`, the old layout's values file, deleted in
   each green repo per the bootstrap step.
 - **Never application code.** Not a source file, not a test, not a directory
@@ -79,7 +81,7 @@ reconciled against them.
   the two-line stub** below, which `/vwf:readme` then fills.
 - **One consent, then apply.** The whole plan is presented once and applied on
   one yes. `init` never asks per file and never writes before the yes. The
-  questions bootstrap's `docs/sync` asks are bootstrap's own, inside the
+  questions `bootstrap migrate` lists are bootstrap's own, asked inside the
   bootstrap step.
 - **A tree that is not clean stops the run.** Before the bootstrap step, `init`
   checks every repo, the base and each member. Any tree that is not clean stops
@@ -175,12 +177,18 @@ table in step 4 is `init`'s own.
    the plan says which it got. An absent member has no tree to read yet; its
    mode resolves with its survey, after the clone below.
 
+**The contract check comes first.** Before it reads any repo's mode, `init`
+runs the contract check of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
+once. With no contract, `init` stops before its plan with that asset's install
+hint, word for word, and writes nothing.
+
 Detect a repo's mode from that repo itself, and the first row that holds
-decides:
+decides. The shaped test is the contract asset's; here its code 2 is not a
+stop: it is the answer *not shaped*, and the next row decides.
 
 | The repo carries                                                                                                               | Mode           |
 | ------------------------------------------------------------------------------------------------------------------------------ | -------------- |
-| **`.config/bootstrap.toml`**                                                                                                   | **shaped**     |
+| **the shaped test** passes: `bootstrap config get repo.format --json` prints `ok` true                                         | **shaped**     |
 | `.config/stackgen.yaml`, or `.config/mise/conf.d/tools.toml`, `.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` | **old layout** |
 | none of those, but a **language manifest**, a **source directory**, a **root tool config**, or a `.config/`                    | **source**     |
 | none of those                                                                                                                  | **blank**      |
@@ -191,7 +199,7 @@ What each mode runs:
   the bootstrap step where the survey reads it as not green, then the survey's
   two passes, the plan, the apply.
 - **`old layout`** runs the same pipeline, and the bootstrap step always:
-  bootstrap's `docs/sync` moves the old files onto its own layout, and
+  `bootstrap migrate` moves the old files onto its own layout, and
   `init` deletes `.config/stackgen.yaml` once the repo reads green.
 - **`source`** runs the bootstrap step and the [new repo](references/new-repo.md)
   landing **plus** the existing pipeline's *Missing files* pass. A repository
@@ -204,16 +212,15 @@ The evidence is the tree, never a flag, and what is **not** evidence is
 (`${CLAUDE_PLUGIN_ROOT}/skills/setup/SKILL.md`, *onboard forks once more*): a
 readme, a licence, `.gitignore`, `.gitattributes` and a docs tree make a repo
 no less blank. `init`'s evidence is one item wider than setup's code test — a
-**root tool config** is not code, but it is a file bootstrap's `docs/sync` will
-have to migrate, so it resolves `source` here where setup calls the repo blank.
+**root tool config** is not code, but it is a file `bootstrap migrate` will have
+to migrate, so it resolves `source` here where setup calls the repo blank.
 That is the two definitions doing different jobs, not disagreeing.
 
 Say the **resolved set** in one line before doing anything else: the base, then
 each member with `present` or `absent`, and each repo's mode with the evidence
 that decided it. Where any repo resolved `shaped`, end that line with: the survey
-runs `setup:configs --dry-run` in each shaped repo mise trusts, before any
-consent: it writes nothing in the repo, refreshes `~/.cache/bootstrap` and runs
-bootstrap's `main` with no pin.
+runs `bootstrap sync --json --dry-run` in each shaped repo, before any consent:
+it writes nothing in the repo and fetches bootstrap's clone first.
 
 ### The clean-tree check
 
@@ -283,7 +290,7 @@ round. Question 2 has two dependent parts, 2a and 2b, which together are the
 round.
 
 `init` asks nothing about the repo's name, its members, its landing model or its
-secrets provider: bootstrap's `docs/sync` decides those, in the values file. It
+secrets provider: `bootstrap migrate` asks those, into the repo's values. It
 asks for **project ids** only where one of its own files uses them, and no
 hygiene asset does today; a project's task group comes from `/vwf:setup`'s
 materialize pass, from a pack's `p/_project/` tasks. What an id is, when one is
@@ -330,8 +337,8 @@ needed, is [new repo](references/new-repo.md)'s *The project ids*.
    others.
 
 Ask them all **before** presenting the plan, so the plan is complete and one yes
-covers all of it. These questions come before the bootstrap step, whose
-`docs/sync` then asks its own.
+covers all of it. These questions come before the bootstrap step, which then
+relays bootstrap's own.
 
 ## The pipelines
 
@@ -364,8 +371,10 @@ push; commit and push means land and push.
 The same order in every mode, on the one consent. The order is the contract.
 
 1. **The clone rows**, then **the clean-tree check** once more.
-2. **The bootstrap step**, below — once, for the base.
-3. **The gate.** A repo with no `.config/bootstrap.toml` after the step
+2. **The bootstrap step**, below — in each repo that takes it, the base first,
+   then each member.
+3. **The gate.** A repo that fails the shaped test of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` after the step
    **stops there**: it gets no hygiene file, no `kept_files` record, no commit,
    no push and no forge pass, and the report names it with the reason. The other
    repos continue. When the stopped step left bootstrap's files uncommitted, the
@@ -382,71 +391,51 @@ The same order in every mode, on the one consent. The order is the contract.
 
 ### The bootstrap step
 
-Give the session this prompt as the instruction, **once, for the base
-repository**; the prompt itself covers the submodules and the siblings. Its
-source is bootstrap's `README.md`, where it sits under "Copy this prompt into an
-AI session in the consumer repository". It does the first adoption, and it also
-brings an adopted repository up to date, so `/vwf:setup reshape` reaches both
-through this step.
+The step runs `bootstrap migrate` per
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, **in each repo Step 0
+resolved that takes it — the base first, then each member**. It does the first
+adoption, and it also brings an adopted repository up to date, so
+`/vwf:setup reshape` reaches both through this step. A member the plan refused
+or that has a membership disagreement takes no step. In each repo:
 
-```text
-Make this repository, each of its git submodules and each of its sibling
-repositories get their shared files from bootstrap. Clone
-git@github.com:virajp/bootstrap.git with --filter=blob:none into a temporary
-directory. Read docs/sync/index.md in the clone, and do its steps in sequence. Read the other
-files of docs/sync/ when index.md tells you to. Apply only what is relevant to
-this repository. Ask me before each choice that docs/sync/ does not decide.
-```
+1. Run `bootstrap migrate --json --dry-run`. It writes nothing; its
+   `data.plan.pending` lists the questions bootstrap has no answer for.
+2. Ask the user each question of `data.plan.pending`, **one at a time**, per
+   `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. Those answers are the user's
+   to give; `init` drafts no values block and proposes no answer of its own.
+3. Run `bootstrap migrate --json --yes`, with each answer as
+   `--answer <tool>.<key>=<value>`.
+4. Where that run still gives code 2 with new items in `data.plan.pending`,
+   ask the new questions the same way and run step 3 again, with every answer
+   so far. After 3 rounds, stop that repo and list the questions still open.
 
-The prompt is the consent to start. bootstrap's `docs/sync` asks its own
-questions, and those answers are the user's to give there — which repos to
-include among them. A member the plan refused or that has a membership
-disagreement is left out at that question; should it take a sync anyway, it is
-reported with `git status --short` and no commit. `init` drafts no values block
-and asks none of those questions. It makes no assumption about whether the user
-told `docs/sync` to commit its sync or to leave it for review; the commit step
-reads which it was.
+Any other code than 0, at step 1 or 3, stops that repo: show the envelope's
+`errors` messages as bootstrap gives them, with no text of `init`'s own per
+case. The gate below then names it.
 
-**Green, per repo, once the step ends.** Green means the repository has
-`.config/bootstrap.toml` and
-`env -u BOOTSTRAP_VERBOSE mise run setup:configs --dry-run` shows no change.
-Here, once the step ends, that dry-run runs code inside `init`'s one consent: it
-writes nothing in the repo, but the repo's own `setup:configs` task refreshes
-bootstrap's clone under `~/.cache/bootstrap` and executes the `main` branch of
-bootstrap from that clone with no pin, and the trust gate of mise is not tied to
-file content, so it does not vouch for either.
+`bootstrap migrate` makes no commit and needs a git repository: a repo with none
+gets its `git init` first, per [new repo](references/new-repo.md). So the step
+always leaves its sync uncommitted, and **if bootstrap leaves its sync
+uncommitted, commit it first** holds wherever the step ran: the commit step
+reads what it left from `git status`.
 
-Run that dry-run only when mise lists the repo as trusted: `mise trust --show`,
-run in that repo, lists a path inside the repo, and every such line reads
-`trusted`. A parent's line does not count. Otherwise do not run it: the repo is
-**drift unknown**, with the reason `repo not trusted by mise`. That check is a
-limit, not a safeguard: it stops only a clone mise has never run.
+**Green, per repo, once the step ends.** Green means the repository passes the
+shaped test and `bootstrap sync --json --dry-run` lists no change: no item in
+`data.plan.changes`, and no file in `data.plan.files` whose `kind` is
+`changed`, `new`, `seeded` or `removed`. The dry-run writes nothing in the
+repo; it fetches bootstrap's clone each run, as bootstrap's fetch rule says
+for `sync`. Read it by its envelope:
 
-Read that command by its exit code and its **stderr**. Its last line is the
-headline, after a glyph or an `[OK]` tag: `Dry run: no file would change` or
-`Dry run: <n> file(s) would change`, matched as the start of that line, so count
-suffixes such as ` · 161 unchanged` after it change nothing. Above it, the list
-lines — `would change`, `would add`, `would seed`, `would remove` — name the
-files, and an info line `bootstrap_commit would change to <commit>` names a new
-commit:
-
-- Exit 0, `Dry run: no file would change` and no
-  `bootstrap_commit would change to` line is **no drift**: green.
-- Exit 0 with a headline of one or more files, or a
-  `bootstrap_commit would change to` line, is **drift**: not green, and the
-  report lists those lines.
-- Exit 0 with no `Dry run:` headline is **drift unknown**: not green, with the
-  reason "no Dry run headline: the repo's setup:configs runs an older sync
-  engine; run bootstrap init".
-- Any exit code other than 0 is **drift unknown**: not green, with the reason
-  the exit code, the last bootstrap error line (it starts with `✗` or
-  `[ERROR]`) and its fix line (`→ …`) when one follows, word for word, or,
-  with no such line, the last line on stderr.
+- Code 0 and no change listed is **no drift**: green.
+- Code 0 with a change listed is **drift**: not green, and the report lists
+  each changed path with its `kind`.
+- Any other code is **drift unknown**: not green, with the reason the
+  envelope's `errors` messages, as bootstrap gives them.
 
 **Then `.config/stackgen.yaml`.** In each repository, base and each member, that
 has the file and is green, delete it with plain `rm`, on the line the one plan
 carried for it. The deletion rides `init`'s own commit in that repository. `init`
-reads no value from the file and carries none over: bootstrap's `docs/sync`
+reads no value from the file and carries none over: `bootstrap migrate`
 decides `[tools.git.branch.*].merge_model` during adoption, members stay in
 `.config/vwf.yaml`, and the forge is read live. A repository that is not green
 keeps the file, and the report names it with its reason.
@@ -454,19 +443,17 @@ keeps the file, and the report names it with its reason.
 **The same read is what a survey does on a shaped repo.** Where every repo of the
 product resolved `shaped`, reads green, holds no `.config/stackgen.yaml` and lacks
 no hygiene asset, the plan is empty and the bootstrap step does not run:
-`docs/sync` would ask each of its questions again to change nothing. A green repo
-that still holds that file is not empty: its section carries the delete line, the
-one question is asked, and the deletion rides `init`'s own commit there. Where
-every repo reads green, the bootstrap step still does not run, and the survey's
-read is the green the deletion goes on. A repo that reads drift, or drift unknown,
-takes the step in the plan like any other, and that includes a repo that fails
-the trust check, which is not run. This survey read runs before the one consent,
-and no consent follows it where the plan comes out empty, as part of the explicit
-`/vwf:setup` run the user started: it writes nothing in the repo, but it executes
-the repo's own `setup:configs` task, which refreshes bootstrap's clone under
-`~/.cache/bootstrap`, and the `main` branch of bootstrap from that clone with no
-pin, and the trust gate of mise is not tied to file content. So the resolved-set
-line in Step 0 prints this, whatever the plan comes to.
+`bootstrap migrate` would ask its questions again to change nothing. A green
+repo that still holds that file is not empty: its section carries the delete
+line, the one question is asked, and the deletion rides `init`'s own commit
+there. Where every repo reads green, the bootstrap step still does not run, and
+the survey's read is the green the deletion goes on. A repo that reads drift, or
+drift unknown, takes the step in the plan like any other. This survey read
+runs before the one consent, and no consent follows it where the plan comes out
+empty, as part of the explicit `/vwf:setup` run the user started: it writes
+nothing in the repo, and fetches bootstrap's clone each run, as bootstrap's
+fetch rule says for `sync`. So the resolved-set line in Step 0 prints this,
+whatever the plan comes to.
 
 ### The record of a keep
 
@@ -475,8 +462,8 @@ by the already-there rule, and no record is written for it, since nothing was
 decided. What is recorded is a decision: a **create** row for an asset the repo
 lacks that the user struck from the plan before answering, per *Missing files* in
 [existing repo](references/existing-repo.md). Files bootstrap writes are never
-recorded in `kept_files`, in any mode: bootstrap's own `setup:configs --dry-run`
-judges them.
+recorded in `kept_files`, in any mode: bootstrap's own
+`bootstrap sync --json --dry-run` judges them.
 
 ## The report
 
@@ -570,7 +557,7 @@ until the day a task is missing or a gate reads a config nobody filled. So the
 re-run is owed on a schedule of events rather than on a symptom, and the way to
 ask for one is `/vwf:setup reshape`:
 
-- **After bootstrap moves.** `mise run setup:configs --dry-run` shows a change,
+- **After bootstrap moves.** `bootstrap sync --json --dry-run` lists a change,
   which is drift, and the bootstrap step brings the repo up to date.
 - **After a member is added or removed** — or after a member is **cloned** on
   a machine that lacked it. A new member has never been shaped at all, and a
@@ -585,7 +572,7 @@ ask for one is `/vwf:setup reshape`:
   is offered — and a repo the first run left `pending` gets its pass on the run
   where it finally lands with a push.
 - **Whenever `/vwf:doctor` says so.** Doctor is what notices the drift between
-  a run. Its Bootstrap drift, Branches, not-shaped and Forge state rows print
+  a run. Its Bootstrap drift, not-shaped and Forge state rows print
   `/vwf:setup reshape`.
 
 Nobody has to remember that schedule. Four commands bring the user to the door

@@ -4,7 +4,8 @@ The files a repository carries whatever it is written in and that no tool
 reads. They are `init`'s own, under
 `${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land;
 `init` places them, fills the three placeholders, and stops. They run after
-the bootstrap step, in a repo that step left with a `.config/bootstrap.toml`.
+the bootstrap step, in a repo that step left passing the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`.
 The ignore file, the attributes file and the issue forms are not among them —
 they are bootstrap's git and github tools.
 
@@ -32,7 +33,8 @@ So a second run finds every asset present and plans nothing for it.
 
 `CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
 the branch model and where its two landing models live
-(`.config/bootstrap.toml`), where the commit types and scopes live, the gate
+(`.config/bootstrap/`), where the commit types and scopes live — the scopes
+read with `bootstrap config get repo.commits.scopes --json` — the gate
 tasks — `code:format`, `code:lint`, `code:sec` and `code:precommit` — the merge
 tasks `code:merge:develop` and `code:merge:main`, and the pointer to
 `SECURITY.md`.
@@ -65,11 +67,11 @@ gets a two-line stub at its own root, and nothing more:**
 <the one-line brief>
 ```
 
-The name is the `repo_name` bootstrap's `docs/sync` wrote into that repo's
-`.config/bootstrap.toml`, read and never edited. The brief is that repo's own
-answer to question 1, asked for every such repo and for no other. An **empty
-brief** writes the H1 alone — an honest empty file beats an invented sentence
-about a product nobody has described yet.
+The name is that repo's `repo_name`, read with
+`bootstrap config get repo.repo_name --json` and never edited. The brief is
+that repo's own answer to question 1, asked for every such repo and for no
+other. An **empty brief** writes the H1 alone — an honest empty file beats an
+invented sentence about a product nobody has described yet.
 
 Then **name `/vwf:readme`** in the report as the command that fills the rest.
 It writes the title, the project list, the architecture diagram, the setup

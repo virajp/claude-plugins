@@ -34,12 +34,12 @@ Three lines, and they do not vary with which branch the forge calls default:
 `mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is set **per branch** in `.config/bootstrap.toml`:
+then do is set **per branch** in `.config/bootstrap/`:
 `[tools.git.branch.develop].merge_model` for the first move,
 `[tools.git.branch.main].merge_model` for the second, each `direct`, the
-default, or `pr`. That file is the repo's values file for bootstrap, the
-shared-files repo this one syncs from: change a value through bootstrap's
-`docs/sync`, then `mise run setup:configs`. `direct`
+default, or `pr`. That folder holds the repo's values for bootstrap, the
+shared-files repo this one syncs from: change a value with
+`bootstrap config set <key> <value>`, then run `bootstrap sync`. `direct`
 merges locally and pushes — your branch is on the destination the moment the
 task returns; `pr` pushes the branch and opens a pull request instead, merging
 nothing — your branch lands when a maintainer merges that request. The two can

@@ -32,7 +32,7 @@
       {
         "id": "K1",
         "check": "grep -rnF over plugins/ for '.config/bootstrap.toml' and for '.config/releases.yaml'.",
-        "pass": "No hit, except: a branch, landing or merge_model passage in plugins/vwf/skills/git-workflow/**, plugins/vwf/skills/init/** or plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md, which R3b owns (D14); a history row (plugins/vwf/skills/setup/references/format-lineage.md, a migration note that names the old form as the old form); and the D5 move in plugins/vwf/skills/execute/references/land.md, plugins/vwf/skills/execute/references/final-report.md and plugins/vwf/skills/plan-management/references/plan-index.md (D36, D38). Each such hit is listed with its reason in the run report."
+        "pass": "No hit, except: a branch, landing or merge_model passage in plugins/vwf/skills/git-workflow/**, plugins/vwf/skills/init/** or plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING.md, which R3b owns (D14); a history row (plugins/vwf/skills/setup/references/format-lineage.md, a migration note that names the old form as the old form); and the D5 move in plugins/vwf/skills/execute/references/land.md, plugins/vwf/skills/execute/references/final-report.md and plugins/vwf/skills/plan-management/references/plan-index.md (D36, D38). Also the (g) Protection passage of plugins/vwf/skills/doctor/references/stack-checks.md, left for R3b (D46). Each such hit is listed with its reason in the run report."
       },
       {
         "id": "K2",
@@ -83,7 +83,7 @@
       "started": "2026-11-15T12:28:29.898Z",
       "ended": "2026-11-18T08:16:53.448Z",
       "commit": "6229ae4f",
-      "rounds": 2
+      "rounds": 5
     },
     {
       "id": "U2",
@@ -101,11 +101,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.435Z",
+      "status": "green",
+      "started": "2026-11-18T08:18:59.629Z",
+      "ended": "2026-11-18T08:35:59.541Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -128,11 +128,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.515Z",
+      "status": "green",
+      "started": "2026-11-18T08:18:59.925Z",
+      "ended": "2026-11-18T08:35:59.975Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -157,11 +157,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.596Z",
+      "status": "green",
+      "started": "2026-11-18T08:19:00.222Z",
+      "ended": "2026-11-18T08:36:00.398Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -182,11 +182,11 @@
         "U1"
       ],
       "waits": "cites the contract asset that U1 writes, and U1 contract check must pass first (D3)",
-      "status": "pending",
-      "started": "",
-      "ended": "2026-11-15T12:31:30.676Z",
+      "status": "green",
+      "started": "2026-11-18T08:19:00.518Z",
+      "ended": "2026-11-18T08:36:00.912Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -243,8 +243,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-18T08:18:59.476Z",
       "ended": ""
     },
     {
@@ -647,6 +647,73 @@
       "decision": "Q2 (U1): bootstrap docs/design/cli.md defines exit code 3, a name bootstrap does not know, which add tool <name> can return; the unit file lists only 0, 1, 2 and 5. Add code 3 to the asset code table?",
       "ruling": "Add code 3: a name bootstrap does not know. The table matches the CLI.",
       "rejected": "Keep 0/1/2/5 only, as Edit 1.3 lists",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Q3 (U2): the init green dry-run is said to read the cached clone under the 30-minute fetch rule, but bootstrap cli.md 1032-1042 says that rule is for catalog reads only and sync fetches each run.",
+      "ruling": "Say that sync fetches bootstrap's clone each run; the docs match the CLI.",
+      "rejected": "Keep the plan wording",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q4 (U2): hygiene CONTRIBUTING.md lines 41-42 tell a reader to change a value through docs/sync, then mise run setup:configs (a retired verb).",
+      "ruling": "Rewrite those lines to bootstrap config set now; the branch model text itself stays for R3b.",
+      "rejected": "Leave it for R3b",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q5 (U3): D26/D8 say setup and recall stop on code 2 or a missing contract, but setup Step 0 offers init on an unshaped repo and recall never stops.",
+      "ruling": "On code 2 (not shaped), setup shows bootstrap's errors text and offers init, and recall shows the line and goes on. A missing contract (CLI absent or too old) still stops.",
+      "rejected": "Stop on code 2",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q6 (U3): sync --json --dry-run returns data.plan.changes and data.plan.files (with kind); D6/D22 read changes only.",
+      "ruling": "Drift counts every entry of data.plan.changes plus each data.plan.files entry whose kind says the sync would write or remove that file.",
+      "rejected": "changes only",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q7 (U3): stack-checks.md (g) Protection still reads merge_model from .config/bootstrap.toml.",
+      "ruling": "Leave it for R3b (D14 keeps the forge rows); K1 lists it as an exception with this reason.",
+      "rejected": "Read it through bootstrap config get now",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D47",
+      "decision": "Q8 (R2): bootstrap 4.1.0 renamed bootstrap init to bootstrap migrate (init stays a hidden alias; error hints say run bootstrap migrate). The assets and U2-U5 say bootstrap init.",
+      "ruling": "Rewrite to bootstrap migrate now in both contract assets and in U2-U5, including every claim about the errors text; the minimum version in the D8 hint becomes 4.1.0.",
+      "rejected": "Keep init and fix only the error-text claims; defer to a follow-up plan",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5"
+      ]
+    },
+    {
+      "id": "D48",
+      "decision": "Q9 (U1): the contract check passes on data.versions holding 1, so 4.0.0 passes, but migrate needs 4.1.0.",
+      "ruling": "The contract check also requires data.cli_version 4.1.0 or newer; a local build reporting dev passes. A 4.0.0 install stops at the check with the install hint.",
+      "rejected": "Keep the versions check alone",
       "units": [
         "U1"
       ]
