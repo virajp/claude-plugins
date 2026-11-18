@@ -14,7 +14,7 @@ No unit bumps a version.
    `mise x -- mise run p:plugins:inventory -- --check`. Both must pass with no
    change. If one fails, report it as a question; do not regenerate.
 2. Run `mise x -- mise run p:plugins:check`. It must pass.
-3. Run `mise x -- mise run code:lint` and `mise x -- pnpm vitest run`.
+3. Run `mise x -- mise run code:lint --all` (D41) and `mise x -- pnpm vitest run`.
 4. Run K1 of `gates.keeps`, and list each allowed hit with its reason.
 
 ## Verification

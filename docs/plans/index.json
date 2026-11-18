@@ -27,7 +27,7 @@
       "kind": "change",
       "title": "R3b — git-workflow and land.mjs over bootstrap's git:* tasks, with the core branches",
       "target_repo": null,
-      "priority": 30,
+      "priority": 10,
       "status": "APPROVED",
       "started": "",
       "ended": "",

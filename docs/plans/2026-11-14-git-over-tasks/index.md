@@ -10,25 +10,65 @@ three R3 plans of `docs/memory/decisions/2026-11-14-bootstrap-plugins-split.md`,
 and it takes the rulings of
 `docs/memory/gaps/2026-11-14-one-or-two-core-branches-parked.md`.
 
+## Amended 2026-11-18
+
+This repo moved to bootstrap 4.1.1 (commit df7ea322) and R3a landed after
+approval. The amend re-surveyed both and added D36 to D42: `land.mjs` runs no
+destructive raw git (D36), rebases its own branch before the merge task
+(D37), keeps a failed push's merge commit (D38), takes git's default merge
+subject (D39), and stops on a missing port with the contract asset's new hint
+(D40); the gates use `--all` (D41); D42 corrects the facts below. The rulings
+review added D43 (`abandon` discards only `land.mjs`'s own scratch), D44
+(`finish` reads `gh` or `glab`), D45 and D47 (fixes), D46 (no retry of an
+unpushed merge), D48 (`finish` deletes its own merged scratch on origin) and
+D49 (fixes); after the fourth round the user accepted the seven rulings of
+D50. The priority is 10: the required R3a plan is archived.
+
 ## Facts the survey established
 
-- `land.mjs` (`git-workflow/scripts/lib/land.mjs`) makes worktrees with raw
-  `git worktree add` (about line 112), merges with
-  `mise x -- git merge --no-ff` (about line 251), opens a pull request itself,
-  and stashes around a dirty main checkout. Its tests are
-  `scripts/src/git-land.test.ts`, run by `pnpm vitest run` in CI.
-- bootstrap's merge library (`repo/tools/git/tasks/merge`) refuses a dirty
-  checkout (about line 115), runs the whole-tree hook pass, checks out the
-  destination in the main worktree, and opens a PR with `gh` or `glab`.
-- R2a (bootstrap) renames `code:merge:<b>` to `git:merge:<b>` (a task per core
-  branch), `setup:worktree` to `git:worktree:setup`, and adds
-  `git:worktree:create|delete|list`, with no aliases.
-- After P0, git-workflow reads `[tools.git.branch.<b>].merge_model`; R1a moves
-  it to `repo.branches.<b>.landing` (`pr`, `direct-merge`, `direct-commit`).
-- `code:merge`, `merge_model` and `setup:worktree` are named in git-workflow,
-  init, the hygiene CONTRIBUTING.md, doctor and readme.
-- Gates: `code:format`, `code:lint`, `code:precommit`, `pnpm vitest run`.
-  Commit types: the ten of `.config/git-conventional-commits.yaml`, no scopes.
+The 2026-11-18 survey; line numbers are about.
+
+- `land.mjs` (`git-workflow/scripts/lib/land.mjs`, 400 lines) makes worktrees
+  with raw `git worktree add --no-track` (line 119), merges with
+  `merge --no-ff` (lines 257-258), opens a pull request itself (lines
+  268-290), retries a rejected push (lines 27, 343-356), and stashes around a
+  dirty main checkout (lines 152-240). `finish` deletes the branch on origin
+  and locally with no merge check; `abandon` deletes its branch. Commit
+  47bf7813 added submodule support (`mainCheckout`, line 75) and its tests
+  (`scripts/src/git-land.test.ts` lines 290-333). Tests run by
+  `pnpm vitest run` in CI.
+- bootstrap 4.1.1's tasks are in `.config/mise/tasks/git/` and the library
+  `.config/mise/tasks/_scripts/merge`, byte-identical to bootstrap's source.
+  The merge library refuses a dirty checkout where it runs from (lines
+  312-326), runs `pre-commit run --all-files` there (lines 89-138), changes to
+  the main worktree (lines 301-310), pulls `<into>`, merges with
+  `--no-ff --no-edit` (line 394), and pushes. On a conflict it exits 1 and
+  leaves `MERGE_HEAD` in the main checkout (lines 390-400); on a failed push it
+  exits 1 and leaves the merge commit on local `<into>` (lines 403-409). Under
+  `pr` it pushes the branch and runs `gh pr create` or `glab mr create`, and
+  exits 0 with no request when neither exists (lines 145-178). It prints plain
+  text only.
+- `git:worktree:create -- <branch> [--from <base>] [--no-setup]` uses
+  `git worktree add -b` with no `--no-track` (line 78), so a branch cut from
+  `origin/<into>` tracks it. `git:worktree:delete -- <branch>` removes the
+  worktree first, then refuses a branch no core branch contains and prints
+  `git branch -D <branch>` with exit 1 (lines 56-86).
+- `bootstrap config get <key> --json` prints the contract envelope; the value
+  is `data.value`. This repo: `repo.core_branches` is `["main", "develop"]`;
+  `repo.branches.develop.landing` is `direct-commit`; `main` reads the default
+  `direct-merge`. The values are `pr`, `direct-merge` and `direct-commit`.
+- `bootstrap contract --json` lists the ports `git:merge:<branch>` and
+  `git:worktree:create|setup|delete`; `bootstrap describe --json` lists
+  `data.ports[].present`. `plugins/vwf/assets/bootstrap-contract.md` names
+  neither.
+- `code:merge`, `merge_model`, `[tools.git.branch.*]`, `read_merge_model` and
+  `setup:worktree` are named in git-workflow, init, the hygiene
+  CONTRIBUTING.md, doctor, readme and the docs; every hit in `plugins/` is in
+  a file a unit owns.
+- Gates: `code:format --all`, `code:lint --all`, `code:precommit`,
+  `pnpm vitest run`. Without `--all`, `code:format` and `code:lint` examine
+  only uncommitted files. Commit types: the ten of
+  `.config/git-conventional-commits.yaml`, no scopes.
 
 ## Unit contract
 
@@ -68,11 +108,21 @@ and answers; the resumed unit applies them and returns the whole block again.
 
 ## Parked
 
-- **Before this plan runs:** this repo must be on bootstrap 4.0.0 and have run
-  `bootstrap init` (the hand step of R3a), so that its `git:*` tasks exist.
+- **Satisfied 2026-11-18:** the precondition that this repo is on bootstrap
+  4.0.0 or later with its `git:*` tasks (it is on 4.1.1, commit df7ea322).
+- **bootstrap follow-up (D39):** bootstrap's `git:merge:<b>` task takes a
+  message flag for the merge commit's subject; then `land.mjs` passes
+  `--message` to it.
+- **The user's own files (D7):** this repo's release tasks
+  (`.config/mise/tasks/p/release`, `p/plugins/release`, `p/site/release`,
+  `p/i/release`) and `.github/workflows/deps-update.yml` still call the
+  removed `code:merge:main` and read the removed `.config/bootstrap.toml`, so
+  a release fails until the user moves them to `git:merge:main` and
+  `bootstrap config get repo.branches.main.landing`.
 - After this plan lands, the uncommitted changes of the main checkout stay
-  uncommitted and are never part of a merge; a landing stops only when git
-  refuses the checkout or the merge (D23).
+  uncommitted and are never part of a merge; a landing stops when git refuses
+  the checkout or the merge, or when the task's whole-tree hook pass fails
+  (D23, D45).
 
 ## Launch
 
