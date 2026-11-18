@@ -19,7 +19,7 @@ bootstrap repo).
   entry into a selectable `virajp-plugins` tool; `setup:ai` installs what the
   claude tool lists, records the project plugins it installs in
   `plugins.installed`, uninstalls them at project scope when they leave the
-  list, updates only with `--update`, and makes no pnpx call.
+  list, updates only with `--upgrade` (D22), and makes no pnpx call.
 - After R3a, stackgen's handoff still gives the plugin verbs
   `bootstrap: add|remove <scope> plugins […]` and the key
   `[claude.plugins.<scope>]` (`bootstrap-handoff.md`, about lines 50-60 and
