@@ -2,9 +2,7 @@
   "format": 1,
   "type": "vwf-change-plan",
   "title": "The default vwf gate lines examine every file (--all)",
-  "requires": [
-    "docs/plans/2026-11-14-git-over-tasks"
-  ],
+  "requires": [],
   "source": [],
   "backlog": [],
   "backlog_pieces": [],
@@ -198,7 +196,7 @@
     {
       "id": "D5",
       "decision": "When can this plan run?",
-      "ruling": "requires docs/plans/2026-11-14-git-over-tasks (R3b). This repo's own code:format and code:lint (bootstrap 3.3.1) pass each argument as a file and fail on --all. R3a's D15 hand step runs bootstrap init in this repo after bootstrap 4.0.0 and before the R3b run, so this repo has the 4.0.0 tasks when this plan runs, and this plan's own gate lines can use --all.",
+      "ruling": "Amended 2026-11-18 (D23): requires nothing. The first ruling required docs/plans/2026-11-14-git-over-tasks (R3b), because this repo then ran bootstrap 3.3.1 tasks that fail on --all. On 2026-11-18 this repo moved to bootstrap 4.1.1 (commit df7ea322), its code:format and code:lint declare #USAGE flag --all, and R3a is COMPLETE, so this plan and its own gate lines can run now.",
       "rejected": "requires R3a (its COMPLETE state does not prove that the D15 hand step ran); no requires (plans written here before the bootstrap init get gate lines that fail).",
       "units": [
         "U1",
@@ -352,6 +350,16 @@
       "units": [
         "U1",
         "U2"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "After approval, this repo moved to bootstrap 4.1.1 (commit df7ea322, ops: migrate to bootstrap v4), and R3a became COMPLETE. The reason of D5 for requires R3b is gone. Does the plan keep requires R3b?",
+      "ruling": "No. requires becomes [], and the row priority becomes 10. D20 (the tie at 40 with R3c) no longer applies; D17 still holds, because this plan now runs before R4b too.",
+      "rejected": "Keep requires R3b and priority 40.",
+      "units": [
+        "U1",
+        "U3"
       ]
     }
   ],

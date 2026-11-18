@@ -129,14 +129,12 @@
       "kind": "change",
       "title": "The default vwf gate lines examine every file (--all)",
       "target_repo": null,
-      "priority": 40,
+      "priority": 10,
       "status": "APPROVED",
       "started": "",
       "ended": "",
       "gaps": null,
-      "requires": [
-        "2026-11-14-git-over-tasks"
-      ],
+      "requires": [],
       "backlog": [],
       "backlog_pieces": []
     }

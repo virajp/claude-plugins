@@ -4,8 +4,8 @@
 
 ## Ruling
 
-- **D5:** This plan runs after R3b, so this repo has the bootstrap 4.0.0
-  tasks, and `--all` works here.
+- **D5, D23:** This plan requires nothing. This repo runs bootstrap 4.1.1
+  (commit df7ea322), so `--all` works here.
 - **D15:** K1 passes when each hit has `--all` as a flag of the command,
   before any redirect or comment, or is an allowed hit that K1 names.
 - **D21:** K1 accepts exactly two bare daily lines in each file that holds the

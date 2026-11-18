@@ -28,9 +28,9 @@ repository). There is no reversal.
   `site/src/content/docs/plugins/vwf.md:3501`,
   `site/src/content/docs/how-to/operate/ad-hoc-change.md:120` and
   `.claude/skills/vwf-plugin/references/skills-and-agents.md:48`.
-- This repo had bootstrap 3.3.1 tasks on 2026-11-18. Its
-  `.config/mise/tasks/code/format/_default` passes each argument to dprint as
-  a file, so `--all` fails there until this repo adopts 4.0.0 (R3a D15).
+- This repo moved to bootstrap 4.1.1 on 2026-11-18 (commit df7ea322). Its
+  `code:format` and `code:lint` declare `#USAGE flag "--all"`, and R3a is
+  COMPLETE, so the plan requires nothing (D23).
 - The stackgen pack texts that name `mise run code:lint` say which tool the
   task runs. That stays true.
 - `plugins/**/*.md` is not formatted: re-pad a table by hand.
