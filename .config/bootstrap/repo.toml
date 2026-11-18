@@ -1,0 +1,15 @@
+# The bootstrap commit of the last sync. repo-sync writes it.
+
+format = 3
+
+bootstrap_commit = "90b499a60ff741d401076e285065c0200b1667c2"
+core_branches = [ "main", "develop" ]
+environments = [ "dev", "ci" ]
+repo_name = "claude-plugins"
+repo_url = "https://github.com/virajp/claude-plugins"
+
+[branches.develop]
+landing = "direct-commit"
+
+[commits]
+style = "conventional"

@@ -1,0 +1,20 @@
+# The tools of bootstrap for this repository, and their values. See docs/sync/index.md of bootstrap.
+
+format = 3
+
+[tools.claude]
+[tools.cloudflare]
+[tools.github]
+[tools.node]
+[tools.pre-commit]
+# The design exports, kept byte for byte.
+exclude = [ "^docs/design/" ]
+
+[tools.dprint]
+[tools.git]
+[tools.linter]
+[tools.mise]
+[tools.gitleaks]
+[tools.grype]
+[tools.osv-scanner]
+[tools.python]

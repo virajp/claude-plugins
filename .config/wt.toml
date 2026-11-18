@@ -12,7 +12,7 @@ trust = "mise trust"
 copy = "wt step copy-ignored --require-include"
 
 [[pre-start]]
-setup = "mise run setup:worktree"
+setup = "mise run git:worktree:setup"
 
 [commit.generation]
 template-append = """
