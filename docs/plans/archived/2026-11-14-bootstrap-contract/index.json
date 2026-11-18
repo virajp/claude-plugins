@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "BLOCKED",
-    "detail": "BLOCKED at wave 1 — U1 unresolved: Q1 bootstrap 4.0.0 (contract 1) not installed, D40 stop until it is; U2, U3, U4, U5, U6, U7 skipped (depend on U1); worktree .worktrees/all-2026-11-15-1730"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-18 — 6229ae4f 22f06cac 945957aa 7150ca02 16975459 c18832fa 8ccd725c 16067406 8038d73b 3dbc48ea "
   },
   "consent": {
     "merge": true,
