@@ -1,0 +1,387 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "The default vwf gate lines examine every file (--all)",
+  "requires": [
+    "docs/plans/2026-11-14-git-over-tasks"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "solo",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-18 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format --all"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint --all"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "No default gate line in plugins/vwf/ or in this repo's CONTRIBUTING.md runs code:format or code:lint without --all: command grep -rnE 'mise run code:(format|lint)' plugins/vwf CONTRIBUTING.md",
+        "pass": "Each hit has --all as a flag of the code:format or code:lint command, before any redirect or comment; or is one of exactly two bare daily lines (mise run code:format and mise run code:lint) in each file that holds the daily-checks block (D6, D19, D18); or is prose that names the task and no command line. The run report lists each allowed hit with its reason."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "The default unit and wave gate lines that the two planners propose take --all, so a gate on a clean worktree examines every file after bootstrap 4.0.0."
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual names the new default gate lines."
+    },
+    {
+      "id": "stackgen",
+      "level": "NONE",
+      "reason": "No unit touches plugins/stackgen/ (D7)."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The default gate lines take --all",
+      "wave": 1,
+      "file": "01-gate-lines.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/change-plan/references/gates-consent.md",
+        "plugins/vwf/skills/plan/references/plan-doc.md",
+        "plugins/vwf/assets/templates/plan-folder.md",
+        "plugins/vwf/skills/execute/references/action-log.md",
+        "plugins/vwf/skills/init/assets/hygiene/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Docs",
+      "wave": 2,
+      "file": "02-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/**",
+        ".claude/skills/vwf-plugin/**",
+        ".claude/docs/**",
+        "CLAUDE.md",
+        "readme.md",
+        "CONTRIBUTING.md"
+      ],
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Gates",
+      "wave": 3,
+      "file": "03-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U2"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "site/src/content/docs/**, .claude/skills/vwf-plugin/**, CLAUDE.md, readme.md, CONTRIBUTING.md",
+      "why": "every human-facing doc belongs to the docs unit",
+      "owner": "U2"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Which default gate lines take --all?",
+      "ruling": "The default unit gate is mise x -- mise run code:format --all, and the default wave gate is mise x -- mise run code:lint --all. After bootstrap 4.0.0, code:format and code:lint examine only the uncommitted files when they get no files and no --all. The wave gate runs before wave 1 and after the units commit, on a clean worktree, so without --all it examines nothing.",
+      "rejected": "Keep the unit gate without --all, because it runs before the commit of a unit, when its files are uncommitted. The bootstrap prompt asks for both lines with --all, and one rule for both lines is clearer.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Does the default plan gate change?",
+      "ruling": "No. The plan gate stays mise x -- mise run code:precommit. It always runs pre-commit with --all-files and takes no flag.",
+      "rejected": "Add --all to code:precommit.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "Does /vwf:execute get new logic?",
+      "ruling": "No. /vwf:execute runs the gate lines that the folder records and nothing it infers, so a change to the default lines is enough. Only the example line of execute/references/action-log.md changes, to the new wave gate line.",
+      "rejected": "A preflight check in /vwf:execute that refuses a code:format or code:lint gate line without --all.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "Do the queued plans change their gate lines?",
+      "ruling": "No. The plans that are already queued keep their gate lines (bootstrap gap 2026-11-15-vwf-gates-all-parked, D55 of its plan). Their gates still pass, but examine fewer files. No unit edits a folder under docs/plans/.",
+      "rejected": "Rewrite the gate lines of each queued folder.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "When can this plan run?",
+      "ruling": "requires docs/plans/2026-11-14-git-over-tasks (R3b). This repo's own code:format and code:lint (bootstrap 3.3.1) pass each argument as a file and fail on --all. R3a's D15 hand step runs bootstrap init in this repo after bootstrap 4.0.0 and before the R3b run, so this repo has the 4.0.0 tasks when this plan runs, and this plan's own gate lines can use --all.",
+      "rejected": "requires R3a (its COMPLETE state does not prove that the D15 hand step ran); no requires (plans written here before the bootstrap init get gate lines that fail).",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "What happens to the two daily commands of the hygiene asset CONTRIBUTING.md?",
+      "ruling": "Keep mise run code:format and mise run code:lint as the daily commands. Correct their comments to say that they examine the uncommitted files (staged, changed and new). Add one line each that shows the same command with --all, with a comment that says it examines every file of the repository.",
+      "rejected": "Add --all to the two daily commands (slower for each contributor); leave the lines as they are (the comment 'every formatter, over what it owns' becomes false).",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Do the stackgen pack texts that name mise run code:lint or code:format change?",
+      "ruling": "No. They say which tool a task runs, for example that mise run code:lint runs ktlint, and that stays true. No unit touches plugins/stackgen/.",
+      "rejected": "Add --all to each pack text.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Does the plan need a review unit?",
+      "ruling": "No. The plan changes prose only and lands no runnable code, so the wave review is the only review.",
+      "rejected": "One review unit after U1.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Which execution mode?",
+      "ruling": "solo. Each wave has one edit unit, so no unit has a peer to send a message to.",
+      "rejected": "teams.",
+      "units": []
+    },
+    {
+      "id": "D10",
+      "decision": "Rulings review round 1 gap 1: in a target repo whose code:format and code:lint are older than bootstrap 4.0.0, a gate line with --all passes --all as a file and fails. What do the planners propose there?",
+      "ruling": "Always propose --all when mise tasks ls --hidden lists code:format and code:lint. This case is accepted: after R3a, vwf supports only a repo on the bootstrap 4.0.0 contract, and /vwf:doctor reports an old-form repo as blocking (R3a D26).",
+      "rejected": "Propose --all only when the task declares #USAGE flag \"--all\", else the bare line; always --all with a note at the gate.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Rulings review round 1 gap 2: the --all lines that D6 adds to the hygiene asset CONTRIBUTING.md fail in a target repo whose tasks are older than bootstrap 4.0.0. Does the asset show them?",
+      "ruling": "Yes. This case is accepted for the same reason as D10: after R3a, /vwf:init adopts bootstrap 4.0.0, so a repo that gets the asset has the new tasks.",
+      "rejected": "Correct only the two comments and show no --all line.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Rulings review round 1 gap 3: /vwf:init writes a hygiene asset only when the repo does not have it (init/references/readme-and-license.md:30-31). A repo that already holds CONTRIBUTING.md keeps the comment every formatter, over what it owns. Does this plan update it?",
+      "ruling": "No. This case is accepted and out of scope. The file belongs to each repo after init writes it, and its commands still run; only one comment is less exact.",
+      "rejected": "Park a gap record for an update path of present hygiene assets; a /vwf:doctor row that reports the old comment.",
+      "units": []
+    },
+    {
+      "id": "D13",
+      "decision": "Rulings review round 2 gap 1: R3b U3 adds a one-branch variant of the hygiene CONTRIBUTING file beside CONTRIBUTING.md, with the same daily-checks block, under a name it does not fix. Does U1 edit it?",
+      "ruling": "Yes. U1 owns plugins/vwf/skills/init/assets/hygiene/CONTRIBUTING*.md and applies the D6 edit to the daily-checks block of each file that matches.",
+      "rejected": "U1 edits only CONTRIBUTING.md, and the variant keeps the old comments.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Rulings review round 2 gap 2: the sentence above the daily-checks block of the hygiene CONTRIBUTING files says there is nothing to remember beyond running them before you push. After a commit, the bare code:format and code:lint examine nothing. Does U1 change it?",
+      "ruling": "Yes. In each CONTRIBUTING*.md, U1 rewrites that sentence: while you work, the bare commands examine the uncommitted files; before you push, run the --all forms, which examine every file of the repository. This widens D6 by this one sentence.",
+      "rejected": "Change only the sh block and leave the sentence.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Rulings review round 2 gap 3: K1 passed only when each hit ends in --all, but the action-log example ends in a redirect and the CONTRIBUTING lines end in a comment.",
+      "ruling": "K1 passes when each hit has --all as a flag of the command, before any redirect or comment. The planner corrected the wording; it has one correct answer.",
+      "rejected": "Keep ends in --all.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Rulings review round 2 gap 4: CLAUDE.md (about line 243) says the lint hook calls code:lint, which runs the house linter over the whole tree. With the 4.0.0 tasks, the hook passes the staged files and only --all examines the whole tree. Does U2 correct it?",
+      "ruling": "Yes. U2 rewrites that clause: the lint hook calls code:lint with the staged files, and code:lint --all lints the whole tree, so every linter exclusion still lives in .config/linter.yaml and nowhere else. .claude/docs/repo-shape.md (about lines 122-125) already says the hooks pass the staged files, and stays.",
+      "rejected": "Leave CLAUDE.md as it is.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Rulings review round 2 gap 5: the queued plan docs/plans/2026-11-15-config-format-28 (R4b, priority 60) also edits plugins/vwf/skills/change-plan/references/gates-consent.md, and this plan does not order itself against it.",
+      "ruling": "Accepted. Priority 40 puts this plan before R4b, and R4b edits a different passage of the file, so its run starts from this plan text. No requires is added.",
+      "rejected": "Add docs/plans/2026-11-15-config-format-28 to requires (priority 70).",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Rulings review round 3 gap 1: this repo own CONTRIBUTING.md (about lines 50-55) says nothing to remember beyond running them before you push, and that code:format runs the formatter, over what it owns. Both become false with the 4.0.0 tasks. Does a unit own it?",
+      "ruling": "Yes. U2 owns CONTRIBUTING.md and applies the D6 and D14 edits to its gates section: the comments of the two bare daily commands say that they examine the uncommitted files; one --all line each is added; the sentence above the block names the --all forms as the pre-push form.",
+      "rejected": "Leave this repo CONTRIBUTING.md as it is.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings review round 3 gap 2: R3b does not fix the name or folder of its one-branch CONTRIBUTING variant, so a CONTRIBUTING*.md glob can miss it.",
+      "ruling": "U1 owns plugins/vwf/skills/init/assets/hygiene/** and applies the D6 and D14 edits to each file there that holds the daily-checks block of mise run code:format and mise run code:lint, found by content. If only CONTRIBUTING.md holds it, U1 edits that one file and reports so in a DECIDED line. This replaces the glob of D13.",
+      "rejected": "Keep the CONTRIBUTING*.md glob, and return a QUESTION when no second file matches.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings review round 3 gap 3: this plan and 2026-11-14-virajp-plugins-tool (R3c) both have priority 40. Which runs first?",
+      "ruling": "The row gets priority 40 (10 + 30 of R3b). plan.mjs pick breaks a tie by the date of the folder name (plan-management/scripts/lib/queue.mjs, about lines 390-393), so R3c (2026-11-14) runs first and this plan next. D17 holds. The planner recorded this fact; it has one answer.",
+      "rejected": "none",
+      "units": []
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings review round 3 gap 4: must K1 and the U1 grep accept exactly two bare daily lines per file, and does init/references/readme-and-license.md (about line 36) change?",
+      "ruling": "K1 accepts exactly two bare daily lines in each file that holds the daily-checks block. readme-and-license.md only names the gate tasks, so it stays correct and no unit edits it. The planner recorded this; it has one answer.",
+      "rejected": "none",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings review round 4 gap 1: the new --all lines are longer than the comment column of the daily-checks sh block, so aligned comments need a new column on every line of the block, against Change nothing else.",
+      "ruling": "U1 and U2 move the comment column of the whole daily-checks sh block, so that all comments align. On the lines they do not otherwise change (code:sec, code:precommit), only whitespace changes.",
+      "rejected": "Keep the other lines and accept misaligned comments.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
