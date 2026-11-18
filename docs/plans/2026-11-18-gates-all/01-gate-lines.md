@@ -22,8 +22,8 @@ Quoted from the `decisions` list of `index.json`:
   gate line.
 - **D4:** The plans that are already queued keep their gate lines. No unit
   edits a folder under `docs/plans/`.
-- **D5:** This plan runs after R3b, so this repo has the bootstrap 4.0.0
-  tasks, and `--all` works here.
+- **D5, D23:** This plan requires nothing. This repo runs bootstrap 4.1.1
+  (commit df7ea322), so `--all` works here.
 - **D6:** Keep `mise run code:format` and `mise run code:lint` as the daily
   commands. Correct their comments to say that they examine the uncommitted
   files (staged, changed and new). Add one line each that shows the same
