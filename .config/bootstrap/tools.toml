@@ -18,3 +18,7 @@ exclude = [ "^docs/design/" ]
 [tools.osv-scanner]
 [tools.python]
 [tools.pnpm]
+# The /brag output, kept byte for byte: no code:format or code:lint gate
+# examines it.
+[tools.mise.code_files]
+excludes = [ "**/*-lock.yaml", "**/*.svg", "**/package-lock.json", "brag-output/" ]

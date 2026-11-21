@@ -7,6 +7,7 @@ dprint	.config/mise/conf.d/dprint/mise.dev.toml
 dprint	.config/mise/tasks/code/format/05-dprint.py
 dprint	.config/mise/tasks/setup/dprint.py
 dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/*.svg"}
+dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/brag-output/**"}
 dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/package-lock.json"}
 dprint	dprint.jsonc	{"kind":"item","path":["plugins"],"match":"^npm:@dprint/json@"}
 dprint	dprint.jsonc	{"kind":"item","path":["plugins"],"match":"^npm:@dprint/markdown@"}
