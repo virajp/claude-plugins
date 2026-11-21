@@ -18,6 +18,8 @@
 # or else the uncommitted files (staged, changed and new). Then three filters,
 # in this order: the repository filter, the global filter of
 # .config/bootstrap/config-files.toml, and the #FILES header of the gate file.
+# The header line starts with "#FILES " or "# FILES " (ruff format adds the
+# space).
 # It writes the sorted list to a new temporary file, one path for each line,
 # and prints the path of that file. The gate deletes the file.
 #
@@ -39,6 +41,7 @@ import tomllib
 
 CONFIG_FILES = ".config/bootstrap/config-files.toml"
 HEADER_KEYS = ("include", "exclude", "shebang")
+HEADER_PREFIXES = ("#FILES ", "# FILES ")
 KNOWN_SHELLS = ("sh", "bash", "dash", "ksh", "mksh", "zsh", "fish", "csh", "tcsh")
 
 
@@ -143,7 +146,9 @@ def first_match(compiled, path):
 
 
 def read_header(gate):
-  """The #FILES lists of the gate file: include, exclude, shebang (or None)."""
+  """The #FILES lists of the gate file: include, exclude, shebang (or None).
+
+  The header line starts with "#FILES " or "# FILES "."""
   try:
     with open(gate, encoding="utf-8", errors="surrogateescape") as f:
       lines = f.read().splitlines()
@@ -153,14 +158,15 @@ def read_header(gate):
   for line in lines:
     if line.strip() and not line.startswith("#"):
       break
-    if line.startswith("#FILES "):
-      found.append(line)
+    for prefix in HEADER_PREFIXES:
+      if line.startswith(prefix):
+        found.append(line[len(prefix) :])
   if len(found) > 1:
     fail(f"{gate}: two #FILES lines")
   header = {}
   if not found:
     return header
-  rest = found[0][len("#FILES ") :]
+  rest = found[0]
   pos = 0
   item = re.compile(r'\s*([^\s=]+)=("([^"]*)"|\S*)')
   while rest[pos:].strip():
