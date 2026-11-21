@@ -91,3 +91,10 @@ configs:
       tailwindcss/no-invalid-properties: off
       tailwindcss/prefer-theme-tokens: off
       tailwindcss/use-baseline: off
+
+  # The layouts of the website export `prerender` for the pages that use them.
+  # The gate of bootstrap runs the linter with --no-ignore, so this rule now
+  # reads the .astro files, and it accepts the export only inside pages/.
+  - files: [ "site/**/*.astro" ]
+    rules:
+      astro/no-prerender-export-outside-pages: off
