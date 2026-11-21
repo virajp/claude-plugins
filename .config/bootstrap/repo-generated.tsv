@@ -94,6 +94,13 @@ git	.config/mise/tasks/git/pull.py
 git	.config/mise/tasks/git/tag.py
 git	.config/mise/tasks/git/worktree/create.py
 git	.config/mise/tasks/git/worktree/delete.py
+git	.config/mise/tasks/release/installer/ci.py
+git	.config/mise/tasks/release/installer/production.py
+git	.config/mise/tasks/release/site/production.py
+git	.config/mise/tasks/release/stackgen/local.py
+git	.config/mise/tasks/release/stackgen/production.py
+git	.config/mise/tasks/release/vwf/local.py
+git	.config/mise/tasks/release/vwf/production.py
 git	.gitattributes
 git	.gitignore	{"kind":"item","path":[],"value":".impeccable/"}
 github	.config/mise/conf.d/github/mise.ci.toml

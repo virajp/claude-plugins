@@ -1,28 +1,39 @@
 ---
 name: release
-description: Cut a release — every project with a pending level via p:release,
-  or one alone via p:plugins:release, p:i:release or p:site:release; each
-  bumps from its last tag, commits on develop, merges to main and tags. Also
-  the GitHub Release note format, and the CI facts that make a failed publish
-  legible. Run when the user asks to cut, tag, or publish a release.
+description: Cut a release — one project at a time via its
+  release:<project>:production task (release:vwf:production,
+  release:stackgen:production, release:installer:production,
+  release:site:production), which runs p:plugins:release, p:i:release or
+  p:site:release; each bumps from its last tag by the level in
+  .config/bootstrap/releases.toml, commits on develop, lands on main and tags
+  main. Also the GitHub Release note format, and the CI facts that make a failed
+  publish legible. Run when the user asks to cut, tag, or publish a release.
 allowed-tools: Read Grep Glob Bash
 ---
 
 # Release
 
-**Ask the user before running `p:release`, `p:i:release`, `p:plugins:release` or
+**Ask the user before running a `release:<project>:production` task,
+`release:installer:ci`, `p:plugins:release`, `p:i:release` or
 `p:site:release`.** It is the repo's hard rule, and every one of them commits,
 merges and tags. There is no exception: no plan folder carries a release step.
 `--dry-run` is the one form that may run without asking — it writes nothing.
+`release:<plugin>:local` is the local stage below and publishes nothing.
 
-**There are three things to release, and one tag family each.** `p:release`
-releases every one that has something pending; each task alone releases its own.
+**There are three things to release, and one tag family each.** Each release
+is a `[release.<project>.<kind>]` table of `.config/bootstrap/repo.toml`, and
+bootstrap ships its task `release:<project>:<kind>`, which runs this repo's own
+task with fixed arguments. There is no run-all task: release each project with
+its own task.
 
-| Releasing           | Tag                    | Task                | Ends at                  |
-| ------------------- | ---------------------- | ------------------- | ------------------------ |
-| one or more plugins | `<name>-v<version>`    | `p:plugins:release` | the pushed tag           |
-| the installer CLI   | `installer-v<version>` | `p:i:release`       | npm + GitHub Release     |
-| the website         | `site-v<version>`      | `p:site:release`    | Workers + GitHub Release |
+| Releasing         | Tag                    | Task                                                                 | Runs                                | Ends at                  |
+| ----------------- | ---------------------- | -------------------------------------------------------------------- | ----------------------------------- | ------------------------ |
+| one plugin        | `<name>-v<version>`    | `release:vwf:production`, `release:stackgen:production`              | `p:plugins:release --plugin <name>` | the pushed tag           |
+| the installer CLI | `installer-v<version>` | `release:installer:production` (`release:installer:ci` from CI only) | `p:i:release` (`--ci`)              | npm + GitHub Release     |
+| the website       | `site-v<version>`      | `release:site:production`                                            | `p:site:release`                    | Workers + GitHub Release |
+
+`--dry-run` on a `release:*` task only prints the command it runs; `--dry-run`
+on the own task prints the plan.
 
 The namespaces must all stay prefixed. GitHub's tag globs match any character
 except `/`, so a bare `v*` family matched `vwf-v19.9.0` and fired the npm
@@ -43,7 +54,9 @@ unguarded. Either give the new family a `-v` or widen
 ## Local first
 
 **A plugin is staged locally before it is tagged publicly.** The staging command
-is `mise run p:plugins:local`: it copies each changed plugin into the gitignored
+is `mise run p:plugins:local` (or `release:<plugin>:local`, which runs it with
+`--plugin <name>` to stage that plugin alone): it copies each changed plugin
+into the gitignored
 dev marketplace under `X.Y.Z+N` and updates this machine's install, so the
 author runs the plugin they are about to publish. It commits nothing, pushes
 nothing and cuts no tag; `/vwf:execute` takes it as the plan folder's
@@ -74,84 +87,64 @@ Two limits, both worth stating rather than papering over:
 
 ```sh
 # on develop, clean
-mise run p:release -- --dry-run # show the user, then ask
-mise run p:release
+mise run p:plugins:release -- --plugin vwf --dry-run # show the user, then ask
+mise run release:vwf:production
 ```
+
+The own task's `--dry-run` prints one line — `<project>: <last> -> <target>
+(<LEVEL>), tag <tag>` — checks no branch or tree, writes nothing and exits zero.
+Show it to the user before asking. Use `p:i:release -- --dry-run` and
+`p:site:release -- --dry-run` for the installer and the site.
 
 **No person and no plan bumps a version by hand.** A landing plan records a
 level per project — `NONE`, `PATCH`, `MINOR` or `MAJOR` — and `/vwf:execute`
-raises it at landing, the highest level winning. The release tasks read it from
-`.config/releases.yaml`. After R3a, `/vwf:execute` writes the levels to
-`.config/bootstrap/releases.toml`; the release tasks read it once the user
-switches them. The release tasks:
+raises it at landing in `.config/bootstrap/releases.toml` (`format = 3`, then
+one `<project> = "LEVEL"` line each), the highest level winning. The release
+tasks read and clear it through `.config/mise/tasks/_scripts/local.py`, not
+`bootstrap config`, because the engine is a macOS binary and `deps-update.yml`
+runs on Linux. All three share one flow, `release()` in that module:
 
 - **The base is always the project's last tag** — `<name>-v*`, `installer-v*`,
   `site-v*` — never the manifest.
-- **The level is the higher** of the recorded one and the one an untagged
-  manifest implies against that tag (the first component that differs). Tag
-  `vwf-v21.0.0`, manifest `21.2.0`, recorded `MAJOR` → `22.0.0`.
+- **The recorded level is the only source** of the bump.
 - **The manifest is the floor**: a target below the manifest releases the
-  manifest as it stands, so a release never lowers it. Tag `vwf-v21.0.0`,
-  manifest `21.2.0`, no record → implied `MINOR` → `21.1.0`, raised to `21.2.0`.
-- **The version skips 13 and 17**: the target comes from the same guard the
-  version tasks use, so `1.1.12` patched is `1.1.14`, and the task says what it
-  skipped. A level that can never clear the number refuses.
-- A project at `NONE`, with no record and a manifest equal to its tag, is
-  **skipped**. A project with **no tag yet** releases its manifest as it stands.
-- Each task reads and clears **only its own keys**: `vwf` and `stackgen` for
+  manifest as it stands, so a release never lowers it. A manifest above the
+  target that carries a 13 or 17 refuses.
+- **The version skips 13 and 17**, so `1.1.12` patched is `1.1.14`, and the
+  task says what it skipped. A level that can never clear the number refuses.
+- A project at `NONE` with a manifest equal to its tag prints **"Nothing to
+  release"** and exits zero. A project with **no tag yet** releases its manifest
+  as it stands.
+- Each task reads and clears **only its own key**: the plugin's name for
   `p:plugins:release`, `installer` for `p:i:release`, `site` for
-  `p:site:release`. A duplicated key in the file refuses.
+  `p:site:release`.
 
-`--dry-run` prints one line per project — its last tag, its level, and
-`→ <version>`, `→ skip` or `→ refused` — checks no branch or tree, writes
-nothing and exits zero. Show it to the user before asking.
+**The sequence.** It fetches the tags, computes the target, then refuses unless
+it is on `develop` with a clean tree and the tag does not exist yet; checks `gh`
+for the installer and the site; runs the preflight (`p:i:test` for the
+installer, `p:site:check` for the site, none for a plugin); writes the version
+in place; for a plugin runs `p:plugins:marketplace`; clears the level; makes
+**one** commit `ops: release <tag>` (for example `ops: release vwf-v25.0.0`) on
+`develop`; pushes `develop`; runs `git:merge:main develop`, which fast-forwards
+`main` to `develop`; and runs bootstrap's `git:tag <tag> --push`, a signed
+annotated tag and the only thing it pushes. For the installer and the site it
+then watches the workflow with `gh run watch --exit-status`.
 
-**`p:release`** runs the three as one release: it plans from their dry-run lines
-and stops on any `refused`; checks `gh` and runs `p:i:test` and `p:site:check`
-for the projects that need them, **before** the first bump; then runs each task
-`--no-commit`, makes **one** commit (`ops: release …`, naming the versions
-staged), pushes `develop`, runs `code:merge:main`, and on `main` runs each
-releasing task `--tag-only` — plugins, installer, site, in that order — and
-switches back to `develop`. Its own tag steps carry `RELEASE_GATES_DONE=1`, so
-the installer and site gates it already ran are not run again on `main`.
-
-**A stop prints its resume commands.** The first failure stops the run and
-prints the steps left, from `develop`: a tag already on origin is not cut again,
-a tag cut but never pushed is pushed rather than re-made, and the resume lines
-never carry `RELEASE_GATES_DONE=1` — a resume may follow a fix no gate of the
-run checked. When `code:merge:main` stops, it adds the resolve-or-abort hint:
-finish the merge and push `main`, or `git merge --abort` and switch back to
-`develop`.
-
-**One task alone** is the same sequence for one project: from `develop` on a
-clean tree it bumps, clears its key, commits (`ops: release …`), pushes
-`develop`, merges with `code:merge:main`, tags on `main`, pushes, and switches
-back to `develop` whatever happens. Two modes split it, for `p:release` and for
-the fallback below:
-
-| Mode          | Runs on   | Does                                                                     |
-| ------------- | --------- | ------------------------------------------------------------------------ |
-| `--no-commit` | `develop` | the bump step alone, staged; refuses only unstaged and untracked changes |
-| `--tag-only`  | `main`    | the tag step alone — tags what the manifest already names; no bump       |
+**A stopped run resumes.** When a run stops after its commit, the level is
+already cleared and the manifest is above a tag that does not exist. The next
+run reads `NONE`, sees that, and lands and tags with no new bump. So the resume
+is the same task again, from `develop`.
 
 **`main` stays merge-only.** The bump is an ordinary commit on `develop`, and
 `main` receives it by merge, so the `no-commit-to-branch` hook never has to be
 skipped.
 
-**The merge model must be `direct`.** Under `pr`, `code:merge:main` only opens a
-pull request, and a tag would name a stale `main`. So full mode, `--ci` and
-`p:release` refuse when `[tools.git.branch.main].merge_model` in
-`.config/bootstrap.toml`
-is `pr`; a missing file or key is `direct`.
-The fallback is the two halves: each task `--no-commit` on `develop`, commit,
-land the PR by hand, then each `--tag-only` on `main`.
-
 ## Releasing plugins
 
 Each entry in `.claude-plugin/marketplace.json` pins its plugin to a
 `<name>-v<version>` tag, and that ref is **derived** from the plugin manifest's
-`version`. `p:plugins:release` writes the target into
-`plugins/<name>/.claude-plugin/plugin.json` — every target validated before any
+`version`. `p:plugins:release --plugin <name>` writes the target into
+`plugins/<name>/.claude-plugin/plugin.json` — the target validated before the
 file is written — and runs `p:plugins:marketplace`, so the ref renames itself in
 the same commit.
 
@@ -165,21 +158,20 @@ repo maintains — a plugin manifest, the installer, the site, `config_format`,
 `blueprint_format`. The release tasks skip past them when they compute a target;
 `p:plugins:check` refuses a manifest whose version has one (`1.13.0`, `17.0.0`,
 `2.1.17`; `1.130.0` and `113.0.0` are ordinary versions that merely contain the
-digits), and the tag step refuses the **whole** run when any ref it would newly
-cut carries one — refs already tagged predate the rule and stay. The `+N`
-staging counter is not a component and never trips it.
+digits) — refs already tagged predate the rule and stay. The `+N` staging
+counter is not a component and never trips it.
 
-The tag step tags only the refs with no tag yet, so a plugin whose version did
-not move is skipped and its entry stays byte-identical — that is what makes
-releases per-plugin. It pushes the tags in one push.
+Each run releases one plugin, so a plugin whose version did not move is never
+touched and its entry stays byte-identical — that is what makes releases
+per-plugin.
 
 **No GitHub Release and no npm publish.** The tag *is* the release. Users move
 with `claude plugin marketplace update virajp-plugins` (re-reads the pins) then
 `claude plugin update <name>` (fetches them) — both steps, or nothing moves.
 
 If `plugins.yml` goes red on `main` with *"marketplace.json pins X, which is not
-a tag"*, the merge landed and the tags did not. Run
-`mise run p:plugins:release -- --tag-only` on `main`.
+a tag"*, the merge landed and the tag did not. Run that plugin's
+`release:<plugin>:production` again from `develop`: it resumes, and tags.
 
 ## Releasing the installer CLI
 
@@ -188,24 +180,25 @@ keeps the strongest npm trust level (trusted publisher).
 
 ### 1. Bump, merge and tag
 
-`p:i:release` bumps `package.json` (through `p:i:version` when the manifest
-equals the tag on a clean tree, by direct write otherwise), commits on
-`develop`, merges, and on `main` refuses a version carrying a 13 or 17
-component, refuses if `installer-vX.Y.Z` already exists, runs `p:i:test`,
-creates the annotated tag, then pushes **`main` first and the tag second** and
+`release:installer:production` runs `p:i:release`: it refuses if
+`installer-vX.Y.Z` already exists, runs `p:i:test`, bumps `package.json`,
+commits on `develop`, lands it on `main` with `git:merge:main` (which pushes
+**`main` first**), tags `main` with `git:tag --push` (the tag second), and
 watches the `release.yml` run with `gh run watch --exit-status`, so the task
 only succeeds if the publish pipeline does. It needs `gh` installed and
-authenticated, and checks it **before** any bump, commit or merge — in full mode
-and under `--tag-only`.
+authenticated, and checks it **before** any bump, commit or merge.
 
 The push order is load-bearing: `release.yml` checks the tagged commit is
 reachable from `origin/main`, so a tag arriving before the branch fails that
-gate. `p:plugins:release` pushes tags alone because no plugin tag is checked for
-reachability.
+gate. `p:plugins:release` takes the same order, though no plugin tag is checked
+for reachability.
 
-`--ci` runs the same bump, commit, merge and tag, then stops, with no push of
-the tag and no watch. `deps-update.yml` passes it, having raised the installer
-to `PATCH` and committed the refresh first. Do not pass it by hand.
+`--ci` (the task `release:installer:ci`) runs the same bump, commit and merge,
+then makes an annotated, unsigned tag with `git tag --annotate` and stops, with
+no push of the tag and no watch. `deps-update.yml` runs it, having raised the
+installer to `PATCH` and committed the refresh first, then pushes the tag and
+dispatches `release.yml` — a tag a bot pushes cannot start a workflow. Do not
+run it by hand.
 
 ### 2. Cut the GitHub Release
 
@@ -232,19 +225,14 @@ nothing. Same shape as the installer.
 
 ### 1. Bump, merge and tag
 
-`p:site:release` checks `gh` first, before it bumps anything, then bumps
-`site/package.json` — through `p:site:version` when the manifest equals the last
-tag and the tree is clean, by direct write otherwise — commits on `develop`,
-merges, and on `main` refuses a version carrying a 13 or 17 component, refuses
-if `site-vX.Y.Z` already exists, runs `mise run p:site:check`, checks `gh` again
-before it creates the annotated tag (the only check under `--tag-only`), then
-pushes **`main` first and the tag second** and watches the `site.yml` run with
-`gh run watch --exit-status`, so the task only succeeds if the deploy does. The
-push order is load-bearing for the same reason as the installer's: `site.yml`
-checks the tagged commit is reachable from `origin/main`.
-
-`--ci` stops after the tag, with no push and no watch. Nothing passes it today;
-do not pass it by hand.
+`release:site:production` runs `p:site:release`: it refuses if `site-vX.Y.Z`
+already exists, checks `gh`, runs `mise run p:site:check`, bumps
+`site/package.json`, commits on `develop`, lands it on `main` with
+`git:merge:main` (**`main` first**), tags `main` with `git:tag --push` (the tag
+second) and watches the `site.yml` run with `gh run watch --exit-status`, so the
+task only succeeds if the deploy does. The push order is load-bearing for the
+same reason as the installer's: `site.yml` checks the tagged commit is
+reachable from `origin/main`.
 
 ### 2. Cut the GitHub Release
 
@@ -310,7 +298,7 @@ release.
 ## Before cutting
 
 Confirm you are on `develop` with a clean tree, that a plugin release has been
-through the local stage above, that `mise run p:release -- --dry-run` names the
-versions the user expects, and that the change being released has its docs
+through the local stage above, that the own task's `--dry-run` names the
+version the user expects, and that the change being released has its docs
 reconciled — `readme.md`, `CLAUDE.md` and
 `site/src/content/docs/plugins/<plugin>.md` ship with the change, not after it.

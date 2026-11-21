@@ -31,43 +31,48 @@ since git runs `pre-merge-commit` for those and only that hook type is
 uninstalled here; the exception is a merge that stops on a **conflict**, whose
 resolution ends in a real commit. Remotely, the `protected-branches` ruleset
 blocks force-push and deletion on both branches, and `release-tags` does the
-same for `refs/tags/*-v*`. Neither requires a PR or a green check, so
-`p:release`, `p:plugins:release`, `p:i:release`, `p:site:release` and
-`deps-update.yml` all still push directly.
+same for `refs/tags/*-v*`. Neither requires a PR or a green check, so the
+`release:*` tasks and `deps-update.yml` all still push directly.
 
 **The landing model is per branch.** `[tools.git.branch.<branch>].merge_model`
 in `.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
-push) or `pr` (push and open a pull request), read by `code:merge:develop` and
-`code:merge:main`. A missing file or key is `direct`, which is what this repo
+push) or `pr` (push and open a pull request), read by `git:merge:develop` and
+`git:merge:main`. A missing file or key is `direct`, which is what this repo
 holds.
 
 **A release task bumps, commits and merges, then tags — and `main` stays
 merge-only.** No person and no plan bumps a version by hand: a landing plan
 records a level per project (`NONE`, `PATCH`, `MINOR`, `MAJOR`), and
-`/vwf:execute` raises it at landing, the highest level winning; the release
-tasks read it from `.config/releases.yaml`. After R3a, `/vwf:execute` writes the
-levels to `.config/bootstrap/releases.toml`; the release tasks read it once the
-user switches them. `p:plugins:release` (keys `vwf`, `stackgen`), `p:i:release`
-(`installer`) and `p:site:release` (`site`) each read only their own keys, run
-from `develop`, bump each project from its **last tag** at the higher of the
-recorded level and the level an untagged manifest implies against that tag —
-never below the manifest, which is the floor — clear their keys, commit on
-`develop`, push, merge `develop` into `main` with `code:merge:main`, tag on
-`main`, push, and go back to `develop`. `p:release` composes them — each
-`--no-commit`, one bump commit, one merge, then each `--tag-only` — and
-`/release` calls it. The bump is an ordinary `develop` commit that reaches
-`main` by merge, so the `no-commit-to-branch` hook is never skipped; under a
-`pr` merge model `code:merge:main` only opens a PR, so every full run, `--ci`
-and `p:release` refuse unless `[tools.git.branch.main].merge_model` in
-`.config/bootstrap.toml` is `direct`, a missing file or key reading `direct` —
-the fallback is `--no-commit`, the PR landed by hand, then `--tag-only`. The
+`/vwf:execute` raises it at landing, the highest level winning, in
+`.config/bootstrap/releases.toml` (`format = 3`, then one `<project> = "LEVEL"`
+line each). Each release is a `[release.<project>.<kind>]` table of
+`.config/bootstrap/repo.toml` with bootstrap's `type = "task"`, and bootstrap
+ships its task `release:<project>:<kind>`, which runs this repo's own task with
+fixed arguments — `release:vwf:production` and `release:stackgen:production`
+run `p:plugins:release --plugin <name>`, `release:installer:production` runs
+`p:i:release`, `release:installer:ci` runs `p:i:release --ci` and
+`release:site:production` runs `p:site:release`; `--dry-run` on a `release:*`
+task only prints the command. The three own tasks share one flow, `release()` in
+`.config/mise/tasks/_scripts/local.py`, which reads and clears the levels itself
+(tomllib and a line edit, not `bootstrap config`: the engine is a macOS binary
+and `deps-update.yml` runs on Linux). It reads only the project's own key, runs
+from `develop` on a clean tree, bumps the project from its **last tag** by the
+recorded level — never below the manifest, which is the floor — runs the
+project's preflight (`p:i:test`, `p:site:check`; none for a plugin), clears the
+key, makes one commit `ops: release <tag>` on `develop`, pushes it, lands
+`develop` on `main` with `git:merge:main` (a fast-forward, so `main` equals
+`develop` after it), and tags `main` with bootstrap's `git:tag <tag> --push` — a
+signed annotated tag, the only thing pushed. A level `NONE` with a manifest
+equal to the last tag is "Nothing to release"; a level `NONE` with a manifest
+above a missing tag resumes a run that stopped after its commit, landing and
+tagging it with no new bump. The bump is an ordinary `develop` commit that
+reaches `main` by merge, so the `no-commit-to-branch` hook is never skipped. The
 targets **skip past 13 and 17** rather than land on one — the bumped component
-stepped past the number, through the same guard `p:i:version` and
-`p:site:version` use, so `1.1.12` patched is `1.1.14` — and all three release
-tasks **refuse** to tag a version carrying such a component, before the tag name
-is built. This reverses the earlier rule that a release task only tags
-(2026-10-08): tagging only what had landed left every bump to a hand edit, which
-is what the recorded levels retire. The full ritual is the `release` skill.
+stepped past the number, so `1.1.12` patched is `1.1.14` — and a manifest above
+the target that carries such a component is refused. This reverses the earlier
+rule that a release task only tags (2026-10-08): tagging only what had landed
+left every bump to a hand edit, which is what the recorded levels retire. The
+full ritual is the `release` skill.
 
 The branch alone would not hold anything back, though, because a merge to `main`
 is what publishes. What decouples the two is that **every plugin is pinned to
@@ -76,7 +81,7 @@ its own tag** in the marketplace manifest, so shipping is a deliberate act:
 ```text
 a plan lands on develop                → /vwf:execute raises the level in .config/bootstrap/releases.toml
 mise run p:plugins:local               → stages X.Y.Z+N, this machine only
-mise run p:release                     → bumps, commits, merges to main, creates + pushes the tags
+mise run release:<plugin>:production   → bumps, commits, merges to main, creates + pushes the tag
 ```
 
 The second line is the **local half** of a release: it publishes nothing,
@@ -103,9 +108,9 @@ runs between releases lives only in the gitignored staged copies
 `p:plugins:local` writes (`dev-marketplace.md`), so no iteration touches git,
 and the `+N` is not a component.
 
-`p:plugins:release` tags **only** the plugins whose ref has no tag yet, which is
-what makes releases per-plugin: a plugin with no recorded level and a manifest
-equal to its tag is skipped, so its entry stays byte-identical and
+`p:plugins:release --plugin <name>` releases **one** plugin, which is what makes
+releases per-plugin: a plugin with no recorded level and a manifest equal to its
+tag is "Nothing to release", so its entry stays byte-identical and
 `claude plugin update` sees nothing for it. It bumps only on `develop` and on a
 clean tree, and tags only on `main` — a tag cut anywhere else would publish
 content `main` never carried.
@@ -153,8 +158,8 @@ loads the working tree for that session, no install and no cache.
 - **`plugins.yml`** — validates the plugin toolkit on every push to `main` or
   `develop` and every PR: `p:plugins:marketplace --check`, then
   `p:plugins:inventory --check`, then `p:plugins:check`, then the vitest suites,
-  then `p:plugins:npm-normalize-test`, then `p:releases:test` (the release-level
-  functions' table test), then `tsc --noEmit` per project. The order matters —
+  then `p:plugins:npm-normalize-test`, then `p:releases:test` (the table test of
+  `_scripts/local.py`), then `tsc --noEmit` per project. The order matters —
   proving the two committed generated files are what their sources generate
   *before* validating anything means a stale one fails as staleness rather than
   as some confusing downstream assertion. On `main` only it adds one more gate:
@@ -186,13 +191,16 @@ loads the working tree for that session, no install and no cache.
 - **`deps-update.yml`** — monthly cron (+ manual dispatch): `pnpm update`
   (bounded by the cooldown below); if anything changed, `osv-scanner` gates on
   any known-vulnerable package, then it cuts a **patch release** — raising
-  `installer` to `PATCH` in `.config/releases.yaml` the way a landing plan does,
+  `installer` to `PATCH` in `.config/bootstrap/releases.toml` the way a landing
+  plan does (through `_scripts/local.py`, since the engine does not run on
+  Linux),
   committing the refresh and that level on **`develop`**, failing on a dirty
-  tree before anything is pushed, pushing `develop` with `-u` (`code:merge:main`
+  tree before anything is pushed, pushing `develop` with `-u` (`git:merge:main`
   reads `develop@{u}`), pointing a local `main` at `origin/main` with
-  `git branch -f`, then running `mise run p:i:release --ci` — which bumps,
-  commits, merges with `code:merge:main` and tags, with no tag push and no watch
-  — and pushing the tag. It takes the same merge-only route a human does. It
+  `git branch -f`, then running `mise run release:installer:ci` — which bumps,
+  commits, merges with `git:merge:main` and makes an annotated, unsigned tag,
+  with no tag push and no watch — and pushing the tag. It takes the same
+  merge-only route a human does. It
   then **delegates the npm publish by dispatching `release.yml` on the new tag**
   (`gh workflow run release.yml
   --ref <tag>`, using the built-in
@@ -223,7 +231,7 @@ loads the working tree for that session, no install and no cache.
   tag, after `build`, and only once the tag is proven to match
   `site/package.json`'s version and to be reachable from `main` — the same two
   verifications `release.yml` makes, so a merge to `main` ships nothing until
-  `mise run p:site:release` cuts the tag. It sets up mise and installs the
+  `release:site:production` cuts the tag. It sets up mise and installs the
   workspace first, so the `wrangler` pinned in `site/package.json` is the one
   that deploys, then runs `cloudflare/wrangler-action` (pinned by commit) with
   the repository secrets `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`.
@@ -272,30 +280,33 @@ with it.
 
 ## Cutting a release
 
-One ritual, on `develop` with a clean tree:
+One ritual per project, on `develop` with a clean tree:
 
 ```sh
-mise run p:release -- --dry-run # one line per project: tag, level, → version | skip | refused
-mise run p:release
+mise run p:plugins:release -- --plugin vwf --dry-run # <project>: <last> -> <target> (<LEVEL>), tag <tag>
+mise run release:vwf:production
 ```
 
-`--dry-run` writes nothing and checks no branch. `p:release` stops on any
-`refused` line; checks `gh` and runs `p:i:test` and `p:site:check` for the
-projects that need them before the first bump; then makes one bump commit, one
-merge, and tags plugins, installer and site in that order, its own tag steps
-carrying `RELEASE_GATES_DONE=1` so those gates are not run twice. A failure
-stops the run and prints the commands that resume it, skipping any tag already
-on origin, with a resolve-or-abort hint when the merge stopped. One task alone —
-`p:plugins:release`, `p:i:release`, `p:site:release` — runs the same sequence
-for its own project.
+The own task's `--dry-run` writes nothing and checks no branch; `--dry-run` on a
+`release:*` task only prints the command it runs. A run with level `NONE` and a
+manifest equal to the last tag prints "Nothing to release" and exits 0.
+Otherwise it checks the branch, the tree and that the tag is new, runs the
+project's preflight (`p:i:test` for the installer, `p:site:check` for the site),
+writes the version, makes one commit `ops: release <tag>`, pushes `develop`,
+lands it on `main` with `git:merge:main` and tags `main` with `git:tag --push`.
+A run that stopped after its commit resumes on the next run: the manifest is
+above a tag that does not exist, so it lands and tags with no new bump. There
+is no run-all task: release each project with its own
+`release:<project>:production` task.
 
 The plugins get no npm and no GitHub Release — the tag *is* the release, and
 users move on `claude plugin marketplace update virajp-plugins`. The installer
 and the site each get a GitHub Release for the tag: every `installer-vX.Y.Z` and
 `site-vX.Y.Z` tag carries one, so a missing Release means a missed step. Their
-tasks push `main` before the tag (`release.yml` and `site.yml` check
-reachability) and watch the run. Prefer releasing the installer via CI over the
-local `p:i:publish`, so every version keeps the strongest npm trust level.
+tasks land `main` before the tag (`release.yml` and `site.yml` check
+reachability) and watch the run with `gh run watch`. Prefer releasing the
+installer via CI over the local `p:i:publish`, so every version keeps the
+strongest npm trust level.
 
 **Ask the user before running any of them** — always; no plan carries a release
 step.

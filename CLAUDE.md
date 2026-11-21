@@ -2,8 +2,9 @@
 
 ## Rules
 
-- ALWAYS ask user before running a `p:release`, `p:i:release`,
-  `p:plugins:release` or `p:site:release` task — `--dry-run` alone excepted
+- ALWAYS ask user before running a release task —
+  `release:<project>:production`, `release:installer:ci`, `p:plugins:release`,
+  `p:i:release` or `p:site:release` — `--dry-run` alone excepted
 - **Docs ship with the change.** Any change to plugin behavior must reconcile
   `readme.md`, this file, and the manual under `site/src/content/docs/` in the
   same commit — stale docs are more harmful than no docs
@@ -197,9 +198,9 @@ inventory and check in that order — freshness before validity:
   the [`plugin-authoring`][auth] skill's `references/checks.md`.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
-- **`p:releases:test`** — table-tests the release-level functions in
-  `.config/mise/tasks/_scripts/local`, the 13/17 skip and "highest wins" among
-  them. In `plugins.yml`, not in pre-commit.
+- **`p:releases:test`** — table-tests `.config/mise/tasks/_scripts/local.py`:
+  the version guard and its 13/17 skip, the manifest floor and the
+  `releases.toml` levels. In `plugins.yml`, not in pre-commit.
 - **`vitest run`** — the `scripts/` and `installer/` suites.
 - **`tsc --noEmit`** per TypeScript project — `installer/` and `scripts/`.
 - **`p:site:check`** — the website's gate: `astro check`, `p:site:build` (Astro
@@ -208,9 +209,8 @@ inventory and check in that order — freshness before validity:
   `llms-full.txt`, plus each page's markdown alternate link). Runs in
   `site.yml`, not `plugins.yml`, and not in pre-commit. Beside it:
   **`p:site:dev`**, **`p:site:build`**, **`p:site:icons`** (rasterizes the
-  committed favicon set, by hand when the mark changes), **`p:site:version`**
-  (kept for hand use) and **`p:site:release`**, which bumps, merges and tags —
-  see CI & Releases.
+  committed favicon set, by hand when the mark changes) and
+  **`p:site:release`**, which bumps, merges and tags — see CI & Releases.
 
 Beside them the local gate runs **tool-neutral hooks** — `format`, `lint` and
 `sec` among them — each of which calls a mise task rather than a tool. Those
@@ -311,9 +311,8 @@ marketplace against the default branch, so `main` stays default and PRs target
 remotely. The landing model is **per branch** —
 `[tools.git.branch.<branch>].merge_model`
 in `.config/bootstrap.toml`, `direct` or `pr`, a missing file or key reading
-`direct`. A release task bumps, commits on `develop`, merges to `main` with
-`code:merge:main`, and only then tags — so `main` stays merge-only; that full
-sequence refuses unless `[tools.git.branch.main].merge_model` is `direct`.
+`direct`. A release task bumps, commits on `develop`, lands `develop` on `main`
+with `git:merge:main`, and only then tags `main` — so `main` stays merge-only.
 
 Every plugin is pinned to its own tag in the marketplace manifest, which is what
 decouples **merged** from **released**. Three tag families, all namespaced:
@@ -331,17 +330,17 @@ writes, so `claude plugin update` sees each edit without a commit.
 
 **13 and 17 are never issued as a version component** — the two plugin
 manifests, the installer, the site, `config_format`, `blueprint_format` alike.
-`p:plugins:check` refuses such a manifest; the release tasks — and `p:i:version`
-and `p:site:version`, which they call — **skip past** the number, computing the
-target first, stepping the bumped component past a 13 or 17 and printing what
-they skipped, refusing before they write anything when the level cannot reach
-the forbidden component; all three release tasks **refuse** to tag one. The
-guard is four functions in `.config/mise/tasks/_scripts/local`, this repo's own
-sidecar beside bootstrap's `helpers`, which no pack file may source; the
-release-level functions sit beside it — `releases_level`, `releases_raise`,
-`releases_clear`, `level_max`, `level_implied` and `release_target`, over a
-private `level_rank`. Versions issued before the rule stand, and the `+N`
-staging counter is not a component.
+`p:plugins:check` refuses such a manifest; the release tasks **skip past** the
+number, computing the target first, stepping the bumped component past a 13 or
+17 and printing what they skipped, refusing before they write anything when the
+level cannot reach the forbidden component, and refusing a manifest above the
+target that carries one. The guard is `forbidden`, `bump`, `next_version` and
+`release_target` in `.config/mise/tasks/_scripts/local.py`, this repo's own
+Python module beside bootstrap's `helpers.py`, which nothing bootstrap ships may
+import; the release-level functions sit beside it — `read_level`,
+`raise_level` and `clear_level` — and so does `release()`, the one release flow
+of every project. Versions issued before the rule stand, and the `+N` staging
+counter is not a component.
 
 **A release is two stages, and only the second reaches anyone else.** Local
 first — `mise run p:plugins:local` stages the changed plugins into the dev
@@ -353,13 +352,21 @@ staged plugin loads in the next **restarted** session. Public second — the tag
 
 **No person and no plan bumps a version by hand**, and a tracked version moves
 only at release. A plan records each project's release level, and `/vwf:execute`
-raises it at landing. The release tasks read it from `.config/releases.yaml`.
-After R3a, `/vwf:execute` writes the levels to
-`.config/bootstrap/releases.toml`; the release tasks read it once the user
-switches them. Each bumps its project from the last tag at the higher of the
-recorded level and the one an untagged manifest implies, never below the
-manifest, and clears its own keys; `p:release` runs all three with one bump
-commit and one merge, then tags each. **Ask the user before running `p:release`,
+raises it at landing in `.config/bootstrap/releases.toml`, which the release
+tasks read and clear through `_scripts/local.py` (not `bootstrap config`: the
+engine is a macOS binary and `deps-update.yml` runs on Linux). Each release is
+a `[release.<project>.<kind>]` table of `.config/bootstrap/repo.toml`, and
+bootstrap ships its task `release:<project>:<kind>`, which runs the own task
+with fixed arguments: `release:vwf:production` and
+`release:stackgen:production` run `p:plugins:release --plugin <name>`,
+`release:installer:production` runs `p:i:release` (`release:installer:ci` adds
+`--ci`), and `release:site:production` runs `p:site:release`;
+`release:<plugin>:local` runs `p:plugins:local --plugin <name>`, the local
+stage, which publishes nothing. Each release task bumps its project from the
+last tag by the recorded level, never below the manifest, clears its own key,
+makes one commit `ops: release <tag>` on `develop`, lands it on `main` and tags
+`main`. **Ask the user before running a
+`release:<project>:production` task, `release:installer:ci`,
 `p:plugins:release`, `p:i:release` or `p:site:release`** — always; no plan
 carries a release step.
 
@@ -445,9 +452,9 @@ Upgrading is `claude plugin marketplace update virajp-plugins` then
 `main`, which `plugins.yml` validates on every push; each plugin's **content**
 comes from the `<name>-v<version>` tag that manifest pins it to. So a merge to
 `main` no longer reaches users — only a tag does, which is what
-`mise run p:plugins:release` cuts. The `marketplace update` step is what picks
-up new refs, and it is not optional: without it `plugin update` re-reads the
-same pins and finds nothing.
+`mise run release:<plugin>:production` cuts. The `marketplace update` step is
+what picks up new refs, and it is not optional: without it `plugin update`
+re-reads the same pins and finds nothing.
 
 **Nothing is gated at install time**, so the first thing to run afterwards is
 `/vwf:doctor` — it is what reports a missing required binary, as a **blocking**

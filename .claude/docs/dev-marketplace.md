@@ -11,8 +11,9 @@ You want this if you are developing the plugins. If you are using them, you want
 
 `.claude-plugin/marketplace.json` pins every plugin to a `<name>-v<version>`
 tag. That is exactly right for users: a merge to `main` ships nothing until
-`mise run p:plugins:release` cuts the tag, so unreleased work can live on
-`develop`. It is exactly wrong for the author, who needs the unreleased tree.
+`mise run release:<plugin>:production` cuts the tag, so unreleased work can
+live on `develop`. It is exactly wrong for the author, who needs the unreleased
+tree.
 One file cannot be both, so there are two — generated together, from the same
 plugin manifests, differing only in each entry's `source`.
 
