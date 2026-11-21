@@ -32,8 +32,17 @@ import {
   join,
   resolve as resolvePath,
 } from "node:path";
-import { abandon, close, LandError, open, worktreeDir } from "../../../git-workflow/scripts/lib/land.mjs";
-import { parseFrontmatter, parseYaml } from "./yaml.mjs";
+import {
+  abandon,
+  close,
+  LandError,
+  open,
+  worktreeDir,
+} from "../../../git-workflow/scripts/lib/land.mjs";
+import {
+  parseFrontmatter,
+  parseYaml,
+} from "./yaml.mjs";
 
 /** A refusal that is not a queue answer; plan.mjs exits 2 on it. */
 export class QueueError extends Error {
@@ -209,7 +218,8 @@ class Product {
   }
 
   clonedMembers() {
-    return this.members
+    return this
+      .members
       .filter((m) => m && typeof m.name === "string")
       .map((m) => this.member(m.name).dir)
       .filter((d) => d !== undefined);
@@ -551,7 +561,8 @@ export function claim({ base, folder, worktree, branches }) {
     const out = {
       claimed: false,
       kind: "member-failed",
-      reason: `the row is RUNNING at ${baseResult.commit}, but the member run commit failed: ${memberResult.reason}; make the plan-management unclaim ${id} request`,
+      reason:
+        `the row is RUNNING at ${baseResult.commit}, but the member run commit failed: ${memberResult.reason}; make the plan-management unclaim ${id} request`,
     };
     return warning ? { ...out, warning } : out;
   }

@@ -17,7 +17,10 @@ import {
   writeFileSync,
 } from "node:fs";
 import { tmpdir } from "node:os";
-import { dirname, join } from "node:path";
+import {
+  dirname,
+  join,
+} from "node:path";
 import {
   afterEach,
   beforeEach,
@@ -263,7 +266,8 @@ describe("next", () => {
         `PLAN_NOW=2026-11-13T01:00:00.000Z node "${PLAN}" set docs/plans/index.json plans.${A}.status RUNNING`,
         "git add -A && git commit -q -m 'docs: plan queue — other session' && git push -q origin develop",
         "",
-      ].join("\n"),
+      ]
+        .join("\n"),
     );
     const r = start(["next"], { RACE: race });
     expect(r.status).toBe(0);
@@ -526,7 +530,8 @@ describe("a fresh run", () => {
         `PLAN_NOW=2026-11-13T01:00:00.000Z node "${PLAN}" set docs/plans/index.json plans.${A}.status RUNNING`,
         "git add -A && git commit -q -m 'docs: plan queue — other session' && git push -q origin develop",
         "",
-      ].join("\n"),
+      ]
+        .join("\n"),
     );
     const r = start([`docs//plans/${A}`], { RACE: race });
     expect(r.status).toBe(1);
@@ -556,7 +561,9 @@ describe("a resume", () => {
         { event: "question", id: "Q2", unit: "U1", text: "t", options: "o", why: "w" },
         { event: "question", id: "Q3", unit: "U2", text: "t3", options: "o3", why: "w3" },
         { event: "answer", id: "Q3", decision: "D2" },
-      ].map((e) => JSON.stringify(e)).join("\n") + "\n",
+      ]
+        .map((e) => JSON.stringify(e))
+        .join("\n") + "\n",
     );
     return log;
   }
@@ -571,7 +578,10 @@ describe("a resume", () => {
       events: [{ id: "Q2", unit: "U1", text: "t", options: "o", why: "w" }],
     });
     expect(trail(A).slice(-4)).toEqual(["run.start", "plan.snapshot", "phase.start:checks", "phase.end:checks"]);
-    expect(events(A).at(-4)).toMatchObject({ mode: "resume", folder: join(base, ".worktrees", "alpha", "docs", "plans", A) });
+    expect(events(A).at(-4)).toMatchObject({
+      mode: "resume",
+      folder: join(base, ".worktrees", "alpha", "docs", "plans", A),
+    });
   });
 
   it("refuses when another session's marker names the plan log", () => {

@@ -1,0 +1,4 @@
+format = 3
+site = "MINOR"
+stackgen = "MAJOR"
+vwf = "MAJOR"

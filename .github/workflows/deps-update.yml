@@ -56,14 +56,14 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
           # The refresh is an installer patch: record it the way a landing plan does.
-          source .config/mise/tasks/_scripts/helpers
-          source .config/mise/tasks/_scripts/local
-          releases_raise .config/releases.yaml installer PATCH
+          # The bootstrap engine is a macOS binary, so the own library writes the level.
+          MISE_PROJECT_ROOT="$PWD" mise x -- python -B -c \
+            'import sys; sys.path.insert(0, ".config/mise/tasks/_scripts"); import local; local.raise_level("installer", "PATCH")'
 
-          git add pnpm-lock.yaml package.json .config/releases.yaml
+          git add pnpm-lock.yaml package.json .config/bootstrap/releases.toml
           mise x -- git commit -m "ops(deps): monthly dependency refresh"
 
-          # code:merge:main refuses untracked files, uncommitted changes and
+          # git:merge:main refuses untracked files, uncommitted changes and
           # unpushed commits on develop. Fail here, before anything is pushed,
           # naming what is dirty, rather than inside the release after it.
           dirty="$(git status --porcelain)"
@@ -72,19 +72,19 @@ jobs:
             printf '%s\n' "$dirty"
             exit 1
           fi
-          # -u: code:merge:main's unpushed check reads develop@{u}.
+          # -u: git:merge:main's unpushed check reads develop@{u}.
           git push -u origin develop
 
-          # code:merge:main needs a local main to check out.
+          # git:merge:main needs a local main to check out.
           git fetch origin main
           git branch -f main origin/main
 
-          # The same merge-only route a person takes: p:i:release bumps from the
-          # recorded level, commits on develop, merges with code:merge:main and
-          # tags on main. --ci stops at the tag — this job owns the push and the dispatch.
-          mise run p:i:release -- --ci
+          # The same route a person takes: the ci kind of the installer bumps from
+          # the recorded level, commits on develop, lands it with git:merge:main and
+          # tags main. --ci stops at the tag — this job owns the push and the dispatch.
+          mise run release:installer:ci
           version="$(node -p "require('./package.json').version")"
-          # Must match the tag p:i:release created and release.yml's installer-v* filter.
+          # Must match the tag release:installer:ci created and release.yml's installer-v* filter.
           tag="installer-v${version}"
           git push origin "$tag"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"

@@ -45,11 +45,25 @@
 // start writes nothing to the log.
 
 import { spawnSync } from "node:child_process";
-import { existsSync, readdirSync, readFileSync } from "node:fs";
+import {
+  existsSync,
+  readdirSync,
+  readFileSync,
+} from "node:fs";
 import { homedir } from "node:os";
-import { basename, dirname, isAbsolute, join, relative, resolve as resolvePath } from "node:path";
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve as resolvePath,
+} from "node:path";
 import { isDeepStrictEqual } from "node:util";
-import { ChecksError, runChecks } from "../../doctor/scripts/lib/index.mjs";
+import {
+  ChecksError,
+  runChecks,
+} from "../../doctor/scripts/lib/index.mjs";
 import {
   claim,
   pick,
@@ -60,7 +74,10 @@ import {
   tipRef,
 } from "../../plan-management/scripts/lib/queue.mjs";
 import { validateFolder } from "../../plan-management/scripts/lib/schema.mjs";
-import { parseYaml, YamlError } from "../../plan-management/scripts/lib/yaml.mjs";
+import {
+  parseYaml,
+  YamlError,
+} from "../../plan-management/scripts/lib/yaml.mjs";
 
 const USAGE = "usage: node start.mjs <folder|next> --branch <name> [--member-branch <name>] "
   + "[--worktree <repo-relative path>] [--continue-unknown-language]";
@@ -265,7 +282,9 @@ function freshRefusals(doc) {
       }
       const earlier = reviews.some((o) => o.wave < r.wave && covers.get(o.id).has(u.id));
       if (!earlier) {
-        out.push(`a review row placed wrong: ${r.id} does not cover ${u.id}, an earlier unit no earlier review row covers`);
+        out.push(
+          `a review row placed wrong: ${r.id} does not cover ${u.id}, an earlier unit no earlier review row covers`,
+        );
       }
     }
   }
@@ -334,7 +353,9 @@ function entryText(rows, e) {
   if (e.kind === "cycle") {
     const m = e.reason.match(/covers doc (\S+) reads implementation: (\S+)/);
     return m
-      ? `Prerequisite plan ${e.entry} has not been executed and merged (${m[1]} is implementation: ${m[2]}). Run /vwf:execute ${e.entry} first.`
+      ? `Prerequisite plan ${e.entry} has not been executed and merged (${m[1]} is implementation: ${
+        m[2]
+      }). Run /vwf:execute ${e.entry} first.`
       : e.reason;
   }
   if (e.kind === "change") {
@@ -371,13 +392,16 @@ function resolveFolder(base, config, arg) {
     repoDir = resolvePath(base, member.path);
     if (!existsSync(join(repoDir, ".git"))) {
       throw new Refusal(
-        `the target repo ${row.target_repo} of ${id} is not on this machine; fetch it with \`${fetchCommand(config, member)}\`, then re-run /vwf:execute ${id}`,
+        `the target repo ${row.target_repo} of ${id} is not on this machine; fetch it with \`${
+          fetchCommand(config, member)
+        }\`, then re-run /vwf:execute ${id}`,
       );
     }
   }
   const folder = row?.folder ?? relative(base, isAbsolute(arg) ? arg : resolvePath(base, arg));
   const tip = tipOf(repoDir);
-  const notCommitted = `${id} is not on ${tip.branch}: run the planner again on it, or land it by hand with git-workflow's land.mjs, then re-launch`;
+  const notCommitted =
+    `${id} is not on ${tip.branch}: run the planner again on it, or land it by hand with git-workflow's land.mjs, then re-launch`;
   const tipDoc = tipJson(repoDir, `${folder}/index.json`);
   if (tipDoc === null) {
     throw new Refusal(notCommitted);
@@ -396,12 +420,15 @@ function resolveFolder(base, config, arg) {
   const resolved = resolve({ base, folder, branches });
   if (!resolved.runnable) {
     throw new Refusal(
-      `${id} is not runnable: ${resolved.entries.filter((e) => !e.satisfied).map((e) => entryText(rows, e)).join("; ")}`,
+      `${id} is not runnable: ${
+        resolved.entries.filter((e) => !e.satisfied).map((e) => entryText(rows, e)).join("; ")
+      }`,
     );
   }
 
   if (row.status === "RUNNING") {
-    const another = `another session is running ${id}; re-run once it lands, or make the plan-management unclaim ${id} request when that run is gone`;
+    const another =
+      `another session is running ${id}; re-run once it lands, or make the plan-management unclaim ${id} request when that run is gone`;
     const wt = typeof tipDoc.run?.worktree === "string" ? resolvePath(repoDir, tipDoc.run.worktree) : null;
     if (wt === null || !existsSync(wt)) {
       throw new Refusal(another);
@@ -419,7 +446,9 @@ function resolveFolder(base, config, arg) {
     const refusals = resumeRefusals(doc);
     if (refusals.length > 0) {
       throw new Refusal(
-        `${refusals.join("; ")}; edit the folder in the worktree with plan.mjs (write a NN-review.md and append its units entry), then re-launch`,
+        `${
+          refusals.join("; ")
+        }; edit the folder in the worktree with plan.mjs (write a NN-review.md and append its units entry), then re-launch`,
       );
     }
     const gaps = (Array.isArray(doc.gaps) ? doc.gaps : [])
@@ -445,7 +474,9 @@ function resolveFolder(base, config, arg) {
   const local = readJsonFile(join(folderDir, "index.json"));
   if (local === null || !isDeepStrictEqual(local, tipDoc)) {
     throw new Refusal(
-      `the working copy of ${folder} is ${local === null ? "absent" : `not the one at ${tip.ref}`}: check out ${tip.branch}${tip.remote ? " and pull" : ""}, then re-run`,
+      `the working copy of ${folder} is ${
+        local === null ? "absent" : `not the one at ${tip.ref}`
+      }: check out ${tip.branch}${tip.remote ? " and pull" : ""}, then re-run`,
     );
   }
   validated(tipDoc, folderDir);
@@ -609,7 +640,9 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
             result: "blocked",
             projects,
             findings: rows,
-            message: `${folder}: unknown language ${rows.map((r) => r.subject).join(", ")}; ask continue or stop, and on continue re-run with --continue-unknown-language`,
+            message: `${folder}: unknown language ${
+              rows.map((r) => r.subject).join(", ")
+            }; ask continue or stop, and on continue re-run with --continue-unknown-language`,
           });
         }
       }
@@ -630,7 +663,9 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
       stop(`the checks failed: ${failed.message}`, "blocked");
       throw failed;
     }
-    const findings = checks.findings.filter((r) => r.severity === "blocking" || r.rule === "unknown-language" && r.severity !== "info");
+    const findings = checks.findings.filter((r) =>
+      r.severity === "blocking" || r.rule === "unknown-language" && r.severity !== "info"
+    );
     const blocking = findings.filter((r) => r.severity === "blocking");
     if (blocking.length > 0) {
       const why = `blocking findings: ${blocking.map((r) => `${r.rule} ${r.subject}`).join(", ")}`;
@@ -674,7 +709,13 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
     const unclaim = c.kind === "member-failed" && !c.reason.includes("unclaim")
       ? `; make the plan-management unclaim ${f.id} request`
       : "";
-    return result({ ...base_, projects, findings, claim: c, message: `${folder}: the claim failed: ${c.reason}${unclaim}` });
+    return result({
+      ...base_,
+      projects,
+      findings,
+      claim: c,
+      message: `${folder}: the claim failed: ${c.reason}${unclaim}`,
+    });
   }
 }
 

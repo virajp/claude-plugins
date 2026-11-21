@@ -10,8 +10,14 @@ import {
   realpathSync,
   statSync,
 } from "node:fs";
-import { delimiter, join } from "node:path";
-import { parseFrontmatter, parseYaml } from "../../../plan-management/scripts/lib/yaml.mjs";
+import {
+  delimiter,
+  join,
+} from "node:path";
+import {
+  parseFrontmatter,
+  parseYaml,
+} from "../../../plan-management/scripts/lib/yaml.mjs";
 
 /** A usage or internal error; checks.mjs exits 2 on it. */
 export class ChecksError extends Error {

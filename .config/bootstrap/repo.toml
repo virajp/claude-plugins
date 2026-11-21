@@ -2,7 +2,7 @@
 
 format = 3
 
-bootstrap_commit = "90b499a60ff741d401076e285065c0200b1667c2"
+bootstrap_commit = "3fc5604f3f51cf38cb88eda5bea47fbd86b6de81"
 core_branches = [ "main", "develop" ]
 environments = [ "dev", "ci" ]
 repo_name = "claude-plugins"
@@ -13,3 +13,48 @@ landing = "direct-commit"
 
 [commits]
 style = "conventional"
+
+[projects.vwf]
+folder = "plugins/vwf"
+
+[projects.stackgen]
+folder = "plugins/stackgen"
+
+[projects.installer]
+folder = "installer"
+
+[projects.site]
+folder = "site"
+
+[release.vwf.production]
+args = [ "--plugin", "vwf" ]
+task = "p:plugins:release"
+type = "task"
+
+[release.vwf.local]
+args = [ "--plugin", "vwf" ]
+task = "p:plugins:local"
+type = "task"
+
+[release.stackgen.production]
+args = [ "--plugin", "stackgen" ]
+task = "p:plugins:release"
+type = "task"
+
+[release.stackgen.local]
+args = [ "--plugin", "stackgen" ]
+task = "p:plugins:local"
+type = "task"
+
+[release.installer.production]
+task = "p:i:release"
+type = "task"
+
+[release.installer.ci]
+args = [ "--ci" ]
+task = "p:i:release"
+type = "task"
+
+[release.site.production]
+task = "p:site:release"
+type = "task"

@@ -10,6 +10,7 @@ import {
   expect,
   it,
 } from "vitest";
+// dprint-ignore
 // @ts-expect-error — a plain ESM script with no type declarations
 import { parseFrontmatter, parseYaml, YamlError } from "../../plugins/vwf/skills/plan-management/scripts/lib/yaml.mjs";
 
@@ -169,9 +170,9 @@ describe("the fake config files", () => {
     expect(doc.projects.app.stack.template).toBe("unresolved");
     expect(doc.projects.app.stack.backing_template).toBe("unresolved");
     expect(doc.harness).toEqual({
-      dev: true,
-      local_stack: { present: true },
-      health: false,
+      "dev": true,
+      "local_stack": { present: true },
+      "health": false,
       "test:load": false,
     });
     expect(doc.enforcement.rules["topology/iac-own-repo/infra"]).toEqual({

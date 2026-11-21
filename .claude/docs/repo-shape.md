@@ -265,53 +265,41 @@ one: a stack's own gates are bootstrap's.
   carries exactly one markdown alternate link to a file that exists),
   `p:site:icons` (rasterizes the committed favicon set from
   `public/brand/vwf-favicon.svg`, run by hand when the mark changes and part of
-  no gate), `p:site:version` (bumps `site/package.json`, no tag, **skipping past
-  a 13 or 17 component** — it computes the target first, stepping the bumped
-  component past the number, writes it in one call and prints what it skipped,
-  so `1.1.12` patched is `1.1.14`; it refuses before writing anything when the
-  level it was given cannot reach the forbidden component, as a patch bump never
-  clears a forbidden *minor*; kept for hand use, and called by `p:site:release`)
-  and `p:site:release` (bumps `site/package.json` from the last `site-v*` tag
-  and the recorded level, commits on `develop`, merges to `main`, tags
-  `site-v<version>` and watches `site.yml`, **refusing** a version that carries
-  such a component before the tag name is built). None of them runs in
-  `plugins.yml` or in pre-commit — `site.yml` owns them.
-- **`p:release`** and its three parts, `p:plugins:release`, `p:i:release` and
-  `p:site:release` — each reads its own keys in `.config/releases.yaml` (After
-  R3a, `/vwf:execute` writes the levels to `.config/bootstrap/releases.toml`;
-  the release tasks read it once the user switches them), bumps from the
-  project's last tag at the higher of the recorded level and the one an untagged
-  manifest implies, never below the manifest, commits on `develop`, merges to
-  `main` with `code:merge:main` and tags there; `p:release` runs the three as
-  one bump commit and one merge. Each of the three takes `--dry-run`,
-  `--no-commit` and `--tag-only`; `p:release` takes `--dry-run` alone. None runs
-  in a gate; the ritual is `/release`.
-- **`p:releases:test`** — a bash table test of the sidecar's release-level
-  functions below, the 13/17 skip and "highest wins" among its cases. It runs in
-  `plugins.yml`, not in pre-commit.
+  no gate) and `p:site:release` (bumps `site/package.json` from the last
+  `site-v*` tag and the recorded level, **skipping past a 13 or 17 component**,
+  so `1.1.12` patched is `1.1.14`, commits on `develop`, merges to `main`, tags
+  `site-v<version>` and watches `site.yml`). None of them runs in `plugins.yml`
+  or in pre-commit — `site.yml` owns them.
+- **`p:plugins:release`**, **`p:i:release`** and **`p:site:release`** — the
+  own release tasks, which bootstrap's `release:<project>:<kind>` tasks run
+  through the `[release.<project>.<kind>]` tables of
+  `.config/bootstrap/repo.toml` (`p:plugins:release --plugin <name>` for
+  `release:<plugin>:production`, `p:i:release --ci` for `release:installer:ci`).
+  Each reads its own key in `.config/bootstrap/releases.toml`, bumps from the
+  project's last tag by the recorded level, never below the manifest, makes one
+  commit `ops: release <tag>` on `develop`, lands it on `main` with
+  `git:merge:main` and tags `main` with `git:tag --push`. Each takes
+  `--dry-run`. None runs in a gate; the ritual is `/release`.
+- **`p:releases:test`** — a Python table test of `_scripts/local.py`: the
+  version guard and its 13/17 skip, the manifest floor and the `releases.toml`
+  levels. It runs in `plugins.yml`, not in pre-commit.
 
-The 13/17 guard itself is four functions — `version_forbidden`,
-`version_skip_note`, `version_bump` and `version_next` — in
-**`.config/mise/tasks/_scripts/local`**, this repo's own sidecar beside the
-bootstrap's `_scripts/helpers`. `version_bump LEVEL CURRENT` prints the plain
-result of the level; `version_next LEVEL CURRENT` prints that same result
-stepped past a forbidden component, and exits 1 without printing when the level
-it was given can never reach one. Beside the guard sit the release-level
-functions: `releases_level`, `releases_raise` and `releases_clear` read, raise
-and clear one flat `key: LEVEL` line of `.config/releases.yaml` with awk
-(`releases_level` refuses an unknown value or a duplicated key), `level_max` and
-`level_implied` compare levels and versions, and `release_target` turns a tag
-and a level into the next version through `version_next`, with the manifest as
-its floor — with a private `level_rank` helper under them. Six tasks source the
-sidecar on the line after they source `helpers`: `p:i:version` and
-`p:site:version` to skip, `p:i:release`, `p:site:release` and
-`p:plugins:release` to compute and refuse, and `p:releases:test` to test it —
-`p:release` reaches it only through the three; `deps-update.yml` sources it too,
-to raise the installer's level. `helpers` is bootstrap's and is replaced on
-every sync, the sidecar is the repo's
-and never is — and nothing a pack lands may source it.
-It carries a shebang and the exec bit, or the repo's own shell gate does not see
-it.
+The 13/17 guard itself is three functions — `forbidden`, `bump` and
+`next_version` — in **`.config/mise/tasks/_scripts/local.py`**, this repo's own
+Python module beside bootstrap's `_scripts/helpers.py`. `bump` returns the plain
+result of the level; `next_version` returns that same result stepped past a
+forbidden component, and raises `VersionError` when the level it was given can
+never reach one. Beside the guard sit the release-level functions:
+`read_level`, `raise_level` and `clear_level` read, raise and clear one
+`<project> = "LEVEL"` line of `.config/bootstrap/releases.toml` with tomllib
+and a line edit (`read_level` refuses an unknown value), and `release_target`
+turns a tag and a level into the next version through `next_version`, with the
+manifest as its floor. `release()` is the one release flow the three release
+tasks call. The release tasks and `p:releases:test` import it with the preamble
+of a bootstrap task; `deps-update.yml` imports it too, to raise the installer's
+level, because the bootstrap engine is a macOS binary and the workflow runs on
+Linux. `helpers.py` is bootstrap's and is replaced on every sync, `local.py` is
+the repo's and never is — and nothing a pack lands may import it.
 
 `p:plugins:check` is deliberately much smaller than the checker it replaced, and
 smaller again than the Python task before that. Whole families of assertion

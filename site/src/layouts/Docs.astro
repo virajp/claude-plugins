@@ -227,11 +227,8 @@ const jsonLd = id && section
 
     // The copy affordance on every code block, skipping mermaid fences (the
     // mermaid script swaps those for diagrams).
-    for (
-      const pre of document.querySelectorAll<HTMLElement>(
-        "article pre:not([data-language='mermaid'])",
-      )
-    ) {
+    const codeBlocks = "article pre:not([data-language='mermaid'])";
+    for (const pre of document.querySelectorAll<HTMLElement>(codeBlocks)) {
       const button = document.createElement("button");
       button.type = "button";
       button.className = "copy";

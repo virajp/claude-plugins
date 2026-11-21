@@ -216,7 +216,8 @@ tokenless — `fetchGithubJson` attaches the token, `fetchJson` never does.
 ## Releasing and documenting
 
 `installer-v<version>` tags trigger `release.yml` → npm publish; the ritual is
-`/release`, and **`p:i:release` is never run without asking the user**.
+`/release`, and **`release:installer:production`, `release:installer:ci` and
+`p:i:release` are never run without asking the user**.
 `release.yml`'s trigger surface stays untouched — npm allows one Trusted
 Publisher and validates the entry-point filename.
 

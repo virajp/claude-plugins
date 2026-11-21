@@ -68,7 +68,8 @@ exit $status
  * the $STUB_RACE script once, and skips the call itself when $STUB_SKIP is
  * set; every other call goes to the real git.
  */
-const GIT_STUB = (real: string) => `#!/bin/sh
+const GIT_STUB = (real: string) =>
+  `#!/bin/sh
 case "$*" in
   "$STUB_MATCH"*)
     if [ -n "$STUB_RACE" ] && [ -f "$STUB_RACE" ]; then
@@ -580,7 +581,8 @@ describe("claim", () => {
         `PLAN_NOW=2026-11-13T01:00:00.000Z node "${SCRIPT}" set docs/plans/index.json plans.${ID}.status RUNNING`,
         "git add -A && git commit -q -m 'docs: plan queue — other session' && git push -q origin develop",
         "",
-      ].join("\n"),
+      ]
+        .join("\n"),
     );
     const before = git(base, "rev-parse", "HEAD");
     const r = plan(base, ["claim", FOLDER], { RACE: race });

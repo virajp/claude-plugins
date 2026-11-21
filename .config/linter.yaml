@@ -41,9 +41,6 @@ ignores:
   - "docs/plans/**"
   # Design exports kept byte-for-byte — each folder is one design version.
   - "docs/design/**"
-  # The release levels: the release tasks clear each key, so after a release
-  # the file holds only its comments, which the YAML rules call an empty document.
-  - ".config/releases.yaml"
   # The fenced code blocks of the plugin docs: fragments with placeholders and
   # elisions, written to be read, not run. The prose of each doc stays linted.
   - "plugins/**/*.md/**"
@@ -94,3 +91,10 @@ configs:
       tailwindcss/no-invalid-properties: off
       tailwindcss/prefer-theme-tokens: off
       tailwindcss/use-baseline: off
+
+  # The layouts of the website export `prerender` for the pages that use them.
+  # The gate of bootstrap runs the linter with --no-ignore, so this rule now
+  # reads the .astro files, and it accepts the export only inside pages/.
+  - files: [ "site/**/*.astro" ]
+    rules:
+      astro/no-prerender-export-outside-pages: off

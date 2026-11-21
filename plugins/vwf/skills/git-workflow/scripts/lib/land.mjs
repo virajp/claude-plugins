@@ -21,7 +21,11 @@
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
+import {
+  dirname,
+  join,
+  resolve,
+} from "node:path";
 
 export const REMOTE = "origin";
 /** The clean retries of a rejected push before close refuses. */
@@ -183,7 +187,8 @@ function onBranch(main, into, tag, body) {
         result = {
           landed: false,
           kind: "failed",
-          reason: `git stash push "${tag}" created no new stash entry; any changes it took are in the stash under "${tag}" — check git stash list`,
+          reason:
+            `git stash push "${tag}" created no new stash entry; any changes it took are in the stash under "${tag}" — check git stash list`,
         };
         return;
       }
@@ -192,7 +197,8 @@ function onBranch(main, into, tag, body) {
         result = {
           landed: false,
           kind: "failed",
-          reason: `another stash (${sha}) landed on top of "${tag}" before it could be read; your changes are in the stash under "${tag}" — apply it by hand`,
+          reason:
+            `another stash (${sha}) landed on top of "${tag}" before it could be read; your changes are in the stash under "${tag}" — apply it by hand`,
         };
         return;
       }
@@ -229,7 +235,9 @@ function onBranch(main, into, tag, body) {
         if (at.ok && at.out === stashed) {
           git(main, ["stash", "drop", `stash@{${n}}`]);
         } else {
-          warn(`the stash moved before it could be dropped; the applied stash "${tag}" (${stashed}) is kept — drop it by hand`);
+          warn(
+            `the stash moved before it could be dropped; the applied stash "${tag}" (${stashed}) is kept — drop it by hand`,
+          );
         }
       }
     } else {
@@ -268,14 +276,43 @@ function mergeOnce(main, branch, message) {
 function pullRequest(worktree, branch, into, message, why) {
   const push = git(worktree, ["push", "-u", REMOTE, branch]);
   if (!push.ok) {
-    return { landed: false, kind: "failed", reason: `the merge was refused (${why}), and git push -u ${REMOTE} ${branch} failed: ${push.err}` };
+    return {
+      landed: false,
+      kind: "failed",
+      reason: `the merge was refused (${why}), and git push -u ${REMOTE} ${branch} failed: ${push.err}`,
+    };
   }
   const body = `The merge into ${into} was refused by the repo's hooks:\n\n${why}`;
-  const gh = mise(worktree, ["gh", "pr", "create", "--base", into, "--head", branch, "--title", message, "--body", body]);
+  const gh = mise(worktree, [
+    "gh",
+    "pr",
+    "create",
+    "--base",
+    into,
+    "--head",
+    branch,
+    "--title",
+    message,
+    "--body",
+    body,
+  ]);
   if (gh.ok) {
     return { landed: false, kind: "pr", url: gh.out.split("\n").pop(), branch };
   }
-  const glab = mise(worktree, ["glab", "mr", "create", "--target-branch", into, "--source-branch", branch, "--title", message, "--description", body, "--yes"]);
+  const glab = mise(worktree, [
+    "glab",
+    "mr",
+    "create",
+    "--target-branch",
+    into,
+    "--source-branch",
+    branch,
+    "--title",
+    message,
+    "--description",
+    body,
+    "--yes",
+  ]);
   if (glab.ok) {
     return { landed: false, kind: "pr", url: glab.out.split("\n").pop(), branch };
   }
@@ -284,7 +321,8 @@ function pullRequest(worktree, branch, into, message, why) {
     kind: "pr",
     url: null,
     branch,
-    reason: `the branch ${branch} is pushed, but no pull request could be opened (gh: ${gh.err}); open it into ${into} on the forge`,
+    reason:
+      `the branch ${branch} is pushed, but no pull request could be opened (gh: ${gh.err}); open it into ${into} on the forge`,
   };
 }
 
@@ -335,7 +373,12 @@ export function close({ worktree, into, message }) {
       if (merged.refused !== undefined) {
         return remote
           ? { refused: merged.refused }
-          : { landed: false, kind: "failed", reason: `the merge into ${into} was refused, and the repo has no remote for a pull request: ${merged.refused}` };
+          : {
+            landed: false,
+            kind: "failed",
+            reason:
+              `the merge into ${into} was refused, and the repo has no remote for a pull request: ${merged.refused}`,
+          };
       }
       if (!remote) {
         return { landed: true, commit: must(main, ["rev-parse", "HEAD"]) };
@@ -365,7 +408,8 @@ export function close({ worktree, into, message }) {
     return result.warning ? { ...pr, warning: result.warning } : pr;
   }
   if (result.landed && !remove(main, worktree, branch, false, into)) {
-    const note = `${into} has the change, but ${worktree} or its branch ${branch} could not be removed — remove them by hand`;
+    const note =
+      `${into} has the change, but ${worktree} or its branch ${branch} could not be removed — remove them by hand`;
     result.warning = result.warning ? `${result.warning}; ${note}` : note;
   }
   return result;
