@@ -1,5 +1,4 @@
 # The tools of bootstrap for this repository, and their values. See docs/sync/index.md of bootstrap.
-
 format = 3
 
 [tools.claude]
@@ -18,3 +17,4 @@ exclude = [ "^docs/design/" ]
 [tools.grype]
 [tools.osv-scanner]
 [tools.python]
+[tools.pnpm]

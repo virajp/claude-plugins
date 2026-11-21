@@ -149,6 +149,8 @@ node	.config/mise/tasks/setup/deps/40-node.py
 osv-scanner	.config/mise/conf.d/osv-scanner/mise.ci.toml
 osv-scanner	.config/mise/conf.d/osv-scanner/mise.dev.toml
 osv-scanner	.config/mise/tasks/code/sec/30-osv-scanner.py
+pnpm	.config/mise/conf.d/pnpm/mise.ci.toml
+pnpm	.config/mise/conf.d/pnpm/mise.dev.toml
 pre-commit	.config/mise/conf.d/pre-commit/mise.dev.toml
 pre-commit	.config/mise/tasks/code/precommit.py
 pre-commit	.config/mise/tasks/setup/precommit.py
