@@ -21,7 +21,13 @@
 // Exit 0 when open, close (landed), abandon or finish succeed; 1 when close
 // does not land; 2 on a usage error or a git failure, with nothing on stdout.
 
-import { abandon, close, finish, LandError, open } from "./lib/land.mjs";
+import {
+  abandon,
+  close,
+  finish,
+  LandError,
+  open,
+} from "./lib/land.mjs";
 
 const USAGE = `usage:
   land.mjs open <repo dir> --into <branch> --name <branch name>

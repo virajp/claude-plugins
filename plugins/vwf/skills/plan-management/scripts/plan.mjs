@@ -101,16 +101,16 @@ import {
   split,
 } from "./lib/path.mjs";
 import {
-  isPlanIndex,
-  validate,
-} from "./lib/schema.mjs";
-import {
   claim,
   pick,
   QueueError,
   resolve,
   resolveBase,
 } from "./lib/queue.mjs";
+import {
+  isPlanIndex,
+  validate,
+} from "./lib/schema.mjs";
 import { YamlError } from "./lib/yaml.mjs";
 
 const USAGE = `usage:

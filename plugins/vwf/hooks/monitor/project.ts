@@ -25,7 +25,6 @@ export type GitIo = {
   read: (path: string) => Promise<string | undefined>;
 };
 
-
 type Json = Record<string, unknown>;
 type Rgb = [number, number, number];
 

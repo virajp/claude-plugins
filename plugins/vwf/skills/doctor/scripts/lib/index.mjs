@@ -4,8 +4,16 @@
 
 import { loadProduct } from "./base.mjs";
 import { membershipRows } from "./membership.mjs";
-import { miseRows, projectRows, repoPinRows } from "./stack.mjs";
-import { ChecksError, isDir, isObject } from "./util.mjs";
+import {
+  miseRows,
+  projectRows,
+  repoPinRows,
+} from "./stack.mjs";
+import {
+  ChecksError,
+  isDir,
+  isObject,
+} from "./util.mjs";
 
 export { ChecksError } from "./util.mjs";
 

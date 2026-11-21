@@ -35,6 +35,7 @@ import {
   rowFromFolder,
   time,
 } from "./plan";
+import { identityOf } from "./project";
 import {
   chipProps,
   drawChip,
@@ -43,7 +44,6 @@ import {
   questionLines,
   WAITING,
 } from "./view";
-import { identityOf } from "./project";
 
 const PANE = "vwf-monitor";
 const SKILL = "vwf:execute";

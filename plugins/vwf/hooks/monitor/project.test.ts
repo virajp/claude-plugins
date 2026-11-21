@@ -129,11 +129,15 @@ test("the row's blocks follow claude-status's config layers", async () => {
     projectName: "from-user",
   });
   const repo = JSON.stringify({ projectName: "from-repo\u001b[31m", segments: { project: { bg: "red" } } });
-  const layered = await identityOf("/u/acme/widget", "/home/me", io({
-    ...files,
-    "/home/me/.config/claude-status/config.json": user,
-    "/u/acme/widget/.config/claude-status.json": repo,
-  }));
+  const layered = await identityOf(
+    "/u/acme/widget",
+    "/home/me",
+    io({
+      ...files,
+      "/home/me/.config/claude-status/config.json": user,
+      "/u/acme/widget/.config/claude-status.json": repo,
+    }),
+  );
   // The repo layer sets the name alone; the user layer sets the rest.
   expect(layered?.project).toMatchObject({ glyph: "GH", text: "from-repo[31m", bg: "#000000", bold: true });
 });

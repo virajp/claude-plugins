@@ -2,9 +2,20 @@
 // assets/membership.md). Every row is blocking and repo-level. The
 // file-not-listed half checks only the repo the run started in (D9 (c)).
 
-import { dirname, join, resolve } from "node:path";
+import {
+  dirname,
+  join,
+  resolve,
+} from "node:path";
 import { repoRoot } from "./base.mjs";
-import { git, isObject, isWorkTree, readYaml, real, row } from "./util.mjs";
+import {
+  git,
+  isObject,
+  isWorkTree,
+  readYaml,
+  real,
+  row,
+} from "./util.mjs";
 
 const MEMBERSHIP = join(".config", "vwf-membership.yaml");
 

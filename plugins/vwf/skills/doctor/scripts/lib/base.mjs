@@ -2,8 +2,16 @@
 // from it. Rules: not-onboarded and early, both info (D29).
 
 import { existsSync } from "node:fs";
-import { dirname, join, resolve } from "node:path";
-import { git, readYaml, row } from "./util.mjs";
+import {
+  dirname,
+  join,
+  resolve,
+} from "node:path";
+import {
+  git,
+  readYaml,
+  row,
+} from "./util.mjs";
 
 const CONFIG = join(".config", "vwf.yaml");
 const MEMBERSHIP = join(".config", "vwf-membership.yaml");

@@ -53,7 +53,8 @@ exec "$@"
 `;
 
 /** A `gh` that records its arguments and prints a pull request URL. */
-const GH = (log: string) => `#!/bin/sh
+const GH = (log: string) =>
+  `#!/bin/sh
 echo "$*" > "${log}"
 echo "Creating pull request"
 echo "https://example.com/pr/7"

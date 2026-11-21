@@ -13,7 +13,10 @@
 // checks only; no flag checks every registry project. No audit, no drift, no
 // network, no bootstrap dry-run, no LSP (parked).
 
-import { ChecksError, runChecks } from "./lib/index.mjs";
+import {
+  ChecksError,
+  runChecks,
+} from "./lib/index.mjs";
 
 const USAGE = "usage: node checks.mjs [--projects a,b] [--repo <dir>]";
 

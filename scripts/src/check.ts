@@ -1384,10 +1384,9 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
       if (value !== true && value !== false) {
         findings.push({
           scope: `${plugin.dir}:${file.path}`,
-          message:
-            `bundle \`default\` is ${
-              JSON.stringify(value)
-            }, not a boolean — the menu preselects on \`default: true\` alone, `
+          message: `bundle \`default\` is ${
+            JSON.stringify(value)
+          }, not a boolean — the menu preselects on \`default: true\` alone, `
             + `so any other spelling never preselects and reports nothing`,
         });
         continue;
@@ -1678,10 +1677,11 @@ function checkVwfIsTechnologyFree(plugins: readonly Plugin[]): Finding[] {
     if (mcpPrefixes.length > 0) {
       findings.push({
         scope: `vwf:${file.path}`,
-        message:
-          `reaches an MCP server directly (${
-            mcpPrefixes.map((p) => `"${p}"`).join(", ")
-          }) — vwf reaches no MCP server; it calls the fixed adapter skills, `
+        message: `reaches an MCP server directly (${
+          mcpPrefixes
+            .map((p) => `"${p}"`)
+            .join(", ")
+        }) — vwf reaches no MCP server; it calls the fixed adapter skills, `
           + `and a server is the user's install.`,
       });
     }
