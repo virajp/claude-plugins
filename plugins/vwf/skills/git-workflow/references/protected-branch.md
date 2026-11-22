@@ -92,12 +92,15 @@ node land.mjs finish <repo dir> --branch <branch name> --into <branch>
   `git:worktree:delete`, keeps an unmerged branch, and its `warning` holds the
   task's output and the `git branch -D` command.
 - **`finish`** runs once the pull request merged: when `gh pr view` gives
-  `MERGED` or `glab mr view` gives `merged`, it deletes the local branch —
+  `MERGED` or `glab mr view` gives `merged`, it reads the request's head
+  (`headRefOid`, or glab's `sha`) and fetches. When that head is the local
+  branch's tip, or the tip is an ancestor of it, it deletes the local branch —
   and, for `land.mjs`'s own scratch branch, the branch on `origin` — and
   fast-forwards `<branch>` in the main checkout when that checkout is on it.
-  With neither CLI, or another state, it keeps the branch and prints
+  With neither CLI, a state other than merged, or a head that is empty,
+  missing or does not hold the tip, it keeps both branches and prints
   `{finished: false, reason, command}`, exit 1: the caller reports `command`
-  for the user to run once they see the merge.
+  for the user to run once they see the branch's commits merged.
 
 Exit 0 when the verb did its work (`close`: landed); 1 when `close` did not
 land or `finish` did not finish; 2 on a usage error or a git failure, with

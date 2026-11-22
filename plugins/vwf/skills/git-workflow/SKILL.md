@@ -67,7 +67,7 @@ disable-model-invocation: false
   user asks. The one exception is `land.mjs`'s own scratch branch — every
   commit after `branch.<name>.vwfLandBase` carries `Vwf-Land: close`:
   `abandon` deletes it, and `finish` deletes it on `origin` too once `gh` or
-  `glab` reports its request merged
+  `glab` reports its request merged with a head that holds the local tip
 - Never push without explicit user request — always ask after a successful
   commit
 - Check `no-commit-to-branch` hook in `.config/pre-commit-config.yaml` before
