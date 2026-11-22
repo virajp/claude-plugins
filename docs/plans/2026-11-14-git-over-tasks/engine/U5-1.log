@@ -1,0 +1,5 @@
+ENGINE: /security-review over f7f69ed5..HEAD (worktree). The skill's built-in diff read the main checkout's develop delta, so the analysis ran in a sub-task over the correct range.
+
+No high-confidence vulnerabilities found.
+
+Reviewed start.mjs, git-workflow/scripts/land.mjs, lib/land.mjs, queue.mjs, plan.mjs and scripts/src/check.ts. Every subprocess runs through spawnSync with an argument array, never a shell string. Branch names come from CLI flags and plan folder names (trusted); git refuses ref names starting with -. abandon force-removes a branch only with vwfLandBase config and every commit carrying the Vwf-Land: close trailer. finish deletes only after gh/glab reports the request merged, and deletes the remote branch only for scratch branches. gh/glab JSON is only JSON.parse'd. check.ts adds one allowlist entry.

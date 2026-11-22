@@ -85,8 +85,8 @@
       "status": "green",
       "started": "2026-11-22T18:41:28.813Z",
       "ended": "2026-11-22T18:55:00.642Z",
-      "commit": "e92b59ae",
-      "rounds": 3
+      "commit": "16784817",
+      "rounds": 4
     },
     {
       "id": "U2",
@@ -114,8 +114,8 @@
       "status": "green",
       "started": "2026-11-22T18:41:28.883Z",
       "ended": "2026-11-22T18:55:00.717Z",
-      "commit": "e3da46fa",
-      "rounds": 2
+      "commit": "fdc9e716",
+      "rounds": 6
     },
     {
       "id": "U3",
@@ -180,14 +180,14 @@
         "U4"
       ],
       "waits": "reviews the committed wave-1 delta, U1's land.mjs and its tests in focus",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T20:26:33.808Z",
+      "ended": "2026-11-22T20:32:32.099Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "9d7a125b",
+        "to": "6dfddb04"
       }
     },
     {
@@ -245,9 +245,9 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-22T20:26:33.756Z",
+      "ended": "2026-11-22T20:37:20.224Z"
     },
     {
       "id": "W3",
@@ -817,6 +817,13 @@
       "unit": "",
       "stage": "",
       "text": "Preflight wave gate line mise x -- mise run code:lint --all is red on develop at 6c905673 (2422 errors, all in the tracked design exports docs/design/site/**, which .config/linter.yaml does not ignore); the failure is inherited, not this plan's · closed: develop db18c22a excluded docs/design/site from the code gates; merged into the worktree, preflight green on resume",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "",
+      "text": "U5 security finding: land.mjs finish deleted a branch on MERGED looked up by branch name, without checking the merged head; D11 names only --json state · closed: always-fixed security finding — finish, landing.md and worktree-setup.md now delete only when the request head equals or contains the local tip (16784817, 6dfddb04 and the U2 wave-2 fix)",
       "state": "closed"
     }
   ],

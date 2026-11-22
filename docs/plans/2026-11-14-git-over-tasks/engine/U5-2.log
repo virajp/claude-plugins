@@ -1,0 +1,5 @@
+ENGINE: /security-review over 9d7a125b..6dfddb04 (round 2, fix delta).
+
+No high-confidence vulnerabilities found.
+
+The fix closes the earlier finding: finish reads headRefOid (gh) / sha (glab), fetches, and deletes nothing unless the local tip equals that head or is an ancestor of it; a missing head, ref or commit keeps the branch. All git/gh/glab calls pass argument lists with no shell.
