@@ -137,9 +137,11 @@ A worktree made here is removed with its task, from another checkout:
 `mise x -- mise run git:worktree:delete -- <name>`. The task removes the
 worktree first, then deletes the branch only when a core branch has each of
 its commits. If it exits 1, run `gh pr view <name> --json state,headRefOid`
-(or `glab mr view <name> --output json`, reading `state` and `sha`). Only
-when the state is `MERGED` (glab: `merged`) **and** that head holds the local
-tip — it equals `git rev-parse refs/heads/<name>`, or
+(or `glab mr view <name> --output json`, reading `state` and `sha`). When
+the state is `MERGED` (glab: `merged`), first run `git fetch --prune origin`
+when an `origin` remote exists, so the merged head is in the local clone.
+Only when that head holds the local tip — it equals
+`git rev-parse refs/heads/<name>`, or
 `git merge-base --is-ancestor refs/heads/<name> <head>` exits 0 — run the
 `git branch -D` command that the task printed. Otherwise keep the branch,
 report the failure — a stale local core branch also gives exit 1, and a tip
