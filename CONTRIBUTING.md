@@ -24,14 +24,14 @@ Three lines, and they do not vary with which branch the forge calls default:
 - `develop` lands on **`main`**, and `main` takes nothing else. A commit hook
   refuses a direct commit to it.
 
-`mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
+`mise run git:merge:develop` and `mise run git:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
-then do is `[tools.git.branch.<branch>].merge_model` in
-`.config/bootstrap.toml`:
-`direct` — this repo's value, and what a missing file or key means — merges
-locally and pushes, and `pr` pushes the branch and opens a pull request instead,
-merging nothing.
+then do is `landing` of `[branches.<destination>]` in
+`.config/bootstrap/repo.toml`: `direct-merge` — what a missing table or key
+means — merges locally and pushes, `direct-commit` merges the same way and also
+lets a commit go directly on the branch, and `pr` pushes the branch and opens a
+pull request instead, merging nothing.
 
 The forge's own default branch is set **by hand, once**, and no task re-runs it:
 `gh repo edit --default-branch main`, or `glab repo update --defaultBranch main`

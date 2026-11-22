@@ -11,6 +11,3 @@ status.missing_tools = "always"
 task.run_auto_install = true
 
 [env]
-
-[shell_alias]
-worktrees = "mise run code:worktrees"
