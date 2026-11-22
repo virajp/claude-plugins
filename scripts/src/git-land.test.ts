@@ -144,7 +144,10 @@ case "$1 $2" in
   "pr create") echo "https://example.com/pr/7" ;;
   "pr view")
     case "$*" in
-      *state*) [ -n "$GH_STATE" ] || exit 1; printf '{"state":"%s"}\\n' "$GH_STATE" ;;
+      *state*)
+        [ -n "$GH_STATE" ] || exit 1
+        head="\${GH_HEAD:-$(git rev-parse --verify -q "refs/heads/$3")}"
+        printf '{"state":"%s","headRefOid":"%s"}\\n' "$GH_STATE" "$head" ;;
       *) printf '{"url":"%s"}\\n' "https://example.com/pr/7" ;;
     esac ;;
 esac
@@ -566,6 +569,23 @@ describe("finish", () => {
     expect(r.json).toMatchObject({ finished: false, command: "git branch -D change-one" });
     expect(r.json.reason).toMatch(/OPEN, not merged/);
     expect(git(repo, "branch", "--list", "change-one")).not.toBe("");
+    expect(git(repo, "ls-remote", "--heads", "origin", "change-one")).not.toBe("");
+  });
+
+  it("keeps the branch when the merged request's head does not hold the branch's tip", () => {
+    merged();
+    const head = git(repo, "rev-parse", "refs/heads/change-one");
+    const tree = git(repo, "rev-parse", "refs/heads/change-one^{tree}");
+    const later = git(repo, "commit-tree", tree, "-p", head, "-m", "later work");
+    git(repo, "update-ref", "refs/heads/change-one", later);
+    const r = land(["finish", repo, "--branch", "change-one", "--into", "develop"], {
+      GH_STATE: "MERGED",
+      GH_HEAD: head,
+    });
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ finished: false, command: "git branch -D change-one" });
+    expect(r.json.reason).toMatch(/does not hold the branch's tip/);
+    expect(git(repo, "rev-parse", "refs/heads/change-one")).toBe(later);
     expect(git(repo, "ls-remote", "--heads", "origin", "change-one")).not.toBe("");
   });
 

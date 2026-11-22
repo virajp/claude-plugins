@@ -382,12 +382,16 @@ export function close({ worktree, into, message }) {
   return failed(`git:merge:${into} failed: ${tail(merge.out)}`);
 }
 
-/** The state of the request of `branch`: merged, another state, or null with no CLI. */
-function requestState(dir, branch) {
-  const gh = mise(dir, ["gh", "pr", "view", branch, "--json", "state"]);
+/**
+ * The request of `branch`: { state, head } — state "merged" or another state,
+ * head the request's head commit — or null with no CLI.
+ */
+function request(dir, branch) {
+  const gh = mise(dir, ["gh", "pr", "view", branch, "--json", "state,headRefOid"]);
   if (gh.ok) {
     try {
-      return JSON.parse(gh.out).state === "MERGED" ? "merged" : String(JSON.parse(gh.out).state);
+      const { state, headRefOid } = JSON.parse(gh.out);
+      return { state: state === "MERGED" ? "merged" : String(state), head: String(headRefOid ?? "") };
     } catch {
       // Fall through to glab.
     }
@@ -395,13 +399,22 @@ function requestState(dir, branch) {
   const glab = mise(dir, ["glab", "mr", "view", branch, "--output", "json"]);
   if (glab.ok) {
     try {
-      const state = JSON.parse(glab.out).state;
-      return state === "merged" ? "merged" : String(state);
+      const { state, sha } = JSON.parse(glab.out);
+      return { state: state === "merged" ? "merged" : String(state), head: String(sha ?? "") };
     } catch {
       return null;
     }
   }
   return null;
+}
+
+/** Whether the merged request's `head` holds the local tip of `branch`: equal, or the tip an ancestor of it. */
+function headHoldsTip(main, branch, head) {
+  const tip = git(main, ["rev-parse", "--verify", "-q", `refs/heads/${branch}`]);
+  if (!tip.ok || head === "") {
+    return false;
+  }
+  return head === tip.out || git(main, ["merge-base", "--is-ancestor", tip.out, head]).ok;
 }
 
 /**
@@ -412,24 +425,37 @@ function requestState(dir, branch) {
  */
 export function finish({ repo, branch, into }) {
   const main = mainCheckout(repo);
-  const state = requestState(main, branch);
+  const req = request(main, branch);
   const command = `git branch -D ${branch}`;
-  if (state !== "merged") {
+  if (req?.state !== "merged") {
     return {
       finished: false,
-      reason: state === null
+      reason: req === null
         ? `neither gh nor glab reports the request of ${branch}; the branch is kept — delete it once the request merged`
-        : `the request of ${branch} is ${state}, not merged; the branch is kept`,
+        : `the request of ${branch} is ${req.state}, not merged; the branch is kept`,
       command,
     };
   }
-  const scratch = exists(main, `refs/heads/${branch}`) && isScratch(main, branch);
+  const remote = hasRemote(main);
+  if (remote) {
+    git(main, ["fetch", "--prune", REMOTE]);
+  }
+  const local = exists(main, `refs/heads/${branch}`);
+  if (local && !headHoldsTip(main, branch, req.head)) {
+    return {
+      finished: false,
+      reason: `the merged request of ${branch} has head ${
+        req.head || "unknown"
+      }, which does not hold the branch's tip; the branch is kept — delete it once its commits merged`,
+      command,
+    };
+  }
+  const scratch = local && isScratch(main, branch);
   const out = { finished: true };
   const warn = (note) => {
     out.warning = out.warning ? `${out.warning}; ${note}` : note;
   };
-  if (hasRemote(main)) {
-    git(main, ["fetch", "--prune", REMOTE]);
+  if (remote) {
     if (scratch && exists(main, `refs/remotes/${REMOTE}/${branch}`)) {
       const d = git(main, ["push", REMOTE, "--delete", branch]);
       if (!d.ok) {
