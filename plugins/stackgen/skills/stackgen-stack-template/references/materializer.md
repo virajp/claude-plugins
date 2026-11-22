@@ -109,8 +109,8 @@ once.
    - **The bootstrap instructions** — the tools and the Claude plugins
      the composition needs that the repo does not select yet, the tools
      chosen from `bootstrap catalog --json` and sent with
-     `bootstrap add tool`, the plugins sent through bootstrap's
-     `docs/sync/vwf.md`.
+     `bootstrap add tool`, the plugins written to the `claude` tool's
+     values with `bootstrap config set` and installed by `setup:ai`.
      **The procedure is [the bootstrap handoff](bootstrap-handoff.md)**:
      steps 1 to 6 run here, step 7 is a consent line in step 3, and steps
      8 to 10 run in step 5. No pack names a bootstrap tool, and stackgen
