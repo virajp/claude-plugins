@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-14 by the user"
+    "state": "BLOCKED",
+    "detail": "BLOCKED at preflight — inherited red gate on develop: mise x -- mise run code:lint --all fails on docs/design/site/** (not ignored by .config/linter.yaml); fix develop, then resume in .worktrees/all-2026-11-22-2030"
   },
   "consent": {
     "merge": true,
@@ -802,7 +802,15 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "",
+      "stage": "",
+      "text": "Preflight wave gate line mise x -- mise run code:lint --all is red on develop at 6c905673 (2422 errors, all in the tracked design exports docs/design/site/**, which .config/linter.yaml does not ignore); the failure is inherited, not this plan's · fix it on develop, then resume",
+      "state": "open"
+    }
+  ],
   "overrides": [],
   "run": {
     "worktree": ".worktrees/all-2026-11-22-2030",
