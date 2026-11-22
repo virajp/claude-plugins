@@ -14,14 +14,18 @@ trees. Confirm them.
 
 | List         | `/vwf:execute` runs it                   | Default, when `mise tasks ls --hidden` lists it |
 | ------------ | ---------------------------------------- | ----------------------------------------------- |
-| `gates.unit` | once before each unit's commit           | `mise x -- mise run code:format`                |
-| `gates.wave` | once before wave 1, and after every wave | `mise x -- mise run code:lint`                  |
+| `gates.unit` | once before each unit's commit           | `mise x -- mise run code:format --all`          |
+| `gates.wave` | once before wave 1, and after every wave | `mise x -- mise run code:lint --all`            |
 | `gates.plan` | once over the finished tree              | `mise x -- mise run code:precommit`             |
 
 - The cheap check runs most often, and the full hook pass runs once.
 - The plan gate runs the full hook pass over every file of the finished tree,
   because `code:precommit` always runs pre-commit with `--all-files`; it takes
   no flag.
+- The unit and wave lines take `--all`: with no files and no `--all`,
+  `code:format` and `code:lint` examine only the uncommitted files, and the
+  wave gate runs on a clean worktree before wave 1 and after each wave, where
+  that set is empty.
 - Put a check that runs the whole hook pass or a slow test suite in the plan
   gate, not the wave gate.
 - A check that only holds once a particular unit has landed is not a wave-gate

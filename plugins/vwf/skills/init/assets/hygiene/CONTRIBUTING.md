@@ -67,14 +67,17 @@ there rather than inventing one in a message.
 
 ## The gates
 
-The same checks run on every commit and in CI, so there is nothing to remember
-beyond running them before you push:
+The same checks run on every commit and in CI. While you work, the bare
+commands examine the uncommitted files; before you push, run the `--all` forms,
+which examine every file of the repository:
 
 ```sh
-mise run code:format     # every formatter, over what it owns
-mise run code:lint       # every linter, per language
-mise run code:sec        # secret and vulnerability scanning
-mise run code:precommit  # every hook, over the whole tree
+mise run code:format        # every formatter, over the uncommitted files (staged, changed and new)
+mise run code:format --all  # every formatter, over every file of the repository
+mise run code:lint          # every linter, over the uncommitted files (staged, changed and new)
+mise run code:lint --all    # every linter, over every file of the repository
+mise run code:sec           # secret and vulnerability scanning
+mise run code:precommit     # every hook, over the whole tree
 ```
 
 `code:precommit` is the one that matches what a merge will do. A hook that only

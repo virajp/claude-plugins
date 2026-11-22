@@ -85,8 +85,8 @@ A change plan:
     "end_all_run": false
   },
   "gates": {
-    "unit": ["mise x -- mise run code:format"],
-    "wave": ["mise x -- mise run code:lint"],
+    "unit": ["mise x -- mise run code:format --all"],
+    "wave": ["mise x -- mise run code:lint --all"],
     "plan": ["mise x -- mise run code:precommit"],
     "keeps": [
       { "id": "K1", "check": "<what a diff cannot prove>", "pass": "<its pass condition>" }
@@ -195,8 +195,8 @@ A cycle plan:
     "lsp": { "dart": "installed" }
   },
   "gates": {
-    "unit": ["mise x -- mise run code:format"],
-    "wave": ["mise x -- mise run code:lint"],
+    "unit": ["mise x -- mise run code:format --all"],
+    "wave": ["mise x -- mise run code:lint --all"],
     "plan": ["mise x -- mise run test"],
     "keeps": []
   },

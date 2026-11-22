@@ -30,13 +30,18 @@ its `waits`, then `rewave`.
 **The three gates.** `gates.unit` runs once before each unit's commit,
 `gates.wave` once before wave 1 and after every wave, `gates.plan` once over
 the finished tree — each a list of command lines. When the repo's
-`mise tasks ls --hidden` lists them, propose `mise x -- mise run code:format`
-for the unit gate, `mise x -- mise run code:lint` for the wave gate and
+`mise tasks ls --hidden` lists them, propose
+`mise x -- mise run code:format --all` for the unit gate,
+`mise x -- mise run code:lint --all` for the wave gate and
 `mise x -- mise run code:precommit` for the plan gate, beside the harness
-lines the slice needs; the user confirms them at §6. The plan gate runs the
-full hook pass over every file of the finished tree, because `code:precommit`
-always runs pre-commit with `--all-files`; it takes no flag. A check that
-runs the whole hook pass or a slow test suite belongs in the plan gate.
+lines the slice needs; the user confirms them at §6. The unit and wave lines
+take `--all`: with no files and no `--all`, `code:format` and `code:lint`
+examine only the uncommitted files, and the wave gate runs on a clean worktree
+before wave 1 and after each wave, where that set is empty. The plan gate
+runs the full hook pass over every file of the finished tree, because
+`code:precommit` always runs pre-commit with `--all-files`; it takes no flag.
+A check that runs the whole hook pass or a slow test suite belongs in the plan
+gate.
 `gates.keeps` lists the gates the orchestrator keeps, each
 `{id, check, pass}`.
 
