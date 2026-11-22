@@ -667,12 +667,16 @@ lives by.
 the checkout. `/vwf:init`'s **forge pass** — run once for the product, after
 the base lands, for a repo `/vwf:git-workflow` landed with a push that run, or
 one with nothing to land whose core branches are already on `origin` — sets
-the repo's default branch on the forge, protects `develop` and `main` there,
-and hands the base's
+the repo's default branch on the forge, protects each of its core branches
+there, and hands the base's
 backlog project over to the user; the forge is the record for all three, and
 nothing in the tree says what it chose. So this predicate asks the forge, in
 **each** repo — the base and every locally-present member — through the same
-CLI the recommended forge-CLI check above already probed.
+CLI the recommended forge-CLI check above already probed. A repo's **core
+branches** are the `data.value` of `bootstrap config get repo.core_branches
+--json`, run in that repo: `develop` and `main`, or one of them. When that read
+fails, the default-branch and protection checks print the note `forge state —
+not checked: core branches unreadable` under that repo, never a drift row.
 
 **The skip rule comes first.** A repo with no `origin`, or one whose host's
 CLI is absent, unauthenticated for that host, or unsupported (`n/a — no forge
@@ -686,13 +690,14 @@ allowed to read. Otherwise, three checks:
 
 - **Default branch.** Read it from the forge — `gh repo view --json
   defaultBranchRef --jq .defaultBranchRef.name` on GitHub, the default-branch
-  line of `glab repo view` on GitLab — and check it is one of the two branches
-  the forge pass offers, `develop` or `main`. Anything else — the forge's own
-  first-push default, typically — is one drift row naming the repo and the
-  branch the forge holds. Which of the two it should be is the user's answer at
+  line of `glab repo view` on GitLab — and check it is one of that repo's core
+  branches and that the branch exists. A default branch that is not a core
+  branch — the forge's own first-push default, typically — or one that does
+  not exist is one drift row naming the repo and the branch the forge holds.
+  With two core branches, which of them it should be is the user's answer at
   the forge pass, recorded nowhere in the tree, so doctor never asserts
   `develop` over `main` or the reverse.
-- **Protection.** On **both** `develop` and `main`, whether the branch is
+- **Protection.** On **each** core branch, whether the branch is
   protected on the forge at all. The pass leaves existing protection alone —
   it never merges its rules into a ruleset or protection already present — so
   a branch counts as protected when **any** ruleset or protection covers it,
@@ -702,13 +707,13 @@ allowed to read. Otherwise, three checks:
   (`gh api repos/<owner>/<repo>/branches/<branch>/protection`); on GitLab, a
   `protected_branches` entry for the branch
   (`glab api projects/:id/protected_branches`). **No protection at all** on
-  `develop` or `main` is the one drift row here, naming the repo and the
+  a core branch is the one drift row here, naming the repo and the
   branch. Where protection exists but lacks one of the rules the pass would
   have set — **no force-push and no deletion**, always; **a pull request
-  required** when that branch's own value reads `pr` —
-  `[tools.git.branch.develop].merge_model` for `develop`,
-  `[tools.git.branch.main].merge_model` for `main`, in that repo's
-  `.config/bootstrap.toml`, a missing file or key reading `direct` (on
+  required** when that branch's own landing value reads `pr` — the
+  `data.value` of `bootstrap config get repo.branches.<branch>.landing --json`
+  in that repo, `pr`, `direct-merge` or `direct-commit`, an unset key reading
+  the default `direct-merge` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and
   `required_pull_request_reviews`; on GitLab `allow_force_push` and a
@@ -717,7 +722,7 @@ allowed to read. Otherwise, three checks:
   **note** naming the branch and the missing rule, like the skip note: it is
   information, never drift, because a reshape would leave that protection
   exactly as it is, so no remedy exists to point at. On a branch whose value is
-  `direct` the require-PR rule is neither expected nor noted when present. A
+  not `pr` the require-PR rule is neither expected nor noted when present. A
   branch the
   forge does not carry reports `not on the forge — not checked` for that
   branch: pushing it is `/vwf:git-workflow`'s, and (d) already says whether it
@@ -734,8 +739,20 @@ allowed to read. Otherwise, three checks:
   remote print the skill's "not yet supported" line as information and check
   nothing; on any other host the skip rule already applies.
 
+**A stray `develop`.** One more check in (g), per repo, which reads the
+checkout rather than the forge, so the skip rule does not apply to it: a repo
+whose core branches are **one** branch other than `develop` and that still has
+a `develop` branch — locally (`refs/heads/develop`) or on `origin`
+(`refs/remotes/origin/develop`) — is one drift row naming the repo and where
+`develop` is. bootstrap's merge then refuses every landing into `main` from any
+other branch while `develop` exists and `[branches.main]` sets neither
+`merge_from` nor `merge_never`. Its fix is not a reshape: delete `develop`, or
+set `merge_from` on `main` in that repo's `.config/bootstrap/repo.toml`
+through the bootstrap CLI.
+
 **Every row is `drift`, none is blocking**, and the remedy is
-`/vwf:setup reshape`, whose forge pass re-offers what is
+`/vwf:setup reshape` (the stray-`develop` row excepted, whose fix it names
+itself), whose forge pass re-offers what is
 absent — the default branch and a protection for an unprotected branch through
 the CLI on one consent, the backlog project through the backlog skill's browser
 hand-over — and leaves what is already set untouched, which is why an existing
