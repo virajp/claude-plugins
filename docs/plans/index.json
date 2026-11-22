@@ -28,8 +28,8 @@
       "title": "R3c — vwf repos add the virajp-plugins tool, and the plugin handoff goes through bootstrap config",
       "target_repo": null,
       "priority": 40,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-22T22:22:28.473Z",
       "ended": "",
       "gaps": null,
       "requires": [
