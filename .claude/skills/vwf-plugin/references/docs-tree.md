@@ -89,8 +89,9 @@ committed intent artifacts, not blueprint docs), and `docs/scratchpad/`
 blueprint §6a, overwritten in place per screen and served at one local URL per
 platform; and the render tree execute keeps,
 `<project>/renders/<platform>/<route>/index[--<state>].png` plus `__renders/`
-(`renders.json`, `comments.yaml`), served by `/vwf:mockups renders`; vwf
-auto-adds the `.gitignore` line when missing). Superseded
+(`renders.json`, `comments.yaml`), served by `/vwf:mockups renders`; the
+`.gitignore` line comes from bootstrap's `virajp-plugins` tool, and vwf never
+writes the file). Superseded
 commands/agents/templates are archived under `archived/vwf-<date>/`
 (`vwf-2026-06-19/` from the prior model; `vwf-2026-07-04/` holds the retired
 `autopilot` command, whose behavior merged into `execute`; `vwf-2026-07-07/` the
