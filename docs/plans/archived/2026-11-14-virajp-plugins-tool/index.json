@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-22T22:23:39Z in .worktrees/all-2026-11-23-0333"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — 0eb2996b 2d3347f8 29cc2cf8 5708c7b3 d8bbe943"
   },
   "consent": {
     "merge": true,
@@ -145,7 +145,7 @@
       "status": "green",
       "started": "2026-11-22T22:36:57.377Z",
       "ended": "2026-11-22T22:40:11.014Z",
-      "commit": "",
+      "commit": "d8bbe943",
       "rounds": 1
     },
     {
@@ -160,11 +160,11 @@
         "U4"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:40:41.334Z",
+      "ended": "2026-11-22T22:41:21.104Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U6",
@@ -200,15 +200,15 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-22T22:36:57.338Z",
-      "ended": ""
+      "ended": "2026-11-22T22:40:41.179Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-22T22:40:41.291Z",
+      "ended": "2026-11-22T22:41:26.351Z"
     }
   ],
   "shared_files": [
