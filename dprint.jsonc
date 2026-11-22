@@ -32,6 +32,7 @@
     "**/*.svg",
     "**/package-lock.json",
     "**/brag-output/**",
+    "docs/design/site/**",
   ],
   "shuck": {
     "binaryNextLine": true,
