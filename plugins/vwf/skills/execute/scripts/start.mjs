@@ -32,10 +32,13 @@
 // it is {gaps: [ids of open QUESTION gaps], events: [question events with no
 // answer]}. claim is the plan.mjs claim result, or null.
 //
-// pending: the hooks refused the claim's merge, so git-workflow's land opened a
-// pull request (claim.kind pr, claim.url, claim.branch, claim.repo). The log
-// stays open: execute waits for the pull request, then runs land.mjs finish and
-// goes on as on ready when it merged, or ends the log when it closed.
+// pending: the work branch lands through a pull request (its landing is pr), so
+// the claim's merge task opened one (claim.kind pr, claim.url, claim.branch,
+// claim.repo). The log stays open: execute waits for the pull request, then
+// runs land.mjs finish and goes on as on ready when it merged, or ends the log
+// when it closed. A claim whose merge task failed, its hook pass included, is
+// refused with the reason; one with claim.unpushed left its merge commit
+// unpushed, and the message gives the push command — never retried.
 //
 // Exit 0 on ready, 1 on pending, refused, blocked or nothing, 2 on a usage or internal
 // error (nothing on stdout then). Every row and folder value comes from the
@@ -709,12 +712,15 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
     const unclaim = c.kind === "member-failed" && !c.reason.includes("unclaim")
       ? `; make the plan-management unclaim ${f.id} request`
       : "";
+    const unpushed = c.unpushed
+      ? "; the merge commit is not pushed — push it as the reason says, never retry the claim"
+      : "";
     return result({
       ...base_,
       projects,
       findings,
       claim: c,
-      message: `${folder}: the claim failed: ${c.reason}${unclaim}`,
+      message: `${folder}: the claim failed: ${c.reason}${unclaim}${unpushed}`,
     });
   }
 }

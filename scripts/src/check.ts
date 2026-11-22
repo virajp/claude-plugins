@@ -315,12 +315,15 @@ const PACK_MISE_TASKS = join(".config", "mise", "tasks");
 /** Where `/vwf:init` keeps its own landed trees — the hygiene assets. */
 const INIT_ASSETS = "skills/init/assets";
 /**
- * The only paths an init asset tree may land, relative to the tree: two root
- * files and one directory, `/`-terminated. init writes the hygiene files and
- * nothing else; every tool config and the issue forms are bootstrap's.
+ * The only paths an init asset tree may land, relative to the tree: three root
+ * files and one directory, `/`-terminated. The two contribution guides are the
+ * two-branch and the one-branch variant; init copies the chosen one to the
+ * repo as `CONTRIBUTING.md`. init writes the hygiene files and nothing else;
+ * every tool config and the issue forms are bootstrap's.
  */
 const INIT_ROOT_ALLOWLIST = [
   "CONTRIBUTING.md",
+  "CONTRIBUTING-one-branch.md",
   "SECURITY.md",
   "licenses/",
 ];

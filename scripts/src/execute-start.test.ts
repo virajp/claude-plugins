@@ -6,6 +6,7 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  appendFileSync,
   chmodSync,
   cpSync,
   existsSync,
@@ -49,8 +50,86 @@ let other: string;
 let logs: string;
 let env: NodeJS.ProcessEnv;
 
-/** A `mise` that runs what follows `--`, then the race script once, if any. */
+/** The main checkout: the parent of the git common dir, or its core.worktree (a submodule). */
+const MAIN = `common=$(git rev-parse --path-format=absolute --git-common-dir)
+tree=$(git config --file "$common/config" core.worktree)
+if [ -n "$tree" ]; then main=$(cd "$common" && cd "$tree" && pwd -P); else main=$(dirname "$common"); fi`;
+
+/** Each stub logs its arguments to stub-tasks.log in the git common dir. */
+const LOG = `echo "$0 $*" >> "$(git rev-parse --path-format=absolute --git-common-dir)/stub-tasks.log"`;
+
+/** git:merge:<b>: the hook pass (the .stub-hook-fail marker), then a merge and a push, or a pull request. */
+const MERGE = `#!/bin/sh
+${LOG}
+into=$(basename "$0")
+branch=$1
+if [ -f .stub-hook-fail ]; then echo "- A hook failed without changing anything, so it needs a fix by hand." >&2; exit 1; fi
+${MAIN}
+origin=
+if git remote get-url origin >/dev/null 2>&1; then origin=1; fi
+if [ "$STUB_LANDING" = pr ]; then
+  git push -q -u origin "$branch" || exit 1
+  if command -v gh >/dev/null 2>&1; then gh pr create --base "$into" --head "$branch" --fill || exit 1; fi
+  exit 0
+fi
+restore=$(git -C "$main" symbolic-ref --short -q HEAD)
+cd "$main" || exit 1
+git checkout -q "$into" || exit 1
+if [ -n "$origin" ] && ! git pull -q --no-rebase origin "$into"; then
+  if [ -n "$restore" ]; then git checkout -q "$restore"; fi
+  exit 1
+fi
+if ! git merge -q --no-ff --no-edit "$branch"; then echo "FAILED to merge $branch into $into; the tree is left mid-merge" >&2; exit 1; fi
+if [ -n "$origin" ] && ! git push -q origin "$into"; then echo "FAILED to push $into branch to origin!" >&2; exit 1; fi
+if [ -n "$restore" ] && [ "$restore" != "$into" ]; then git checkout -q "$restore" || exit 1; fi
+exit 0
+`;
+
+/** git:worktree:create: a new branch from --from; fails after the add on a .stub-create-fail marker. */
+const CREATE = `#!/bin/sh
+${LOG}
+${MAIN}
+name=$1; shift; from=
+while [ "$#" -gt 0 ]; do case "$1" in --from) from=$2; shift 2 ;; *) shift ;; esac; done
+dir=.worktrees
+if [ ! -e "$main/.worktrees" ] && [ -d "$main/worktrees" ]; then dir=worktrees; fi
+git worktree add --quiet -b "$name" "$main/$dir/$name" "$from" || exit 1
+if [ -f "$main/.stub-create-fail" ]; then echo "mise trust failed." >&2; exit 1; fi
+exit 0
+`;
+
+/** git:worktree:delete: remove the worktree, then the branch only when a core branch has it. */
+const DELETE = `#!/bin/sh
+${LOG}
+branch=$1
+wt=$(git worktree list --porcelain | awk -v b="branch refs/heads/$branch" '/^worktree /{p=substr($0,10)} $0==b{print p; exit}')
+if [ -z "$wt" ]; then echo "no worktree has the branch '$branch'." >&2; exit 1; fi
+git worktree remove "$wt" || { echo "git worktree remove failed." >&2; exit 1; }
+for core in develop main; do
+  ref=
+  if git show-ref --verify --quiet "refs/heads/$core"; then ref="refs/heads/$core"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$core"; then ref="refs/remotes/origin/$core"; fi
+  if [ -n "$ref" ] && git merge-base --is-ancestor "refs/heads/$branch" "$ref"; then git branch -D -q "$branch"; exit 0; fi
+done
+echo "no core branch has each commit of '$branch', so the branch stays." >&2
+echo "- delete it anyway: git branch -D $branch" >&2
+exit 1
+`;
+
+/**
+ * A `mise` that runs `run git:<x> -- <args>` as the stub file
+ * .config/mise/tasks/git/<x> of the main checkout; every other call runs what
+ * follows `--`, then the race script once, if any.
+ */
 const MISE = `#!/bin/sh
+if [ "$1" = run ]; then
+  name=$2; shift 2
+  if [ "$1" = -- ]; then shift; fi
+  ${MAIN}
+  stub="$main/.config/mise/tasks/$(echo "$name" | tr ':' '/')"
+  if [ ! -f "$stub" ]; then echo "mise ERROR no task $name found" >&2; exit 1; fi
+  exec sh "$stub" "$@"
+fi
 if [ -n "$MISE_FAIL" ]; then echo "mise stub: failing on purpose" >&2; exit 1; fi
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
 shift
@@ -159,15 +238,31 @@ function seed({ rows, build = () => {}, config = "after_landing: []\n", skip = [
   git(s, "push", "-q", "origin", "develop");
   git(root, "clone", "-q", "-b", "develop", origin, base);
   git(root, "clone", "-q", "-b", "develop", origin, other);
+  stubTasks(base);
 }
 
-/** A pre-merge-commit hook in `repo` that refuses every merge, and a `gh` stub that opens a pull request. */
-function refuseMerges(repo: string) {
-  const hook = join(repo, ".git", "hooks", "pre-merge-commit");
-  writeFileSync(hook, "#!/bin/sh\necho 'Refuse a direct commit to a protected branch' >&2\nexit 1\n");
-  chmodSync(hook, 0o755);
+/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, kept out of git status. */
+function stubTasks(dir: string) {
+  const tasks = join(dir, ".config", "mise", "tasks", "git");
+  const files: [string, string][] = [
+    ["merge/develop", MERGE],
+    ["merge/main", MERGE],
+    ["worktree/create", CREATE],
+    ["worktree/delete", DELETE],
+  ];
+  for (const [path, text] of files) {
+    write(join(tasks, path), text);
+  }
+  appendFileSync(join(dir, ".git", "info", "exclude"), "/.config/mise/tasks/git/\n");
+}
+
+/** A `gh` stub that opens a pull request and reports its URL. */
+function ghStub() {
   const gh = join(root, "bin", "gh");
-  writeFileSync(gh, "#!/bin/sh\necho https://example.com/pr/7\n");
+  writeFileSync(
+    gh,
+    `#!/bin/sh\ncase "$1 $2" in "pr view") printf '{"url":"%s"}\\n' https://example.com/pr/7 ;; *) echo https://example.com/pr/7 ;; esac\n`,
+  );
   chmodSync(gh, 0o755);
 }
 
@@ -220,6 +315,7 @@ beforeEach(() => {
   };
   delete env.RACE;
   delete env.MISE_FAIL;
+  delete env.STUB_LANDING;
   git(root, "init", "-q", "--bare", "-b", "develop", origin);
 });
 
@@ -384,10 +480,32 @@ describe("the refusals", () => {
 });
 
 describe("a fresh run", () => {
-  it("is pending when the hooks refuse the claim's merge, the log left open", () => {
-    seed({ rows: [row(A)] });
-    refuseMerges(base);
+  it("stops when the merge task's hook pass fails, the log closed claim-failed", () => {
+    seed({ rows: [row(A)], build: (s) => write(join(s, ".stub-hook-fail"), "") });
     const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ result: "refused", mode: "fresh", claim: { claimed: false, kind: "failed" } });
+    expect(r.json.message).toMatch(/the claim failed: .*A hook failed/);
+    expect(events(A).at(-1)).toMatchObject({ event: "run.end", outcome: "claim-failed" });
+    expect(rowAtOrigin(A).status).toBe("APPROVED");
+  });
+
+  it("stops on a conflict of the merge task, the main checkout left mid-merge", () => {
+    seed({ rows: [row(A)] });
+    const file = join(base, "docs", "plans", "index.json");
+    writeFileSync(file, readFileSync(file, "utf8").replace("\"status\": \"APPROVED\"", "\"status\": \"DRAFT\""));
+    git(base, "commit", "-q", "-am", "mine, unpushed");
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ result: "refused", claim: { claimed: false, kind: "failed" } });
+    expect(r.json.claim.reason).toMatch(/mid-merge/);
+    expect(rowAtOrigin(A).status).toBe("APPROVED");
+  });
+
+  it("is pending when develop lands through a pull request, the log left open", () => {
+    seed({ rows: [row(A)] });
+    ghStub();
+    const r = start([`docs/plans/${A}`], { STUB_LANDING: "pr" });
     expect(r.status).toBe(1);
     expect(r.json).toMatchObject({ result: "pending", mode: "fresh" });
     expect(r.json.claim).toMatchObject({ kind: "pr", url: "https://example.com/pr/7" });
@@ -402,7 +520,7 @@ describe("a fresh run", () => {
     const r = start([`docs/plans/${A}`]);
     expect(r.status).toBe(0);
     expect(r.json).toMatchObject({ result: "ready", mode: "fresh" });
-    expect(git(base, "log", "-1", "--format=%s", "develop")).toBe(`docs: plan queue — ${A} running`);
+    expect(git(base, "log", "-1", "--format=%s", "develop^2")).toBe(`docs: plan queue — ${A} running`);
     expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe("seed");
   });
 

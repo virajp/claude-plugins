@@ -846,7 +846,9 @@ date. A repo is shaped when `bootstrap config get repo.format --json` answers
 values: a pack that needs a tool asks for it with `bootstrap add tool`, and the
 materializer never writes a bootstrap file itself.
 
-**The prose files are `/vwf:init`'s own assets**: `CONTRIBUTING.md`,
+**The prose files are `/vwf:init`'s own assets**: `CONTRIBUTING.md` (one
+variant for a repo with `develop` and `main` as core branches, another for a
+repo with one),
 `SECURITY.md` and the chosen `LICENSE` on a repo init was told is public. They
 carry no lock record. A repo init was told is **private** gets no licence, since
 a grant to the public has no reader there. `SECURITY.md`'s one contact slot
@@ -854,7 +856,7 @@ takes
 the security contact as init was given it — an advisories URL for a public repo,
 an email or an internal URL for a private one. `CONTRIBUTING.md` records that
 the
-forge's default branch and the protection on `develop` and `main` are set by
+forge's default branch and the protection on each core branch are set by
 `/vwf:init`'s forge pass on GitHub and GitLab, and keeps the **by-hand** form of
 both for any other forge.
 

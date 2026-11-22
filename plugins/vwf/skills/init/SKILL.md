@@ -96,10 +96,11 @@ reconciled against them.
   on no branch is a **refused** row naming the branch to check out, its gitlink
   left where it was. **After the base lands comes the forge pass**, on one
   further consent for the whole product: it sets each eligible repo's default
-  branch on the forge, protects its core branches there — requiring a pull
-  request on whichever has `merge_model = "pr"` in that repo's
-  `.config/bootstrap.toml` — and reaches the backlog skill's missing-project
-  procedure for the base — those three are the only forge settings it touches.
+  branch on the forge to its integration branch, protects each core branch of
+  that repo's `repo.core_branches` there — requiring a pull request on each
+  whose landing, `repo.branches.<b>.landing` read through `bootstrap config`,
+  is `pr` — and reaches the backlog skill's missing-project procedure for the
+  base — those three are the only forge settings it touches.
   It never creates a remote, never pushes, and on a forge it has no CLI for, or
   a CLI it cannot log in with, it prints the by-hand list and carries on. History
   is never rewritten, nothing is force-pushed, and no verification-skipping flag
@@ -383,7 +384,11 @@ The same order in every mode, on the one consent. The order is the contract.
    cleans or commits a partial sync. When the stopped repo is the base, the forge
    pass does not run.
 4. **The hygiene files**, per [new repo](references/new-repo.md)'s hygiene step,
-   placeholders, and readme, licence and security file sections.
+   placeholders, and readme, licence and security file sections. The
+   contribution guide has two variants: `assets/hygiene/CONTRIBUTING.md` for a
+   repo whose `repo.core_branches` holds `develop` and `main`, and
+   `assets/hygiene/CONTRIBUTING-one-branch.md` for a repo with one core branch;
+   `init` copies the chosen one to the repo's root as `CONTRIBUTING.md`.
 5. **`kept_files`**, written into the base's `.config/vwf.yaml`.
 6. **The commit step**, through `/vwf:git-workflow`, members before the base.
 7. **The forge pass**, once for the product, after the base lands.
@@ -436,7 +441,7 @@ for `sync`. Read it by its envelope:
 has the file and is green, delete it with plain `rm`, on the line the one plan
 carried for it. The deletion rides `init`'s own commit in that repository. `init`
 reads no value from the file and carries none over: `bootstrap migrate`
-decides `[tools.git.branch.*].merge_model` during adoption, members stay in
+decides each `repo.branches.<b>.landing` during adoption, members stay in
 `.config/vwf.yaml`, and the forge is read live. A repository that is not green
 keeps the file, and the report names it with its reason.
 

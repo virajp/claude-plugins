@@ -80,7 +80,7 @@ blocker rather than a preference. Know this before you install.
   `/vwf:backlog`,
   which keeps the backlog
   in a GitHub Project and wants the `project` scope, by `init`'s **forge pass**
-  (the default branch and protection on `develop` and `main` on the `repo`
+  (the default branch and protection on each core branch on the `repo`
   scope, the backlog project on `project` — on a GitLab remote, `glab`), and by
   the doctor predicate that reads that forge state back; doctor reports its
   absence as a **degradation** with the remedy, and init prints the by-hand list

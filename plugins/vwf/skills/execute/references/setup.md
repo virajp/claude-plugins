@@ -89,9 +89,9 @@ two, each call from the directory the step runs in, per
    `start.mjs --worktree`, so the claim's `run.worktree` already names it.
    - When a worktree on that branch exists, reuse it. Stop when it is not clean. Then
      bring it up to date with a plain `git merge <integration branch>` run inside it,
-     where the plan before it landed. Treat a conflict as the hard halt
-     [land.md](land.md) names: abort, keep the worktree, and mark the folder `BLOCKED`
-     with the conflicting files.
+     where the plan before it landed. A conflict is a hard halt: this merge runs in the
+     run's own worktree, never in the main checkout, so run `git merge --abort` there,
+     keep the worktree, and mark the folder `BLOCKED` with the conflicting files.
    - When none exists, invoke `/vwf:git-workflow` with the same preferences, the branch
      named as given instead of with the plan's name.
 

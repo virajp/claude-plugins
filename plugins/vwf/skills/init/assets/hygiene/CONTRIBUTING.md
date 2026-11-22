@@ -31,29 +31,32 @@ Three lines, and they do not vary with which branch the forge calls default:
 - `develop` lands on **`main`**, and `main` takes nothing else. A commit hook
   refuses a direct commit to it.
 
-`mise run code:merge:develop` and `mise run code:merge:main` are the two moves.
+`mise run git:merge:develop` and `mise run git:merge:main` are the two moves.
 They run the gates over the whole tree before they touch anything, so a merge
 that would break the branch fails before it starts rather than after. What they
 then do is set **per branch** in `.config/bootstrap/`:
-`[tools.git.branch.develop].merge_model` for the first move,
-`[tools.git.branch.main].merge_model` for the second, each `direct`, the
-default, or `pr`. That folder holds the repo's values for bootstrap, the
-shared-files repo this one syncs from: change a value with
-`bootstrap config set <key> <value>`, then run `bootstrap sync`. `direct`
-merges locally and pushes — your branch is on the destination the moment the
-task returns; `pr` pushes the branch and opens a pull request instead, merging
-nothing — your branch lands when a maintainer merges that request. The two can
-differ: a repo that lands features directly on `develop` and still requires a
-pull request for `main` is the usual shape.
+`repo.branches.develop.landing` for the first move,
+`repo.branches.main.landing` for the second, each `direct-merge`, the default,
+`direct-commit` or `pr`. That folder holds the repo's values for bootstrap, the
+shared-files repo this one syncs from: read a value with
+`bootstrap config get <key> --json`, change one with
+`bootstrap config set <key> <value>`, then run `bootstrap sync`.
+`direct-merge` merges locally and pushes — your branch is on the destination
+the moment the task returns; `direct-commit` merges the same way and also
+permits a commit on that branch itself; `pr` pushes the branch and opens a pull
+request instead, merging nothing — your branch lands when a maintainer merges
+that request. The two can differ: a repo that lands features directly on
+`develop` and still requires a pull request for `main` is the usual shape.
 
-The forge's own settings — the default branch, and protection on `develop` and
-`main` — are set by `/vwf:setup`'s forge pass on GitHub and GitLab, and no task
-re-runs them. On any other forge a maintainer sets them **by hand, once**:
+The forge's own settings — the default branch, `develop`, and protection on
+both branches — are set by `/vwf:setup`'s forge pass on GitHub and GitLab, and
+no task re-runs them. On any other forge a maintainer sets them **by hand,
+once**:
 
-- The default branch: `gh repo edit --default-branch <branch>`, or
-  `glab repo update --defaultBranch <branch>` on GitLab.
+- The default branch: `gh repo edit --default-branch develop`, or
+  `glab repo update --defaultBranch develop` on GitLab.
 - Protection on both `develop` and `main`: no force-push and no deletion; and a
-  pull request required on each branch whose `merge_model` is `pr`.
+  pull request required on each branch whose landing is `pr`.
 
 ## Commits
 

@@ -67,8 +67,8 @@
 // member folder's run is a second landing on the member's work branch —
 // and prints {claimed: true, commit[, warning]}, exit 0, or {claimed: false,
 // kind, reason[, warning]}, exit 1, kind lost, member-failed or failed — or kind
-// pr, with url, branch and repo, when the hooks refused the merge and a pull
-// request was opened instead.
+// pr, with url, branch and repo, when the work branch lands through a pull
+// request (its landing is pr) and the claim waits on it.
 // --branch names the base repo's work branch and is necessary; --member-branch
 // names every member repo's work branch, necessary only when a verb reads a
 // member. The tip is origin/<branch> when the repo has an origin remote, else

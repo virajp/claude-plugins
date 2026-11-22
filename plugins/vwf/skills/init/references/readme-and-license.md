@@ -2,9 +2,11 @@
 
 The files a repository carries whatever it is written in and that no tool
 reads. They are `init`'s own, under
-`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land;
-`init` places them, fills the three placeholders, and stops. They run after
-the bootstrap step, in a repo that step left passing the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/skills/init/assets/hygiene/`, laid out as they land,
+save the contribution guide's one-branch variant, `CONTRIBUTING-one-branch.md`,
+which lands as `CONTRIBUTING.md` and never under its own name; `init` places
+them, fills the three placeholders, and stops. They run after the bootstrap
+step, in a repo that step left passing the shaped test of
 `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`.
 The ignore file, the attributes file and the issue forms are not among them —
 they are bootstrap's git and github tools.
@@ -15,11 +17,11 @@ A row's answer never reaches a repo other than the one it names.
 
 ## What the assets carry
 
-| Asset                                           | Lands at      | When               |
-| ----------------------------------------------- | ------------- | ------------------ |
-| `CONTRIBUTING.md`                               | the repo root | always             |
-| `licenses/MIT.txt` or `licenses/Apache-2.0.txt` | `LICENSE`     | question 2a, below |
-| `SECURITY.md`                                   | the repo root | question 2b, below |
+| Asset                                             | Lands at          | When                |
+| ------------------------------------------------- | ----------------- | ------------------- |
+| `CONTRIBUTING.md` or `CONTRIBUTING-one-branch.md` | `CONTRIBUTING.md` | always, one variant |
+| `licenses/MIT.txt` or `licenses/Apache-2.0.txt`   | `LICENSE`         | question 2a, below  |
+| `SECURITY.md`                                     | the repo root     | question 2b, below  |
 
 They land in the new-repo pipeline's *The hygiene assets*, after the bootstrap
 step; the licence and the security file wait for their answers and land in its
@@ -32,12 +34,17 @@ is **kept, never replaced, and reported as kept** — no offer, no
 So a second run finds every asset present and plans nothing for it.
 
 `CONTRIBUTING.md` is developer-facing and repo-neutral: setup in one command,
-the branch model and where its two landing models live
-(`.config/bootstrap/`), where the commit types and scopes live — the scopes
-read with `bootstrap config get repo.commits.scopes --json` — the gate
-tasks — `code:format`, `code:lint`, `code:sec` and `code:precommit` — the merge
-tasks `code:merge:develop` and `code:merge:main`, and the pointer to
-`SECURITY.md`.
+the branch model and where each core branch's landing lives
+(`repo.branches.<b>.landing` in `.config/bootstrap/`), where the commit types
+and scopes live — the scopes read with
+`bootstrap config get repo.commits.scopes --json` — the gate tasks —
+`code:format`, `code:lint`, `code:sec` and `code:precommit` — the merge tasks
+`git:merge:develop` and `git:merge:main`, and the pointer to `SECURITY.md`.
+That is the two-branch variant, for a repo whose `repo.core_branches` holds
+`develop` and `main`. `CONTRIBUTING-one-branch.md` carries the same sections
+for a repo with one core branch, with one move, `git:merge:<branch>`. `init`
+picks the variant from `repo.core_branches` and copies it to the repo's root as
+`CONTRIBUTING.md`; a repo that carries `CONTRIBUTING.md` has the asset.
 
 ## The placeholder vocabulary
 

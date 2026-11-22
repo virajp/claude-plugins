@@ -1,23 +1,32 @@
 // The one way vwf writes a commit to a protected branch (develop or main):
 // never a direct commit. A change is made in its own worktree, on its own
-// local branch cut from the branch's tip, committed there, merged into the
-// branch in the main checkout, pushed, and the worktree and branch removed.
-// When pre-commit refuses the merge, the branch is pushed and a pull request
-// opened instead; the caller waits for it to merge, then calls `finish`.
+// local branch cut from the branch's tip, committed there, rebased on the tip,
+// and landed by bootstrap's git:merge:<branch> task, which merges and pushes,
+// or pushes the branch and opens a pull request when the branch's landing is
+// pr. bootstrap's git:worktree:create and git:worktree:delete make and remove
+// the worktree. The caller waits for a pull request to merge, then calls
+// `finish`.
 //
 // open    → { worktree, branch, into, base }
 // close   → { landed: true, commit[, warning] }
 //         | { landed: false, kind: pr, url, branch[, warning] }
 //         | { landed: false, kind: conflict, files, reason[, warning] }
-//         | { landed: false, kind: failed, reason[, warning] }
-// abandon → removes the worktree and deletes its branch
-// finish  → after the pull request merged: deletes the local branch, and
-//           fast-forwards the branch in the main checkout when it is there
+//         | { landed: false, kind: failed, reason[, unpushed: true][, warning] }
+// abandon → { abandoned: true, branch[, warning] }: removes land.mjs's own
+//           scratch worktree and branch; anything else goes through
+//           git:worktree:delete, which keeps an unmerged branch
+// finish  → { finished: true[, warning] } after the pull request merged
+//         | { finished: false, reason, command } while it has not
+//
+// land.mjs runs no destructive raw git: it aborts no merge in the main
+// checkout, resets no branch, checks nothing out after the task, and deletes
+// only its own scratch branch (branch.<name>.vwfLandBase is set by open, and
+// every commit after that base carries the trailer Vwf-Land: close).
 //
 // A repo with no origin remote is supported: its tip is the local branch, and
-// there is no fetch, pull, push or pull request; a refused merge there fails.
-// Every git call is an argument array, never a shell string; the commit and
-// the merge run through `mise x --` so that the repo's hooks run.
+// there is no fetch or push. Every git call is an argument array, never a
+// shell string; the commit runs through `mise x --` so that the repo's hooks
+// run, and the tasks through `mise run`.
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -28,8 +37,12 @@ import {
 } from "node:path";
 
 export const REMOTE = "origin";
-/** The clean retries of a rejected push before close refuses. */
-const PUSH_RETRIES = 3;
+/** The trailer close adds to each change commit it makes. */
+const TRAILER = "Vwf-Land: close";
+/** The hint when a bootstrap git port is missing (bootstrap-contract.md, the git ports). */
+const MIGRATE = "the repo has no bootstrap git task for this step: run `bootstrap migrate`";
+/** The lines of a task's output a reason keeps. */
+const TAIL = 20;
 
 export class LandError extends Error {
   constructor(message) {
@@ -65,6 +78,23 @@ function mise(cwd, args) {
   };
 }
 
+/** One bootstrap task, `mise run <name> -- <args>`: { ok, missing, out }. */
+function task(cwd, name, args) {
+  const r = spawnSync("mise", ["run", name, "--", ...args], { cwd, encoding: "utf8" });
+  const out = (`${r.stdout ?? ""}${r.stderr ?? ""}`.trim() || r.error?.message) ?? "";
+  return {
+    ok: r.status === 0,
+    status: r.status,
+    missing: new RegExp(`no task ${name.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")} found`).test(out),
+    out,
+  };
+}
+
+/** The last lines of a task's output. */
+function tail(out) {
+  return out.split("\n").slice(-TAIL).join("\n");
+}
+
 /** Whether `dir` has an origin remote. */
 export function hasRemote(dir) {
   return git(dir, ["remote", "get-url", REMOTE]).ok;
@@ -89,38 +119,96 @@ export function worktreeDir(repo) {
     : ".worktrees";
 }
 
-/** The tip of `branch` in `dir`, fetched first when the repo has a remote. */
-function tip(dir, branch) {
-  const remote = hasRemote(dir);
-  if (remote) {
-    must(dir, ["fetch", REMOTE]);
+const exists = (dir, ref) => git(dir, ["rev-parse", "--verify", "--quiet", ref]).ok;
+const contains = (dir, branch, ref) => git(dir, ["merge-base", "--is-ancestor", branch, ref]).ok;
+const midMerge = (dir) => exists(dir, "MERGE_HEAD");
+const baseKey = (branch) => `branch.${branch}.vwfLandBase`;
+
+/**
+ * Whether `branch` is land.mjs's own scratch: open recorded its base, and
+ * every commit after that base carries close's trailer (none qualifies).
+ */
+function isScratch(main, branch) {
+  const base = git(main, ["config", "--get", baseKey(branch)]);
+  if (!base.ok || base.out === "" || !exists(main, `${base.out}^{commit}`)) {
+    return false;
   }
-  const ref = remote ? `${REMOTE}/${branch}` : branch;
-  const full = remote ? `refs/remotes/${REMOTE}/${branch}` : `refs/heads/${branch}`;
-  if (!git(dir, ["rev-parse", "--verify", "--quiet", full]).ok) {
-    throw new LandError(`${ref} does not exist in ${dir}; the branch to land on is ${branch}`);
+  const list = git(main, ["rev-list", `${base.out}..refs/heads/${branch}`]);
+  if (!list.ok) {
+    return false;
   }
-  return ref;
+  return list.out.split("\n").filter(Boolean).every((sha) => {
+    const t = git(main, ["show", "-s", "--format=%(trailers:key=Vwf-Land,valueonly)", sha]);
+    return t.ok && t.out.split("\n").includes("close");
+  });
+}
+
+/** Remove land.mjs's own scratch worktree and branch, dirty or unmerged; null or the error. */
+function dropScratch(main, worktree, branch) {
+  const errs = [];
+  if (existsSync(worktree)) {
+    const w = git(main, ["worktree", "remove", "--force", worktree]);
+    if (!w.ok) {
+      errs.push(`git worktree remove --force ${worktree} failed: ${w.err}`);
+    }
+  }
+  if (exists(main, `refs/heads/${branch}`)) {
+    const b = git(main, ["branch", "-D", branch]);
+    if (!b.ok) {
+      errs.push(`git branch -D ${branch} failed: ${b.err}`);
+    }
+  } else {
+    git(main, ["config", "--unset", baseKey(branch)]);
+  }
+  return errs.length > 0 ? errs.join("; ") : null;
 }
 
 /**
- * A new worktree on a new local branch `name`, cut from the tip of `into`.
- * The branch is never pushed unless a pull request needs it.
+ * A new worktree on a new local branch `name`, cut from the tip of `into` by
+ * git:worktree:create. The branch is local: its upstream is unset.
  */
 export function open({ repo, into, name }) {
   if (!into || !name) {
     throw new LandError("open needs the branch to land on and a name");
   }
   const main = mainCheckout(repo);
-  if (git(main, ["rev-parse", "--verify", "--quiet", `refs/heads/${name}`]).ok) {
+  if (exists(main, `refs/heads/${name}`)) {
     throw new LandError(`the branch ${name} already exists in ${main}; finish or abandon it first`);
   }
-  const base = tip(main, into);
+  const remote = hasRemote(main);
+  if (remote) {
+    must(main, ["fetch", REMOTE]);
+    if (exists(main, `refs/remotes/${REMOTE}/${name}`)) {
+      throw new LandError(
+        `${REMOTE}/${name} already exists; finish its pull request, or delete ${REMOTE}/${name}, first`,
+      );
+    }
+  }
+  const base = remote ? `${REMOTE}/${into}` : into;
+  const full = remote ? `refs/remotes/${REMOTE}/${into}` : `refs/heads/${into}`;
+  if (!exists(main, full)) {
+    throw new LandError(`${base} does not exist in ${main}; the branch to land on is ${into}`);
+  }
   const worktree = join(main, worktreeDir(main), name);
   if (existsSync(worktree)) {
     throw new LandError(`${worktree} already exists; finish or abandon it first`);
   }
-  must(main, ["worktree", "add", "--quiet", "--no-track", "-b", name, worktree, base]);
+  must(main, ["config", baseKey(name), must(main, ["rev-parse", full])]);
+  // The flag is a template literal: rule 16's checker reads a quoted string
+  // right after that flag's name as an import.
+  const create = task(main, "git:worktree:create", [name, `--from`, base, "--no-setup"]);
+  if (!create.ok || !existsSync(worktree)) {
+    const left = dropScratch(main, worktree, name);
+    const why = create.missing
+      ? MIGRATE
+      : create.ok
+      ? `git:worktree:create made no ${worktree}`
+      : `git:worktree:create failed: ${tail(create.out)}`;
+    throw new LandError(left === null ? why : `${why}; ${left}`);
+  }
+  if (git(main, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", `${name}@{upstream}`]).ok) {
+    must(main, ["branch", "--unset-upstream", name]);
+  }
   return { worktree, branch: name, into, base };
 }
 
@@ -131,214 +219,81 @@ function where(worktree) {
 }
 
 /**
- * Remove a worktree and delete its branch; true when both went. Without
- * `force`, the branch goes only when `into` contains it: `git branch -d`
- * compares with HEAD, which in the main checkout may be another branch.
+ * Remove the worktree of a change that will not land. land.mjs's own scratch
+ * goes whole, dirty or unmerged; anything else goes through
+ * git:worktree:delete, which keeps an unmerged branch and says so.
  */
-function remove(main, worktree, branch, force, into) {
-  const w = git(main, ["worktree", "remove", ...(force ? ["--force"] : []), worktree]);
-  const merged = force || git(main, ["merge-base", "--is-ancestor", branch, into]).ok;
-  const b = merged ? git(main, ["branch", "-D", branch]) : { ok: false };
-  return w.ok && b.ok;
-}
-
-/** Remove the worktree of a change that will not land, and delete its branch. */
 export function abandon({ worktree }) {
   const { branch, main } = where(worktree);
-  if (!remove(main, worktree, branch, true)) {
-    throw new LandError(`could not remove ${worktree} and its branch ${branch}`);
+  if (isScratch(main, branch)) {
+    const left = dropScratch(main, worktree, branch);
+    if (left !== null) {
+      throw new LandError(`could not remove ${worktree} and its branch ${branch}: ${left}`);
+    }
+    return { abandoned: true, branch };
   }
-  return { abandoned: true, branch };
+  const del = task(main, "git:worktree:delete", [branch]);
+  if (del.ok) {
+    return { abandoned: true, branch };
+  }
+  if (del.missing) {
+    throw new LandError(MIGRATE);
+  }
+  if (del.status === 1) {
+    return {
+      abandoned: true,
+      branch,
+      warning: `${tail(del.out)}\nthe branch ${branch} is kept; delete it with git branch -D ${branch}`,
+    };
+  }
+  throw new LandError(`git:worktree:delete ${branch} failed: ${tail(del.out)}`);
 }
 
-const rejected = (err) => /\[rejected\]|non-fast-forward|fetch first|failed to push/.test(err);
-
-/** The shared stash stack, newest first: each entry's SHA. */
-function stashShas(dir) {
-  const list = git(dir, ["stash", "list", "--format=%H"]);
-  return list.ok && list.out !== "" ? list.out.split("\n") : [];
-}
-
-/**
- * Run `body` in the main checkout on `into`: set aside its changes in a stash
- * held by SHA, check out `into`, run, then go back to the branch it was on and
- * apply the stash. Returns body's result, with a warning when a step back fails.
- */
-function onBranch(main, into, tag, body) {
-  const branch = git(main, ["symbolic-ref", "--short", "-q", "HEAD"]);
-  const origin = branch.ok ? branch.out : must(main, ["rev-parse", "HEAD"]);
-  let stashed = null;
-  let result;
-
-  (() => {
-    if (git(main, ["status", "--porcelain"]).out !== "") {
-      const before = git(main, ["rev-parse", "-q", "--verify", "refs/stash"]);
-      const s = git(main, ["stash", "push", "-u", "-m", tag]);
-      if (!s.ok) {
-        result = { landed: false, kind: "failed", reason: `git stash push failed: ${s.err}` };
-        return;
-      }
-      // The stash stack is shared by every worktree and session: hold this
-      // entry by the SHA refs/stash names right after the push, never by
-      // stash@{0} or by its tag.
-      const after = git(main, ["rev-parse", "refs/stash"]);
-      const sha = after.ok ? after.out : null;
-      if (sha === null || (before.ok && before.out === sha)) {
-        result = {
-          landed: false,
-          kind: "failed",
-          reason:
-            `git stash push "${tag}" created no new stash entry; any changes it took are in the stash under "${tag}" — check git stash list`,
-        };
-        return;
-      }
-      const subject = git(main, ["log", "-1", "--format=%s", sha]);
-      if (!subject.ok || !subject.out.endsWith(`: ${tag}`)) {
-        result = {
-          landed: false,
-          kind: "failed",
-          reason:
-            `another stash (${sha}) landed on top of "${tag}" before it could be read; your changes are in the stash under "${tag}" — apply it by hand`,
-        };
-        return;
-      }
-      stashed = sha;
-    }
-    if (origin !== into) {
-      const c = git(main, ["checkout", into]);
-      if (!c.ok) {
-        result = { landed: false, kind: "failed", reason: `git checkout ${into} failed: ${c.err}` };
-        return;
-      }
-    }
-    result = body();
-  })();
-
-  const warn = (note) => {
-    result.warning = result.warning ? `${result.warning}; ${note}` : note;
-  };
-  const now = git(main, ["symbolic-ref", "--short", "-q", "HEAD"]);
-  if ((now.ok ? now.out : "") !== origin) {
-    const back = git(main, ["checkout", origin]);
-    if (!back.ok) {
-      warn(`could not check out ${origin} again: ${back.err}`);
-    }
-  }
-  if (stashed !== null) {
-    const apply = git(main, ["stash", "apply", stashed]);
-    if (apply.ok) {
-      const n = stashShas(main).indexOf(stashed);
-      if (n !== -1) {
-        // Another session may push or pop between the lookup and the drop:
-        // read stash@{n} again and drop it only while it is still this entry.
-        const at = git(main, ["rev-parse", `stash@{${n}}`]);
-        if (at.ok && at.out === stashed) {
-          git(main, ["stash", "drop", `stash@{${n}}`]);
-        } else {
-          warn(
-            `the stash moved before it could be dropped; the applied stash "${tag}" (${stashed}) is kept — drop it by hand`,
-          );
-        }
-      }
-    } else {
-      git(main, ["reset", "--merge"]);
-      warn(`git stash apply ${stashed} failed in ${main}; the stash "${tag}" (${stashed}) is kept — apply it by hand`);
-    }
-  }
-  return result;
-}
-
-/** The files a stopped merge left in conflict. */
+/** The files a stopped merge or rebase left in conflict. */
 function conflicts(dir) {
   const r = git(dir, ["diff", "--name-only", "--diff-filter=U"]);
   return r.ok && r.out !== "" ? r.out.split("\n") : [];
 }
 
-/** Undo a merge that did not complete; leaves the checkout at its HEAD. */
-function undoMerge(dir) {
-  if (git(dir, ["rev-parse", "-q", "--verify", "MERGE_HEAD"]).ok) {
-    git(dir, ["merge", "--abort"]);
-  }
+/** Remove the worktree after a landed or PR result; a warning, or null. */
+function removeWorktree(main, worktree, branch) {
+  task(main, "git:worktree:delete", [branch]);
+  return existsSync(worktree) ? `${worktree} could not be removed — remove it by hand` : null;
 }
 
-/** One merge of `branch` into the checked-out branch: { ok } | { conflict } | { refused }. */
-function mergeOnce(main, branch, message) {
-  const m = mise(main, ["git", "merge", "--no-ff", "-m", message, branch]);
-  if (m.ok) {
-    return { ok: true };
+/** The pull request URL of `branch`, from gh, or null. */
+function prUrl(dir, branch) {
+  const r = mise(dir, ["gh", "pr", "view", branch, "--json", "url"]);
+  if (!r.ok) {
+    return null;
   }
-  const files = conflicts(main);
-  undoMerge(main);
-  return files.length > 0 ? { conflict: files, err: m.err } : { refused: m.err };
-}
-
-/** Push the branch and open a pull request into `into`. */
-function pullRequest(worktree, branch, into, message, why) {
-  const push = git(worktree, ["push", "-u", REMOTE, branch]);
-  if (!push.ok) {
-    return {
-      landed: false,
-      kind: "failed",
-      reason: `the merge was refused (${why}), and git push -u ${REMOTE} ${branch} failed: ${push.err}`,
-    };
+  try {
+    return JSON.parse(r.out).url ?? null;
+  } catch {
+    return null;
   }
-  const body = `The merge into ${into} was refused by the repo's hooks:\n\n${why}`;
-  const gh = mise(worktree, [
-    "gh",
-    "pr",
-    "create",
-    "--base",
-    into,
-    "--head",
-    branch,
-    "--title",
-    message,
-    "--body",
-    body,
-  ]);
-  if (gh.ok) {
-    return { landed: false, kind: "pr", url: gh.out.split("\n").pop(), branch };
-  }
-  const glab = mise(worktree, [
-    "glab",
-    "mr",
-    "create",
-    "--target-branch",
-    into,
-    "--source-branch",
-    branch,
-    "--title",
-    message,
-    "--description",
-    body,
-    "--yes",
-  ]);
-  if (glab.ok) {
-    return { landed: false, kind: "pr", url: glab.out.split("\n").pop(), branch };
-  }
-  return {
-    landed: false,
-    kind: "pr",
-    url: null,
-    branch,
-    reason:
-      `the branch ${branch} is pushed, but no pull request could be opened (gh: ${gh.err}); open it into ${into} on the forge`,
-  };
 }
 
 /**
- * Commit every change in `worktree` with `message`, then land it on `into`
- * in the main checkout: merge --no-ff, push, retry a rejected push from a
- * fresh pull, then remove the worktree and branch. A conflict or a failure
- * leaves the worktree and the branch for the caller (abandon removes them).
- * A merge the hooks refuse becomes a pull request; the worktree is removed
- * and the branch kept until `finish`.
+ * Commit every change in `worktree` with `message`, rebase the branch on the
+ * tip of `into` in the worktree, then run git:merge:<into> from the worktree:
+ * the task merges and pushes, or opens a pull request. On landed or PR the
+ * worktree is removed (a PR keeps the branch for `finish`); on a conflict or
+ * a failure the worktree and branch stay for the caller.
  */
 export function close({ worktree, into, message }) {
   if (!into || !message) {
     throw new LandError("close needs the branch to land on and a message");
   }
   const { branch, main } = where(worktree);
+  if (midMerge(main)) {
+    return {
+      landed: false,
+      kind: "failed",
+      reason:
+        `the main checkout ${main} was mid-merge before the landing; resolve and commit it, or run git merge --abort there, then close again`,
+    };
+  }
   if (git(worktree, ["status", "--porcelain"]).out === "") {
     return { landed: false, kind: "failed", reason: `nothing to commit in ${worktree}` };
   }
@@ -346,95 +301,176 @@ export function close({ worktree, into, message }) {
   if (!add.ok) {
     return { landed: false, kind: "failed", reason: `git add failed: ${add.err}` };
   }
-  const commit = mise(worktree, ["git", "commit", "-m", message]);
+  const commit = mise(worktree, ["git", "commit", "-m", message, "-m", TRAILER]);
   if (!commit.ok) {
     git(worktree, ["reset", "--quiet"]);
     return { landed: false, kind: "failed", reason: `the commit failed: ${commit.err}` };
   }
 
   const remote = hasRemote(main);
-  const result = onBranch(main, into, `vwf land ${branch}`, () => {
-    for (let retries = 0;; retries++) {
-      if (remote) {
-        const pull = git(main, ["pull", "--ff-only", REMOTE, into]);
-        if (!pull.ok) {
-          return { landed: false, kind: "failed", reason: `git pull --ff-only ${REMOTE} ${into} failed: ${pull.err}` };
-        }
-      }
-      const merged = mergeOnce(main, branch, message);
-      if (merged.conflict) {
-        return {
-          landed: false,
-          kind: "conflict",
-          files: merged.conflict,
-          reason: `merging ${branch} into ${into} conflicts on ${merged.conflict.join(", ")}`,
-        };
-      }
-      if (merged.refused !== undefined) {
-        return remote
-          ? { refused: merged.refused }
-          : {
-            landed: false,
-            kind: "failed",
-            reason:
-              `the merge into ${into} was refused, and the repo has no remote for a pull request: ${merged.refused}`,
-          };
-      }
-      if (!remote) {
-        return { landed: true, commit: must(main, ["rev-parse", "HEAD"]) };
-      }
-      const push = git(main, ["push", REMOTE, into]);
-      if (push.ok) {
-        return { landed: true, commit: must(main, ["rev-parse", "HEAD"]) };
-      }
-      // Undo the local merge commit, keeping any unrelated working-tree state.
-      git(main, ["reset", "--keep", "HEAD~1"]);
-      if (!rejected(push.err)) {
-        return { landed: false, kind: "failed", reason: `git push ${REMOTE} ${into} failed: ${push.err}` };
-      }
-      if (retries >= PUSH_RETRIES) {
-        return {
-          landed: false,
-          kind: "failed",
-          reason: `git push was rejected after ${PUSH_RETRIES} retries: ${push.err}`,
-        };
-      }
+  if (remote) {
+    const f = git(worktree, ["fetch", REMOTE]);
+    if (!f.ok) {
+      return { landed: false, kind: "failed", reason: `git fetch ${REMOTE} failed: ${f.err}` };
     }
-  });
+  }
+  const tipRef = remote ? `${REMOTE}/${into}` : into;
+  const rebase = git(worktree, ["rebase", tipRef]);
+  if (!rebase.ok) {
+    const files = conflicts(worktree);
+    git(worktree, ["rebase", "--abort"]);
+    return files.length > 0
+      ? {
+        landed: false,
+        kind: "conflict",
+        files,
+        reason: `rebasing ${branch} on ${tipRef} conflicts on ${files.join(", ")}`,
+      }
+      : { landed: false, kind: "failed", reason: `git rebase ${tipRef} failed: ${rebase.err}` };
+  }
+  git(main, ["config", baseKey(branch), must(worktree, ["rev-parse", tipRef])]);
 
-  if (result.refused !== undefined) {
-    const pr = pullRequest(worktree, branch, into, message, result.refused);
-    git(main, ["worktree", "remove", "--force", worktree]);
-    return result.warning ? { ...pr, warning: result.warning } : pr;
+  const merge = task(worktree, `git:merge:${into}`, [branch]);
+  if (merge.missing) {
+    return { landed: false, kind: "failed", reason: MIGRATE };
   }
-  if (result.landed && !remove(main, worktree, branch, false, into)) {
-    const note =
-      `${into} has the change, but ${worktree} or its branch ${branch} could not be removed — remove them by hand`;
-    result.warning = result.warning ? `${result.warning}; ${note}` : note;
+  const landed = () => {
+    const out = { landed: true, commit: must(main, ["rev-parse", `refs/heads/${into}`]) };
+    const left = removeWorktree(main, worktree, branch);
+    return left === null ? out : { ...out, warning: `${into} has the change, but ${left}` };
+  };
+  if (merge.ok) {
+    if (contains(main, branch, `refs/heads/${into}`)) {
+      return landed();
+    }
+    const out = { landed: false, kind: "pr", url: prUrl(worktree, branch), branch };
+    const left = removeWorktree(main, worktree, branch);
+    return left === null ? out : { ...out, warning: left };
   }
-  return result;
+
+  const onInto = git(main, ["symbolic-ref", "--short", "-q", "HEAD"]).out === into;
+  const failed = (reason, extra = {}) => ({
+    landed: false,
+    kind: "failed",
+    reason: onInto ? `${reason}; the main checkout ${main} is now on ${into}` : reason,
+    ...extra,
+  });
+  if (midMerge(main)) {
+    const files = conflicts(main);
+    return failed(
+      `git:merge:${into} left the main checkout ${main} mid-merge, as the task left it, with conflicts on ${
+        files.join(", ")
+      }: resolve them and commit, or run git merge --abort there`,
+    );
+  }
+  const pushed = remote
+    ? exists(main, `refs/remotes/${REMOTE}/${into}`) && contains(main, branch, `refs/remotes/${REMOTE}/${into}`)
+    : contains(main, branch, `refs/heads/${into}`);
+  if (pushed) {
+    const out = landed();
+    const note = `git:merge:${into} landed the change, then failed: ${tail(merge.out)}`;
+    return { ...out, warning: out.warning ? `${note}; ${out.warning}` : note };
+  }
+  if (remote && contains(main, branch, `refs/heads/${into}`)) {
+    return failed(
+      `the merge commit is on the local ${into} but not pushed: run git push ${REMOTE} ${into} from ${main}; ${
+        tail(merge.out)
+      }`,
+      { unpushed: true },
+    );
+  }
+  return failed(`git:merge:${into} failed: ${tail(merge.out)}`);
 }
 
 /**
- * After the pull request of `branch` merged: delete the local branch, delete
- * the remote branch when it still exists, and fast-forward `into` in the main
- * checkout when that is the branch it is on.
+ * The request of `branch`: { state, head } — state "merged" or another state,
+ * head the request's head commit — or null with no CLI.
+ */
+function request(dir, branch) {
+  const gh = mise(dir, ["gh", "pr", "view", branch, "--json", "state,headRefOid"]);
+  if (gh.ok) {
+    try {
+      const { state, headRefOid } = JSON.parse(gh.out);
+      return { state: state === "MERGED" ? "merged" : String(state), head: String(headRefOid ?? "") };
+    } catch {
+      // Fall through to glab.
+    }
+  }
+  const glab = mise(dir, ["glab", "mr", "view", branch, "--output", "json"]);
+  if (glab.ok) {
+    try {
+      const { state, sha } = JSON.parse(glab.out);
+      return { state: state === "merged" ? "merged" : String(state), head: String(sha ?? "") };
+    } catch {
+      return null;
+    }
+  }
+  return null;
+}
+
+/** Whether the merged request's `head` holds the local tip of `branch`: equal, or the tip an ancestor of it. */
+function headHoldsTip(main, branch, head) {
+  const tip = git(main, ["rev-parse", "--verify", "-q", `refs/heads/${branch}`]);
+  if (!tip.ok || head === "") {
+    return false;
+  }
+  return head === tip.out || git(main, ["merge-base", "--is-ancestor", tip.out, head]).ok;
+}
+
+/**
+ * After the pull request of `branch` merged, as gh or glab reports it: delete
+ * the local branch, delete origin/<branch> when it is land.mjs's own scratch,
+ * and fast-forward `into` in the main checkout when that is the branch it is
+ * on. Before that, keep the branch and return the command for the user.
  */
 export function finish({ repo, branch, into }) {
   const main = mainCheckout(repo);
-  const out = { finished: true };
-  if (hasRemote(main)) {
+  const req = request(main, branch);
+  const command = `git branch -D ${branch}`;
+  if (req?.state !== "merged") {
+    return {
+      finished: false,
+      reason: req === null
+        ? `neither gh nor glab reports the request of ${branch}; the branch is kept — delete it once the request merged`
+        : `the request of ${branch} is ${req.state}, not merged; the branch is kept`,
+      command,
+    };
+  }
+  const remote = hasRemote(main);
+  if (remote) {
     git(main, ["fetch", "--prune", REMOTE]);
-    git(main, ["push", REMOTE, "--delete", branch]);
+  }
+  const local = exists(main, `refs/heads/${branch}`);
+  if (local && !headHoldsTip(main, branch, req.head)) {
+    return {
+      finished: false,
+      reason: `the merged request of ${branch} has head ${
+        req.head || "unknown"
+      }, which does not hold the branch's tip; the branch is kept — delete it once its commits merged`,
+      command,
+    };
+  }
+  const scratch = local && isScratch(main, branch);
+  const out = { finished: true };
+  const warn = (note) => {
+    out.warning = out.warning ? `${out.warning}; ${note}` : note;
+  };
+  if (remote) {
+    if (scratch && exists(main, `refs/remotes/${REMOTE}/${branch}`)) {
+      const d = git(main, ["push", REMOTE, "--delete", branch]);
+      if (!d.ok) {
+        warn(`git push ${REMOTE} --delete ${branch} failed: ${d.err}`);
+      }
+    }
     const on = git(main, ["symbolic-ref", "--short", "-q", "HEAD"]);
     if (into && on.ok && on.out === into) {
       const pull = git(main, ["pull", "--ff-only", REMOTE, into]);
       if (!pull.ok) {
-        out.warning = `git pull --ff-only ${REMOTE} ${into} failed: ${pull.err}`;
+        warn(`git pull --ff-only ${REMOTE} ${into} failed: ${pull.err}`);
       }
     }
   }
-  if (git(main, ["rev-parse", "--verify", "--quiet", `refs/heads/${branch}`]).ok) {
+  if (exists(main, `refs/heads/${branch}`)) {
     const d = git(main, ["branch", "-D", branch]);
     if (!d.ok) {
       throw new LandError(`git branch -D ${branch} failed: ${d.err}`);

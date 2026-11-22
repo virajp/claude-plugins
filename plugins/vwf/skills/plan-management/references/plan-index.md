@@ -299,12 +299,15 @@ changes are never swept into the commit.
 3. `land.mjs close <worktree> --into <integration> --message <message>`:
    `docs: plan queue — <folder> running` for a claim, `… — <folder> unclaimed`
    for an unclaim, `… — <folder> complete` for a completion. `<folder>` is the
-   basename. It commits, merges, pushes, and restores the main checkout and
-   its stash; a rejected push is pulled and merged again, up to 3 times.
+   basename. It commits, rebases the branch on the tip in its own worktree,
+   and runs the `git:merge:<integration>` task from there, which merges and
+   pushes under a direct landing model, or opens a pull request under `pr`.
+   The main checkout's uncommitted changes are never part of the merge.
 4. By its result:
    - `landed: true` → done.
-   - `kind: "conflict"` on `docs/plans/index.json` → another session changed
-     the same row first. `land.mjs abandon <worktree>`, then by kind of edit:
+   - `kind: "conflict"` on `docs/plans/index.json` → the rebase met another
+     session's change to the same row. `land.mjs abandon <worktree>`, then by
+     kind of edit:
      - A **completion** starts again at step 1 — a completion never re-picks;
        it repeats until it lands.
      - A **claim** is lost: for `next`, a re-pick through *Reading the
@@ -313,13 +316,19 @@ changes are never swept into the commit.
      - An **unclaim** stops: the same row changed under it — the run landed,
        or another session released it — so the verb reports that and the
        user asks again after reading the queue.
-   - `kind: "pr"` → the hooks refused the merge and a pull request is open.
+   - `kind: "pr"` → the landing model is `pr`, and a pull request is open.
      The write waits on it, per *Waiting on a pull request* in
      `protected-branch.md`; on `MERGED`, `land.mjs finish`, then go on as on
      `landed: true`. A claim waiting so reports `pending`
      (`/vwf:execute`'s `references/claim.md`).
    - `kind: "failed"`, or a conflict on another file → `land.mjs abandon`,
-     and the write is refused with the reason.
+     and the write is refused with the reason, never retried. A `failed`
+     that the task's hook pass gave, or a conflict of the task in the main
+     checkout, is reported as `land.mjs` words it; the main checkout is left
+     mid-merge for the user. With `unpushed: true` the merge commit stays on
+     the local integration branch, and the reason gives
+     `git push origin <integration>`: the write stops and reports it, and is
+     never retried, since a retry would conflict with that commit.
 
 When the folder lives in a member repo, the claim's base write comes first —
 the row in the base is the claim — and then the folder's `run` is a second
@@ -327,11 +336,10 @@ write in the member repo, the same steps with `--into` the member's
 integration branch. If that write does not land, the claim returns
 `{claimed: false, kind: member-failed, reason}`, the reason naming the failure
 and the `plan-management unclaim <folder>` request, because the row is already
-`RUNNING`. A stash in the main checkout that cannot be applied or dropped
-leaves the landed write standing, with a `warning` naming the stash by tag and
-SHA. This reverses the older rule that the row was the one edit the run made
-there (approved 2026-10-24): a reader of the folder now finds a running plan's
-worktree and action log without searching.
+`RUNNING`. A landed write can carry a `warning` from `land.mjs`, which the
+caller prints. This reverses the older rule that the row was the one edit the
+run made there (approved 2026-10-24): a reader of the folder now finds a
+running plan's worktree and action log without searching.
 
 Every command is one plain call; none of them is `--force`, `reset --hard` or
 `--no-verify`, which `vwf:git-workflow` forbids everywhere. The write carries

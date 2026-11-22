@@ -375,7 +375,14 @@ stand.
   rule covered by a product-wide `enforcement.rules` waiver. These are enforced
   defaults, not elicitation material: never ask the user whether to adopt one; a
   deviation arrives only when the user raises it, and lands as the doc note +
-  scoped waiver pair. An environment named by a synonym (`dev`/`test`/`prod`
+  scoped waiver pair. The one confirmation is the pipeline's **release
+  branches**: when seeding `#pipeline`, show each repo's core branches — the
+  `data.value` of `bootstrap config get repo.core_branches --json`, run in
+  that repo — with a preselected stage/prod pair (staging from `develop` and
+  production from `main` when it has both; staging and production both from
+  its one core branch when it has one, `main` or `develop` alike), and the user
+  confirms or picks another pair; `#pipeline` records the confirmed pair per
+  repo. An environment named by a synonym (`dev`/`test`/`prod`
   etc.) anywhere in the docs or config is drift — propose the canonical name,
   never normalize silently.
 

@@ -18,17 +18,20 @@ than a mechanism.
 Three environments, exact names. Like the standard flow slugs, synonyms are
 recognized but normalized — a config or doc using a synonym is drift.
 
-| Canonical     | Who it serves               | Built from                                   | Deployed by                       |
-| ------------- | --------------------------- | -------------------------------------------- | --------------------------------- |
-| `development` | the developer's own machine | any branch                                   | never — run locally via mise      |
-| `staging`     | testers only, controlled    | one designated branch (`develop` by default) | a deliberate release act (rule 2) |
-| `production`  | customers                   | one designated branch (`main` by default)    | a deliberate release act (rule 2) |
+| Canonical     | Who it serves               | Built from                                         | Deployed by                       |
+| ------------- | --------------------------- | -------------------------------------------------- | --------------------------------- |
+| `development` | the developer's own machine | any branch                                         | never — run locally via mise      |
+| `staging`     | testers only, controlled    | one designated branch (`develop` when a core one)  | a deliberate release act (rule 2) |
+| `production`  | customers                   | one designated branch (`main` by default)          | a deliberate release act (rule 2) |
 
 **Each deployed environment releases from exactly one branch** — that much is
 the contract, because rule 3 has nothing to validate against otherwise. *Which*
-branch is the product's to choose; `develop` and `main` are the recommended
-default, and a product that names others records them in
-`conventions.md#pipeline` so the pipeline and the reviewers read the same pair.
+branch is the product's to choose, per repo, from that repo's core branches.
+`/vwf:blueprint` preselects the pair — staging from `develop` and production
+from `main` when both are core branches, both from the one core branch when
+there is one, `main` or `develop` alike — and the user confirms it or picks
+another; the confirmed pair is recorded in `conventions.md#pipeline` so the
+pipeline and the reviewers read the same pair.
 
 Synonyms: `dev`, `develop`, `local` → `development`; `test`, `stage` →
 `staging`; `prod` → `production`. The `environments:` keys in `.config/vwf.yaml`
@@ -104,8 +107,8 @@ literally named `production`).
 
 - **`/vwf:blueprint`** seeds `#pipeline` into `conventions.md` on first touch
   (beside `#baseline`) and normalizes environment synonyms it encounters in docs
-  as drift to fix, never silently. Where the product designates branches other
-  than the default pair, they are recorded there too.
+  as drift to fix, never silently. It shows each repo's core branches with the
+  preselected stage/prod pair, and records there the pair the user confirms.
 - **`/vwf:verify`** resolves its target environment by canonical name (a synonym
   in `environments:` is flagged as drift); its release offer stays
   production-only — rule 4 is why.

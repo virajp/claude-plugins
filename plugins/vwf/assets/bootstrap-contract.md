@@ -96,3 +96,22 @@ With `--json`, `add`, `remove`, `replace`, `migrate` and `detect --add` need
 `--yes` or `--dry-run`, else they stop with code 2. `config set`,
 `config unset` and `sync` need neither. A pending question stops a `--yes` run
 with code 2 and is listed in `data.plan.pending`.
+
+## The git ports
+
+Every git action of vwf that lands, cuts or removes a branch's worktree runs
+through bootstrap's git tasks, never raw git in their place:
+
+- `git:merge:<branch>` — lands a branch on the core branch `<branch>`, under
+  that branch's landing model, `repo.branches.<branch>.landing`:
+  `mise x -- mise run git:merge:<branch> -- <source>`.
+- `git:worktree:create` —
+  `mise x -- mise run git:worktree:create -- <name> --from <base> --no-setup`.
+- `git:worktree:setup` — sets up a fresh worktree, run inside it.
+- `git:worktree:delete` — `mise x -- mise run git:worktree:delete -- <name>`.
+
+A repo has a port when `bootstrap describe --json` lists it in `data.ports`
+with `present` true. When a port a skill needs is absent, the skill stops with
+this hint, word for word:
+
+> the repo has no bootstrap git task for this step: run `bootstrap migrate`

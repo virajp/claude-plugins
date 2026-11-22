@@ -42,8 +42,10 @@ Then act on that consent:
   that consent was recorded in the plan — do not ask again**.
   - Under an `all` shared-worktree override the option is *merge, push & keep worktree*. The next plan reuses
     it, and the loop's exit removes it unless the run ends on a `STOPPED` plan.
-  - A merge conflict is a hard halt: abort, keep the worktree, invoke
-    `plan-management status <folder> BLOCKED "<the conflicting files>"` there, and report the files.
+  - A merge conflict is a hard halt: run no `git merge --abort` — the `git:merge:<integration>` task leaves the
+    main checkout mid-merge for the user to resolve and commit, or abort — keep the worktree, invoke
+    `plan-management status <folder> BLOCKED "<the conflicting files>"` there, and report the files and that the
+    main checkout is left mid-merge.
   - When step 4 returns from the merge and push, open the completion's protected-branch write —
     `node ${CLAUDE_PLUGIN_ROOT}/skills/git-workflow/scripts/land.mjs open <base> --into <integration> --name
     vwf-complete-<plan name>` (`git-workflow/references/protected-branch.md`) — and invoke
@@ -56,8 +58,11 @@ Then act on that consent:
     write fails, abandon the write with `land.mjs`, so the partial `.config/bootstrap/releases.toml` goes with
     it, and stop per that section's last step. Otherwise `land.mjs close <worktree> --into <integration> --message "docs: plan queue —
     <folder> complete"` lands the row and the raised levels together. A conflict on the index abandons the write
-    and makes it again, the same row and the same raise, until it lands, and never re-picks. A `pr` result waits
-    on the pull request per that reference, then runs `land.mjs finish`.
+    and makes it again, the same row and the same raise, until it lands, and never re-picks; a conflict is the
+    only result retried. A `failed` result stops and is reported with its reason; one with `unpushed: true` also
+    reports `git push origin <integration>`, run from the main checkout, and is never retried. A `pr` result
+    waits on the pull request per that reference, then runs `land.mjs finish`; a `{finished: false, reason,
+    command}` result is reported with its `command`, and the landing goes on.
 - **no** → stop with the worktree path and the branch name, and say the branch is ready to land by hand. Say too
   that the index row stays `RUNNING` until the hand merge is followed by asking the session to archive the folder.
   That request is `plan-management archive <folder>`, made in a protected-branch write's worktree, never as a

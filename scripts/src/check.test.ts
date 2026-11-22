@@ -673,6 +673,19 @@ describe("the pack config tier", () => {
     );
   });
 
+  it("accepts the one-branch contribution guide in an init asset tree", () => {
+    // init copies this variant to a one-branch repo as CONTRIBUTING.md.
+    const hygiene = "skills/init/assets/hygiene";
+    const root = tree({
+      vwf: {
+        files: {
+          [`${hygiene}/CONTRIBUTING-one-branch.md`]: "# Contributing\n",
+        },
+      },
+    });
+    expect(messages(check(root))).toEqual([]);
+  });
+
   it("flags an init asset file outside the hygiene allowlist", () => {
     // init writes the hygiene files alone; every tool config and the issue
     // forms are bootstrap's.
@@ -681,6 +694,7 @@ describe("the pack config tier", () => {
       vwf: {
         files: {
           [`${hygiene}/CONTRIBUTING.md`]: "# Contributing\n",
+          [`${hygiene}/CONTRIBUTING-one-branch.md`]: "# Contributing\n",
           [`${hygiene}/SECURITY.md`]: "# Security\n",
           [`${hygiene}/licenses/MIT.txt`]: "MIT\n",
         },
@@ -698,13 +712,13 @@ describe("the pack config tier", () => {
     });
     expect(messages(check(root)).sort()).toEqual([
       `init asset tree lands a file outside its allowlist — only `
-      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
+      + `CONTRIBUTING.md, CONTRIBUTING-one-branch.md, SECURITY.md, licenses/: `
       + `${hygiene}/.editorconfig`,
       `init asset tree lands a file outside its allowlist — only `
-      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
+      + `CONTRIBUTING.md, CONTRIBUTING-one-branch.md, SECURITY.md, licenses/: `
       + `${hygiene}/.github/CODEOWNERS`,
       `init asset tree lands a file outside its allowlist — only `
-      + `CONTRIBUTING.md, SECURITY.md, licenses/: `
+      + `CONTRIBUTING.md, CONTRIBUTING-one-branch.md, SECURITY.md, licenses/: `
       + `${hygiene}/.github/ISSUE_TEMPLATE/bug.md`,
     ]
       .sort());

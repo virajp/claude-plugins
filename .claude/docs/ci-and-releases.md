@@ -4,7 +4,7 @@
 
 The mise config, its `MISE_ENV` split and the `setup:*` and `code:*` tasks are
 [bootstrap](https://github.com/virajp/bootstrap)'s, synced under `.config/` from
-the tools `.config/bootstrap.toml` selects: one folder per tool under
+the tools `.config/bootstrap/tools.toml` selects: one folder per tool under
 `.config/mise/conf.d/`, and this repo's own values in `conf.d/zz-repo/` and
 `conf.d/cloudflare/`. Its reference is bootstrap's `docs/sync`.
 
@@ -34,11 +34,12 @@ blocks force-push and deletion on both branches, and `release-tags` does the
 same for `refs/tags/*-v*`. Neither requires a PR or a green check, so the
 `release:*` tasks and `deps-update.yml` all still push directly.
 
-**The landing model is per branch.** `[tools.git.branch.<branch>].merge_model`
-in `.config/bootstrap.toml` sets how a branch lands: `direct` (merge locally and
-push) or `pr` (push and open a pull request), read by `git:merge:develop` and
-`git:merge:main`. A missing file or key is `direct`, which is what this repo
-holds.
+**The landing model is per branch.** `repo.branches.<b>.landing` — the
+`[branches.<b>]` table of `.config/bootstrap/repo.toml` — sets how a branch
+lands: `direct-merge` (merge locally and push), `direct-commit` (direct commits
+allowed too) or `pr` (push and open a pull request), read by
+`git:merge:develop` and `git:merge:main`. A missing key is `direct-merge`; this
+repo sets `develop` to `direct-commit` and leaves `main` at the default.
 
 **A release task bumps, commits and merges, then tags — and `main` stays
 merge-only.** No person and no plan bumps a version by hand: a landing plan

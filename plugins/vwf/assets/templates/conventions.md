@@ -112,8 +112,9 @@ to the relevant anchors rather than repeating.
 <!-- Seeded by `blueprint` on first touch from the vwf delivery-pipeline asset:
      the canonical environment table (development / staging / production, with
      synonyms normalized) and the pipeline rules (mise-built CI, tag-triggered
-     deploys — <project>-stage-v<x.y.z> → staging from develop,
-     <project>-prod-v<x.y.z> → production from main, branch-validated —
+     deploys — <project>-stage-v<x.y.z> → staging from the repo's stage
+     branch, <project>-prod-v<x.y.z> → production from its prod branch, the
+     pair the user confirmed from its core branches, branch-validated —
      staging-is-not-a-release, and tested-before-release), each with its
      pipeline/<rule> id. The CI system pinned on the project's cicd axis
      generates conforming workflows from this anchor. -->

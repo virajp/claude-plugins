@@ -87,8 +87,9 @@ and hands each pick to an `execute-runner` subagent, one at a time, until one
 stops — starts with one script call in the main checkout, `start.mjs` (the
 format test, the pick or resolve, `checks.mjs`'s blocking checks, the log start
 and the claim, no doctor skill), which claims it `RUNNING` through
-git-workflow's `land.mjs` (its own worktree and branch, merged in, never a
-direct commit; a pull request when pre-commit refuses the merge) before cutting
+git-workflow's `land.mjs` (its own worktree and branch, landed with the
+`git:merge:<integration>` task, never a direct commit; a pull request only when
+that branch's `repo.branches.<b>.landing` is `pr`) before cutting
 a worktree — the same commit writing the folder's `run`, the worktree and
 action-log paths — runs each unit by its `kind` (a `code` unit through TDD and
 the coverage gate, a `review` row through the two engines plus the code and
@@ -149,8 +150,10 @@ which the resolved-set line discloses, since the survey runs it before the
 consent. An `old layout` repo always takes the step, and `init` deletes
 `.config/stackgen.yaml` in each repo that reads green. A repo that fails the
 shaped test after the step stops there. `init` writes only its **hygiene
-assets** from `skills/init/assets/hygiene/` (`CONTRIBUTING.md`, `SECURITY.md`,
-the licence texts, with no adapter fetch and no lock record), a two-line readme
+assets** from `skills/init/assets/hygiene/` (`CONTRIBUTING.md` for a repo
+with `develop` and `main` as core branches, `CONTRIBUTING-one-branch.md` copied
+as `CONTRIBUTING.md` for a repo with one, `SECURITY.md`, the licence texts,
+with no adapter fetch and no lock record), a two-line readme
 stub, and `enforcement.kept_files` in the base's `.config/vwf.yaml`, the one key
 it writes there, in a stub (`config_format` + `enforcement`) where the file is
 missing. A hygiene asset the repo already has is kept; a struck create is a
@@ -168,9 +171,10 @@ where it left one uncommitted, is the first commit, `init`'s own files the
 second, and a member on no branch is a **refused** row naming the branch to
 check out. **After the base lands comes the forge pass**, on one further consent
 for the whole product: it sets each eligible repo's default branch on the forge,
-protects `develop` and `main` there — no force-push, no deletion, and a pull
-request required on each branch whose `[tools.git.branch.<branch>].merge_model`
-reads `pr`; a branch already protected in any form is left exactly as it is —
+protects each core branch of its `repo.core_branches` there — no force-push,
+no deletion, and a pull request required on each branch whose
+`repo.branches.<b>.landing` reads `pr`; a branch already protected in any form
+is left exactly as it is —
 and reaches the backlog skill's missing-project procedure for the base. Those
 three are the only forge settings it touches; a repo it could not reach is
 listed `pending`, and a forge it has no CLI for gets the by-hand list, which the

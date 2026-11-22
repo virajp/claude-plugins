@@ -92,7 +92,7 @@ user happened to be standing in.
 or the forge state, so most runs of it arrive from a drift row and should act
 on exactly what that row named. A row about a pack names `/vwf:setup` instead:
 a reshape runs no materialize pass. The shape pass includes init's **forge
-pass** — the default branch, the protection on `develop` and `main`, the base's backlog
+pass** — the default branch, the protection on each core branch, the base's backlog
 project — which is idempotent on a repo already set, so a reshape that arrives
 from a forge-state row sets only what drifted.
 

@@ -90,9 +90,10 @@ sync
 and its own files as separate commits. If you chose *commit and push*, the
 **forge
 pass** follows on one more consent: it
-shows what it will set on the forge — the default branch (`develop`
-preselected), protection on `develop` and `main` (no force-push, no deletion,
-and a pull request required on whichever of the two you set to `pr`), and the
+shows what it will set on the forge — the default branch (the integration
+branch: `develop` when it is a core branch, else `main`), protection on each
+core branch (no force-push, no deletion, and a pull request required on each
+whose landing you set to `pr`), and the
 backlog project it hands you the browser to create — and applies it through the
 forge CLI, leaving any protection already there untouched. Without the CLI, or
 on a forge it has none for, it prints the same list for you to apply by hand —

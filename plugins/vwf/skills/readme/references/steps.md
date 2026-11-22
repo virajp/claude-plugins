@@ -10,9 +10,9 @@ Gather the facts before writing, from the Detect signals table in `SKILL.md`.
   `MISE_ENV=dev mise run setup` alone is the single bootstrap entrypoint. It
   installs the pinned tools itself, over the `setup:*` steps that it already
   orders.
-- Note `MISE_ENV=dev mise run setup:worktree` too, where the repo has one. It is
-  the lighter bootstrap that a fresh worktree runs. A contributor who does not
-  know it exists runs the slow path forever.
+- Note `MISE_ENV=dev mise run git:worktree:setup` too, where the repo has one.
+  It is the lighter bootstrap that a fresh worktree runs. A contributor who does
+  not know it exists runs the slow path forever.
 - Task runner: prefer mise when more than one is present. Read the tasks from
   whichever exists. Pick the ones used day to day: setup, the lint, test and
   build gates, dev or run, and release. If none exists, there is no section 8.
@@ -67,8 +67,8 @@ Follow the `documentation-standards` skill:
   2. Set up the env.
   3. Run `MISE_ENV=dev mise run setup`, with no `mise install` before it.
   4. State how to run it.
-  5. Add `MISE_ENV=dev mise run setup:worktree` for a fresh worktree, when the
-     repo defines it.
+  5. Add `MISE_ENV=dev mise run git:worktree:setup` for a fresh worktree, when
+     the repo defines it.
 - **Projects**, per project: what it is, its stack, how to run and test it, and
   its key tasks.
 - **Important tasks** is a table: `| Task | What it does |`. Use real names from
