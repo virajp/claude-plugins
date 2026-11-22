@@ -60,11 +60,11 @@ pointers current — then remove it. Order matters:
    commits. If it exits 1, run `gh pr view <branch> --json state,headRefOid`
    (or `glab mr view <branch> --output json`, reading `state` and `sha`).
    Only when the state is `MERGED` (glab: `merged`) **and** that head holds
-   the local tip — it equals `git rev-parse <branch>`, or
-   `git merge-base --is-ancestor <branch> <head>` exits 0 — run the
-   `git branch -D` command that the task printed. Otherwise keep the branch,
-   report the failure — a stale local core branch also gives exit 1, and a
-   tip the merged head lacks is unmerged work — and stop.
+   the local tip — it equals `git rev-parse refs/heads/<branch>`, or
+   `git merge-base --is-ancestor refs/heads/<branch> <head>` exits 0 —
+   run the `git branch -D` command that the task printed. Otherwise keep
+   the branch, report the failure — a stale local core branch also gives
+   exit 1, and a tip the merged head lacks is unmerged work — and stop.
 
 5. **Sweep stale worktrees.** After this one lands, list the other worktrees
    under the worktree dir (`git worktree list`) whose branches are **fully
