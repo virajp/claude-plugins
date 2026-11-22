@@ -218,7 +218,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, the vwf plugin at any scope (`claude plugin list --json`, blocking when installed at no scope) and the base's `virajp-plugins` tool (`bootstrap describe --json`, drift when missing; a note when the catalog lacks it), and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `docs/memory/` store's handoff ignore line |
 | **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
 
@@ -286,8 +286,8 @@ and the payload absent, a `custom` template pin, a project whose template does
 not cover every platform it declares, a broken membership link (§1), an unwaived
 **critical** dependency advisory (the audit check), no bootstrap contract — the
 install hint of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — and a
-repo its shaped test refuses, with the envelope's `errors` text (§5); callers
-must halt),
+repo its shaped test refuses, with the envelope's `errors` text (§5), and the
+vwf plugin installed at no scope (§5); callers must halt),
 **drift** (config and repo disagree — **including the whole repo-shape check
 against the baseline `/vwf:init` lays down**, run **per repo — the base and each
 locally-present member** (§5): a pack version behind, a registry id whose pinned
@@ -301,7 +301,8 @@ and — read from the forge, only where its CLI answers — a default branch tha
 not one of the repo's core branches or does not exist, a core branch with no
 protection on the forge at all, or no backlog project for the base — and, read
 from the checkout, a `develop` branch left in a repo whose one core branch is
-not `develop`. Each row is printed under the
+not `develop` — and a base repo with no `virajp-plugins` tool, whose
+`.gitignore` lines are missing (§5). Each row is printed under the
 repo it was found in, and an **absent** member is a blind spot rather than a
 row. A repo behind its baseline still works, so none of those is ever blocking),
 **warning** (the repo-shape check could not judge a row, or read a value it cannot
@@ -345,11 +346,11 @@ read.
 remedies, named in that check's table — **across every repo**, since one re-run
 covers a member's drift as well as the base's — so print each remedy a single
 time with the rows that led to it underneath: `/vwf:setup` for the pack rows,
-and `/vwf:setup reshape` for the bootstrap and forge rows. A
-list repeating one command per row reads as several problems when it is one
-re-run, and hides how much of the baseline has moved. The two doors differ by
-what they reconcile: plain `/vwf:setup` reconciles
-what the config declares and the packs it pins, `reshape` reconciles the shape.
+and `/vwf:setup reshape` for the bootstrap, forge and `virajp-plugins` tool
+rows. A list repeating one command per row reads as several problems when it is
+one re-run, and hides how much of the baseline has moved. The two doors differ
+by what they reconcile: plain `/vwf:setup` reconciles what the config declares
+and the packs it pins, `reshape` reconciles the shape.
 Neither is a remedy doctor applies: `reshape` is the door, and the consent to
 re-shape a repo is `/vwf:init`'s to take behind it.
 

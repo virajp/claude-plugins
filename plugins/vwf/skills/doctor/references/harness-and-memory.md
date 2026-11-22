@@ -23,7 +23,9 @@ folders — `decisions/`, `gaps/`, `problems/` and `handoff/` — where the memo
 asset's location rule puts them (the base repo, in a multi-repo product). A
 missing folder is fine (nothing written there yet). Check one thing: that
 `.gitignore` covers `docs/memory/handoff/`, a line the repo's `.gitignore`
-carries, synced by bootstrap's git tool (remedy `/vwf:setup reshape`), and that
-no handoff file is
+carries, given by bootstrap's `virajp-plugins` tool (remedy
+`/vwf:setup reshape`), and that no handoff file is
 **committed** — drift to report, since it puts one developer's session state in
-everyone's diff. A folder or file the current format no longer has is §8's.
+everyone's diff. When §5 reports the base's missing `virajp-plugins` tool, this
+check does not report the missing ignore line: one row per cause, and the tool
+row covers it. A folder or file the current format no longer has is §8's.

@@ -8,8 +8,9 @@ non-zero — blocking once the project's `template` is pinned, a degradation
 while it reads `unresolved` — and a pin not materialized) and §5 (a `custom`
 template pin, a missing `mise`, an `iac` project inside another repo the user
 has not declined to extract, a template that does not cover its project's
-platforms). An unknown language is a degradation, never blocking (§3);
-`/vwf:setup` alone stops on it, by its own rule. The
+platforms, the vwf plugin installed at no scope). An unknown language is a
+degradation, never blocking (§3); `/vwf:setup` alone stops on it, by its own
+rule. The
 package manager's lockfile is looked for where the pack's `lockfile:` fact
 says, when it declares one (§5).
 
@@ -456,6 +457,32 @@ no backlog to read, and nothing else says so until a verb fails.
 The same three answers decide whether predicate **(g)** below runs at all —
 it reuses them rather than probing a second time, and a miss here is what it
 reports as its skip reason.
+
+**The vwf plugin and the `virajp-plugins` tool.** Two checks, full mode only.
+The user may have installed vwf at user scope rather than in the repo, so the
+plugin is read from `claude`, at any scope, and the tool from bootstrap:
+
+- **The vwf plugin.** Run `claude plugin list --json` once. An entry counts
+  when it is `vwf@virajp-plugins`, its `enabled` is true, and either its scope
+  is `user`, or its `projectPath` is this repo's main checkout or one of its
+  worktrees (`git worktree list`). Another repo's project install, or a
+  disabled entry, does not count. One counting entry passes; none is
+  **blocking**. When `claude` is not on `PATH`, the check is a note, not a
+  finding.
+- **The `virajp-plugins` tool.** In the base repo only. vwf's `.gitignore`
+  lines come from bootstrap's `virajp-plugins` tool, and a repo shaped before
+  init added it loses them at its next sync. Read `bootstrap catalog --json`
+  first: when the catalog has no `virajp-plugins` tool — only a local build of
+  bootstrap can lack it — give a note, not a row. When the contract check
+  failed, the base is not shaped, or `bootstrap describe --json` fails, skip
+  the row: doctor already reports the shape problem. Otherwise, when
+  `data.tools` of `describe` does not list `virajp-plugins`, report one
+  **drift** row, never blocking: vwf's `.gitignore` lines are missing.
+
+| Check | Finding | Remedy |
+| --- | --- | --- |
+| The vwf plugin | installed at no scope — **blocking** | install vwf: the installer's one-shot (`pnpx @virajp.dev/claude-plugins --all`), or `mise run setup:ai` in a repo with the tool |
+| The `virajp-plugins` tool | not in the base's `describe` tools — **drift** | `/vwf:setup reshape`, whose init pass adds the tool |
 
 ## The repo shape against its baseline
 
