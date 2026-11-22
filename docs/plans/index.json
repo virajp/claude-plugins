@@ -28,8 +28,8 @@
       "title": "R4a — vwf.yaml format 27: product, topology, members and environments move to repo.toml",
       "target_repo": null,
       "priority": 50,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-22T22:45:09.257Z",
       "ended": "",
       "gaps": null,
       "requires": [
