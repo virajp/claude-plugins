@@ -72,8 +72,12 @@ would write. No materializer is called, and nothing a pack or bootstrap landed
 reaches this pass.
 
 Diff **the repo this pass is running in** against what the hygiene assets carry
-— the same set for every repo, since the shape is per repo. Every asset that
-repo lacks is a **create**, listed with where it comes from, unless
+— the same set for every repo, since the shape is per repo, the contribution
+guide counted once, by the name it lands as: a repo with `CONTRIBUTING.md` has
+that asset, and `CONTRIBUTING-one-branch.md` is never looked for under its own
+name. Every asset that repo lacks is a **create**, listed with where it comes
+from — for the contribution guide, the variant `repo.core_branches` picks —
+unless
 `enforcement.kept_files` already records its path. A create row may be struck
 from the plan before the consent, which is a **keep**, recorded below.
 
@@ -195,7 +199,8 @@ printed; a repo of the set that resolved to mode `blank` or `source` takes the
 - **Creates** are `init`'s hygiene assets, copied as
   [hygiene assets](readme-and-license.md) states and exactly as
   [new repo](new-repo.md)'s *The hygiene assets* lands them — every file the plan
-  lists. `init` never authors asset content from scratch.
+  lists, the chosen contribution guide variant copied as `CONTRIBUTING.md`.
+  `init` never authors asset content from scratch.
 - **After the creates, the steps every mode shares.** Run
   [new repo](new-repo.md)'s *The placeholders*, across every landed file, and
   *The readme stub, the licence and the security file* — on this pipeline each is

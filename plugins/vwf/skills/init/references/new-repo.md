@@ -77,6 +77,14 @@ through. The files that wait for an answer land in
 *The readme stub, the licence and the security file*. No adapter is fetched, and
 no materializer is called.
 
+**The contribution guide has two variants**, chosen per repo from
+`bootstrap config get repo.core_branches --json` (the envelope's `data.value`):
+`CONTRIBUTING.md` where the core branches are `develop` and `main`, and
+`CONTRIBUTING-one-branch.md` where there is one. `init` copies the chosen variant
+to the repo's root as `CONTRIBUTING.md`; `CONTRIBUTING-one-branch.md` never
+lands under its own name, and a repo that carries `CONTRIBUTING.md` has the
+asset, whichever variant it came from.
+
 Each asset is a row of *Missing files* in [existing repo](existing-repo.md). A
 readme, a licence, a security file or any other hygiene asset the repo already
 carries is kept on the already-there rule, and reported as kept.
@@ -252,7 +260,7 @@ for their answers and are placed here.
 **`init` commits nothing itself.** bootstrap's hook refuses a commit on a
 protected core branch, so `init` could not commit first in any case: it lands
 through `/vwf:git-workflow`, which makes each commit after it isolates the work
-and owns branches, protected core branches, `merge_model`, conflicts, failures
+and owns branches, protected core branches, the landing, conflicts, failures
 and reruns. This section writes no branch, merge task, hook bypass or conflict
 rule of its own; every one of those is that skill's.
 
@@ -321,8 +329,9 @@ required checks, the repo's description, its visibility — is nobody's here.
 The pass never creates a remote and never pushes.
 
 **Eligibility.** A repo takes the pass where `/vwf:git-workflow` landed it with a
-push this run — `direct` pushed the core branch, or `pr` opened the pull request —
-or where it had **nothing to land** and its core branches already exist on
+push this run — `direct-merge` or `direct-commit` pushed the core branch, or
+`pr` opened the pull request — or where it had **nothing to land** and its core
+branches already exist on
 `origin`. Any other repo — the answer was **commit**, it has no remote, that skill
 did not land it, or the bootstrap step stopped it — is listed as `pending` on its
 `Forge` line with that reason, and nothing is set for it: a default branch on a
@@ -372,24 +381,26 @@ run continues to the report. Where every row reads as already set and the backlo
 project is present, there is nothing to ask, and the report says so. The table is
 built from these reads, in this order:
 
-- **The default branch.** One row per repo, **`develop` preselected** where it
-  exists, `main` the other. The branch model does not depend on the answer — work
-  flows into `develop` and from there into `main` either way — but a forge
-  opens pull requests, shows a landing page and clones against its default,
-  and `develop` is where that traffic belongs on a product whose `main` takes
-  nothing but merges. Nothing in the tree records the answer: the forge is
-  the record, and doctor's Forge state predicate reads it back from there.
-- **The protection, each of `main` and `develop` the repo has, always**: no
-  force-push and no deletion. Then **per branch, from that branch's own value** —
-  `merge_model` of `[tools.git.branch.develop]` for `develop` and of
-  `[tools.git.branch.main]` for `main`, in that repo's
-  `.config/bootstrap.toml`, a missing file or key reading
-  `direct`: where the value is **`pr`**, additionally **require a pull request**,
-  with no approval count, because the landing model says that branch lands through
-  a request, so a direct push to it is exactly what the forge should refuse.
-  Where it is `direct` the merge tasks push the merge themselves, and a
-  require-pull-request rule would refuse the model the repo chose. Any branch of
-  another name is neither set default nor protected.
+- **The core branches**, per repo, from
+  `bootstrap config get repo.core_branches --json`, the value being the
+  envelope's `data.value`: `develop` and `main`, or one of them.
+- **The default branch.** One row per repo: its **integration branch** —
+  `develop` where `develop` is a core branch, else `main`. With two core
+  branches work flows into `develop` and from there into `main`; with one, each
+  feature lands on it. A forge opens pull requests, shows a landing page and
+  clones against its default, and the integration branch is where that traffic
+  belongs. Nothing in the tree records the setting: the forge is the record,
+  and doctor's Forge state predicate reads it back from there.
+- **The protection, each core branch, always**: no force-push and no deletion.
+  Then **per branch, from that branch's own landing** —
+  `bootstrap config get repo.branches.<b>.landing --json`, the value being the
+  envelope's `data.value`, a missing key reading `direct-merge`: where the value
+  is **`pr`**, additionally **require a pull request**, with no approval count,
+  because the landing says that branch lands through a request, so a direct
+  push to it is exactly what the forge should refuse. Where it is `direct-merge`
+  or `direct-commit` the `git:merge:<b>` task pushes the merge itself, and a
+  require-pull-request rule would refuse the landing the repo chose. A branch
+  that is not a core branch is neither set default nor protected.
 - **The idempotence check, per branch.** A branch that is already protected
   in any form is **left exactly as it is** and reported as such — never
   merged with, never replaced, however different its rules are from the two
@@ -476,9 +487,9 @@ miss on the `project` scope, reads `pending` with its reason — the next
 it — no CLI for the forge, a failed precondition, a refused call, or the
 consent declined. It is the same table, printed for that repo alone, in the
 words a person applies on the forge's settings pages: set the default branch
-to `<branch>`; on each core branch, refuse force-pushes and deletion, and require
-a pull request on whichever has `merge_model = "pr"`; and, for the base, create
-the backlog project per the backlog skill. The hygiene assets' `CONTRIBUTING.md`,
+to `<branch>`; on each core branch, refuse force-pushes and deletion, and
+require a pull request on each whose landing is `pr`; and, for the base, create
+the backlog project per the backlog skill. The `CONTRIBUTING.md` `init` copied,
 at the repo's root, carries the same by-hand form of the default-branch line, so
 the list points there rather than restating it.
 
