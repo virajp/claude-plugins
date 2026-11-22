@@ -3481,16 +3481,19 @@ things are always agreed before anything is written:
   touched trees, in three tiers: the **unit gate**, run once before each unit's
   commit; the **wave gate**, run once after every wave; and the **plan gate**,
   run once over the finished tree. When the repo has them, the proposal is
-  `mise x -- mise run code:format`, `mise x -- mise run code:lint` and
+  `mise x -- mise run code:format --all`,
+  `mise x -- mise run code:lint --all` and
   `mise x -- mise run code:precommit`, in that order: the cheap check runs
-  most often, and the full hook pass runs once, over every file — the plan
-  gate runs the full hook pass over every file of the finished tree, because
-  `code:precommit` always runs pre-commit with `--all-files` and takes no
-  flag. A folder with no plan gate runs its
-  wave gate once more at the end. `/vwf:execute` runs what is written and
-  nothing it infers. Every unit gate and wave gate line has to be green
-  **before wave 1**, since those gates run as the preflight too — so a check
-  that only starts holding once a particular unit has
+  most often, and the full hook pass runs once, over every file. The unit and
+  wave lines take `--all`: with no files and no `--all`, `code:format` and
+  `code:lint` examine only the uncommitted files, and the wave gate runs on a
+  clean worktree before wave 1 and after each wave, where that set is empty. The
+  plan gate runs the full hook pass over every file of the finished tree,
+  because `code:precommit` always runs pre-commit with `--all-files` and takes
+  no flag. A folder with no plan gate runs its wave gate once more at the end.
+  `/vwf:execute` runs what is written and nothing it infers. Every unit gate and
+  wave gate line has to be green **before wave 1**, since those gates run as the
+  preflight too — so a check that only starts holding once a particular unit has
   landed is not a gate line at all. It goes in that unit's *Verification*, and
   again in the gates unit's. A repo with neither task runner nor stamp records
   `none`, and the plan says plainly that the wave review is then the only check.

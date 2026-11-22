@@ -195,9 +195,9 @@ chosen there, copy verbatim; the docs page is its option C. Tokens are in
   `.config/linter.yaml` entry is `site/public/**`: the linter has no config for
   an ICO, a PNG or an extensionless `_headers`, and any path it has no config
   for produces warnings that fail the run. The ignore lives there and only there
-  — the `lint` pre-commit hook calls `mise run code:lint`, which runs the linter
-  over the whole tree, so there is no hook exclude and no pre-commit argument
-  list to narrow it.
+  — the `lint` pre-commit hook calls `mise run code:lint` with the staged files,
+  and `mise run code:lint --all` lints the whole tree. The two runs use the same
+  ignore, so there is no hook exclude to narrow it.
 - `**/*.astro` is dprint-formatted through the markup plugin and ignored by the
   linter in `.config/linter.yaml`; `site/**/*.css` has its own linter config
   block. `src/content/docs/**/*.md` is dprint-formatted like the rest of the

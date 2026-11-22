@@ -240,8 +240,8 @@ in [`repo-shape.md`][repo].
   hand. `**/*.astro` **is** dprint's, via the markup plugin, and is ignored by
   the linter in `.config/linter.yaml`: the linter has no Astro parser. There is
   no pre-commit argument list to exclude it from any more — the `lint` hook
-  calls `code:lint`, which runs the house linter over the whole tree, so every
-  linter exclusion lives in
+  calls `code:lint` with the staged files, and `code:lint --all` lints the
+  whole tree, so every linter exclusion still lives in
   `.config/linter.yaml` and nowhere else.
 - **`plugins/*/stacks/*/*/config/` is excluded whole, and the reason is not
   style.** That tree is **payload**: it is copied byte-for-byte into a target

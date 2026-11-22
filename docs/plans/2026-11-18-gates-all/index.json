@@ -78,7 +78,7 @@
       "status": "green",
       "started": "2026-11-22T22:08:14.120Z",
       "ended": "2026-11-22T22:09:30.904Z",
-      "commit": "",
+      "commit": "da6fca75",
       "rounds": 1
     },
     {
@@ -94,17 +94,18 @@
         ".claude/docs/**",
         "CLAUDE.md",
         "readme.md",
-        "CONTRIBUTING.md"
+        "CONTRIBUTING.md",
+        "site/CLAUDE.md"
       ],
       "depends_on": [
         "U1"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:11:40.962Z",
+      "ended": "2026-11-22T22:14:27.205Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -128,14 +129,14 @@
   "waves": [
     {
       "id": "W1",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-22T22:08:14.086Z",
-      "ended": ""
+      "ended": "2026-11-22T22:11:32.138Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-22T22:11:40.928Z",
       "ended": ""
     },
     {
@@ -365,31 +366,39 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers, so no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-22T22:11:40.583Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers, so no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-22T22:11:40.299Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers, so no blueprint slice to verify",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-22T22:11:40.439Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-22T22:11:40.722Z"
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U2",
+      "stage": "",
+      "text": "U2 reported DOCS FALSIFIED: site/CLAUDE.md (Traps) says the lint hook calls code:lint, which lints the whole tree, the same falsehood D16 corrects in CLAUDE.md, and no unit owned site/CLAUDE.md · U2 owns widened to site/CLAUDE.md under the plan Goal and D16, and the passage corrected",
+      "state": "closed"
+    }
+  ],
   "overrides": [
     {
       "id": "O1",
