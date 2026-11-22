@@ -5,6 +5,7 @@
  */
 import { spawnSync } from "node:child_process";
 import {
+  appendFileSync,
   chmodSync,
   cpSync,
   mkdirSync,
@@ -52,8 +53,86 @@ let base: string;
 let other: string;
 let env: NodeJS.ProcessEnv;
 
-/** A `mise` that runs what follows `--`, then the race script once, if any. */
+/** The main checkout: the parent of the git common dir, or its core.worktree (a submodule). */
+const MAIN = `common=$(git rev-parse --path-format=absolute --git-common-dir)
+tree=$(git config --file "$common/config" core.worktree)
+if [ -n "$tree" ]; then main=$(cd "$common" && cd "$tree" && pwd -P); else main=$(dirname "$common"); fi`;
+
+/** Each stub logs its arguments to stub-tasks.log in the git common dir. */
+const LOG = `echo "$0 $*" >> "$(git rev-parse --path-format=absolute --git-common-dir)/stub-tasks.log"`;
+
+/** git:merge:<b>: the hook pass (the .stub-hook-fail marker), then a merge and a push, or a pull request. */
+const MERGE = `#!/bin/sh
+${LOG}
+into=$(basename "$0")
+branch=$1
+if [ -f .stub-hook-fail ]; then echo "- A hook failed without changing anything, so it needs a fix by hand." >&2; exit 1; fi
+${MAIN}
+origin=
+if git remote get-url origin >/dev/null 2>&1; then origin=1; fi
+if [ "$STUB_LANDING" = pr ]; then
+  git push -q -u origin "$branch" || exit 1
+  if command -v gh >/dev/null 2>&1; then gh pr create --base "$into" --head "$branch" --fill || exit 1; fi
+  exit 0
+fi
+restore=$(git -C "$main" symbolic-ref --short -q HEAD)
+cd "$main" || exit 1
+git checkout -q "$into" || exit 1
+if [ -n "$origin" ] && ! git pull -q --no-rebase origin "$into"; then
+  if [ -n "$restore" ]; then git checkout -q "$restore"; fi
+  exit 1
+fi
+if ! git merge -q --no-ff --no-edit "$branch"; then echo "FAILED to merge $branch into $into; the tree is left mid-merge" >&2; exit 1; fi
+if [ -n "$origin" ] && ! git push -q origin "$into"; then echo "FAILED to push $into branch to origin!" >&2; exit 1; fi
+if [ -n "$restore" ] && [ "$restore" != "$into" ]; then git checkout -q "$restore" || exit 1; fi
+exit 0
+`;
+
+/** git:worktree:create: a new branch from --from; fails after the add on a .stub-create-fail marker. */
+const CREATE = `#!/bin/sh
+${LOG}
+${MAIN}
+name=$1; shift; from=
+while [ "$#" -gt 0 ]; do case "$1" in --from) from=$2; shift 2 ;; *) shift ;; esac; done
+dir=.worktrees
+if [ ! -e "$main/.worktrees" ] && [ -d "$main/worktrees" ]; then dir=worktrees; fi
+git worktree add --quiet -b "$name" "$main/$dir/$name" "$from" || exit 1
+if [ -f "$main/.stub-create-fail" ]; then echo "mise trust failed." >&2; exit 1; fi
+exit 0
+`;
+
+/** git:worktree:delete: remove the worktree, then the branch only when a core branch has it. */
+const DELETE = `#!/bin/sh
+${LOG}
+branch=$1
+wt=$(git worktree list --porcelain | awk -v b="branch refs/heads/$branch" '/^worktree /{p=substr($0,10)} $0==b{print p; exit}')
+if [ -z "$wt" ]; then echo "no worktree has the branch '$branch'." >&2; exit 1; fi
+git worktree remove "$wt" || { echo "git worktree remove failed." >&2; exit 1; }
+for core in develop main trunk; do
+  ref=
+  if git show-ref --verify --quiet "refs/heads/$core"; then ref="refs/heads/$core"
+  elif git show-ref --verify --quiet "refs/remotes/origin/$core"; then ref="refs/remotes/origin/$core"; fi
+  if [ -n "$ref" ] && git merge-base --is-ancestor "refs/heads/$branch" "$ref"; then git branch -D -q "$branch"; exit 0; fi
+done
+echo "no core branch has each commit of '$branch', so the branch stays." >&2
+echo "- delete it anyway: git branch -D $branch" >&2
+exit 1
+`;
+
+/**
+ * A `mise` that runs `run git:<x> -- <args>` as the stub file
+ * .config/mise/tasks/git/<x> of the main checkout; every other call runs what
+ * follows `--`, then the race script once, if any.
+ */
 const MISE = `#!/bin/sh
+if [ "$1" = run ]; then
+  name=$2; shift 2
+  if [ "$1" = -- ]; then shift; fi
+  ${MAIN}
+  stub="$main/.config/mise/tasks/$(echo "$name" | tr ':' '/')"
+  if [ ! -f "$stub" ]; then echo "mise ERROR no task $name found" >&2; exit 1; fi
+  exec sh "$stub" "$@"
+fi
 if [ -n "$MISE_FAIL" ]; then echo "mise stub: failing on purpose" >&2; exit 1; fi
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
 shift
@@ -62,34 +141,6 @@ status=$?
 if [ -n "$RACE" ] && [ -f "$RACE" ]; then sh "$RACE" >/dev/null 2>&1; rm -f "$RACE"; fi
 exit $status
 `;
-
-/**
- * A `git` that, on a call whose arguments start with $STUB_MATCH, first runs
- * the $STUB_RACE script once, and skips the call itself when $STUB_SKIP is
- * set; every other call goes to the real git.
- */
-const GIT_STUB = (real: string) =>
-  `#!/bin/sh
-case "$*" in
-  "$STUB_MATCH"*)
-    if [ -n "$STUB_RACE" ] && [ -f "$STUB_RACE" ]; then
-      race="$STUB_RACE.run"; mv "$STUB_RACE" "$race"; sh "$race" >/dev/null 2>&1; rm -f "$race"
-    fi
-    if [ -n "$STUB_SKIP" ]; then exit 0; fi
-    ;;
-esac
-exec "${real}" "$@"
-`;
-
-/** Runs plan.mjs with the git stub ahead of the real git on PATH. */
-function stubbed(cwd: string, args: string[], stub: NodeJS.ProcessEnv) {
-  const dir = join(root, "stub");
-  mkdirSync(dir, { recursive: true });
-  const real = spawnSync("sh", ["-c", "command -v git"], { env, encoding: "utf8" }).stdout.trim();
-  writeFileSync(join(dir, "git"), GIT_STUB(real));
-  chmodSync(join(dir, "git"), 0o755);
-  return plan(cwd, args, { ...stub, PATH: `${dir}:${env.PATH}` });
-}
 
 function git(cwd: string, ...args: string[]) {
   const r = spawnSync("git", args, { cwd, env, encoding: "utf8" });
@@ -180,15 +231,32 @@ function seed(rows: Json[], build: (seed: string) => void = () => {}, config = "
   git(s, "push", "-q", "origin", "develop");
   git(root, "clone", "-q", "-b", "develop", origin, base);
   git(root, "clone", "-q", "-b", "develop", origin, other);
+  stubTasks(base);
 }
 
-/** A pre-merge-commit hook in `repo` that refuses every merge, and a `gh` stub that opens a pull request. */
-function refuseMerges(repo: string) {
-  const hook = join(repo, ".git", "hooks", "pre-merge-commit");
-  writeFileSync(hook, "#!/bin/sh\necho 'Refuse a direct commit to a protected branch' >&2\nexit 1\n");
-  chmodSync(hook, 0o755);
+/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, kept out of git status. */
+function stubTasks(dir: string) {
+  const tasks = join(dir, ".config", "mise", "tasks", "git");
+  const files: [string, string][] = [
+    ["merge/develop", MERGE],
+    ["merge/main", MERGE],
+    ["merge/trunk", MERGE],
+    ["worktree/create", CREATE],
+    ["worktree/delete", DELETE],
+  ];
+  for (const [path, text] of files) {
+    write(join(tasks, path), text);
+  }
+  appendFileSync(join(dir, ".git", "info", "exclude"), "/.config/mise/tasks/git/\n");
+}
+
+/** A `gh` stub that opens a pull request and reports its URL. */
+function ghStub() {
   const gh = join(root, "bin", "gh");
-  writeFileSync(gh, "#!/bin/sh\necho https://example.com/pr/7\n");
+  writeFileSync(
+    gh,
+    `#!/bin/sh\ncase "$1 $2" in "pr view") printf '{"url":"%s"}\\n' https://example.com/pr/7 ;; *) echo https://example.com/pr/7 ;; esac\n`,
+  );
   chmodSync(gh, 0o755);
 }
 
@@ -230,6 +298,7 @@ beforeEach(() => {
   };
   delete env.RACE;
   delete env.MISE_FAIL;
+  delete env.STUB_LANDING;
   git(root, "init", "-q", "--bare", "-b", "develop", origin);
 });
 
@@ -428,8 +497,6 @@ describe("claim", () => {
   const ID = "2026-11-10-example-change";
   const FOLDER = `docs/plans/${ID}`;
   const MESSAGE = `docs: plan queue — ${ID} running`;
-  /** The stash tag git-workflow's land sets aside the main checkout's changes under. */
-  const TAG = "vwf land vwf-claim-example-change";
   const RUN = { worktree: ".worktrees/example-change", log: `~/Library/Caches/vwf/base/${ID}.jsonl` };
 
   function claimed() {
@@ -445,7 +512,7 @@ describe("claim", () => {
     expect(r.status).toBe(0);
     expect(r.json).toEqual({ claimed: true, commit: git(base, "rev-parse", "HEAD") });
     expect(git(origin, "log", "-1", "--format=%P", "develop").split(" ")).toHaveLength(2);
-    expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe(MESSAGE);
+    expect(git(origin, "log", "-1", "--format=%s", "develop^2")).toBe(MESSAGE);
     expect(git(origin, "show", "--name-only", "--format=", "develop^2").split("\n").sort())
       .toEqual([`${FOLDER}/index.json`, "docs/plans/index.json"]);
     expect(git(base, "branch", "--list", "vwf-claim-*")).toBe("");
@@ -470,7 +537,7 @@ describe("claim", () => {
     expect(claimed().run.worktree).toBe("worktrees/example-change");
   });
 
-  it("stashes a dirty tree and pops it back", () => {
+  it("leaves the main checkout's own changes uncommitted and out of the claim", () => {
     seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
     writeFileSync(join(base, "notes.md"), "edited\n");
     writeFileSync(join(base, "scratch.txt"), "untracked\n");
@@ -479,74 +546,7 @@ describe("claim", () => {
     expect(r.json.warning).toBeUndefined();
     expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
     expect(readFileSync(join(base, "scratch.txt"), "utf8")).toBe("untracked\n");
-    expect(git(base, "stash", "list")).toBe("");
-    expect(git(origin, "show", "--name-only", "--format=", "develop")).not.toMatch(/notes|scratch/);
-  });
-
-  it("restores its own stash when another is pushed on top of it", () => {
-    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
-    writeFileSync(join(base, "notes.md"), "edited\n");
-    const race = join(root, "race.sh");
-    writeFileSync(
-      race,
-      `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session"\n`,
-    );
-    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "pull --ff-only", STUB_RACE: race });
-    expect(r.status).toBe(0);
-    expect(r.json.warning).toBeUndefined();
-    expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
-    expect(readExists(join(base, "foreign.txt"))).toBe(false);
-    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual(["On develop: another session"]);
-  });
-
-  it("keeps its stash and warns when the stack moves before the drop", () => {
-    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
-    writeFileSync(join(base, "notes.md"), "edited\n");
-    const race = join(root, "race.sh");
-    writeFileSync(
-      race,
-      `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session" -- foreign.txt\n`,
-    );
-    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "rev-parse stash@{", STUB_RACE: race });
-    expect(r.status).toBe(0);
-    const ours = git(base, "stash", "list", "--format=%H %gs")
-      .split("\n")
-      .find((l) => l.endsWith(TAG));
-    expect(ours).toBeDefined();
-    const sha = ours!.split(" ")[0];
-    expect(r.json.warning).toContain(sha);
-    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
-      "On develop: another session",
-      `On develop: ${TAG}`,
-    ]);
-    expect(readFileSync(join(base, "notes.md"), "utf8")).toBe("edited\n");
-  });
-
-  it("refuses when another stash lands on top before it reads refs/stash", () => {
-    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
-    writeFileSync(join(base, "notes.md"), "edited\n");
-    const race = join(root, "race.sh");
-    writeFileSync(race, `cd "${base}" && echo foreign > foreign.txt && git stash push -q -u -m "another session"\n`);
-    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "rev-parse refs/stash", STUB_RACE: race });
-    expect(r.status).not.toBe(0);
-    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
-    expect(r.json.reason).toContain(`"${TAG}"`);
-    expect(r.json.reason).toContain(git(base, "rev-parse", "refs/stash"));
-    expect(git(base, "stash", "list", "--format=%gs").split("\n")).toEqual([
-      "On develop: another session",
-      `On develop: ${TAG}`,
-    ]);
-    expect(claimed().row.status).not.toBe("RUNNING");
-  });
-
-  it("refuses when the stash push creates no entry", () => {
-    seed([row(ID)], (s) => write(join(s, "notes.md"), "tracked\n"));
-    writeFileSync(join(base, "notes.md"), "edited\n");
-    const r = stubbed(base, ["claim", FOLDER], { STUB_MATCH: "stash push", STUB_SKIP: "1" });
-    expect(r.status).not.toBe(0);
-    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
-    expect(r.json.reason).toMatch(/created no new stash entry.*in the stash under "vwf land/);
-    expect(claimed().row.status).not.toBe("RUNNING");
+    expect(git(origin, "show", "--name-only", "--format=", "develop^2")).not.toMatch(/notes|scratch/);
   });
 
   it("claims from another branch and checks it out back", () => {
@@ -567,11 +567,12 @@ describe("claim", () => {
     );
     const r = plan(base, ["claim", FOLDER], { RACE: race });
     expect(r.status).toBe(0);
-    expect(git(origin, "log", "-2", "--format=%s", "develop").split("\n")).toEqual([MESSAGE, "other"]);
+    expect(git(origin, "log", "-1", "--format=%s", "develop^2")).toBe(MESSAGE);
+    expect(git(origin, "log", "-1", "--format=%s", "develop^1")).toBe("other");
     expect(claimed().row.status).toBe("RUNNING");
   });
 
-  it("loses a same-row conflict: restored, exit 1, nothing pushed", () => {
+  it("loses a same-row conflict at the rebase: exit 1, nothing pushed, the main checkout untouched", () => {
     seed([row(ID)]);
     const race = join(root, "race.sh");
     writeFileSync(
@@ -593,13 +594,14 @@ describe("claim", () => {
     expect(git(origin, "log", "--format=%s", "develop")).not.toMatch(MESSAGE);
     expect(git(base, "status", "--porcelain")).toBe("");
     expect(git(base, "symbolic-ref", "--short", "HEAD")).toBe("develop");
-    expect(git(base, "rev-parse", "HEAD")).not.toBe(before);
+    expect(git(base, "rev-parse", "HEAD")).toBe(before);
+    expect(git(base, "branch", "--list", "vwf-claim-*")).toBe("");
   });
 
-  it("opens a pull request when the hooks refuse the merge, claiming nothing yet", () => {
+  it("waits on a pull request when develop lands through one, claiming nothing yet", () => {
     seed([row(ID)]);
-    refuseMerges(base);
-    const r = plan(base, ["claim", FOLDER]);
+    ghStub();
+    const r = plan(base, ["claim", FOLDER], { STUB_LANDING: "pr" });
     expect(r.status).toBe(1);
     expect(r.json).toMatchObject({
       claimed: false,
@@ -611,6 +613,43 @@ describe("claim", () => {
     expect(git(origin, "log", "-1", "--format=%s", "develop")).toBe("seed");
     expect(git(origin, "log", "-1", "--format=%s", "vwf-claim-example-change")).toBe(MESSAGE);
     expect(git(base, "status", "--porcelain")).toBe("");
+  });
+
+  it("fails when the merge task's hook pass fails, claiming nothing", () => {
+    seed([row(ID)], (s) => write(join(s, ".stub-hook-fail"), ""));
+    const r = plan(base, ["claim", FOLDER]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
+    expect(r.json.reason).toMatch(/A hook failed/);
+    expect(r.json.unpushed).toBeUndefined();
+    expect(claimed().row.status).toBe("APPROVED");
+    expect(git(base, "branch", "--list", "vwf-claim-*")).toBe("");
+  });
+
+  it("fails on a conflict of the merge task, leaving the main checkout mid-merge", () => {
+    seed([row(ID)]);
+    const file = join(base, "docs", "plans", "index.json");
+    writeFileSync(file, readFileSync(file, "utf8").replace("\"status\": \"APPROVED\"", "\"status\": \"DRAFT\""));
+    git(base, "commit", "-q", "-am", "mine, unpushed");
+    const r = plan(base, ["claim", FOLDER]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ claimed: false, kind: "failed" });
+    expect(r.json.reason).toMatch(/mid-merge.*docs\/plans\/index\.json/);
+    expect(git(base, "rev-parse", "-q", "--verify", "MERGE_HEAD")).not.toBe("");
+    expect(claimed().row.status).toBe("APPROVED");
+  });
+
+  it("stops on an unpushed merge commit with its push command", () => {
+    seed([row(ID)]);
+    const hook = join(origin, "hooks", "pre-receive");
+    writeFileSync(hook, "#!/bin/sh\nexit 1\n");
+    chmodSync(hook, 0o755);
+    const r = plan(base, ["claim", FOLDER]);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ claimed: false, kind: "failed", unpushed: true });
+    expect(r.json.reason).toMatch(/git push origin develop/);
+    expect(git(base, "log", "-1", "--format=%s", "develop^2")).toBe(MESSAGE);
+    expect(claimed().row.status).toBe("APPROVED");
   });
 
   it("refuses a row already RUNNING at the tip as lost", () => {
@@ -684,6 +723,7 @@ describe("the branch flags", () => {
     }
     git(dir, "add", "-A");
     git(dir, "commit", "-q", "-m", "seed");
+    stubTasks(dir);
   }
 
   it.each([
@@ -713,12 +753,13 @@ describe("the branch flags", () => {
     git(s, "commit", "-q", "-m", "seed");
     git(s, "push", "-q", "origin", "main");
     git(root, "clone", "-q", "-b", "main", origin, base);
+    stubTasks(base);
     expect(plan(base, ["pick", "--branch", "main"]).json).toEqual({
       pick: { folder: FOLDER, kind: "change", priority: 10 },
     });
     const r = plan(base, ["claim", FOLDER, "--branch", "main"]);
     expect(r.status).toBe(0);
-    expect(git(origin, "log", "-1", "--format=%s", "main")).toBe(MESSAGE);
+    expect(git(origin, "log", "-1", "--format=%s", "main^2")).toBe(MESSAGE);
   });
 
   it("reads and claims on the local branch in a repo with no origin", () => {
@@ -730,7 +771,7 @@ describe("the branch flags", () => {
     expect(r.stderr).toBe("");
     expect(r.status).toBe(0);
     expect(r.json).toEqual({ claimed: true, commit: git(base, "rev-parse", "main") });
-    expect(git(base, "log", "-1", "--format=%s", "main")).toBe(MESSAGE);
+    expect(git(base, "log", "-1", "--format=%s", "main^2")).toBe(MESSAGE);
     const index = JSON.parse(git(base, "show", "main:docs/plans/index.json"));
     expect(index.plans[0]).toMatchObject({ status: "RUNNING", started: NOW });
     expect(git(base, "remote")).toBe("");
@@ -757,7 +798,7 @@ describe("the branch flags", () => {
     expect(without.json.reason).toMatch(/is a member repo; pass --member-branch <name>/);
     const r = plan(base, ["claim", FOLDER, "--member-branch", "trunk"]);
     expect(r.status).toBe(0);
-    expect(git(base, "log", "-1", "--format=%s", "develop")).toBe(MESSAGE);
-    expect(git(member, "log", "-1", "--format=%s", "trunk")).toBe(MESSAGE);
+    expect(git(base, "log", "-1", "--format=%s", "develop^2")).toBe(MESSAGE);
+    expect(git(member, "log", "-1", "--format=%s", "trunk^2")).toBe(MESSAGE);
   });
 });

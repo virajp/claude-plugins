@@ -11,15 +11,17 @@
 // never the working copy. Every git call is an argument array, never a shell
 // string. The claim is never a direct commit on the work branch: it lands
 // through git-workflow's land (scripts/lib/land.mjs) — a worktree and local
-// branch, a commit, a merge, a push, the worktree and branch removed; a merge
-// the hooks refuse becomes a pull request. In a repo with no origin there is
-// no fetch, no pull and no push.
+// branch, a commit, a rebase on the tip, then bootstrap's git:merge:<branch>
+// task, which merges and pushes, the worktree and branch removed; a branch
+// whose landing is pr gets a pull request instead. A failed landing is never
+// retried; one that left its merge commit unpushed carries unpushed: true and
+// the push command. In a repo with no origin there is no fetch and no push.
 //
 // pick    → { pick: { folder, kind, priority } } | { nothing: [{ folder, waits }] }
 // resolve → { runnable, entries: [{ entry, kind, satisfied, reason }] }
 // claim   → { claimed: true, commit[, warning] }
 //         | { claimed: false, kind: pr, url, branch, repo, reason[, warning] }
-//         | { claimed: false, kind: lost|member-failed|failed, reason[, warning] }
+//         | { claimed: false, kind: lost|member-failed|failed, reason[, unpushed: true][, warning] }
 
 import { spawnSync } from "node:child_process";
 import {
@@ -430,8 +432,8 @@ function planSet(cwd, file, path, value, json) {
 /**
  * One claim commit on `into` of `dir`, through git-workflow's land: a worktree
  * and local branch cut from the tip, `edit(worktree)` there, then close —
- * commit, merge, push, clean up. `edit` returns null, { lost: reason } or
- * { failed: reason }. A conflict on `contested` is a lost claim.
+ * commit, rebase, the merge task, clean up. `edit` returns null, { lost: reason }
+ * or { failed: reason }. A rebase conflict on `contested` is a lost claim.
  */
 function landClaim(dir, into, id, contested, edit) {
   const fail = (reason) => ({ claimed: false, kind: "failed", reason });
@@ -470,13 +472,13 @@ function landClaim(dir, into, id, contested, edit) {
       url: r.url,
       branch: r.branch,
       repo: dir,
-      reason: r.reason ?? `the merge into ${into} was refused; the claim waits on its pull request`,
+      reason: r.reason ?? `${into} lands through a pull request; the claim waits on it`,
     });
   }
   const left = drop();
   const out = r.kind === "conflict" && r.files.includes(contested)
     ? { claimed: false, kind: "lost", reason: `another session changed the same row of ${contested} first` }
-    : fail(r.reason);
+    : { ...fail(r.reason), ...(r.unpushed ? { unpushed: true } : {}) };
   const warning = [r.warning, left].filter(Boolean).join("; ");
   return warning ? { ...out, warning } : out;
 }
@@ -485,8 +487,8 @@ function landClaim(dir, into, id, contested, edit) {
  * The D17 claim: the row RUNNING and the folder's run, landed on the base's
  * work branch through git-workflow's land — never a direct commit; a member
  * folder's run is a second landing on that member's work branch (D19). A
- * merge the hooks refuse returns kind pr: the claim waits on that pull
- * request. `worktree` overrides the default <dir>/<plan name> (D20).
+ * work branch whose landing is pr returns kind pr: the claim waits on that
+ * pull request. `worktree` overrides the default <dir>/<plan name> (D20).
  */
 export function claim({ base, folder, worktree, branches }) {
   const id = basename(folder);
@@ -563,6 +565,7 @@ export function claim({ base, folder, worktree, branches }) {
       kind: "member-failed",
       reason:
         `the row is RUNNING at ${baseResult.commit}, but the member run commit failed: ${memberResult.reason}; make the plan-management unclaim ${id} request`,
+      ...(memberResult.unpushed ? { unpushed: true } : {}),
     };
     return warning ? { ...out, warning } : out;
   }
