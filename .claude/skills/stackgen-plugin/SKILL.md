@@ -123,8 +123,9 @@ of a repo are **bootstrap**'s — a separate repo, selected through the
 `bootstrap catalog --json` to choose the tools a composition needs, from each
 component's `pack.yaml` facts and conventions, and adds them with
 `bootstrap add tool <t> --json --dry-run`, then `--yes`, behind their own
-consent line; a plugin a pack names still goes as an `add user plugins`
-instruction through bootstrap's `docs/sync/vwf.md`, read from a blobless clone.
+consent line; a plugin a pack names is written to the `claude` tool's values
+with `bootstrap config set` (`config unset` on removal), and `mise run setup:ai`
+installs or uninstalls it.
 It never edits a file in `.config/bootstrap/` and never names a bootstrap tool
 from memory; it records what it asked for in the lockfile's `bootstrap:` block,
 so removal runs the matching `remove` and `stackgen-sync` diffs that block. A

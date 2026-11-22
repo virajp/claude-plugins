@@ -22,13 +22,12 @@ user's, and `/vwf:doctor` reports it in a shaped repo as drift.
   tag). It never edits Claude's settings itself. What stays deliberately cut is
   everything thicker than that: the copied payload, the adapters, the
   `requires:` gate, and any receipt for a plugin install — Claude's settings are
-  the record, and `--uninstall` reads them live. **A shaped repo calls this
-  once, only when `vwf` is missing**: since 2026-10-03 the task library's
-  `setup:ai` runs `pnpx @virajp.dev/claude-plugins@latest --all` when
-  `vwf@virajp-plugins` is installed at no scope that serves the repo, then
-  drives `claude plugin` itself to update every marketplace and upgrade every
-  plugin installed at a scope that serves the repo, at that scope. It never
-  installs at project scope. This is the one-shot a person runs; that is what a
+  the record, and `--uninstall` reads them live. **A shaped repo never calls
+  this**: bootstrap's `setup:ai` task is declarative. It installs what the
+  `claude` tool lists — vwf through the `virajp-plugins` tool — removes the
+  project plugins it recorded once they leave that list, updates only with
+  `mise run setup:ai --upgrade`, which `mise run setup --upgrade` passes, and
+  makes no pnpx call. This is the one-shot a person runs; that is what a
   checkout re-runs.
 - **`--uninstall`** — interactive; see below.
 

@@ -168,9 +168,9 @@ command consumes are missing — then tell the user to run `/vwf:setup` and stop
 Before any write, verify `docs/scratchpad/` is gitignored:
 `git check-ignore -q docs/scratchpad/x` — a child path, since the directory
 pattern does not match the bare name until it exists. If it is not, stop and
-say so: the line is in the repo's `.gitignore`, synced by bootstrap's git tool,
-and this skill never writes the file. Rendered mockups must never become
-committable.
+say so: the line is in the repo's `.gitignore`, given by bootstrap's
+`virajp-plugins` tool, and this skill never writes the file. Rendered mockups
+must never become committable.
 
 ### 2. Check `node`
 

@@ -143,7 +143,13 @@ each repo, the base first: after the contract check (bootstrap 4.1.0 or newer,
 contract 1), it runs `bootstrap migrate --json --dry-run`, asks the user each
 question of `data.plan.pending` one at a time, and runs
 `bootstrap migrate --json --yes` with each answer as
-`--answer <tool>.<key>=<value>`, up to 3 rounds. A repo is **green** when it
+`--answer <tool>.<key>=<value>`, up to 3 rounds. In the base alone, the step's
+last part adds bootstrap's `virajp-plugins` tool, which gives vwf's
+`.gitignore` lines and its `vwf@virajp-plugins` entry:
+`bootstrap add tool virajp-plugins --json --dry-run`, then `--yes`, inside the
+same consent — skipped with a warning where `bootstrap catalog --json` lists no
+such tool, and reported *stopped* on a non-zero exit while the base goes on to
+its hygiene files, commit and forge pass. A repo is **green** when it
 passes the shaped test and `bootstrap sync --json --dry-run` lists no change;
 that read writes nothing in the repo and fetches bootstrap's clone each run,
 which the resolved-set line discloses, since the survey runs it before the

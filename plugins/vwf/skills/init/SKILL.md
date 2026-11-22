@@ -108,7 +108,8 @@ reconciled against them.
 - **Idempotent.** A second run on a shaped **product** with nothing to do
   produces an **empty plan** — one section per repo, each reading nothing — and
   says the product is shaped: every repo reads green, per the bootstrap step,
-  holds no `.config/stackgen.yaml` and lacks no hygiene asset. The bootstrap step
+  holds no `.config/stackgen.yaml` and lacks no hygiene asset, and the base
+  carries no `virajp-plugins` tool row. The bootstrap step
   does not run on an empty plan, and the forge pass still reads the forge.
 - **A decline is a deferral, never a halt.** A declined write is recorded and
   named with its unlock — run `/vwf:setup reshape` — exactly as `/vwf:setup`'s
@@ -361,7 +362,8 @@ one-consent rule exists to prevent.
 | [hygiene assets](references/readme-and-license.md) | every mode — the stub, the licence, the security contact, the other assets |
 
 **The one plan carries, per repo:** its mode and evidence, a clone row where it
-is absent, the bootstrap step, each hygiene file it would create, **delete
+is absent, the bootstrap step, in the base alone the **`virajp-plugins` tool**
+row of the bootstrap step, each hygiene file it would create, **delete
 `.config/stackgen.yaml` if the repository is green** where it has that file, and
 **if bootstrap leaves its sync uncommitted, commit it first**. Then the one
 question: **commit**, or **commit and push**. Commit means commit only, with no
@@ -373,7 +375,8 @@ The same order in every mode, on the one consent. The order is the contract.
 
 1. **The clone rows**, then **the clean-tree check** once more.
 2. **The bootstrap step**, below — in each repo that takes it, the base first,
-   then each member.
+   then each member — and, in the base alone, its last part: the
+   `virajp-plugins` tool, added once `bootstrap migrate` ends there.
 3. **The gate.** A repo that fails the shaped test of
    `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` after the step
    **stops there**: it gets no hygiene file, no `kept_files` record, no commit,
@@ -418,6 +421,37 @@ Any other code than 0, at step 1 or 3, stops that repo: show the envelope's
 `errors` messages as bootstrap gives them, with no text of `init`'s own per
 case. The gate below then names it.
 
+**The `virajp-plugins` tool, in the base alone.** vwf's `.gitignore` lines and
+its `vwf@virajp-plugins` plugin entry come from bootstrap's `virajp-plugins`
+tool, so the step's last part adds that tool to the base. Member repos do not
+get it: only the base holds `docs/memory/` and `docs/plans/`, and one entry is
+enough.
+
+- **Before the plan**, read `bootstrap catalog --json` once. Where its tools
+  list no `virajp-plugins`, the base's section carries the row as *skipped*
+  with a warning — bootstrap ships no `virajp-plugins` tool, so vwf's ignore
+  lines and plugin entry are not added — the report repeats it, and nothing
+  below runs. Only a local build of bootstrap can lack the tool.
+- **The row.** Otherwise the base's section carries one row, *add the
+  `virajp-plugins` tool*, where the base is not shaped yet, or where it is
+  shaped and its `bootstrap describe --json` `data.tools` does not list
+  `virajp-plugins`. A shaped base that lists it carries no row. The row is
+  part of the plan's total, so a base that lacks only the tool does not read
+  as shaped, and the row runs on the consent even where `bootstrap migrate`
+  does not.
+- **On the consent**, once `bootstrap migrate` ends in the base, or where it
+  did not run there: run `bootstrap add tool virajp-plugins --json --dry-run`
+  and show its plan; ask each question of its `data.plan.pending` one at a
+  time, as step 2 above does; then run
+  `bootstrap add tool virajp-plugins --json --yes`, with each answer as
+  `--answer <tool>.<key>=<value>`, and loop on a new pending question as
+  step 4 above does. The one consent covers both runs; no second question is
+  asked.
+- **A non-zero exit**, from either run, shows the envelope's `errors` as
+  bootstrap gives them and reports the row as *stopped*; the base still goes
+  on to its hygiene files, its commit and the forge pass. A missing tool is
+  drift, which `/vwf:doctor` reports and `/vwf:setup reshape` fixes.
+
 `bootstrap migrate` makes no commit and needs a git repository: a repo with none
 gets its `git init` first, per [new repo](references/new-repo.md). So the step
 always leaves its sync uncommitted, and **if bootstrap leaves its sync
@@ -447,7 +481,8 @@ keeps the file, and the report names it with its reason.
 
 **The same read is what a survey does on a shaped repo.** Where every repo of the
 product resolved `shaped`, reads green, holds no `.config/stackgen.yaml` and lacks
-no hygiene asset, the plan is empty and the bootstrap step does not run:
+no hygiene asset, and the base carries no `virajp-plugins` tool row, the plan is
+empty and the bootstrap step does not run:
 `bootstrap migrate` would ask its questions again to change nothing. A green
 repo that still holds that file is not empty: its section carries the delete
 line, the one question is asked, and the deletion rides `init`'s own commit
@@ -486,6 +521,7 @@ check.
 ```text
 ── <repo> ──
 Bootstrap                <green | not green — <reason> | stopped — <reason>>
+virajp-plugins tool      added | present | skipped — <warning> | stopped — <reason>   (the base's alone)
 Old values file          .config/stackgen.yaml — deleted | kept — <reason> | none
 Files written     <n>    + <path>            (one per line)
 Files kept        <n>    <path> — <the reason>

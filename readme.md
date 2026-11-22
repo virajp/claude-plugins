@@ -135,7 +135,11 @@ do not report config drift: `/vwf:doctor` run whole does, through
 `bootstrap check --json` and `bootstrap sync --json --dry-run`.
 
 Once a repo **is** shaped, bootstrap's `setup:ai` task takes the plugin side
-over. The
+over, declaratively: it installs what bootstrap's `claude` tool lists — vwf
+through the `virajp-plugins` tool, which `/vwf:init` adds to the base repo —
+removes the project plugins it recorded once they leave that list, updates only
+with `mise run setup:ai --upgrade` (which `mise run setup --upgrade` passes),
+and makes no pnpx call. The
 command above is the one-shot a person runs on a machine; that is what a
 checkout
 re-runs.
@@ -332,8 +336,9 @@ through `bootstrap migrate`, and the `setup:*` and `code:*` tasks are
 bootstrap's with them. A pack ships no toolchain at all: its tool pins, its
 gates and their configs, and its generic tasks are bootstrap's. The materializer
 reads `bootstrap catalog` to choose the tools a stack needs, and adds them with
-`bootstrap add tool`, behind its own consent line; a plugin a pack names still
-goes through bootstrap's `docs/sync/vwf.md`. It never edits a file in
+`bootstrap add tool`, behind its own consent line; a plugin a pack names is
+written to the `claude` tool's values with `bootstrap config set`, and
+`mise run setup:ai` installs it. It never edits a file in
 `.config/bootstrap/` itself. A value only the machine can answer — the Xcode a
 repo builds with — is found by bootstrap's task, or set by the repo in
 `.config/mise/conf.d/zz-repo/`. Language manifests and CI workflow files stay

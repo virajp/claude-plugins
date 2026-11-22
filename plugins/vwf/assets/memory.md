@@ -72,8 +72,8 @@ what only one developer needs.**
 | `handoff`                       | gitignored | One developer's session state                       |
 
 The `.gitignore` entry (`docs/memory/handoff/`) and the `docs/scratchpad/` line
-sit in the repo's `.gitignore`, which bootstrap's git tool syncs, and no vwf
-skill writes the file. It also ignores
+sit in the repo's `.gitignore`, which bootstrap's `virajp-plugins` tool gives
+it, and no vwf skill writes the file. It also ignores
 `docs/memory/doctor/` and `docs/memory/runs/`: folders left from
 config_format 23, until the config_format 24 migration removes them.
 
