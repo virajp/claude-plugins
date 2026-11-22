@@ -60,7 +60,12 @@ Report what was created and what was already there.
 **SKILL.md's bootstrap step is this step**, as stated there:
 `bootstrap migrate --json --dry-run`, bootstrap's own questions asked one at a
 time, then `bootstrap migrate --json --yes` with the answers, in each repo that
-takes it, the base first, after the clone rows and the clean-tree check. Its
+takes it, the base first, after the clone rows and the clean-tree check — and in
+the base alone its last part, the `virajp-plugins` tool:
+`bootstrap add tool virajp-plugins --json --dry-run`, then `--yes` with the
+answers, inside the same consent, skipped with a warning where
+`bootstrap catalog --json` lists no such tool, and reported *stopped* on a
+non-zero exit while the base goes on to hygiene, commit and forge. Its
 gate — the shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
 — decides which repos reach the rest of this file, and its green read decides
 where `.config/stackgen.yaml` goes. The toolchain, the gates, the hooks, the
@@ -136,9 +141,11 @@ rather than filled here. Every other occurrence is the origin URL, per the table
 
 ## 5 — The template fallback
 
-Retired. The ignore file is bootstrap's git tool, a shared superset — a pattern
-for a tree the repo never produces matching nothing — so no language template is
-fetched and none is asked for, by `init` or by a pack. A line the repo adds goes
+Retired. The ignore file is bootstrap's: its git tool gives a shared superset —
+a pattern for a tree the repo never produces matching nothing — and vwf's own
+lines come from its `virajp-plugins` tool, which the bootstrap step adds to the
+base. So no language template is fetched and none is asked for, by `init` or by
+a pack. A line the repo adds goes
 into its `.gitignore` directly; the repo's own ignore lines — a line of the
 shared `.gitignore` it drops among them — are an override in its
 `.config/bootstrap/tools.toml`, set through `bootstrap config`; `init` reads and

@@ -33,8 +33,13 @@ the same one consent; nothing about the set changes which pipeline a repo reads.
 Exhaustive before anything is printed, and it writes nothing in the repo. It
 starts with one read per `shaped` repo, whether it is green, by the read
 SKILL.md's bootstrap step states: where it is not, the bootstrap step is a row
-of that repo's section, and an `old layout` repo always carries that row. That
-read runs `bootstrap sync --json --dry-run` before the one consent, writes
+of that repo's section, and an `old layout` repo always carries that row. In a
+`shaped` base, the survey also reads `bootstrap describe --json`: where its
+`data.tools` does not list `virajp-plugins`, and `bootstrap catalog --json`
+ships it, the base's section carries the row *add the `virajp-plugins` tool*,
+per SKILL.md's bootstrap step. This is how `/vwf:setup reshape` brings a base
+shaped before the tool existed up to date; nothing else about the pass changes.
+That read runs `bootstrap sync --json --dry-run` before the one consent, writes
 nothing in the repo and fetches bootstrap's clone, as SKILL.md's *The same
 read is what a survey does* states. Two read-only passes then run **per
 repo**: each reads, and reports on, the repo it is running in and no other.
@@ -136,6 +141,7 @@ the heading is what says which repo that is.
 
 ```text
 Bootstrap step               run | not needed — green
+virajp-plugins tool          add | present | skipped — <warning>   (the base's alone)
 Old values file              delete .config/stackgen.yaml if the repository is green | none
 Uncommitted sync             if bootstrap leaves its sync uncommitted, commit it first
 Moves                  <n>
@@ -150,7 +156,7 @@ total**, the per-repo totals summed, so the user reads one number before the one
 consent. The conditional `Uncommitted sync` line is printed for every repo that
 takes the bootstrap step, and counts for nothing until it happens. A delete line
 under `Old values file` counts as one, so a green repo holding that file never
-totals zero.
+totals zero, and so does an `add` under `virajp-plugins tool`.
 
 A **product** total of zero, with no repo taking the bootstrap step, is the
 idempotent case: the document is still printed with a section per repo, each
@@ -271,9 +277,11 @@ alone silently reads the same as a file nobody looked at.
 **The invariant, stated in the report itself:** running `init` again on a shaped
 repo that reads green and holds no `.config/stackgen.yaml` produces an empty plan,
 and on a shaped product an empty
-section for **every** repo. If a second run finds work, it is one of four things,
+section for **every** repo. If a second run finds work, it is one of five things,
 and the report names which: the first run deferred something; **bootstrap moved**
 — the repo no longer reads green, and the bootstrap step brings it up to date;
+**the base lacks the `virajp-plugins` tool** — it was shaped before the tool
+existed, and the bootstrap step adds it;
 **the set changed** — a member joined the product, or one this machine lacked was
 cloned, and that member's section is the whole of the work; or **a hygiene asset
 went missing** — someone deleted a file the run had landed, and it is a create
