@@ -21,5 +21,13 @@ exclude = [ "^docs/design/" ]
 # No code:format or code:lint gate examines these paths. brag-output/: the
 # /brag output, kept byte for byte. plugins/**/*.md: dprint keeps their fold
 # width, and the gate cannot skip only their fenced code blocks.
+# docs/design/site/: the site design export, kept byte for byte.
 [tools.mise.code_files]
-excludes = [ "**/*-lock.yaml", "**/*.svg", "**/package-lock.json", "brag-output/", "plugins/**/*.md" ]
+excludes = [
+  "**/*-lock.yaml",
+  "**/*.svg",
+  "**/package-lock.json",
+  "brag-output/",
+  "docs/design/site/",
+  "plugins/**/*.md",
+]

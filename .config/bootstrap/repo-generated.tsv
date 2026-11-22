@@ -9,6 +9,7 @@ dprint	.config/mise/tasks/setup/dprint.py
 dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/*.svg"}
 dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/brag-output/**"}
 dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"**/package-lock.json"}
+dprint	dprint.jsonc	{"kind":"item","path":["excludes"],"value":"docs/design/site/**"}
 dprint	dprint.jsonc	{"kind":"item","path":["plugins"],"match":"^npm:@dprint/json@"}
 dprint	dprint.jsonc	{"kind":"item","path":["plugins"],"match":"^npm:@dprint/markdown@"}
 dprint	dprint.jsonc	{"kind":"item","path":["plugins"],"match":"^npm:@dprint/ruff@"}
