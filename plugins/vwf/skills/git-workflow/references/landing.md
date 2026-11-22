@@ -5,8 +5,14 @@ user's choice or a caller-declared preference. A **Commit only** outcome never
 needs it.
 
 The merge-conflict hard halt in Step 4 applies to **both** sequences below: on a
-conflict, abort cleanly, leave the worktree intact, and report — never resolve
+conflict, leave the main checkout mid-merge as the task left it, run no
+`git merge --abort`, leave the worktree intact, and report — never resolve
 autonomously.
+
+Every landing runs bootstrap's `git:merge:<b>` task, `<b>` the destination.
+When a repo has no such task, the landing stops with the hint of *The git
+ports* in `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: there is no
+fallback merge.
 
 ## Merge, push & clean up
 
@@ -14,14 +20,14 @@ End the worktree with **full coverage** — nothing left uncommitted, submodule
 pointers current — then remove it. Order matters:
 
 1. **Land each changed submodule.** For every submodule with work on this
-   branch, run its own merge task from the submodule directory (this commits and
-   pushes the submodule's branch, under `merge_model` of
-   `[tools.git.branch.develop]` in that member's own `.config/bootstrap.toml` —
-   the destination is `develop`).
+   branch, run its own merge task from the submodule (this lands the
+   submodule's branch under the model of
+   `bootstrap config get repo.branches.<b>.landing --json` in that member,
+   `<b>` its integration branch).
    Repeat per changed submodule:
 
    ```bash
-   mise x --cd <submodule> -- mise run code:merge:develop <branch>
+   mise x --cd <submodule> -- mise run git:merge:<b> -- <branch>
    ```
 
 2. **Update the outer repo's submodule pointers.** Back in the outer worktree,
@@ -33,55 +39,68 @@ pointers current — then remove it. Order matters:
    mise x -- git commit -m "ops: update submodule pointers"
    ```
 
-3. **Land the outer repo.** Merge this branch to the destination — its own
-   `code:merge:` task if the outer repo defines one, else merge the branch in
-   the main worktree and `git push`. The task pushes for you; only the manual
-   path needs the push spelled out. The task reads the key for its destination
-   from the outer repo's own `.config/bootstrap.toml`: `code:merge:develop`
-   reads `merge_model` of `[tools.git.branch.develop]`, `code:merge:main` reads
-   `merge_model` of `[tools.git.branch.main]`.
+3. **Land the outer repo.** From this worktree, run
 
-4. **Remove the worktree.** From the main checkout — where step 3 already ran
-   the outer merge — run `git worktree remove <path>`.
+   ```bash
+   mise x -- mise run git:merge:<b> -- <branch>
+   ```
+
+   The task reads the outer repo's own `repo.branches.<b>.landing` and applies
+   it: it changes to the main worktree, pulls `<b>`, merges and pushes. The
+   main checkout's uncommitted changes stay uncommitted and are never part of
+   the merge. The landing stops when git refuses the checkout or the merge,
+   or when the task's whole-tree hook pass (`pre-commit run --all-files`)
+   fails or rewrites a file anywhere in the tree. A member repo's landing runs
+   the same task there:
+   `mise x --cd <member> -- mise run git:merge:<b> -- <branch>`.
+
+4. **Remove the worktree.** From the main checkout, run
+   `mise x -- mise run git:worktree:delete -- <branch>`. It removes the
+   worktree first, and deletes the branch when a core branch has each of its
+   commits. If it exits 1 and `gh pr view <branch> --json state` gives
+   `MERGED`, or `glab mr view <branch> --output json` gives the state
+   `merged`, run the `git branch -D` command that the task printed. Otherwise
+   report the failure — a stale local core branch also gives exit 1 — and
+   stop.
 
 5. **Sweep stale worktrees.** After this one lands, list the other worktrees
    under the worktree dir (`git worktree list`) whose branches are **fully
    merged** into the destination (`git branch --merged`), and offer to remove
-   them. Never remove a worktree with unmerged work.
+   them with `git:worktree:delete`. Never remove a worktree with unmerged work.
 
-For a repo with **no submodules**, skip steps 1–2: land the branch (its
-`code:merge:` task if defined, else merge it in the main worktree and push),
-then remove the worktree.
+For a repo with **no submodules**, skip steps 1–2: land the branch with its
+`git:merge:<b>` task, then remove the worktree.
 
 ## Merge, push & keep worktree
 
-Run the same land sequence — any submodule work, then the outer repo +
-`git
-push` — but **do not remove** the worktree. Inform the user which branch
-and path it is on.
+Run the same land sequence — any submodule work, then the outer repo's
+`git:merge:<b>` task — but **do not remove** the worktree. Inform the user
+which branch and path it is on.
 
 ## Under `pr`
 
-Both sequences above describe `direct` for the destination Step 4 resolved.
-Under `pr` for that destination the shape is the same and only the outer repo's
-step 3 changes: its `code:merge:` task runs the same predicates, pushes the
-branch and **opens a pull request** against the destination — nothing merges
-locally, and the branch lands only when someone merges that request.
+Both sequences above describe `direct-merge` or `direct-commit` for the
+destination Step 4 resolved. Under `pr` for that destination the shape is the
+same and only the outer repo's step 3 changes: its `git:merge:<b>` task runs
+the same predicates, pushes the branch and **opens a pull request** against
+the destination (`gh`, else `glab`; with neither, it pushes and opens none) —
+nothing merges locally, and the branch lands only when someone merges that
+request.
 
 - **Step 1 is unchanged.** Each submodule member is its own repo with its own
-  `.config/bootstrap.toml`, so it lands under its **own** `merge_model` of
-  `[tools.git.branch.develop]` — a member set to `direct` merges and pushes as
-  before even when the outer repo is `pr` for `develop`, and a member set to
-  `pr` opens its own request and stops, which means the outer pointer cannot
-  advance until it is merged. Report that and stop rather than working around
-  it.
+  `repo.branches.<b>.landing` — a member on a direct model merges and pushes
+  as before even when the outer repo is `pr`, and a member on `pr` opens its
+  own request and stops, which means the outer pointer cannot advance until it
+  is merged. Report that and stop rather than working around it.
 - **Step 2 still happens.** Commit the moved gitlinks on **this branch** before
   the push, so the pointer travels in the pull request instead of waiting for a
   merge that will not happen here.
 - **Step 3 is the push and the request**, done by the task. There is no
   pointer-commit-then-merge in the base repo under `pr`.
 - **Steps 4–5 are unchanged** — teardown follows the option the user chose.
-  Under **clean up** the worktree goes while the request is still open; under
+  Under **clean up** the worktree goes while the request is still open, and
+  step 4's exit 1 is reported as step 4 says — the task kept the unmerged
+  branch, which the request needs; under
   **keep worktree** it stays for review fixes. The stale sweep still only
   removes worktrees whose branches are fully merged into the destination, so a
   branch awaiting review is never swept.

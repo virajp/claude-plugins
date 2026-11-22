@@ -5,24 +5,17 @@ the main checkout and isolation was consented to (or pre-declared by the
 caller). Already inside a linked worktree, or working in place after a decline,
 skip straight to Step 3.
 
-Run the three sub-steps in order — create the worktree with git, populate its
-submodules, bootstrap it. Git is the only creation path: never a Claude Code
+Run the three sub-steps in order — create the worktree with bootstrap's
+`git:worktree:create` task, populate its submodules, set it up with
+`git:worktree:setup`. The task is the only creation path: never a Claude Code
 worktree tool (see the Core Rules).
 
-## 2a. Create the Worktree with Git
+## 2a. Create the Worktree with `git:worktree:create`
 
 ### Directory selection
 
-Follow this priority:
-
-1. Check instructions for a declared worktree directory preference.
-2. Check for an existing project-local worktree directory:
-   ```bash
-   ls -d .worktrees 2>/dev/null   # preferred
-   ls -d worktrees 2>/dev/null    # alternative
-   ```
-   Use it if found (`.worktrees/` wins if both exist).
-3. Default to `.worktrees/` at the project root.
+The task chooses it: `.worktrees/<name>` of the main checkout, or
+`worktrees/<name>` when only `worktrees/` exists.
 
 ### Safety verification
 
@@ -53,18 +46,23 @@ BRANCH_NAME="<declared name, or the confirmed kebab-case slug>"
 
 ### Create the worktree
 
-Always branch from the **current branch**, not the default branch:
+Always branch from the **integration branch** `<into>` (the Core Rules), at
+its tip on `origin`. After a fetch, cut it, and drop the upstream the task
+gives a branch cut from `origin/<into>`, so the branch stays local:
 
 ```bash
-CURRENT_BRANCH=$(git branch --show-current)
-path=".worktrees/$BRANCH_NAME"
-
-git worktree add -b "$BRANCH_NAME" "$path" "$CURRENT_BRANCH"
-cd "$path"
+git fetch origin
+mise x -- mise run git:worktree:create -- "$BRANCH_NAME" --from "origin/<into>" --no-setup
+git rev-parse --abbrev-ref --symbolic-full-name "$BRANCH_NAME@{upstream}" >/dev/null 2>&1 \
+  && git branch --unset-upstream "$BRANCH_NAME"
+cd "$(git worktree list --porcelain | awk -v b="refs/heads/$BRANCH_NAME" '/^worktree /{p=substr($0,10)} /^branch /{if ($2==b) print p}')"
 ```
 
-**Sandbox fallback:** If `git worktree add` fails with a permission error,
-report it and proceed in the current directory instead.
+With no `origin` remote, skip the fetch and pass `--from <into>`. Step 2c
+runs the setup the `--no-setup` left out.
+
+**Sandbox fallback:** If the task fails with a permission error, report it
+and proceed in the current directory instead.
 
 Then **proceed to Step 2b** (submodules).
 
@@ -99,14 +97,15 @@ user how to proceed — do not leave a partially-initialized worktree silently.
 ## 2c. Initialize the Worktree (mise task)
 
 A fresh worktree has no installed dependencies. After submodules are populated,
-bootstrap it so it can build and run — prefer the dedicated `setup:worktree`
-task, falling back to the full bootstrap entrypoint `setup`:
+bootstrap it so it can build and run — prefer the dedicated
+`git:worktree:setup` task, falling back to the full bootstrap entrypoint
+`setup`:
 
 ```bash
 have_task() { mise x -- mise tasks --hidden 2>/dev/null | awk 'NR>1 {print $1}' | grep -qx "$1"; }
 
-if have_task setup:worktree; then
-  MISE_ENV=dev mise x -- mise run setup:worktree
+if have_task git:worktree:setup; then
+  MISE_ENV=dev mise x -- mise run git:worktree:setup
 elif have_task setup; then
   MISE_ENV=dev mise x -- mise run setup
 fi
@@ -115,7 +114,7 @@ fi
 **Why the probe prefers it.** Both tasks run `setup:mise`, the repo's own
 `setup:secrets` and `setup:deps` tasks and `setup:precommit`, and neither passes
 `--upgrade` here, so each installs only what the lockfiles and configs already
-pin. `setup:worktree` also checks out the submodules
+pin. `git:worktree:setup` also checks out the submodules
 (`git submodule update --init --recursive`), which `setup` does not, and it
 leaves out the `setup:vscode` that `setup` runs when the repo has that task. The
 `dev` on each is there because bootstrap loads no `conf.d` file without
@@ -131,3 +130,13 @@ where the older spellings are recorded and mapped forward.
 Run it from the worktree root. **Skip silently** if neither task exists. If the
 task fails, report it and ask the user how to proceed rather than working in a
 half-initialized worktree.
+
+## Removing a worktree
+
+A worktree made here is removed with its task, from another checkout:
+`mise x -- mise run git:worktree:delete -- <name>`. The task removes the
+worktree first, then deletes the branch only when a core branch has each of
+its commits. If it exits 1 and `gh pr view <name> --json state` gives
+`MERGED`, or `glab mr view <name> --output json` gives the state `merged`,
+run the `git branch -D` command that the task printed. Otherwise report the
+failure — a stale local core branch also gives exit 1 — and stop.

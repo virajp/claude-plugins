@@ -108,10 +108,10 @@ The verbs below point at its sections rather than restate them.
   exit 0, or `{nothing: [{folder, waits}]}`, exit 1. `resolve` prints
   `{runnable, entries: [{entry, kind, satisfied, reason}]}`, exit 0 when
   runnable, else 1. `claim` prints `{claimed: true, commit}`, exit 0 — a
-  `warning` beside it when the stash could not be applied, or was applied
-  but kept undropped — or
+  `warning` beside it when the landing left one — or
   `{claimed: false, kind, reason}`, exit 1, `kind` one of `lost`,
-  `member-failed`, `failed`. `/vwf:execute` reaches all three through its
+  `member-failed`, `failed` (with `unpushed: true` when the merge commit
+  was not pushed). `/vwf:execute` reaches all three through its
   `start.mjs`. `unclaim` and `complete` stay procedures the model follows.
 
 A path is dot-separated keys, and a segment after a list chooses the entry by
@@ -243,9 +243,10 @@ set the folder's row from `APPROVED` to
 row's `status` alone — `plan.mjs` stamps the row's `started` in the same
 write; `kind` and `target_repo` are never edited. The write lands as
 `docs: plan queue — <folder> running`; a conflict on the index means another
-session claimed first, and the caller re-picks or stops; a merge the hooks
-refuse becomes a pull request the claim waits on. A row already `RUNNING`, or
-absent, is refused in one line.
+session claimed first, and the caller re-picks or stops; under a `pr`
+landing model the `git:merge:<integration>` task opens a pull request the
+claim waits on, and a landing the hooks refuse is `failed`. A row already
+`RUNNING`, or absent, is refused in one line.
 
 After the row, in the same checkout, write the folder's run paths with one
 `set <folder>/index.json run --json '{"worktree": "<dir>/<branch>", "log": "~/Library/Caches/vwf/<repo>/<folder basename>.jsonl"}'`:

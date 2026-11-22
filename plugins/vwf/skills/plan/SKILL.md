@@ -567,9 +567,12 @@ In this order.
      <slice> — approved, awaiting execution"`. The approve in §6 is the
      explicit request git-workflow's push rule wants; do not ask again
    - a `pr` result waits on its pull request per that reference, then runs
-     `land.mjs finish`; a `conflict` or `failed` result is reported with the
-     worktree path, and the hand-off stops — the folder is not on the
-     integration branch yet
+     `land.mjs finish`; a `{finished: false, reason, command}` result is
+     reported with its `command`, and the hand-off goes on. A `conflict` or
+     `failed` result is reported with the worktree path, and the hand-off
+     stops — the folder is not on the integration branch yet; a `failed`
+     with `unpushed: true` is reported with `git push origin <integration>`,
+     run from the main checkout, and the write is never retried
 
    Under `multi-repo` the folder and the index are two repos: two writes,
    the member's (the folder) first, the base's (the index row and each

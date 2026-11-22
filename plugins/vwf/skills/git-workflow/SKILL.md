@@ -24,42 +24,64 @@ disable-model-invocation: false
   belongs. The base repo is a **separate** checkout the caller writes to
   directly; it is never reached by walking up from a member
   (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`)
-- **Worktrees are git's work, never a Claude Code tool's.** Create, enter and
-  leave a worktree with `git worktree add`, `cd` and `git worktree remove` —
-  never with `EnterWorktree`, `ExitWorktree` or an agent's worktree isolation.
-  Such a tool branches from origin's default branch rather than the current
-  one, and its session refuses `git`
+- **Worktrees are bootstrap's tasks' work, never a Claude Code tool's.**
+  Create, enter and leave a worktree with
+  `mise x -- mise run git:worktree:create -- <name> …`, `cd` and
+  `mise x -- mise run git:worktree:delete -- <name>` — never with
+  `EnterWorktree`, `ExitWorktree` or an agent's worktree isolation. Such a
+  tool branches from origin's default branch rather than the integration
+  branch, and its session refuses `git`
+- **The integration branch comes from `repo.core_branches`** — the
+  `data.value` of `bootstrap config get repo.core_branches --json`. It is
+  `develop` when `develop` is in that list, else `main`. With both, work
+  moves feature → `develop` → `main`; with one, each feature lands on that
+  branch. A core branch that exists only on `origin` gets a local branch that
+  tracks `origin/<branch>` before anything lands on it. Every caller that
+  names "the integration branch, as git-workflow resolves it" means this
+  rule
 - **Initialize** every new worktree with its mise bootstrap task (Step 2c), and
   **end** every worktree with full coverage — land the branch (plus any
   submodule work and pointer updates), then remove it (Step 4)
 - **How a branch lands is the repo's choice, not this skill's.** The repo sets
-  it **per destination**, in the repository's `.config/bootstrap.toml`:
-  `merge_model` of `[tools.git.branch.develop]` for a branch landing on
-  `develop`, of `[tools.git.branch.main]` for `develop` landing on `main`, each
-  `direct` (the default) or `pr`. `direct` merges the branch to the destination
-  and pushes, as it always has; `pr` pushes the branch and opens a pull request
-  instead, merging nothing locally. The two task names are the same in both
-  modes — `mise x -- mise run code:merge:develop <branch>` reads the first key
-  when it runs, `mise x -- mise run code:merge:main` the second. Step 4 reads
-  the mode for the destination it is about to land on before it offers its
-  options
-- **The merge tasks refuse a dirty tree** — untracked files, uncommitted
-  changes, or unpushed commits on the branch each stop the merge before it
-  touches git. That is not a nuisance: whatever is uncommitted at merge time is
-  work the merge commit would claim to carry and does not, and the repair
-  belongs on the branch that caused it. Commit or clean first, then re-run
+  it **per destination** `<b>`: the landing model is the `data.value` of
+  `bootstrap config get repo.branches.<b>.landing --json` — `pr`,
+  `direct-merge` (the default) or `direct-commit`. `direct-merge` merges the
+  branch to the destination and pushes; `pr` pushes the branch and opens a
+  pull request instead, merging nothing locally; `direct-commit` also allows a
+  commit made on `<b>` itself. A landing always runs
+  `mise x -- mise run git:merge:<b> -- <branch>`, and the task applies the
+  model itself. This skill reads the model only to tell the user what a
+  landing will do (Step 4), and to refuse a direct commit on `<b>` where the
+  value is not `direct-commit`
+- **The `git:merge:<b>` task refuses a dirty tree** where it runs —
+  untracked files, uncommitted changes, or unpushed commits on the branch each
+  stop the merge before it touches git. That is not a nuisance: whatever is
+  uncommitted at merge time is work the merge commit would claim to carry and
+  does not, and the repair belongs on the branch that caused it. Commit or
+  clean first, then re-run. The main checkout's uncommitted changes stay
+  uncommitted and are never part of the merge. A landing stops when git
+  refuses the checkout or the merge, or when the task's whole-tree hook pass
+  (`pre-commit run --all-files`) fails or rewrites a file anywhere in the tree
+- **No destructive git on the tool's own account.** Nothing here aborts a
+  merge, resets a branch, or deletes an unmerged or a remote branch unless the
+  user asks. The one exception is `land.mjs`'s own scratch branch — every
+  commit after `branch.<name>.vwfLandBase` carries `Vwf-Land: close`:
+  `abandon` deletes it, and `finish` deletes it on `origin` too once `gh` or
+  `glab` reports its request merged
 - Never push without explicit user request — always ask after a successful
   commit
 - Check `no-commit-to-branch` hook in `.config/pre-commit-config.yaml` before
   committing to any branch
-- **Never a direct commit on `develop` or `main`.** Both are protected
-  branches. A change to one — a plan-queue row, a planner's approved folder,
-  anything — is made in its own worktree on its own local branch, committed
-  there, merged into the branch, and the worktree and branch removed; when
-  pre-commit refuses the merge, a pull request instead, and the caller waits
-  for it to merge. The script `scripts/land.mjs` does this, and every vwf
-  caller uses it — no other script commits, cuts a branch or adds a worktree
-  on a protected branch. [Protected-branch writes](references/protected-branch.md)
+- **Never a direct commit on a core branch whose landing is not
+  `direct-commit`.** Each branch of `repo.core_branches` is a protected
+  branch. A vwf change to one — a plan-queue row, a planner's approved
+  folder, anything — is made in its own worktree on its own local branch,
+  committed there, and landed with `git:merge:<b>`, and the worktree removed;
+  when the landing is `pr`, the task opens a pull request instead, and the
+  caller waits for it to merge. The script `scripts/land.mjs` does this, and
+  every vwf caller uses it — no other script commits, cuts a branch or adds a
+  worktree on a protected branch.
+  [Protected-branch writes](references/protected-branch.md)
 
 ## Caller Preferences
 
@@ -77,7 +99,7 @@ preference, ask as each step specifies.
 
 **Never:**
 
-- `--force`, `--no-verify`, `reset --hard`, force-push to `main`/`develop`
+- `--force`, `--no-verify`, `reset --hard`, force-push to a core branch
 - Update git config
 - Any destructive operation without explicit user request
 
@@ -92,8 +114,8 @@ an existing worktree and stops at a commit needs none of them.
 
 | Reference                                     | When to read                                                                                               |
 | --------------------------------------------- | ---------------------------------------------------------------------------------------------------------- |
-| [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (git worktree add, submodules, mise init) |
-| [Protected-branch writes](references/protected-branch.md) | Whenever a change must reach `develop` or `main` outside a worktree's own landing — a plan-queue row, a planner's folder — through `scripts/land.mjs` |
+| [Worktree setup](references/worktree-setup.md) | **Step 2** — only when Step 1 concluded a worktree must be created (`git:worktree:create`, submodules, `git:worktree:setup`) |
+| [Protected-branch writes](references/protected-branch.md) | Whenever a change must reach a core branch outside a worktree's own landing — a plan-queue row, a planner's folder — through `scripts/land.mjs` |
 | [Landing a branch](references/landing.md)      | **Step 4** — only when the chosen post-commit action is one of the two landing options (submodule order, push, the `pr` path, teardown, stale sweep) |
 
 ---
@@ -145,8 +167,9 @@ in place and skip to Step 3.
 ## Step 2 — Create Isolated Workspace
 
 Read [Worktree setup](references/worktree-setup.md) and follow its three
-sub-steps in order: **2a** creates the worktree with `git worktree add`, **2b**
-populates its submodules, **2c** runs the init task.
+sub-steps in order: **2a** creates the worktree with
+`git:worktree:create -- <name> --from origin/<into> --no-setup`, **2b**
+populates its submodules, **2c** runs `git:worktree:setup`.
 
 ---
 
@@ -210,42 +233,37 @@ A specification or a design document is `docs` — there is no `blueprint` type.
 it without asking: take that action and skip the prompt below. This is the only
 way the prompt is bypassed.
 
-**Read the landing mode before you ask.** What the merge tasks do is the repo's
-setting, held **per destination** — `merge_model` of
-`[tools.git.branch.develop]` for a branch landing on `develop`, of
-`[tools.git.branch.main]` for `code:merge:main`, in `.config/bootstrap.toml` —
-so resolve the one for the destination you are about
-to land on, from the root of the repository that lands; the base repo and each
-member have their own file. `pr` means `pr`; any other value, a missing key or
-a missing file means `direct` — the same reading the merge tasks take:
+**Read the landing model before you ask.** What `git:merge:<b>` does is the
+repo's setting, held **per destination** `<b>` — the integration branch for a
+feature branch, `main` for `develop` landing on `main` — so read the one for
+the destination you are about to land on, from the root of the repository
+that lands; the base repo and each member have their own:
 
 ```bash
-read_merge_model() {   # $1 is the destination: develop or main
-  local model
-  if [ ! -f .config/bootstrap.toml ]; then echo direct; return 0; fi
-  model=$(B="$1" mise x -- yq -p toml -o yaml '.tools.git.branch[strenv(B)].merge_model // "direct"' .config/bootstrap.toml) || return 1
-  if [ "$model" = pr ]; then echo pr; else echo direct; fi
-}
-read_merge_model develop
-read_merge_model main
+mise x -- bootstrap config get repo.branches.<b>.landing --json
 ```
 
-When the file exists and yq exits non-zero, stop with "cannot read the merge
-config of .config/bootstrap.toml." and offer no landing option: a merge model
-that cannot be read must not become `direct`.
+The model is the envelope's `data.value`: `pr`, `direct-merge` (the default)
+or `direct-commit`. The task applies it; this read only words the options
+below. When the command fails or its envelope's `ok` is false, stop with the
+envelope's `errors` messages as bootstrap gives them
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`) and offer no landing
+option: a model that cannot be read is not guessed.
 
 Otherwise, after a successful commit, ask the user to choose what to do next via
-`AskUserQuestion` with these three options — the first is the same in both
-modes, the other two are worded by the mode you just read for this destination:
+`AskUserQuestion` with these three options — the first is the same in every
+model, the other two are worded by the model you just read for this
+destination:
 
-**Under `direct` for this destination:**
+**Under `direct-merge` or `direct-commit` for this destination:**
 
 - **Commit only** — stop here; leave the worktree as-is for continued work.
-- **Merge, push & clean up** — merge to the default branch in the main worktree,
-  push changes, then archive/delete the additional worktree.
-- **Merge, push & keep worktree** — merge to the default branch in the main
-  worktree, push changes, but leave the additional worktree open for continued
-  work.
+- **Merge, push & clean up** — land the branch on the destination with
+  `git:merge:<b>`, which merges and pushes, then delete the additional
+  worktree.
+- **Merge, push & keep worktree** — land the branch on the destination with
+  `git:merge:<b>`, which merges and pushes, but leave the additional worktree
+  open for continued work.
 
 **Under `pr` for this destination:**
 
@@ -262,14 +280,17 @@ while the pull request is still open, and **keep worktree** leaves it in place
 for review fixes, which is the safer default to suggest when the user has no
 preference.
 
-**On a merge conflict (either land sequence).** This applies under `direct`
-only, where a merge actually happens locally. If a merge — the outer repo's or a
-submodule merge task — **conflicts**, do **not** resolve it autonomously. Abort
-the merge cleanly (`git merge --abort`, or the task's equivalent), leave the
-worktree **intact**, and report the conflicting files to the caller. Callers
-treat this as a **hard halt**. Under `pr` nothing merges locally, so the outer
-repo cannot conflict here; a submodule that lands under its own `direct` mode
-still can, and the same hard halt applies to it.
+**On a merge conflict (either land sequence).** This applies under
+`direct-merge` and `direct-commit` only, where a merge actually happens
+locally. If a merge — the outer repo's or a submodule's `git:merge:<b>` task
+— **conflicts**, the task exits 1 and leaves the main checkout mid-merge. Do
+**not** resolve it autonomously, and run no `git merge --abort`: leave the
+merge for the user to resolve and commit, or abort, leave the worktree
+**intact**, and report the conflicting files
+(`git diff --name-only --diff-filter=U` in the main checkout) to the caller.
+Callers treat this as a **hard halt**. Under `pr` nothing merges locally, so
+the outer repo cannot conflict here; a submodule that lands under its own
+direct model still can, and the same hard halt applies to it.
 
 Execute the chosen action:
 
@@ -281,10 +302,11 @@ available.
 ### The two landing options
 
 Read [Landing a branch](references/landing.md) and follow the sequence for the
-chosen option — submodules first, then the outer repo's pointers and its merge
-task; under `direct` for the destination that task merges and pushes, under
-`pr` it pushes and opens the pull request. **Clean up** additionally removes
-this worktree and sweeps stale ones, **keep worktree** leaves it in place.
+chosen option — submodules first, then the outer repo's pointers and its
+`git:merge:<b>` task; under a direct model for the destination that task
+merges and pushes, under `pr` it pushes and opens the pull request.
+**Clean up** additionally removes this worktree and sweeps stale ones,
+**keep worktree** leaves it in place.
 
 ---
 
