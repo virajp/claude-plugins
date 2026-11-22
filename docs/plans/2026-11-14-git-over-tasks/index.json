@@ -174,9 +174,12 @@
       "model": "opus",
       "owns": [],
       "depends_on": [
-        "U1"
+        "U1",
+        "U2",
+        "U3",
+        "U4"
       ],
-      "waits": "reviews U1's committed land.mjs and its tests",
+      "waits": "reviews the committed wave-1 delta, U1's land.mjs and its tests in focus",
       "status": "pending",
       "started": "",
       "ended": "",
@@ -761,6 +764,15 @@
         "U2",
         "U3",
         "U6"
+      ]
+    },
+    {
+      "id": "D51",
+      "decision": "Amended 2026-11-22: start.mjs refused the plan, because review row U5 did not cover every earlier wave-1 unit (the rule that a review row's coverage and its commit range agree).",
+      "ruling": "U5 depends_on is widened to every wave-1 unit (U1, U2, U3, U4). The prose units are covered so that coverage and range agree; the wave review already judged them, so the review focus does not change.",
+      "rejected": "Move the prose units to a wave after U5, with a second review row after them.",
+      "units": [
+        "U5"
       ]
     }
   ],
