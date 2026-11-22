@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-23 00:11 in .worktrees/all-2026-11-22-2030 (resumed after develop fixed the inherited lint gate)"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — 87f71f55 e92b59ae e3da46fa 3f3cd5d3 16784817 6dfddb04 1c7c4ce1 76d4df0b fdc9e716 a3a4b957"
   },
   "consent": {
     "merge": true,
@@ -229,11 +229,11 @@
         "U6"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T20:45:41.228Z",
+      "ended": "2026-11-22T20:47:02.838Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -257,9 +257,9 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-22T20:45:41.188Z",
+      "ended": "2026-11-22T20:47:41.018Z"
     }
   ],
   "shared_files": [
