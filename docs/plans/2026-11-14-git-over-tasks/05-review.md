@@ -24,3 +24,5 @@ Focus:
 - A conflict in the main checkout is `failed` and is left for the user
   (D15); a lost claim is the D37 `conflict` and leaves the main checkout clean.
 - The JSON results keep their shape; the tests use no network (D6).
+
+The row also covers U2, U3 and U4 (D51), so that its coverage and its commit range agree. The wave review already judged them; the focus above stays on U1.

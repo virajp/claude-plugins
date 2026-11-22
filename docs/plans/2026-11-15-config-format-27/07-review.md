@@ -9,3 +9,5 @@ and the four test files since the branch base. Focus: each member type resolves
 (D4, D17: a folder member is part of the base repo); a failed `bootstrap`
 call is a refusal, never a silent empty list; the pane writes nothing and reads
 only `[members.*]` and `[home]` (D5); the scripts stay dependency-free.
+
+The row also covers U1, U2, U3 and U6 (D34), so that its coverage and its commit range agree. The wave review already judged them; the focus above stays on U4 and U5.
