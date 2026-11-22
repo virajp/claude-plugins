@@ -2,36 +2,19 @@
   "format": 1,
   "plans": [
     {
-      "id": "2026-11-14-git-over-tasks",
-      "folder": "docs/plans/archived/2026-11-14-git-over-tasks",
-      "kind": "change",
-      "title": "R3b — git-workflow and land.mjs over bootstrap's git:* tasks, with the core branches",
-      "target_repo": null,
-      "priority": 10,
-      "status": "COMPLETE",
-      "started": "2026-11-22T15:01:29.770Z",
-      "ended": "2026-11-22T20:50:19.169Z",
-      "gaps": {
-        "open": 0,
-        "moved_to": []
-      },
-      "requires": [
-        "2026-11-14-bootstrap-contract"
-      ],
-      "backlog": [],
-      "backlog_pieces": []
-    },
-    {
       "id": "2026-11-14-virajp-plugins-tool",
-      "folder": "docs/plans/2026-11-14-virajp-plugins-tool",
+      "folder": "docs/plans/archived/2026-11-14-virajp-plugins-tool",
       "kind": "change",
       "title": "R3c — vwf repos add the virajp-plugins tool, and the plugin handoff goes through bootstrap config",
       "target_repo": null,
       "priority": 40,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-11-22T22:22:28.473Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-11-22T22:43:11.920Z",
+      "gaps": {
+        "open": 0,
+        "moved_to": []
+      },
       "requires": [
         "2026-11-14-git-over-tasks"
       ],
