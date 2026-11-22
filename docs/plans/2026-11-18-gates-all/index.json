@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-18 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-23 03:37 in .worktrees/all-2026-11-23-0333"
   },
   "consent": {
     "merge": true,
@@ -75,11 +75,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:08:14.120Z",
+      "ended": "2026-11-22T22:09:30.904Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -128,8 +128,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-22T22:08:14.086Z",
       "ended": ""
     },
     {
@@ -390,7 +390,12 @@
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-18-gates-all.jsonl"

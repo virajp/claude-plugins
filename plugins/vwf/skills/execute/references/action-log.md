@@ -97,7 +97,7 @@ its rounds.
 `run` runs the command with its output where it would have gone. It then logs the command line, its exit code and its
 duration, and exits with the command's own code. So wrapping a gate line changes nothing about how its result is read. Put
 the shell's redirection outside the wrapper:
-`log.mjs run --tier wave -- mise x -- mise run code:lint > /tmp/g.log 2>&1`.
+`log.mjs run --tier wave -- mise x -- mise run code:lint --all > /tmp/g.log 2>&1`.
 
 For the older events a `--key value` pair becomes a field; quote a value with spaces. Keep a `text` to the line as recorded,
 never a file's content.
