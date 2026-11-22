@@ -10,10 +10,10 @@ Create `docs/memory/` with its four folders: `decisions/`, `gaps/` and
 `<name>.md`. The tree lives where the memory asset's location rule puts it —
 the base repo, in a multi-repo product; a member gets none. `handoff/` is
 developer-specific and stays out of git through a line already in the repo's
-`.gitignore`: bootstrap's git tool syncs that file with the line in it, so
-setup **writes no ignore file**. A repo whose
-`.gitignore` lacks it is behind its shape, and Step 0's offer is what brings it
-forward. A pre-format-19 `docs/handoffs/next.md` moves to
+`.gitignore`: bootstrap's `virajp-plugins` tool, which `/vwf:init` adds to
+the base repo, gives that file the line, so setup **writes no ignore file**.
+A repo whose `.gitignore` lacks it is behind its shape, and Step 0's offer is
+what brings it forward. A pre-format-19 `docs/handoffs/next.md` moves to
 `docs/memory/handoff/next.md`.
 
 An existing `docs/memory/` is **merged, never overwritten**: a record already
