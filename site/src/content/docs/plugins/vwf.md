@@ -70,7 +70,7 @@ printed the command to fix each; that gate did not come back when the
 installer's plugin flags did, so the failure now arrives at first use rather
 than at install. `gh` is the exception: [`/vwf:backlog`](#vwfbacklog) and the
 planners' recall of it need the GitHub CLI, and so do [`/vwf:init`](#vwfinit)'s
-**forge pass** — the default branch, the protection on `develop` and `main`, the
+**forge pass** — the default branch, the protection on each core branch, the
 backlog project; `glab` on a GitLab remote — and the `/vwf:doctor` predicate
 that reads that forge state back. Doctor reports a CLI that is absent, not
 logged in, or without the `project` scope as a **degradation** with the remedy,
@@ -797,8 +797,11 @@ Alongside it sits the **delivery-pipeline contract**
 developer's machine, any branch, never deployed), `staging` (testers only) and
 `production` (customers) — with `dev`/`test`/`prod`-style synonyms treated as
 drift. Each deployed environment releases from **exactly one branch**; which
-branch is the product's to choose and record there, `develop` and `main` being
-the default pair. A deploy is **deliberate** — an explicit act naming one
+branch is the product's to choose and record there: `/vwf:blueprint`
+preselects staging from `develop` and production from `main` when a repo has
+both as core branches, and both from its one core branch — `main` or `develop`
+— when it has one, and you confirm the pair or pick another. A deploy is
+**deliberate** — an explicit act naming one
 project and one environment, never a side effect of a branch push, and
 re-validated by the pipeline rather than trusted from its trigger — the pipeline
 **proves the commit is reachable** from that environment's branch, and **no
@@ -1118,7 +1121,7 @@ verification-skipping flag is ever passed.
 forge, run **once for the product** and on **one further consent**. It sets
 three
 things and no fourth: each repo's **default branch** on the forge, the
-**protection** on its `develop` and `main`, and the product's **backlog
+**protection** on each of its core branches, and the product's **backlog
 project**.
 Everything else the forge holds — who may push, who reviews, required checks,
 the
@@ -1137,20 +1140,17 @@ carries one, then the backlog line for the base — and asks once: apply, or sto
 in
 which case the same table is printed as the by-hand list and the run continues
 to
-the report. The default branch is one row per repo, **`develop` preselected**
-and
-`main` the other. Nothing in the tree records the answer — the forge is the
+the report. The default branch is one row per repo: its **integration branch** —
+`develop` when it is a core branch, else `main`. Nothing in the tree records the
+answer — the forge is the
 record,
 and `/vwf:doctor`'s Forge state predicate reads it back from there. The
-protection
-is the same on both branches, always: **no force-push and no deletion**; then
-**per
-branch, from `[tools.git.branch.<branch>].merge_model` in that repo's
-`.config/bootstrap.toml`** — where the value is `pr`, additionally **a pull
-request
-required** (no approval count); where it is `direct` the merge tasks push the
-merge
-themselves, and that rule would refuse the model you chose. On GitHub each
+protection is the same on every core branch of that repo's
+`repo.core_branches`, always: **no force-push and no deletion**; then **per
+branch, from `repo.branches.<b>.landing`, read through `bootstrap config`** —
+where the value is `pr`, additionally **a pull request required** (no approval
+count); where it is `direct-merge` or `direct-commit` the merge task pushes the
+merge itself, and that rule would refuse the model you chose. On GitHub each
 branch
 gets one **ruleset** named `vwf-<branch>`; on GitLab a protected branch. **A
 branch
@@ -1225,14 +1225,17 @@ Doctor's repo-shape check is what notices between runs, through five predicates,
   recorded under `kept_files` is skipped.
 - **Forge state** — read from the forge where its CLI answers for the origin
   host:
-  the default branch one of `develop` or `main`, each of the two branches
+  the default branch one of the repo's core branches, each core branch
   carrying
   some protection and, for the base alone, the backlog project present. Where
   the
   CLI is absent, not logged in or refuses a read, that repo gets one
   `not checked`
   note and no row; an existing protection short of one of the pass's rules is a
-  note too.
+  note too. Read from the checkout instead: a repo whose one core branch is not
+  `develop` but which still has a `develop` branch, locally or on `origin`, is
+  a drift row — delete `develop`, or set `merge_from` on `main` through the
+  bootstrap CLI.
 
 Every one of these is `drift` or a warning and none is blocking — a repo behind
 its baseline is out of date, not broken. Each row carries its owner's remedy,
@@ -1289,7 +1292,7 @@ the commands that now offer it in-session: setup itself after its materialize
 pass, `/stackgen:stackgen-sync` after a re-sync, and `/vwf:recall`'s drift lines
 at session start (see [`/vwf:init`](#vwfinit), *When it runs again*). The shape
 pass includes init's **forge pass** — the default branch, the protection on
-`develop` and `main`, the base's backlog project — which is idempotent on a repo
+each core branch, the base's backlog project — which is idempotent on a repo
 already set, so a reshape that arrives from a forge-state row sets only what
 drifted. A `reshape` started **inside a member** is not a reshape of that member
 alone: `init` resolves the base and runs from there, so what gets reshaped is
@@ -2198,8 +2201,9 @@ backlog ids; the backlog ids are marked `planned`, an edit to the project and
 nothing in the tree; and the folder plus the index **land on the integration
 branch** through [`/vwf:git-workflow`](#vwfgit-workflow)'s protected-branch
 write — never a direct commit: a worktree and a local branch of their own, one
-commit there, merged into the integration branch and pushed, the worktree and
-branch removed, or a pull request when pre-commit refuses the merge — because
+commit there, landed on the integration branch with bootstrap's
+`git:merge:<integration>` task and pushed, the worktree and branch removed, or
+a pull request when that branch's landing is `pr` — because
 the fresh session's worktree is cut from the integration branch and can see the
 folder only once it lands there. Under `multi-repo` the folder lands in the
 member whose code it changes and the row in the base — two writes. Only then
@@ -2385,17 +2389,23 @@ worktree and [action log](#the-action-log) paths the run will use, in one
 commit — `docs: plan queue — <folder> running` — landed on the integration
 branch before any worktree exists. The claim is never a direct commit: it is a
 protected-branch write of [`/vwf:git-workflow`](#vwfgit-workflow) — its own
-worktree and local branch, the commit there, merged into the integration branch
-and pushed, the worktree and branch removed. When pre-commit refuses that
-merge, the claim branch is pushed and a pull request opened instead; the
-script returns `pending`, and the session waits for the pull request to merge
-before it goes on. The session passes the integration branch to the script as
+worktree and local branch, the commit there, landed on the integration branch
+with bootstrap's `git:merge:<integration>` task and pushed, the worktree and
+branch removed. When the integration branch's landing
+(`repo.branches.<b>.landing`) is `pr`, the task pushes the claim branch and
+opens a pull request instead; the script returns `pending`, and the session
+waits for the pull request to merge before it goes on — then deletes the claim
+branch, locally and on `origin`, only when `gh` or `glab` reports the request
+merged with a head that is the local tip or contains it, and otherwise keeps it
+and prints the delete command for you. A landing the task's whole-tree hook pass
+refuses is `failed`,
+never a pull request; a merge commit whose push failed stays on the local
+integration branch, and the result gives the `git push` to run. The session
+passes the integration branch to the script as
 `--branch`; the script never assumes a name. A repo with no remote is
-supported: the script reads the local branch, and nothing is pushed. When the
-main checkout has uncommitted changes, the merge sets them aside in a stash and
-restores it, found by its SHA, once the claim lands; if it cannot, the run
-continues in its own worktree and the result names the stash for you to apply
-or drop by hand.
+supported: the script reads the local branch, and nothing is pushed. The main
+checkout's uncommitted changes stay uncommitted and are never part of the
+merge; a claim stops when git refuses the checkout or the merge there.
 That landed row is what makes a second session safe beside this one; a
 conflict on the row means the plan was claimed first, so `next` re-picks and a
 named run stops.
@@ -3575,15 +3585,20 @@ row is appended to the base repo's `docs/plans/index.json` — folder, `kind`
 the `backlog` and `backlog_pieces` ids — the one edit this skill ever makes to
 that file; [`/vwf:backlog planned`](#vwfbacklog) marks the ids both lists name,
 adding the folder to their `Planned in:` list — an edit to the forge project,
-nothing in the tree; the folder plus `docs/plans/index.json` is **committed and
-pushed** through [`/vwf:git-workflow`](#vwfgit-workflow) on the branch you are
-standing on, in place and with no worktree; and only then the check that nothing
-is left to plan, which decides how it ends. The push is not an extra: the fresh
+nothing in the tree; the folder plus its `docs/plans/index.json` row **land on
+the integration branch** through [`/vwf:git-workflow`](#vwfgit-workflow)'s
+protected-branch write — never a direct commit: `land.mjs` opens a worktree and
+branch of its own, the folder and the row move into it and leave the main
+checkout, one commit there is landed with bootstrap's
+`git:merge:<integration>` task and pushed, or a pull request is opened when
+that branch's landing is `pr`; and only then the check that nothing is left to
+plan, which decides how it ends. The landing is not an extra: the fresh
 session's worktree is cut from the integration branch, so it can see the folder
-only once the folder is committed there — an untracked folder ends up swept into
-some later wave's commit instead. The index row rides the same commit for the
+only once the folder lands there. The index row rides the same commit for the
 same reason. The approval you gave is the explicit request the push rule wants,
-so it is not asked again, and nothing is merged.
+so it is not asked again. A `conflict` or `failed` result is reported with the
+worktree path and stops the hand-off: the folder is not on the integration
+branch yet.
 
 The check is [`/vwf:plan`](#vwfplan)'s: [`/vwf:backlog unplanned`](#vwfbacklog)
 at the highest priority among the plan's backlog ids — or, with none, the
@@ -3774,11 +3789,12 @@ commits `docs:` through `/vwf:git-workflow`.
 
 Internal — you rarely invoke it directly. The other commands route **all** git
 actions through it: it isolates work in a git worktree (always the outermost
-superproject, never a submodule), cut with `git worktree add` from the current
-branch and removed with `git worktree remove` — never with a Claude Code
-worktree tool, which branches from origin's default branch and leaves a session
-that refuses `git` — initializes it with the repo's `setup:worktree` (or
-`setup`) mise task, run under `MISE_ENV=dev`, commits with conventional
+superproject, never a submodule), cut with bootstrap's `git:worktree:create`
+task from the integration branch and removed with `git:worktree:delete` —
+never with a Claude Code worktree tool, which branches from origin's default
+branch and leaves a session that refuses `git` — initializes it with the repo's
+`git:worktree:setup` (or `setup`) mise task, run under `MISE_ENV=dev`, commits
+with conventional
 messages, and ends a worktree with full coverage — landing the branch (plus any
 submodule work and pointer updates), then removing it. It never pushes without
 your explicit request.
@@ -3789,21 +3805,33 @@ tracks, with no flag — a new file is checked once it is `git add`-ed, or by th
 commit hook at commit — so a fixup folds into the same commit instead of needing
 one of its own — the
 sequence is `code:precommit`, then stage, then commit. And landing runs through
-`code:merge:develop` / `code:merge:main` (renamed from `merge:*`), which obey
-the repo's landing model **per destination** —
-`[tools.git.branch.develop].merge_model` for the first,
-`[tools.git.branch.main].merge_model` for
-the
-second, in `.config/bootstrap.toml`: under `direct` they merge locally and
-push with `--follow-tags`, under `pr` they push the branch and open a pull
-request and nothing merges locally. The skill reads the value for the
-destination it is about to land on before it offers the landing options — a
-missing
-file or key means `direct` — so the two choices read "Merge & push" on one repo
-and
+bootstrap's `git:merge:<b>` task, `<b>` the destination, which obeys the
+repo's landing model **per destination** — `repo.branches.<b>.landing`, read
+through `bootstrap config`, in `.config/bootstrap/repo.toml`: under
+`direct-merge` (the default) or `direct-commit` it merges locally and pushes,
+under `pr` it pushes the branch and opens a pull request and nothing merges
+locally; `direct-commit` also allows a commit made on `<b>` itself. The skill
+reads the value for the destination it is about to land on before it offers
+the landing options, so the two choices read "Merge & push" on one repo and
 "Push & open PR" on another — it still names no forge; the task does. The
-explicit push step survives only in the manual fallback for a repo that has no
-such task.
+integration branch comes from `repo.core_branches`: `develop` when it is one,
+else `main`. The main checkout's uncommitted changes stay uncommitted and are
+never part of a merge; a landing stops when git refuses the checkout or the
+merge, or when the task's whole-tree hook pass fails. A conflict leaves the
+main checkout mid-merge for you to resolve and commit, or abort. A repo with no
+such task stops with the hint `bootstrap migrate`: there is no manual fallback.
+
+The protected-branch write the planners and `execute` use is the skill's
+`land.mjs` script. Before the merge it rebases its own branch on the
+integration branch in its own worktree — on `origin`'s copy after a fetch, when
+there is a remote — so a write that lost the race (another session changed the
+same `docs/plans/index.json` row first) is a clean `conflict` with the rebase
+aborted, and the main checkout is never left mid-merge by it. The merge commit
+takes git's default subject; the message `land.mjs` is given is the subject of
+the change commit. Its `abandon` step keeps an unmerged branch and its worktree
+and reports them, unless both are `land.mjs`'s own scratch (every commit after
+the recorded base carries its `Vwf-Land: close` trailer), which it discards so
+a retry can open the same name again.
 
 ## How it asks questions
 

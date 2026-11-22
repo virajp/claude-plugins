@@ -191,8 +191,9 @@ chain runs in order. Any backlog item the plan covers, finished or a piece, is
 marked `planned` with this folder added to its `Planned in:` list — an edit to
 the project on the forge, nothing in the tree — and the folder and the index
 **land on the integration branch**: never a direct commit, but a worktree and a
-local branch of their own, one commit there, merged in and pushed, then removed
-(a pull request instead, when pre-commit refuses the merge). That is not
+local branch of their own, one commit there, landed with bootstrap's
+`git:merge:<integration>` task and pushed, then removed (a pull request
+instead, when the integration branch's landing is `pr`). That is not
 housekeeping: the next step runs in a worktree cut from the integration branch,
 and it can only see a folder that is already committed there. Only then does it
 **check that nothing is left to plan**:
@@ -278,9 +279,12 @@ plan**: the row in
 `docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
 worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run
 will use, in one commit landed on the integration branch before any worktree
-exists — through its own short-lived worktree and branch, merged in, never a
-direct commit. If pre-commit refuses that merge, a pull request opens instead,
-and the session waits for it to merge before it goes on. In a repo with no
+exists — through its own short-lived worktree and branch, landed with
+bootstrap's `git:merge:<integration>` task, never a direct commit. When the
+integration branch's landing is `pr`, a pull request opens instead, and the
+session waits for it to merge before it goes on; a landing the task's hook pass
+refuses stops the run. Your main checkout's uncommitted changes stay
+uncommitted and are never part of the merge. In a repo with no
 remote, nothing is pushed. That landed row is what makes a second session
 safe: another `/vwf:execute next` or `all` running at the same time sees the
 row taken and picks something else, and if two sessions race for the same row,

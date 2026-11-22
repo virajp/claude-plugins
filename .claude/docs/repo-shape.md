@@ -164,7 +164,8 @@ one: a stack's own gates are bootstrap's.
   payload tier being materializable as-is** (assertions in one rule, the
   landed-tree ones also run over `/vwf:init`'s
   `skills/init/assets/<name>/` trees against init's own allowlist
-  (`CONTRIBUTING.md`, `SECURITY.md`, `licenses/`):
+  (`CONTRIBUTING.md`, `CONTRIBUTING-one-branch.md`, `SECURITY.md`,
+  `licenses/`):
   exec bit *and* a known shebang on every file under
   `config/.config/mise/tasks/**`, because mise reports a 644 task as an
   *unknown* one rather than a permission error and execs the file directly; the

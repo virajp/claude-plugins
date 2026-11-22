@@ -110,8 +110,8 @@ much smaller than the one it replaced: whole families of assertion became
     `/vwf:init`'s asset trees (`skills/init/assets/<name>/`), whose root check
     is
     skipped since init picks one licence out of several there; every file in one
-    must instead sit on init's own allowlist (`CONTRIBUTING.md`, `SECURITY.md`,
-    `licenses/`):
+    must instead sit on init's own allowlist (`CONTRIBUTING.md`,
+    `CONTRIBUTING-one-branch.md`, `SECURITY.md`, `licenses/`):
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
