@@ -3,7 +3,6 @@
 //
 //   node start.mjs <folder|next> --branch <name> [--member-branch <name>]
 //                  [--worktree <repo-relative path>]
-//                  [--continue-unknown-language]
 //
 // --branch names the base repo's work branch and is necessary;
 // --member-branch names every member repo's work branch, necessary only when
@@ -24,11 +23,11 @@
 //    kind, priority, has_code_unit, has_covers, projects, findings,
 //    open_questions, claim, message}
 //
-// findings holds the blocking rows and the unknown-language rows (D39: execute
-// asks the user on those). On a fresh run whose only stopping rows are
-// unknown-language ones, and no --continue-unknown-language, the result is
-// blocked with no log start and no claim: execute asks continue or stop, and
-// on continue runs start.mjs again with the flag, which claims (D41). open_questions is null on a fresh run; on a resume
+// findings holds the blocking rows; a degraded row never stops the run (D28).
+// projects are the registry projects the owns paths fall under, each by its
+// folder in the repo that holds it (bootstrap's repo.projects.<name>.folder,
+// D11); a project bootstrap has no entry for is skipped (D26). open_questions
+// is null on a fresh run; on a resume
 // it is {gaps: [ids of open QUESTION gaps], events: [question events with no
 // answer]}. claim is the plan.mjs claim result, or null.
 //
@@ -66,6 +65,8 @@ import { isDeepStrictEqual } from "node:util";
 import {
   BootstrapError,
   memberRepo,
+  projectFolder,
+  projectRepo,
   readMembers,
 } from "../../doctor/scripts/lib/bootstrap.mjs";
 import {
@@ -88,7 +89,7 @@ import {
 } from "../../plan-management/scripts/lib/yaml.mjs";
 
 const USAGE = "usage: node start.mjs <folder|next> --branch <name> [--member-branch <name>] "
-  + "[--worktree <repo-relative path>] [--continue-unknown-language]";
+  + "[--worktree <repo-relative path>]";
 const LOG = join(import.meta.dirname, "log.mjs");
 const INDEX = "docs/plans/index.json";
 const ROOT = process.env.VWF_LOG_ROOT || join(homedir(), "Library", "Caches", "vwf");
@@ -343,14 +344,49 @@ function targetMember(base, row, id) {
 }
 
 /**
+ * The registry projects with their base-relative paths: each project's folder
+ * read through bootstrap in the repo that holds it (D11). A project with no
+ * repo.projects entry (D26), or whose member repo is absent, is skipped; a
+ * failed bootstrap call is a Refusal.
+ */
+function projectPaths(base) {
+  const registry = readYaml(join(base, "docs", "blueprint", "registry.yaml"));
+  const names = (Array.isArray(registry?.projects) ? registry.projects : [])
+    .filter((p) => p && typeof p.name === "string")
+    .map((p) => p.name);
+  if (names.length === 0) {
+    return [];
+  }
+  const config = readYaml(join(base, ".config", "vwf.yaml"));
+  const out = [];
+  for (const name of names) {
+    const repo = projectRepo(base, config, membersOf(base), name);
+    if (!repo.present) {
+      continue;
+    }
+    let folder;
+    try {
+      folder = projectFolder(repo.dir, name);
+    } catch (e) {
+      if (e instanceof BootstrapError) {
+        throw new Refusal(e.message);
+      }
+      throw e;
+    }
+    if (folder !== null) {
+      out.push({ name, path: relative(base, resolvePath(repo.dir, folder)) });
+    }
+  }
+  return out;
+}
+
+/**
  * The D8 projects: the registry project each owns path falls under, by path
  * segment. A folder member's work is the base's, so its owns paths are base
  * paths (D17).
  */
 function projectsOf(base, row, doc) {
-  const registry = readYaml(join(base, "docs", "blueprint", "registry.yaml"));
-  const projects = (Array.isArray(registry?.projects) ? registry.projects : [])
-    .filter((p) => p && typeof p.name === "string" && typeof p.path === "string");
+  const projects = projectPaths(base);
   if (projects.length === 0) {
     return [];
   }
@@ -529,7 +565,6 @@ function parseArgs(argv) {
   let worktree;
   let branch;
   let memberBranch;
-  let continueUnknown = false;
   const value = (i) => rest[i + 1] && !rest[i + 1].startsWith("--");
   for (let i = 0; i < rest.length; i++) {
     if (rest[i] === "--worktree" && worktree === undefined && value(i)) {
@@ -538,8 +573,6 @@ function parseArgs(argv) {
       branch = rest[++i];
     } else if (rest[i] === "--member-branch" && memberBranch === undefined && value(i)) {
       memberBranch = rest[++i];
-    } else if (rest[i] === "--continue-unknown-language" && !continueUnknown) {
-      continueUnknown = true;
     } else {
       throw new UsageError(USAGE);
     }
@@ -547,7 +580,7 @@ function parseArgs(argv) {
   if (branch === undefined) {
     throw new UsageError(USAGE);
   }
-  return { target, worktree, branch, memberBranch, continueUnknown };
+  return { target, worktree, branch, memberBranch };
 }
 
 function result(over) {
@@ -580,7 +613,7 @@ function oldFormat(base, target) {
   return dirs.some((d) => existsSync(join(d, "index.md")) && !existsSync(join(d, "index.json")));
 }
 
-function start({ target, worktree, branch, memberBranch, continueUnknown }) {
+function start({ target, worktree, branch, memberBranch }) {
   const base = resolveBase(process.cwd());
   baseDir = base;
   branches = { base: branch, member: memberBranch };
@@ -661,22 +694,6 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
         failed = e;
       }
       const ended = new Date().toISOString();
-      if (failed === null) {
-        const unknown = checks.findings.some((r) => r.rule === "unknown-language" && r.severity !== "info");
-        const blocks = checks.findings.some((r) => r.severity === "blocking");
-        if (unknown && !blocks && !continueUnknown) {
-          const rows = checks.findings.filter((r) => r.rule === "unknown-language" && r.severity !== "info");
-          return result({
-            ...base_,
-            result: "blocked",
-            projects,
-            findings: rows,
-            message: `${folder}: unknown language ${
-              rows.map((r) => r.subject).join(", ")
-            }; ask continue or stop, and on continue re-run with --continue-unknown-language`,
-          });
-        }
-      }
       log(f.logCwd, ["start", "--folder", f.folderDir, "--mode", f.mode]);
       log(f.logCwd, ["event", "phase.start", "--phase", "checks", "--started", started]);
       log(f.logCwd, ["event", "phase.end", "--phase", "checks", "--ended", ended]);
@@ -694,12 +711,9 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
       stop(`the checks failed: ${failed.message}`, "blocked");
       throw failed;
     }
-    const findings = checks.findings.filter((r) =>
-      r.severity === "blocking" || r.rule === "unknown-language" && r.severity !== "info"
-    );
-    const blocking = findings.filter((r) => r.severity === "blocking");
-    if (blocking.length > 0) {
-      const why = `blocking findings: ${blocking.map((r) => `${r.rule} ${r.subject}`).join(", ")}`;
+    const findings = checks.findings.filter((r) => r.severity === "blocking");
+    if (findings.length > 0) {
+      const why = `blocking findings: ${findings.map((r) => `${r.rule} ${r.subject}`).join(", ")}`;
       stop(why, "blocked");
       return result({ ...base_, result: "blocked", projects, findings, message: `${folder}: ${why}` });
     }

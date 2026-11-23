@@ -60,6 +60,16 @@ asked before the plan is shown, one at a time. A declined row is not recorded
 under `enforcement:`: it writes nothing, the stamp stays at 26, and the next
 migrate pass offers the step again.
 
+**`config_format` 27 → 28 takes one consent row per repo.** The base and each
+present member are one row each of the plan, as the
+[migrate pipeline](migrate-pipeline.md)'s `27 → 28` entry runs them. Its
+questions — a registry path outside every repo, a project folder that differs
+from the one `repo.projects` holds, and the yes that lets
+`bootstrap detect --add` link the tools it found — are asked before the plan
+is shown, one at a time. A declined row is not recorded under `enforcement:`:
+it writes nothing, the stamp stays at 27, and the next migrate pass offers the
+step again.
+
 **Idempotent re-run:** this governs the migrate pipeline's doc reconciliation,
 not structural change. Detect what already conforms and reconcile only what
 drifted; a conforming tree produces an empty plan.

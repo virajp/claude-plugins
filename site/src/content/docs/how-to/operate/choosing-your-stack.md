@@ -211,9 +211,9 @@ documentation.
 
 The union of what the installed stack plugins declare **is** the vocabulary.
 There is no free-text pin and no *other (describe)* escape: a project the menu
-cannot cover halts, and a language the pinned template does not list is
-*unknown*: `setup` stops on it, `/vwf:doctor` reports it, and `/vwf:execute`
-asks you to continue or stop before it claims the plan. That refusal is
+cannot cover halts. A project's languages are the bootstrap tools linked to
+it, and one no language tool links is a degradation `/vwf:doctor` reports,
+never a stop. The refusal is
 deliberate — a stack nothing
 defines supplies no conventions to plan against, no harness to build against and
 no UX gate, so a run against it would lose every guarantee while reporting

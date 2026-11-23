@@ -1,6 +1,6 @@
 # A fake .config/vwf.yaml of a multi-repo product — invented names only.
-config_format: 27
-blueprint_format: 25
+config_format: 28
+blueprint_format: 26
 
 blueprint:
   coverage: complete
@@ -12,20 +12,17 @@ addons: []
 repo:
   stack:
     template: repo/example-repo
-    package_manager: pnpm
-    tools: []
 
 projects:
   api:
     repo: example-api # a member named in bootstrap's repo.members
     stack:
       template: project/example-service
-      backing_template: [
+      services: [
         example-postgres,
         example-auth,
       ]
-      deploy_template: []
-      languages: [ typescript ]
+      deploy: []
       frameworks: []
       dependencies: []
       note: picked for the example team's existing
@@ -36,17 +33,10 @@ projects:
     repo: "example-app"
     stack:
       template: unresolved
-      backing_template: unresolved
-      deploy_template: [ example-store ]
-      languages: []
+      services: unresolved
+      deploy: [ example-store ]
     design: example-canvas
     stylesheet: example-tokens
-
-harness:
-  dev: true
-  local_stack: { present: true }
-  health: false
-  "test:load": false
 
 enforcement:
   rules:

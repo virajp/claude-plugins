@@ -21,8 +21,10 @@ job is to absorb it and hand back conclusions.
 ## Inputs
 
 - the **slice** — the flow or entity doc path(s) it covers;
-- the registry `projects:` block (paths, roles, capabilities) and each project's
-  **stack**, which the orchestrator reads from `.config/vwf.yaml` (the
+- the registry `projects:` block (roles, platforms, capabilities), each
+  project's **folder**, which the orchestrator reads from bootstrap's
+  `repo.projects.<name>.folder` — the registry carries no path — and each
+  project's **stack**, which the orchestrator reads from `.config/vwf.yaml` (the
   structured `projects.<name>.stack` block) — the registry itself carries none;
 - `docs/blueprint/conventions.md` anchors relevant to the slice;
 - the API contract path(s) the slice references, when any.

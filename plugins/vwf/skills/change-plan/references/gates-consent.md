@@ -9,8 +9,8 @@ what is written and nothing it infers.
 
 Propose the exact commands the run must pass, one per line, for each tier. Draw
 them from the survey's gate list: the repo's task runner tasks, the capabilities
-the `harness:` stamp records, and the checks CI already runs over the touched
-trees. Confirm them.
+whose tasks exist, and the checks CI already runs over the touched trees.
+Confirm them.
 
 | List         | `/vwf:execute` runs it                   | Default, when `mise tasks ls --hidden` lists it |
 | ------------ | ---------------------------------------- | ----------------------------------------------- |
@@ -31,7 +31,7 @@ trees. Confirm them.
 - A check that only holds once a particular unit has landed is not a wave-gate
   line — the gate runs before wave 1 and must be green then. Make it that unit's
   *Verification*, repeated in the gates unit's.
-- A repo with no task runner and no harness stamp records `none`. Say plainly
+- A repo with no task runner records `none`. Say plainly
   that the run then has no automated gate, and the wave review is the only
   check.
 - The wave review is the only review a change plan runs by default. Write a

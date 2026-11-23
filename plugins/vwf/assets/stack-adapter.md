@@ -36,13 +36,13 @@ someone else's repo, never to tell them what to use. Any third case is a bug.
    carry no preference; a tool absent from them is a gap in recognition, not a
    verdict on the tool.
 
-Everything else that reads a repo — topology detection, harness detection —
-resolves through the installed stack plugins instead. A signal no plugin claims
-is recorded as `unknown`, which lets a **scan** finish on its other evidence. It
-is a **degraded** finding in `/vwf:doctor`, `/vwf:plan` and `/vwf:execute`
-(execute asks whether to continue or stop), and only `/vwf:setup` stops on it:
-the menu is closed to what the installed plugins define
-(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
+Everything else that reads a repo resolves elsewhere instead: topology
+detection through the installed stack plugins, a project's languages through
+its linked bootstrap tools
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`), and a capability through
+its task (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`). A topology signal no
+plugin claims is recorded as `unknown`, which lets a **scan** finish on its
+other evidence.
 
 ## Configuration
 
@@ -70,18 +70,18 @@ projects:
   website:
     stack:
       template: project/site/<slug>
-      backing_template: [ <slug>, <slug> ]
-      deploy_template: [ <slug> ]
+      services: [ <slug>, <slug> ]
+      deploy: [ <slug> ]
   api:
     stack:
       template: project/service/<slug>
-      backing_template: [ <slug> ]
-      deploy_template: [ <slug>, <slug> ] # a project may ship through several
+      services: [ <slug> ]
+      deploy: [ <slug>, <slug> ] # a project may ship through several
   cli:
     stack:
       template: unresolved # deferred — see below
-      backing_template: []
-      deploy_template: unresolved
+      services: []
+      deploy: unresolved
 ```
 
 Since **config_format 13** the `backing` and `deploy` axes are per project, not
@@ -90,11 +90,12 @@ API on another while both draw from the same installed plugins: the roster is
 shared, the selections are not. A product-wide `backing:` or `deploy:` block is
 `12` drift.
 
-Since **config_format 16** `deploy_template` is a **list**, matching
-`backing_template`: a project ships through as many delivery mechanisms as it has
-— a package registry, a container image, a signed archive — and a scalar could
-record one. Adapters that emit a deploy payload are unaffected; the cardinality
-is the *config's*, and each slug is still fetched on its own.
+Since **config_format 16** the deploy axis is a **list**, matching the backing
+axis: a project ships through as many delivery mechanisms as it has — a package
+registry, a container image, a signed archive — and a scalar could record one.
+Since **config_format 28** the two keys are `services` and `deploy`; the values
+are the same slugs. Adapters that emit a deploy payload are unaffected; the
+cardinality is the *config's*, and each slug is still fetched on its own.
 
 Since **config_format 16** any axis may also read **`unresolved`** — deferred,
 not decided (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis
@@ -376,10 +377,12 @@ harness: # HOW this stack satisfies each capability
 conventions: <prose> # layout, testing, placement — read by plan/execute
 ```
 
-The `harness` block is what replaces the tool names vwf used to carry. vwf asks
-"can this repo run `screenshots`?"; the plugin answers "yes — task `test:e2e`,
-via a browser driver". `/vwf:doctor` checks the task exists; it never checks
-*which* tool.
+The `harness` block is what replaces the tool names vwf used to carry: it says
+*how* the stack satisfies each capability. vwf reads a capability only by its
+one task name (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — "can this repo run
+`screenshots`?" is "does the `screenshots` task exist?" — and `/vwf:doctor`
+checks that the task exists; it never checks *which* tool. Since
+`config_format` 28 nothing of this block is copied into `.config/vwf.yaml`.
 
 ### Resolving the conventions
 
@@ -390,8 +393,8 @@ steps against that prose and `/vwf:execute` writes code to it, so both resolve
 it the same way:
 
 1. **Collect the pins** for every project in scope — `template`, each
-   `backing_template` entry, each `deploy_template` entry (a list since
-   `config_format` 16), and the repo's `repo.stack.template`. Skip `n/a` and an
+   `services` entry, each `deploy` entry (a list since `config_format` 16),
+   and the repo's `repo.stack.template`. Skip `n/a` and an
    empty list; both are answers, not pins.
 
    **An `unresolved` axis halts here, before any fetch.** It is the one state
@@ -446,14 +449,14 @@ side of the contract is three rules:
   up on `PATH`, or a map `{ name: <binary>, probe: "<command>" }`, whose
   probe `/vwf:doctor` runs and requires to exit 0 — run only while the
   template entry matches what the lockfile last recorded, and reported not
-  run otherwise. That is the **materialized
-  escape** in `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`: a token
-  those facts cover is *known* to `/vwf:doctor` without a claiming language
-  plugin. One more fact rides the payload outside `language_facts`:
-  **`lockfile:`**, on whichever payload composes a package manager — the
-  repo axis's or a project template's alike — the repo-relative paths or
-  globs where that package manager's lockfile may sit, any match passing
-  `/vwf:doctor`'s lockfile check.
+  run otherwise. Since `config_format` 28 a project's languages are its
+  linked bootstrap tools (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`),
+  and no `language_facts` token is matched against a tool name: nothing is
+  *known* or *unknown* by these facts any more. One more fact rides the
+  payload outside `language_facts`: **`lockfile:`**, on whichever payload
+  composes a package manager — the repo axis's or a project template's
+  alike — the repo-relative paths or globs where that package manager's
+  lockfile may sit, any match passing `/vwf:doctor`'s lockfile check.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as

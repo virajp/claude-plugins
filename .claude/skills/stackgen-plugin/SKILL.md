@@ -189,7 +189,8 @@ A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,
 since 2026-10-10: its keys a subset of the bundle's `platforms:`, the first OS
 on each list the primary. `stackgen-stack-template` passes it through in the
 payload, and `/vwf:setup` records it as `projects.<name>.stack.os`, beside
-`languages` and `frameworks`; vwf alone maps a (platform, OS) pair to a device
+`frameworks` (a project's languages are bootstrap's tools since
+`config_format` 28); vwf alone maps a (platform, OS) pair to a device
 frame, so the bundle names no frame. Three carry one — `swift-swiftui`,
 `kotlin-compose` and `dart-flutter`; an absent map, or a platform absent from
 it, reads as no OS known.

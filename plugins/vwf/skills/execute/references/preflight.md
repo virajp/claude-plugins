@@ -70,9 +70,8 @@ final report, and no conventions are fetched. A `blocking` row of the start resu
 The LSP check waits on the bootstrap work (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`). Until it lands,
 this step checks no LSP server and reads no `consent.lsp`, and a run with a `code` unit proceeds without an LSP gate.
 
-A language the start result's `findings` row reports as **unknown** (`rule` `unknown-language`) is not handled here at
-all. It is not a missing LSP: it is a stack vwf has no template, conventions or harness for. The user already chose to
-continue or stop on it, in [claim.md](claim.md).
+A project the start result's `findings` reports as linked to no bootstrap language tool, or as having no
+`repo.projects.<name>` entry, is a `degraded` row: it is not a missing LSP, is not handled here, and never stops the run.
 
 ### Stack conventions (Setup step 3)
 

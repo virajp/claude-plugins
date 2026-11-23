@@ -22,8 +22,9 @@ The orchestrator passes: the acceptance criteria to verify (each criterion with
 its source flow — from the `acceptance` list of the plan folder's
 `index.json`, each entry's `text` quoting a flow doc and its `flow` naming it;
 or every flow's Acceptance block from `docs/blueprint/flows/*/*/index.md` when
-`/vwf:verify` dispatches you), the registry (project paths and stacks), and
-the **slice** and **round number**.
+`/vwf:verify` dispatches you), the registry (projects and stacks) with each
+project's folder — bootstrap's `repo.projects.<name>.folder`, which the
+orchestrator reads — and the **slice** and **round number**.
 
 **Environment mode** (`/vwf:verify`): the orchestrator additionally names a
 target environment (base URLs) and the repo's staging/external-mode E2E
@@ -41,12 +42,13 @@ staging-capable test).
    trigger and assert the criterion's **observable outcome**. A test that mocks
    away the project boundary the flow crosses does not count as covering a
    cross-project criterion.
-2. **Boot the stack & run.** Discover how the repo runs E2E per the harness
-   contract (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`): the canonical
-   `test:e2e` mise task first, then near-canonical names (`all:e2e`, package
-   scripts of the projects involved). If the harness needs the local stack
-   (backing services, dev servers), use the repo's own boot mechanism and wait
-   on its readiness signal — never hand-roll infrastructure. Run the mapped tests
+2. **Boot the stack & run.** Run E2E through the task the harness contract
+   (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) maps `e2e_local` to — the
+   `test:e2e` port, present when `bootstrap describe --json` reports it so in
+   the repo that holds the project. A non-canonical name is not a fallback. If
+   the run needs the local stack (backing services, dev servers), boot it with
+   the `stack:up` task and wait on its readiness signal — never hand-roll
+   infrastructure. Run the mapped tests
    (the full e2e suite when scoping is impractical) and capture per-criterion
    results.
 3. **Classify each criterion:**

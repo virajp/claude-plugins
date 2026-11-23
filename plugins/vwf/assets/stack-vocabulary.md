@@ -1,96 +1,70 @@
 # Stack Vocabulary
 
 The **shape of a language fact** — what vwf needs to know about any language,
-and what it does when the pinned template lists none. vwf holds no list of
+and where it reads which languages a project has. vwf holds no list of
 languages.
 Frameworks and dependencies are open: any lowercase-kebab token is valid, because
 no useful check exists for them beyond presence in a manifest.
 
-## Languages — closed to what the installed plugins declare
+## Languages — the project's linked bootstrap tools
 
-**vwf names no language.** A language token is whatever a stack template
-declares, and the facts `/vwf:doctor` checks are supplied by the
-**pinned template** that lists it, never by a table here. This file defines only
-what such a fact consists of:
+**vwf names no language, and records none.** Since `config_format` 28 a
+project's languages are not a key of `.config/vwf.yaml`: a language is a
+**bootstrap tool of category `languages`** — `node`, `go`, `python` and the
+rest of bootstrap's catalog — whose `projects` list names the project, and the
+project's package manager is a bootstrap tool of category `package-managers`
+linked the same way. vwf reads both with `bootstrap describe --json`, run in
+the repo that holds the project — `projects.<name>.repo`, else the base repo
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`): the `data.tools`
+entries of those two categories whose `projects` list names it. A failed
+`bootstrap` call is a refusal, with bootstrap's error text. `bootstrap detect
+--add` writes the links; `bootstrap add tool <t>` adds a missing tool.
+
+The language's name is the **tool name**, everywhere vwf uses one: the
+per-language checks of `/vwf:doctor` walk the linked tools by that name. This
+file defines only what a language fact consists of:
 
 | Field        | Means                                                                    |
 | ------------ | ------------------------------------------------------------------------ |
-| token        | The lowercase-kebab name the template's `languages:` frontmatter carries |
+| name         | The bootstrap tool name, of category `languages`                         |
 | LSP plugin   | The plugin whose `lspServers` covers the language — for a materialized stack, stackgen's generated `vwf-tools` |
 | manifest     | The file whose presence identifies a project of that language           |
-| toolchain    | The mise tool that installs it, where mise manages one                   |
+| toolchain    | The bootstrap tool itself, which pins it                                 |
 
 Any of these may legitimately be absent, and no absence among them is a failure.
-A language whose toolchain does not come from mise has none; a language with no
-LSP in this marketplace is reported as *unavailable here* rather than *missing*,
-because there is no install command to suggest.
+A language with no LSP in this marketplace is reported as *unavailable here*
+rather than *missing*, because there is no install command to suggest.
 
-**What is not open is the set of tokens.** vwf holds no list: the template its
-project pins **is** the list. A token is **known** only when that pinned,
-materialized template lists it, under `language_facts` or
-`optional_languages`; no installed plugin is read. A token it does not list is
-reported as `unknown`. **`/vwf:setup` stops on it**: setup is the one-time
-place for the setup-shape checks. `/vwf:doctor` and `/vwf:execute` only report
-it, as a **degradation** — `/vwf:execute` asks the user whether to continue or
-stop on it.
+**A project with no linked language tool is drift.** `/vwf:doctor` reports it
+as a **degraded** row, with the fix `bootstrap add tool <t>` or
+`bootstrap detect --add`; a degraded row never stops `/vwf:execute`. A project
+whose platforms are **all** `iac`, `cicd` or `misc` needs no language tool and
+gets no row.
 
-**Why setup stops rather than degrading.** vwf is an opinionated workflow
-— it plans against a template's conventions, builds against its harness, and
-gates a UI slice on its UX contract. A language no template lists supplies none
-of those, so a run against it loses every one of those guarantees *while
-reporting itself healthy*. That is worse than a refusal, because the run looks
-exactly like every other run. The menu is deliberately closed: many options, all
-of them defined by a template here. "Works with anything" is not a goal vwf has.
-
-Adding a language means **a template that lists it**, whose facts supply the
-rows this file used to hardcode. It does not mean editing vwf. Until the
-project's pinned template lists it, `/vwf:setup` declines the repo rather than
-half-running against it.
-
-**Where the facts come from.** A template is read as materialized into the repo
-(the materialized-template variant in
-`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`): a language is **known** when
-the project's pin resolves to a materialized template whose payload lists the
-token. Under **`language_facts`** it carries the facts for that token — how the
-LSP is provided, the mise tool, the manifest, and the optional `binaries` —
-executables the stack needs on `PATH` that mise does not manage, absent
-meaning none, each a bare name or a `{ name, probe }` map whose probe must
-exit 0 — four language facts in all, emitted into the template when it was
-materialized. Beside them the payload may carry one fact that is not per
-language: `lockfile:`, where the package manager's lockfile may sit — five
-facts in all. A token listed only under **`optional_languages`** is known but
-carries no facts of its own, so its rows read *unverified* rather than passing.
-`/vwf:doctor` verifies the repo against those facts, and `n/a` in a fact is an
-answer, not an absence. The facts entered the config through a consent-gated
-materialization, not through free text. A token the pinned template lists under
-**neither** key stays `unknown`, whatever plugin is installed.
-
-**Setup stops on unknown, but only once the project has a stack.** Since
-`config_format` 16 a project's `template` may read `unresolved` — deferred, not
-yet chosen (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis
-states"). A project in that state records `languages: []` and there is no token
-to be unknown; if it carries tokens anyway, an unlisted one is a **degradation**
-even to setup, because the template that would list it is exactly what has not
-been chosen yet. The moment the project axis is pinned, the rule reverts:
-`setup` stops on it. `doctor` and `execute` report it as a degradation either
-way, and `execute` asks continue or stop. Setup's rule follows the pin, never
-the calendar.
+**There is no `unknown` language any more.** Until format 28 a token was
+*known* only when the project's pinned template listed it under
+`language_facts` or `optional_languages`, and an unlisted one was the
+`unknown` finding. A template's tokens and bootstrap's tool names are
+different vocabularies that cannot be compared, so that check is gone — from
+`/vwf:doctor`, from `/vwf:setup` and from `/vwf:execute`'s start — and a
+template's `language_facts` stay pack data, never matched against a tool name.
 
 ## The eight axes
 
 A stack is **composed from eight independent templates** — `project | backing |
 deploy | repo | design | cicd | stylesheet | addon` — not one monolith. Each axis
 answers a different question, and a project's `.config/vwf.yaml` answers each one
-(the first four in its `stack` block, the three tool axes as `design`, `cicd` and
-`stylesheet` pins, and `addon` as the top-level `addons:` list, one per product,
-absent or `[]` meaning no optional tool):
+(the first three in its `stack` block — `template`, `services` and `deploy` —
+the `repo` axis as `repo.stack.template`, the three tool axes as `design`,
+`cicd` and `stylesheet` pins, and `addon` as the top-level `addons:` list, one
+per product, absent or `[]` meaning no optional tool):
 
 | Axis           | Scope       | Cardinality           | Owns                                                    |
 | -------------- | ----------- | --------------------- | ------------------------------------------------------- |
 | **project**    | per project | one                   | Language, framework, source layout, testing             |
 | **backing**    | per project | a list (one per capability) | Datastore, identity, queue, storage, the local stack    |
 | **deploy**     | per project | a list (one per delivery mechanism, since `config_format` 16) | Build artifact, release pipeline, hosting, environments |
-| **repo**       | per repo    | one                   | Package manager, task runner, lint/format, workspace    |
+| **repo**       | per repo    | one                   | Task runner, lint/format, workspace                     |
 | **design**     | per project | one                   | The design tool and its adapter, for screen platforms   |
 | **cicd**       | per project | one                   | The CI system that builds and releases the project      |
 | **stylesheet** | per project | one                   | The stylesheet approach and how the design-system tokens are realized, for `site` and `webapp` platforms |

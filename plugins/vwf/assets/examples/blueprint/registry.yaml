@@ -1,4 +1,4 @@
-# Conformance example (blueprint-format 24) — the machine-readable registry.
+# Conformance example (blueprint-format 26) — the machine-readable registry.
 #
 # Every downstream command parses THIS file; architecture.md is the prose view
 # and is omitted from this bundle for brevity. Note what is absent: there is no
@@ -6,9 +6,10 @@
 # under `projects.<name>.stack`, which no blueprint-authoring or reviewing
 # surface reads — which is why no doc in this bundle names a database, cloud,
 # framework, or vendor, and why doing so would be a reviewer failure rather
-# than a matter of taste.
+# than a matter of taste. Nor is there a `path`: a project's folder is
+# bootstrap's `repo.projects.<name>.folder` (blueprint-format 26).
 
-vwf_registry: 2
+vwf_registry: 3
 
 # Each project carries exactly ONE `role` — the coarse domain grouping — plus
 # one or more `platforms` from that role's closed list. Format 22 replaced the
@@ -32,7 +33,6 @@ projects:
   - name: web
     role: frontend
     platforms: [ webapp ]
-    path: apps/web
     capabilities: [ ssr, seo ]
     depends_on: [ api ]
     doc_unit: page
@@ -40,7 +40,6 @@ projects:
   - name: api
     role: backend
     platforms: [ service ]
-    path: services/api
     capabilities: [ relational-datastore, payments-subscriptions, audit-log ]
     depends_on: []
     doc_unit: entity
@@ -48,7 +47,6 @@ projects:
   - name: worker
     role: backend
     platforms: [ worker ]
-    path: services/worker
     capabilities: [ scheduled-jobs, message-queue, email ]
     depends_on: [ api ]
     doc_unit: entity

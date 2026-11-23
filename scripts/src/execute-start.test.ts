@@ -141,23 +141,36 @@ exit $status
 
 /**
  * A `bootstrap` that answers `config get <key> --json` from the
- * .bootstrap-stub.json of its cwd (a key it lacks reads null); with no such
- * file it exits 2 as a repo with no .config/bootstrap/ does.
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null), and
+ * `describe --json` from that file's describe key, in the shape the real
+ * bootstrap prints (D29): data.tools[] {name, category, values.projects},
+ * data.ports[] {name, present}. With no such file it exits 2 as a repo with
+ * no .config/bootstrap/ does; a describe key of "fail" fails the describe.
  */
 const BOOTSTRAP = `#!${process.execPath}
 const { existsSync, readFileSync } = require("node:fs");
-const [cmd, sub, key, flag] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const command = args[0] === "describe" ? "describe" : "config get";
 const out = (ok, code, data, errors) => {
-  process.stdout.write(JSON.stringify({ contract: 1, command: "config get", ok, code, data, errors, warnings: [] }) + "\\n");
+  process.stdout.write(JSON.stringify({ contract: 1, command, ok, code, data, errors, warnings: [] }) + "\\n");
   process.exit(code);
 };
-if (cmd !== "config" || sub !== "get" || flag !== "--json") {
-  out(false, 2, null, [{ code: "usage", message: "the stub answers config get only" }]);
+const describe = args.length === 2 && args[0] === "describe" && args[1] === "--json";
+const get = args.length === 4 && args[0] === "config" && args[1] === "get" && args[3] === "--json";
+if (!describe && !get) {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get and describe only" }]);
 }
 if (!existsSync(".bootstrap-stub.json")) {
   out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
 }
 const facts = JSON.parse(readFileSync(".bootstrap-stub.json", "utf8"));
+if (describe) {
+  if (facts.describe === "fail") {
+    out(false, 1, null, [{ code: "describe", message: "the values file does not parse" }]);
+  }
+  out(true, 0, facts.describe ?? { repo: {}, tools: [], members: [], ports: [], lsp: {} }, []);
+}
+const key = args[2];
 out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
 `;
 
@@ -522,7 +535,7 @@ describe("the refusals", () => {
     const r = start([]);
     expect(r.status).toBe(2);
     expect(r.json).toBeNull();
-    expect(start(["next", "--continue-unknown-language", "--continue-unknown-language"]).status).toBe(2);
+    expect(start(["next", "--continue-unknown-language"]).status).toBe(2);
     expect(startRaw(["next"]).status).toBe(2);
     expect(startRaw(["next", "--branch"]).status).toBe(2);
   });
@@ -636,61 +649,60 @@ describe("a fresh run", () => {
     expect(events(A).at(-1).outcome).toBe("blocked");
   });
 
-  function unknownSeed() {
+  /** Two registry projects with no path (D11): their folders are bootstrap's, in `facts`. */
+  function projectSeed(folders: Json) {
     seed({
       rows: [row(A)],
-      config: "projects:\n  tool:\n    stack:\n      languages: [zig]\n",
+      config: "projects:\n  tool:\n    stack:\n      template: unresolved\n",
       build: (s) =>
         write(
           join(s, "docs", "blueprint", "registry.yaml"),
-          "vwf_registry: 2\nprojects:\n  - name: tool\n    path: scripts\n  - name: site\n    path: web\n",
+          "vwf_registry: 3\nprojects:\n  - name: tool\n    platforms: [cli]\n  - name: site\n    platforms: [site]\n",
         ),
     });
+    facts(base, folders);
   }
-  const zig = expect.objectContaining({
-    rule: "unknown-language",
-    severity: "degraded",
-    project: "tool",
-    subject: "zig",
-  });
 
-  it("stops before the log start on an unknown language alone: no claim, no log run", () => {
-    unknownSeed();
-    const head = git(origin, "rev-parse", "develop");
+  it("scopes the checks by the owns paths, each project by its bootstrap folder; a degraded row never stops", () => {
+    projectSeed({ "repo.projects.tool.folder": "scripts", "repo.projects.site.folder": "web" });
     const r = start([`docs/plans/${A}`]);
-    expect(r.status).toBe(1);
-    expect(r.json).toMatchObject({ result: "blocked", mode: "fresh", claim: null, projects: ["tool"] });
-    expect(r.json.findings).toEqual([zig]);
-    expect(r.json.message).toMatch(/--continue-unknown-language/);
-    expect(git(origin, "rev-parse", "develop")).toBe(head);
-    expect(rowAtOrigin(A).status).toBe("APPROVED");
-    expect(events(A)).toEqual([]);
-    expect(existsSync(join(logs, "active", SESSION))).toBe(false);
-  });
-
-  it("claims on an unknown language with --continue-unknown-language, scoped by the owns paths", () => {
-    unknownSeed();
-    const r = start([`docs/plans/${A}`, "--continue-unknown-language"]);
     expect(r.status).toBe(0);
     expect(r.json).toMatchObject({ result: "ready", mode: "fresh", projects: ["tool"], claim: { claimed: true } });
-    expect(r.json.findings).toEqual([zig]);
+    expect(r.json.findings).toEqual([]);
     expect(rowAtOrigin(A).status).toBe("RUNNING");
-    expect(trail(A)).toEqual([
-      "run.start",
-      "plan.snapshot",
-      "phase.start:checks",
-      "phase.end:checks",
-      "phase.start:claim",
-      "phase.end:claim",
-    ]);
   });
 
-  it("still blocks on a blocking row with --continue-unknown-language", () => {
-    seed({ rows: [row(A)], config: "repo:\n  stack:\n    template: repo/custom\n" });
-    const r = start([`docs/plans/${A}`, "--continue-unknown-language", "--worktree", ".worktrees/x"]);
-    expect(r.status).toBe(1);
-    expect(r.json).toMatchObject({ result: "blocked", claim: null });
-    expect(events(A).at(-1).outcome).toBe("blocked");
+  it("skips a project bootstrap has no repo.projects entry for (D26)", () => {
+    projectSeed({ "repo.projects.site.folder": "web" });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(0);
+    expect(r.json).toMatchObject({ result: "ready", projects: [] });
+  });
+
+  it("reads a folder member's project folder in the base repo", () => {
+    seed({
+      rows: [row(A)],
+      config: "projects:\n  tool:\n    repo: dock-yard\n",
+      build: (s) =>
+        write(
+          join(s, "docs", "blueprint", "registry.yaml"),
+          "vwf_registry: 3\nprojects:\n  - name: tool\n    platforms: [cli]\n",
+        ),
+    });
+    facts(base, {
+      "repo.members": { "dock-yard": { folder: "yard", type: "folder" } },
+      "repo.projects.tool.folder": "scripts",
+    });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.json).toMatchObject({ result: "ready", projects: ["tool"] });
+  });
+
+  it("a failed describe stops the checks with bootstrap's errors text, no claim", () => {
+    projectSeed({ "repo.projects.tool.folder": "scripts", "describe": "fail" });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/bootstrap describe failed/);
+    expect(rowAtOrigin(A).status).toBe("APPROVED");
   });
 
   it("refuses a failed claim commit and closes the log claim-failed", () => {

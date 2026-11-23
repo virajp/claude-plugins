@@ -153,6 +153,79 @@ Four sources define it, and none of them is a history:
    consent row of it, per [migration and consent](migration-and-consent.md):
    a declined row writes nothing, the stamp stays at 26, and the next migrate
    pass offers the step again.
+
+   **`config_format` 27 → 28** slims the stack to a decision record and moves
+   each project's folder to bootstrap, as the
+   [format lineage](format-lineage.md) rows for 28 and for `blueprint_format`
+   26 map them. It runs once the stamp reads 27, including when this pass just
+   moved it there, and reaches bootstrap only through its CLI, by
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. **The step, per repo
+   of the product** — each present member, then the base:
+   1. For each registry project this repo holds, run
+      `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`
+      in this repo, with the folder its registry `path` gives (below).
+   2. Run `bootstrap detect --json` and show its `projects` and `links`. On
+      the user's yes, run `bootstrap detect --add --yes --json`.
+   3. Report each project of this repo that no tool of category `languages`
+      links, with the fix: `bootstrap add tool <tool>`, then
+      `bootstrap detect --add`. A project whose platforms are all `iac`,
+      `cicd` or `misc` is skipped: it has no language tool by nature. The
+      report is a `degraded` row like any other, pinned `template` or not:
+      it never stops the step, which continues.
+   4. Rename `backing_template` → `services` and `deploy_template` →
+      `deploy` in every `projects.<name>.stack`, each slug kept as it is.
+   5. Remove `languages`, `package_manager`, `repo.stack.package_manager`,
+      `repo.stack.tools` and the workspace `harness` block. Report each
+      non-canonical task name that block recorded, with the canonical name of
+      `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, so the user renames that
+      task; nothing reads the old name any more.
+      `projects.<name>.harness.health` stays.
+   6. Remove `path` from every project of `docs/blueprint/registry.yaml`, and
+      set `config_format: 28`, `blueprint_format: 26` and `vwf_registry: 3`.
+   7. Run `bootstrap sync --json` in this repo, then commit as the `26 → 27`
+      step does.
+
+   Steps 1, 2, 3 and 7 run in each repo that holds a project; steps 4 to 6
+   edit the base's `.config/vwf.yaml` and registry, and run in the base step
+   alone, since a member carries no `vwf.yaml`.
+
+   **The folder.** A registry `path` is base-relative; the folder is relative
+   to the repo that holds the project — the member `projects.<name>.repo`
+   names, else the base. Strip that member's `folder` prefix from the path; a
+   path equal to the prefix becomes `.`. A path in the base keeps its
+   spelling. A path outside every repo of the product stops that repo's step
+   with one question, per `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. A
+   project name that is not kebab case stops the step with a report naming
+   it. When `repo.projects` already has an entry:
+   - under the same name at another folder, ask which folder to keep, as the
+     `26 → 27` step asks where two values differ;
+   - under another name at the same folder, vwf's name wins: set the entry
+     under the registry name, move each tool link to it with
+     `bootstrap config set tools.<tool>.projects '<JSON list>' --json`, then
+     `bootstrap config unset repo.projects.<old name> --json`;
+   - under the same name at the same folder, set nothing.
+
+   A project whose folder does not exist yet takes no `config set`: the
+   report shows the line to run once it does,
+   `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`,
+   and `/vwf:doctor` reports the missing entry as `degraded` until then.
+
+   **Order and commits.** Each member's step runs and commits first, through
+   `/vwf:git-workflow`, carrying what bootstrap wrote and the sync's output;
+   then the base makes its step commit — the spine's approval-gate commit,
+   after its validation and doctor steps — carrying `vwf.yaml`, the registry,
+   what bootstrap wrote, the sync's output and the new submodule pointers.
+   The base's step 6 and its stamps run only after every member step
+   succeeds: a member step that fails stops the base step too, so the
+   registry keeps each `path` a re-run still needs. A member that is not on
+   this machine stops the migration: the report names the member to clone,
+   and the base stays at 27 until it is present. A failed `bootstrap` call
+   stops that repo's step with bootstrap's `errors` messages, and nothing of
+   that repo's step is committed. The step's questions come before the plan,
+   and each repo is one consent row of it, per
+   [migration and consent](migration-and-consent.md): a declined row writes
+   nothing, the stamp stays at 27, and the next migrate pass offers the step
+   again.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-15 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — dd3c5069 3997c4d9 bfbd53f2 40818c27 25792c7c 0f7502c6"
   },
   "consent": {
     "merge": true,
@@ -89,11 +89,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T07:59:38.478Z",
+      "ended": "2026-11-23T08:09:02.010Z",
+      "commit": "dd3c5069",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -107,11 +107,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T07:59:38.557Z",
+      "ended": "2026-11-23T08:24:14.368Z",
+      "commit": "3997c4d9",
+      "rounds": 3
     },
     {
       "id": "U3",
@@ -138,11 +138,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T07:59:38.633Z",
+      "ended": "2026-11-23T08:09:02.088Z",
+      "commit": "bfbd53f2",
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -165,11 +165,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T07:59:38.708Z",
+      "ended": "2026-11-23T08:30:46.159Z",
+      "commit": "40818c27",
+      "rounds": 3
     },
     {
       "id": "U5",
@@ -188,11 +188,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T07:59:38.784Z",
+      "ended": "2026-11-23T08:09:02.167Z",
+      "commit": "25792c7c",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -210,14 +210,14 @@
         "U5"
       ],
       "waits": "reviews the committed wave-1 delta, the code of U4 in focus",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T08:39:08.797Z",
+      "ended": "2026-11-23T08:40:04.312Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "6a459c2e",
+        "to": "25792c7c"
       }
     },
     {
@@ -243,11 +243,11 @@
         "U6"
       ],
       "waits": "docs-sync reads the delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T08:41:21.074Z",
+      "ended": "2026-11-23T08:46:39.601Z",
+      "commit": "0f7502c6",
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -261,37 +261,37 @@
         "U7"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T08:49:40.309Z",
+      "ended": "2026-11-23T08:51:20.982Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T07:59:38.439Z",
+      "ended": "2026-11-23T08:38:48.992Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:39:08.758Z",
+      "ended": "2026-11-23T08:40:54.483Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:41:21.033Z",
+      "ended": "2026-11-23T08:49:24.473Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:49:40.271Z",
+      "ended": "2026-11-23T08:52:06.486Z"
     }
   ],
   "shared_files": [
@@ -655,36 +655,68 @@
       "units": [
         "U6"
       ]
+    },
+    {
+      "id": "D36",
+      "decision": "Q1: In the 27-to-28 migration, should /vwf:setup stop when a pinned project has no linked bootstrap language tool?",
+      "ruling": "No — setup reports a pinned project with no linked bootstrap language tool like any degraded row and continues.",
+      "rejected": "Yes — setup halts and reverts the stamp, as the old unknown-language halt did",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Q2: Should doctor checks.mjs emit any capability rows from the D10/D19 read (describe ports + mise tasks ls), and if so which?",
+      "ruling": "A degraded harness row for the capabilities a platform implies (dev, screenshots, goldens) — adds a mise call, stubbed in the tests.",
+      "rejected": "None; doctor capability section stays prose-only; A row for every harness.md capability — needs blueprint reads in the script",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q3: When mise is not on PATH and a project has a screen platform, should doctor checks.mjs refuse (D25) or skip the D37 capability read?",
+      "ruling": "Refuse, as D25 says for a failed mise call — keep what U4 built; doctor stops, and the missing-mise row never appears.",
+      "rejected": "Skip the capability read when mise is not on PATH — doctor still runs and its existing mise row reports the missing tool",
+      "units": [
+        "U4"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.673Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.787Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.900Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, nothing to persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:16.051Z"
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-15-config-format-28.jsonl"

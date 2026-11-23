@@ -45,27 +45,22 @@ manifest of any language a **stack plugin** in the config's `stacks:` roster
 declares, and treat any other root manifest as a manifest all the same — a
 project in a language nobody has written a plugin for is still a project.
 
-**Package manager** — only where the language has more than one. The
-**lockfile is the signal**, never the manifest: some ecosystems share a manifest
-field across managers, so the manifest cannot distinguish them. The repo's
-`repo`-axis stack template names which managers it permits and which lockfile
-selects each; ask when a repo carries none of them. A language with one manager
-records it without a question, because it was never a choice.
+**Language and package manager are bootstrap's.** vwf records neither: a
+project's languages are the bootstrap tools of category `languages`, and its
+package managers those of category `package-managers`, whose `projects` list
+names it — linked by `bootstrap detect --add` and read with
+`bootstrap describe --json` in the repo that holds the project
+([stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md)). Show
+`bootstrap detect --json`'s `projects` and `links` with the proposal, and run
+`bootstrap detect --add --yes --json` on the user's yes.
 
 **An unrecognised manifest never fails detection.** The repo classifies on the
-structural signals above regardless, and its language is recorded verbatim with
-its facts marked `unknown`. Detection is **recognition**, and recognising a
-language vwf has no plugin for is a legitimate scan result — it is what lets
-setup describe the repo accurately instead of refusing to look at it.
-
-**It does not follow that the repo is onboarded.** `/vwf:doctor` reports an
-`unknown` language as a **degradation**, and `/vwf:setup` alone stops on it, by
-its own rule, once the project's `template` is pinned: a token is known only
-when the pinned template lists it, and vwf will not plan or build against a
-language no template covers
-([stack-vocabulary](${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md)). Detection
-records the fact; the gate decides what it means. Onboarding completes once the
-project pins a template that lists that language.
+structural signals above regardless. Detection is **recognition**, and a
+project no language tool links is a legitimate scan result — it is what lets
+setup describe the repo accurately instead of refusing to look at it. Report
+it with the fix, `bootstrap add tool <tool>` then `bootstrap detect --add`,
+unless every platform of the project is `iac`, `cicd` or `misc`, which have
+no language tool by nature; `/vwf:doctor` reports it as `degraded` until then.
 
 ## Role and platforms
 

@@ -81,11 +81,15 @@ with an application change is a change that should have been two deploys.
 
 ## Repo tooling
 
-The `repo` stack axis carries the package manager, task runner, and workspace
-wiring. Since all projects share it, there is exactly one `repo.stack` block.
+The `repo` stack axis carries the task runner and workspace wiring. Since all
+projects share it, there is exactly one `repo.stack` block. The package
+manager is a bootstrap tool of category `package-managers`, linked to the
+projects that use it (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
 
 ## Adding and removing projects
 
-Adding a project is a registry entry plus a directory. Removing one **archives**
+Adding a project is a registry entry, a directory, and bootstrap's
+`[projects.<name>]` entry naming that directory as its `folder`, set with
+`bootstrap config set` once the directory exists. Removing one **archives**
 its flows and entities under `docs/blueprint/archived/` — vwf never deletes
 blueprint docs — and recomputes the coverage stamp without them.

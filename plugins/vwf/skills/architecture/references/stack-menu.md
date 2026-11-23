@@ -15,16 +15,16 @@ one number: the first is the blueprint-side format this file has always cited,
 the second is `.config/vwf.yaml`'s own stamp. The enum lives in
 `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`. Each axis is its own menu:
 
-| Axis           | Scope       | Menu                    | Recorded as                              |
-| -------------- | ----------- | ----------------------- | ---------------------------------------- |
-| **project**    | per project | project-axis entries    | `projects.<name>.stack.template`         |
-| **backing**    | per project | backing-axis entries    | `projects.<name>.stack.backing_template` |
-| **deploy**     | per project | deploy-axis entries     | `projects.<name>.stack.deploy_template`  |
-| **repo**       | per repo    | repo-axis entries       | `repo.stack.template`                    |
-| **design**     | per project | design-axis entries     | `projects.<name>.design`                 |
-| **cicd**       | per project | cicd-axis entries       | `projects.<name>.cicd`                   |
-| **stylesheet** | per project | stylesheet-axis entries | `projects.<name>.stylesheet`             |
-| **addon**      | per product | addon-axis entries      | the top-level `addons:` list             |
+| Axis           | Scope       | Menu                    | Recorded as                      |
+| -------------- | ----------- | ----------------------- | -------------------------------- |
+| **project**    | per project | project-axis entries    | `projects.<name>.stack.template` |
+| **backing**    | per project | backing-axis entries    | `projects.<name>.stack.services` |
+| **deploy**     | per project | deploy-axis entries     | `projects.<name>.stack.deploy`   |
+| **repo**       | per repo    | repo-axis entries       | `repo.stack.template`            |
+| **design**     | per project | design-axis entries     | `projects.<name>.design`         |
+| **cicd**       | per project | cicd-axis entries       | `projects.<name>.cicd`           |
+| **stylesheet** | per project | stylesheet-axis entries | `projects.<name>.stylesheet`     |
+| **addon**      | per product | addon-axis entries      | the top-level `addons:` list     |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
@@ -101,14 +101,16 @@ state, and only the first can act on an install.
 **Deferral is per axis, never per project.** One axis may read `unresolved`
 while its siblings are pinned, and nothing about a sibling is inferred from it —
 a deferred deploy axis says nothing about the project axis. On the two list axes
-record the **bare scalar** — `deploy_template: unresolved`, never
+record the **bare scalar** — `deploy: unresolved`, never
 `[ unresolved ]` — because deferral is a property of the axis, not of one
 mechanism within it, so a list never mixes slugs with it. `[]` is the opposite
 value, not a neighbour: it is a completed decision.
 
-**A deferred project axis records `languages: []`.** That is the one legal empty
-languages list — the plugin that would claim a token is exactly what has not
-been chosen. Never carry tokens forward against an unresolved project axis.
+**No axis records a language.** Since `config_format` 28 a project's languages
+and package manager are not in its `stack` block: they are the bootstrap tools
+of category `languages` and `package-managers` linked to the project, which
+`bootstrap describe --json` reports, so a deferred project axis leaves nothing
+to empty.
 
 **Re-running is how it gets answered later.** An update run re-asks only the
 axes that read `unresolved`; the ones already pinned are settled, and are not
@@ -206,22 +208,19 @@ against, and it cannot check what was never recorded.
 vwf ships no default and marks no template recommended: the one preselection it
 honours is the adapter's `default: true` among the entries a round offers
 (above), which it never infers and never records. Picking a project template
-fills its four frontmatter axes, and a `languages` token is whatever the stack
-plugin owning that language declares.
+fills `frameworks` and `dependencies` from its frontmatter; its languages are
+recorded nowhere in `.config/vwf.yaml`, a project's language being the linked
+bootstrap tool of category `languages` (`bootstrap describe --json`).
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
-must resolve to a template an installed plugin ships, and every `languages` token
-is known only when the pinned template lists it, in its `language_facts` or its
-`optional_languages` (the materialized-template variant in
-`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`). An unknown token is a
-degradation in `/vwf:doctor` and `/vwf:execute`; only `/vwf:setup` stops on it.
-A materializing adapter's menu may include its one open entry — *generate for
-an uncovered technology*, pinned as `generated/<technology-slug>` — which is a
-legitimate pick, not a free-text
-escape: the pin only resolves once the consent-gated materialization lands, and
-that materialization is **`/vwf:setup`'s**, never this command's. Architecture
-records the pin and hands off at its last step; setup's materialize pass invokes
-the adapter once per (repo, slug), passing the principles-catalog paths and the
+must resolve to a template an installed plugin ships. A materializing
+adapter's menu may include its one open entry — *generate for an uncovered
+technology*, pinned as `generated/<technology-slug>` — which is a legitimate
+pick, not a free-text escape: the pin only resolves once the consent-gated
+materialization lands, and that materialization is **`/vwf:setup`'s**, never
+this command's. Architecture records the pin and hands off at its last step;
+setup's materialize pass invokes the adapter once per (repo, slug), passing the
+principles-catalog paths and the
 `repo:` line per *the catalog handover* and *the target repo* in that same
 asset. So a freshly recorded pin is expected to sit unmaterialized until setup
 runs — that is the handoff working, not a gap.
@@ -232,11 +231,10 @@ write one (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "Writing a stack
 plugin"), or **defer the axis** and carry on defining the product. Before
 `config_format` 16 only the first two existed, so an empty menu was a halt; the
 third is what makes it a postponement instead. Never record a free-text axis,
-never write `template: custom` (retired in `config_format` 14), and never
-record a language token the pinned template does not list — each of those
-writes a config `/vwf:setup` stops on immediately (a free-text or `custom` pin
-is blocking in `/vwf:doctor` too; an unknown token is a degradation there),
-which is a worse outcome than the halt because it arrives one command later.
+and never write `template: custom` (retired in `config_format` 14) — each of
+those writes a config `/vwf:setup` stops on immediately (and `/vwf:doctor`
+reports as blocking), which is a worse outcome than the halt because it arrives
+one command later.
 Why the menu is closed at all is in
 `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`.
 

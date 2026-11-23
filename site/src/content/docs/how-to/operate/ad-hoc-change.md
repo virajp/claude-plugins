@@ -114,7 +114,8 @@ Two of the questions are the ones the run leans on most later, and they are
 worth answering carefully; a third thing is stated rather than asked:
 
 - **The three gates.** The exact commands the run must pass, proposed from your
-  repo's own task list and its `harness:` stamp, in three tiers: the **unit
+  repo's own task list and the harness capabilities whose tasks exist, in three
+  tiers: the **unit
   gate** runs once before each unit's commit, the **wave gate** once after every
   wave, and the **plan gate** once over the finished tree. When your repo has
   them, the proposal is `code:format --all`, `code:lint --all` and
@@ -275,9 +276,9 @@ Its whole start is one script call in your main checkout, `start.mjs`: it
 resolves the plan, runs the start checks — the blocking checks `/vwf:doctor`
 runs too, without the audit, the drift checks or the doctor skill — and claims
 it. A blocking finding stops the run there, before it has claimed anything, so
-the fix and a re-launch need no clean-up. An unknown language alone stops it
-before the claim too, and the session asks you to continue or stop; continue
-re-runs the script with `--continue-unknown-language`. Then it **claims the
+the fix and a re-launch need no clean-up. A degraded finding — a project no
+bootstrap language tool links, say — never stops it and is never asked about.
+Then it **claims the
 plan**: the row in
 `docs/plans/index.json` is set to `RUNNING`, and the folder's `run` to the
 worktree and [action log](../../plugins/vwf.md#the-action-log) paths the run

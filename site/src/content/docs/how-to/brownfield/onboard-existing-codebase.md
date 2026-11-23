@@ -33,10 +33,10 @@ claude plugin install vwf@virajp-plugins
 
 The commands and scopes are the same as the greenfield run —
 [install the plugins](../greenfield/single-repo.md#install-the-plugins) — but
-the ordering matters more here, because the repo already has languages in it. A
-language the pinned template does not list is recorded honestly by detection,
-reported by doctor as unknown, and then **stops** setup's own spine, which
-halts the onboard.
+the ordering matters more here, because the repo already has languages in it.
+Each project's languages are the bootstrap tools `bootstrap detect --add` links
+to it; a project no language tool links is reported by doctor and setup as a
+degraded row, with its fix, and the onboard carries on.
 Bookable is TypeScript throughout, so stackgen's `language/typescript` bundle
 covers both apps and the shared package, its `postgres` bundle answers the API's
 backing axis, and its design-tool pack answers the import that `apps/web` will
@@ -113,10 +113,11 @@ setup re-checks the shape once more after its materialize pass and on every
 re-run's Step 0. (A repo that was never shaped stays silent at `/vwf:recall`,
 whose drift lines are for a shaped repo that has fallen behind.)
 
-Two brownfield-only items appear in that plan. **Harness detection** records
-which verification capabilities the repo can already run: Bookable's `dev` task
-and its API health endpoint are found, its missing local end-to-end stack is
-recorded and **not** built — `/vwf:plan` injects the bootstrap when a cycle
+Two brownfield-only items appear in that plan. **Harness detection** reports
+which verification capabilities the repo can already run — each present when
+its task exists, so nothing is recorded: Bookable's `dev` task and its API
+health endpoint are found, its missing local end-to-end stack is reported and
+**not** built — `/vwf:plan` injects the bootstrap when a cycle
 first needs it. And because Bookable's API talks to outside services, the
 **environment catalog** is bootstrapped from the env usage already in the repo —
 `.env.example`, the config schema, the CI variables — as variable *names* with
@@ -394,11 +395,11 @@ Each of these is a genuine stop this journey can hit, and each is explained
 where it is enforced.
 
 - **Setup halts and reverts its own stamp on a blocking `/vwf:doctor` finding**
-  — a language no installed stack plugin declares is the one an
-  otherwise-onboarded repo reaches most often.
+  — a project with no linked language tool is not one: it is a degraded row
+  setup reports and carries on past.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
-- **A pin whose template was never landed is blocking too**, reported as
-  *pinned, not materialized* rather than as an unknown language. On this journey
+- **A pin whose template was never landed is blocking**, reported as
+  *pinned, not materialized*. On this journey
   it is reached by declining a landing in setup's
   [materialize pass](../../plugins/vwf.md#the-materialize-pass); the pin stays
   untouched and the block stands until a later `/vwf:setup` lands it.

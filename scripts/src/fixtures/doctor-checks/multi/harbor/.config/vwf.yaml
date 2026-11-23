@@ -1,6 +1,6 @@
 # An invented multi-repo base, shaped on assets/vwf-config.md.
-config_format: 27
-blueprint_format: 25
+config_format: 28
+blueprint_format: 26
 
 stacks: [ stackgen ]
 
@@ -13,13 +13,11 @@ projects:
     repo: dock-app
     stack:
       template: project/kite-app
-      backing_template: []
-      deploy_template: []
-      languages: [ kite ]
+      services: []
+      deploy: []
   dock-absent:
     repo: dock-absent
     stack:
       template: project/kite-app
-      backing_template: []
-      deploy_template: []
-      languages: [ kite ]
+      services: []
+      deploy: []

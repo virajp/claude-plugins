@@ -112,7 +112,8 @@ grounding.
 The product contract is about outcomes, not shape, so it settles none of the
 following — elicit these in Step 3 as always:
 
-- `path`, `depends_on` and `doc_unit` for each project.
+- The folder (written to bootstrap, not the registry), `depends_on` and
+  `doc_unit` for each project.
 - Hosting and deployment (3a), and every cross-cutting decision plus the
   foundations checklist (3c).
 - Any judgment call the definitions deliberately leave open — a shared package

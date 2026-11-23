@@ -75,7 +75,9 @@ recorded under `enforcement:` is settled and not re-proposed.
 ## Adding and removing repos or projects
 
 Both are **incremental**. Adding a project is a registry entry, recorded by
-`/vwf:architecture`. Adding a **repo** is a `repo.members.<name>` table, set
+`/vwf:architecture`, and its folder is bootstrap's
+`repo.projects.<name>.folder` in the repo that holds it — the registry carries
+no `path`. Adding a **repo** is a `repo.members.<name>` table, set
 whole with `bootstrap config set repo.members.<name> '<JSON table>' --json`,
 plus its `repo.home` (`setup:configs --<member>` from the base, and
 `git submodule add` for a `submodule`), recorded by running `/vwf:setup` from

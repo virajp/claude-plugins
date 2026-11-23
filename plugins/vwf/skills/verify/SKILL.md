@@ -113,8 +113,10 @@ Acceptance blocks of **every** flow (`docs/blueprint/flows/*/*/index.md` —
 regressions in untouched flows are the point, not just the last plan's), the
 registry, the target environment's base URLs, and the repo's staging-mode E2E
 mechanism per the harness contract (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md` —
-the canonical `test:e2e:staging` task, else the stamped equivalent; the
-`.config/vwf.yaml` `harness:` block says whether `e2e_staging` exists at all) —
+the one task `test:e2e:staging`, present when
+`mise tasks ls --json --no-global --hidden` lists it in the repo that holds
+the project under test; a failed `mise` call stops the run with its error
+output) —
 it runs the suite against the deployed environment, never against local
 emulators, and returns the standard per-criterion `PASS` / `FAIL` /
 `NOT-COVERED` block. `n/a — no staging

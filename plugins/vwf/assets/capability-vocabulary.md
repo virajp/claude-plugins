@@ -17,7 +17,7 @@ capability has no provider" checkable rather than ambiguous:
 
 | Kind    | Means                                                                                                     |
 | ------- | ----------------------------------------------------------------------------------------------------------- |
-| **`B`** | **backing service** — something outside the product provides it, so the project pins a `backing_template`  |
+| **`B`** | **backing service** — something outside the product provides it, so the project pins a `services` entry    |
 | **`F`** | **product foundation** — implemented in the product's own code; there is nothing to pin. See the `product-foundations` skill |
 | **`P`** | **project-axis fact** — a property of how the project is built, not a service it talks to; belongs to the project template |
 
@@ -86,7 +86,7 @@ or `ssr` is a category error, and the check below relies on that.
 
 Nothing used to verify this: a product could declare `document-datastore`, pin
 nothing, and pass every gate. `/vwf:doctor` now reports a **`B`** capability
-declared by a project whose `backing_template` list contains no entry declaring
+declared by a project whose `services` list contains no entry declaring
 it — and stays silent on every `F` and `P` token, which have nothing to pin.
 
 It is a **finding, not blocking**. Several `B` tokens have no template offering

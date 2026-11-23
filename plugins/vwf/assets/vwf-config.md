@@ -5,8 +5,9 @@ repo** under `multi-repo` topology; members never get their own, they find the
 base through bootstrap's `repo.home` instead
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Written by `/vwf:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
-of the system description**: what the product *is* (projects, roles, paths,
-capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
+of the system description**: what the product *is* (projects, roles,
+capabilities, platforms) lives in `docs/blueprint/registry.yaml`, and where
+each project's folder sits is bootstrap's; this file
 holds how vwf treats it — plus, since **format 10**, the one fact about the
 product that is realization rather than description: each project's **stack**.
 That lives here precisely so no blueprint-authoring or reviewing surface can
@@ -50,15 +51,23 @@ design tool, and left every MCP server to the user to install. **Format 27**
 moved the repo facts — the product name, the topology, the members and the
 deploy environments — to bootstrap's `.config/bootstrap/repo.toml`, read and
 written through `bootstrap config`; this file keeps only which member holds a
-project, at `projects.<name>.repo`.
+project, at `projects.<name>.repo`. **Format 28** slimmed the stack to a
+decision record and moved what bootstrap already knows there: a project's
+folder is bootstrap's `[projects.<name>]`, its languages and package manager
+are the bootstrap tools linked to it, and a capability is present when its
+task exists — so the stack lost its language and package-manager keys, the
+backing and deploy keys became `services` and `deploy`, `repo.stack` kept only
+its pin, and the workspace harness block went.
 
-## Schema (config_format 27)
+## Schema (config_format 28)
 
 ```yaml
-config_format: 27 # this file's own schema version — setup migrates it
-blueprint_format: 25 # the docs/blueprint format stamp
+config_format: 28 # this file's own schema version — setup migrates it
+blueprint_format: 26 # the docs/blueprint format stamp
 
 # NO `product:`, `topology:`, `topology_reason:`, `linkage:`, `members:`, `environments:` or `production_env:` key since FORMAT 27 — each lives in bootstrap's repo.toml (The repo facts, below). A leftover key is format drift, see `26 → 27` below
+
+# NO workspace `harness:` block since FORMAT 28 — a capability is present when its task exists (assets/harness.md; The projects in bootstrap, below). A leftover block is format drift, see `27 → 28` below
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
@@ -69,29 +78,25 @@ integrations: true # external integration/secret exists → environment.md requi
 
 stacks: [ stackgen ] # the ADAPTER ROSTER — stack-plugin names, verbatim, in menu order (`[stackgen]` today; assets/stack-adapter.md). Product-wide: it names WHICH plugins are asked for a menu, never what any project picked. Written by `setup` (confirmed with the user); read by setup's topology-detection and workspace-structure references, and by each adapter's menu skill (stackgen's `stackgen-stack-menu`), which is invoked only when its plugin is listed here. Present since format 10 as the roster — the retired `stacks:` the `enforcement:` note below names was `enforcement.stacks`, a different key. Every name must be an installed plugin: a missing one is a halt, never an empty menu
 
-addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a slug of the installed stack plugin's `addon` axis. Written by /vwf:architecture's tools round, where nothing is ever preselected; materialized by /vwf:setup on every run, in the base repo only, and a slug dropped from the list is removed. Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision. Not `repo.stack.tools`, which is repo tooling a repo template names
+addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a slug of the installed stack plugin's `addon` axis. Written by /vwf:architecture's tools round, where nothing is ever preselected; materialized by /vwf:setup on every run, in the base repo only, and a slug dropped from the list is removed. Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in multi-repo topology the base and each member carry their own
   stack:
     template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships, or `unresolved` (format 16 — deferred, see The three axis states). No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
-    package_manager: <tool> # only where the language has one; the repo template names the permitted values
-    tools: [] # open, lowercase-kebab — whatever the repo template names
+    # The pin is all `repo.stack` holds since FORMAT 28: the package manager is a bootstrap tool of category `package-managers` (The projects in bootstrap, below), and the repo tools list went with it
 
-projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
+projects: # per-project REALIZATION + nuances — no role/path/folder keys, ever (the role describes the system: registry.yaml; the folder is bootstrap's repo.projects.<name>.folder)
   <project-name>:
     repo: <member-name> # FORMAT 27. The member repo this project lives in — a key of bootstrap's repo.members. Absent for a project of the BASE repo, and under `repo`/`monorepo`. Was the member's `projects:` list in format 26. The registry names WHAT exists; this names WHERE
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
       template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
-      backing_template: [
+      services: [
         <slug>,
-      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block). A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred. An `addon` slug never sits here: an optional tool is the product's, in the top-level `addons:` list (format 25)
-      deploy_template: [
+      ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block); named `services` since format 28. A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred. An `addon` slug never sits here: an optional tool is the product's, in the top-level `addons:` list (format 25)
+      deploy: [
         <slug>,
-      ] # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block). A LIST since format 16, the same shape change `backing_template` made in 13: one slug per DELIVERY MECHANISM the project ships through, because a project routinely has more than one — a `cli` may publish to a package registry AND a container image AND a signed archive, and format 15 could record exactly one. Keyed on PLATFORM: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial` — records `[]`, since it ships through a store rather than to a deploy target, as does an `iac` platform, which IS the deploy path. A `cli` platform pins a deploy template for its package registry — WHICH one is the stack plugin's answer and vwf names NO slug here, on this axis or any other. `unresolved` when deferred
-      package_manager: <tool> # optional — overrides repo.stack.package_manager for a hybrid repo mixing managers
-      languages: [
-        <token>,
-      ] # CLOSED vocabulary — the languages the PINNED project template lists (assets/stack-vocabulary.md); vwf holds no table of its own. At least one, EXCEPT while `template` reads `unresolved` — a project whose language nobody has chosen yet records `[]`, and that is the one legal empty. Drives doctor's LSP + toolchain checks. A token the pinned template does not list is the `unknown` finding — a degradation that `/vwf:doctor` reports and on which `/vwf:execute` asks continue or stop; `/vwf:setup` alone stops on it (assets/stack-vocabulary.md) — never a recorded-and-ignored value
+      ] # the DEPLOY axis, PER PROJECT since format 13 (was one product-wide `deploy:` block); named `deploy` since format 28. A LIST since format 16, the same shape change the backing axis made in 13: one slug per DELIVERY MECHANISM the project ships through, because a project routinely has more than one — a `cli` may publish to a package registry AND a container image AND a signed archive, and format 15 could record exactly one. Keyed on PLATFORM: a project whose platforms are all SCREEN platforms other than `site`/`webapp` — `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv`, `spatial` — records `[]`, since it ships through a store rather than to a deploy target, as does an `iac` platform, which IS the deploy path. A `cli` platform pins a deploy template for its package registry — WHICH one is the stack plugin's answer and vwf names NO slug here, on this axis or any other. `unresolved` when deferred
+      # NO language or package-manager key since FORMAT 28: a project's languages and package manager are the bootstrap tools of category `languages` and `package-managers` linked to it (The projects in bootstrap, below). Drives doctor's LSP + toolchain checks, by tool name
       frameworks: [] # open, lowercase-kebab; 0..n. What the code is written against
       dependencies: [] # open, lowercase-kebab; the few that characterize the stack
       os: # OPTIONAL — which OPERATING SYSTEM the pinned template targets on each platform, copied by /vwf:setup from the template payload's `os:` field, filtered to the platforms this project declares in the registry. Each value is a token from the OS vocabulary in assets/standard-flows.md for that platform, the first being the primary. An absent key, or an absent platform in it, reads as NO OS KNOWN — the platform's generic canvas frame, as before the key existed. Additive, so it carries no config_format bump. Read by the design.viewports resolution below, through which the canvas picks each platform's OS frames
@@ -106,16 +111,6 @@ projects: # per-project REALIZATION + nuances — no role/path keys, ever (those
     harness:
       health: </path or
         n/a> # override the GET /health convention, or declare no surface
-
-harness: # workspace-level capability inventory (see the harness contract)
-  dev: true
-  e2e_local: true # or { present: true, task: <non-canonical name> }
-  local_stack: true
-  e2e_staging: false
-  health: true
-  screenshots: true
-  goldens: true # required when any project declares a DEVICE screen platform (desktop/mobile/tablet/auto/watch/tv/spatial) — see the harness contract
-  test:load: false # required when a flow's declared peak rate meets the delivery-pipeline load-validation threshold, ahead of its first production release
 
 enforcement: # vwf's enforcement opt-outs
   # `structure:` was retired in format 19 and `enforcement.stacks` in format 10, for the same reason: both became MENUS (assets/topologies/ for structure; the stack menu is stackgen's, offered through the stack adapter), so no choice deviates from anything and none needs a waiver. A legacy `structure:` or `enforcement.stacks` block reads as drift — structure migrates into `topology` + `topology_reason`, `enforcement.stacks` into projects.<name>.stack (its reason into `note`). The TOP-LEVEL `stacks:` above is a different key — the adapter roster — and is current.
@@ -184,10 +179,44 @@ daily, **detected** every run (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`).
 `repo.environments` is bootstrap's list of mise environments, not these deploy
 targets.
 
+## The projects in bootstrap (format 28)
+
+Three facts about a project are bootstrap's since format 28, and vwf reads each
+with the bootstrap CLI in **the repo that holds the project** —
+`projects.<name>.repo`, else the base repo — never from this file or the
+registry (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
+
+- **The folder** is `repo.projects.<name>.folder`, repo-relative, `.` for the
+  repo root:
+  `bootstrap config get repo.projects.<name>.folder --json`. The registry's
+  `path` is gone (`blueprint_format` 26, `vwf_registry: 3`). A registry
+  project with no `repo.projects.<name>` entry is a **degraded**
+  `/vwf:doctor` row with the fix
+  `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`,
+  and `/vwf:execute`'s start skips that project. The entry is written only
+  once the folder exists.
+- **The languages and the package manager** are the `data.tools` entries of
+  `bootstrap describe --json` of category `languages` and `package-managers`
+  whose `projects` list names the project. A language's name is the tool name
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A project with no
+  linked language tool is a **degraded** `/vwf:doctor` row, unless every one
+  of its platforms is `iac`, `cicd` or `misc`. A degraded row never stops
+  `/vwf:execute`.
+- **The capabilities** of the harness contract are present when their task
+  exists: a port (`test:e2e`, `test:golden`) when `describe`'s
+  `data.ports[].present` is true, any other capability when its task name is in
+  `mise tasks ls --json --no-global --hidden`, run in the repo that holds the
+  project whose platform needs it. Each capability has one task name
+  (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`), and none is recorded here; only
+  the per-project `projects.<name>.harness.health` override stays.
+
+A failed `bootstrap` or `mise` call is a refusal, with that tool's error text —
+never a value read as absent.
+
 ## The three axis states
 
-Every stack axis — `projects.<name>.stack.template`, `backing_template`,
-`deploy_template`, `repo.stack.template`, and, since `config_format` 19,
+Every stack axis — `projects.<name>.stack.template`, `services`, `deploy`,
+`repo.stack.template`, and, since `config_format` 19,
 `projects.<name>.stylesheet` — is in exactly one of **three** states since
 format 16. Until then there were two, and the missing one is what forced a user
 with no stack plugin installed to answer an unanswerable question:
@@ -199,7 +228,7 @@ with no stack plugin installed to answer an unanswerable question:
 | **deferred**                   | `unresolved`                                 | not asked yet, or asked and postponed                   |
 
 `unresolved` is the **bare scalar on every axis, including the list ones** —
-`deploy_template: unresolved`, never `[ unresolved ]`. An element of a list is a
+`deploy: unresolved`, never `[ unresolved ]`. An element of a list is a
 slug; deferral is a property of the axis, not of one mechanism within it. A list
 axis therefore never mixes the two.
 
@@ -260,12 +289,12 @@ at answering the question, never at installing something.
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
 | `repo.members` (repo.toml) | `setup` (spine step 2, from the onboard pipeline; the `26 → 27` migration), `architecture` (Step 5: each member's `type`) — through `bootstrap config set` | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) — through `bootstrap config get`; the progress pane alone reads the file (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`) |
 | `repo.product_name`, `repo.topology` (repo.toml) | `setup` (spine step 2, confirmed with the user); `architecture` (Step 5: `repo.topology`) — through `bootstrap config set` | every command that names the product or branches on its shape — through `bootstrap config get`                  |
+| `repo.projects`, tool links (repo.toml) | `setup` (the `27 → 28` migration; `bootstrap detect --add` on consent), `architecture` (a new project whose folder exists), the plan unit that creates a project's folder — through `bootstrap config set` | `plan`, `execute`, `doctor`, the verifiers — the folder through `bootstrap config get`, the languages, package manager and ports through `bootstrap describe` |
 | `stacks`             | `setup` (confirmed with the user)                                                                                                        | `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
 | `addons`             | `architecture` (the tools round, elicited); `setup` (the `24 → 25` and `25 → 26` migrations)                                             | `setup` (the materialize pass), `doctor` (drift, never blocking), `architecture` (the current pick on a re-run) |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
 | `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited; `repo` — the member a project is placed in); `execute` reconcile       | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
-| `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
 | `repo.deploy`, `repo.release_env` (repo.toml) | `setup` / `verify` (confirmed) — through `bootstrap config set`                                                                   | `verify` (the targets, and the release environment) — through `bootstrap config get`                            |
@@ -573,9 +602,10 @@ earlier than 65/90/80), never loosen.
   Readers treat a `custom` pin as `13` drift **and** as a blocking `/vwf:doctor`
   finding — the drift says the repo is behind, the blocking finding says vwf
   will not build against it meanwhile. A token the pinned template does not
-  list is the `unknown` finding instead — a degradation that `/vwf:doctor`
-  reports and on which `/vwf:execute` asks continue or stop; `/vwf:setup` alone
-  stops on it (assets/stack-vocabulary.md).
+  list was the `unknown` finding instead — a degradation that `/vwf:doctor`
+  reported and on which `/vwf:execute` asked continue or stop, `/vwf:setup`
+  alone stopping on it — until format 28 removed the check with the
+  `languages` key (`27 → 28` below).
 
 - **`14 → 15` migration** (performed by `/vwf:setup`): **a
   multi-repo product stops having to be a submodule
@@ -878,6 +908,36 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   eleventh config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20`, `21`, `22`, `23`, `24`, `25` and `26`.
+
+- **`27 → 28` migration** (performed by `/vwf:setup`, its migrate pipeline):
+  **the stack slims, and the projects move to bootstrap.** Per repo, in order:
+  set each project's `repo.projects.<name>.folder` from its registry `path`,
+  made repo-relative (`.` when it is the repo's own folder), skipping a project
+  whose folder does not exist yet and showing its fix line; run
+  `bootstrap detect --json` and, on the user's yes, `detect --add --yes`;
+  report each project with no linked language tool, with the fix
+  `bootstrap add tool <t>`, skipping a project whose platforms are all `iac`,
+  `cicd` or `misc`; rename `backing_template` → `services` and
+  `deploy_template` → `deploy`, the slugs unchanged; remove `languages` and
+  `package_manager` from every project's stack, `repo.stack.package_manager`,
+  `repo.stack.tools` and the workspace `harness:` block, reporting each
+  non-canonical task name that block recorded, for the user to rename
+  (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`); stamp `config_format` 28 and
+  `blueprint_format` 26, the registry losing `path` and reading
+  `vwf_registry: 3`; run `bootstrap sync --json`; commit. Members go first,
+  and the base repo's step runs only once every member's step succeeded; a
+  member absent on this machine stops the migration, naming the member to
+  clone. A failed `bootstrap` call stops that repo's step with bootstrap's
+  errors. The cases, the questions and the fix lines are the setup skill's
+  `format-lineage` row for 28.
+
+  A config still reading **27** is drift: `/vwf:doctor`'s stamp check reports
+  27 against 28 until the next `/vwf:setup` applies the step, and no reader
+  takes a removed key from this file as a value.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` **moves
+  with it, 25 → 26**: the registry's `path` leaves, because a project's folder
+  is bootstrap's.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

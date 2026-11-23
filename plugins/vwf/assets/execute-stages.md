@@ -132,7 +132,9 @@ Per-stage dispatch contract:
   full in its findings block.
 - **acceptance** — dispatch `execute-acceptance-verifier` (pass the
   `acceptance` list of the folder's `index.json`, each criterion's `text`
-  with its source flow, its `flow`, the registry, the **plan folder path**
+  with its source flow, its `flow`, the registry with each project's folder —
+  `bootstrap config get repo.projects.<name>.folder --json`, run in
+  `projects.<name>.repo`, else the base repo — the **plan folder path**
   and the **`covers` doc names** for the gap lines it returns, and the
   **slice** and **round number**). It
   independently maps each criterion to an E2E test (never trusting the coder's
@@ -367,10 +369,12 @@ recorded `skipped` in `stages.reconcile` with its reason.
    value**), creating the doc from the environment template if it did not exist.
    A committed secret value or an undocumented credential is a security finding,
    not a reconciliation.
-3. **Harness stamp.** If the cycle added a harness capability (a bootstrap step
-   landed — e2e task, dev server, health endpoint, staging mode), update the
-   `harness:` block in `.config/vwf.yaml` to match, per
-   `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`.
+3. **Harness.** Nothing is stamped: since `config_format` 28 a capability is
+   present when its task exists (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`),
+   so a cycle that lands one — e2e task, dev server, staging mode — records
+   nothing in `.config/vwf.yaml`. Only a project's health override is a key:
+   if the cycle moved a service's readiness route, update
+   `projects.<name>.harness.health` to match.
 4. **Implementation stamp.** For each blueprint doc in the `covers` list of
    the plan's `index.json`, set its `implementation:` key to what the run
    actually landed — the single carve-out from the never-silently-edit rule

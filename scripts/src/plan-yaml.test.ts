@@ -141,27 +141,25 @@ describe("frontmatter", () => {
 describe("the fake config files", () => {
   it("reads .config/vwf.yaml of a multi-repo product", () => {
     const doc = parseYaml(fixture("vwf.yaml"));
-    expect(doc.config_format).toBe(27);
+    expect(doc.config_format).toBe(28);
     expect(doc.topology).toBeUndefined();
     expect(doc.members).toBeUndefined();
     expect(doc.projects.api.repo).toBe("example-api");
     expect(doc.projects.app.repo).toBe("example-app");
     expect(doc.repo.stack.template).toBe("repo/example-repo");
     expect(doc.projects.api.stack.template).toBe("project/example-service");
-    expect(doc.projects.api.stack.backing_template).toEqual(["example-postgres", "example-auth"]);
-    expect(doc.projects.api.stack.deploy_template).toEqual([]);
+    expect(doc.projects.api.stack.services).toEqual(["example-postgres", "example-auth"]);
+    expect(doc.projects.api.stack.deploy).toEqual([]);
+    expect(doc.projects.api.stack.languages).toBeUndefined();
+    expect(doc.repo.stack).toEqual({ template: "repo/example-repo" });
     expect(doc.projects.api.stack.note).toBe(
       "picked for the example team's existing experience with it",
     );
     expect(doc.projects.api.coverage_target).toBe(90);
     expect(doc.projects.app.stack.template).toBe("unresolved");
-    expect(doc.projects.app.stack.backing_template).toBe("unresolved");
-    expect(doc.harness).toEqual({
-      "dev": true,
-      "local_stack": { present: true },
-      "health": false,
-      "test:load": false,
-    });
+    expect(doc.projects.app.stack.services).toBe("unresolved");
+    expect(doc.projects.app.stack.deploy).toEqual(["example-store"]);
+    expect(doc.harness).toBeUndefined();
     expect(doc.enforcement.rules["topology/iac-own-repo/infra"]).toEqual({
       waived: true,
       reason: "kept beside the api: one deploy",
@@ -171,14 +169,15 @@ describe("the fake config files", () => {
 
   it("reads docs/blueprint/registry.yaml", () => {
     const doc = parseYaml(fixture("registry.yaml"));
-    expect(doc.vwf_registry).toBe(2);
+    expect(doc.vwf_registry).toBe(3);
     expect(doc.projects.map((p: { name: string }) => p.name)).toEqual(["api", "app", "infra"]);
     expect(doc.projects[0].threat_notes).toEqual([
       "an external caller sends a forged token",
       "a webhook replays an old event",
     ]);
     expect(doc.projects[1].platforms).toEqual(["mobile", "tablet"]);
-    expect(doc.projects[2].path).toBe(".");
+    expect(doc.projects[2].platforms).toEqual(["iac"]);
+    expect(doc.projects.some((p: { path?: string }) => "path" in p)).toBe(false);
   });
 
   it("reads .claude/stackgen/lock.yaml", () => {
