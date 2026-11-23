@@ -2,36 +2,19 @@
   "format": 1,
   "plans": [
     {
-      "id": "2026-11-15-stack-bundles-tools",
-      "folder": "docs/plans/archived/2026-11-15-stack-bundles-tools",
-      "kind": "change",
-      "title": "R5a — stackgen bundles over bootstrap tools: tool knowledge, slim packs, design tools in vwf-tools",
-      "target_repo": null,
-      "priority": 70,
-      "status": "COMPLETE",
-      "started": "2026-11-23T08:56:56.643Z",
-      "ended": "2026-11-23T11:48:44.248Z",
-      "gaps": {
-        "open": 0,
-        "moved_to": []
-      },
-      "requires": [
-        "2026-11-15-config-format-28"
-      ],
-      "backlog": [],
-      "backlog_pieces": []
-    },
-    {
       "id": "2026-11-15-vwf-over-bundles",
       "folder": "docs/plans/2026-11-15-vwf-over-bundles",
       "kind": "change",
       "title": "R5b — vwf over stackgen bundles: architecture composes, setup adds tools and addons through bootstrap, doctor examines the links",
       "target_repo": null,
       "priority": 80,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-11-23T11:50:48.573Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-11-23T12:56:39.407Z",
+      "gaps": {
+        "open": 1,
+        "moved_to": []
+      },
       "requires": [
         "2026-11-15-stack-bundles-tools"
       ],
