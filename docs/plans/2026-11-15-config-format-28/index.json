@@ -243,11 +243,11 @@
         "U6"
       ],
       "waits": "docs-sync reads the delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T08:41:21.074Z",
+      "ended": "2026-11-23T08:46:39.601Z",
+      "commit": "0f7502c6",
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -283,9 +283,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:41:21.033Z",
+      "ended": "2026-11-23T08:49:24.473Z"
     },
     {
       "id": "W4",
@@ -686,28 +686,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.673Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.787Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no blueprint slice to verify against",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:15.900Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, nothing to persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T08:41:16.051Z"
     }
   },
   "gaps": [],
