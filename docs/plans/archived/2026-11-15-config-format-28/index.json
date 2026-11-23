@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-23T13:28 in .worktrees/all-2026-11-23-0333"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — dd3c5069 3997c4d9 bfbd53f2 40818c27 25792c7c 0f7502c6"
   },
   "consent": {
     "merge": true,
@@ -261,11 +261,11 @@
         "U7"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T08:49:40.309Z",
+      "ended": "2026-11-23T08:51:20.982Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -289,9 +289,9 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:49:40.271Z",
+      "ended": "2026-11-23T08:52:06.486Z"
     }
   ],
   "shared_files": [
