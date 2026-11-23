@@ -2,12 +2,11 @@
 name: HTML
 axis: project
 kind: language-bundle
-components:
-- language/typescript@0.5.0
-- package-manager/pnpm@1.1.2
-- toolchain-gate/tsconfig@0.2.2
-- toolchain-gate/eslint@0.3.5
-- framework/html@0.2.1
+tools:
+- node
+- pnpm
+packs:
+- framework/html@1.0.0
 platforms:
 - site
 ---

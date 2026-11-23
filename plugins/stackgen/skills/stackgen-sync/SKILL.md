@@ -2,10 +2,11 @@
 name: stackgen-sync
 description: Diff the repo's materialized entries — the .claude/ tree and
   the repo config files a component landed — against the
-  current component packs (and offer regeneration per generated component),
-  presenting the delta for consent — the explicit re-sync that makes drift
-  visible without ever overwriting silently. Also diffs the generated local
-  plugin on this machine, where the lockfile records one. Run after
+  current knowledge packs and tool knowledge (and offer regeneration per
+  generated component), presenting the delta for consent — the explicit
+  re-sync that makes drift visible without ever overwriting silently. Also
+  diffs the generated local plugin on this machine, and converts, once, a
+  lockfile written before tool knowledge and design tools. Run after
   upgrading stackgen,
   or any time you want to see how far the repo's copies have drifted.
 disable-model-invocation: true
@@ -38,7 +39,7 @@ user's clock.
    26 deletes it.
 
    **Entries are not all under `.claude/`.** A component may have landed
-   repo config files from its `config/` tree — a `test:*` task, a
+   repo config files from its `config/` tree — a
    `p/<id>/` task, a deploy target's root config —
    and those are ordinary lockfile entries carrying a `path`, a
    `component`, a `hash` and a `mode`. Inventory them with the rest; they
@@ -48,21 +49,60 @@ user's clock.
    statement of it — never re-list it here.
 
    **What bootstrap syncs is never diffed here.** The tool pins, the
-   gates, their configs and the generic tasks carry no lockfile record:
-   bootstrap's `mise run setup:configs` keeps them. The lockfile's
-   `bootstrap:` block — the tools and plugins stackgen asked bootstrap
-   for — is inventoried here and diffed at step 2.
+   gates, their configs, the generic and test tasks and the LSP servers'
+   declarations carry no lockfile record: bootstrap's
+   `mise run setup:configs` keeps them. The lockfile's `bootstrap:` block —
+   the tools stackgen asked bootstrap for — is inventoried here and diffed
+   at step 2.
 
-2. **Diff pack-sourced components.** For each component, re-derive its
+   **The conversion, once.** A lockfile written before tool knowledge and
+   design tools holds rows of the retired kinds. Sync converts them before
+   anything else, with no consent line of its own — it lands nothing and
+   deletes nothing — and the report lists each change:
+
+   - a row whose source is `pack/language/<slug>@<v>`,
+     `pack/package-manager/<slug>@<v>` or `pack/toolchain-gate/<slug>@<v>`
+     becomes `tool/<slug>@1.0.0`, its component `tool/<slug>`, the file kept
+     and its hash unchanged;
+   - a row whose source is `pack/design-tool/<tool>@<v>` is removed, and the
+     tool is offered for `vwf-tools` on step 5's tier-3 line, as
+     materializing installs it; its old `.claude/skills/design-import-*`
+     files are left in place and reported, and are the repo's own from then
+     on;
+   - a row whose source is `pack/addon/<slug>@<v>` is removed, with any
+     `bootstrap.plugins` record whose components are all addon refs; the
+     files are left in place, nothing is sent to bootstrap, and the plugin
+     stays as bootstrap lists it;
+   - a row of a test task file the packs no longer ship —
+     `.config/mise/tasks/test/e2e` and `.config/mise/tasks/test/golden` — is
+     removed, and the file is left in place: those tasks are bootstrap's
+     tool parts now.
+   - a `bootstrap.tools` entry that lists component refs is rewritten to
+     the slugs whose `entries` carry those components, since a bundle now
+     names its tools;
+   - a `local_plugin.lsp_servers` entry whose `packs:` lists component refs
+     is rewritten the same way, to the slugs whose `entries` carry those
+     components — the bundles that landed the server; an entry no `entries`
+     row matches is left with owners unknown and reported.
+
+   A lockfile with none of these rows has nothing to convert, and the report
+   says nothing of it. After the conversion, sync diffs knowledge packs and
+   tool knowledge by version, as below.
+
+2. **Diff shipped components.** For each component, re-derive its
    landing set from the current pack
    (`${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`, per
-   `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`) and classify each copied
+   `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`), or, for a `tool/<slug>`
+   component, from the current tool-knowledge entry
+   (`${CLAUDE_PLUGIN_ROOT}/tools/<slug>/`), and classify each copied
    file by hash against the lockfile and the tree — three states, reported per
    file: **unchanged**, **pack moved** (the pack's version/content changed,
    the copy still matches its landing hash), **repo edited** (the copy no
    longer matches its landing hash — whether or not the pack also moved).
-   A pack that no longer exists in this stackgen version is reported, never
-   deleted.
+   A pack or entry that no longer exists in this stackgen version is
+   reported, never deleted. A tool-knowledge entry the repo's tools now call
+   for and no lockfile row holds — a tool the repo linked since — is offered
+   as a new landing, by the materializer's tool-knowledge rule.
 
    **The required MCP servers.** A component updated to a pack version whose
    `conventions.md` has a `## MCP servers` section gets its lines recorded in
@@ -70,25 +110,6 @@ user's clock.
    filled when the key is missing, rewritten when the lines changed. It rides
    the component's update and has no consent line of its own: it is a record,
    and nothing installs a server.
-
-   **The relocation table.** One item moved to a new pack, and this fixed
-   table is the whole of it — there is no general diff across pins:
-
-   | From                                                               | To                  |
-   | ------------------------------------------------------------------ | ------------------- |
-   | the `taste-skill@taste-skill` claim of `design-tool/claude-code@1` | `addon/taste-skill` |
-
-   **In the base repo**, where the new pack is pinned, a relocated item is
-   **re-attributed in the lockfile, never removed and re-added**, before the
-   diff above runs against it, and the report names it. A change of content is
-   a normal update behind its normal consent.
-
-   **In a member repo of a multi-repo product** — one whose bootstrap
-   `[home]` back-link (`repo.home`) has a value — the table does not apply:
-   a claim on `taste-skill@taste-skill` goes by the bootstrap handoff's
-   Removal section.
-   A sync in the base repo names each member not cloned locally in a one-line
-   warning; its old items wait for a sync there.
 
    **A retired record whose file is gone is dropped.** A recorded path
    that its recording component — the `component:` ref — no longer
@@ -100,12 +121,12 @@ user's clock.
    path the component no longer ships that is still **present** is not
    this rule's.
 
-   **The bootstrap delta.** Run steps 1 to 6 of the bootstrap handoff
+   **The bootstrap delta.** Run steps 1 to 5 of the bootstrap handoff
    (`${CLAUDE_PLUGIN_ROOT}/skills/stackgen-stack-template/references/bootstrap-handoff.md`) for the
-   current composition, and compare its result with the lockfile's
-   `bootstrap:` block. A tool or plugin that the composition needs and
-   the repo does not select is an `add`; one whose recorded components
-   all left is a `remove`, on the terms of that file's Removal section.
+   `tools:` of each bundle the lockfile records, and compare its result with
+   the lockfile's `bootstrap:` block. A tool that a bundle names and the
+   repo does not select is an `add`; one whose recorded slugs all left is a
+   `remove`, on the terms of that file's Removal section.
    A repo that fails the shaped test of
    `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` is not shaped:
    report the `errors` messages as bootstrap gives them, and offer no
@@ -118,7 +139,6 @@ user's clock.
    reports a non-executable task file as an *unknown task* rather than as a
    permission error, and `mise run init` is the restore. And where two
    components write into one tree, re-derive in composition order —
-   `toolchain-gate`, then `package-manager` / `language`, then
    `app-framework`, then `capability-provider`, then `cloud-provider`, then
    `cloud-service`, later wins — and diff each file against the component the
    lockfile says supplied it. A file whose supplying component **changed** is a
@@ -129,10 +149,7 @@ user's clock.
    has no pack to diff against; offer to re-run the generator for that
    component alone (the pipeline in `/stackgen:stackgen-stack-template`'s
    references — fresh research against its recorded citations, reviewer
-   gate included) and diff its output against the repo's copy. An
-   `lsp_servers:` declaration bound for `vwf-tools` is the exception: it is
-   researched from fresh sources alone, never from those citations or any
-   other text the repo holds, because a repo can plant them. A
+   gate included) and diff its output against the repo's copy. A
    regenerated component goes through the generator and so through its
    `stackgen-reputation` check: every concrete name it emits is re-checked
    at regeneration, a name that passed at first generation included, and
@@ -155,30 +172,35 @@ user's clock.
      6 with no prompt, and the report names the rewrite. The repo's servers
      then merge behind the normal tier-3 line, as a first write when
      `vwf-tools` does not exist.
-   Then the diff — of LSP keys only; sync subtracts and offers no MCP key. No
-   `local_plugin` block and no key the composition declares
+   Then the diff — of LSP keys and design tools only; sync subtracts and
+   offers no MCP key. No `local_plugin` block, no server in
+   `data.servers` of `mise x -- bootstrap lsp --json` and no design tool a
+   project of `.config/vwf.yaml` names
    → skip the rest of this step; this repo has never written to the
    machine and a sync must not start. Otherwise read
    `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json` and
    compare, **key by key and only for the `lspServers` keys this repo claims**
-   under `local_plugin.lsp_servers`, and the keys the current composition
-   declares:
+   under `local_plugin.lsp_servers`, and the servers `bootstrap lsp --json`
+   lists:
 
-   - a key the current composition declares that this repo does not claim yet
+   - a server bootstrap lists that this repo does not claim yet
      — **offer** it, classified by the merge table;
-   - a claimed key whose declaration the current pack has changed —
+   - a claimed key whose declaration bootstrap now prints differently —
      **offer** the update, classified by the merge table too: it is ours only
      when `claims.json` lists this repo's path, never because the committed
      lockfile names the key, and is otherwise a conflict;
    - a claimed key the manifest no longer holds — report it; the user
      removed it by hand and re-adding it uninvited is exactly the silent
      write this skill exists to prevent;
-   - a claimed key whose component is no longer in the composition —
+   - a claimed key bootstrap no longer lists —
      offer **removal by subtraction**, which drops this repo's claim on that
      key alone, deletes the key only when no repo claims it, and
      touches no other repo's;
    - a key the manifest holds that this repo does not claim — invisible
-     here, always. It is another repo's, or the user's.
+     here, always. It is another repo's, or the user's;
+   - a design tool a project names that this repo does not claim yet, or
+     whose files this stackgen ships differently — **offer** it; a claimed
+     design tool no project names any more — offer removal by subtraction.
 
    Everything in this step is **outside the repo and outside the commit**;
    only the `local_plugin` block moves with the lockfile.
@@ -201,8 +223,9 @@ user's clock.
      updated or removed, and a declined line leaves the `.claude/` side
      landed and says the tasks stay as they are;
    - the bootstrap delta of step 2 — each instruction as it will be sent,
-     on the terms of step 7 of the bootstrap handoff;
-   - anything from step 4 — the **tier-3** line, LSP servers only, which shows
+     on the terms of step 6 of the bootstrap handoff;
+   - anything from step 4 or the conversion — the **tier-3** line, LSP
+     servers and design tools only, which shows
      each server's full declaration (`command`, `args`, the `env` keys and
      their values), says plainly that it writes to this machine outside the
      repo and that a server landing in `vwf-tools` starts in every repo on
@@ -223,12 +246,13 @@ user's clock.
    selected, update the changed
    components' lockfile hashes, the `bootstrap:` block and the
    `local_plugin` block — every entry rewritten to the owners shape, with the
-   re-attributions of step 2 and the no-prompt rewrite of step 4 — and commit as
+   conversion of step 1 and the no-prompt rewrite of step 4 — and commit as
    one commit via the repo's git workflow. The local plugin's own files
    are on the machine, not in the commit. A consented bootstrap delta is
-   sent first — steps 8 to 10 of the bootstrap handoff — and the files
-   its sync changes join the commit. The retired records step 2 found are dropped
-   here too, on every run — whatever was selected, nothing included.
+   sent first — steps 7 to 9 of the bootstrap handoff — and the files
+   its sync changes join the commit. The retired records step 2 found are
+   dropped here too, on every run — whatever was selected, nothing
+   included.
 
 7. **Re-check the shape.** Once everything selected is written and
    committed — or nothing was selected — run the shape check `/vwf:setup`
@@ -243,8 +267,8 @@ user's clock.
 ## Rules
 
 - **Visible, never silent** — every write traces to a line the user saw in
-  the delta, save a retired record whose file is already gone (step 2), a
-  re-attribution (step 2) and the rewrite to the `vwf-tools` names (step 4),
+  the delta, save a retired record whose file is already gone (step 2), the
+  conversion (step 1) and the rewrite to the `vwf-tools` names (step 4),
   which the report names instead.
 - **The component is the grain.** A framework's major bump regenerates that
   framework component alone; the language baseline beside it is untouched
@@ -262,7 +286,7 @@ user's clock.
 - **The local plugin is the one thing subtracted rather than left.** It is
   the machine's shared file, not a repo copy, so a stale key there is
   another repo's problem rather than a note the user can ignore. Removal
-  drops only this repo's claims, and a key leaves the manifest only when no
+  drops only this repo's claims, and a key leaves the plugin only when no
   repo claims it; the directory and the
-  registration go only when subtracting leaves no servers at all, and only
-  after the user confirms the two printed commands.
+  registration go only when subtracting leaves no server and no design tool
+  at all, and only after the user confirms the two printed commands.

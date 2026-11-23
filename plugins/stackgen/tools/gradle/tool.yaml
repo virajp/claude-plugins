@@ -1,0 +1,7 @@
+name: Gradle
+summary: Dependency declaration, resolution and locking for a Kotlin/JVM build
+  —
+  the committed wrapper, the Kotlin DSL, the version catalog as the one place a
+  version is written, and gradle.lockfile as the pin.
+version: 1.0.0
+tools: [ kotlin, java, android ]

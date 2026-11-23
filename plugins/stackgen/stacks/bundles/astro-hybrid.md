@@ -2,14 +2,13 @@
 name: Astro (Hybrid)
 axis: project
 kind: language-bundle
-components:
-- language/typescript@0.5.0
-- package-manager/pnpm@1.1.2
-- toolchain-gate/tsconfig@0.2.2
-- toolchain-gate/eslint@0.3.5
-- framework/astro@0.5.1
+tools:
+- node
+- pnpm
+packs:
+- framework/astro@1.0.0
 - framework/react@generated
-- framework/effect@0.1.0
+- framework/effect@1.0.0
 platforms:
 - site
 ---

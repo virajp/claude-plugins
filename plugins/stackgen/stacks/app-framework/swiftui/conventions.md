@@ -89,17 +89,17 @@ package stack.
 explicitly by the tasks. No pack lands a root config, a `Package.swift` or the
 project.
 
-## The task this pack owns
+## The golden task
 
-This pack ships one task, `test/golden`, landing at the repo's own
-`.config/mise/tasks/` behind the materializer's config consent line. The rest
-of the toolchain is bootstrap's: `mise run setup` resolves the project's
-packages from the committed `Package.resolved`, `mise run setup --upgrade`
-moves them to the newest versions their ranges allow, and `mise run code`
-runs the format and lint gates. `test:golden` locates the project as the
-single `*.xcodeproj` at the repo root, refusing none or several, and checks
-Xcode first through the `_scripts/xcode` library. Package checkouts and build
-products go under `.build/`.
+The task is bootstrap's: its `swift` tool ships `test:golden` as a part, and
+this pack lands none. The rest of the toolchain is bootstrap's too:
+`mise run setup` resolves the project's packages from the committed
+`Package.resolved`, `mise run setup --upgrade` moves them to the newest
+versions their ranges allow, and `mise run code` runs the format and lint
+gates. `test:golden` locates the project as the single `*.xcodeproj` at the
+repo root, refusing none or several, and checks Xcode first through the
+`_scripts/xcode` library. Package checkouts and build products go under
+`.build/`.
 
 | Task | Does |
 | --- | --- |

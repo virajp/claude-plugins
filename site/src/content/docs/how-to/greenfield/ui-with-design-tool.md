@@ -11,7 +11,8 @@ reads the imported contract instead of the canvas.
 
 The worked example is **Centwise**, a Flutter expense tracker for phones. One
 repo, one project, one platform — `mobile` — with the terminal itself as the
-design tool, materialized by `stackgen`'s `claude-code` pack: the canvas is a
+design tool, materialized by `stackgen`'s `claude-code` design tool: the canvas
+is a
 committed `docs/design/<project>/` directory, authored in session by
 `/design-session` and reviewed in a browser on loopback. At the end Centwise has
 an imported design system, flow contracts whose screens were designed on the
@@ -38,9 +39,9 @@ claude plugin install vwf@virajp-plugins
 ```
 
 `stackgen` supplies the `dart-flutter` bundle — its Dart, Kotlin and Swift
-doctrine, and the language servers it declares — plus the `ux-gate` that renders
+doctrine — plus the `ux-gate` that renders
 Flutter screens, which matters at the end of the run, and the `claude-code`
-design-tool pack, without which `/vwf:design-system` has nothing to import from.
+design tool, without which `/vwf:design-system` has nothing to import from.
 Scopes and
 upgrades: [the installer CLI](../../installer/usage.md#installing-plugins); the
 rest of this step is the spine's
@@ -77,9 +78,10 @@ the derive-and-correct shape. Two of Centwise's answers are the delta:
   flows the blueprint mandates, that screens land in `mobile.md` files, and
   which toolchain checks the built screens in step 9.
 - **Design tool** — `claude-code`, asked once per project that declares a
-  screen platform and recorded against that project. The menu preselects it,
-  so Centwise only confirms. It is a bundle
-  slug, and the slug *is* the config token, so pinning it and writing the key
+  screen platform and recorded against that project. Nothing is preselected
+  on the design axis, so Centwise picks it. It is a design tool's folder name
+  in stackgen, and the name *is* the config token, so pinning it and writing the
+  key
   are one act. A product with two UI projects can answer it twice with two
   different tools: [stackgen](../../plugins/stackgen.md).
 - **Tools** — `taste-skill`, on the last round, the `addon` axis. Nothing is
@@ -282,9 +284,10 @@ feedback, rather than through any tool-specific call. See
 The choice is recorded per registry project, so a product with a marketing site
 and a phone app can answer it twice. The tokens the adapter supports today are
 `claude-code`, `lovable` and `stitch` — the first is the terminal itself, with a
-committed `docs/design/<project>/` directory as its canvas, and the one the menu
-preselects; the other two are hosted canvases, each reaching an MCP server you
-install yourself when its pack asks — and they differ in two ways that matter
+committed `docs/design/<project>/` directory as its canvas; the menu
+preselects none; the other two are hosted canvases, each reaching an MCP server
+you install yourself when its design tool asks — and they differ in two ways
+that matter
 downstream.
 
 The first is whether the tool **stores** a design system or the adapter has to
@@ -296,7 +299,8 @@ carry the pinned screen codes back. Those codes are the join key for the import
 diff; a tool whose output cannot recover them still imports, but reports the
 screens without codes rather than guessing, and you match them by hand.
 
-Support for a tool is a `design-tool` pack inside `stackgen`, not a vwf change
+Support for a tool is a design tool inside `stackgen`'s `design-tools/`, not a
+vwf change
 and not a new plugin — so "my tool isn't listed" is a small contribution, not a
 fork. Three ship today: `claude-code`, `lovable` and `stitch`. What each reads
 and how each authenticates:

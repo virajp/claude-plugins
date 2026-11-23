@@ -1,14 +1,16 @@
 # Component Taxonomy
 
 stackgen's unit is the **component** — the atom a stack is actually made
-of: `typescript`, `pnpm`, `axum`, `postgres`, `kafka`, `cloud-run`. One
-pack per component (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`); a
-**bundle** is never a directory — it is a recorded composition of component
-refs in the template payload. This file is the closed vocabulary that
-classifies every component, curated and generated alike. It is **extended
-deliberately**: a new type or category is an edit to this file, reviewed
-like any contract change — never a value a generation run invents because
-nothing here fit.
+of: `axum`, `postgres`, `kafka`, `cloud-run`. One knowledge pack per
+component (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`); a **bundle** is
+never a directory — it is a recorded composition of bootstrap tools and
+component refs. A language, a package manager and a gate meaningful for one
+toolchain are no component: they are bootstrap tools, and their doctrine is
+tool knowledge (`${CLAUDE_PLUGIN_ROOT}/tools/<slug>/`), keyed by the tool.
+This file is the closed vocabulary that classifies every component, curated
+and generated alike. It is **extended deliberately**: a new type or
+category is an edit to this file, reviewed like any contract change — never
+a value a generation run invents because nothing here fit.
 
 Every component declares up to three classification fields in its metadata:
 **`type`** always, **`category`** where its type has categories, and
@@ -18,19 +20,10 @@ Every component declares up to three classification fields in its metadata:
 
 The closed list. A component is exactly one of:
 
-- **`language`** — a programming language; the root a Language-Bundle
-  composes around, and the one type that carries the per-language facts
-  `/vwf:doctor` verifies (LSP provision, mise tool, manifest, and the
-  optional `binaries` — executables needed on `PATH` that mise does not
-  manage, each a bare name doctor looks up or a `{ name, probe }` map whose
-  probe command doctor runs instead).
-- **`package-manager`** — how a language's dependencies are installed and
-  locked; contributes the `repo`-axis facts, and declares its `lockfile:`
-  paths or globs, which doctor's resolve check reads.
 - **`framework`** — a library that imposes structure inside a language: a
   webserver, an ORM, a testing framework, a meta-framework. Note the
-  containment: a `framework` is **subordinate** to the `language` component
-  it composes with.
+  containment: a `framework` is **subordinate** to the language tool it
+  composes with.
 - **`app-framework`** — the inversion of that containment: an SDK that owns
   the manifest, the build and the project layout, and **decides which
   languages appear**. Flutter is the case that forced this type — its
@@ -39,11 +32,11 @@ The closed list. A component is exactly one of:
   rather than the reverse, and its scaffolder takes the native language as a
   flag. A type is warranted where the SDK is what a project pins and the
   language is what the SDK brought.
-- **`toolchain-gate`** — a gate meaningful for one toolchain: its linter,
-  its formatter, its compiler config. The repo-wide gates — the formatter,
-  the two scanners and the hook runner — are no type since 2026-09-26, and
-  are bootstrap's. A `toolchain-gate` pack carries the doctrine of its gate;
-  the gate's pin, config and task are bootstrap's too.
+- **Languages, package managers and toolchain gates are no type** since
+  2026-11-15: each is a bootstrap tool, its pin, config, tasks and LSP
+  server bootstrap's, and its doctrine a tool-knowledge entry. The
+  repo-wide gates — the formatter, the two scanners and the hook runner —
+  are no type since 2026-09-26.
 - **The toolchain manager is no type** since 2026-09-26: the repo's mise
   config, its tool pins and its task library are bootstrap's, and a pack
   ships none of them.
@@ -67,29 +60,23 @@ The closed list. A component is exactly one of:
   per system, never per workflow.
 - **`build-orchestrator`** — task and build orchestration across a workspace's
   packages: caching, dependency-ordered runs. Distinct from the
-  `package-manager`, which installs and locks but does not schedule work.
+  package manager, which installs and locks but does not schedule work.
 - **`deploy-target`** — where a built artifact lands when the target belongs to
   no cloud: a package registry, a provider-neutral container host. A cloud's own
   compute service stays a `cloud-service`.
 - **`cdn`** — a content-delivery layer.
-- **`design-tool`** — the tool a project's screens and design system are
-  authored in. Selected by the project's `design:` pin rather than composed
-  into anything, which is why it is its own type: it sits beside a stack
-  rather than inside one, and two projects on the same stack routinely use
-  different ones.
 - **`stylesheet`** — how a web frontend's styles are authored, and how the
   design system's semantic tokens become CSS: a utility framework, a
   compile-time CSS-in-JS system, or plain custom properties. Selected by
   the project's `stylesheet:` pin rather than composed into a framework,
-  for the same reason `design-tool` is its own type — two projects on the
-  same framework routinely author styles differently, and the framework
-  pack must not decide it for them. Pinned per project, and asked only of
-  a project declaring a `site` or `webapp` platform. Composes into a
-  Stylesheet-Bundle.
-- **`addon`** — an optional tool the user picks for the whole product: a
-  Claude plugin the agent uses, which nothing the product runs depends on.
-  Never a default. An `addon` pack realizes no capability token, and its
-  `capability` stays unset. Composes into an Addon-Bundle.
+  because two projects on the same framework routinely author styles
+  differently, and the framework pack must not decide it for them. Pinned
+  per project, and asked only of a project declaring a `site` or `webapp`
+  platform. Composes into a Stylesheet-Bundle.
+- **A design tool and an addon are no type** since 2026-11-15. A design
+  tool is a folder of `${CLAUDE_PLUGIN_ROOT}/design-tools/`, installed into
+  the local plugin `vwf-tools`; an addon is a Claude plugin bootstrap
+  installs, listed in `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`.
 
 ## Categories
 
@@ -110,8 +97,6 @@ and its components leave `category` unset.
   `in-memory`
 - **`capability-provider`**: `identity` / `telemetry` / `workflow` /
   `secrets-manager` / `audit`
-- **`addon`**: none — an `addon` pack, like `addon/taste-skill`, leaves
-  `category` unset.
 - **`app-framework`**: `cross-platform-ui` / `native-ui`
 - **`stylesheet`**: `utility` / `compile-time` / `plain` — the three ways
   the token mapping can be paid for. `utility` generates classes from a
@@ -166,9 +151,9 @@ they share a noun and neither replaces the other.
 
 A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
 
-- A **Language-Bundle** is the composition rooted at a `language`
-  component: the language + its `package-manager`, `framework` components
-  and `toolchain-gate`s.
+- A **Language-Bundle** is the composition rooted at a language tool: the
+  language, its package manager and its gates as bootstrap tools, plus its
+  `framework` packs.
 - A **Cloud-Bundle** is a `cloud-provider` component + `cloud-service`
   components.
 - A **Datastore-Bundle** is category-level doctrine + an instance
@@ -193,10 +178,8 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   that belongs to a cloud is a `cloud-service` inside a Cloud-Bundle
   instead. What keeps the single component honest is its kind's scope
   fence rather than a pairing.
-- A **Design-Bundle** is exactly one `design-tool` component, standing alone
-  like a Deploy-Bundle, on the **`design`** axis.
 - A **Stylesheet-Bundle** is exactly one `stylesheet` component, standing
-  alone like a Design-Bundle, on the **`stylesheet`** axis. There is no
+  alone like a Deploy-Bundle, on the **`stylesheet`** axis. There is no
   second half for the same reason: there is no category above "how styles
   are authored" to write doctrine at, and what keeps the single component
   honest is its kind's scope fence. It carries **no `platforms:`** — the
@@ -204,26 +187,21 @@ A bundle is rooted per kind (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`):
   condition rather than a property of the bundle, and listing platforms
   here would make the same pack read as a different answer per platform.
 
-Those last three share a property nothing else here has, and it is what makes
-the **tool axes** (`design`, `cicd`, `stylesheet`) cheap: **the bundle slug is
-the token the project config already holds**. Picking from the menu and writing
-`projects.<name>.design` are one act rather than two that can disagree. They
-exist because a template no menu can offer is not an error — it is invisible,
-which is how a CI-system pack shipped that nothing could ever materialize.
-- A **Workspace-Bundle** is the `package-manager` component that installs
-  and locks the repo's members plus a `build-orchestrator` component where
-  the repo has one — the one composition on the **`repo`** axis:
-  `repo.stack.template` is what selects it, while the repo baseline is
-  bootstrap plus `/vwf:init`'s own assets. A single-package
-  repo pins none, which is the edge rather than a gap. The
-  `package-manager` component appears in two kinds' compositions the way
-  `toolchain-gate` does — it carries `language-bundle` topics 7–8 there and
-  the multi-member half here, so its own `kind:` naming `language-bundle`
-  is the seam working rather than a mis-declared pack.
-- An **Addon-Bundle** is exactly one `addon` component, standing alone, on the
-  **`addon`** axis. It is not one of the tool axes above: its slug is an entry
-  in the product-level `addons:` list of `.config/vwf.yaml`, not a project's
-  config token, and no bundle on the axis carries `default: true`.
+The CI- and Stylesheet-Bundles share a property with the design tools that
+nothing else here has, and it is what makes the **tool axes** (`design`,
+`cicd`, `stylesheet`) cheap: **the slug is the token the project config
+already holds** — a bundle's slug, or a design tool's folder name. Picking
+from the menu and writing `projects.<name>.design` are one act rather than two
+that can disagree. They exist because a template no menu can offer is not an
+error — it is invisible, which is how a CI-system pack shipped that nothing
+could ever materialize.
+- A **Workspace-Bundle** is the package-manager tool that installs and locks
+  the repo's members plus a `build-orchestrator` component where the repo has
+  one — the one composition on the **`repo`** axis: `repo.stack.template` is
+  what selects it, while the repo baseline is bootstrap plus `/vwf:init`'s own
+  assets. A single-package repo pins none, which is the edge rather than a
+  gap. The package manager's tool knowledge serves both kinds: the
+  language-bundle topics there and the multi-member half here.
 
 ## Category-level doctrine
 

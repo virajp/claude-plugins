@@ -51,6 +51,8 @@ boots it headless, runs the module's `androidTest` source set, and tears it
 down. On CI it adds the software GPU renderer.
 `mise run test:e2e -- --connected` runs `connected<Variant>AndroidTest`
 against a running emulator or device instead, for a local debugging loop.
+The task is bootstrap's: its `android` tool ships `test:e2e` as a part, and
+this pack lands none.
 
 **Why it is built the way it is.** The task file carries one-line comments
 only; the reasoning is here.

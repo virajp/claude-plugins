@@ -2,11 +2,10 @@
 name: Swift · SwiftUI
 axis: project
 kind: app-framework
-components:
-- app-framework/swiftui@1.0.1
-- package-manager/swiftpm@0.3.2
-- toolchain-gate/swift-format@1.0.0
-- toolchain-gate/swiftlint@1.0.0
+tools:
+- swift
+packs:
+- app-framework/swiftui@2.0.0
 platforms:
 - mobile
 - tablet

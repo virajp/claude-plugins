@@ -121,5 +121,5 @@ needs, and this instance is simply reachable over the network.
 **So retrieval quality is verified against a real corpus or not at all.**
 That is not a gap to close with more local machinery; it is what local
 can mean for a managed pipeline, and it is why the pre-production
-instance in the harness block is seeded deliberately and its sync job's
+instance the harness uses is seeded deliberately and its sync job's
 state is read rather than assumed.

@@ -2,9 +2,10 @@
 name: Cloudflare Zero Trust Access
 axis: deploy
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/zero-trust-access@0.1.1
+- cloud-service/zero-trust-access@1.0.0
 artifact: n/a
 ---
 

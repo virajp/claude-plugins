@@ -1,0 +1,8 @@
+# The addons — optional Claude plugins a product may pick on the addon axis.
+# stackgen-stack-menu lists each item; bootstrap installs the plugin.
+addons:
+  - name: taste-skill # the plugin, taste-skill@taste-skill
+    summary: The Claude plugin whose design skills the claude-code design
+      tool's design-session authors through.
+    source: Leonxlnx/taste-skill # its marketplace, for claude plugin marketplace add
+    design_tools: [ claude-code ]

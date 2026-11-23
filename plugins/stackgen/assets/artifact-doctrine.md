@@ -177,7 +177,7 @@ What the generated wiring must respect:
   documents concurrent writers, and a lockless read-modify-write file beside
   the store counts as the store for this purpose.
 - **An LSP declaration must not start a server in a repo with no matching
-  files.** Every generated `lspServers` entry **must** carry an
+  files.** Every `lspServers` entry stackgen writes **must** carry an
   `extensionToLanguage` map. This is a hard rule, not a preference: the map is
   the only guard, so a declaration without one starts unconditionally in every
   session in every repo — and since the generated declaration is user-scoped
@@ -189,10 +189,11 @@ What the generated wiring must respect:
 `lspServers` exists only in a plugin manifest, so the installer pattern above
 takes one further form: stackgen **generates a plugin** at the fixed path
 `~/.claude/plugins/local/vwf-tools/` — a `.claude-plugin/plugin.json`
-carrying `lspServers` alone, as a union across the user's stacks,
-beside a single-plugin `marketplace.json` — and prints the two `claude plugin`
-commands that register it at **user** scope. The full contract, the consent
-tier and the lockfile key are
+carrying `lspServers`, copied unchanged from `bootstrap lsp --json` as a
+union across the user's repos, beside a single-plugin `marketplace.json`,
+and the design tools' skills under `skills/` — and prints the two
+`claude plugin` commands that register it at **user** scope. The full
+contract, the consent tier and the lockfile key are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`.
 
 Two rules bind the generated manifest:
@@ -206,12 +207,11 @@ Two rules bind the generated manifest:
 
 §5 says stackgen holds no registry; this says what happens to the names it
 emits instead. A **concrete name** is any third-party thing a generated
-component would have a repo fetch or run: a package a `mise_tool` entry or a
-runner-invoked harness task names (`dlx`, `npx`, `uv run --with`, `uvx`), a
-command an `lsp_servers:` entry spawns, every package a server's runner chain
-fetches, the host of any URL or bare host in an entry's `args` or `env` values,
-a GitHub Action, a container image, a dependency in a `Package.swift`, a Maven
-dependency or a Gradle plugin in a build file. Every
+component would have a repo fetch or run: a package its skills or
+conventions tell a repo to add or run, a GitHub Action, a container image, a
+dependency in a `Package.swift`, a Maven dependency or a Gradle plugin in a
+build file. A tool pin and an LSP server are no such name: both are
+bootstrap's. Every
 one of them gets a verdict before the dry-run gate shows it, from the
 `stackgen-reputation` skill — a skill anyone can call, the user by hand on a
 name they are about to type

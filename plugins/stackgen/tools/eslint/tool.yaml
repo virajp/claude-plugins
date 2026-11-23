@@ -1,0 +1,6 @@
+name: ESLint
+summary: The correctness gate for TypeScript and JavaScript — flat config,
+  zero
+  formatting rules, overrides scoped by glob.
+version: 1.0.0
+tools: [ node, bun ]

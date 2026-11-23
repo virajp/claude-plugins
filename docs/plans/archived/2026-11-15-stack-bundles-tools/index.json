@@ -1,0 +1,737 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "R5a — stackgen bundles over bootstrap tools: tool knowledge, slim packs, design tools in vwf-tools",
+  "requires": [
+    "2026-11-15-config-format-28"
+  ],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "solo",
+  "status": {
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — 3d4f5ce8 ee7d3706 083e2e54 22ccb05c cc41ceb5 939b032c"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint",
+      "mise x -- pnpm vitest run",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- mise run p:plugins:inventory -- --check",
+      "mise x -- mise run p:plugins:marketplace -- --check",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "grep -rnE over plugins/stackgen/ for: lsp_servers|package_manager:|lockfile:|language_facts|^components:|stacks/(language|package-manager|toolchain-gate|design-tool|addon)/",
+        "pass": "No hit, except a passage of stackgen-sync that names the old rows it converts (D11), and the lock key local_plugin.lsp_servers, which names the vwf-tools LSP claims (D41). Each such hit is listed with its reason in the run report."
+      },
+      {
+        "id": "K2",
+        "check": "node scripts/src/bootstrap-tools.ts --check, with the installed bootstrap 4.0.0",
+        "pass": "Exit 0: the committed snapshot matches bootstrap catalog --json."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "stackgen",
+      "level": "MAJOR",
+      "reason": "Bundles list tools and packs; the language, package-manager, toolchain-gate, design-tool and addon kinds go; LSP comes from bootstrap; changed packs bump MAJOR."
+    },
+    {
+      "id": "vwf",
+      "level": "NONE",
+      "reason": "No unit edits plugins/vwf; R5b follows."
+    },
+    {
+      "id": "site",
+      "level": "MINOR",
+      "reason": "The manual describes bundles over bootstrap tools, tool knowledge and design tools."
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No unit touches installer/."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "depends_on": [],
+      "waits": "",
+      "status": "green",
+      "started": "2026-11-23T08:59:27.161Z",
+      "ended": "2026-11-23T09:12:47.894Z",
+      "commit": "22ccb05c",
+      "rounds": 2,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 1,
+      "id": "U1",
+      "title": "The tree and the checker",
+      "file": "01-tree.md",
+      "owns": [
+        "plugins/stackgen/stacks/language/",
+        "plugins/stackgen/stacks/package-manager/",
+        "plugins/stackgen/stacks/toolchain-gate/",
+        "plugins/stackgen/tools/",
+        "plugins/stackgen/stacks/design-tool/",
+        "plugins/stackgen/stacks/addon/",
+        "plugins/stackgen/design-tools/",
+        "plugins/stackgen/stacks/app-framework/",
+        "plugins/stackgen/stacks/capability-provider/",
+        "plugins/stackgen/stacks/ci-system/",
+        "plugins/stackgen/stacks/cloud-provider/",
+        "plugins/stackgen/stacks/cloud-service/",
+        "plugins/stackgen/stacks/datastore/",
+        "plugins/stackgen/stacks/deploy-target/",
+        "plugins/stackgen/stacks/framework/",
+        "plugins/stackgen/stacks/stylesheet/",
+        "plugins/stackgen/stacks/bundles/",
+        "plugins/stackgen/stacks/readme.md",
+        "scripts/src/",
+        "plugins/stackgen/stacks/inventory.md",
+        "plugins/stackgen/assets/kinds.md"
+      ]
+    },
+    {
+      "depends_on": [
+        "U1"
+      ],
+      "waits": "commits after U1: the checker and the tree land first (D21, D40)",
+      "status": "green",
+      "started": "2026-11-23T10:13:18.547Z",
+      "ended": "2026-11-23T10:56:31.161Z",
+      "commit": "083e2e54",
+      "rounds": 2,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 2,
+      "id": "U2",
+      "title": "stackgen skills and assets",
+      "file": "02-skills.md",
+      "owns": [
+        "plugins/stackgen/skills/",
+        "plugins/stackgen/assets/artifact-doctrine.md",
+        "plugins/stackgen/assets/contracts/",
+        "plugins/stackgen/assets/ids.md",
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/assets/pack-format.md",
+        "plugins/stackgen/assets/taxonomy.md",
+        "plugins/stackgen/assets/addons.yaml",
+        "plugins/stackgen/agents/",
+        "plugins/stackgen/.claude-plugin/plugin.json",
+        ".claude-plugin/marketplace.json"
+      ]
+    },
+    {
+      "depends_on": [
+        "U1",
+        "U2"
+      ],
+      "waits": "reviews the committed delta of waves 1 and 2",
+      "status": "green",
+      "started": "2026-11-23T11:05:34.757Z",
+      "ended": "2026-11-23T11:06:38.238Z",
+      "commit": "",
+      "rounds": 1,
+      "kind": "review",
+      "model": "opus",
+      "wave": 3,
+      "id": "U3",
+      "title": "Review: wave 1",
+      "file": "03-review.md",
+      "owns": [],
+      "range": {
+        "from": "5fb7d359",
+        "to": "b4d03c40"
+      }
+    },
+    {
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "docs-sync reads the delta of waves 1 and 2",
+      "status": "green",
+      "started": "2026-11-23T11:07:55.406Z",
+      "ended": "2026-11-23T11:29:21.142Z",
+      "commit": "ee7d3706",
+      "rounds": 2,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 4,
+      "id": "U4",
+      "title": "Docs",
+      "file": "04-docs.md",
+      "owns": [
+        "CLAUDE.md",
+        "readme.md",
+        ".claude/docs/",
+        ".claude/skills/",
+        "site/src/content/docs/"
+      ]
+    },
+    {
+      "depends_on": [
+        "U4"
+      ],
+      "waits": "bumps versions and runs the gates over the whole delta",
+      "status": "green",
+      "started": "2026-11-23T11:36:53.207Z",
+      "ended": "2026-11-23T11:43:40.478Z",
+      "commit": "3d4f5ce8",
+      "rounds": 1,
+      "kind": "edit",
+      "model": "opus",
+      "wave": 5,
+      "id": "U5",
+      "title": "Versions and gates",
+      "file": "05-gates.md",
+      "owns": [
+        "plugins/stackgen/stacks/*/*/pack.yaml",
+        "plugins/stackgen/stacks/bundles/",
+        "plugins/stackgen/stacks/inventory.md"
+      ]
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "green",
+      "started": "2026-11-23T08:59:27.119Z",
+      "ended": "2026-11-23T10:13:06.365Z"
+    },
+    {
+      "id": "W2",
+      "status": "green",
+      "started": "2026-11-23T10:13:18.509Z",
+      "ended": "2026-11-23T11:05:06.821Z"
+    },
+    {
+      "id": "W3",
+      "status": "green",
+      "started": "2026-11-23T11:05:34.829Z",
+      "ended": "2026-11-23T11:07:36.176Z"
+    },
+    {
+      "id": "W4",
+      "status": "green",
+      "started": "2026-11-23T11:07:55.367Z",
+      "ended": "2026-11-23T11:36:37.135Z"
+    },
+    {
+      "id": "W5",
+      "status": "green",
+      "started": "2026-11-23T11:36:53.167Z",
+      "ended": "2026-11-23T11:45:55.683Z"
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "every human-facing doc (CLAUDE.md, readme.md, .claude/docs/**, .claude/skills/**, site/src/content/docs/**)",
+      "why": "U1 and U2 falsify passages in the same docs",
+      "owner": "U4"
+    },
+    {
+      "id": "S2",
+      "file": "the tool map of D4 (01-tree.md part A)",
+      "why": "U2 matches tool entries to tools with it",
+      "owner": "U1"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "What R5 is.",
+      "ruling": "The brainstorm amendment of 2026-11-15 to the split record (B1-B13): bundles stay as the optional pick unit; tool packs become tool knowledge keyed by bootstrap tool; knowledge packs slim down; templates stay; no vwf.yaml format 29.",
+      "rejected": "Packs and bundles go, the generator writes every stack per repo (the first R5 interview, stopped by the user).",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "How R5 splits.",
+      "ruling": "Two plans: R5a (this folder) is stackgen and the repo tooling; R5b is vwf and requires R5a. No release between them.",
+      "rejected": "One plan; three plans.",
+      "units": []
+    },
+    {
+      "id": "D3",
+      "decision": "The bundle frontmatter.",
+      "ruling": "tools: bootstrap tool names, no version; packs: <type>/<slug>@<version> knowledge packs. Tool knowledge is not listed: it follows the tools. name, axis, kind, default, platforms and artifact stay.",
+      "rejected": "One typed components list.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "How tool knowledge is keyed.",
+      "ruling": "18 entries under plugins/stackgen/tools/<slug>/, each with tool.yaml naming its bootstrap tools (the table of 01-tree.md part A); bash and markdown name none and apply to every repo.",
+      "rejected": "One folder per bootstrap tool.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "A user who picks no shipped bundle.",
+      "ruling": "A repo bundle at .claude/stackgen/bundles/<slug>.md, written by a new compose verb of stackgen-stack-menu that architecture (R5b) calls; an uncovered item is the ref <kind>/<slug>@generated. A bundle is never mandatory.",
+      "rejected": "Free pick with no bundle; the repo bundle written at setup.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "The design adapters.",
+      "ruling": "plugins/stackgen/design-tools/ holds three generic role skills at the fixed names and one folder per tool (tool.yaml, conventions.md, references/<role>.md, skills/ for a tool-only skill such as design-session). Materialize adds the role skills once and a named tool's references and skills to vwf-tools. The menu's design axis lists the tool folders. The design-tool kind and its bundles go.",
+      "rejected": "Prefix the skills per tool; keep design-tool packs; materialize into the repo.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "The addon.",
+      "ruling": "An addon is a Claude plugin that bootstrap installs (R5b runs bootstrap add plugin). plugins/stackgen/assets/addons.yaml lists them; the menu reads it. The addon kind, its pack and its bundle go.",
+      "rejected": "The bootstrap catalog as the list; drop addons.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "The pack test task files (android test/e2e, compose and swiftui test/golden).",
+      "ruling": "They are static scripts; bootstrap ships them as tool parts in a new plan, R2e (android e2e; the kotlin or android golden with a tool question on the library; swift golden). R5a deletes them from the packs. p/_project/deploy and p/_project/icons stay in the packs.",
+      "rejected": "stackgen writes them as 40-<pack> parts.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "Where the LSP entries come from.",
+      "ruling": "vwf-tools takes lspServers from data.servers of bootstrap lsp --json, unchanged (bootstrap R2b D4). The packs lose lsp_servers; the generator researches no LSP server.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "How tool knowledge reaches a repo.",
+      "ruling": "Materialize copies each entry whose tools meet a tool the project links or the bundle names, and every entry with tools: [], into .claude/skills/; lock.yaml records tool/<slug>@<version>.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Repos materialized before R5a.",
+      "ruling": "stackgen-sync converts once: tool-pack rows become tool/<slug>@1.0.0 rows with the files kept; design-tool rows are removed and the tool goes into vwf-tools; addon rows and rows of the deleted test task files are removed, the files left in place; a report lists each change.",
+      "rejected": "Regenerate all; delete stackgen-sync.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "The checker and the inventory.",
+      "ruling": "Keep every rule: 4 adds tools/ and design-tools/ skills; 8 checks design-tools/; 9 unchanged; 11 forbids test/ tasks in a pack config/ and config/ in a tool entry, and retires the moved keys; 13 scans tools/ and design-tools/; 14 checks bundle tools against the snapshot and pack refs against stacks/. The inventory adds tool entries and design tools.",
+      "rejected": "Retire rules 11, 13 and 14 and the inventory (the first R5 interview).",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "How the checker knows bootstrap's tool names.",
+      "ruling": "scripts/src/bootstrap-tools.ts writes a committed snapshot, scripts/src/bootstrap-tools.json, from bootstrap catalog --json (every supported tool, not only installed ones); --check fails when stale; rule 14 reads the file. The mise task and its pre-commit hook are a hand step in this repo's .config/.",
+      "rejected": "A fixed list by hand; a live bootstrap call in every check and in CI.",
+      "units": [
+        "U1",
+        "U4"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Pack and bundle versions.",
+      "ruling": "Each changed knowledge pack bumps MAJOR (13 and 17 skipped); bundle refs follow; tool entries and design tools start at 1.0.0. U5 bumps, after the edits.",
+      "rejected": "MINOR per changed pack.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "ux-gate and the docs/blueprint/ references in the typescript pack.",
+      "ruling": "They stay in tools/typescript/ in R5a; R5b moves them to vwf with the UX reviewer change. R5a edits no vwf file.",
+      "rejected": "Move them in R5a.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "What a knowledge pack loses.",
+      "ruling": "languages, lsp_servers, package_manager, lockfile and harness, from pack.yaml and from the template payload. Every other key stays.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Release levels.",
+      "ruling": "stackgen MAJOR, site MINOR, vwf NONE, installer NONE.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D18",
+      "decision": "A review unit.",
+      "ruling": "Yes, U3 after wave 1: the plan changes runnable code (check.ts, inventory.ts, bootstrap-tools.ts) and moves serve.mjs.",
+      "rejected": "No review unit.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Execution mode.",
+      "ruling": "solo: after D40 each wave holds one edit unit.",
+      "rejected": "solo.",
+      "units": []
+    },
+    {
+      "id": "D20",
+      "decision": "Gates and keeps.",
+      "ruling": "Unit: code:format. Wave: code:lint, vitest, p:plugins:check. Plan: code:precommit, vitest, tsc of scripts, p:plugins:check, inventory --check, marketplace --check, p:site:check (D28 drops claude plugin test). K1: no removed key or kind path in plugins/stackgen. K2: the snapshot matches the installed bootstrap.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Round 1 gap 1: one commit per unit runs p:plugins:check and the inventory check in pre-commit; the old checker fails on the new tree and the new checker on the old tree.",
+      "ruling": "Merge the tool, design-tool, pack and bundle edits and the checker into one unit, U1, which also regenerates inventory.md before it returns (the one generator a unit runs). The skills prose is U2, committed after U1.",
+      "rejected": "A transitional checker that accepts both shapes, over three waves.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Round 1 gap 2: chore: is not an allowed commit type.",
+      "ruling": "U5 commits with ops:.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Round 1 gap 3: npm-normalize-test and pre-commit lines hard-code stacks/package-manager/pnpm/hooks/; the inventory hook filter misses tools/ and design-tools/.",
+      "ruling": "Both go in the hand step after the run, in this repo's .config/; plugins.yml fails its npm-normalize-test step until then.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D24",
+      "decision": "Round 1 gap 4: bundles with @generated refs of removed kinds, or with nothing left.",
+      "ruling": "A @generated ref of a removed kind becomes a tool name (package-manager/bun@generated -> bun); other @generated refs stay in packs; a bundle with empty tools and packs is valid.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Round 1 gap 5: where a tool entry's conventions.md and hooks land; which tools count as linked with no projects.",
+      "ruling": "They land where a pack's land today; with no project in describe, every tool the bundle names counts.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Round 1 gap 6: old design-import skill files after the sync conversion.",
+      "ruling": "Left in place and reported, as for the addon rows.",
+      "rejected": "Delete them.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Round 1 gap 7: a repo with several projects on different design tools.",
+      "ruling": "The caller passes the project name; the role skill reads that project's design value.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "Round 1 gap 8: claude plugin test plugins/stackgen has no tests.",
+      "ruling": "Drop that plan gate line.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Round 2 gap 1: inventory.ts renders its kinds table from assets/kinds.md, which U2 edited after U1 regenerated; the inventory hook fails U2's commit.",
+      "ruling": "The kinds.md edit moves to U1, which owns that file; U2 owns the other asset files by name.",
+      "rejected": "U2 regenerates the inventory.",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Round 2 gap 2: kinds.md has no language, package-manager or toolchain-gate kinds; language-bundle still covers framework packs and bundles.",
+      "ruling": "Remove only the design-tool and addon headings; reword language-bundle to rooted at a language tool.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Round 2 gap 3: the pnpm hook and conventions read package_manager from .config/vwf.yaml, a key R4b removes; K1 fails.",
+      "ruling": "U1 drops that fallback from tools/pnpm/hooks/npm-normalize.sh and tools/pnpm/conventions.md.",
+      "rejected": "Except the two files in K1.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Round 2 gap 4: where design-tool references land in vwf-tools; claims, removal and version.",
+      "ruling": "vwf-tools/skills/<role>/references/<tool>.md and skills/<skill>/ for a tool-only skill; the files join claims.json, are removed when no repo claims them, and bump the vwf-tools version with the update pair, as the LSP keys do.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Round 2 gap 5: the unit contract excepts only U1 from running a generator; D14 and D18 named old unit ids.",
+      "ruling": "U5 is excepted too; D14 names U5 and D18 names U3.",
+      "rejected": "",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Round 2 gap 6: .config/repo-sync/pre-commit.yaml also names the old pnpm hook path.",
+      "ruling": "Add it to the hand step after the run.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D35",
+      "decision": "Round 3 gap 1: part B and U2 named references/<tool>/<role>.md against D32.",
+      "ruling": "D32 holds everywhere: a role skill reads references/<tool>.md in its own folder in vwf-tools.",
+      "rejected": "",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Round 3 gap 2: the plugin.json description is copied into .claude-plugin/marketplace.json; the marketplace hook fails U2's commit.",
+      "ruling": "U2 owns .claude-plugin/marketplace.json and runs p:plugins:marketplace, then its --check, as its last step; the unit contract excepts it.",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Round 3 gap 3: the .config/vwf.yaml block in npm-normalize.sh also stops the upward walk.",
+      "ruling": "Keep the stop at the directory holding .config/vwf.yaml, returning pnpm there; drop only the package_manager grep.",
+      "rejected": "Drop the whole block.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Round 3 gap 4: five tool packs carry platforms.",
+      "ruling": "tool.yaml carries no platforms; bundles carry their own.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Round 3 gap 5: D4 cited 01-tools.md.",
+      "ruling": "D4 cites the table of 01-tree.md part A.",
+      "rejected": "",
+      "units": []
+    },
+    {
+      "id": "D40",
+      "decision": "Round 3 gap 6: nothing enforced that U2 commits after U1.",
+      "ruling": "U2 moves to wave 2 with depends_on U1; the review, docs and gates units move to waves 3, 4 and 5. Each wave now holds one edit unit, so execution is solo (D19 revised).",
+      "rejected": "",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Round 4 gap 1: the lock key local_plugin.lsp_servers records LSP claims (D32 keeps that model) but K1 fails on lsp_servers.",
+      "ruling": "Keep the key; K1 excepts local_plugin.lsp_servers. No lock conversion.",
+      "rejected": "Rename it to local_plugin.lsp with a sync conversion.",
+      "units": [
+        "U2",
+        "U5"
+      ]
+    },
+    {
+      "id": "D42",
+      "decision": "Round 4 gap 2: the reviewer section of kinds.md still describes design-tool and addon.",
+      "ruling": "U1 removes those two reviewer passages with the two headings; the rest of the section stays.",
+      "rejected": "",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q1: Wave 1 review left one contested finding: plugins/stackgen/design-tools/claude-code/conventions.md:91 is 81 characters in a hand-folded file whose other lines are 79 or less. Fix it or accept it?",
+      "ruling": "Fix: one targeted refold moving the word lands to line 92, then a narrow check; the file keeps its fold width.",
+      "rejected": "Accept: keep the 81-char line",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q2: With LSP servers from bootstrap lsp --json (D9) and the lock key local_plugin.lsp_servers kept (D41), what does each entry packs (owners) list hold?",
+      "ruling": "The bundle slugs that landed the server; doctor still reads the owners.",
+      "rejected": "Leave the list empty — doctor skips the entry",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q3: Does a repo bundle written by compose (D5) carry kind:, and is the prefix of an uncovered <prefix>/<slug>@generated ref a pack type or a kind?",
+      "ruling": "Type prefix, as in the shipped bundles, with compose taking the bundle kind as an input; repo bundles match shipped ones.",
+      "rejected": "Kind prefix, used as the bundle kind",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q4: The site page plugins/stackgen.md heading Optional tools — the addon kind is stale, and vwf.md:634 links to its anchor (vwf passages are R5b). Rename now, or keep until R5b?",
+      "ruling": "Keep the heading until R5b, then rename it together with the vwf.md:634 link; the site link check stays green.",
+      "rejected": "Rename it to ...the addon axis now",
+      "units": [
+        "U4"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
+      "started": "",
+      "ended": "2026-11-23T11:07:54.764Z"
+    },
+    "acceptance": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
+      "started": "",
+      "ended": "2026-11-23T11:07:54.880Z"
+    },
+    "ux": {
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
+      "started": "",
+      "ended": "2026-11-23T11:07:54.991Z"
+    },
+    "reconcile": {
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
+      "started": "",
+      "ended": "2026-11-23T11:07:55.140Z"
+    }
+  },
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "",
+      "text": "R1 found U1 rewrote the falsified not-yet-reachable passage and a heading in tools/uv and tools/ruff conventions.md beyond Part A item 4 · kept: the old text was falsified by the plan, so the edit is in scope under the plan Goal",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "",
+      "text": "R1 Q1: who rewrites knowledge-pack prose citing the harness key D16 removed (fnox, queues, pipelines) · settled by the run rules: the files are in U1 Owns, so the finding looped to U1, which reworded them",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "",
+      "text": "U4 reported vwf passages falsified (site plugins/vwf.md:127,580,621-637,731-735,1618,4253; .claude/skills/vwf-plugin/SKILL.md:58,219,338-341; vwf-plugin/references/dependencies.md:94,110-114; vwf-plugin/references/assets.md:45 per R4) · left to R5b by the 04-docs.md ruling (vwf passages are R5b), with the stackgen.md addon heading per D46",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
+  "run": {
+    "worktree": ".worktrees/all-2026-11-23-0333",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-15-stack-bundles-tools.jsonl"
+  }
+}

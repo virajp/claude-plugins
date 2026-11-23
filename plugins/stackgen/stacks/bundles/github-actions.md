@@ -2,8 +2,9 @@
 name: GitHub Actions
 axis: cicd
 kind: ci-system
-components:
-- ci-system/github-actions@0.2.2
+tools: []
+packs:
+- ci-system/github-actions@1.0.0
 ---
 
 # CI — GitHub Actions

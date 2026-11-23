@@ -2,8 +2,9 @@
 name: OpenTelemetry · Grafana OTel-LGTM
 axis: backing
 kind: capability-provider
-components:
-- capability-provider/otel-lgtm@0.1.1
+tools: []
+packs:
+- capability-provider/otel-lgtm@1.0.0
 ---
 
 # Backing — OpenTelemetry · Grafana OTel-LGTM

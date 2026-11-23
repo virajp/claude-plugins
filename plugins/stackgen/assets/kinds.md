@@ -47,17 +47,16 @@ the task needs.** An artifact too big to read in one sitting is a router
 skill and its references that has not been decomposed yet — and *that* is
 the finding to report. Never "too long".
 
-## `language-bundle` — the composition rooted at a `language` component
+## `language-bundle` — the composition rooted at a language tool
 
-The bundle is a `language` component plus its `package-manager`,
-`framework` and `toolchain-gate` components
+The bundle is rooted at a language tool: its `tools:` names the
+bootstrap tool for the language, and its `packs:` lists the knowledge
+packs that go with it, a `framework` among them
 (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`). It lands as **one run**, but
-research, citations and versions stay per component, so a framework's
-major bump regenerates one component without churning the language
-baseline.
+research, citations and versions stay per pack, so a framework's major
+bump regenerates one pack without churning the language baseline.
 
-- **Axis**: `project` (the package-manager component contributes the
-  `repo` axis facts).
+- **Axis**: `project`.
 - **Structure**: the **topic bar** below — one artifact per topic, hung on
   the archetype shape (the `typescript` plugin, the most mature language
   plugin): a **lean router skill** per language → on-demand `references/`
@@ -69,9 +68,9 @@ baseline.
   (Context7 serves that at use time, when Context7 is installed; else the
   official documentation), never the datastore's or cloud's
   judgment.
-- **Facts**: per language — `lsp` (how a language server is provided;
-  stackgen ships none, so this recommends the mise tool or marketplace
-  plugin that does), `mise_tool`, `manifest`.
+- **Facts**: none in the pack — a language's facts and its language
+  server come from bootstrap (`bootstrap lsp --json`), never from
+  `pack.yaml`.
 - **Invocation**: routers paths-scoped; doctrine paths-scoped
   (`**/*.<ext>` plus the config files); rules for one-screen constraints.
 
@@ -676,76 +675,6 @@ apply is recorded `n/a`, never silently absent.
    the infrastructure layer rather than by application auth alone.
    *(conditional — `n/a` for a target that runs nothing)*
 
-## `design-tool` — the tool a project's screens are authored in
-
-The output is a **Design-Bundle** (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`):
-one `design-tool` component, standing alone.
-
-This kind exists because vwf **names no design tool** and must not. Its three
-import skills define the *payloads*; this kind supplies one tool's
-implementation of them, materialized into the repo's own `.claude/` under
-**fixed names** vwf invokes — the same seam that dissolved the `-ux-gate` name
-construction, and for the same reason: a name assembled from configuration
-resolves to nothing silently.
-
-- **Axis**: `design`. The bundle slug **is** the `projects.<name>.design`
-  token, so the pin and the config key are one value.
-- **Structure**: exactly three model-invocable skills, at the fixed names
-  `design-import-screens`, `design-import-design-system` and
-  `design-import-conversations`, plus a `## MCP servers` line in its
-  `conventions.md` where the tool is reached over MCP — never the server's
-  wiring, which is the user's to install. Three because vwf has three
-  import surfaces and each returns a different payload; fewer would make
-  one of them silently unavailable.
-- **Scope**: how to read this tool's authored designs back, and how to reach
-  its API. **Never** what a design *means* — the diffing, the contract deltas
-  and every blueprint edit stay vwf's. **Never** the prompt side: design briefs
-  are files vwf writes into `docs/prompts/`, and no tool is involved in
-  producing them.
-- **Facts & harness**: `n/a` throughout. A design tool satisfies no harness
-  capability — nothing about it is booted, stood up or probed.
-- **Invocation**: all three skills **model-invocable, mandatorily**. A
-  user-only skill here is removed from the model's context, so vwf's import
-  would return nothing and be indistinguishable from a design nobody authored.
-  This is the single most important ruling in the kind.
-
-**A file canvas is admitted beside the hosted ones.** A design tool's source
-of truth need not be a server: it may be a **committed directory** in the
-target repo, by convention `docs/design/<project>/`, that the three import
-skills read as files instead of calling an API — the design system in the
-shape the tool authors it, the brand assets, and whatever screens the tool
-lays down. Such a pack may ship **one extra, user-invocable authoring skill**
-that runs the design session and writes that canvas; it is the tool's
-authoring surface, which is the tool's to own and vwf's never to be. The
-three fixed adapter names, their payloads and their model-invocability are
-unchanged by the variant and are what the checker asserts — it counts the
-three, not the fourth. Topic 4 answers for the directory rather than an API
-(no credentials, nothing to log), and topic 5 names the files and folders an
-import must find rather than pages and frames.
-
-### The topic bar
-
-A closed list of five topics, one artifact per topic. Topic 5 is conditional.
-
-1. **Screens import** — reading a flow's designed screens back for one
-   platform: where pages live, how a screen code is recovered from a name, and
-   the rule that a code which cannot be recovered is returned null rather than
-   invented, because the code is the join key.
-2. **Design-system import** — reading the tokens, typography, spacing, motion
-   and component behaviours back as the design-system payload.
-3. **Conversations import** — reading the design review discussion back. This
-   is the one surface allowed to answer `harvested: n/a`, because a tool may
-   genuinely have no review channel; the other two must halt instead, since an
-   empty payload there reads as a design nobody made.
-4. **Reach & credentials** — how the tool's API is contacted, what
-   authentication it needs, and what must never be logged. Where the tool is
-   reached over MCP, this topic names the server its `## MCP servers` line
-   declares and what a skill does when it is missing: ask the user to install
-   it, and wait.
-5. **Naming contract** — the page and frame naming this tool needs so an
-   import can find anything, mirroring what `/vwf:screens prompt` commissions.
-   *(conditional — `n/a` for a tool with no canvas)*
-
 ## `stylesheet` — the approach a web frontend's styles are authored in
 
 The output is a **Stylesheet-Bundle**
@@ -841,46 +770,6 @@ silently absent.
    approach shipping no checker of its own, where the repo's gate bundle
    covers it)*
 
-## `addon` — an optional tool the user picks
-
-The output is an **Addon-Bundle**
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): one `addon` component, standing
-alone.
-
-This kind exists because some tools serve the agent rather than the product,
-and installing them for everyone is a decision nobody made. An `addon` pack is
-**never a default**. It is picked on the tools round of `/vwf:architecture`,
-recorded in `.config/vwf.yaml`'s `addons:`, and materialized by `/vwf:setup`
-only while it is picked.
-
-- **Axis**: `addon`. The bundle slug **is** the entry in the product-level
-  `addons:` list. No bundle on the axis carries `default: true`.
-- **Structure**: the pack lands no repo file of its own beyond its skills. It
-  carries a `## Claude plugins` section, handed to bootstrap; it declares no
-  MCP server. A pack with judgment to carry hangs it per the
-  kind-general rule, one artifact per topic behind a lean router skill.
-- **Scope**: what the tool serves and who needs it, where it lands, and what the
-  person must have on `PATH`. **Never** a client library, a credential or
-  anything the product's own code reads.
-- **Facts & harness**: `n/a` unless the tool has something to say about being
-  absent. An `addon` satisfies no harness capability, and realizes no capability
-  token.
-- **Invocation**: a skill the pack ships is `user-invocable: false` with no
-  `paths:` key, triggered by its description, because the moment it applies is a
-  question put to the tool rather than a file being edited.
-
-### The topic bar
-
-A closed list of three topics, each short, all of them in `conventions.md`
-unless the pack ships a skill that carries one.
-
-1. **What it serves** — the tool, the steps that use it, and which of them halt
-   without it.
-2. **Where it lands** — `vwf-tools` at user scope, or the bootstrap handoff, and
-   the consent line in front of it.
-3. **What it needs** — the executables, the overridable runner, any optional
-   variable. *(conditional — `n/a` for a hosted server or a Claude plugin)*
-
 ## Reserved kinds (defined at their merge wave, not before)
 
 **None outstanding.** Both reservations have been redeemed —
@@ -910,7 +799,7 @@ verifies the artifact against its declared kind: every structural element
 the kind requires is present (a `database` output without a `local_stack`
 mechanism is a gap), nothing outside the kind's scope crept in (a language
 bundle naming a database is a gap), and each skill's invocation mode matches
-the kind's ruling. For all eleven kinds the structural checklist **is the
+the kind's ruling. For all nine kinds the structural checklist **is the
 topic bar** — every non-`n/a` topic covered by the composition, each
 artifact inside the depth sizing. For `database` the composition is the
 instance component alone, and citing rather than restating the category
@@ -939,15 +828,9 @@ platform configuration only. For `deploy-target` the composition is the one
 component alone, and the check that carries the kind is the scope fence:
 local-stack mechanism, pipeline workflow syntax, or one cloud's deploy
 mechanics appearing here is a gap, because each belongs to a kind that
-already owns it. For `design-tool` the composition is the one component, and
-two checks carry the kind: all three import skills present (a missing one is
-silently unavailable to vwf, not a smaller feature), and every one of them
-model-invocable. For `stylesheet` the composition is the one component alone,
+already owns it. For `stylesheet` the composition is the one component alone,
 and two checks carry the kind: **topic 1 answering for every token class the
 design-system contract defines** — a mapping that covers colour and spacing and
 goes quiet on elevation or motion is a gap, not a shorter answer — and any
 **token value** appearing in the pack at all, which is the design system's to
-hold and a default here would quietly become the product's. For `addon` the
-composition is the one component alone, and two checks carry the kind: a
-`default: true` on its bundle is a gap, and so is a repo file the pack lands
-beyond its skills.
+hold and a default here would quietly become the product's.

@@ -2,8 +2,9 @@
 name: bun · workspaces
 axis: repo
 kind: workspace
-components:
-- package-manager/bun@generated
+tools:
+- bun
+packs: []
 ---
 
 # Monorepo — bun · workspaces

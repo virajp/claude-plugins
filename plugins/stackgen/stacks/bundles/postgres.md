@@ -2,8 +2,9 @@
 name: PostgreSQL
 axis: backing
 kind: database
-components:
-- datastore/postgres@0.1.1
+tools: []
+packs:
+- datastore/postgres@1.0.0
 ---
 
 # Backing — PostgreSQL

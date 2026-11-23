@@ -1,0 +1,5 @@
+name: uv
+summary: Dependency resolution, locking, virtualenv management and process
+  running for Python — one tool where the ecosystem historically had four.
+version: 1.0.0
+tools: [ python ]

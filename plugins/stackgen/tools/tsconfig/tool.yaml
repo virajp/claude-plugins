@@ -1,0 +1,5 @@
+name: tsconfig
+summary: The TypeScript compiler configuration — a strict shared base,
+  per-project configs, the path alias and the emit variant.
+version: 1.0.0
+tools: [ node, bun ]

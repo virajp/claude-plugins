@@ -2,8 +2,9 @@
 name: Audit store · Cloudflare D1
 axis: backing
 kind: capability-provider
-components:
-- capability-provider/audit-store-d1@0.1.1
+tools: []
+packs:
+- capability-provider/audit-store-d1@1.0.0
 ---
 
 # Backing — Audit store · Cloudflare D1

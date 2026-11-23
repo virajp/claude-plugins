@@ -143,11 +143,14 @@ one: a stack's own gates are bootstrap's.
   a plugin quietly serving yesterday's tree.
 - **`p:plugins:inventory`** — generates `plugins/stackgen/stacks/inventory.md`
   from the stacks tree: every `<type>/<slug>/pack.yaml`, every bundle
-  frontmatter, and the kind headings in `assets/kinds.md`. It exists because the
-  pack, bundle and kind counts were typed into four prose files and drifted; the
-  tree is the only inventory true by construction. It throws on a `kind` no
-  heading defines, since the vocabulary is closed — and on a bundle component
-  ref that is not `<type>/<slug>@<version>`, that names no
+  frontmatter, the kind headings in `assets/kinds.md`, every
+  `tools/<slug>/tool.yaml` and every `design-tools/<tool>/tool.yaml`. It exists
+  because the pack, bundle and kind counts were typed into four prose files and
+  drifted; the tree is the only inventory true by construction. It throws on a
+  `kind` no heading defines, since the vocabulary is closed — on a bundle
+  missing its `tools:` or `packs:` list, or still carrying the retired
+  `components:` — and on a bundle `packs:` ref that is not
+  `<type>/<slug>@<version>`, that names no
   `stacks/<type>/<slug>/pack.yaml`, or that pins a version the pack no longer
   carries: a bundle is the recorded composition, so a stale pin advertises
   something the materializer cannot copy. `@generated` refs name no pack by
@@ -174,17 +177,18 @@ one: a stack's own gates are bootstrap's.
   allowlist, whose two allowed **directories** are `.config/` and `.github/` and
   whose sibling tier — the root file vwf writes, `CLAUDE.md` — no pack may land;
   a **CI workflow refused inside `.github/`**, since a pack names the task CI
-  runs and never the workflow; under `.config/`, an allowlist — only a `test/`
-  task or a `p/_project/` task, since the toolchain is bootstrap's — and no pack
-  `templates/` tier; the pack's two doctor-read facts in the shapes their
-  readers trust — every `binaries` entry a bare name or a map of exactly `name`
-  and an optional non-empty `probe`, and `lockfile` a non-empty list of relative
-  paths or globs with no `..` — and a retired `tool-config:`, `machine_env:`,
-  `values:` or `conditional:` key refused outright, since nothing reads any of
-  them); **strict-YAML frontmatter** (every skill and agent a plugin
-  ships, and every
-  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships — the
-  larger half, and the half that actually lands in a user's repo; a pack's
+  runs and never the workflow; under `.config/`, an allowlist — only a
+  `p/_project/` task, a `test/` task refused as a bootstrap tool's part, since
+  the toolchain is bootstrap's — and no pack `templates/` tier; no `config/`
+  tier at all in a tool-knowledge entry under `tools/`; and a retired key —
+  `tool-config:`, `machine_env:`, `values:`, `conditional:`,
+  `user_mcp_servers:`, `languages:`, `lsp_servers:`, `package_manager:`,
+  `lockfile:` or `harness:` — refused outright in a `pack.yaml` or a
+  `tool.yaml`, since nothing reads any of them); **strict-YAML frontmatter**
+  (every skill and agent a plugin ships, every
+  `stacks/*/*/skills/*/SKILL.md` and `stacks/*/*/agents/*.md` a pack ships, and
+  every skill of a `tools/` entry and of `design-tools/` — the larger half, and
+  the half that actually lands in a user's repo or in `vwf-tools`; a pack's
   `rules/*.md` is out, frontmatter being optional there); relative links under
   `assets/examples/**`; **root-relative reference resolution** (every such
   reference resolves inside the plugin that wrote it — in the files a pack
@@ -193,8 +197,10 @@ one: a stack's own gates are bootstrap's.
   resolution** in both directions (every role-shaped `` `token` `` in a plugin's
   own prose names a real agent, and every declared agent is referenced at least
   once — the two directions cover each other on a rename); the vwf
-  design-adapter contract (all **three** import skills present and
-  model-invocable); the vwf **stack-adapter** contract (both
+  design-adapter contract (all **three** role skills present under
+  `design-tools/skills/` and model-invocable, and each `design-tools/<tool>/`
+  carrying `tool.yaml`, `conventions.md` and one reference per role); the vwf
+  **stack-adapter** contract (both
   `<plugin>-stack-menu` and `<plugin>-stack-template` present, each carrying an
   explicit `disable-model-invocation: false` **and** a `user-invocable: false` —
   an adapter is vwf's to call, not a user's to type — on every plugin keyworded
@@ -206,13 +212,17 @@ one: a stack's own gates are bootstrap's.
   list of spellings the corpus stopped meaning, flagged per line and exempt on a
   line that marks itself as history); and **a landed pack file citing nothing by
   plugin path** (in `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, a
-  pack's `conventions.md` and a bundle's body — all copied verbatim into a repo
-  with no plugin — the literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path,
+  pack's or tool entry's `conventions.md`, a bundle's body and every file under
+  `design-tools/` but a `tool.yaml` — all copied verbatim where no plugin
+  root resolves — the literal `${CLAUDE_PLUGIN_ROOT}`, a bare `assets/…` path,
   a `../` climb leaving the tree the file lands in, and a path into a sibling
   pack are each refused; a bare `<type>/<slug>` ref is the identifier vocabulary
   and stays legal, and the last three forms read `.md` only, with fenced blocks
-  blanked to their own line count); and **at most one default bundle per axis
-  per platform** (across `stacks/bundles/*.md`, grouped by `axis`, two
+  blanked to their own line count); and **a bundle's composition resolving,
+  and at most one default bundle per axis per platform** (each `tools:` name in
+  the committed snapshot `scripts/src/bootstrap-tools.json`, each `packs:` ref
+  naming a pack under `stacks/` or `@generated`, the retired `components:`
+  refused; and across `stacks/bundles/*.md`, grouped by `axis`, two
   frontmatters carrying `default: true` — the entry vwf's architecture menu
   preselects on a round — conflict when either declares no `platforms:` list or
   their lists intersect, and the value is boolean; a conflict is a preselection
@@ -242,9 +252,11 @@ one: a stack's own gates are bootstrap's.
   through the system sed (the BSD-sed portability guarantee), for **both**
   package managers: each table runs in a temp dir seeded with the lockfile that
   selects pnpm or bun, so resolution is exercised alongside the rewrite. It runs
-  against `plugins/stackgen/stacks/package-manager/pnpm/hooks/`, which is both
-  the source and what the pack copies into a target repo. The hook lives with
-  the **package manager** it rewrites for, not in `vwf`: a JS/TS rewrite is
+  against `plugins/stackgen/tools/pnpm/hooks/` — the path the task and the
+  pre-commit lines are pointed at by hand in this repo's `.config/` — which is
+  both the source and what the `pnpm` tool-knowledge entry copies into a target
+  repo. The hook lives with the **package manager** it rewrites for, not in
+  `vwf`: a JS/TS rewrite is
   stack doctrine, and vwf's workflow doctrine stays language-agnostic — the one
   TypeScript module vwf ships is engine glue for the progress pane, not
   doctrine.

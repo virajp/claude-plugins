@@ -90,6 +90,13 @@ function skill(name: string, extra = "", body = "prose"): string {
 
 const messages = (findings: readonly Finding[]) => findings.map((f) => f.message);
 
+/**
+ * Findings minus the design-adapter rule's, for a fixture that ships a partial
+ * design-tools tree to test another rule.
+ */
+const besideDesignRule = (findings: readonly Finding[]) =>
+  findings.filter((f) => !/^design(?:-tools is| tool is) missing/.test(f.message));
+
 describe("the manifest", () => {
   it("flags a name that disagrees with the directory", () => {
     // The directory is what the marketplace `source` points at; the name is what
@@ -279,7 +286,7 @@ describe("hook scripts", () => {
 
 describe("the pack config tier", () => {
   const pack = "stacks/toolchain-manager/mise/config";
-  const task = `${pack}/.config/mise/tasks/test/golden`;
+  const task = `${pack}/.config/mise/tasks/p/_project/build`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
     const deploy = `${pack}/.config/mise/tasks/p/_project/deploy`;
@@ -316,10 +323,15 @@ describe("the pack config tier", () => {
     const root = tree({
       alpha: {
         files: {
-          "stacks/package-manager/pnpm/hooks/guard.sh": "#!/usr/bin/env sh\n",
-          "stacks/package-manager/pnpm/hooks/hooks.yaml": "hooks: {}\n",
+          "stacks/framework/x/hooks/guard.sh": "#!/usr/bin/env sh\n",
+          "stacks/framework/x/hooks/hooks.yaml": "hooks: {}\n",
+          "tools/pnpm/hooks/guard.sh": "#!/usr/bin/env sh\n",
+          "tools/pnpm/hooks/hooks.yaml": "hooks: {}\n",
         },
-        executable: ["stacks/package-manager/pnpm/hooks/guard.sh"],
+        executable: [
+          "stacks/framework/x/hooks/guard.sh",
+          "tools/pnpm/hooks/guard.sh",
+        ],
       },
     });
     expect(messages(check(root))).toEqual([]);
@@ -328,8 +340,8 @@ describe("the pack config tier", () => {
   it("flags a hook script that is not executable", () => {
     // The materializer copies it to `.claude/hooks/` and settings.json names it
     // as a bare path, so the host execs the file. A hook that cannot run is the
-    // quietest fault there is.
-    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    // quietest fault there is. A tool entry's hook is held to the same rule.
+    const script = "tools/pnpm/hooks/guard.sh";
     const root = tree({
       alpha: { files: { [script]: "#!/usr/bin/env bash\n" } },
     });
@@ -341,7 +353,7 @@ describe("the pack config tier", () => {
   it("flags a hook script with no shebang a host can exec", () => {
     // `shellcheck` reads the same line to pick its dialect, so an absent or
     // exotic one means the shell gate checks it as the wrong language.
-    const script = "stacks/package-manager/pnpm/hooks/guard.sh";
+    const script = "stacks/framework/x/hooks/guard.sh";
     const root = tree({
       alpha: {
         files: { [script]: "#!/bin/zsh\necho hi\n" },
@@ -471,11 +483,43 @@ describe("the pack config tier", () => {
       files
         .map((f) =>
           `pack config/ tier ships ${f} — under .config/ a pack ships only `
-          + ".config/mise/tasks/test/, .config/mise/tasks/p/_project/; the toolchain "
+          + ".config/mise/tasks/p/_project/; the toolchain "
           + `is bootstrap's: ${pack}/${f}`
         )
         .sort(),
     );
+  });
+
+  it("flags a test task in a pack's config/ tier — a bootstrap tool part", () => {
+    // A test task is a part of bootstrap's tool now, so a pack shipping one is
+    // a second writer of it.
+    const test = `${pack}/.config/mise/tasks/test/golden`;
+    const root = tree({
+      alpha: { files: { [test]: "#!/usr/bin/env bash\n" }, executable: [test] },
+    });
+    expect(messages(check(root))).toEqual([
+      "pack config/ tier ships .config/mise/tasks/test/golden — a test task is "
+      + `a part of bootstrap's tool, never a pack's: ${test}`,
+    ]);
+  });
+
+  it("flags a config/ tier in a tool entry, and passes one without", () => {
+    // A tool entry lands knowledge only: its tool's tasks and configs are
+    // bootstrap's, whatever the path.
+    const root = tree({
+      alpha: {
+        files: {
+          "tools/swift/tool.yaml": "name: Swift\n",
+          "tools/swift/config/.config/mise/tasks/p/_project/x": "#!/usr/bin/env bash\n",
+          "tools/ruff/tool.yaml": "name: Ruff\n",
+        },
+        executable: ["tools/swift/config/.config/mise/tasks/p/_project/x"],
+      },
+    });
+    expect(messages(check(root))).toEqual([
+      "tool entry ships a config/ tier — a tool entry lands knowledge only; "
+      + "its tool's tasks and configs are bootstrap's: tools/swift/config",
+    ]);
   });
 
   it("flags a pack templates/ tier, retired with the key that fed it", () => {
@@ -491,8 +535,6 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  // Doctor runs a probe and reads a lockfile glob as the pack states them — a
-  // malformed fact fails in neither.
   const facts = (yaml: string, files: Record<string, string> = {}) => ({
     alpha: {
       files: {
@@ -501,55 +543,49 @@ describe("the pack config tier", () => {
       },
     },
   });
-  const binaries = (list: string) =>
-    facts(
-      `languages:\n  - token: swift\n    facts:\n      binaries: ${list}\n`,
-    );
   const confD = "stacks/app-framework/swiftui/config/.config/mise/conf.d";
 
-  it("accepts a binaries list of bare names and probe maps", () => {
-    const root = tree(binaries(
-      "[ swift, { name: xcodebuild, probe: \"xcodebuild -version\" }, "
-        + "{ name: xcrun } ]",
-    ));
-    expect(messages(check(root))).toEqual([]);
+  /** The keys whose data moved to bootstrap, and the remedy each names. */
+  const moved = [
+    [
+      "languages",
+      "a language's facts are its bootstrap tool's, which a bundle names under "
+      + "`tools:`",
+    ],
+    ["lsp_servers", "vwf-tools takes its LSP entries from `bootstrap lsp --json`"],
+    [
+      "package_manager",
+      "the package manager is a bootstrap tool a bundle names under `tools:`",
+    ],
+    ["lockfile", "the lockfile is the package manager's bootstrap tool's"],
+    ["harness", "the harness tasks are bootstrap's"],
+  ] as const;
+  const movedYaml = "languages:\n  - token: swift\n"
+    + "lsp_servers:\n  sourcekit-lsp: { command: mise }\n"
+    + "package_manager: swiftpm\n"
+    + "lockfile:\n  - Package.resolved\n"
+    + "harness: n/a\n";
+
+  it("refuses the keys whose data moved to bootstrap, in a pack.yaml", () => {
+    const at = "stacks/app-framework/swiftui/pack.yaml";
+    expect(messages(check(tree(facts(movedYaml))))).toEqual(
+      moved.map(([key, remedy]) => `${at}: \`${key}:\` is retired — ${remedy}`),
+    );
   });
 
-  it("flags a binaries entry that is neither a name nor a probe map", () => {
-    const root = tree(binaries(
-      "[ \"\", 3, { probe: \"x -v\" }, { name: x, probe: \"\" }, "
-        + "{ name: y, version: 1 } ]",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`languages[0].facts.binaries`[0] is an empty"),
-      expect.stringContaining("[1] is neither a name nor a { name, probe }"),
-      expect.stringContaining("[2] declares no `name`"),
-      expect.stringContaining("[3] `probe` is not a non-empty string"),
-      expect.stringContaining("[4] carries `version` — only `name` and"),
-    ]);
-  });
-
-  it("accepts a lockfile list of relative paths and globs", () => {
-    const root = tree(facts(
-      "lockfile:\n  - Package.resolved\n"
-        + "  - \"*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/"
-        + "Package.resolved\"\n",
-    ));
-    expect(messages(check(root))).toEqual([]);
-  });
-
-  it("flags an empty lockfile list, and entries that climb out", () => {
-    const empty = tree(facts("lockfile: []\n"));
-    expect(messages(check(empty))).toEqual([
-      expect.stringContaining("`lockfile` is not a non-empty list"),
-    ]);
-    const root = tree(facts(
-      "lockfile:\n  - ../Package.resolved\n  - /Package.resolved\n  - 7\n",
-    ));
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining("`lockfile[0]` (../Package.resolved) climbs out"),
-      expect.stringContaining("`lockfile[1]` (/Package.resolved) climbs out"),
-      expect.stringContaining("`lockfile[2]` is not a path or glob"),
+  it("refuses the same keys in a tool entry's and a design tool's tool.yaml", () => {
+    const root = tree({
+      alpha: {
+        files: {
+          "tools/swift/tool.yaml": `name: Swift\n${movedYaml}`,
+          "design-tools/acme/tool.yaml": "name: Acme\nharness: n/a\n",
+        },
+      },
+    });
+    expect(messages(besideDesignRule(check(root)))).toEqual([
+      ...moved.map(([key, remedy]) => `tools/swift/tool.yaml: \`${key}:\` is retired — ${remedy}`),
+      "design-tools/acme/tool.yaml: `harness:` is retired — the harness tasks "
+      + "are bootstrap's",
     ]);
   });
 
@@ -596,7 +632,7 @@ describe("the pack config tier", () => {
     }));
     expect(messages(check(root))).toEqual([
       `pack config/ tier ships .config/mise/conf.d/swiftui.toml — under .config/ a pack ships only `
-      + ".config/mise/tasks/test/, .config/mise/tasks/p/_project/; the toolchain "
+      + ".config/mise/tasks/p/_project/; the toolchain "
       + `is bootstrap's: ${confD}/swiftui.toml`,
     ]);
   });
@@ -803,17 +839,43 @@ describe("frontmatter", () => {
     const root = tree({
       stackgen: {
         files: {
-          "stacks/language/x/skills/x/SKILL.md": "---\nname: x\ndescription: a: b\n---\n\nprose\n",
-          "stacks/language/x/agents/x-writer.md": "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
+          "stacks/framework/x/skills/x/SKILL.md": "---\nname: x\ndescription: a: b\n---\n\nprose\n",
+          "stacks/framework/x/agents/x-writer.md": "---\nname: x-writer\ndescription: a: b\n---\n\nprose\n",
         },
       },
     });
     expect(messages(check(root))).toEqual([
       expect.stringContaining(
-        "stacks/language/x/agents/x-writer.md: frontmatter is not valid YAML",
+        "stacks/framework/x/agents/x-writer.md: frontmatter is not valid YAML",
       ),
       expect.stringContaining(
-        "stacks/language/x/skills/x/SKILL.md: frontmatter is not valid YAML",
+        "stacks/framework/x/skills/x/SKILL.md: frontmatter is not valid YAML",
+      ),
+    ]);
+  });
+
+  it("flags a tool entry's skill and a design tool's skills", () => {
+    // They land the same way a pack's do — a tool entry's into the repo, the
+    // design tools' into vwf-tools — so a strict host drops them the same way.
+    const bad = "---\nname: x\ndescription: a: b\n---\n\nprose\n";
+    const root = tree({
+      stackgen: {
+        files: {
+          "tools/swift/skills/swift/SKILL.md": bad,
+          "design-tools/skills/design-import-x/SKILL.md": bad,
+          "design-tools/acme/skills/session/SKILL.md": bad,
+        },
+      },
+    });
+    expect(messages(besideDesignRule(check(root)))).toEqual([
+      expect.stringContaining(
+        "design-tools/acme/skills/session/SKILL.md: frontmatter is not valid",
+      ),
+      expect.stringContaining(
+        "design-tools/skills/design-import-x/SKILL.md: frontmatter is not valid",
+      ),
+      expect.stringContaining(
+        "tools/swift/skills/swift/SKILL.md: frontmatter is not valid YAML",
       ),
     ]);
   });
@@ -824,8 +886,8 @@ describe("frontmatter", () => {
     const root = tree({
       stackgen: {
         files: {
-          "stacks/language/x/skills/x/SKILL.md": skill("x"),
-          "stacks/language/x/rules/house-style.md": "# House style\n",
+          "stacks/framework/x/skills/x/SKILL.md": skill("x"),
+          "stacks/framework/x/rules/house-style.md": "# House style\n",
         },
       },
     });
@@ -961,15 +1023,17 @@ describe("root-relative references", () => {
     const root = tree({
       stackgen: {
         files: {
-          "stacks/language/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
+          "stacks/framework/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
+          "tools/swift/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/nope.md`\n",
         },
       },
     });
     const found = check(root);
-    expect(found).toHaveLength(1);
-    expect(found[0]?.scope).toBe(
-      "stackgen:stacks/language/x/conventions.md:1",
-    );
+    expect(found).toHaveLength(2);
+    expect(found.map((f) => f.scope)).toEqual([
+      "stackgen:tools/swift/conventions.md:1",
+      "stackgen:stacks/framework/x/conventions.md:1",
+    ]);
     expect(found[0]?.message).toContain("expands to nothing");
   });
 });
@@ -993,15 +1057,15 @@ describe("landed citations", () => {
     // Form (a) holds for every landed file, not just prose: a shell task under
     // `config/` can spell the token as readily as a skill can, and the dot
     // segments on its way there are why this walks rather than filters.
-    const task = "stacks/language/x/config/.config/mise/tasks/test/x";
+    const task = "stacks/framework/x/config/.config/mise/tasks/p/_project/x";
     const root = tree(packs(
       {
-        "stacks/language/x/skills/x/SKILL.md": skill(
+        "stacks/framework/x/skills/x/SKILL.md": skill(
           "x",
           "",
           "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`",
         ),
-        "stacks/language/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
+        "stacks/framework/x/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}/assets/doc.md`\n",
         "stacks/bundles/thing.md": "read `${CLAUDE_PLUGIN_ROOT}`\n",
         [task]: "#!/usr/bin/env bash\n# see ${CLAUDE_PLUGIN_ROOT}/assets/x.md\n",
       },
@@ -1037,7 +1101,7 @@ describe("landed citations", () => {
     // The lookbehind is what keeps the token form from being counted twice and
     // keeps a word merely ending in `assets` out.
     const root = tree(packs({
-      "stacks/language/x/conventions.md": "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
+      "stacks/framework/x/conventions.md": "see `assets/contracts/secrets.md`, `${CLAUDE_PLUGIN_ROOT}/assets/x.md`"
         + " and `my-assets/x.md`\n",
     }));
     expect(messages(check(root))).toEqual([
@@ -1052,16 +1116,16 @@ describe("landed citations", () => {
     // pack both still resolve; the pack's own conventions land elsewhere
     // entirely, so the climb to it does not.
     const root = tree(packs({
-      "stacks/language/x/skills/one/SKILL.md": skill(
+      "stacks/framework/x/skills/one/SKILL.md": skill(
         "one",
         "",
         "see [d](../two/references/z.md)",
       ),
-      "stacks/language/x/skills/one/references/y.md": "see [a](../references/z.md), [b](../../two/references/z.md) and"
+      "stacks/framework/x/skills/one/references/y.md": "see [a](../references/z.md), [b](../../two/references/z.md) and"
         + " [c](../../../conventions.md)\n",
-      "stacks/language/x/skills/two/SKILL.md": skill("two"),
-      "stacks/language/x/skills/two/references/z.md": "z\n",
-      "stacks/language/x/skills/one/references/z.md": "z\n",
+      "stacks/framework/x/skills/two/SKILL.md": skill("two"),
+      "stacks/framework/x/skills/two/references/z.md": "z\n",
+      "stacks/framework/x/skills/one/references/z.md": "z\n",
     }));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("cites `../../../conventions.md`"),
@@ -1072,7 +1136,7 @@ describe("landed citations", () => {
     // It lands as one file under `.claude/stackgen/templates/`, with nothing
     // above it and no tree to move within.
     const root = tree(packs({
-      "stacks/language/x/conventions.md": "see [a](../x.md)\n",
+      "stacks/framework/x/conventions.md": "see [a](../x.md)\n",
     }));
     expect(messages(check(root))).toEqual([
       expect.stringContaining("cites `../x.md`"),
@@ -1094,6 +1158,39 @@ describe("landed citations", () => {
     ]);
   });
 
+  it("flags the token in a tool entry and in every design-tools file", () => {
+    // A tool entry lands like a pack; everything under design-tools/ but a
+    // tool.yaml installs into vwf-tools, where the token expands to nothing.
+    const root = tree(packs({
+      "tools/swift/conventions.md": "read `${CLAUDE_PLUGIN_ROOT}`\n",
+      "tools/swift/skills/swift/SKILL.md": skill("swift", "", "`${CLAUDE_PLUGIN_ROOT}`"),
+      "tools/swift/tool.yaml": "name: Swift # ${CLAUDE_PLUGIN_ROOT}\n",
+      "design-tools/skills/design-import-x/SKILL.md": skill(
+        "design-import-x",
+        "",
+        "`${CLAUDE_PLUGIN_ROOT}`",
+      ),
+      "design-tools/acme/references/design-import-x.md": "`${CLAUDE_PLUGIN_ROOT}`\n",
+      "design-tools/acme/tool.yaml": "name: Acme # ${CLAUDE_PLUGIN_ROOT}\n",
+    }));
+    expect(besideDesignRule(check(root)).map((f) => f.scope).sort()).toEqual([
+      "stackgen:design-tools/acme/references/design-import-x.md:1",
+      "stackgen:design-tools/skills/design-import-x/SKILL.md:6",
+      "stackgen:tools/swift/conventions.md:1",
+      "stackgen:tools/swift/skills/swift/SKILL.md:6",
+    ]);
+  });
+
+  it("does not count a retired pack type as a pack type", () => {
+    // The tool packs moved to tools/, and design-tool and addon left: a
+    // directory of that name left behind is not a type the form polices.
+    const root = tree(packs({
+      "stacks/language/x/pack.yaml": "name: x\n",
+      "stacks/bundles/thing.md": "see `language/x/conventions.md`\n",
+    }));
+    expect(messages(check(root))).toEqual([]);
+  });
+
   it("does not flag a type this plugin ships no packs under", () => {
     // The type list is read from the tree at check time, so the form covers a
     // new type directory without an edit — and covers nothing that is not one.
@@ -1108,7 +1205,7 @@ describe("landed citations", () => {
     // show a path the TARGET repo will hold. Blanking it has to keep the line
     // count, because the line is the whole value of the finding.
     const root = tree(packs({
-      "stacks/language/x/conventions.md": [
+      "stacks/framework/x/conventions.md": [
         "intro",
         "",
         "```json",
@@ -1125,70 +1222,103 @@ describe("landed citations", () => {
       expect.stringContaining("cites `assets/contracts/secrets.md`"),
     ]);
     expect(found[0]?.scope).toBe(
-      "stackgen:stacks/language/x/conventions.md:7",
+      "stackgen:stacks/framework/x/conventions.md:7",
     );
   });
 });
 
 describe("the design-adapter contract", () => {
-  // Wave D moved the three adapter skills out of a plugin and into a stackgen
-  // `design-tool` pack, where they are materialized into the repo's own
-  // `.claude/` under fixed names vwf invokes. The rule is unchanged; where it
-  // looks is not.
-  const pack = (files: Record<string, string>) => ({
-    stackgen: {
-      manifest: { name: "stackgen", version: "1.0.0", description: "x" },
-      files: { "stacks/design-tool/acme/pack.yaml": "name: Acme\n", ...files },
-    },
-  });
-
-  const three = (extra: string) =>
+  // The three role skills vwf delegates to live once, under
+  // design-tools/skills/, and install into vwf-tools; each tool folder beside
+  // them carries the reference a role skill follows for that tool.
+  const roles = ["screens", "design-system", "conversations"];
+  const roleSkills = (extra: string) =>
     Object.fromEntries(
-      ["screens", "design-system", "conversations"].map((kind) => [
-        `stacks/design-tool/acme/skills/design-import-${kind}/SKILL.md`,
-        skill(`design-import-${kind}`, extra),
+      roles.map((role) => [
+        `design-tools/skills/design-import-${role}/SKILL.md`,
+        skill(`design-import-${role}`, extra),
       ]),
     );
+  const toolFolder = (tool: string) => ({
+    [`design-tools/${tool}/tool.yaml`]: "name: Acme\n",
+    [`design-tools/${tool}/conventions.md`]: "# Acme\n",
+    ...Object.fromEntries(
+      roles.map((role) => [
+        `design-tools/${tool}/references/design-import-${role}.md`,
+        "# ref\n",
+      ]),
+    ),
+  });
+  const design = (files: Record<string, string>) => ({
+    stackgen: {
+      manifest: { name: "stackgen", version: "1.0.0", description: "x" },
+      files,
+    },
+  });
+  const called = "disable-model-invocation: false\n";
 
-  it("accepts all three skills at disable-model-invocation: false", () => {
-    const root = tree(pack(three("disable-model-invocation: false\n")));
+  it("accepts the three role skills and a complete tool folder", () => {
+    const root = tree(design({ ...roleSkills(called), ...toolFolder("acme") }));
     expect(check(root)).toEqual([]);
   });
 
-  it("flags a missing import skill", () => {
+  it("flags a missing role skill", () => {
     const files = Object.fromEntries(
       Object
-        .entries(three("disable-model-invocation: false\n"))
-        .filter(([path]) => !path.includes("design-import-conversations")),
+        .entries({ ...roleSkills(called), ...toolFolder("acme") })
+        .filter(([path]) => !path.includes("skills/design-import-conversations")),
     );
-    expect(messages(check(tree(pack(files))))).toEqual([
-      "design-tool pack is missing its \"design-import-conversations\" skill — "
+    expect(messages(check(tree(design(files))))).toEqual([
+      "design-tools is missing its \"design-import-conversations\" skill — "
       + "vwf delegates to that exact name, and a missing one is silently "
       + "unavailable rather than a smaller feature",
     ]);
   });
 
-  it("flags a skill the model cannot invoke", () => {
+  it("flags a role skill the model cannot invoke", () => {
     // `true` removes the skill from the model's context entirely, so vwf's
     // delegation returns an empty payload rather than an error — which reads
     // exactly like a design nobody authored.
-    const root = tree(pack(three("disable-model-invocation: true\n")));
+    const root = tree(design({
+      ...roleSkills("disable-model-invocation: true\n"),
+      ...toolFolder("acme"),
+    }));
     expect(messages(check(root))).toHaveLength(3);
     expect(messages(check(root))[0]).toContain(
       "is not `disable-model-invocation: false`",
     );
   });
 
-  it("flags a skill that is model-invocable but hidden from the user", () => {
-    // `user-invocable: false` is the old `invocation: model`. The model can
-    // invoke it, so a rule that only banned `true` would pass — but these three
-    // are documented as user-runnable too, and only the explicit `false` means
-    // both.
-    const root = tree(pack(three("user-invocable: false\n")));
+  it("flags a role skill that says nothing about model invocation", () => {
+    // Only the explicit `false` is a claim; `user-invocable: false` alone
+    // leaves the state vwf depends on unstated.
+    const root = tree(design({
+      ...roleSkills("user-invocable: false\n"),
+      ...toolFolder("acme"),
+    }));
     expect(messages(check(root))).toHaveLength(3);
   });
 
-  it("does not apply to a plugin shipping no design-tool pack", () => {
+  it("flags a tool folder missing its manifest, conventions or a reference", () => {
+    const files = Object.fromEntries(
+      Object
+        .entries({ ...roleSkills(called), ...toolFolder("acme") })
+        .filter(([path]) =>
+          !path.endsWith("acme/conventions.md")
+          && !path.endsWith("acme/references/design-import-screens.md")
+        ),
+    );
+    expect(messages(check(tree(design(files))))).toEqual([
+      "design tool is missing its conventions.md — a role skill follows the "
+      + "named tool's reference, and a tool without one is silently "
+      + "unavailable for that role",
+      "design tool is missing its references/design-import-screens.md — a "
+      + "role skill follows the named tool's reference, and a tool without one "
+      + "is silently unavailable for that role",
+    ]);
+  });
+
+  it("does not apply to a plugin shipping no design-tools tree", () => {
     const root = tree({ stackgen: {} });
     expect(check(root)).toEqual([]);
   });
@@ -1304,7 +1434,7 @@ describe("bundle defaults", () => {
       platforms.length > 0
         ? `platforms:\n${platforms.map((p) => `- ${p}\n`).join("")}`
         : ""
-    }components:\n- k/x@1.0.0\n---\n\nprose\n`;
+    }tools: []\npacks:\n- k/x@generated\n---\n\nprose\n`;
 
   const bundles = (files: Record<string, string>) => ({
     stackgen: {
@@ -1380,6 +1510,80 @@ describe("bundle defaults", () => {
       "bundle `default` is \"true\", not a boolean — the menu preselects on "
       + "`default: true` alone, so any other spelling never preselects and "
       + "reports nothing",
+    ]);
+  });
+});
+
+describe("bundle composition", () => {
+  // A bundle lists bootstrap tools under `tools:`, held against the committed
+  // snapshot, and knowledge packs under `packs:`, each of which must exist
+  // unless it is @generated. The single `components:` list is retired.
+  const snapshot = JSON.stringify([
+    { name: "node", category: "languages" },
+    { name: "pnpm", category: "package-managers" },
+  ]);
+  const composed = (frontmatter: string, files: Record<string, string> = {}) => {
+    const root = tree({
+      stackgen: {
+        files: {
+          "stacks/framework/effect/pack.yaml": "name: Effect\n",
+          "stacks/bundles/a.md": `---\nname: A\naxis: project\nkind: k\n${frontmatter}---\n\nprose\n`,
+          ...files,
+        },
+      },
+    });
+    return root;
+  };
+  const withSnapshot = (root: string) => {
+    write(join(root, "scripts", "src", "bootstrap-tools.json"), snapshot);
+    return root;
+  };
+
+  it("accepts known tools, an existing pack and an @generated ref", () => {
+    const root = withSnapshot(composed(
+      "tools:\n- node\n- pnpm\npacks:\n- framework/effect@0.1.0\n"
+        + "- build-orchestrator/turbo@generated\n",
+    ));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("accepts a bundle whose tools and packs are both empty", () => {
+    const root = withSnapshot(composed("tools: []\npacks: []\n"));
+    expect(check(root)).toEqual([]);
+  });
+
+  it("flags the retired components list", () => {
+    const root = withSnapshot(composed("components:\n- framework/effect@0.1.0\n"));
+    expect(messages(check(root))).toEqual([
+      "bundle carries `components:` — retired: a bundle lists bootstrap tools "
+      + "under `tools:` and knowledge packs under `packs:`",
+    ]);
+  });
+
+  it("flags a tool name the snapshot does not list", () => {
+    const root = withSnapshot(composed("tools:\n- node\n- deno\n"));
+    expect(messages(check(root))).toEqual([
+      "bundle tool \"deno\" is not in scripts/src/bootstrap-tools.json — a "
+      + "bundle names only tools bootstrap ships; re-run "
+      + "scripts/src/bootstrap-tools.ts if bootstrap added it",
+    ]);
+  });
+
+  it("flags every tool name when there is no snapshot to vouch for it", () => {
+    const root = composed("tools:\n- node\n");
+    expect(messages(check(root))).toEqual([
+      expect.stringContaining("bundle tool \"node\" is not in"),
+    ]);
+  });
+
+  it("flags a pack ref naming no pack, and one shaped wrong", () => {
+    const root = withSnapshot(composed(
+      "packs:\n- framework/ghost@0.1.0\n- framework/effect\n",
+    ));
+    expect(messages(check(root))).toEqual([
+      "bundle pack ref \"framework/ghost@0.1.0\" names no pack — there is no "
+      + "stacks/framework/ghost/pack.yaml",
+      "bundle pack ref \"framework/effect\" is not <type>/<slug>@<version>",
     ]);
   });
 });

@@ -34,8 +34,8 @@ bucket nobody queries for anything real — costs a provisioning step and
 gives the highest fidelity available: the real schema rejection, the real
 transform, the real files. It is what a developer wants when the thing
 under test is the pipeline. It is not free, it needs a credential on the
-laptop, and it is the reason the environment rule in the pack's `harness`
-block says a stream and a sink **per environment** rather than a shared
+laptop, and it is the reason this component's environment rule for the
+harness says a stream and a sink **per environment** rather than a shared
 one behind a prefix.
 
 **A stub behind the send seam.** The `send()` call has a natural boundary

@@ -97,7 +97,7 @@ export function check(repoRoot: string): Finding[] {
 
   findings.push(...checkDesignAdapters(plugins));
   findings.push(...checkStackAdapters(plugins));
-  findings.push(...checkBundleDefaults(plugins));
+  findings.push(...checkBundleDefaults(plugins, readToolSnapshot(repoRoot)));
   findings.push(...checkVwfIsTechnologyFree(plugins));
   return findings;
 }
@@ -402,15 +402,20 @@ const PACK_CONFIG_ROOT_DIRS = new Set([
 
 /**
  * The only folders under `.config/` a pack's `config/` tier may ship into,
- * `/`-terminated: a test task and a task of the pinned project. The toolchain
- * — tool pins, gates, gate configs, generic tasks, hooks — is bootstrap's, so
+ * `/`-terminated: a task of the pinned project. The toolchain — tool pins,
+ * gates, gate configs, generic tasks, test tasks, hooks — is bootstrap's, so
  * any other `.config/` path is a pack shipping what bootstrap owns. The list
  * names no bootstrap tool, so it does not drift when bootstrap changes.
  */
 const PACK_CONFIG_DOTCONFIG_ALLOWLIST = [
-  ".config/mise/tasks/test/",
   ".config/mise/tasks/p/_project/",
 ];
+
+/**
+ * Where a test task would sit. Refused with its own message: a test task is a
+ * part of a bootstrap tool, never a pack's payload.
+ */
+const PACK_CONFIG_TEST_TASKS = ".config/mise/tasks/test/";
 
 /**
  * The one path inside an allowlisted root directory a pack may not ship.
@@ -444,12 +449,14 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  *   it — and inside the one forge directory the list admits, a **workflow file
  *   is refused**: a pack states which task CI runs and never writes the
  *   workflow;
- * - under `.config/`, the tier is an **allowlist** — a test task or a task of
- *   the pinned project ({@link PACK_CONFIG_DOTCONFIG_ALLOWLIST}); the
- *   toolchain is bootstrap's, so any other path is a second copy of a
+ * - under `.config/`, the tier is an **allowlist** — a task of the pinned
+ *   project ({@link PACK_CONFIG_DOTCONFIG_ALLOWLIST}); the toolchain, test
+ *   tasks included, is bootstrap's, so any other path is a second copy of a
  *   bootstrap file, and a pack `templates/` tier is refused outright;
- * - the pack's **`binaries` and `lockfile` facts** take the shapes
- *   `/vwf:doctor` reads, and the retired keys are refused (`packFactFaults`).
+ * - a **tool entry** under `tools/` ships no `config/` tier at all, and its
+ *   hook scripts are held to the pack's rule;
+ * - the retired keys are refused in a `pack.yaml` and a `tool.yaml`
+ *   (`packFactFaults`).
  *
  * Each `/vwf:init` asset tree is walked as a landed tree too, and lands only
  * its hygiene allowlist.
@@ -519,9 +526,8 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
     }
   }
 
-  const packs = globSync("stacks/*/*", { cwd: plugin.root });
-  for (const pack of packs) {
-    for (const absolute of filesUnder(join(plugin.root, pack, PACK_HOOKS))) {
+  const hookScripts = (entry: string) => {
+    for (const absolute of filesUnder(join(plugin.root, entry, PACK_HOOKS))) {
       if (PACK_HOOK_METADATA.test(absolute)) {
         continue;
       }
@@ -536,13 +542,59 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
         );
       }
     }
+  };
+
+  const manifestFaults = (manifest: string, label: string) => {
+    if (!existsSync(manifest)) {
+      return;
+    }
+    let document: unknown;
+    try {
+      document = parseYaml(readText(manifest));
+    } catch (error) {
+      at(
+        `${path(manifest)}: ${label} is not valid YAML — ${firstLine(error)}`,
+      );
+      return;
+    }
+    for (const message of packFactFaults(document)) {
+      at(`${path(manifest)}: ${message}`);
+    }
+  };
+
+  // A tool entry lands knowledge only: its tasks and configs are bootstrap's.
+  for (const entry of globSync("tools/*", { cwd: plugin.root })) {
+    hookScripts(entry);
+    const config = join(plugin.root, entry, "config");
+    if (existsSync(config)) {
+      at(
+        `tool entry ships a config/ tier — a tool entry lands knowledge only; `
+          + `its tool's tasks and configs are bootstrap's: ${path(config)}`,
+      );
+    }
+    manifestFaults(join(plugin.root, entry, "tool.yaml"), "tool.yaml");
+  }
+  for (const entry of globSync("design-tools/*", { cwd: plugin.root })) {
+    manifestFaults(join(plugin.root, entry, "tool.yaml"), "tool.yaml");
+  }
+
+  const packs = globSync("stacks/*/*", { cwd: plugin.root });
+  for (const pack of packs) {
+    hookScripts(pack);
 
     const config = join(plugin.root, pack, "config");
     landedTree(config, "pack config/ tier", PACK_CONFIG_ROOT_FILES);
-    // Under `.config/`, a pack ships a test task or a project task and
-    // nothing else: the toolchain is bootstrap's.
+    // Under `.config/`, a pack ships a project task and nothing else: the
+    // toolchain, test tasks included, is bootstrap's.
     for (const absolute of filesUnder(join(config, ".config"))) {
       const rel = relative(config, absolute).split(sep).join("/");
+      if (rel.startsWith(PACK_CONFIG_TEST_TASKS)) {
+        at(
+          `pack config/ tier ships ${rel} — a test task is a part of `
+            + `bootstrap's tool, never a pack's: ${path(absolute)}`,
+        );
+        continue;
+      }
       if (
         !PACK_CONFIG_DOTCONFIG_ALLOWLIST.some((entry) => rel.startsWith(entry))
       ) {
@@ -562,108 +614,23 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       );
     }
 
-    const packYaml = join(plugin.root, pack, "pack.yaml");
-    if (!existsSync(packYaml)) {
-      continue;
-    }
-    let document: unknown;
-    try {
-      document = parseYaml(readText(packYaml));
-    } catch (error) {
-      at(
-        `${path(packYaml)}: pack.yaml is not valid YAML — ${firstLine(error)}`,
-      );
-      continue;
-    }
-    for (const message of packFactFaults(document)) {
-      at(`${path(packYaml)}: ${message}`);
-    }
+    manifestFaults(join(plugin.root, pack, "pack.yaml"), "pack.yaml");
   }
   return findings;
 }
 
 /**
- * What a pack's two doctor-read facts are held to, and the two keys it may no
- * longer carry.
+ * The keys a `pack.yaml` or a `tool.yaml` may no longer carry.
  *
- * - every `languages[].facts.binaries` entry is a bare name `/vwf:doctor` looks
- *   up on PATH, or a map of exactly `name` and an optional `probe` it runs;
- * - `lockfile` is a non-empty list of paths or globs relative to the repo root,
- *   any match passing doctor's package-manager check;
- * - a key in {@link RETIRED_PACK_KEYS} is refused — nothing reads one any more,
- *   so a pack still carrying one is asking for lines and values that never land.
- *
- * Each is read by a caller that trusts its shape: a probe that is not a string
- * is never run, and a lockfile glob that climbs out of the repo matches
- * something the repo does not own — both silently.
+ * A key in {@link RETIRED_PACK_KEYS} is refused — nothing reads one any more,
+ * so a manifest still carrying one is asking for lines and values that never
+ * land.
  */
 function packFactFaults(document: unknown): string[] {
   if (!isPlainObject(document)) {
     return [];
   }
   const faults: string[] = [];
-
-  const languages = Array.isArray(document.languages) ? document.languages : [];
-  languages.forEach((language: unknown, l) => {
-    const facts = isPlainObject(language) ? language.facts : undefined;
-    if (!isPlainObject(facts) || facts.binaries === undefined) {
-      return;
-    }
-    const label = `\`languages[${l}].facts.binaries\``;
-    if (!Array.isArray(facts.binaries)) {
-      faults.push(`${label} is not a list`);
-      return;
-    }
-    facts.binaries.forEach((entry: unknown, b) => {
-      const at = `${label}[${b}]`;
-      if (typeof entry === "string") {
-        if (entry === "") {
-          faults.push(`${at} is an empty name`);
-        }
-        return;
-      }
-      if (!isPlainObject(entry)) {
-        faults.push(`${at} is neither a name nor a { name, probe } map`);
-        return;
-      }
-      const extra = Object.keys(entry).filter((k) => k !== "name" && k !== "probe");
-      if (extra.length > 0) {
-        faults.push(
-          `${at} carries ${extra.map((k) => `\`${k}\``).join(", ")} — only `
-            + `\`name\` and \`probe\``,
-        );
-      }
-      if (typeof entry.name !== "string" || entry.name === "") {
-        faults.push(`${at} declares no \`name\``);
-      }
-      if (
-        entry.probe !== undefined
-        && (typeof entry.probe !== "string" || entry.probe === "")
-      ) {
-        faults.push(`${at} \`probe\` is not a non-empty string`);
-      }
-    });
-  });
-
-  if (document.lockfile !== undefined) {
-    const lockfile = document.lockfile;
-    if (!Array.isArray(lockfile) || lockfile.length === 0) {
-      faults.push("`lockfile` is not a non-empty list");
-    } else {
-      lockfile.forEach((entry: unknown, index) => {
-        const label = `\`lockfile[${index}]\``;
-        if (typeof entry !== "string" || entry === "") {
-          faults.push(`${label} is not a path or glob`);
-        } else if (isAbsolute(entry) || entry.split("/").includes("..")) {
-          faults.push(
-            `${label} (${entry}) climbs out of the repo — a lockfile path is `
-              + `relative to the repo root and stays inside it`,
-          );
-        }
-      });
-    }
-  }
-
   for (const [key, remedy] of RETIRED_PACK_KEYS) {
     if (document[key] !== undefined) {
       faults.push(`\`${key}:\` is retired — ${remedy}`);
@@ -672,7 +639,7 @@ function packFactFaults(document: unknown): string[] {
   return faults;
 }
 
-/** The pack.yaml keys nothing reads any more, and what replaced each. */
+/** The pack.yaml and tool.yaml keys nothing reads any more, and what replaced each. */
 const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
   ["tool-config", "a pack's toolchain is bootstrap's, chosen from a clone"],
   [
@@ -689,6 +656,18 @@ const RETIRED_PACK_KEYS: ReadonlyMap<string, string> = new Map([
     "a pack names a server it needs in a `## MCP servers` section of its "
     + "conventions.md, and the user installs it",
   ],
+  [
+    "languages",
+    "a language's facts are its bootstrap tool's, which a bundle names under "
+    + "`tools:`",
+  ],
+  ["lsp_servers", "vwf-tools takes its LSP entries from `bootstrap lsp --json`"],
+  [
+    "package_manager",
+    "the package manager is a bootstrap tool a bundle names under `tools:`",
+  ],
+  ["lockfile", "the lockfile is the package manager's bootstrap tool's"],
+  ["harness", "the harness tasks are bootstrap's"],
 ]);
 
 /** Every landed tree directly under `assets`, plugin-relative. */
@@ -727,8 +706,10 @@ function* filesUnder(dir: string): Generator<string> {
  * A pack's skills and agents are held to it too, and they are the larger half:
  * they outnumber the plugin's own, they are the documents that actually land in
  * a user's repo — where the host reading them is not this one — and until this
- * widened not one of them had ever been parsed. A pack's `rules/*.md` is left
- * out: frontmatter there is optional, so absence is not a fault.
+ * widened not one of them had ever been parsed. So are the skills of a tool
+ * entry under `tools/` and of `design-tools/`, which land the same way. A
+ * pack's `rules/*.md` is left out: frontmatter there is optional, so absence
+ * is not a fault.
  */
 function checkFrontmatterYaml(plugin: Plugin): Finding[] {
   const findings: Finding[] = [];
@@ -755,16 +736,27 @@ function checkFrontmatterYaml(plugin: Plugin): Finding[] {
   return findings;
 }
 
-/** A pack's skills and agents, which the reader's plugin-root globs miss. */
+/**
+ * A pack's skills and agents, a tool entry's skills and a design tool's
+ * skills, which the reader's plugin-root globs miss.
+ */
 const PACK_SKILL_RE = /^stacks\/[^/]+\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
 const PACK_AGENT_RE = /^stacks\/[^/]+\/[^/]+\/agents\/[^/]+\.md$/;
+const TOOL_SKILL_RE = /^tools\/[^/]+\/skills\/[^/]+\/SKILL\.md$/;
+const DESIGN_TOOL_SKILL_RE = /^design-tools\/(?:[^/]+\/)?skills\/[^/]+\/SKILL\.md$/;
+const LANDED_DOC_RES = [
+  PACK_SKILL_RE,
+  PACK_AGENT_RE,
+  TOOL_SKILL_RE,
+  DESIGN_TOOL_SKILL_RE,
+];
 
 /** Every document in a plugin whose frontmatter a host parses. */
 function frontmatteredDocs(plugin: Plugin): string[] {
   const packs = plugin
     .files
     .map((f) => f.path)
-    .filter((path) => PACK_SKILL_RE.test(path) || PACK_AGENT_RE.test(path));
+    .filter((path) => LANDED_DOC_RES.some((re) => re.test(path)));
   return [...plugin.skills, ...plugin.agents, ...packs];
 }
 
@@ -854,7 +846,9 @@ function outside(root: string, path: string): boolean {
  * `rules/`, `hooks/` and `config/` are copied byte-for-byte, a pack's
  * `conventions.md` — like a bundle's body — lands as the body of
  * `.claude/stackgen/templates/<slug>.md`, and the materializer's only mutation
- * is the `p/_project/` -> `p/<id>/` rename. Nothing else is rewritten.
+ * is the `p/_project/` -> `p/<id>/` rename. Nothing else is rewritten. A tool
+ * entry under `tools/` lands the same tiers and its `conventions.md`, and every
+ * file under `design-tools/` but a `tool.yaml` installs into `vwf-tools`.
  */
 const LANDED_TIERS = [
   "skills",
@@ -999,6 +993,20 @@ function isLandedPath(path: string): boolean {
     return true;
   }
   const parts = path.split("/");
+  if (parts[0] === "tools") {
+    // tools/<slug>/conventions.md, or a file under one of its landed tiers.
+    const [, slug, tier] = parts;
+    if (slug === undefined || tier === undefined) {
+      return false;
+    }
+    return parts.length === 3
+      ? tier === "conventions.md"
+      : LANDED_TIERS.includes(tier);
+  }
+  if (parts[0] === "design-tools") {
+    // Everything installs into vwf-tools but a tool's own manifest.
+    return parts.length > 2 && parts[parts.length - 1] !== "tool.yaml";
+  }
   const [stacks, type, slug, tier] = parts;
   if (stacks !== "stacks" || type === undefined || slug === undefined) {
     return false;
@@ -1025,6 +1033,14 @@ function* landedFiles(plugin: Plugin): Generator<LandedFile> {
       yield { path: relative(plugin.root, found), absolute: found };
     }
   }
+  for (const tree of ["tools", "design-tools"]) {
+    for (const found of filesUnder(join(plugin.root, tree))) {
+      const path = relative(plugin.root, found).split(sep).join("/");
+      if (isLandedPath(path)) {
+        yield { path, absolute: found };
+      }
+    }
+  }
   for (const pack of globSync("stacks/*/*", { cwd: plugin.root })) {
     const absolute = join(plugin.root, pack);
     if (pack.startsWith("stacks/bundles/")) {
@@ -1046,6 +1062,19 @@ function* landedFiles(plugin: Plugin): Generator<LandedFile> {
 }
 
 /**
+ * The retired pack types: the tool packs moved to `tools/`, and the design
+ * tools and the addon left the stacks tree. None is a pack type any more,
+ * even where a directory of that name is left behind.
+ */
+const RETIRED_STACK_TYPES = new Set([
+  "language",
+  "package-manager",
+  "toolchain-gate",
+  "design-tool",
+  "addon",
+]);
+
+/**
  * The pack types, read from the tree at check time.
  *
  * A new type directory therefore extends the cross-pack form without an edit
@@ -1058,7 +1087,8 @@ function stackTypes(plugin: Plugin): string[] {
       path !== "stacks/bundles"
       && statSync(join(plugin.root, path)).isDirectory()
     )
-    .map((path) => path.slice("stacks/".length));
+    .map((path) => path.slice("stacks/".length))
+    .filter((type) => !RETIRED_STACK_TYPES.has(type));
 }
 
 /** `<type>/<slug>/<segment…>`, or null when the plugin ships no packs. */
@@ -1103,6 +1133,23 @@ function landingRootOf(path: string): string | null {
   // An init asset tree lands whole as the repo root.
   if (path.startsWith(`${INIT_ASSETS}/`)) {
     return parts.slice(0, 4).join("/");
+  }
+  // A tool entry's skills land as sibling directories, like a pack's.
+  if (parts[0] === "tools") {
+    return parts[2] === "skills" && parts.length > 4
+      ? parts.slice(0, 3).join("/")
+      : null;
+  }
+  // design-tools/skills/<role>/… and design-tools/<tool>/skills/<skill>/…
+  // land as skill directories in vwf-tools; a tool's reference lands inside
+  // another skill's folder, so it has no tree of its own to climb within.
+  if (parts[0] === "design-tools") {
+    if (parts[1] === "skills" && parts.length > 3) {
+      return parts.slice(0, 2).join("/");
+    }
+    return parts[2] === "skills" && parts.length > 4
+      ? parts.slice(0, 3).join("/")
+      : null;
   }
   return parts[3] === "skills" && parts.length > 5
     ? parts.slice(0, 4).join("/")
@@ -1170,67 +1217,89 @@ function checkAgentReferences(plugin: Plugin): Finding[] {
   return findings;
 }
 
+/** The three role skills vwf's design adapter delegates to, by fixed name. */
+const DESIGN_ROLES = [
+  "design-import-screens",
+  "design-import-design-system",
+  "design-import-conversations",
+] as const;
+
 /**
  * The design-adapter contract, on the materialized side.
  *
  * vwf calls three fixed skill names, which in turn delegate to three more fixed
- * names in the repo's own `.claude/` — the ones a `design-tool` pack lands. Every
- * way of getting that second hop wrong fails silently. A missing skill imports
+ * names — the generic role skills under `design-tools/skills/`, which install
+ * into `vwf-tools` and read the named project's tool reference. Every way of
+ * getting that second hop wrong fails silently. A missing skill imports
  * nothing and reports no error; a skill carrying `disable-model-invocation: true`
  * is removed from the model's context altogether, so it cannot be invoked
  * programmatically and the import returns an empty payload that reads exactly
- * like a design nobody authored. Static checking is the only place either is
- * catchable.
+ * like a design nobody authored. And a tool folder missing one role's
+ * reference leaves that role skill nothing to follow for that tool. Static
+ * checking is the only place any of these is catchable.
  *
- * This used to key on a plugin keyworded `vwf-design-adapter`. Wave D deleted the
- * last such plugin, which would have left this rule permanently inert — a check
- * that can never fire is indistinguishable from one that always passes, and that
- * is the class of defect this file exists to prevent. So it now walks the packs
- * instead, where the three skills actually live.
- *
- * Asserting the literal absence of `true` would also pass for
- * `user-invocable: false`, which is model-invocable but hides the skill from the
- * user. So the check is for the explicit `false`, the one spelling meaning both.
+ * So a plugin shipping a `design-tools/` tree ships the three role skills, each
+ * at the explicit `disable-model-invocation: false` — asserting the literal
+ * absence of `true` would also pass a file that says nothing — and every
+ * `design-tools/<tool>/` folder carries `tool.yaml`, `conventions.md` and one
+ * `references/<role>.md` per role. Tools are discovered from the file list, so
+ * adding one extends the rule without touching it.
  */
 function checkDesignAdapters(plugins: readonly Plugin[]): Finding[] {
   const findings: Finding[] = [];
 
-  const KINDS = [
-    "design-import-screens",
-    "design-import-design-system",
-    "design-import-conversations",
-  ] as const;
-
   for (const plugin of plugins) {
-    // Every design-tool pack, discovered from the file list rather than the
-    // filesystem — one entry per `stacks/design-tool/<tool>/pack.yaml`.
-    const tools = plugin
-      .files
-      .map((file) => /^stacks\/design-tool\/([^/]+)\/pack\.yaml$/.exec(file.path))
-      .filter((match) => match !== null)
-      .map((match) => match[1]!);
+    const paths = new Set(plugin.files.map((file) => file.path));
+    const tree = [...paths].filter((path) => path.startsWith("design-tools/"));
+    if (tree.length === 0) {
+      continue;
+    }
 
+    for (const role of DESIGN_ROLES) {
+      const wanted = `design-tools/skills/${role}/SKILL.md`;
+      const file = plugin.files.find((entry) => entry.path === wanted);
+      if (file === undefined) {
+        findings.push({
+          scope: `${plugin.dir}:design-tools`,
+          message: `design-tools is missing its "${role}" skill — vwf delegates `
+            + `to that exact name, and a missing one is silently unavailable `
+            + `rather than a smaller feature`,
+        });
+        continue;
+      }
+      const front = frontmatterBlock(readText(file.absolute)) ?? "";
+      if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
+        findings.push({
+          scope: `${plugin.dir}:design-tools`,
+          message: `${role} is not \`disable-model-invocation: false\` — vwf `
+            + `delegates to it by name, and a skill the model cannot invoke `
+            + `returns an empty payload rather than an error, which is `
+            + `indistinguishable from a design nobody authored`,
+        });
+      }
+    }
+
+    const tools = [
+      ...new Set(
+        tree
+          .map((path) => /^design-tools\/([^/]+)\//.exec(path)?.[1])
+          .filter((tool): tool is string => tool !== undefined && tool !== "skills"),
+      ),
+    ]
+      .sort();
     for (const tool of tools) {
-      for (const kind of KINDS) {
-        const wanted = `stacks/design-tool/${tool}/skills/${kind}/SKILL.md`;
-        const file = plugin.files.find((entry) => entry.path === wanted);
-        if (file === undefined) {
+      const wanted = [
+        "tool.yaml",
+        "conventions.md",
+        ...DESIGN_ROLES.map((role) => `references/${role}.md`),
+      ];
+      for (const file of wanted) {
+        if (!paths.has(`design-tools/${tool}/${file}`)) {
           findings.push({
-            scope: `${plugin.dir}:stacks/design-tool/${tool}`,
-            message: `design-tool pack is missing its "${kind}" skill — vwf delegates `
-              + `to that exact name, and a missing one is silently unavailable `
-              + `rather than a smaller feature`,
-          });
-          continue;
-        }
-        const front = frontmatterBlock(readText(file.absolute)) ?? "";
-        if (!/^disable-model-invocation:\s*false\s*$/m.test(front)) {
-          findings.push({
-            scope: `${plugin.dir}:stacks/design-tool/${tool}`,
-            message: `${kind} is not \`disable-model-invocation: false\` — vwf `
-              + `delegates to it by name, and a skill the model cannot invoke `
-              + `returns an empty payload rather than an error, which is `
-              + `indistinguishable from a design nobody authored`,
+            scope: `${plugin.dir}:design-tools/${tool}`,
+            message: `design tool is missing its ${file} — a role skill `
+              + `follows the named tool's reference, and a tool without one `
+              + `is silently unavailable for that role`,
           });
         }
       }
@@ -1331,8 +1400,43 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
   return findings;
 }
 
+/** Where `scripts/src/bootstrap-tools.ts` writes bootstrap's tool names. */
+export const TOOL_SNAPSHOT = join("scripts", "src", "bootstrap-tools.json");
+
 /**
- * At most one default bundle per (axis, platform).
+ * Every bootstrap tool name in the committed snapshot, or null when the file
+ * is absent or unreadable — then every `tools:` name a bundle carries is a
+ * finding, since nothing can vouch for it. The checker never calls bootstrap.
+ */
+function readToolSnapshot(repoRoot: string): ReadonlySet<string> | null {
+  const path = join(repoRoot, TOOL_SNAPSHOT);
+  if (!existsSync(path)) {
+    return null;
+  }
+  try {
+    const list = JSON.parse(readText(path)) as unknown;
+    return new Set(
+      asArray(list)
+        .map((entry) => (entry as { name?: unknown }).name)
+        .filter((name): name is string => typeof name === "string"),
+    );
+  } catch {
+    return null;
+  }
+}
+
+/** A bundle's `packs:` entry: `<type>/<slug>@<version>`. */
+const BUNDLE_PACK_REF_RE = /^([a-z0-9-]+)\/([a-z0-9-]+)@(.+)$/;
+
+/**
+ * A bundle's composition, and at most one default bundle per (axis, platform).
+ *
+ * The composition is two lists. `tools:` names bootstrap tools, each of which
+ * must be in the committed snapshot ({@link TOOL_SNAPSHOT}) — a name bootstrap
+ * does not know is a tool nobody can add. `packs:` names knowledge packs, each
+ * of which must exist under `stacks/<type>/<slug>/` unless it is `@generated`,
+ * which names no pack by design. The retired single `components:` list is
+ * refused outright.
  *
  * A bundle's frontmatter may carry `default: true`, which the stack menu passes
  * through and vwf's architecture menu preselects among the entries it offers
@@ -1351,10 +1455,14 @@ function checkStackAdapters(plugins: readonly Plugin[]): Finding[] {
  * The frontmatter is parsed with the same reader the inventory generator uses,
  * so a bundle this rule reads is a bundle the inventory reads.
  */
-function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
+function checkBundleDefaults(
+  plugins: readonly Plugin[],
+  snapshot: ReadonlySet<string> | null,
+): Finding[] {
   const findings: Finding[] = [];
 
   for (const plugin of plugins) {
+    const paths = new Set(plugin.files.map((file) => file.path));
     const flagged = new Map<
       string,
       { path: string; platforms: string[] | null }[]
@@ -1381,6 +1489,14 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
         string,
         unknown
       >;
+      findings.push(
+        ...bundleCompositionFaults(
+          doc as Record<string, unknown>,
+          paths,
+          snapshot,
+        )
+          .map((message) => ({ scope: `${plugin.dir}:${file.path}`, message })),
+      );
       if (value === undefined) {
         continue;
       }
@@ -1443,6 +1559,50 @@ function checkBundleDefaults(plugins: readonly Plugin[]): Finding[] {
     }
   }
   return findings;
+}
+
+/** What is wrong with one bundle's `tools:`, `packs:` and `components:`. */
+function bundleCompositionFaults(
+  doc: Record<string, unknown>,
+  paths: ReadonlySet<string>,
+  snapshot: ReadonlySet<string> | null,
+): string[] {
+  const faults: string[] = [];
+  if (doc["components"] !== undefined) {
+    faults.push(
+      "bundle carries `components:` — retired: a bundle lists bootstrap tools "
+        + "under `tools:` and knowledge packs under `packs:`",
+    );
+  }
+  for (const tool of asArray(doc["tools"])) {
+    if (typeof tool !== "string" || !snapshot?.has(tool)) {
+      faults.push(
+        `bundle tool ${JSON.stringify(tool)} is not in ${TOOL_SNAPSHOT} — `
+          + `a bundle names only tools bootstrap ships; re-run `
+          + `scripts/src/bootstrap-tools.ts if bootstrap added it`,
+      );
+    }
+  }
+  for (const ref of asArray(doc["packs"])) {
+    const match = typeof ref === "string" ? BUNDLE_PACK_REF_RE.exec(ref) : null;
+    if (match === null) {
+      faults.push(
+        `bundle pack ref ${JSON.stringify(ref)} is not <type>/<slug>@<version>`,
+      );
+      continue;
+    }
+    const [, type, slug, version] = match;
+    if (version === "generated") {
+      continue;
+    }
+    if (!paths.has(`stacks/${type}/${slug}/pack.yaml`)) {
+      faults.push(
+        `bundle pack ref "${ref}" names no pack — there is no `
+          + `stacks/${type}/${slug}/pack.yaml`,
+      );
+    }
+  }
+  return faults;
 }
 
 // Rule 15 (one formatter exclusion set) is retired: the formatters' lists are

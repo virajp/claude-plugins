@@ -2,9 +2,10 @@
 name: Cloudflare Browser Rendering
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/browser-rendering@0.1.1
+- cloud-service/browser-rendering@1.0.0
 ---
 
 # Backing — Cloudflare Browser Rendering

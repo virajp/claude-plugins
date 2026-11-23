@@ -2,7 +2,7 @@ name: fnox
 summary: The development-only secrets manager — values live in the OS
   keychain or behind a reference into your own cloud store, and nothing
   secret is ever in the repo.
-version: 3.0.1
+version: 4.0.0
 type: capability-provider
 category: secrets-manager
 # `capability` is deliberately unset: `secrets-manager` has no vwf capability
@@ -10,7 +10,3 @@ category: secrets-manager
 # vwf's move, and nothing here fills the hole.
 kind: capability-provider
 axis: backing
-# fnox is a binary, not a service — there is nothing to compose behind a
-# readiness gate, so it satisfies no harness capability. What it contributes is
-# the injector that WRAPS every harness task; see the local-stack reference.
-harness: n/a

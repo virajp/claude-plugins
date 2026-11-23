@@ -2,9 +2,10 @@
 name: Cloudflare Workers AI
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/workers-ai@0.1.1
+- cloud-service/workers-ai@1.0.0
 ---
 
 # Backing — Cloudflare Workers AI

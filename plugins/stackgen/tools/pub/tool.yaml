@@ -1,0 +1,5 @@
+name: pub
+summary: Dependency declaration and locking for a Flutter app — pubspec.yaml,
+  which also carries the SDK constraints and native package-manager config.
+version: 1.0.0
+tools: [ flutter ]

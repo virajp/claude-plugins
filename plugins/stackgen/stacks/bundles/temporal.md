@@ -2,8 +2,9 @@
 name: Temporal
 axis: backing
 kind: capability-provider
-components:
-- capability-provider/temporal@0.1.1
+tools: []
+packs:
+- capability-provider/temporal@1.0.0
 ---
 
 # Backing — Temporal

@@ -2,10 +2,10 @@
 name: Dart · Flutter
 axis: project
 kind: app-framework
-components:
-- app-framework/flutter@1.0.1
-- package-manager/pub@0.3.2
-- toolchain-gate/analysis-options@0.2.3
+tools:
+- flutter
+packs:
+- app-framework/flutter@2.0.0
 platforms:
 - mobile
 - tablet

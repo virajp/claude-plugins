@@ -58,9 +58,11 @@ much smaller than the one it replaced: whole families of assertion became
    strict parser rejects — and **a rejected skill is dropped silently**. This is
    the highest-value rule in the file. It reads every skill and agent a plugin
    ships **and** every `stacks/*/*/skills/*/SKILL.md` and
-   `stacks/*/*/agents/*.md` a pack does — the pack half is the larger one, and
-   it is what actually lands in a user's repo, where the host reading it is not
-   this one. A pack's `rules/*.md` is left out: frontmatter is optional there.
+   `stacks/*/*/agents/*.md` a pack does, every `tools/*/skills/*/SKILL.md` a
+   tool-knowledge entry does, and every skill under `design-tools/` — the
+   landed half is the larger one, and it is what actually lands in a user's
+   repo or in `vwf-tools`, where the host reading it is not this one. A pack's
+   `rules/*.md` is left out: frontmatter is optional there.
 5. **Example-bundle links.** Relative links under
    `plugins/vwf/assets/examples/**` resolve. That bundle is the worked "what
    good looks like" for a blueprint, so a broken link there teaches the wrong
@@ -72,9 +74,14 @@ much smaller than the one it replaced: whole families of assertion became
 7. **Agent cross-references, both directions.** Every role-shaped `` `token` ``
    in a plugin's prose names a real agent of that plugin, and every declared
    agent is referenced at least once. Either direction alone misses a rename.
-8. **The vwf design-adapter contract.** Every `design-tool` pack ships all three
-   `design-import-*` skills, model-invocable. The checker discovers packs from
-   `stacks/design-tool/<tool>/pack.yaml`, so adding a tool extends the rule
+8. **The vwf design-adapter contract.** A plugin shipping a `design-tools/`
+   tree ships the three generic role skills under `design-tools/skills/` —
+   `design-import-screens`, `design-import-design-system` and
+   `design-import-conversations` — each at the explicit
+   `disable-model-invocation: false`, and every `design-tools/<tool>/` folder
+   carries `tool.yaml`, `conventions.md` and one `references/<role>.md` per
+   role, the reference the role skill follows for that tool. The checker
+   discovers tools from the file list, so adding a tool extends the rule
    without touching it — see stackgen's
    [artifact doctrine](../../../../plugins/stackgen/assets/artifact-doctrine.md)
    §2 for why a user-only adapter skill is worse than a missing one.
@@ -132,29 +139,31 @@ much smaller than the one it replaced: whole families of assertion became
       elsewhere for, plus the files humans read first; the forge directory is on
       the list for that reason, and the workflow is carved back out of it: a
       pack states which task CI runs, and the workflow is the repo's;
-    - **under `.config/`, the tier is an allowlist**: a pack ships only a test
-      task (`.config/mise/tasks/test/`) or a task of the pinned project
-      (`.config/mise/tasks/p/_project/`), read off
+    - **under `.config/`, the tier is an allowlist**: a pack ships only a task
+      of the pinned project (`.config/mise/tasks/p/_project/`), read off
       `PACK_CONFIG_DOTCONFIG_ALLOWLIST`. The toolchain — tool pins, gates, gate
-      configs, generic tasks, hook fragments — is bootstrap's, so any other
-      `.config/` path is a pack shipping a second copy of a bootstrap file. The
-      list names no bootstrap tool, so it does not drift when bootstrap changes.
-      A pack `templates/` tier is refused too: retired with the pack's
+      configs, generic tasks, test tasks, hook fragments — is bootstrap's, so
+      any other `.config/` path is a pack shipping a second copy of a bootstrap
+      file. A test task (`.config/mise/tasks/test/`) is refused with its own
+      message: it is a part of a bootstrap tool, never a pack's payload. The
+      list names no bootstrap tool, so it does not drift when bootstrap
+      changes. A pack `templates/` tier is refused too: retired with the pack's
       `values:`;
-    - the pack's **two doctor-read facts** take the shapes their readers trust:
-      every `languages[].facts.binaries` entry is a bare name (the `PATH`
-      lookup) or a map of exactly `name` and an optional non-empty `probe` (the
-      command `/vwf:doctor` runs instead); and `lockfile` is a non-empty list of
-      repo-relative paths or globs with no `..`. Each caller trusts the shape: a
-      probe that is not a string is never run, and a glob that climbs out
-      matches something the repo does not own — both silently. A retired
-      `tool-config:`,
-      `machine_env:`, `values:`, `conditional:` or `user_mcp_servers:` key is
-      **refused** outright: nothing reads any of them — the toolchain is
-      bootstrap's, a machine value is found by bootstrap's task or set in
-      `conf.d/zz-repo`, no pack used `conditional:`, and a pack names a server
-      it needs in a `## MCP servers` section of its `conventions.md`, which the
-      user installs. The finding names the pack and the key.
+    - a **tool-knowledge entry** under `tools/` ships **no `config/` tier** at
+      all — it lands knowledge only, and its tool's tasks and configs are
+      bootstrap's — and its hook scripts are held to the pack's rule above;
+    - a **retired key** is **refused** outright in a `pack.yaml` and in a
+      `tool.yaml` (a tool entry's or a design tool's), read off
+      `RETIRED_PACK_KEYS`: `tool-config:`, `machine_env:`, `values:`,
+      `conditional:`, `user_mcp_servers:`, `languages:`, `lsp_servers:`,
+      `package_manager:`, `lockfile:` and `harness:`. Nothing reads any of
+      them — the toolchain, a language's facts, its package manager, its
+      lockfile and its tasks are bootstrap's tools', `vwf-tools` takes its LSP
+      entries from `bootstrap lsp --json`, a machine value is found by
+      bootstrap's task or set in `conf.d/zz-repo`, no pack used
+      `conditional:`, and a pack names a server it needs in a
+      `## MCP servers` section of its `conventions.md`, which the user
+      installs. The finding names the file and the key.
 
     The walk is its own rather than the plugin file reader's, because every one
     of these paths runs through a dot segment the reader's glob does not descend
@@ -172,8 +181,11 @@ much smaller than the one it replaced: whole families of assertion became
 13. **A landed pack file cites nothing by plugin path.** A pack's landed tiers —
     `skills/`, `agents/`, `rules/`, `hooks/`, `config/`, its `conventions.md`
     and a bundle's body — are copied into a target repo **verbatim**, and that
-    repo has no plugin installed. So is every file under each
-    `skills/init/assets/<name>/`; the rule reads each as one landed tree. Inside
+    repo has no plugin installed. So are a tool-knowledge entry's under
+    `tools/<slug>/` — the same tiers and its `conventions.md` — and every file
+    under `design-tools/` but a `tool.yaml`, which installs into `vwf-tools`.
+    So is every file under each `skills/init/assets/<name>/`; the rule reads
+    each as one landed tree. Inside
     the plugin every citation in them resolves, which is exactly why rule 6 was
     silent about all of them; after landing not one does, and nothing reports it
     — the reader is sent to a path that is not there. Four forms, matched
@@ -205,8 +217,18 @@ much smaller than the one it replaced: whole families of assertion became
     The blanking keeps the line numbers true, which is the finding's whole
     value. The fix is never another path: name the asset by role ("stackgen's
     secrets contract"), or state inline the rule it carries.
-14. **At most one default bundle per axis per platform.** A bundle's frontmatter
-    may carry `default: true`; the stack menu passes it through on every entry
+14. **A bundle's composition resolves, and at most one default bundle per axis
+    per platform.** The composition is two lists. `tools:` names bootstrap
+    tools, each of which must be in the committed snapshot
+    `scripts/src/bootstrap-tools.json` — written by
+    `scripts/src/bootstrap-tools.ts` from `bootstrap catalog --json`, so the
+    checker never calls bootstrap, and an absent snapshot makes every name a
+    finding. `packs:` names knowledge packs, each `<type>/<slug>@<version>`
+    naming an existing pack under `stacks/<type>/<slug>/` unless it is
+    `@generated`, which names no pack by design. The retired single
+    `components:` list is refused outright. A bundle's frontmatter
+    may also carry `default: true`; the stack menu passes it through on every
+    entry
     whose bundle carries it, and vwf's architecture menu preselects the one
     flagged entry among those it offers on a round — a list it has already
     filtered by the project's platforms — as a generic rule that names no tool.
@@ -222,8 +244,8 @@ much smaller than the one it replaced: whole families of assertion became
     the file that declares no list; the finding for a non-boolean names the one
     file. It does not check that any bundle carries the flag — zero flagged is
     green, since an axis with no default is what every axis was before the flag
-    existed — and it does not check that the flagged bundle's components
-    resolve, which `p:plugins:inventory` owns.
+    existed. That a pack ref pins the version its pack carries is
+    `p:plugins:inventory`'s.
 15. **Retired.** It held the exclusion lists `stackgen:tool-config` shipped to
     one
     set; the lists left with that skill, and bootstrap owns them now. The number
