@@ -242,11 +242,11 @@
         "U7"
       ],
       "waits": "docs-sync reads the delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T12:25:39.299Z",
+      "ended": "2026-11-23T12:31:24.843Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "kind": "edit",
       "model": "opus",
       "wave": 3,
@@ -259,7 +259,8 @@
         ".claude/docs/",
         ".claude/skills/",
         "site/src/content/docs/",
-        "plugins/stackgen/.claude-plugin/plugin.json"
+        "plugins/stackgen/.claude-plugin/plugin.json",
+        "docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md"
       ]
     },
     {
@@ -278,7 +279,9 @@
       "id": "U9",
       "title": "Gates",
       "file": "09-gates.md",
-      "owns": []
+      "owns": [
+        ".claude-plugin/marketplace.json"
+      ]
     }
   ],
   "waves": [
@@ -296,8 +299,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T12:25:39.259Z",
       "ended": ""
     },
     {
@@ -696,32 +699,42 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D41",
+      "decision": "Q6: The wave-3 vitest marketplace test is red because U8 changed the stackgen plugin.json description, leaving .claude-plugin/marketplace.json stale; U9 ruling regenerates nothing. How should the run settle it?",
+      "ruling": "Widen U9 to .claude-plugin/marketplace.json and have it run mise run p:plugins:marketplace once, then mise run p:plugins:marketplace -- --check, before the plan gate; the corrected description ships and the generated file stays in step.",
+      "rejected": "Revert U8 plugin.json description edit and record the stale description as an open gap",
+      "units": [
+        "U8",
+        "U9"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T12:25:38.782Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T12:25:38.557Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers — a change plan has no blueprint slice",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T12:25:38.671Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers and no code unit — nothing to stamp or persist; no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T12:25:38.928Z"
     }
   },
   "gaps": [
@@ -738,6 +751,20 @@
       "stage": "",
       "text": "Follow-up owed (D40): the bootstrap config set lines at plugins/vwf/skills/setup/references/migrate-pipeline.md:121, :204 and onboard-pipeline.md:157 write values from a cloned repo with no shell-quoting rule (security engine, U7 round 2: command injection, confidence 8) · not fixed here by ruling; a backlog item and a change-plan applying the materialize.md step 4 quoting rule are owed",
       "state": "open"
+    },
+    {
+      "id": "G3",
+      "unit": "U8",
+      "stage": "",
+      "text": "U4 DOCS FALSIFIED: docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md says checks.mjs has no LSP rows; no unit owned it · U8 owns widened to that file under the plan Goal",
+      "state": "closed"
+    },
+    {
+      "id": "G4",
+      "unit": "U9",
+      "stage": "",
+      "text": "Wave-3 vitest marketplace test red: U8 plugin.json description edit left .claude-plugin/marketplace.json stale · settled by D41: U9 owns widened to .claude-plugin/marketplace.json and it regenerates it with p:plugins:marketplace",
+      "state": "closed"
     }
   ],
   "overrides": [

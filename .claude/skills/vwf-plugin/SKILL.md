@@ -213,11 +213,16 @@ Step 0 re-resolves the mode from what is on disk and a conforming repo resolves
 to `current`. Setup is also where a **pinned** stack is landed: **architecture
 decides, setup pins.** Its **materialize pass** runs once per run in every mode
 — `current` included, which is the mode a repo architecture just wrote pins into
-resolves to — grouping the axes holding a slug the target repo's adapter
-lockfile does not name, deduping by slug per repo, and invoking
-`-stack-template` once per `(repo, slug)` with the contract's `repo:` line; the
-materializer copies each pack's `config/` and hands the tools a pack needs to
-bootstrap. A template pinned months after `init` ran lands the same way; an
+resolves to — per repo, base first: on consent, invoking
+`/stackgen:stackgen-sync` to convert a lockfile row of a removed pack kind;
+grouping the axes holding a bundle slug the target repo's adapter lockfile does
+not name, deduping by slug per repo; adding each bundle `tools:` entry the repo
+does not select with `bootstrap add tool` and linking it with
+`bootstrap detect --add`, on one consent line; invoking `-stack-template` once
+per `(repo, slug)` with the contract's `repo:` line; and, in the base alone,
+declaring the `addons:` in the `claude` tool's `plugins.project` with
+`bootstrap config set` and running `mise run setup:ai`. A template pinned months
+after `init` ran lands the same way; an
 **absent** axis is written `unresolved` and a pinned slug is never rewritten. On
 the spine it runs before the doctor gate, and a declined landing is the expected
 way to reach doctor's blocking *pinned, not materialized*. **It runs none of the
@@ -336,7 +341,8 @@ adapter contract. Both keys are load-bearing together: `user-invocable: false`
 alone would be the model-only row minus its `paths:`, and
 `disable-model-invocation: true` would silently break the call. Checker rule 9
 asserts the pair on the two stack-adapter skills; rule 8 asserts only
-`disable-model-invocation: false` on the pack-landed `design-import-*` skills,
+`disable-model-invocation: false` on stackgen's `design-import-*` role skills,
+which `vwf-tools` installs,
 so `init`, `plan-management` and the three `vwf:import-*` carry
 `user-invocable: false` as their own choice, not a contract, and rule 4 plus
 `claude plugin validate` are all that check it.

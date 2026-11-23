@@ -50,8 +50,9 @@ rest of this step is the spine's
 There is no canvas to connect. The `claude-code` canvas is files in the repo,
 so there is no account, no server and nothing to sign in to; the one thing it
 needs is the `taste-skill` plugin, which `/design-session` authors through, and
-which you pick on the tools round in step 3. Lovable and Stitch are packs of
-their own and bring hosted canvases: a pack that reaches an MCP server names it
+which you pick on the tools round in step 3. Lovable and Stitch are design tools
+of
+their own and bring hosted canvases: a tool that reaches an MCP server names it
 in its conventions, and you install that server yourself.
 
 ### 2. /vwf:setup and /vwf:product
@@ -364,9 +365,10 @@ are the ones this scenario adds, each explained where it is enforced.
 
 - **Design-system import halts on exactly three conditions**, each with its own
   message because they need different fixes: the project has no design tool
-  configured; the configured tool was never materialized, so
-  `/vwf:import-design-system` has no `design-import-design-system` skill in the
-  repo's own `.claude/` to delegate to; or the adapter returns nothing usable.
+  configured; the `vwf-tools` plugin has no `design-import-design-system` role
+  skill, or no reference for the configured tool, so
+  `/vwf:import-design-system` stops and names `/vwf:setup` as the fix; or the
+  adapter returns nothing usable.
   There is no offline authoring mode.
   [`/vwf:design-system`](../../plugins/vwf.md#vwfdesign-system),
   [stackgen](../../plugins/stackgen.md)
