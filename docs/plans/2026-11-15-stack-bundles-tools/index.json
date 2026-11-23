@@ -199,7 +199,7 @@
       "status": "green",
       "started": "2026-11-23T11:36:53.207Z",
       "ended": "2026-11-23T11:43:40.478Z",
-      "commit": "",
+      "commit": "3d4f5ce8",
       "rounds": 1,
       "kind": "edit",
       "model": "opus",
@@ -241,9 +241,9 @@
     },
     {
       "id": "W5",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T11:36:53.167Z",
-      "ended": ""
+      "ended": "2026-11-23T11:45:55.683Z"
     }
   ],
   "shared_files": [
