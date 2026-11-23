@@ -80,7 +80,7 @@
       "status": "green",
       "started": "2026-11-23T08:59:27.161Z",
       "ended": "2026-11-23T09:12:47.894Z",
-      "commit": "04e475df",
+      "commit": "22ccb05c",
       "rounds": 2,
       "kind": "edit",
       "model": "opus",
@@ -120,7 +120,7 @@
       "status": "green",
       "started": "2026-11-23T10:13:18.547Z",
       "ended": "2026-11-23T10:56:31.161Z",
-      "commit": "",
+      "commit": "cc41ceb5",
       "rounds": 2,
       "kind": "edit",
       "model": "opus",
@@ -223,9 +223,9 @@
     },
     {
       "id": "W2",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T10:13:18.509Z",
-      "ended": ""
+      "ended": "2026-11-23T11:05:06.821Z"
     },
     {
       "id": "W3",
