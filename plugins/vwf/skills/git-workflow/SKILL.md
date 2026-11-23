@@ -19,11 +19,13 @@ disable-model-invocation: false
 - Worktrees are always created for the **outermost superproject**, never a
   submodule (Step 1 resolves this)
 - **A sibling member is its own outermost superproject.** Under a `multi-repo`
-  product with `linkage: siblings`, the members are ordinary repos — the
-  superproject walk correctly ends at the member, and that is where the worktree
-  belongs. The base repo is a **separate** checkout the caller writes to
-  directly; it is never reached by walking up from a member
-  (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`)
+  product, a member of `type: sibling` in `repo.members` is an ordinary repo —
+  the superproject walk correctly ends at the member, and that is where the
+  worktree belongs. The base repo is a **separate** checkout the caller writes
+  to directly; it is never reached by walking up from a member, but through
+  the member's `repo.home` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A
+  `type: folder` member is a folder of the base's tree: its worktree is the
+  base's
 - **Worktrees are bootstrap's tasks' work, never a Claude Code tool's.**
   Create, enter and leave a worktree with
   `mise x -- mise run git:worktree:create -- <name> …`, `cd` and

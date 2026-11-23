@@ -33,6 +33,7 @@ place a platform name is legitimate.
 | Reg. templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/registry.yaml`   |
 | Arch templ.  | `${CLAUDE_PLUGIN_ROOT}/assets/templates/architecture.md` |
 | Stacks       | `.config/vwf.yaml` `projects.<name>.stack`               |
+| Repo facts   | `repo.topology`, `repo.members` — `bootstrap config`     |
 
 There is exactly one registry and one architecture doc per workspace; together
 they describe every project.
@@ -118,6 +119,13 @@ Overview and topology — ask in sequence:
 - What the system is and its high-level purpose.
 - Cloud-hosted vs client-device split and the shared-package strategy.
 - How projects interconnect: who calls whom, the auth flow, the data flow.
+- The topology — `repo`, `monorepo` or `multi-repo`, the menu in
+  `${CLAUDE_PLUGIN_ROOT}/assets/topologies/` — and its one-line reason.
+- Under `multi-repo`, each member repo: its name, its folder relative to the
+  base repo root, its clone url, the projects that live in it, and how it
+  links to the base — a **submodule** of the base, or a **sibling** beside it.
+  A member folder inside the base repo's tree that is not a submodule is a
+  **folder** member.
 
 Hosting and deployment — ask in sequence:
 
@@ -262,10 +270,11 @@ slug — or `unresolved` where the user defers — into
 `projects.<name>.stack.template` in `.config/vwf.yaml`. Nothing is materialized
 here: no template is landed, no adapter is asked for one, and no repo tree is
 touched by the pick. The repo a pin will be materialized **into** is the member
-whose `members:` entry lists this project — the membership asset
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
-the base repo's. Landing it there, once per (repo, slug), is `/vwf:setup`'s
-materialize pass — which Step 7 hands off to.
+named by the project's `projects.<name>.repo` — the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project with no `repo` key is
+the base repo's, and so is a project of a `folder` member, materialized into the
+base with no `repo:` line. Landing it there, once per (repo, slug), is
+`/vwf:setup`'s materialize pass — which Step 7 hands off to.
 
 The stack never reaches `docs/blueprint/`. That is not a convention the authors
 have to keep — it is what the registry's shape enforces, and it is why a flow
@@ -335,6 +344,7 @@ Before writing, summarize to the user what will be created or changed:
 
 - Projects being added or edited (with their type, path, and capabilities).
 - Cross-cutting decisions being added, changed, or removed.
+- The topology and the members being set, with each member's type.
 - Prose sections being written for the first time vs updated.
 
 Present this as a concise outline. **Do not write on an unapproved plan.** Wait
@@ -370,6 +380,28 @@ never sees a stack — that separation is what keeps the blueprint vendor-free.
 
 Writing those keys is the **whole** of what this command does about the stack.
 Materialization is `/vwf:setup`'s, per Step 3b; Step 7 invokes it.
+
+**Write the topology and the members through bootstrap**, never into
+`.config/vwf.yaml`: they live in the base repo's `.config/bootstrap/repo.toml`,
+reached only through the CLI
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). Run the contract check
+first, then, in the base repo:
+
+```sh
+bootstrap config set repo.topology <topology> --json
+bootstrap config set repo.topology_reason '<one line>' --json
+bootstrap config set repo.members.<name> '<JSON table>' --json
+bootstrap config set repo.members.<name>.<field> <value> --json
+```
+
+The third line sets a new member as one whole table — `folder`, `url` and
+`type`; the fourth changes one field of a member already there. A member's
+`type` is `submodule` or `sibling` from the user's link answer (Step 3a), and
+`folder` for a member folder inside the base repo's tree that is not a
+submodule. For each project placed in a member, write `projects.<name>.repo` in
+`.config/vwf.yaml` as that member's name; a project of the base repo has no
+`repo` key. A failed `bootstrap` call stops this command with the envelope's
+`errors` as bootstrap gives them.
 
 ---
 

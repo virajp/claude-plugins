@@ -509,8 +509,11 @@ type Found =
 async function reposOf($: $, base: string, isMember: boolean): Promise<string[]> {
   const repos = [base];
   if (isMember) {
-    const yaml = await $.fs.read(`${base}/.config/vwf.yaml`).catch(() => "");
-    memberPaths(yaml).forEach((path) => repos.push(joinPath(base, path)));
+    const toml = await $
+      .fs
+      .read(`${base}/.config/bootstrap/repo.toml`)
+      .catch(() => "");
+    memberPaths(toml).forEach((path) => repos.push(joinPath(base, path)));
   }
 
   return repos;

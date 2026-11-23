@@ -83,9 +83,10 @@ user's clock.
    diff above runs against it, and the report names it. A change of content is
    a normal update behind its normal consent.
 
-   **In a member repo of a multi-repo product** — one carrying
-   `.config/vwf-membership.yaml` — the table does not apply: a claim on
-   `taste-skill@taste-skill` goes by the bootstrap handoff's Removal section.
+   **In a member repo of a multi-repo product** — one whose bootstrap
+   `[home]` back-link (`repo.home`) has a value — the table does not apply:
+   a claim on `taste-skill@taste-skill` goes by the bootstrap handoff's
+   Removal section.
    A sync in the base repo names each member not cloned locally in a one-line
    warning; its old items wait for a sync there.
 

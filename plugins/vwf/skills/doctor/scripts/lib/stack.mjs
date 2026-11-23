@@ -16,6 +16,7 @@ import {
   join,
   resolve,
 } from "node:path";
+import { memberRepo } from "./bootstrap.mjs";
 import {
   git,
   isObject,
@@ -100,17 +101,18 @@ export function repoPinRows({ config }) {
     : [];
 }
 
-/** The repo a project lives in: the member listing it, else the base. */
-function targetRepo(base, config, name) {
-  const members = Array.isArray(config.members) ? config.members.filter(isObject) : [];
-  const member = members.find(
-    (m) => Array.isArray(m.projects) && m.projects.includes(name) && typeof m.path === "string",
-  );
+/**
+ * The repo a project lives in: the member its projects.<p>.repo names, else
+ * the base. A folder member is part of the base's tree (D17).
+ */
+function targetRepo(base, config, members, name) {
+  const repo = stackOf(config, name).repo;
+  const member = typeof repo === "string" ? members.find((m) => m.name === repo) : undefined;
   if (member === undefined) {
     return { dir: base, present: true };
   }
-  const dir = resolve(base, member.path);
-  return { dir, present: isWorkTree(dir) };
+  const dir = memberRepo(base, member);
+  return { dir, present: dir === base || isWorkTree(dir) };
 }
 
 function sha256(file) {
@@ -196,7 +198,7 @@ function iacRow(base, config, project) {
  * The per-project rows for the registry projects named in `scope`, and the
  * binaries those projects need, reported once each.
  */
-export function projectRows({ base, config, registry, scope }) {
+export function projectRows({ base, config, members, registry, scope }) {
   const rows = [];
   const adapters = Array.isArray(config.stacks) ? config.stacks.filter((s) => typeof s === "string") : [];
   const projects = (Array.isArray(registry?.projects) ? registry.projects : [])
@@ -232,7 +234,7 @@ export function projectRows({ base, config, registry, scope }) {
 
     let frontmatter = null;
     let found = null;
-    const target = targetRepo(base, config, name);
+    const target = targetRepo(base, config, members, name);
     if (pinned && adapters.length === 0) {
       continue; // D38: no stacks: adapter, so no pin is walked — doctor's to catch
     }

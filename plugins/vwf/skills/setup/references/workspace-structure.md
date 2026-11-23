@@ -21,15 +21,16 @@ Read the one being proposed; do not summarize all three at the user.
 can share **one dependency graph and one release cadence**. Yes → `monorepo` (or
 `repo`, if there is only one project). No → `multi-repo`.
 
-## Multi-repo has a second question: linkage
+## Multi-repo has a second question: each member's type
 
-Once `multi-repo` is picked, ask how the members are wired — recorded as
-`linkage:`:
+Once `multi-repo` is picked, ask how each member is wired — recorded as its
+`type` in `repo.members.<name>` through `bootstrap config set`
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
 
-| Linkage | The members are | Pick it when |
+| Type | The member is | Pick it when |
 | --- | --- | --- |
-| `submodule` **(recommended)** | git submodules of the base repo | the repos are yours to wire, and reproducing the whole product at a known-good set of commits is worth the pointer-commit ceremony |
-| `siblings` | ordinary repos cloned next to the base | the repos already exist independently, one is shared with another product, or there are more of them than submodule bookkeeping carries comfortably |
+| `submodule` **(recommended)** | a git submodule of the base repo | the repos are yours to wire, and reproducing the whole product at a known-good set of commits is worth the pointer-commit ceremony |
+| `sibling` | an ordinary repo cloned next to the base | the repo already exists independently, is shared with another product, or there are more members than submodule bookkeeping carries comfortably |
 
 Recommend `submodule` and say why — a member can find its product structurally,
 and the pointer commits record which versions were ever consistent together.
@@ -37,11 +38,16 @@ and the pointer commits record which versions were ever consistent together.
 made a whole class of product un-onboardable without restructuring work the user
 never asked for.
 
-**Under either linkage the base repo holds the blueprint and no product code**,
-and every member carries `.config/vwf-membership.yaml` naming the product and
-the way back — belt-and-braces under `submodule`, load-bearing under `siblings`,
-and written uniformly so a later switch of linkage is a config edit rather than
-a second migration. **Which members are cloned on this machine is not part of
+A member folder inside the base repo's tree that is not a submodule is type
+`folder`: a folder of the base repo, whose work is the base repo's work.
+
+**Under every type the base repo holds the blueprint and no product code**,
+and every submodule or sibling member carries its way back as `[home]` in its
+own `.config/bootstrap/repo.toml`, read as `repo.home` — belt-and-braces for a
+`submodule`, load-bearing for a `sibling`, and written uniformly, by
+`setup:configs` run from the base with the member's flag (`--<member>`), so a
+later switch of type is a config edit rather than a second migration. **Which
+members are cloned on this machine is not part of
 this choice**: it is detected every run and never recorded. The contract, the
 resolution order and the absent-member sequence are in
 [membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md).
@@ -52,8 +58,9 @@ Adding a topology means **adding a template file** under
 ## Detecting and recording
 
 Classify the repo per [topology detection](topology-detection.md),
-present the matching template for confirmation, and record `topology:` plus
-`topology_reason:` (and `linkage:` for multi-repo) in `.config/vwf.yaml`. In a
+present the matching template for confirmation, and set `repo.topology` plus
+`repo.topology_reason` (and each member's `type` for multi-repo) with
+`bootstrap config set <key> <value> --json`. In a
 multi-repo product, classify **each member on its own signals** — a member may
 be a `repo` or a `monorepo`, and each carries its own `repo.stack` block.
 
@@ -68,12 +75,15 @@ recorded under `enforcement:` is settled and not re-proposed.
 ## Adding and removing repos or projects
 
 Both are **incremental**. Adding a project is a registry entry, recorded by
-`/vwf:architecture`. Adding a **repo** is a `members:` entry plus its
-`.config/vwf-membership.yaml` (plus `git submodule add` under submodule
-linkage), recorded by running `/vwf:setup` from **inside** the new repo, where
-the missing config resolves Step 0 to `onboard`. Removing **archives** the removed unit's flows and
+`/vwf:architecture`. Adding a **repo** is a `repo.members.<name>` table, set
+whole with `bootstrap config set repo.members.<name> '<JSON table>' --json`,
+plus its `repo.home` (`setup:configs --<member>` from the base, and
+`git submodule add` for a `submodule`), recorded by running `/vwf:setup` from
+**inside** the new repo, where the missing config resolves Step 0 to
+`onboard`. Removing **archives** the removed unit's flows and
 entities under `docs/blueprint/archived/` — vwf never deletes a blueprint doc —
-deregisters its projects, drops its `members:` entry, and recomputes the coverage
+deregisters its projects, unsets its `repo.members.<name>` with
+`bootstrap config unset`, and recomputes the coverage
 stamp without them.
 
 ## Stack templates (a menu)

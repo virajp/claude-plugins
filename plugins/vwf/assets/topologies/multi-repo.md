@@ -22,16 +22,18 @@ repo**: the repo holding the blueprint, `.config/vwf.yaml`, the plan index, the
 product-wide mise config and the local stack. `/vwf:setup` runs
 there, and so does every command that only reads docs.
 
-The base repo holds **no product code**. Members hold the code; the base holds
-what describes and coordinates them.
+The base repo holds **no product code** of its own. Members hold the code; the
+base holds what describes and coordinates them — and any `folder` member, a
+folder of its own tree.
 
-## Two linkages
+## Three member types
 
-Which one a product uses is recorded as `linkage:` in `.config/vwf.yaml`. Both
-are first-class; the difference is how the members are wired, never how vwf
-behaves.
+Each member records how it is wired as its own `type`, in the base's
+`[members.<name>]` table of bootstrap's `.config/bootstrap/repo.toml` (format
+27), so one product can mix them. The types are first-class; the difference is
+how a member is wired, never how vwf behaves.
 
-### `linkage: submodule` — recommended
+### `submodule` — recommended
 
 The members are git submodules of the base repo. This is the older shape and
 still the better one when you can have it:
@@ -43,7 +45,7 @@ my-product/           # base repo — vwf lives here
 ├── docs/plans/index.json
 ├── .config/          # mise config, vwf.yaml
 ├── backend/          # submodule — a monorepo
-│   ├── .config/vwf-membership.yaml
+│   ├── .config/bootstrap/repo.toml   # [home] back-link
 │   ├── docs/plans/   # this repo's cycle plans, one folder each
 │   │   └── <date>-<HHMM>-<slice>/
 │   ├── projects/
@@ -53,7 +55,7 @@ my-product/           # base repo — vwf lives here
 │   └── packages/
 │       └── common/   # platforms: [packages]
 └── app/              # submodule — a single repo
-    └── .config/vwf-membership.yaml
+    └── .config/bootstrap/repo.toml   # [home] back-link
 ```
 
 **Why it is recommended.** One `git clone --recurse-submodules` reproduces the
@@ -64,9 +66,9 @@ find its product structurally, via
 
 **What it costs.** Detached HEADs, a pointer commit in the base for every member
 commit, and a `git clone` that needs `--recurse-submodules` or the checkout is
-empty. Real ergonomic friction, and the reason the second linkage exists.
+empty. Real ergonomic friction, and the reason the `sibling` type exists.
 
-### `linkage: siblings`
+### `sibling`
 
 The members are ordinary repos, cloned next to the base. Nothing wires them
 together in git at all:
@@ -76,13 +78,13 @@ together in git at all:
 ├── acme-product/           # base repo — docs only
 │   ├── docs/blueprint/
 │   ├── docs/plans/index.json
-│   ├── .config/vwf.yaml    # members: [...]
+│   ├── .config/bootstrap/repo.toml   # [members.<name>]
 │   └── docs/memory/
 ├── acme-api/               # plain repo
-│   ├── .config/vwf-membership.yaml
+│   ├── .config/bootstrap/repo.toml   # [home] back-link
 │   └── docs/plans/<date>-<HHMM>-<slice>/
 └── acme-app/
-    ├── .config/vwf-membership.yaml
+    ├── .config/bootstrap/repo.toml   # [home] back-link
     └── docs/plans/<date>-<HHMM>-<slice>/
 ```
 
@@ -92,12 +94,19 @@ one product's submodule; a product with more repos than submodule bookkeeping
 can carry comfortably.
 
 **What it costs.** Git knows nothing about the grouping, so vwf has to. The
-`members:` list and the per-member `.config/vwf-membership.yaml` back-links are
-what replace `.gitmodules`, and they are load-bearing rather than
-documentation — the full contract is
+base's `[members.<name>]` tables and each member's `[home]` back-link are what
+replace `.gitmodules`, and they are load-bearing rather than documentation —
+the full contract is
 [membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md). There is no equivalent of a
 pointer commit, so nothing records which member versions were consistent
 together.
+
+### `folder`
+
+The member is a folder of the base repo's own tree — a monorepo part, not a
+separate repo. It has no `[home]`, and no separate worktree, clone or landing:
+its work is the base repo's work, and its base is its git top level. It is
+never absent, since it is there whenever the base is.
 
 ## Not every member is on every machine
 
@@ -139,7 +148,8 @@ on the **monorepo** shape becomes multi-repo by that fact alone.
 | --- | --- |
 | `docs/blueprint/` | the base repo, always — one bundle per product |
 | `.config/vwf.yaml` | the base repo, always |
-| `.config/vwf-membership.yaml` | every member, never the base |
+| `[members.<name>]` (bootstrap's `repo.toml`) | the base repo, one table per member |
+| `[home]` (bootstrap's `repo.toml`) | every `submodule` or `sibling` member, never the base, never a `folder` member |
 | A cycle plan folder (`docs/plans/<date>-<HHMM>-<slice>/`) | **the repo whose code it changes** |
 | `docs/plans/index.json` | the base repo — a thin index: its `plans` list, one row per plan folder naming the target repo, per `skills/plan-management/references/plan-index.md` |
 | `implementation:` stamps | the blueprint, so the base repo |
@@ -164,8 +174,10 @@ graph and one release cadence**.
 
 ## Adding and removing members
 
-Adding a member is a `members:` entry, a `.config/vwf-membership.yaml` in it, and
-its registry projects — plus `git submodule add` under submodule linkage. Run
+Adding a member is a `[members.<name>]` table in the base, its `[home]`
+back-link — written by bootstrap's sync when `setup:configs` runs from the base
+with the member's flag — and its registry projects, each placed in it by
+`projects.<name>.repo` — plus `git submodule add` for a `submodule` member. Run
 `/vwf:setup` from **inside the new repo**: finding no config
 there, Step 0 resolves `onboard`, and base-repo resolution
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) reaches the product from it. Its
@@ -173,4 +185,4 @@ registry projects are `/vwf:architecture`'s to record.
 
 Removing one **archives** its flows and entities under `docs/blueprint/archived/`
 — vwf never deletes blueprint docs — deregisters its projects, drops its
-`members:` entry, and recomputes the coverage stamp without them.
+`[members.<name>]` table, and recomputes the coverage stamp without them.

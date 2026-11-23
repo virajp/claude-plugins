@@ -1,11 +1,7 @@
 # An invented single-repo product, shaped on assets/vwf-config.md.
-config_format: 26
+config_format: 27
 blueprint_format: 25
 
-product:
-  name: lumen
-
-topology: repo
 stacks: [ stackgen ]
 
 repo:

@@ -1,9 +1,9 @@
 # The vwf Config — `.config/vwf.yaml`
 
 **How vwf operates in this product.** One file per product — in the **base
-repo** under `multi-repo` topology; members never get their own, they carry
-`.config/vwf-membership.yaml` instead (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`).
-Written by `/vwf:setup` and
+repo** under `multi-repo` topology; members never get their own, they find the
+base through bootstrap's `repo.home` instead
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Written by `/vwf:setup` and
 maintained by the workflow commands. It is the operating config, **never a copy
 of the system description**: what the product *is* (projects, roles, paths,
 capabilities, platforms) lives in `docs/blueprint/registry.yaml`; this file
@@ -46,38 +46,30 @@ memory is the file store under `docs/memory/`. **Format 25** added the
 top-level `addons:` list — the optional tools the product picked, on the
 `addon` axis — and moved a tool out of `backing_template` into it. **Format
 26** took the retired optional tools out of `addons:`, re-pinned a retired
-design tool, and left every MCP server to the user to install.
+design tool, and left every MCP server to the user to install. **Format 27**
+moved the repo facts — the product name, the topology, the members and the
+deploy environments — to bootstrap's `.config/bootstrap/repo.toml`, read and
+written through `bootstrap config`; this file keeps only which member holds a
+project, at `projects.<name>.repo`.
 
-## Schema (config_format 26)
+## Schema (config_format 27)
 
 ```yaml
-config_format: 26 # this file's own schema version — setup migrates it
+config_format: 27 # this file's own schema version — setup migrates it
 blueprint_format: 25 # the docs/blueprint format stamp
 
-product:
-  name: <product-name> # display name
+# NO `product:`, `topology:`, `topology_reason:`, `linkage:`, `members:`, `environments:` or `production_env:` key since FORMAT 27 — each lives in bootstrap's repo.toml (The repo facts, below). A leftover key is format drift, see `26 → 27` below
 
 blueprint: # coverage stamp — written by /vwf:blueprint after every sweep
   coverage: complete # complete | partial — /vwf:plan halts unless complete
   remaining: [] # unresolved holes when partial: flows/<project>/<NNN>-<flow>, entities/<entity>, apis/<project>, screens/<project>/<NNN>-<flow>/<platform> (skipped visual review), density/<unit> (over its line budget — cleared by the sweep's condenser pass, or when the condenser reports every remaining line load-bearing), coherence; a flow not yet authored (unserved goal, missing standard flow) is named without its number — flows/<project>/<slug> — and takes its NNN when authored
 
-topology: multi-repo # repo | monorepo | multi-repo — a MENU since format 19 (assets/topologies/), not enforced. `polyrepo` was renamed in config_format 15, which also stopped requiring submodules
-topology_reason: <one
-  line> # why this shape; recorded so it is never re-litigated
-linkage: siblings # MULTI-REPO ONLY: submodule (recommended) | siblings. How the members are wired, NOT how many are cloned — see `members:` below
 ui: true # a SCREEN platform exists on some project → design-system required
 integrations: true # external integration/secret exists → environment.md required
 
 stacks: [ stackgen ] # the ADAPTER ROSTER — stack-plugin names, verbatim, in menu order (`[stackgen]` today; assets/stack-adapter.md). Product-wide: it names WHICH plugins are asked for a menu, never what any project picked. Written by `setup` (confirmed with the user); read by setup's topology-detection and workspace-structure references, and by each adapter's menu skill (stackgen's `stackgen-stack-menu`), which is invoked only when its plugin is listed here. Present since format 10 as the roster — the retired `stacks:` the `enforcement:` note below names was `enforcement.stacks`, a different key. Every name must be an installed plugin: a missing one is a halt, never an empty menu
 
 addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a slug of the installed stack plugin's `addon` axis. Written by /vwf:architecture's tools round, where nothing is ever preselected; materialized by /vwf:setup on every run, in the base repo only, and a slug dropped from the list is removed. Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision. Not `repo.stack.tools`, which is repo tooling a repo template names
-
-members: # MULTI-REPO ONLY (format 15). One entry per member repo; the BASE repo declares them and each member back-links in .config/vwf-membership.yaml. Absent under `repo`/`monorepo`, where the product is one checkout
-  - name: <member-name>
-    path: <../relative-path> # resolved from the BASE repo root. Under `submodule` linkage this is the submodule path; under `siblings` it usually escapes the repo
-    url: <git-remote> # REQUIRED — the absent-member clone offer has nothing to clone from without it. Derivable from .gitmodules under submodule linkage, but recorded uniformly so member resolution has ONE shape
-    projects: [ <project-name>, <...> ] # which registry projects live in this repo. The registry names WHAT exists; this names WHERE
-# There is NO `present:`/`cloned:` key, and there never will be. Which members are on this machine is per-developer state that changes daily — it is DETECTED every run (assets/membership.md). A committed key would be one laptop asserted as the product's shape
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in multi-repo topology the base and each member carry their own
   stack:
@@ -87,6 +79,7 @@ repo: # REPO-level tooling, the counterpart to a project's stack. One block per 
 
 projects: # per-project REALIZATION + nuances — no role/path keys, ever (those describe the system: registry.yaml)
   <project-name>:
+    repo: <member-name> # FORMAT 27. The member repo this project lives in — a key of bootstrap's repo.members. Absent for a project of the BASE repo, and under `repo`/`monorepo`. Was the member's `projects:` list in format 26. The registry names WHAT exists; this names WHERE
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
       template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       backing_template: [
@@ -137,12 +130,6 @@ pipeline: # bounded knobs — see the hard floor below
   models: {} # per-stage tier override, e.g. review: sonnet — ALWAYS reported at the gate as configured-vs-default
   execute_caps: {} # tighten-only: context/five_hour/seven_day below the shipped 65/90/80
 
-environments: # /vwf:verify targets — URLs only, NEVER secrets (those stay in environment.md by name + the secret manager by value); keys use the CANONICAL names development/staging/production per assets/delivery-pipeline.md — a synonym key (dev/test/stage/prod) is drift to propose fixing
-  <env-name>:
-    <project-name>: <base-url>
-
-production_env: production # optional — names the release environment for /vwf:verify (default: the env literally named "production")
-
 design: # CANVAS STATE only — ids and flow names, never content. The design TOOL is not here: it is per project, at projects.<name>.design (format 13)
   design_system_id: <uuid> # UNIVERSAL — one per product: the design system /vwf:design-system imports from, as the design tool identifies it (its own canvas project); every mockup push binds it
   projects: # one canvas design-system project per registry UI project PER PLATFORM — each platform canvas carries its own conventions CLAUDE.md (device frame, layout), so two platforms NEVER share a project; the same platform of two registry projects may share a uuid, as the product needs
@@ -159,6 +146,43 @@ docs_sync:
 
 after_landing: [] # OPTIONAL, hand-edited — shell commands /vwf:execute runs after every green landing, after the plan's own After landing steps, each once. Additive: absent or empty means none, so it carries no config_format bump
 ```
+
+## The repo facts in bootstrap's `repo.toml` (format 27)
+
+The facts that say what the product's repos *are* live in bootstrap's
+`.config/bootstrap/repo.toml`, one copy per product in the base repo, and vwf
+reads and writes them only through the bootstrap CLI
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
+`bootstrap config get <key> --json` and
+`bootstrap config set <key> <value> --json`. Each format 26 key has one home:
+
+- The product's display name, format 26's `product.name`, is
+  `repo.product_name`.
+- The repo shape and its reason are `repo.topology` and
+  `repo.topology_reason`: `repo`, `monorepo` or `multi-repo`, a menu
+  (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`), never enforced.
+- Each member repo is `repo.members.<name>`, keyed by its name: `folder` is
+  its path from the base repo root, `url` its git remote, and `type` how it is
+  wired — `submodule`, `sibling`, or `folder`, a folder of the base repo's own
+  tree that is no separate repo. Format 26's per-product wiring key is gone:
+  each member carries its own `type`. bootstrap also keeps `label` and
+  `worktree_install` there. Which projects a member holds is
+  `projects.<name>.repo` in this file.
+- A submodule or sibling member finds the base repo through its own
+  `repo.home`, written there by bootstrap's sync; a base or single repo reads
+  `repo.home` as null. Format 26's `.config/vwf-membership.yaml` is gone.
+- Each deploy target, format 26's `environments.<env>.<project>`, is
+  `repo.deploy.<env>.<project>`, its base URL — URLs only, never secrets, the
+  env keys the canonical names of
+  `${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`.
+- The release environment `/vwf:verify` freezes contracts against is
+  `repo.release_env`; unset, it is the env named `production`.
+
+There is **no** key recording which members are on this machine, in either
+file, and there never will be: presence is per-developer state that changes
+daily, **detected** every run (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`).
+`repo.environments` is bootstrap's list of mise environments, not these deploy
+targets.
 
 ## The three axis states
 
@@ -234,18 +258,17 @@ at answering the question, never at installing something.
 | Section              | Written by                                                                                                                                | Read by                                                                                                         |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | stamp keys           | `setup`                                                                                                                                   | every command's format check                                                                                    |
-| `linkage` / `members` | `setup` (elicited; each member's facts detected)                                                                                         | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) |
-| `product`            | `setup` (confirmed with the user)                                                                                                         | every command that names the product                                                                            |
+| `repo.members` (repo.toml) | `setup` (spine step 2, from the onboard pipeline; the `26 → 27` migration), `architecture` (Step 5: each member's `type`) — through `bootstrap config set` | every command that resolves the base repo or a member — `plan`, `execute`, `doctor`, `verify`, `git-workflow` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`) — through `bootstrap config get`; the progress pane alone reads the file (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`) |
+| `repo.product_name`, `repo.topology` (repo.toml) | `setup` (spine step 2, confirmed with the user); `architecture` (Step 5: `repo.topology`) — through `bootstrap config set` | every command that names the product or branches on its shape — through `bootstrap config get`                  |
 | `stacks`             | `setup` (confirmed with the user)                                                                                                        | `setup`'s topology-detection and workspace-structure references, `architecture`, `doctor` (the preflight), each adapter's menu skill |
 | `addons`             | `architecture` (the tools round, elicited); `setup` (the `24 → 25` and `25 → 26` migrations)                                             | `setup` (the materialize pass), `doctor` (drift, never blocking), `architecture` (the current pick on a re-run) |
 | `blueprint`          | `blueprint` (after every sweep)                                                                                                           | `plan` (the coverage gate)                                                                                      |
-| `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited); `execute` reconcile                                                  | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
+| `projects.*`         | `setup` / `architecture` (`stack`, `design`, `cicd` — all elicited; `repo` — the member a project is placed in); `execute` reconcile       | `plan`, `execute`, `doctor`, the verifiers, the design adapter (`design`) and the pinned CI system (`cicd`) — **never** `blueprint` or the reviewers, which must not see a stack |
 | `repo`               | `setup` / `architecture` (elicited)                                                                                                       | `doctor`, `plan`, `execute`                                                                                     |
 | `harness`            | `setup`; `execute` reconcile                                                                                                              | `plan` preflight, acceptance/ux verifiers, `verify`, `doctor`                                                   |
 | `enforcement`        | `setup` / `architecture` (consented); `init` (`kept_files` only, consented in its single plan)                                            | `setup`, `architecture`, `blueprint`, the reviewers; `init` and `doctor` (`kept_files`)                         |
 | `pipeline`           | the user (hand-edited)                                                                                                                    | `execute`, and the external caps hook that delivers its resource-cap pause                                       |
-| `environments`       | `setup` / `verify` (confirmed)                                                                                                            | `verify`                                                                                                        |
-| `production_env`     | `setup` / `verify` (confirmed)                                                                                                            | `verify` (the release environment)                                                                              |
+| `repo.deploy`, `repo.release_env` (repo.toml) | `setup` / `verify` (confirmed) — through `bootstrap config set`                                                                   | `verify` (the targets, and the release environment) — through `bootstrap config get`                            |
 | `design`             | `design-system` (`design_system_id`); `screens` (`projects.*.*` pins — confirmed); `blueprint` / `mockups` / `screens` (`flows_rendered`); the user (`viewports` — hand-edited) | `design-system`, `blueprint`, `mockups`, `screens`, `feedback`, `plan` (advisory) — the tool itself is `projects.<name>.design` |
 | `docs_sync`          | the user (hand-edited)                                                                                                                    | the /vwf:docs-sync skill                                                                        |
 | `after_landing`      | the user (hand-edited)                                                                                                                    | `execute` (runs each command after a green landing); `change-plan` and `plan`, which never propose a listed command as a plan step |
@@ -275,6 +298,17 @@ earlier than 65/90/80), never loosen.
   means **no sweep has stamped this repo** — `/vwf:plan` halts until
   `/vwf:blueprint` runs (self-healing on repos configured before config_format
   2).
+- **The repo facts are read through `bootstrap config`, never from this
+  file.** Since format 27 every reader of the product name, the topology, the
+  members, a member's back-link, the deploy targets or the release environment
+  runs `bootstrap config get <key> --json` (The repo facts, above) and shows
+  the envelope's `errors` text on a failure, per
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. The one exception is
+  the `/vwf:execute` progress pane, which reads `[members.*]` and `[home]` of
+  `repo.toml` itself and writes nothing. A moved key still present in this
+  file is `26` drift and is never read as a value.
+- **`projects.<name>.repo`** names a key of `repo.members`; a project without
+  it lives in the base repo.
 - **`design.viewports.<project>.<platform>`** overrides one device screen
   platform's canvas frames for one project, in one of two forms. The **scalar**
   `<W>x<H>` (points, two positive integers) resizes the primary frame. The
@@ -733,7 +767,8 @@ earlier than 65/90/80), never loosen.
   since been deleted. A repo's answers now live in its `.config/bootstrap/`,
   written by the bootstrap CLI, which moves the old keys there. The
   per-repo dependency-bot key is dropped with nothing to replace it: the bot
-  config it chose is no longer shipped. `members:` and `linkage:` stay here.
+  config it chose is no longer shipped. `members:` and `linkage:` stayed here
+  until format 27 (`26 → 27` below).
 
   A config still reading **22** is not broken for a reader: the block is
   ignored wherever it would have been read, and `/vwf:doctor`'s stamp check
@@ -816,6 +851,33 @@ earlier than 65/90/80), never loosen.
   **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
   tenth config bump to ship without a paired blueprint bump, after `14`,
   `16`, `18`, `20`, `21`, `22`, `23`, `24` and `25`.
+
+- **`26 → 27` migration** (performed by `/vwf:setup`, its migrate pipeline):
+  **the repo facts move to bootstrap's `repo.toml`.** The format 26 keys map
+  as follows: `product.name` → `repo.product_name`; `topology`,
+  `topology_reason` → `repo.topology`, `repo.topology_reason`; each `members`
+  entry → `repo.members.<name>`, keyed by its `name`, `path` → `folder`,
+  `url` → `url`, and the product's `linkage` → each member's `type`
+  (`submodule` → `submodule`, `siblings` → `sibling`); a member's `projects`
+  → `projects.<p>.repo` = the member's name, in this file;
+  `environments.<env>.<project>` → `repo.deploy.<env>.<project>`;
+  `production_env` → `repo.release_env`; and each member's
+  `.config/vwf-membership.yaml` → its `repo.home`. Each value is set with
+  `bootstrap config set` where `repo.toml` has none, dropped when both hold
+  the same value, and asked about, one key at a time, when they differ; then
+  the keys leave this file in the same commit. Each member commits the
+  deletion of its `vwf-membership.yaml` first, once its back-link resolves,
+  and the base commits last. The cases, the questions and the fix lines are
+  the setup skill's `format-lineage` row for 27.
+
+  A config still reading **26** is drift: `/vwf:doctor`'s stamp check reports
+  26 against 27 until the next `/vwf:setup` applies the step, and no reader
+  takes a moved key from this file as a value.
+
+  **Neither 13 nor 17 is in play on this bump.** `blueprint_format` is
+  **untouched** and stays **25**: nothing under `docs/blueprint/` changes, the
+  eleventh config bump to ship without a paired blueprint bump, after `14`,
+  `16`, `18`, `20`, `21`, `22`, `23`, `24`, `25` and `26`.
 
 - **`10 → 11` migration** (performed by `/vwf:setup`): stacks stop being
   *enforced with an escape hatch* and become a **menu**, and the flat

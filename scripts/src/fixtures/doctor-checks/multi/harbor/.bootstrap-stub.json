@@ -1,0 +1,15 @@
+{
+  "repo.topology": "multi-repo",
+  "repo.members": {
+    "dock-app": {
+      "folder": "../dock-app",
+      "type": "sibling",
+      "url": "git@forge.example.test:harbor/dock-app.git"
+    },
+    "dock-absent": {
+      "folder": "../dock-absent",
+      "type": "sibling",
+      "url": "git@forge.example.test:harbor/dock-absent.git"
+    }
+  }
+}

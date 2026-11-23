@@ -64,6 +64,11 @@ import {
 } from "node:path";
 import { isDeepStrictEqual } from "node:util";
 import {
+  BootstrapError,
+  memberRepo,
+  readMembers,
+} from "../../doctor/scripts/lib/bootstrap.mjs";
+import {
   ChecksError,
   runChecks,
 } from "../../doctor/scripts/lib/index.mjs";
@@ -312,18 +317,45 @@ function validated(doc, dir) {
   }
 }
 
-/** The D8 projects: the registry project each owns path falls under, by path segment. */
-function projectsOf(base, config, row, doc) {
+/** The base's members from bootstrap's repo.members (D7), read once; a failed call is a Refusal (D23). */
+let listed = null;
+function membersOf(base) {
+  if (listed === null) {
+    try {
+      listed = readMembers(base);
+    } catch (e) {
+      if (e instanceof BootstrapError) {
+        throw new Refusal(e.message);
+      }
+      throw e;
+    }
+  }
+  return listed;
+}
+
+/** The member a row's target_repo names, or a Refusal. */
+function targetMember(base, row, id) {
+  const member = membersOf(base).find((m) => m.name === row.target_repo);
+  if (!member) {
+    throw new Refusal(`the target repo ${row.target_repo} of ${id} is not listed in bootstrap's repo.members`);
+  }
+  return member;
+}
+
+/**
+ * The D8 projects: the registry project each owns path falls under, by path
+ * segment. A folder member's work is the base's, so its owns paths are base
+ * paths (D17).
+ */
+function projectsOf(base, row, doc) {
   const registry = readYaml(join(base, "docs", "blueprint", "registry.yaml"));
   const projects = (Array.isArray(registry?.projects) ? registry.projects : [])
     .filter((p) => p && typeof p.name === "string" && typeof p.path === "string");
   if (projects.length === 0) {
     return [];
   }
-  const member = row.target_repo
-    ? (Array.isArray(config?.members) ? config.members : []).find((m) => m?.name === row.target_repo)
-    : null;
-  const prefix = typeof member?.path === "string" ? member.path : "";
+  const member = row.target_repo ? membersOf(base).find((m) => m.name === row.target_repo) : null;
+  const prefix = member && member.type !== "folder" ? member.folder : "";
   const segs = (p) => p.split("/").filter((s) => s !== "" && s !== ".");
   const out = [];
   for (const u of units(doc)) {
@@ -344,11 +376,11 @@ function projectsOf(base, config, row, doc) {
   return out;
 }
 
-/** The fetch command for an absent member, per membership.md. */
-function fetchCommand(config, member) {
-  return config?.linkage === "submodule"
-    ? `git submodule update --init ${member.path}`
-    : `git clone ${member.url ?? "<url>"} ${member.path}`;
+/** The fetch command for an absent member, by its own type (D10). */
+function fetchCommand(member) {
+  return member.type === "submodule"
+    ? `git submodule update --init ${member.folder}`
+    : `git clone ${member.url ?? "<url>"} ${member.folder}`;
 }
 
 /** The text of one unsatisfied requires entry, per folder.md. */
@@ -380,7 +412,7 @@ function entryText(rows, e) {
  * Resolve one folder: {id, row, repoDir, doc, folderDir, mode, logFile,
  * openQuestions}, or a Refusal.
  */
-function resolveFolder(base, config, arg) {
+function resolveFolder(base, arg) {
   const id = basename(arg.replace(/\/+$/, "").replace(/\/index\.(md|json)$/, ""));
   const index = tipJson(base, INDEX);
   const rows = Array.isArray(index?.plans) ? index.plans : [];
@@ -388,15 +420,12 @@ function resolveFolder(base, config, arg) {
 
   let repoDir = base;
   if (row?.target_repo) {
-    const member = (Array.isArray(config?.members) ? config.members : []).find((m) => m?.name === row.target_repo);
-    if (!member || typeof member.path !== "string") {
-      throw new Refusal(`the target repo ${row.target_repo} of ${id} is not listed under members: in .config/vwf.yaml`);
-    }
-    repoDir = resolvePath(base, member.path);
-    if (!existsSync(join(repoDir, ".git"))) {
+    const member = targetMember(base, row, id);
+    repoDir = memberRepo(base, member);
+    if (repoDir !== base && !existsSync(join(repoDir, ".git"))) {
       throw new Refusal(
         `the target repo ${row.target_repo} of ${id} is not on this machine; fetch it with \`${
-          fetchCommand(config, member)
+          fetchCommand(member)
         }\`, then re-run /vwf:execute ${id}`,
       );
     }
@@ -558,7 +587,6 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
   if (oldFormat(base, target)) {
     return result({ message: MIGRATE });
   }
-  const config = readYaml(join(base, ".config", "vwf.yaml")) ?? {};
   const lost = new Set();
 
   for (;;) {
@@ -592,7 +620,7 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
 
     let f;
     try {
-      f = resolveFolder(base, config, arg);
+      f = resolveFolder(base, arg);
     } catch (e) {
       if (e instanceof Refusal || e instanceof QueueError) {
         return result({
@@ -620,7 +648,7 @@ function start({ target, worktree, branch, memberBranch, continueUnknown }) {
       log(f.logCwd, ["end", "--outcome", outcome]);
     };
 
-    const projects = projectsOf(base, config, f.row, f.doc);
+    const projects = projectsOf(base, f.row, f.doc);
     const fresh = f.mode === "fresh";
     let checks;
     let failed = null;

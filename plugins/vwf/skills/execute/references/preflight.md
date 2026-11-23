@@ -81,11 +81,13 @@ Fetch the `conventions:` prose for every template this plan's projects pin, per 
 unit. The config block names the templates. The prose is what the code is actually written to, and every stage that touches
 code is passed it.
 
-**Under `multi-repo`, the fetch carries `repo: <path>`**: that asset's *The target repo* line, naming the member whose
-`members:` entry lists the project (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Setup step 1 already resolved which repo each
-project is of. Hand that resolution to the fetch, under both linkages. Under `siblings` it is the worktree's own repo, and under
-`submodule` the member's path inside the base. A materialized template lives in the repo it was landed in. So a fetch that omits
-the repo reads the base's `.claude/` tree for a member's project, and finds the wrong prose or none. Dedupe per (repo, slug).
+**Under `multi-repo`, the fetch carries `repo: <path>`**: that asset's *The target repo* line, naming the member the project's
+`projects.<p>.repo` names (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). Setup step 1 already resolved which repo each
+project is of. Hand that resolution to the fetch for a `sibling` or `submodule` member: under `sibling` it is the worktree's
+own repo, and under `submodule` the member's folder inside the base. A `folder` member's project lands in the base, so its fetch
+carries no `repo:` line, like a project with no `repo` key. A materialized template lives in the repo it was landed in. So a
+fetch that omits the repo reads the base's `.claude/` tree for a sibling or submodule member's project, and finds the wrong
+prose or none. Dedupe per (repo, slug).
 
 **Two different halts live here.**
 

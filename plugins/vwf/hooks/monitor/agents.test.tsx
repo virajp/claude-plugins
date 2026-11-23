@@ -1003,7 +1003,9 @@ test(
     mock.clock(on, { now: NOW });
     world(on, {
       files: {
-        [`${MAIN}/.config/vwf.yaml`]: "topology: multi-repo\nmembers:\n  - name: api\n    path: ../api\n",
+        [`${MAIN}/.config/vwf.yaml`]: "config_format: 27\n",
+        [`${MAIN}/.config/bootstrap/repo.toml`]:
+          "topology = \"multi-repo\"\n\n[members.api]\nfolder = \"../api\"\ntype = \"sibling\"\n",
         [`${MAIN}/docs/plans/index.json`]: plans([A, "RUNNING", "api"]),
         [`/api/docs/plans/${A}/index.json`]: plan("Member plan", ["pending"]),
       },

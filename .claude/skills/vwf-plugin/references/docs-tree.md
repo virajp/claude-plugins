@@ -138,8 +138,9 @@ window: any stamp reconciles to the shipped one. **Do not restate the per-format
 history here** — what each past format changed is git's job; a second narrative
 copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
-describes throughout; the paired `config_format` (currently **26**, the bump
-that retired plugin-installed MCP servers) is described under
+describes throughout; the paired `config_format` (currently **27**, the bump
+that moved product, topology, members and environments to bootstrap's
+`repo.toml`) is described under
 `assets/vwf-config.md`, and its own
 `N → N+1` deltas do still live there — state-based reconciliation replaced the
 **blueprint** ladder only. **Neither line issues 13 or 17.** From

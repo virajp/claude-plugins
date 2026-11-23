@@ -141,24 +141,11 @@ describe("frontmatter", () => {
 describe("the fake config files", () => {
   it("reads .config/vwf.yaml of a multi-repo product", () => {
     const doc = parseYaml(fixture("vwf.yaml"));
-    expect(doc.topology).toBe("multi-repo");
-    expect(doc.topology_reason).toBe(
-      "the api and the app ship on their own release trains, so each keeps its own repo and its own history",
-    );
-    expect(doc.members).toEqual([
-      {
-        name: "example-api",
-        path: "../example-api",
-        url: "git@example.com:example/api.git",
-        projects: ["api", "worker"],
-      },
-      {
-        name: "example-app",
-        path: "../example-app",
-        url: "https://example.com/example/app.git",
-        projects: ["app"],
-      },
-    ]);
+    expect(doc.config_format).toBe(27);
+    expect(doc.topology).toBeUndefined();
+    expect(doc.members).toBeUndefined();
+    expect(doc.projects.api.repo).toBe("example-api");
+    expect(doc.projects.app.repo).toBe("example-app");
     expect(doc.repo.stack.template).toBe("repo/example-repo");
     expect(doc.projects.api.stack.template).toBe("project/example-service");
     expect(doc.projects.api.stack.backing_template).toEqual(["example-postgres", "example-auth"]);

@@ -7,7 +7,7 @@ import {
   expandHome,
   folderIn,
   FRESH_MS,
-  hostOf,
+  homeOf,
   joinPath,
   latestRow,
   memberPaths,
@@ -101,28 +101,48 @@ test("maps a reviewer by its row, and a coder by its unit file", async () => {
   expect(unitForAgent("general-purpose", "U9", units)).toBe(undefined);
 });
 
-test("reads members and the host, and resolves the base repo", async () => {
+test("reads members and the home, and resolves the base repo", async () => {
   expect(
-    memberPaths(`topology: multi-repo
-members:
-  - name: api
-    path: ../api # the API
-  - name: app
-    path: "../app"
-other:
-  path: nope
+    memberPaths(`product_name = "product"
+topology = "multi-repo"
+
+[members.api]
+folder = "../api" # the API
+type = "sibling"
+url = "git@example.com:o/api.git"
+
+[members."app"]
+type = 'submodule'
+folder = 'app'
+
+[members.web]
+type = "submodule"
+
+[members.lib]
+folder = "packages/lib"
+type = "folder"
+
+[deploy.production]
+api = "https://api.example.com"
+folder = "nope"
 `),
   )
-    .toEqual(["../api", "../app"]);
-  // A sequence with no indent is valid YAML.
-  expect(memberPaths("members:\n- name: api\n  path: ../api\n- path: ../app\n"))
-    .toEqual(["../api", "../app"]);
-  expect(hostOf("vwf_membership: 1\nhost: ../product\n")).toBe("../product");
+    .toEqual(["../api", "app", "web"]);
+  expect(memberPaths("")).toEqual([]);
+  expect(homeOf(`topology = "single"
+
+[home]
+folder = ".."
+type = "submodule"
+`))
+    .toBe("..");
+  expect(homeOf("[members.api]\nfolder = \"../api\"\ntype = \"sibling\"\n"))
+    .toBe(undefined);
   expect(joinPath("/w/api", "../product")).toBe("/w/product");
-  // A worktree of a member: its main checkout, then the host.
+  // A worktree of a member: its main checkout, then the home.
   const files: Record<string, string> = {
-    "/w/api/.config/vwf-membership.yaml": "host: ../product\n",
-    "/w/product/.config/vwf.yaml": "members: []\n",
+    "/w/api/.config/bootstrap/repo.toml": "[home]\nfolder = \"../product\"\ntype = \"sibling\"\n",
+    "/w/product/.config/vwf.yaml": "config_format: 27\n",
   };
   const base = await resolveBase("/w/api/.worktrees/x", {
     read: async (path) => files[path],

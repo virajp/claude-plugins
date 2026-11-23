@@ -17,14 +17,14 @@ human docs are the docs unit's, not this step's; this skill runs no docs-sync of
    whole, said in `stages.reconcile`'s `detail`.
 2. **Persist — when the plan has a `code` unit**. Follow `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`
    and its run exception. Write the run's durable decisions as `docs/memory/decisions/` files,
-   one record per file, and nothing else. Write them in the worktree, or the base checkout under
-   `linkage: siblings`. File no finding, and keep the run's gaps in the folder's `gaps` list alone.
+   one record per file, and nothing else. Write them in the worktree, or the base checkout when
+   the target member's `type` is `sibling`. File no finding, and keep the run's gaps in the folder's `gaps` list alone.
    Skip anything a doc already captures. The `code` pipeline already wrote most per-unit
    decisions, so fill only what is missing here.
 
    Every `docs/memory/` file the run wrote rides the Reconcile commit. That commit is made for
-   this step alone when step 1 was skipped, and under `linkage: siblings` it is the base repo's
-   commit, made last. It is the one commit whose paths are no unit's Owns.
+   this step alone when step 1 was skipped, and for a `sibling` target member it is the base
+   repo's commit, made last. It is the one commit whose paths are no unit's Owns.
 
    A plan of `edit` units alone has nothing to persist here: an `edit` unit's decisions are in
    its file and its report.

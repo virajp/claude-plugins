@@ -34,9 +34,10 @@ another; the confirmed pair is recorded in `conventions.md#pipeline` so the
 pipeline and the reviewers read the same pair.
 
 Synonyms: `dev`, `develop`, `local` → `development`; `test`, `stage` →
-`staging`; `prod` → `production`. The `environments:` keys in `.config/vwf.yaml`
-use the canonical names (`production_env` keeps its default meaning — the env
-literally named `production`).
+`staging`; `prod` → `production`. The deploy target keys,
+`repo.deploy.<env>` in bootstrap's `.config/bootstrap/repo.toml` (format 27),
+use the canonical names (an unset `repo.release_env` keeps its default meaning
+— the env literally named `production`).
 
 ## The pipeline rules
 
@@ -110,7 +111,7 @@ literally named `production`).
   as drift to fix, never silently. It shows each repo's core branches with the
   preselected stage/prod pair, and records there the pair the user confirms.
 - **`/vwf:verify`** resolves its target environment by canonical name (a synonym
-  in `environments:` is flagged as drift); its release offer stays
+  in `repo.deploy` is flagged as drift); its release offer stays
   production-only — rule 4 is why.
 - **The CI system pinned on the project's `cicd` axis** generates pipelines
   conforming to rules 1–3, 5, 6, and 8 when the repo carries this contract, and

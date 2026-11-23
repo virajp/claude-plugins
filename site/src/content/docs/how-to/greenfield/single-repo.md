@@ -373,7 +373,7 @@ that ships on a different cadence — a mobile app beside this service — makes
 a multi-repo product, and that is a different guide. Getting it wrong is
 recoverable but expensive, since the topology decides where the blueprint lives
 and how `plan` maps a slice to code. The three templates and the multi-repo
-linkage choice are in [Structure](../../plugins/vwf.md#structure).
+member types are in [Structure](../../plugins/vwf.md#structure).
 
 Note where this question is *asked*: on a blank repo, `/vwf:setup` does not ask
 it. `/vwf:architecture` derives it from `product.md` and confirms it with you.

@@ -50,23 +50,29 @@ surfaces; device screen platforms ship through a store and `iac`, `data` and
 `system` platforms are not deployed environments vwf checks) and the Acceptance
 blocks of every flow under
 `docs/blueprint/flows/*/*/index.md`. Resolve each project's base URL for the
-named environment from the **`environments:` block in `.config/vwf.yaml`** first
-(per the vwf-config asset); fall back to the repo's own configuration (deploy
-manifests, env files by **name** via `docs/blueprint/environment.md`, mise
-tasks) — ask the user for anything unresolvable, never guess a hostname, and
-**offer to pin what was resolved/asked into the config** so the next run asks
-nothing. Health probes honor any per-project override
+named environment from **`repo.deploy.<env>.<project>`** first, read with
+`bootstrap config get repo.deploy --json` in the base repo
+(`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`); fall back to the repo's
+own configuration (deploy manifests, env files by **name** via
+`docs/blueprint/environment.md`, mise tasks) — ask the user for anything
+unresolvable, never guess a hostname, and **offer to pin what was
+resolved/asked**, with
+`bootstrap config set repo.deploy.<env>.<project> <url> --json`, so the next
+run asks nothing. A failed `bootstrap` call stops the run
+with the envelope's `errors` as bootstrap gives them. Health probes honor any
+per-project override
 (`projects.<name>.harness.health` — a declared `n/a` is reported as such, not
 "unverifiable").
 
 **Environment names are canonical** per
 `${CLAUDE_PLUGIN_ROOT}/assets/delivery-pipeline.md`: `development` / `staging` /
 `production`. Resolve a synonym the user types (`dev`, `test`, `stage`, `prod`)
-to its canonical environment, and flag a synonym **key** in the config's
-`environments:` block as drift (offer the rename; never normalize silently).
+to its canonical environment, and flag a synonym **key** under `repo.deploy` as
+drift (offer the rename; never normalize silently).
 
-**The release environment** is the one named `production`, unless the config's
-`production_env:` key names another (per the vwf-config asset). Note whether
+**The release environment** is the one named `production`, unless
+`repo.release_env` names another — read with
+`bootstrap config get repo.release_env --json`. Note whether
 this run targets it — §5 fires only then. A staging run is never a release
 (`pipeline/staging-is-not-a-release`).
 

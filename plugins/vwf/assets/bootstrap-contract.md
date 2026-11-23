@@ -1,13 +1,19 @@
 # The bootstrap Contract
 
 **How a plugin reaches bootstrap.** vwf cites this file wherever a skill needs
-a bootstrap fact. stackgen carries the same body in its own
-`assets/bootstrap-contract.md`, because `${CLAUDE_PLUGIN_ROOT}` names only the
-plugin it is read in.
+a bootstrap fact. stackgen carries the same body, less the one exception below
+(the `/vwf:execute` progress pane), in its own `assets/bootstrap-contract.md`,
+because `${CLAUDE_PLUGIN_ROOT}` names only the plugin it is read in.
 
 A plugin reaches bootstrap only through its CLI and the JSON contract it
 prints. It never reads or writes a file in `.config/bootstrap/` directly, and
 never falls back to reading one; it may stage such a file with git.
+
+**The one exception** is vwf's `/vwf:execute` progress pane, which runs no
+command: it reads the `[members.*]` and `[home]` tables of
+`.config/bootstrap/repo.toml` itself, with a small TOML read, to find a plan's
+member repos, and writes nothing. With no `repo.toml`, it reads the repo as a
+base. Every other reader of those keys runs `bootstrap config get`.
 
 ## The contract check
 

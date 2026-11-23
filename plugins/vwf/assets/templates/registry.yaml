@@ -12,9 +12,10 @@
 #     project's PLATFORMS (assets/stack-adapter.md). Keeping it out is what
 #     makes the blueprint structurally incapable of naming a vendor: no
 #     authoring or reviewing surface reads it.
-#   - `members` — which repo a project lives in is a topology fact and lives in
-#     `.config/vwf.yaml` under `members:`. Here, `path` names the location and
-#     the config resolves the repo.
+#   - `members` — which repo a project lives in is a topology fact: the member
+#     repos are bootstrap's `repo.members` (`.config/bootstrap/repo.toml`), and
+#     `.config/vwf.yaml` places a project in one at `projects.<name>.repo`.
+#     Here, `path` names the location and the config resolves the repo.
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
 #   - prose, rationale, or hosting narrative — architecture.md.
 

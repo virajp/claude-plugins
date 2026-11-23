@@ -128,7 +128,8 @@ the **base repo and every member repo the product has** and `setup` sets up
 the other. It resolves that set itself and takes no argument: the base per the
 membership asset (so a run started inside a member walks up and shapes the
 product), the members as the **union** of `.gitmodules` walked recursively and
-the config's `members:` list, deduped on realpath, with a path in only one of
+the `submodule` and `sibling` members of bootstrap's `repo.members`, deduped
+on realpath, with a path in only one of
 two present sources reported as a disagreement and never shaped, and an absent
 member offered a **clone row inside the same plan**. Mode resolves per repo from
 what its tree contains, never a flag or setup's fork — `shaped` (the shaped test

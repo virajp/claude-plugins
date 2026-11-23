@@ -49,8 +49,8 @@ the clone that should have landed there afterwards then has nowhere to go.
 So: a member with a clone source is cloned by its row and shaped in this same
 run, and by the time this pass runs in it the repo is on disk and already had
 commits. A member with **no** clone source gets no row at all: report it as
-absent and uncloneable under *Deferred*, naming the unlock — add it to the
-product's membership with a source it can be cloned from, then run
+absent and uncloneable under *Deferred*, naming the unlock — give its
+`repo.members.<name>.url` a source it can be cloned from, then run
 `/vwf:setup reshape` — and shape nothing at that path.
 
 Report what was created and what was already there.

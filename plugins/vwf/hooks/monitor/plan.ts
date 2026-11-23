@@ -87,42 +87,70 @@ function unitOf(
     : byFile() ?? byRow();
 }
 
-/** The value of a `key:` line, its quotes and trailing comment dropped. */
-function value(line: string): string {
-  return line
-    .replace(/^[^:]*:\s*/, "")
-    .replace(/\s+#.*$/, "")
-    .trim()
-    .replace(/^(["'])(.*)\1$/, "$2");
+// bootstrap's `.config/bootstrap/repo.toml`: the pane reads its
+// `[members.<name>]` and `[home]` tables only, and writes nothing.
+const TOML_HEADER = /^\s*\[\s*([^[\]]+?)\s*\]\s*(?:#.*)?$/;
+const TOML_KEY = /^\s*("[^"]*"|'[^']*'|[A-Za-z0-9_-]+)\s*=\s*(.*)$/;
+
+/** A TOML key or header part, its quotes dropped. */
+function unquote(part: string): string {
+  const one = part.trim();
+
+  return /^(["']).*\1$/.test(one) ? one.slice(1, -1) : one;
 }
 
-/** The `path:` of each `members:` entry of a `.config/vwf.yaml`. */
-export function memberPaths(yaml: string): string[] {
-  const out: string[] = [];
-  let isIn = false;
-  for (const line of yaml.split("\n")) {
-    // A sequence written with no indent stays inside its key.
-    if (/^[^\s#-]/.test(line)) {
-      isIn = /^members:/.test(line);
+/** A TOML string value, else undefined. */
+function tomlString(raw: string): string | undefined {
+  const text = raw.trim();
+  const basic = text.match(/^"((?:[^"\\]|\\.)*)"/);
+  if (basic) {
+    return basic[1].replace(/\\(["\\])/g, "$1");
+  }
+
+  return text.match(/^'([^']*)'/)?.[1];
+}
+
+/** The string keys of each standard table of a TOML text, by header parts. */
+function tomlTables(toml: string): { path: string[]; keys: Map<string, string> }[] {
+  const tables: { path: string[]; keys: Map<string, string> }[] = [];
+  let current: Map<string, string> | undefined;
+  for (const line of toml.split("\n")) {
+    const header = line.match(TOML_HEADER);
+    if (header && !/^\s*\[\[/.test(line)) {
+      current = new Map();
+      tables.push({
+        path: (header[1].match(/"[^"]*"|'[^']*'|[^.]+/g) ?? []).map(unquote),
+        keys: current,
+      });
       continue;
     }
-    if (isIn && /^\s*(-\s+)?path:/.test(line)) {
-      const path = value(line.replace(/^\s*-\s+/, ""));
-      if (path !== "") {
-        out.push(path);
-      }
+    const pair = line.match(TOML_KEY);
+    const text = pair ? tomlString(pair[2]) : undefined;
+    if (current && pair && text !== undefined) {
+      current.set(unquote(pair[1]), text);
     }
   }
 
-  return out;
+  return tables;
 }
 
-/** The `host:` of a `.config/vwf-membership.yaml`. */
-export function hostOf(yaml: string): string | undefined {
-  const line = yaml.split("\n").find((one) => /^host:/.test(one));
-  const host = line === undefined ? "" : value(line);
+/**
+ * The `folder` of each `[members.<name>]` of a `repo.toml`, `<name>` by
+ * default. A `folder` member is part of the base repo's tree, so it is left
+ * out: its plans are the base repo's.
+ */
+export function memberPaths(toml: string): string[] {
+  return tomlTables(toml)
+    .filter(({ path, keys }) => path.length === 2 && path[0] === "members" && keys.get("type") !== "folder")
+    .map(({ path, keys }) => keys.get("folder") || path[1]);
+}
 
-  return host === "" ? undefined : host;
+/** The `folder` of the `[home]` of a `repo.toml`: set only in a member. */
+export function homeOf(toml: string): string | undefined {
+  const home = tomlTables(toml).find(({ path }) => path.length === 1 && path[0] === "home");
+  const folder = home?.keys.get("folder");
+
+  return folder === undefined || folder === "" ? undefined : folder;
 }
 
 /** `rel` resolved against the directory `base`, `.` and `..` folded. */
@@ -157,8 +185,10 @@ function onePath(out: string | undefined): string | undefined {
 }
 
 /**
- * The base repo of a checkout: `.config/vwf.yaml` here, else the membership
- * `host:`, else a linked worktree's main checkout, tried again from there.
+ * The base repo of a checkout: a member's `[home]` folder in its
+ * `.config/bootstrap/repo.toml`, else `.config/vwf.yaml` here, else a linked
+ * worktree's main checkout, tried again from there. A repo with no `[home]`,
+ * or no `repo.toml`, acts as a base; a folder member is its git top level's.
  */
 export async function resolveBase(
   cwd: string,
@@ -168,16 +198,15 @@ export async function resolveBase(
   for (let hop = 0; hop < 3; hop++) {
     const root = onePath(await io.git(dir, ["rev-parse", "--show-toplevel"]))
       ?? dir;
-    if ((await io.read(`${root}/.config/vwf.yaml`)) !== undefined) {
-      return root;
-    }
-    const membership = await io.read(`${root}/.config/vwf-membership.yaml`);
-    const host = membership === undefined ? undefined : hostOf(membership);
-    if (host !== undefined) {
-      const base = joinPath(root, host);
+    const repo = await io.read(`${root}/.config/bootstrap/repo.toml`);
+    const home = repo === undefined ? undefined : homeOf(repo);
+    if (home !== undefined) {
+      const base = joinPath(root, home);
       if ((await io.read(`${base}/.config/vwf.yaml`)) !== undefined) {
         return base;
       }
+    } else if ((await io.read(`${root}/.config/vwf.yaml`)) !== undefined) {
+      return root;
     }
     const common = onePath(
       await io.git(root, [

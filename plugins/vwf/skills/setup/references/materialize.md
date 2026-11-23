@@ -30,7 +30,10 @@ to read.
 
 ## Inputs
 
-- **`.config/vwf.yaml`** — `topology`, `linkage`, `members:`, and every stack
+- **bootstrap's repo facts** — `repo.topology` and `repo.members`, each read
+  with `bootstrap config get <key> --json`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`).
+- **`.config/vwf.yaml`** — each `projects.<name>.repo`, and every stack
   axis: each `projects.<name>.stack.template`, `backing_template` and
   `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
@@ -53,9 +56,13 @@ into a member's config, in any topology.
 
 ## Resolve the target repo, per project
 
-The repo of a project is the member whose `projects:` lists it, at that
-member's `path` relative to the base root. A project no member lists is the
-**base's**. Under `topology: repo` and `topology: monorepo` there are no
+The repo of a project is the member its `projects.<name>.repo` names, at that
+member's `folder` relative to the base root. A project with no `repo` key is
+the **base's**, and so is a project whose `repo` names a `folder` member: that
+member is a folder of the base repo's tree, so its project lands in the base,
+in the base's lockfile, with no `repo:` line, as
+`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md` states. Under `repo.topology`
+`repo` and `monorepo` there are no
 members and everything is the base's. The `repo.stack.template` axis describes
 a checkout rather than a project, so its target is the repo that declares it.
 Every `addons:` slug targets the **base**: in a multi-repo product members get
@@ -63,9 +70,9 @@ no `addon` pin, and in a single repo the repo is the base.
 
 A member that is declared but **not on this machine** — an uncloned sibling, or
 an empty submodule directory — is a blind spot, never a finding. Report it
-with its checkout line (`git submodule update --init <path>` under `submodule`
-linkage, the recorded `url` under `siblings`) and skip every axis that targets
-it. Nothing is written on its behalf.
+with its checkout line (`git submodule update --init <folder>` for a
+`submodule` member, the recorded `url` for a `sibling`) and skip every axis
+that targets it. Nothing is written on its behalf.
 
 ## Build the landing list
 
@@ -112,8 +119,9 @@ the same payload style:
 repo: <path>
 ```
 
-`<path>` is the member's `path` relative to the base repo root. Absent means
-the current repo, so a base-targeted landing carries no such line.
+`<path>` is the member's `folder` relative to the base repo root. Absent means
+the current repo, so a base-targeted landing — a `folder` member's project
+among them — carries no such line.
 
 Any call may end in a `declined:` line, after what it returns. Pass each such
 line, as returned, into every later `-stack-template` call of this run, in the

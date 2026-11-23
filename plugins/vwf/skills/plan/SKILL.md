@@ -204,14 +204,16 @@ command settles — where a file goes, what a test looks like, which existing
 shape to extend — are answered by that prose. Sizing units without it is
 guessing at a layout the repo already has an opinion about.
 
-**Under `topology: multi-repo`, pass the target repo with each fetch.** Each
+**Under a `multi-repo` topology, pass the target repo with each fetch.** Each
 project's pins were materialized into *its own* repo, so the invocation carries
 the `repo: <path>` line that asset's *The target repo* defines — the member
-whose `members:` entry lists that project, per the membership asset
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project no member lists is
-the base's. The dedupe still holds, now per (repo, slug) rather than per slug:
-two members on the same slug are two materializations, and resolving one for
-both would size units against prose the other repo does not contain.
+that the project's `projects.<name>.repo` names, per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project with no `repo` key is
+the base's, and so is a project of a `folder` member, fetched with no `repo:`
+line, since its pins landed in the base repo. The dedupe still holds, now per
+(repo, slug) rather than per slug: two members on the same slug are two
+materializations, and resolving one for both would size units against prose the
+other repo does not contain.
 
 Once per chain rather than per element, because every element of a chain sits in
 the same few projects and the prose cannot change between them. Hold the result
@@ -477,8 +479,9 @@ retirement is planned work, never silently accumulated debt.
 
 **Into the repo whose code this plan changes.** In a `repo` or `monorepo`
 topology that is the one checkout and the rule costs nothing. In `multi-repo` it
-is the member holding the chain element's project — resolve it from `members:`
-per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A chain spanning two members already
+is the member holding the chain element's project — resolve it from the
+project's `projects.<name>.repo` and `repo.members`, per
+`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`. A chain spanning two members already
 produces one plan per element, so each simply lands in its own repo; a plan is
 never split across repos. The folder is written **in place on the current
 branch** — this skill cuts no worktree; the fresh context that runs the plan —

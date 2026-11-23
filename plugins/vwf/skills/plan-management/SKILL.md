@@ -220,7 +220,8 @@ the sweep removed it — gets no edit, and the report names it. Then:
    contract's *The row*: `id` the folder's basename, `folder` its path
    relative to its repo root, `kind` from `type` — `vwf-plan` is `cycle`,
    `vwf-change-plan` is `change` — `title`, `target_repo` per membership (the
-   member whose code a cycle plan changes under `multi-repo`; `null` for a
+   member whose code a cycle plan changes under `multi-repo`, the one each
+   changed project's `projects.<p>.repo` names; `null` for a
    change plan, and for any plan in a `repo` or `monorepo` topology),
    `priority`, `status` `APPROVED`, `started` and `ended` `""`, `gaps`
    `null`, `requires` the basenames of the folder's `requires` entries,
