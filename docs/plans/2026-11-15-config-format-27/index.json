@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-15 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-22T22:46:33Z in .worktrees/all-2026-11-23-0333"
   },
   "consent": {
     "merge": true,
@@ -89,11 +89,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.642Z",
+      "ended": "2026-11-23T06:03:30.236Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -107,11 +107,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.681Z",
+      "ended": "2026-11-22T23:01:46.490Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U3",
@@ -131,11 +131,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.721Z",
+      "ended": "2026-11-23T06:03:30.315Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -158,11 +158,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.761Z",
+      "ended": "2026-11-23T06:03:30.398Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U5",
@@ -176,11 +176,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.801Z",
+      "ended": "2026-11-22T22:58:13.586Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U6",
@@ -202,11 +202,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-22T22:47:29.840Z",
+      "ended": "2026-11-23T06:03:30.478Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U7",
@@ -285,8 +285,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-22T22:47:29.602Z",
       "ended": ""
     },
     {
@@ -633,6 +633,44 @@
       "units": [
         "U7"
       ]
+    },
+    {
+      "id": "D35",
+      "decision": "Q1: In setup materialize, where does a project placed in a folder member land?",
+      "ruling": "Base repo: a folder member project lands in the base repo, root lockfile, no repo: line, matching U1 stack-adapter.md.",
+      "rejected": "repo: <folder> with its own lockfile inside the base tree",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Q2: In the blank onboard path of an unshaped repo, config set repo.product_name exits 2. What does setup do?",
+      "ruling": "Defer: leave the name unset, report it, and set it on the next setup run once the repo is shaped.",
+      "rejected": "Stop the run with bootstrap errors text; Keep product.name in vwf.yaml until shaped",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Q3: How is consent taken for the 26-to-27 step, and what happens on a decline?",
+      "ruling": "One row per repo, as 25-to-26 does: questions before the plan; a declined row writes nothing, the stamp stays 26, and the next pass offers the step again.",
+      "rejected": "One consent for the whole step across every repo",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q4: When a submodule member has repo.home null or bootstrap exits 2, does base resolution fall back to the git superproject walk?",
+      "ruling": "Keep the superproject walk as the fallback: when repo.home is null or bootstrap exits 2, base resolution falls back to git rev-parse --show-superproject-working-tree; membership.md, queue.mjs resolveBase and init all keep the walk.",
+      "rejected": "No fallback, as D18/D25 read literally",
+      "units": [
+        "U1",
+        "U4",
+        "U6"
+      ]
     }
   ],
   "stages": {
@@ -661,8 +699,21 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "",
+      "stage": "",
+      "text": "R1 wave review: 7 findings round 1, 5 round 2 (cap 2), closing pass left 3 fold-width regressions (membership.md:124, doctor/SKILL.md:164,168) · settled by one targeted rewrap and a narrow column check, no ruling owed",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-15-config-format-27.jsonl"

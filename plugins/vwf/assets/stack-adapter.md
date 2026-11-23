@@ -139,11 +139,14 @@ line beside the catalog paths, in the same payload style:
 repo: <path> # OPTIONAL — relative to the BASE repo root
 ```
 
-The value is the **member's `path`**, and vwf is what resolves it: the member
-whose `projects:` list contains the project being materialized for — the
-`members:` list of `.config/vwf.yaml`, per the membership asset
-(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A project no member lists lives
-in the base repo. **Absent means the current repo**, which is the whole answer
+The value is the **member's `folder`**, and vwf is what resolves it: the
+member that `projects.<name>.repo` of `.config/vwf.yaml` names for the project
+being materialized for, its `folder` read with
+`bootstrap config get repo.members.<member> --json`, per the membership asset
+(`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A project with no `repo` key
+lives in the base repo, and so does a project of a `folder` member, a folder of
+the base repo's tree whose work is the base repo's work: neither passes
+`repo:`. **Absent means the current repo**, which is the whole answer
 under `repo` and `monorepo` topology. Under `topology: multi-repo` **every vwf
 caller passes it** — a member's materialization lands in that member's own
 tree and is recorded in **that** repo's lockfile, never the base's, so two

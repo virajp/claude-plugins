@@ -9,6 +9,12 @@ A plugin reaches bootstrap only through its CLI and the JSON contract it
 prints. It never reads or writes a file in `.config/bootstrap/` directly, and
 never falls back to reading one; it may stage such a file with git.
 
+**The one exception** is vwf's `/vwf:execute` progress pane, which runs no
+command: it reads the `[members.*]` and `[home]` tables of
+`.config/bootstrap/repo.toml` itself, with a small TOML read, to find a plan's
+member repos, and writes nothing. With no `repo.toml`, it reads the repo as a
+base. Every other reader of those keys runs `bootstrap config get`.
+
 ## The contract check
 
 Before a skill uses a bootstrap fact, it runs:

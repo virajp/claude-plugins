@@ -47,18 +47,19 @@ plan's action log, and `/vwf:doctor` reports afresh on each run.
 ### Where the tree lives
 
 In a `repo` or `monorepo` topology, at the repo root. In `multi-repo`, at the
-**base repo** root, under either linkage — beside the blueprint, never in a
-member: a member's run, review or handoff writes its record there, so a recall
-from any repo of the product reads one tree. Always at the **main checkout**,
-never inside a worktree — a gitignored file written there dies with it, and a
-committed one lands only with the branch.
+**base repo** root, whatever its members' types — beside the blueprint, never
+in a member: a member's run, review or handoff writes its record there, so a
+recall from any repo of the product reads one tree. Always at the **main
+checkout**, never inside a worktree — a gitignored file written there dies
+with it, and a committed one lands only with the branch.
 
 **One exception: a `/vwf:execute` run.** A run never dirties the main
 checkout, so it writes its durable decision records — `decisions/` only; a run
 writes no `gaps/` or `problems/` file — inside the run's worktree, where they
-ride the run's commits and land with the merge. Under `multi-repo` with
-`linkage: siblings` that worktree is of the member, so the records go to the
-base checkout as the second working tree, the way Reconcile writes its stamps.
+ride the run's commits and land with the merge. Under `multi-repo`, when the
+target is a `sibling` member that worktree is of the member, so the records go
+to the base checkout as the second working tree, the way Reconcile writes its
+stamps.
 Every other writer keeps the main-checkout rule.
 
 ### What is committed, and what is not
