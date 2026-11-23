@@ -210,14 +210,14 @@
         "U5"
       ],
       "waits": "reviews the committed wave-1 delta, the code of U4 in focus",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T08:39:08.797Z",
+      "ended": "2026-11-23T08:40:04.312Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "6a459c2e",
+        "to": "25792c7c"
       }
     },
     {
@@ -277,9 +277,9 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T08:39:08.758Z",
+      "ended": "2026-11-23T08:40:54.483Z"
     },
     {
       "id": "W3",
