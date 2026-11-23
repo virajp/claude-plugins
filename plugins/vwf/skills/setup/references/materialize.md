@@ -152,8 +152,9 @@ payload. Then, in that repo:
    names the bundle, read `tools.<t>.projects` with `bootstrap config get`
    and run
    `bootstrap config set tools.<t>.projects '<JSON list>' --json` with that
-   project added — an empty project folder is the usual cause. A project with
-   no `repo.projects.<name>` is skipped here; doctor reports it.
+   project added — an empty project folder is the usual cause. The value is
+   a shell argument, quoted as the next section's **Quote** step says. A
+   project with no `repo.projects.<name>` is skipped here; doctor reports it.
 
 ## Invoke the adapter, once per entry
 
@@ -201,12 +202,21 @@ In the base only, after its landings. Each addon is a key
    `bootstrap config get tools.claude.plugins.project --json`.
 3. **Edit** it: add the key of each `addons:` name; drop each key that matches
    an `addons.yaml` entry not in `addons:`; keep every other key, the user's
-   own plugins among them.
-4. **Write** the whole map back, on one consent line naming the keys it adds
+   own plugins among them. A key that is not `<name>@<marketplace>` — a
+   name and a marketplace of letters, digits, `.`, `_` and `-`, one `@`
+   between them — stops the base's pass with a report naming it; setup
+   writes nothing.
+4. **Quote.** `bootstrap config set` takes the value as one positional
+   argument, with no stdin or file form. The map, like any `<JSON list>`
+   this pass writes, comes from the repo's committed config, which a cloned
+   repo controls: in the serialized JSON replace each `'` with `'\''`, then
+   wrap the whole in single quotes. Never pass it unquoted or in double
+   quotes.
+5. **Write** the whole map back, on one consent line naming the keys it adds
    and drops, with
    `bootstrap config set tools.claude.plugins.project '<JSON object>' --json`.
    A map that would not change asks nothing and writes nothing.
-5. **Install.** When `claude` is selected and this run added or dropped a key,
+6. **Install.** When `claude` is selected and this run added or dropped a key,
    `mise run setup:ai` installs the added plugins and uninstalls the dropped
    ones.
 

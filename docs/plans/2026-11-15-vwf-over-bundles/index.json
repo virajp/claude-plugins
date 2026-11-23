@@ -110,9 +110,9 @@
       "waits": "",
       "status": "green",
       "started": "2026-11-23T11:52:59.793Z",
-      "ended": "2026-11-23T12:11:45.860Z",
+      "ended": "2026-11-23T12:19:13.793Z",
       "commit": "7d31b673",
-      "rounds": 3,
+      "rounds": 4,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -220,11 +220,11 @@
         "U10"
       ],
       "waits": "reviews the committed delta of wave 1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T12:17:05.353Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "review",
       "model": "opus",
       "wave": 2,
@@ -233,8 +233,8 @@
       "file": "07-review.md",
       "owns": [],
       "range": {
-        "from": "",
-        "to": ""
+        "from": "3e1cfdc6",
+        "to": "5066b57e"
       }
     },
     {
@@ -290,8 +290,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T12:17:05.318Z",
       "ended": ""
     },
     {
