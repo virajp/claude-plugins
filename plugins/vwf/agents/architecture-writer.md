@@ -29,9 +29,11 @@ You receive:
 
 - **Elicited prose** — system overview, project interconnects,
   hosting/deployment details confirmed by the user.
-- **Per-project registry rows** — name, role, path, capabilities, depends_on,
+- **Per-project registry rows** — name, role, capabilities, depends_on,
   doc_unit, platforms, and any trust-boundary `threat_notes` for every project.
-  There is no `stack` row; it is not a registry field.
+  There is no `stack` row and no `path` row; neither is a registry field. A
+  project's folder is bootstrap's `repo.projects.<name>.folder`, which the
+  orchestrator writes, never you (blueprint-format 26).
 - **Cross-cutting decisions** — one-line selections for system-wide concerns
   (auth, errors, observability, config, testing, integrations, data-retention,
   and any others present).
@@ -64,10 +66,11 @@ You receive:
    node per registry project (labelled `name (platforms)`), edges from `depends_on`
    and the elicited interconnects. Regenerate it whenever the registry changes —
    a stale diagram is a sync violation like any prose/registry mismatch.
-3. **Registry** (`registry.yaml`) — `vwf_registry: 2`, the `projects:` list (one
+3. **Registry** (`registry.yaml`) — `vwf_registry: 3`, the `projects:` list (one
    entry per project) and the `cross_cutting:` block. It describes the system as
    it is; enforcement opt-outs and stacks live in `.config/vwf.yaml`, which the
-   orchestrator maintains. Never write a `deviations:` or `stack:` key.
+   orchestrator maintains. Never write a `deviations:`, `stack:` or `path:`
+   key; an existing `path:` on a project is removed when you edit it.
 4. **Never duplicate the registry into the prose.** No cross-cutting table, no
    project/stack table, no capability list in `architecture.md` — format 16
    removed them because nothing could check the two copies against each other.
@@ -142,12 +145,10 @@ them is a later effort, and until it exists their absence from the blueprint is
 by design, not a hole. **`plugin` is the exception** — it is covered: its flows
 are its extension points, one per skill, command or hook, `index.md` alone.
 Record them all so
-`plan`, `doctor` and `execute` can see them. An `iac` project's `path` is
-whatever the
-orchestrator elicited and passes you: it lives in **its own repo**
-(`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`), so its path routinely points outside
-the product tree. Write what you are given — never rewrite it to a directory
-under the product root, and never invent one.
+`plan`, `doctor` and `execute` can see them. An `iac` project lives in **its
+own repo** (`${CLAUDE_PLUGIN_ROOT}/assets/topologies/`); where that repo sits
+is bootstrap's, not the registry's, so record no location for it — never a
+directory under the product root, and never an invented one.
 
 **Synonyms** are recognized and normalized, never stored. Roles: `web`, `app`,
 `ui` → `frontend`; `api`, `server` → `backend`; `infra`, `ops` → `system`.

@@ -15,11 +15,14 @@
 #   - `members` — which repo a project lives in is a topology fact: the member
 #     repos are bootstrap's `repo.members` (`.config/bootstrap/repo.toml`), and
 #     `.config/vwf.yaml` places a project in one at `projects.<name>.repo`.
-#     Here, `path` names the location and the config resolves the repo.
+#   - `path` — removed in blueprint format 26 (`vwf_registry: 3`). A
+#     project's folder is bootstrap's `repo.projects.<name>.folder`, read
+#     with `bootstrap config get repo.projects.<name>.folder --json` in the
+#     repo that holds it: `projects.<name>.repo`, else the base repo.
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
 #   - prose, rationale, or hosting narrative — architecture.md.
 
-vwf_registry: 2 # registry schema version — 2 since blueprint format 22
+vwf_registry: 3 # registry schema version — 3 since blueprint format 26
 
 projects:
   - name: <project-name>
@@ -47,7 +50,6 @@ projects:
     # them all — a Flutter project is one project with four platforms
     # (`mobile`, `tablet`, `desktop`, `auto`), not four projects.
     platforms: [ <platform>, <...> ]
-    path: <repo-or-directory>
     capabilities: [ <capability>, <...> ] # assets/capability-vocabulary.md
     threat_notes: [
       <one worst-plausible-abuse line per trust boundary>,
