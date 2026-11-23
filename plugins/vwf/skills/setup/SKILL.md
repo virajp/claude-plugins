@@ -235,8 +235,8 @@ the whole report.
 **Architecture decides; setup pins.** A slug on a stack axis is a decision
 `/vwf:architecture` made and wrote; landing it is setup's, and the pass that
 does it is [materialize](references/materialize.md) — read it there, in full,
-rather than reconstructing it here. The stackgen materializer, which hands the
-tools a pack needs to bootstrap, is the one thing the pass calls.
+rather than reconstructing it here. The pass adds and links each bundle's
+bootstrap tools, then calls the stackgen materializer for the bundle.
 
 It runs **once per run, in every mode**, on a `.config/vwf.yaml` that is
 already current: in `onboard` and `migrate` between the spine's steps 2 and 3
@@ -245,22 +245,27 @@ exception to be optimized away — a repo `/vwf:architecture` has just written
 pins into resolves to exactly that mode, and skipping the pass there is
 skipping the whole handoff.
 
-In one paragraph, so a reader knows what the reference will say: setup groups
-the axes holding a slug the target repo's adapter lockfile does not name,
-dedupes by slug per repo, and invokes the adapter once per `(repo, slug)`,
-each landing behind the **adapter's own** consent line; the adapter copies
-each pack's `config/` as part of it. Setup reads nothing from
+In one paragraph, so a reader knows what the reference will say: per repo,
+setup first offers `/stackgen:stackgen-sync`'s one-time conversion when the
+lockfile holds a pack row of a removed kind. It groups the axes holding a
+bundle slug the target repo's adapter lockfile does not name, dedupes by slug
+per repo, adds each bundle tool the repo does not select with
+`bootstrap add tool` and links them with `bootstrap detect --add` on one
+consent line, then invokes the adapter once per `(repo, slug)`, each landing
+behind the **adapter's own** consent line. Setup reads nothing from
 `.config/stackgen.yaml`, and a repo's secrets provider is bootstrap's. A
 declined landing leaves the pin untouched and is reported. An `unresolved`
 axis is skipped silently. An **absent** axis is written `unresolved` and the
-run continues — a slug is never rewritten. The pass also reads `addons:` and
-fetches each slug as an `addon`-axis pin through the stack adapter, on every
-run and in the base repo only; a slug removed from `addons:` goes through the
-adapter's removal path, and an absent `addons:` reads as none and is never
-written `unresolved`. Beside the claims reconcile, on every run, the pass
-offers the machine part of the `25 → 26` step: when this machine's stack
-plugin manifest holds an MCP server key, one consent removes every key and
-setup lists the servers for the user to install by hand.
+run continues — a slug is never rewritten. In the base, `addons:` names no
+landing: setup writes each addon's `<plugin>@<marketplace>` key into the
+`claude` tool's `plugins.project` map, drops the key of an addon no longer
+listed, and runs `mise run setup:ai`; an absent `addons:` reads as none and is
+never written `unresolved`. A declined step, or a failed `bootstrap` or `mise`
+call, stops that repo's pass; the others go on. Beside the claims reconcile,
+on every run, the pass offers the machine part of the `25 → 26` step: when
+this machine's stack plugin manifest holds an MCP server key, one consent
+removes every key and setup lists the servers for the user to install by
+hand.
 
 ### The second shape check
 
