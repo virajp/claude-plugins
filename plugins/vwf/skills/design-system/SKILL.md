@@ -13,7 +13,7 @@ user-invocable: true
 disable-model-invocation: false
 metadata:
   archetype: workflow
-  depends-on: [import-design-system, design-system-authoring, git-workflow, blueprint, architecture]
+  depends-on: [import-design-system, vwf-tools:design-import-design-system, design-system-authoring, git-workflow, blueprint, architecture]
 ---
 
 # design-system
@@ -67,13 +67,13 @@ components-and-anti-patterns, brand, terminal-ux, checklist).
 
 H2, H3 and H4 stay distinct, because each needs a different fix.
 
-| ID | Condition                                           | Action                                                                                                                                                                                                                                                                      |
-| -- | --------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| H1 | `docs/blueprint/registry.yaml` does not exist       | Halt: "No registry found. Run `/vwf:architecture` first."                                                                                                                                                                                                                   |
-| H2 | No `design` on any screen-platform project          | Halt: "No design tool configured. Set `projects.<name>.design` in `.config/vwf.yaml` to one of the options the design-axis stack menu offers." A config still carrying a product-wide `design.tool` is `config_format` 12 drift: nudge `/vwf:setup` rather than reading it. |
-| H3 | The repo has no `design-import-design-system` skill | Halt: "the repo has no `design-import-design-system` skill. Materialize the project's `design` pin, then re-run."                                                                                                                                                           |
-| H4 | `/vwf:import-design-system` returns nothing usable  | Halt: "`<tool>` returned no usable payload", with the parse error.                                                                                                                                                                                                          |
-| H5 | The reviewer's gap count does not strictly decrease | Pause and ask the user.                                                                                                                                                                                                                                                     |
+| ID | Condition                                              | Action                                                                                                                                                                                                                                                                      |
+| -- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1 | `docs/blueprint/registry.yaml` does not exist          | Halt: "No registry found. Run `/vwf:architecture` first."                                                                                                                                                                                                                   |
+| H2 | No `design` on any screen-platform project             | Halt: "No design tool configured. Set `projects.<name>.design` in `.config/vwf.yaml` to one of the options the design-axis stack menu offers." A config still carrying a product-wide `design.tool` is `config_format` 12 drift: nudge `/vwf:setup` rather than reading it. |
+| H3 | `vwf-tools` has no `design-import-design-system` skill | Halt: "`vwf-tools` has no `design-import-design-system` skill, or no reference for the project's `design` pin. Run `/vwf:setup`, then re-run."                                                                                                                              |
+| H4 | `/vwf:import-design-system` returns nothing usable     | Halt: "`<tool>` returned no usable payload", with the parse error.                                                                                                                                                                                                          |
+| H5 | The reviewer's gap count does not strictly decrease    | Pause and ask the user.                                                                                                                                                                                                                                                     |
 
 ## Output
 

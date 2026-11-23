@@ -37,9 +37,10 @@ not here.
 2. If they all agree, use that project and say which.
 3. If they disagree, ask which project's tool authors the product's one design
    system. That is a product decision, so do not pick silently.
-4. Confirm that the repo's own `design-import-design-system` skill exists, before
-   you delegate. The project's `design:` pin, `projects.<name>.design`,
-   materializes it.
+4. Confirm that `vwf-tools` has the `design-import-design-system` skill, before
+   you delegate. `/vwf:setup` installs it there, with the reference for the
+   project's `design:` pin, `projects.<name>.design`. Check `vwf-tools`, not
+   the repo: a copy left in the repo's `.claude/skills/` is not read.
 
 Take H2, H3 or H4 on those failures. Absence of the skill is the one failure
 that otherwise reads as an empty design.

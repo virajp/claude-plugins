@@ -10,7 +10,7 @@ disable-model-invocation: false
 model: sonnet
 metadata:
   archetype: workflow
-  depends-on: [design-import-conversations]
+  depends-on: [vwf-tools:design-import-conversations]
 ---
 
 # import-conversations
@@ -25,27 +25,27 @@ payload shape: `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`.
 
 ## State
 
-| File                                             | Access  | Owner               |
-| ------------------------------------------------ | ------- | ------------------- |
-| `.config/vwf.yaml`: `projects.<project>.design`  | read    | the repo            |
-| `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md` | read    | vwf                 |
-| the repo's `design-import-conversations` skill   | invoked | the project's stack |
+| File                                                      | Access  | Owner        |
+| --------------------------------------------------------- | ------- | ------------ |
+| `.config/vwf.yaml`: `projects.<project>.design`           | read    | the repo     |
+| `${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`          | read    | vwf          |
+| `vwf-tools:design-import-conversations`, with the project | invoked | `/vwf:setup` |
 
 This skill writes no file.
 
 ## Phases
 
-| §    | Phase                                                                             | Gate | File                                  | Loads  |
-| ---- | --------------------------------------------------------------------------------- | ---- | ------------------------------------- | ------ |
-| 1–3  | Read the inputs, resolve the project's design tool, invoke the repo's own adapter | auto | [delegate.md](references/delegate.md) | always |
+| §   | Phase                                                                               | Gate | File                                  | Loads  |
+| --- | ----------------------------------------------------------------------------------- | ---- | ------------------------------------- | ------ |
+| 1–3 | Read the inputs, resolve the project's design tool, invoke the vwf-tools role skill | auto | [delegate.md](references/delegate.md) | always |
 
 ## Halt and pause
 
-| ID | Condition                                        | Action                                                                                                                                                                                                                                                                                                                                  |
-| -- | ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| H1 | `projects.<project>.design` is absent            | Stop, do not guess. Output only: `ERROR: no design tool configured for project <project>. Set projects.<project>.design in .config/vwf.yaml to one of the options the design-axis stack menu offers.`                                                                                                                                    |
-| H2 | The repo has no `design-import-conversations` skill | The project's `design:` pin has not been materialized. Stop, do not improvise against an API with no reference. Output only: `ERROR: no design adapter materialized for project <project>. Its design pin is "<value>". Run the stack materializer for that pin so the repo's own design-import-conversations skill exists, then retry.` |
-| H3 | The repo's adapter returns an empty result              | An empty result is not an answer. Output the failure line of Output, and never an empty payload.                                                                                                                                                                                                                                         |
+| ID | Condition                                                                                       | Action                                                                                                                                                                                                                                                                                                                                |
+| -- | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| H1 | `projects.<project>.design` is absent                                                           | Stop, do not guess. Output only: `ERROR: no design tool configured for project <project>. Set projects.<project>.design in .config/vwf.yaml to one of the options the design-axis stack menu offers.`                                                                                                                                 |
+| H2 | `vwf-tools` has no `design-import-conversations` skill, or it stops on an absent tool reference | The project's `design:` pin has not been set up in `vwf-tools`. Stop, do not improvise against an API with no reference. Output only: `ERROR: no design adapter in vwf-tools for project <project>. Its design pin is "<value>". Run /vwf:setup so vwf-tools:design-import-conversations and the tool's reference exist, then retry.` |
+| H3 | The role skill returns an empty result                                                          | An empty result is not an answer. Output the failure line of Output, and never an empty payload.                                                                                                                                                                                                                                      |
 
 ## Output
 

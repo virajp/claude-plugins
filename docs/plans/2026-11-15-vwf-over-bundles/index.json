@@ -129,7 +129,7 @@
       "status": "green",
       "started": "2026-11-23T11:52:59.864Z",
       "ended": "2026-11-23T12:01:19.720Z",
-      "commit": "",
+      "commit": "8b2edb10",
       "rounds": 1,
       "kind": "edit",
       "model": "opus",

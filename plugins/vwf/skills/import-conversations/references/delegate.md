@@ -29,15 +29,22 @@ config.
 
 If the key is absent, take H1.
 
-## §3 — Invoke the repo's own adapter, at a fixed name
+## §3 — Invoke the vwf-tools role skill, with the project
 
-Invoke `design-import-conversations`, and pass the inputs of §1.
+Invoke `vwf-tools:design-import-conversations`. Pass the registry project name
+as the first argument, then the inputs of §1.
 
 Do not look for a per-tool reference inside this plugin. None exists, by design.
-vwf names no design tool. The project's stack materializes the resolved tool's
-adapter into the repo's own `.claude/skills/`, under a fixed name.
+vwf names no design tool. `/vwf:setup` installs the resolved tool's reference
+into the machine's local plugin `vwf-tools`, at
+`~/.claude/plugins/local/vwf-tools/`, under the role skill
+`design-import-conversations`, which reads that project's tool itself.
+
+Do not look in the repo's `.claude/skills/`. A copy of
+`design-import-conversations` left there by an older setup is not read.
 
 The name is fixed, and is never built from the config value.
 
-If no such skill exists in the repo, take H2. If the repo's adapter returns an
+If `vwf-tools` has no `design-import-conversations` skill, or the call stops
+because the tool's reference is absent, take H2. If the role skill returns an
 empty result, take H3.
