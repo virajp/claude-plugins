@@ -33,13 +33,18 @@ names and nothing else. *Which* design tool answers is resolved **inside** the
 adapter, from the project's configuration — because that is a fact about the
 project, not about vwf's delegation.
 
-Those three skills in turn delegate once more, to **three more fixed names in
-the repo's own `.claude/skills/`** — `design-import-screens`,
-`design-import-design-system` and `design-import-conversations`. Those are what
-the project's `design:` pin materializes, and they are the only place a tool is
-named. It is the same seam that retired the `<plugin>-ux-gate` construction,
-reused rather than reinvented: a fixed name in the repo, resolved at
-materialization time, never assembled at run time.
+Those three skills in turn delegate once more, to **three role skills in the
+machine plugin `vwf-tools`** — `vwf-tools:design-import-screens`,
+`vwf-tools:design-import-design-system` and
+`vwf-tools:design-import-conversations` — each called with the **project
+name as its first argument**. A role skill reads that project's `design`
+value from `.config/vwf.yaml` and follows its tool's part,
+`skills/<role>/references/<tool>.md` in its own folder, which the project's
+`design:` pin installs into `vwf-tools`; that reference is the only place a
+tool is named. It is the same seam that retired the `<plugin>-ux-gate`
+construction, reused rather than reinvented: a fixed name, resolved at
+materialization time, never assembled at run time. The repo's own
+`.claude/skills/` is not read for them.
 
 The third name is the newest and was added to close a real hole: `/vwf:feedback
 canvas` used to reach one specific tool's MCP server by hardcoded prefix, so
@@ -62,8 +67,8 @@ one tool would be a vwf-imposed constraint on a decision vwf has no stake in.
 
 The value is a **tool token**, and since Wave D it is also the **slug of a
 menu entry on the `design` axis** — one value, not two spellings that can
-disagree. Teaching vwf a new tool means adding a pack and its bundle to the
-stack plugin; it never means a change in vwf, and vwf never learns the token's
+disagree. Teaching vwf a new tool means adding a design tool to the stack
+plugin; it never means a change in vwf, and vwf never learns the token's
 meaning.
 
 A product-wide `design.tool` is the pre-`config_format`-13 shape and is **not**
@@ -82,10 +87,11 @@ nothing.
 
 An adapter whose skills are user-only is indistinguishable, at runtime, from an
 adapter that returned an empty payload. It applies to **both** hops: vwf's three
-import skills, and the three materialized ones they delegate to. The stack
-plugin's own reviewer gate enforces the materialized half — all three present
-and all three model-invocable — because a missing one is silently unavailable
-rather than a smaller feature.
+import skills, and the three `vwf-tools` role skills they delegate to. The
+stack plugin's own checker enforces the second half — all three role skills
+present and model-invocable, and each design tool carrying all three
+references — because a missing one is silently unavailable rather than a
+smaller feature.
 
 ### The preflight, because the failure mode is silence
 
@@ -98,7 +104,7 @@ Three distinct halts, because they need three different fixes:
 | Condition                              | Message                                                                             |
 | -------------------------------------- | ------------------------------------------------------------------------------------- |
 | No design tool configured for the project | "No design tool for `<project>`. Set `projects.<project>.design` in `.config/vwf.yaml`." |
-| Configured tool has not been materialized | "`<project>` sets `design: <token>`, but the repo has no `design-import-*` skill. Materialize that pin." |
+| Configured tool has not been installed    | "`<project>` sets `design: <token>`, but `vwf-tools` has no `<role>` skill or no `references/<token>.md`. Run `/vwf:setup`." |
 | Adapter returned nothing / garbage        | "The design adapter returned no usable payload." (with the parse error)              |
 
 Never collapse these into one message. "Design import failed" sends the user
@@ -286,28 +292,31 @@ gets to do it:
 
 ## Adding a tool
 
-A new design tool is a **pack and a bundle in the stack plugin**, not a new
-plugin and not a new vwf code path. vwf changes not at all.
+A new design tool is a **folder under the stack plugin's `design-tools/`**,
+not a pack, not a new plugin and not a new vwf code path. vwf changes not at
+all.
 
-1. Add a `design-tool` pack with **all three** skills at the fixed names
+1. Name the folder by the **tool token** the project config will hold, so the
+   menu pick and the config key are one value: `design-tools/<tool>/`, with a
+   `tool.yaml` (`name`, `summary`, `version`) and a `conventions.md`.
+2. Write **all three** references, `references/<role>.md` for the roles
    `design-import-screens`, `design-import-design-system` and
    `design-import-conversations`, each stating how to read that tool and fill
    its payload. A tool with no review surface **still gets the third**; it
    returns `harvested: n/a` with the reason, which is what keeps *unsupported*
    distinguishable from *unimplemented*. The design-system payload's `brand:`
-   block is the one optional part: a tool that holds no logo leaves it out.
-2. Add a bundle on the `design` axis whose **slug is the tool token** the
-   project config will hold, so the menu pick and the config key are one value.
-3. All three must be **model-invocable**. A user-only one is invisible to vwf
-   and returns nothing rather than erroring.
+   block is the one optional part: a tool that holds no logo leaves it out. A
+   skill only that tool has goes in the folder's own `skills/`.
+3. The three role skills are shared, and stay **model-invocable**. A
+   user-only one is invisible to vwf and returns nothing rather than erroring.
 4. Each returns **only** the payload (YAML or JSON), nothing before or after —
    the same discipline as vwf's subagent return contracts.
 5. Unrecoverable fields are `null` with a line in `notes`. Never invent a screen
    code, a token value, or a component the tool did not actually report.
-6. Auth is the pack's business — tools differ (OAuth, an API key, an MCP
-   connection), and vwf deliberately knows nothing about it. No design-tool
-   pack lands an MCP server: the server is the user's to install. A tool
-   reached over MCP names its server in the `## MCP servers` section of the
-   pack's conventions — the name, what it is for, its install page — and a
-   skill that needs it and finds it missing asks the user to install it under
-   that name, and waits.
+6. Auth is the tool's business — tools differ (OAuth, an API key, an MCP
+   connection), and vwf deliberately knows nothing about it. No design tool
+   lands an MCP server: the server is the user's to install. A tool reached
+   over MCP names its server in the `## MCP servers` section of its
+   conventions — the name, what it is for, its install page — and a skill
+   that needs it and finds it missing asks the user to install it under that
+   name, and waits.

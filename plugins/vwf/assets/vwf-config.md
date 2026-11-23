@@ -78,18 +78,18 @@ integrations: true # external integration/secret exists → environment.md requi
 
 stacks: [ stackgen ] # the ADAPTER ROSTER — stack-plugin names, verbatim, in menu order (`[stackgen]` today; assets/stack-adapter.md). Product-wide: it names WHICH plugins are asked for a menu, never what any project picked. Written by `setup` (confirmed with the user); read by setup's topology-detection and workspace-structure references, and by each adapter's menu skill (stackgen's `stackgen-stack-menu`), which is invoked only when its plugin is listed here. Present since format 10 as the roster — the retired `stacks:` the `enforcement:` note below names was `enforcement.stacks`, a different key. Every name must be an installed plugin: a missing one is a halt, never an empty menu
 
-addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a slug of the installed stack plugin's `addon` axis. Written by /vwf:architecture's tools round, where nothing is ever preselected; materialized by /vwf:setup on every run, in the base repo only, and a slug dropped from the list is removed. Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision
+addons: [] # FORMAT 25. The OPTIONAL TOOLS the product picked — one list per product, each element a name of the stack plugin's `addon` axis — an entry of stackgen's assets/addons.yaml, the name being the Claude plugin's. Written by /vwf:architecture's tools round, where nothing is ever preselected; declared by /vwf:setup on every run in the base repo's `tools.claude.plugins.project` (`<plugin>@<marketplace>` = `<owner/repo>`), installed by `mise run setup:ai`, and a name dropped from the list is unset there (assets/stack-adapter.md, The addon axis). Absent or `[]` means none. Always a list: never `unresolved`, and never a pending decision
 
 repo: # REPO-level tooling, the counterpart to a project's stack. One block per repo; in multi-repo topology the base and each member carry their own
   stack:
-    template: repo/<slug> # a repo-axis template an INSTALLED stack plugin ships, or `unresolved` (format 16 — deferred, see The three axis states). No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
+    template: repo/<slug> # a repo-axis BUNDLE — one an INSTALLED stack plugin ships, or a repo bundle in .claude/stackgen/bundles/ — or `unresolved` (format 16 — deferred, see The three axis states). No `custom` — that value was retired in format 14; nothing on the menu means a halt, not a free-text pin
     # The pin is all `repo.stack` holds since FORMAT 28: the package manager is a bootstrap tool of category `package-managers` (The projects in bootstrap, below), and the repo tools list went with it
 
 projects: # per-project REALIZATION + nuances — no role/path/folder keys, ever (the role describes the system: registry.yaml; the folder is bootstrap's repo.projects.<name>.folder)
   <project-name>:
     repo: <member-name> # FORMAT 27. The member repo this project lives in — a key of bootstrap's repo.members. Absent for a project of the BASE repo, and under `repo`/`monorepo`. Was the member's `projects:` list in format 26. The registry names WHAT exists; this names WHERE
     stack: # the CONCRETE technology, structured. Lives here (never registry.yaml) so the blueprint is structurally incapable of naming a vendor. Written for EVERY project, always — an absent block is drift, not "the default", because /vwf:doctor cannot check what was never recorded
-      template: project/<slug> # the PROJECT-axis template, from an INSTALLED stack plugin, or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
+      template: project/<slug> # the PROJECT-axis BUNDLE — one an INSTALLED stack plugin ships, or a repo bundle in .claude/stackgen/bundles/ that /vwf:architecture composed — or `unresolved` (format 16 — deferred, see The three axis states). NOT a default: /vwf:architecture presents the menu and the user picks. `custom` was RETIRED in format 14 — the menu is the whole vocabulary, and a platform nothing fits halts rather than recording free text. Format 15 dropped the `<role>/` path segment: a template declares the platforms it serves in its own frontmatter (one template can serve several — a Flutter template covers mobile+tablet+desktop+auto), which a directory name cannot express. The pin must COVER every platform this project declares in the registry
       services: [
         <slug>,
       ] # the BACKING axis, PER PROJECT since format 13 (was one product-wide `backing:` block); named `services` since format 28. A LIST: one slug per capability the project needs — datastore, identity, queue, object storage, telemetry sink. `[]` when the project talks to no backing service at all (a `packages` platform, or a client app talking only to a `service`, usually does not). `unresolved` — the bare scalar, never an element — when the axis is deferred. An `addon` slug never sits here: an optional tool is the product's, in the top-level `addons:` list (format 25)
@@ -104,7 +104,7 @@ projects: # per-project REALIZATION + nuances — no role/path/folder keys, ever
       note: <one
         line> # optional — why this stack, when the reason is not obvious from the template name
     # NO `platforms:` key — a project's implemented surfaces are a system-shape fact and live in docs/blueprint/registry.yaml, the single source (format 19). Config carries realization: the stack and the design pins
-    design: <tool-token> # the DESIGN TOOL for this project's surfaces. Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. Since Wave D it is a pin on the DESIGN AXIS and the value is that menu entry's SLUG — one value, not a token plus a separate pin, so nothing can drift. vwf never constructs a skill name from it: the pin materializes three fixed-name adapters into the repo's own .claude/ (assets/design-adapter.md). Required for a project declaring any SCREEN platform, absent for every other project
+    design: <tool-token> # the DESIGN TOOL for this project's surfaces. Per project since format 13 (was one product-wide `design.tool`): a product may design its website in one tool and its app in another. Since Wave D it is a pin on the DESIGN AXIS and the value is that menu entry's SLUG — one value, not a token plus a separate pin, so nothing can drift. vwf never constructs a skill name from it: the pin installs the tool's part of the three role skills into the machine plugin vwf-tools, which vwf calls with the project name (assets/design-adapter.md). Required for a project declaring any SCREEN platform, absent for every other project
     cicd: <tool> # the CI SYSTEM that builds and releases this project. Per project since format 13, so a product whose projects ship through different pipelines can say so. Since Wave D it is a pin on the CICD AXIS, the value being that menu entry's slug — which is what finally made a CI template reachable at all, the menu having been the only door and no CI entry having existed. vwf owns the delivery-pipeline CONTRACT (assets/delivery-pipeline.md) and never the mechanism. In a monorepo every project repeats the same value — accepted, since the key's scope follows the other three rather than inventing a fourth scoping rule
     stylesheet: <slug> # the STYLESHEET approach for this project's web surfaces, and how the design system's semantic tokens are realized in it. Per project, like every other technology key since format 13. A pin on the STYLESHEET AXIS (`config_format` 19 — NOT the blueprint format 19 the neighbouring comments cite), the value being that menu entry's SLUG — one value, written once, nothing to drift against. Required for a project declaring a `site` or `webapp` platform, absent for every other project, the same shape `design`'s screen-platform condition takes. `unresolved` when deferred (see The three axis states) — the stylesheet round offers *defer this axis*, and the key is written so the postponed decision is visible rather than missing. vwf names NO approach here or anywhere: the menu is the installed stack plugin's, and what the pin materializes is doctrine — a conventions doc and a skill — never a landed config file
     coverage_target: <int> # per-project override of pipeline.coverage_target
@@ -367,14 +367,19 @@ earlier than 65/90/80), never loosen.
   after-landing steps" override covers them too. `change-plan` and `plan` never
   propose a listed command as a plan step. The key is **additive**, so it
   needed no `config_format` bump.
-- **`addons`** is a list of `addon`-axis slugs, one list per product; absent or
-  `[]` means no optional tool. `/vwf:architecture` writes it, showing the tools
-  round after the stack menu with nothing preselected. `/vwf:setup`'s materialize
-  pass reads it on every run and passes each slug to the stack adapter as a pin
-  for the base repo alone — in a single repo, the repo is the base — and removes
-  a slug dropped from it. `/vwf:doctor` reads it against the base repo's adapter
-  lockfile and reports a difference as drift, never blocking: a missing tool
-  stops no `plan` and no `execute`.
+- **`addons`** is a list of `addon`-axis names, one list per product; absent or
+  `[]` means no optional tool. Each is the name of an entry of the stack
+  plugin's `assets/addons.yaml`, which is the Claude plugin's name.
+  `/vwf:architecture` writes it, showing the tools round after the stack menu
+  with nothing preselected. `/vwf:setup`'s materialize pass reads it on every
+  run and declares each name in the base repo's `tools.claude.plugins.project`
+  — in a single repo, the repo is the base — as the key
+  `<plugin>@<marketplace>` with the value `<owner/repo>`, unsets the key of a
+  name dropped from it, and runs `mise run setup:ai`, which installs and
+  uninstalls them; it makes no stack-template pin for an addon
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The `addon` axis").
+  `/vwf:doctor` reads it against that map and reports a difference as drift,
+  never blocking: a missing tool stops no `plan` and no `execute`.
 - **A stamped config with no registry is a legal state**, not drift. `setup`
   writes this file at the end of its own run; `registry.yaml` arrives later,
   from `/vwf:architecture`. Between the two the product is

@@ -46,8 +46,23 @@ gets no row.
 `language_facts` or `optional_languages`, and an unlisted one was the
 `unknown` finding. A template's tokens and bootstrap's tool names are
 different vocabularies that cannot be compared, so that check is gone — from
-`/vwf:doctor`, from `/vwf:setup` and from `/vwf:execute`'s start — and a
-template's `language_facts` stay pack data, never matched against a tool name.
+`/vwf:doctor`, from `/vwf:setup` and from `/vwf:execute`'s start. Since the
+stack plugin's bundles name bootstrap tools, a template carries no language
+facts at all.
+
+## A bundle's tools, and the knowledge that follows them
+
+**A bundle's tools are bootstrap tool names.** A bundle — what a stack pin
+names — lists the tools it needs under `tools:`, each a name of
+`bootstrap catalog --json`, with no version: the version is bootstrap's pin.
+`/vwf:setup` adds each missing one and links it to the project; from then on
+the project's languages are read from the links as above, never from the
+bundle.
+
+**Tool knowledge follows the linked tools.** The skills and conventions
+written for a tool land because the project links that tool (or the bundle
+names it), never because anyone picked them from a menu: there is no menu
+entry for them, and vwf names none.
 
 ## The eight axes
 

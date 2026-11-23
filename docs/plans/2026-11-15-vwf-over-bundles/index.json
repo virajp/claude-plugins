@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-15 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-23T17:21 in .worktrees/all-2026-11-23-0333"
   },
   "consent": {
     "merge": true,
@@ -69,11 +69,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:52:59.654Z",
+      "ended": "2026-11-23T12:11:45.791Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 3,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -90,11 +90,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:52:59.723Z",
+      "ended": "2026-11-23T12:04:17.147Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 3,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -108,11 +108,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:52:59.793Z",
+      "ended": "2026-11-23T12:11:45.860Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 3,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -126,11 +126,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:52:59.864Z",
+      "ended": "2026-11-23T12:01:19.720Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -146,11 +146,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:52:59.933Z",
+      "ended": "2026-11-23T12:01:19.792Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -171,11 +171,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:53:00.009Z",
+      "ended": "2026-11-23T12:01:19.864Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -203,11 +203,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:53:00.080Z",
+      "ended": "2026-11-23T12:04:17.289Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "depends_on": [
@@ -258,7 +258,8 @@
         "readme.md",
         ".claude/docs/",
         ".claude/skills/",
-        "site/src/content/docs/"
+        "site/src/content/docs/",
+        "plugins/stackgen/.claude-plugin/plugin.json"
       ]
     },
     {
@@ -283,8 +284,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T11:52:59.619Z",
       "ended": ""
     },
     {
@@ -647,6 +648,45 @@
       "units": [
         "U4"
       ]
+    },
+    {
+      "id": "D36",
+      "decision": "Q1: When /vwf:architecture composes a bundle, who names its slug and where does its kind come from?",
+      "ruling": "Architecture proposes the slug <project>-<axis> for the user to confirm, asks kind as an MCQ over the menu compose.kinds, and U1 adds kind to the adapter compose lines.",
+      "rejected": "The user types the slug and no kind is sent",
+      "units": [
+        "U2",
+        "U1"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Q2: When composing a bundle, what does architecture packs question offer?",
+      "ruling": "Free-text pack refs, checked by stackgen compose:, re-asked when it returns ERROR (as U2 wrote it); no payload change.",
+      "rejected": "U1 and U10 add a packs list to the menu compose block and architecture asks it as an MCQ",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q3: How should setup materialize step 1 (convert old lock rows, D6) run stackgen-sync, which has disable-model-invocation: true?",
+      "ruling": "U10 drops disable-model-invocation on stackgen-sync (and its user-only sentence) so setup can invoke it on consent; D6 stands as written.",
+      "rejected": "Setup stops that repo pass and tells the user to run /stackgen:stackgen-sync, then re-run /vwf:setup",
+      "units": [
+        "U3",
+        "U10"
+      ]
+    },
+    {
+      "id": "D39",
+      "decision": "Q4: When a pinned bundle is dropped, does it leave through setup deleting the recorded files or through stackgen-stack-template remove:, and who removes its bootstrap tools?",
+      "ruling": "Keep setup own deletion: U1 reverts stack-adapter.md:375 so remove: covers what it did before, minus addons; U3 fixes the dangling Every other dropped slug at materialize.md:272; a dropped bundle tools stay selected and are named in setup report.",
+      "rejected": "Setup calls remove: <slug> for every dropped bundle and stackgen removes the tools through bootstrap remove tool",
+      "units": [
+        "U1",
+        "U3"
+      ]
     }
   ],
   "stages": {
@@ -675,8 +715,21 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U8",
+      "stage": "",
+      "text": "R1 rule-5 finding: plugins/stackgen/.claude-plugin/plugin.json:5 description still says bootstrap adds the tools and installs addons; no unit owned it · U8 owns widened to that file under the plan Goal, the passage handed to U8 as DOCS FALSIFIED",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-15-vwf-over-bundles.jsonl"

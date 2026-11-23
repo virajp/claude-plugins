@@ -84,6 +84,12 @@ projects:
       deploy: unresolved
 ```
 
+**A pin names a bundle** on every axis but `design` and `addon`: a bundle the
+plugin ships, or a **repo bundle** the menu's `compose` verb wrote into the
+repo's `.claude/stackgen/bundles/` ([Composing a bundle](#composing-a-bundle)).
+vwf cannot tell the two apart and need not: both are menu entries, and both
+resolve through the same `-stack-template` call.
+
 Since **config_format 13** the `backing` and `deploy` axes are per project, not
 product-wide. That is what lets one product run its site on one cloud and its
 API on another while both draw from the same installed plugins: the roster is
@@ -118,6 +124,7 @@ vwf invokes skills on each configured plugin, at **exactly** these names:
 | Skill                                      | Kind   | Returns                     |
 | ------------------------------------------ | ------ | --------------------------- |
 | `/<plugin>:<plugin>-stack-menu`            | data   | a **menu payload**          |
+| `/<plugin>:<plugin>-stack-menu compose:`   | action | the composed bundle's slug  |
 | `/<plugin>:<plugin>-stack-template <slug>` | data   | a **template payload**      |
 | the repo's own `ux-gate` skill             | action | **UX findings** (UI stacks) |
 
@@ -183,23 +190,68 @@ missing plugin is a **halt** with the install command, never an empty menu.
 
 ## The menu payload
 
-Returned by `-stack-menu`. One entry per template the plugin offers:
+Returned by `-stack-menu`. One entry per option the plugin offers — each
+**shipped bundle**, each **repo bundle** in the repo's
+`.claude/stackgen/bundles/`, each **design tool** and each **addon** — plus
+the one open entry, **compose a bundle**:
 
 ```yaml
 plugin: <name>
 templates:
-  - slug: <kebab> # unique within the plugin
+  - slug: <kebab> # unique within the plugin — a bundle's filename, a design tool's token, an addon's name
     axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
-    platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this template serves
+    kind: <bundle kind> # BUNDLES ONLY
+    platforms: [ <platform> ] # PROJECT AXIS ONLY — which registry platforms this bundle serves
+    tools: [ <bootstrap tool name> ] # BUNDLES ONLY — the bootstrap tools the bundle needs, no version; [] when none
     name: <display name> # what the menu shows
     summary: <one line> # why you would pick it
-    default: true # OPTIONAL — at most one entry per axis per platform; vwf preselects the one it offers. Never on the addon axis
-    needed_by: <string> # OPTIONAL, ADDON AXIS ONLY — names the shipped pack that needs this tool
+    default: true # OPTIONAL — at most one entry per axis per platform; vwf preselects the one it offers. Never on a repo bundle, a design tool or an addon
+    needed_by: <string> # OPTIONAL, ADDON AXIS ONLY — names what needs this addon
+    plugin: <plugin> # ADDON AXIS ONLY — the Claude plugin the addon is; equals the slug
+    marketplace: <marketplace> # ADDON AXIS ONLY — the marketplace the plugin installs from
+    repo: <owner/repo> # ADDON AXIS ONLY — the marketplace's source repo
+compose: # the OPEN ENTRY, present on every answer
+  verb: compose
+  axes: [ <axis> ] # the axes a composed bundle may sit on
+  kinds: [ <bundle kind> ] # the bundle kinds compose takes
+  summary: <one line>
 ```
+
+A **bundle** is what a user picks on the technology axes: it names the
+bootstrap tools it needs under `tools:` and the knowledge packs it composes
+under `packs:`. The menu entry carries its `tools:` so `/vwf:setup` can add and
+link them before it materializes the bundle; its `packs:` stay the plugin's
+business. A **design tool** is one `design`-axis entry whose slug is the tool
+token; an **addon** is one `addon`-axis entry whose `plugin`, `marketplace` and
+`repo` are what `/vwf:setup` declares ([The `addon` axis](#the-addon-axis)).
 
 vwf renders the union of every configured plugin's menu, grouped by axis and
 (for the project axis) filtered to the **platforms** being decided. It never
-reads a template file.
+reads a bundle file.
+
+### Composing a bundle
+
+When no bundle fits, `/vwf:architecture` composes one rather than leaving the
+axis without a pin: it proposes the slug `<project>-<axis>` for the user to
+confirm, asks the kind as an MCQ over the compose block's `kinds`, asks for
+the bootstrap tools (from `bootstrap catalog --json`), the knowledge packs,
+and any item no pack covers, then calls
+`/<plugin>:<plugin>-stack-menu compose:` with one line each:
+
+```yaml
+slug: <kebab> # the slug vwf will pin — proposed as <project>-<axis>, confirmed by the user
+axis: <axis> # one of the compose block's axes
+kind: <bundle kind> # one of the compose block's kinds — the user's MCQ answer
+platforms: [ <platform> ] # project axis only
+tools: [ <bootstrap tool name> ] # no version
+packs: [ <type>/<slug>@<version> | <type>/<slug>@generated ] # an item no pack covers is an @generated ref
+```
+
+The verb checks each tool and pack, writes the repo bundle
+`.claude/stackgen/bundles/<slug>.md`, commits nothing, and returns one line,
+the slug, which vwf records as the pin. A refusal is an `ERROR:` line naming
+what it refused, and vwf records nothing. An axis the user neither picks nor
+composes stays `unresolved`.
 
 **`default: true` is the adapter's to set, and vwf never infers one.** An
 entry carrying it is what the menu **preselects** on its axis — highlighted, not
@@ -277,15 +329,17 @@ needs are made from that doctrine, not landed by the pin.
 **`design` is where the design adapter's per-tool knowledge now comes from.**
 vwf still names no tool: the adapter contract
 (`${CLAUDE_PLUGIN_ROOT}/assets/design-adapter.md`) defines the payloads and the
-three fixed skill names, and the pinned template materializes the resolved
-tool's implementation of them into the repo's own `.claude/`.
+three role skills, and the pinned design tool installs its part of each into
+the machine's local plugin `vwf-tools`, as
+`skills/<role>/references/<tool>.md`. A design tool is no bundle: its entry
+names no `tools:` and no `packs:`.
 
 ### The `addon` axis
 
-The optional tools a product may pick, recorded in `.config/vwf.yaml`'s
-top-level `addons:` list. The menu calls them optional tools; the axis and the
-key are `addon` so neither reads as `repo.stack.tools` or as the three tool axes
-above.
+The optional Claude plugins a product may pick, recorded in
+`.config/vwf.yaml`'s top-level `addons:` list. The menu calls them optional
+tools; the axis and the key are `addon` so neither reads as `repo.stack.tools`
+or as the three tool axes above.
 
 **The `addon` round differs from every other round:**
 
@@ -296,25 +350,36 @@ above.
 - **no generate entry** — the open entry never appears on this round;
 - **no defer** — `addons:` is always a list, `[]` when none, so the round never
   returns `unresolved`;
-- **`needed_by`** — an entry a shipped pack needs may name that pack in this
+- **`needed_by`** — an entry a design tool needs may name that tool in this
   optional string, which the round shows beside the entry. It selects nothing.
 
-**vwf passes each `addons:` slug as an `addon`-axis pin**, one call per slug
-through `/<plugin>:<plugin>-stack-template <slug>`, **to the base repo only**:
-the call carries no `repo:` line, and in a multi-repo product members get none.
-In a single repo, the repo is the base. **The call is made on every
-`/vwf:setup` run**, including for a slug the lockfile already names, because a
-pick is committed while each person's first run on a machine still has the
-pack's per-machine part to land. **An addon lands no server**: no pack lands an
-MCP server, each is the user's to install, and a pack that needs one names it in
-the `## MCP servers` section of its conventions.
+**An addon is a Claude plugin, and bootstrap installs it.** `/vwf:setup`
+declares each `addons:` slug in the `claude` tool's
+`tools.claude.plugins.project` map of the **base repo** — the key
+`<plugin>@<marketplace>`, the value `<repo>`, all three from the addon's menu
+entry — and in a multi-repo product members get none. In a single repo, the
+repo is the base. Setup reads the map with `bootstrap config get`, edits it,
+and writes the whole map back with `bootstrap config set
+tools.claude.plugins.project '<JSON object>'`; a `claude` tool the repo has not
+selected is added first with `bootstrap add tool claude`, on a consent. **A
+slug dropped from `addons:` is unset in the same write**: each key that matches
+an addon entry no longer in `addons:` leaves the map, and every other key
+stays. When this run set or unset a key and `claude` is selected, setup runs
+`mise run setup:ai`, which installs what the map lists and uninstalls a project
+plugin that left it. **An addon is no stack-template pin**: setup makes no
+`-stack-template` call for it and no `remove:` call when it is dropped.
+**An addon lands no server**: no pack lands an MCP server, each is the user's
+to install, and a pack that needs one names it in the `## MCP servers` section
+of its conventions.
 
-**A slug dropped from `addons:` leaves through one call of its own**,
-`/<plugin>:<plugin>-stack-template remove: <slug>`, made once per slug by
-`/vwf:setup` in the base repo, never by setup deleting its files, which would
-leave the slug's claims, skill files and bootstrap records behind. The call
-takes any slug the lockfile records, on any axis; it returns no payload, one
-line, **removed** or **declined**. One more form exists: `remove: key <name>`
+**A slug leaves a lockfile through one call of its own**,
+`/<plugin>:<plugin>-stack-template remove: <slug>`, the form `/vwf:setup`'s
+format steps make for each component they retire. The call takes any slug the
+lockfile records, on any axis; it returns no payload, one line, **removed** or
+**declined**. A pin dropped from an axis is not removed through it: `/vwf:setup`
+deletes the files the lockfile records for that pin itself, on its own consent,
+and a dropped bundle's bootstrap tools stay selected, named in setup's report.
+One more form exists: `remove: key <name>`
 deletes one server key from this machine's local plugin manifest and its claims
 file, commits nothing and returns the removed key name — the form the machine
 part of `/vwf:setup`'s `config_format` `25 → 26` step calls. That step's repo
@@ -331,9 +396,10 @@ and `/vwf:setup` offers it again on the next run.
 `/<plugin>:<plugin>-stack-template reconcile-claims:`, once per run in the base
 repo on each plugin named in `stacks:`, whether or not a slug was dropped. It
 takes no slug and returns no payload, one line, **removed**, **declined** or
-**unchanged**. An addon dropped on another machine reaches this one by a pull,
-so no `remove:` call is made for it, while this machine still holds this repo's
-claim on its tools; the plugin drops each claim its lockfile no longer records,
+**unchanged**. A pin dropped on another machine — a design tool re-pinned, a
+bundle whose server left — reaches this one by a pull, so no `remove:` call is
+made for it, while this machine still holds this repo's claim on its
+`vwf-tools` keys; the plugin drops each claim its lockfile no longer records,
 on one consent of its own. A plugin holding no such claim returns **unchanged**
 and asks nothing. vwf wraps it in no consent and no commit. A decline changes
 nothing and `/vwf:setup` offers it again on the next run.
@@ -361,28 +427,37 @@ Returned by `-stack-template <slug>` once the user picks. Carries what
 
 ```yaml
 slug: <kebab>
-axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
-languages: [ <token> ] # open; the plugin owning the language defines its facts
-optional_languages: []
+axis: project | backing | deploy | repo | design | cicd | stylesheet
+kind: <bundle kind> # omitted on the design axis
+tools: [ <bootstrap tool name> ] # the bundle's tools: — omitted on the design axis
+packs: [ <type>/<slug>@<version | generated> ] # the bundle's packs: — omitted on the design axis
+platforms: [ <platform> ] # project axis only
+languages: [ <token> ] # the bundle's tools whose catalog category is languages
 frameworks: [] # open, lowercase-kebab
 dependencies: [] # open, lowercase-kebab
 os: # optional, project axis only — which OS the template targets on each platform; vwf maps (platform, OS) to a canvas frame; absent means no OS known
   <platform>: [ <os> ] # tokens from standard-flows.md's OS vocabulary, primary first
 capabilities: [] # backing axis — capability-vocabulary.md tokens
 artifact: <token> # deploy axis
-package_manager: <token> # any axis composing a package manager
-lockfile: [ <path | glob> ] # optional, any axis composing a package manager — where its lockfile may sit; any match passes
-harness: # HOW this stack satisfies each capability
-  <capability>: { task: <name>, mechanism: <one line> } # or `n/a`
 conventions: <prose> # layout, testing, placement — read by plan/execute
 ```
 
-The `harness` block is what replaces the tool names vwf used to carry: it says
-*how* the stack satisfies each capability. vwf reads a capability only by its
-one task name (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — "can this repo run
-`screenshots`?" is "does the `screenshots` task exist?" — and `/vwf:doctor`
+**The payload names the bundle's tools and none of their facts.** A
+language's server, its toolchain, its package manager, its lockfile and the
+tasks that satisfy each capability are bootstrap's, read from the repo through
+the bootstrap CLI, and no payload declares them. vwf reads a capability only by
+its one task name (`${CLAUDE_PLUGIN_ROOT}/assets/harness.md`) — "can this repo
+run `screenshots`?" is "does the `screenshots` task exist?" — and `/vwf:doctor`
 checks that the task exists; it never checks *which* tool. Since
-`config_format` 28 nothing of this block is copied into `.config/vwf.yaml`.
+`config_format` 28 nothing of the payload's capability mechanism was copied
+into `.config/vwf.yaml`, and since the bundles named bootstrap tools the
+payload carries none.
+
+**The materialized entry carries the same `tools:`.** The entry a
+materialization writes, `.claude/stackgen/templates/<slug>.md`, records the
+bundle's `tools:` in its frontmatter, which is what `/vwf:doctor` reads to
+check that each tool is selected and linked. An `addon` slug has no payload:
+an addon is no stack-template pin ([The `addon` axis](#the-addon-axis)).
 
 ### Resolving the conventions
 
@@ -441,22 +516,17 @@ repo's CLAUDE.md stays vwf's domain — the materializer ends by recommending
 `/vwf:setup`. The `stackgen` plugin is this variant's implementation; vwf's
 side of the contract is three rules:
 
-- **The payload may carry `language_facts`** — per language, the facts a
-  language plugin would otherwise supply (LSP provision, mise tool, manifest;
-  `n/a` where honest), plus an optional fourth, `binaries` — the
-  executables the stack needs on `PATH` that mise does not manage (Xcode's
-  `xcodebuild`, say), absent meaning none. Each entry is a bare name, looked
-  up on `PATH`, or a map `{ name: <binary>, probe: "<command>" }`, whose
-  probe `/vwf:doctor` runs and requires to exit 0 — run only while the
-  template entry matches what the lockfile last recorded, and reported not
-  run otherwise. Since `config_format` 28 a project's languages are its
-  linked bootstrap tools (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`),
-  and no `language_facts` token is matched against a tool name: nothing is
-  *known* or *unknown* by these facts any more. One more fact rides the
-  payload outside `language_facts`: **`lockfile:`**, on whichever payload
-  composes a package manager — the repo axis's or a project template's
-  alike — the repo-relative paths or globs where that package manager's
-  lockfile may sit, any match passing `/vwf:doctor`'s lockfile check.
+- **The payload carries the bundle's `tools:`, never their facts.** A bundle
+  names the bootstrap tools it needs; `/vwf:setup` adds each missing one and
+  links it to its project before the first fetch, and the materializer lands
+  the **tool knowledge** — the skills and conventions written for a tool —
+  that follows the tools the project links, never a menu pick. A project's
+  languages are its linked bootstrap tools
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`); the LSP servers the
+  materializer writes into `vwf-tools` are bootstrap's, from `bootstrap lsp
+  --json`. The per-language facts, the required binaries and their probes,
+  and the lockfile paths a payload once carried are gone, and `/vwf:doctor`
+  checks none of them.
 - **A materialized fetch is a pure read.** Once a slug is materialized, every
   `-stack-template` call returns the committed payload from the repo — so
   `plan`'s and `execute`'s conventions resolution behaves exactly as
@@ -466,42 +536,39 @@ side of the contract is three rules:
   `/vwf:architecture` has recorded the pin. Architecture decides; setup lands
   the decision, in the repo the pin belongs to. A pin whose materialization was
   declined is **unmaterialized**, and the fetch says so rather than generating
-  silently — `/vwf:setup` offers it again on its next run. The one call that
-  may do more is `/vwf:setup`'s every-run call for an `addon` pin
-  ([The `addon` axis](#the-addon-axis)): the entry is read as above, and what
-  that pin lands per machine and this machine lacks is the adapter's to offer
-  behind its own consent — never an MCP server, which is the user's to install.
-  That is not the `unresolved` axis state above and must not be recorded as one:
-  the axis *was* answered, and what is missing is the artifact, not the decision.
-- **The menu may carry one open entry.** A materializing adapter's menu may
-  offer *generate for an uncovered technology* (pinned as
-  `generated/<technology-slug>`) alongside its curated entries. That entry is
-  consent-gated, reviewer-gated generation — not the retired free-text
-  `custom`: nothing lands unresearched, unreviewed, or unrecorded, and the
-  resulting pin resolves to a real materialized template every later check
-  verifies. The open entry is not the only door into generation: a
-  materializing adapter may also generate *part* of an otherwise curated pin,
-  and vwf sees the same thing either way — one payload, one consent-gated
-  materialization. The no-fitting-template **halt** still applies when
-  nothing on any menu fits *and* no installed adapter offers generation.
+  silently — `/vwf:setup` offers it again on its next run. That is not the
+  `unresolved` axis state above and must not be recorded as one: the axis
+  *was* answered, and what is missing is the artifact, not the decision.
+- **The menu carries one open entry, compose a bundle.** A materializing
+  adapter's menu offers it alongside its curated bundles
+  ([Composing a bundle](#composing-a-bundle)): the composed repo bundle names
+  bootstrap tools and knowledge packs, and an item no pack covers is an
+  `@generated` ref the first fetch generates. That is consent-gated,
+  reviewer-gated generation — not the retired free-text `custom`: nothing
+  lands unresearched, unreviewed, or unrecorded, and the resulting pin
+  resolves to a real materialized template every later check verifies. A
+  shipped bundle may hold `@generated` refs too, and vwf sees the same thing
+  either way — one payload, one consent-gated materialization. The
+  no-fitting-template **halt** still applies when nothing on any menu fits
+  *and* no installed adapter offers composition.
 
 **The adapter supplies bundles; the universal tools are
 [bootstrap](https://github.com/virajp/bootstrap)'s.** The repo's toolchain
 manager and the tools every repo carries are not a bundle any more: `/vwf:init`
-runs `bootstrap migrate`, and a pack hands the tools it needs to bootstrap
-through the adapter. A repo is shaped when the shaped test of
-`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` passes; a repo's answers
-live in `.config/bootstrap/`, written by the bootstrap CLI; and `/vwf:doctor`
-finds drift with `bootstrap check --json` and `bootstrap sync --json
---dry-run`.
+runs `bootstrap migrate`, and a bundle names the bootstrap tools it needs
+under `tools:`, which `/vwf:setup` adds and links. A repo is shaped when the
+shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` passes; a
+repo's answers live in `.config/bootstrap/`, written by the bootstrap CLI; and
+`/vwf:doctor` finds drift with `bootstrap check --json` and `bootstrap sync
+--json --dry-run`.
 
 ## The UX gate
 
 `execute-ux-reviewer` no longer knows how to render anything. For a UI slice it
 invokes the repo's **own** `ux-gate` skill — a fixed name in the repo's
-`.claude/skills/`, materialized there by whichever pack owns the project's
-stack — passing the slice, the changed screens, the design-system path and the
-flow's Screens contract.
+`.claude/skills/`, materialized there with the tool knowledge of the
+project's stack — passing the slice, the changed screens, the design-system
+path and the flow's Screens contract.
 
 **The name is fixed, and that is the point.** vwf used to construct a name,
 the retired `<plugin>-ux-gate`, from the stack pin, which stops working the
@@ -537,7 +604,7 @@ vwf's rule is unchanged and stays vwf's: `rendered: n/a` on any UI slice is a
 gap that reaches the final human gate, never a silent downgrade to a code-only
 review. What counts as "rendered" is the plugin's call.
 
-**A pack with no UI surface materializes no `ux-gate`**, and vwf finds none —
+**A stack with no UI surface materializes no `ux-gate`**, and vwf finds none —
 a project with no screens has nothing to render. That absence is the same
 `rendered: n/a` path as a gate that declined, and carries the same rule: it
 reaches the final human gate rather than downgrading silently.
@@ -550,11 +617,13 @@ reaches the final human gate rather than downgrading silently.
    `skills/<name>-stack-template/SKILL.md`, both
    **`disable-model-invocation: false`**. A user-only skill cannot be invoked by
    vwf and the failure is silent.
-3. A UI-owning pack materializes `skills/ux-gate/SKILL.md` into the repo's
+3. A UI stack materializes `skills/ux-gate/SKILL.md` into the repo's
    `.claude/` — an unprefixed, fixed name, because vwf invokes it there rather
    than through the plugin.
-4. The templates themselves, in the plugin's own tree — their layout is the
-   plugin's business; only the payload is contracted.
+4. The menu skill's `compose:` verb, which writes a repo bundle and returns
+   its slug ([Composing a bundle](#composing-a-bundle)).
+5. The bundles themselves, in the plugin's own tree — their layout is the
+   plugin's business; only the payloads are contracted.
 
 There is no registration step: the marketplace manifest is generated from the
 manifests, so adding the plugin is the registration.
