@@ -3,7 +3,7 @@ name: doctor
 description: Check that the repo actually matches what .config/vwf.yaml declares
   — per-language
   LSP servers and toolchains, each project's frameworks and dependencies against
-  its manifest, the harness task names, health endpoints, the docs/memory/
+  its manifest, the harness capability tasks, health endpoints, the docs/memory/
   store, leftovers of retired tools, and format-stamp drift.
   Reports; never writes without consent. Run it after setup, before execute, or
   any time the repo and the config might have drifted apart.
@@ -106,16 +106,15 @@ nothing. With no `prefer:`, doctor offers as §9 says.
   `prefer: report only` drops the offer (see Caller Preferences).
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule.
-- **Unavailable ≠ missing ≠ unknown ≠ not materialized.** A language with no
+- **Unavailable ≠ missing ≠ not linked ≠ not materialized.** A language with no
   LSP shipped in this marketplace is reported as *unavailable* with no suggested
   command; only a language that *has* a plugin and isn't installed is a
-  *missing* finding. Both presuppose the language is **known**. One that no
-  materialized template of its project lists — under `language_facts` or
-  `optional_languages`, no installed plugin read — is *unknown*, and unknown is
-  a **degradation**, never blocking, whether the project's `template` is pinned
-  or reads `unresolved`: `checks.mjs` reports it so, and doctor reports that
-  finding as it comes (§3). `/vwf:execute` asks the user whether to continue or
-  stop on it; `/vwf:setup` alone stops on it, by its own rule. vwf's stack menu
+  *missing* finding. A language is a bootstrap tool of category `languages`
+  linked to the project (`bootstrap describe --json`); a project no such tool
+  links is a **degraded** row, never blocking, unless every platform it declares
+  is `iac`, `cicd` or `misc` (§3). A registry project with no bootstrap
+  `repo.projects.<name>` entry is a **degraded** row too (§3). No degraded row
+  stops `/vwf:execute`. vwf's stack menu
   is still closed to what the installed plugins define
   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). And a pin whose adapter
   materializes but never landed the payload in its target repo is *not
@@ -202,8 +201,11 @@ node ${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs [--projects a,b] [--
 It covers exactly: not onboarded and early (both `info`), membership both
 directions and the member url, a missing `mise`, a `custom` pin, template
 platform coverage, an `iac` project inside another repo with its recorded
-decline, pinned not materialized, an unknown language, and binaries with their
-probes. It prints one JSON object, `{base, projects, findings}`, each finding
+decline, pinned not materialized, a project no language tool links, a registry
+project with no bootstrap folder entry, binaries with their probes, and the
+`harness` row — a capability a project's platforms imply (`dev`, `screenshots`,
+`goldens`) absent in the repo that holds it, **degraded** (§6). It prints one
+JSON object, `{base, projects, findings}`, each finding
 `{rule, severity, project, subject, message, remedy}` — `project` `null` on a
 repo-level row, `severity` one of `blocking`, `degraded`, `drift`, `missing`,
 `unavailable`, `info`. Exit 0 when no row is `blocking`, 1 when one is, 2 on a
@@ -226,8 +228,8 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per language, required binaries on `PATH` or their declared probes, an unknown language, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, the vwf plugin at any scope (`claude plugin list --json`, blocking when installed at no scope) and the base's `virajp-plugins` tool (`bootstrap describe --json`, drift when missing; a note when the catalog lacks it), and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
-| **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Harness task names and health paths; the `docs/memory/` store's handoff ignore line |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per linked language tool, required binaries on `PATH` or their declared probes, a project no language tool links, a registry project with no bootstrap folder entry, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each package-manager tool's lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, the vwf plugin at any scope (`claude plugin list --json`, blocking when installed at no scope) and the base's `virajp-plugins` tool (`bootstrap describe --json`, drift when missing; a note when the catalog lacks it), and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Each required capability's task and health paths; the `docs/memory/` store's handoff ignore line |
 | **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
 
 **Full mode's drift check runs bootstrap.** Bootstrap drift (§5) is
@@ -316,24 +318,23 @@ row. A repo behind its baseline still works, so none of those is ever blocking),
 **warning** (the repo-shape check could not judge a row, or read a value it cannot
 use; never blocking),
 **missing** (something declared has no install — including a **`B`**-kind
-capability a project declares that none of its `backing_template` pins provides,
+capability a project declares that none of its `services` pins provides,
 which is never blocking; §5), **unavailable** (nothing shipped here to install),
-**unknown** (no materialized template of its project lists it — the
-`checks.mjs` row as it comes, a degradation, never blocking,
-listed separately so the remedy reads as *install or write the plugin*, never
-*install this one*), **pinned, not materialized** (§3's neighbour to that one
-and never folded into it: the token *is* declared, by a template the adapter
-would have landed here and did not, so the remedy is the one line `/vwf:setup` —
-its materialize pass, never `/vwf:architecture` — and the row is one per project
-rather than one per token, reached only after a declined landing or on a repo
-setup has not re-run on, and blocking while the pin stands), **degraded**
+**pinned, not materialized** (§3: the template is pinned, and the adapter
+would have landed it here and did not, so the remedy is the one line
+`/vwf:setup` — its materialize pass, never `/vwf:architecture` — and the row
+is one per project rather than one per language, reached only after a declined
+landing or on a repo setup has not re-run on, and blocking while the pin
+stands), **degraded**
 (something optional is absent and a fallback is carrying the work, or the run
 simply costs more — a forge CLI that is absent, unauthenticated or without the
 `project` scope, which leaves `/vwf:backlog` unreadable and predicate (g) of
 the repo-shape check unread (§5)
 — **or** a decision the user has not yet made or has declined on the record: an
 axis reading `unresolved`, whose dependent checks report
-`not checked — no stack resolved` (§§3–5), a `binaries` name missing from `PATH`
+`not checked — no stack resolved` (§§3–5), a project no language tool links or
+with no bootstrap `repo.projects.<name>` entry (§3), a harness capability its
+platforms imply and its repo lacks (§6), a `binaries` name missing from `PATH`
 or failing its probe while its project's `template` reads `unresolved` (§3),
 and an `iac` extraction declined under `enforcement:`, each reported every run
 and never escalating back to blocking). §8's leftovers are **drift**, listed
@@ -341,11 +342,12 @@ under their own heading. State the count of checks that passed rather than
 listing them.
 
 Close with the remedies, each as a runnable line, and offer to apply only the
-ones that are pure config edits (a stale `stack` entry, a harness task rename).
+ones that are pure config edits (a stale `stack` entry).
 Anything that installs, or that changes
 code, is reported and left to the user — as is anything needing a **choice**: a
-`custom` pin and an unknown language both look like one-line config edits and
-are not, since resolving either means picking off a menu or installing a plugin.
+`custom` pin and a project no language tool links both look like one-line
+config edits and are not, since resolving either means picking off a menu or
+adding a tool.
 Nudge plain `/vwf:setup` — the config-side door, never `reshape` — and stop
 there; a template doctor guessed would silently change what `plan` and `execute`
 read.

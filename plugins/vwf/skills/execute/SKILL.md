@@ -144,7 +144,7 @@ Read each `sometimes` file where it applies, and never upfront.
 | The release levels in `.config/bootstrap/releases.toml`, through `bootstrap config` only                              | raised on a merged landing   | this skill; the release step clears |
 | `docs/memory/decisions/`, `docs/memory/problems/`, `docs/memory/gaps/`                                                | read; decisions written      | the memory rule               |
 | `docs/scratchpad/<project>/renders/` in the main checkout                                                             | written by `renders.mjs`     | this skill                    |
-| `.config/vwf.yaml`                                                                                                    | read; `harness:` at Reconcile | the repo                     |
+| `.config/vwf.yaml`                                                                                                    | read                         | the repo                      |
 | Registry: `docs/blueprint/registry.yaml` — *cycle plans only*                                                         | read; updated at Reconcile   | the blueprint                 |
 | Flow (slice): `docs/blueprint/flows/<project>/<NNN>-<flow>/index.md` — *cycle plans only*                             | read                         | the blueprint                 |
 | Entity: `docs/blueprint/entities/<entity>/` (`index.md` + schema) — *cycle plans only*                                | read                         | the blueprint                 |

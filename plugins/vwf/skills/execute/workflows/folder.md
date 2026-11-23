@@ -128,9 +128,8 @@ result.
     [questions.md](../references/questions.md). If the status line still reads
     the same `UNRESOLVED:` with no answer recorded, stop and say which ruling is
     missing.
-  - An `unknown-language` row in the result is not asked about: the fresh run
-    asked, and the claim shows the user chose continue (*An unknown language* in
-    [claim.md](../references/claim.md)).
+  - A `degraded` row in the result is not asked about: it never stops a run,
+    fresh or resumed.
   - The row reads `RUNNING` already, and is left alone. A row reading `APPROVED`
     is always a fresh run: an unclaimed plan is claimed again in
     [claim.md](../references/claim.md).

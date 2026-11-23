@@ -181,8 +181,11 @@ the list that knows which projects live in a member is the base's:
 3. otherwise the same **type**, for that member's project.
 
 **A sub-project directory is defined here, once.** Where a registry exists, the
-sub-project directories are the registry's `projects[].path` list, and nothing
-else in the tree is one. Where none does, the term is live in **`source` mode
+sub-project directories are its projects' folders — each one's
+`bootstrap config get repo.projects.<name>.folder --json`, run in the repo that
+holds it, the registry having no `path` since `blueprint_format` 26 — and
+nothing else in the tree is one. A failed `bootstrap` call stops with
+bootstrap's `errors`. Where none does, the term is live in **`source` mode
 only**, and means a non-root directory that carries its **own language manifest**
 from the table below, or that a **workspace file** at the root enumerates as a
 member. `docs/`, `scripts/`, `.config/`, `.github/` and any dot-directory never

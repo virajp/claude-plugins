@@ -5,11 +5,10 @@
 Reconcile runs **before** the docs unit's wave, so that unit's delta is complete. The
 human docs are the docs unit's, not this step's; this skill runs no docs-sync of its own.
 
-1. **Architecture, environment, harness and implementation stamps — with `covers`**.
+1. **Architecture, environment and implementation stamps — with `covers`**.
    Reconcile per the Reconcile section of `${CLAUDE_PLUGIN_ROOT}/assets/execute-stages.md`:
    - the registry block for any topology change;
    - `environment.md` for any new secret or env var;
-   - the `.config/vwf.yaml` `harness:` block for any capability the run added;
    - the **`implementation:` stamp** on each blueprint doc in the plan's `covers` list, the
      single sanctioned blueprint edit (state only, per the stage rules).
 

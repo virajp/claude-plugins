@@ -198,13 +198,6 @@ after-landing steps. It covers every stop too, each the stop those files already
   - on a resume reading *no one can answer*, does *No one to answer* of [questions.md](../references/questions.md) itself and returns
     `STOPPED`.
 
-  One question differs: the continue-or-stop of an unknown language, asked before the claim (*An unknown language* in
-  [claim.md](../references/claim.md)). It records nothing: no log is open, so it takes no `log.mjs next-question` id and no
-  `question` event — its id is one past the highest `Q<n>` in the folder's `decisions` and `gaps` text, its owner `setup` — and
-  its answer writes no `answer` event and no `decisions` entry, from a `SendMessage` resume or an `Answers:` block alike. On
-  continue, the runner runs `start.mjs` again with `--continue-unknown-language`; on stop, or *no one can answer*, it returns
-  `STOPPED`, nothing claimed.
-
   A runner never resumes one of its agents with `SendMessage`: that agent's reply goes to the top session, which the runner cannot read.
   When the runner invokes a skill that could prompt, it passes the answer in the invocation:
   - the declared preferences those files name for `/vwf:git-workflow` and `plan-management archive`;

@@ -1,8 +1,8 @@
 # §3's Conditional Checks
 
-Five checks that run **after** the surveyor returns, each only when its trigger
+Six checks that run **after** the surveyor returns, each only when its trigger
 is present. Read this once per chain element, while working §3 — the harness
-preflight fires on every element, the other four only when their condition
+preflight fires on every element, the other five only when their condition
 holds.
 
 ## Stamp-heal (only when the computed delta is empty)
@@ -44,13 +44,35 @@ capabilities this element's gates will need (acceptance criteria → `e2e_local`
 cloud project → `health`; flows + a deploy target → `e2e_staging`; a flow whose
 Guarantees table declares a peak rate meeting the delivery-pipeline's
 load-validation threshold, ahead of its first production release →
-`test:load`). Read the
-`.config/vwf.yaml` `harness:` block (plus any per-project
-`projects.<name>.harness` override) and **re-verify just those** against the
-repo (the stamp may be stale). For each one missing, **inject a bootstrap unit**
+`test:load`). **Check just those** against the repo that holds the project
+needing each one: since `config_format` 28 nothing records a capability, and
+one is present when its one fixed task exists — a port (`test:e2e`,
+`test:golden`) when `bootstrap describe --json` lists it in `data.ports` with
+`present` true, any other task when `mise tasks ls --json --no-global --hidden`
+lists its name. `health` alone stays per project, at
+`projects.<name>.harness.health`. A failed `bootstrap` call stops the plan with
+bootstrap's `errors`, a failed `mise` call with its error output. For each one
+missing, **inject a bootstrap unit**
 into the units — the coder builds it under the normal pipeline. Harness units
 are gate-required guardrails: the minimalism ladder never strikes them, and they
 order **before** the units whose verification depends on them.
+
+## Project folder entry (only when a unit creates a project's folder)
+
+A project's folder is bootstrap's, `repo.projects.<name>.folder`, never the
+registry's, and `/vwf:architecture` writes that entry only for a folder that
+already exists. So when a unit of this plan **creates a registry project's
+folder** and `bootstrap config get repo.projects.<name>.folder --json`, run in
+the repo that holds the project (`projects.<name>.repo`, else the base repo),
+does not answer it, that same unit also runs
+
+```sh
+bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json
+```
+
+in that repo once the folder exists, `<folder>` relative to that repo's root.
+Write the line into the unit's steps. Until it runs, `/vwf:doctor` reports the
+missing entry as a degraded row, which never stops `/vwf:execute`.
 
 ## Deferred-core-token check (every element, when the slice is production-bound)
 

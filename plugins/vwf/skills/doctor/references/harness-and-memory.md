@@ -1,15 +1,27 @@
 # Harness, Health & Memory (§§6–7)
 
 Read this before running §6. Neither section produces a **blocking** finding —
-only drift, recorded gaps, and degradations.
+only drift and degradations — though a failed `mise` or `bootstrap` read in §6
+stops doctor.
 
 ## 6. Harness and health
 
-Per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, check every capability the
-config's `harness:` block marks `true` still resolves — its canonical task name
-exists (`mise tasks`), or the non-canonical override the config records does. A
-capability marked `false` is a **recorded gap, not a finding**: `/vwf:plan`
-injects its bootstrap when a cycle needs it.
+Per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md`, report each capability a
+project's platforms require as present or absent. Since `config_format` 28 no
+capability is recorded in `.config/vwf.yaml`: a capability is present when its
+one fixed task exists, in the repo that holds the project that needs it. A port
+capability (`e2e_local` → `test:e2e`, `goldens` → `test:golden`) is read from
+`bootstrap describe --json`, its `data.ports` entry's `present`; any other is
+its task name in `mise tasks ls --json --no-global --hidden`. A task under a
+non-canonical name is not supported, so it reads as absent. `checks.mjs`
+reports `dev`, `screenshots` and `goldens` — the capabilities `harness.md`
+says a project's platforms imply — as its `harness` row: an absent one is a
+**degraded** row, one per project and capability, never blocking, since
+`/vwf:plan` injects its bootstrap when a cycle needs it. A failed `bootstrap`
+call stops doctor with bootstrap's `errors`, a failed `mise` call with its
+error output — and so does a `mise` absent from `PATH` once a project's
+platforms imply a task capability (`dev`, `screenshots`): that is a refusal,
+not a row.
 
 Then check each project's health path (`projects.<name>.harness.health`,
 defaulting to `/health`) is actually registered in that project's routing. Do

@@ -140,7 +140,7 @@ field. Offer them **by domain group**, as they are written: that is the axis
 someone picking capabilities thinks along. Each token also carries a **kind**
 (`B` backing service / `F` product foundation / `P` project-axis fact) — do not
 surface it as a grouping, but do use it: only a `B` token can be answered by a
-`backing_template` pin, so a project declaring one and pinning nothing is what
+`services` pin, so a project declaring one and pinning nothing is what
 `/vwf:doctor` §5 reports. A token added via **Other** must be classified into
 the asset before it is recorded.
 
@@ -161,7 +161,7 @@ a time, gathering for each:
 | -------------- | ------------------------------------------------------------------------------------ |
 | `name`         | Free text (short identifier)                                                         |
 | `role`         | MCQ: `backend` / `frontend` / `data` / `system`                                      |
-| `path`         | Free text (repo-relative directory)                                                  |
+| `folder`       | Free text (folder in the repo that holds it) — bootstrap's, not the registry         |
 | `capabilities` | Multi-select from the Capability Vocabulary asset (tokens read above) + Other        |
 | `depends_on`   | Multi-select from named projects + None                                              |
 | `doc_unit`     | MCQ: `entity` / `page` / `module` (default by platforms)                             |
@@ -223,7 +223,8 @@ product parent. The rule and its rationale live in
 `${CLAUDE_PLUGIN_ROOT}/assets/topologies/`; it holds under all three topologies,
 including a monorepo that otherwise keeps every project in one tree. So when a
 user declares a project with the `iac` platform, **elicit its repo** — ask where it
-lives and record that path — rather than defaulting it under the product root
+lives and record that repo, the project's folder in it being `.` — rather than
+defaulting it under the product root
 like every other project. If the answer places it inside another repo, say so
 plainly and record what they chose: `/vwf:doctor` raises it as blocking — a
 decline recorded under `enforcement:` drops it to a warning reported every run —
@@ -342,7 +343,7 @@ not the full blueprint — `blueprint` expands it into
 
 Before writing, summarize to the user what will be created or changed:
 
-- Projects being added or edited (with their type, path, and capabilities).
+- Projects being added or edited (with their type, folder, and capabilities).
 - Cross-cutting decisions being added, changed, or removed.
 - The topology and the members being set, with each member's type.
 - Prose sections being written for the first time vs updated.
@@ -357,9 +358,10 @@ for explicit approval before proceeding to Step 5.
 Dispatch the `architecture-writer` subagent (Agent tool). Pass:
 
 - All elicited prose answers (system overview, interconnects, hosting).
-- All per-project registry rows (name, role, platforms, path, capabilities —
+- All per-project registry rows (name, role, platforms, capabilities —
   with their trust-boundary `threat_notes` — depends_on,
-  doc_unit, platforms) — **no stack**; it is not a registry field.
+  doc_unit, platforms) — **no stack** and **no folder**; neither is a registry
+  field.
 - All cross-cutting decisions.
 - **Update mode only:** the **paths** `docs/blueprint/architecture.md` and
   `docs/blueprint/registry.yaml` plus the **specific changes** elicited (which
@@ -373,7 +375,7 @@ not pass either file back through this session.
 
 **Write the stack yourself**, not through the writer: set the structured
 `projects.<name>.stack` block in `.config/vwf.yaml` for **every** project — all
-three axes, `template`, `backing_template` and `deploy_template` — plus the
+three axes, `template`, `services` and `deploy` — plus the
 per-project `design` (screen-platform projects) and `cicd` keys, the repo-level
 `repo.stack` and the top-level `addons:`. The writer never touches config, and
 never sees a stack — that separation is what keeps the blueprint vendor-free.
@@ -402,6 +404,23 @@ submodule. For each project placed in a member, write `projects.<name>.repo` in
 `.config/vwf.yaml` as that member's name; a project of the base repo has no
 `repo` key. A failed `bootstrap` call stops this command with the envelope's
 `errors` as bootstrap gives them.
+
+**Write each project's folder through bootstrap too**, never into
+`registry.yaml`: since `blueprint_format` 26 the registry has no `path`, and a
+project's folder is bootstrap's `repo.projects.<name>.folder`. In the repo that
+holds the project — the member `projects.<name>.repo` names, else the base
+repo — run, for a new project or a moved one:
+
+```sh
+bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json
+```
+
+`<folder>` is relative to that repo's root, and `.` when the project is the
+whole repo. **Write the entry only when the folder exists.** A project whose
+folder is not created yet gets no entry here: the plan unit that creates the
+folder also runs this `config set` (`/vwf:plan` says so), and until then
+`/vwf:doctor` reports the missing entry as a degraded row. A failed `bootstrap`
+call stops this command with bootstrap's `errors`.
 
 ---
 
@@ -443,8 +462,10 @@ Once the writes are confirmed, read both yourself. Check:
   dangling reference).
 - Every registry project has a `projects.<name>.stack` block in
   `.config/vwf.yaml` — the block is mandatory since config-format 11 — and every
-  `languages` token is one an installed stack plugin declares, every axis a
-  template one ships (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). A token or pin
+  axis a template one ships
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
+  A project's languages are not recorded there: they are the linked bootstrap
+  language tools `bootstrap describe --json` reports. A pin
   outside that is a **halt**, not a recorded value, and `template: custom` is
   retired. A flat list, an absent block, or a legacy `enforcement.stacks` block
   is drift — migrate it. Every entry **under `enforcement.rules`** names a known
