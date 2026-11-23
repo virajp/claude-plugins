@@ -1,0 +1,8 @@
+/security-review over 374ef4f0..HEAD (worktree all-2026-11-23-0333), round 1 of loop U4
+
+No high-confidence vulnerabilities found in 374ef4f0..HEAD.
+
+- No shell, and no repo value reaches one: holds. lsp.mjs:65 and :82 call spawnSync("mise", [...fixed args]) with no shell option; every argument is a constant; base is passed only as cwd. start.mjs:767 passes the task output as separate arguments through spawnSync(process.execPath, ...) (start.mjs:192), with no shell.
+- Only a not-found line can make a row: holds. lsp.mjs:20 anchors NOT_FOUND at both ends and requires " not found - "; rows come only from lines that match (:93, :97). Low note, not a vulnerability: a server name that starts with -- would reach log.mjs as a flag-like argument; it cannot inject a command, and the input comes from the developer's own repo.
+- A failed or absent task always gives a row: holds. didNotRun (lsp.mjs:66, :83); failedRun (:69-71, always returns a row :41-48); missing task (:73-79); non-zero run with no not-found line (:94-95); only exit 0 returns [] (:86).
+- The scripts stay dependency-free: holds. lsp.mjs:8-12 imports only node:child_process and ./util.mjs; start.mjs adds no new imports.

@@ -1,6 +1,9 @@
 // runChecks({cwd, projects}) → {base, projects, findings}: the blocking set
-// of doctor (D16) and its degraded rows (R5b D8). `projects` absent checks
-// every registry project; [] runs the repo-level checks only (D37).
+// of doctor (D16) and its degraded rows (R5b D8), with the degraded lsp-check
+// rows of bootstrap's code:lsp:check, run once from the base root
+// (lib/lsp.mjs). `projects` absent checks every registry project; [] runs the
+// repo-level checks only (D37). No network read but the one of
+// code:lsp:check, which runs `bootstrap lsp --json`.
 
 import { loadProduct } from "./base.mjs";
 import {
@@ -8,6 +11,7 @@ import {
   configGet,
   readMembers,
 } from "./bootstrap.mjs";
+import { lspCheckRows } from "./lsp.mjs";
 import { membershipRows } from "./membership.mjs";
 import {
   addonRows,
@@ -66,6 +70,7 @@ export function runChecks({ cwd, projects } = {}) {
     ...rows,
     ...membershipRows({ base, topology, members }),
     ...miseRows({ base, config }),
+    ...lspCheckRows({ base }),
     ...repoPinRows({ config }),
     ...oldPackRows(base, Array.isArray(config.stacks) ? config.stacks.filter((s) => typeof s === "string") : []),
     ...addonRows({ base, config }),

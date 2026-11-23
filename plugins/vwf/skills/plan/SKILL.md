@@ -179,16 +179,9 @@ Three things about its placement and scope, each deliberate:
   inline read in the workflow; halting after it would spend exactly the work the
   gate exists to avoid.
 - **Blocking only.** Every other finding is noted, not acted on — planning
-  compiles nothing. The one exception is the **LSP question**: for each
-  language doctor reports without an LSP server, ask once (MCQ — *install now*
-  / *proceed without*) and hold the answer for the folder's `index.json` as
-  `consent.lsp.<language>`, `installed` or `proceed without` (interview item
-  9a). An absent toolchain is asked here, once, and recorded. `execute` does
-  not read the key until its parked LSP check lands
-  (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`), and never asks
-  it. A language doctor reports as
-  *unavailable* (no LSP ships in this marketplace) has nothing to install and
-  is not asked; note it.
+  compiles nothing, and asks no LSP question: `/vwf:execute` stops a plan with
+  a code unit when bootstrap's `code:lsp:check` reports a missing server, and
+  the user fixes it before the run.
 
 This is a delegation, never a second copy of the rule — the finding kinds and
 their remedies live in `doctor` alone, so closing the menu further never means
@@ -353,22 +346,21 @@ plan requires none of them — and which row it stands on. Item 10a places the
 `review` unit(s) — one after the last code unit by default, an earlier one
 only on a ruling recorded in the `decisions` list. Item 10b writes
 `execution`, with its reason in the `decisions` list. Items 16–17 produce the
-consent: the landing answer and the `after_landing` steps each carrying `run`
-— a step not confirmed `run` is dropped; a cycle plan carries no release step,
-as a release is always a hand step with `/release`; the `consent.lsp` answers
-come from §2. Item 18 — the **release levels** — is stated as a fact, never
-asked, as the priority is: one `release_levels` entry per project the units
-touch, `NONE` included, each level derived from the
-change — breaks users → `MAJOR`, new behaviour → `MINOR`, a fix → `PATCH`, no
-user-visible change → `NONE` — with its reason. A slice lands blueprint
-behaviour, so its levels are normally `MINOR` or `MAJOR`, but that rule decides,
-not the habit; the user changes a level at the §6 gate. Item 18a writes
-`consent.end_all_run`, the End an `all` run after landing answer: asked only
-when the units' `owns` include a
-plugin the run itself loads — one installed in the session that runs
-`/vwf:execute all`, which keeps running the stale copy until it restarts; on
-yes, `/vwf:execute all` ends after this plan and reports "restart, then
-`/vwf:execute all`" — and written `false` unasked otherwise.
+consent: the landing answer and the `after_landing` steps each carrying `run` —
+a step not confirmed `run` is dropped; a cycle plan carries no release step, as
+a release is always a hand step with `/release`. Item 18 — the **release
+levels** — is stated as a fact, never asked, as the priority is: one
+`release_levels` entry per project the units touch, `NONE` included, each level
+derived from the change — breaks users → `MAJOR`, new behaviour → `MINOR`, a fix
+→ `PATCH`, no user-visible change → `NONE` — with its reason. A slice lands
+blueprint behaviour, so its levels are normally `MINOR` or `MAJOR`, but that
+rule decides, not the habit; the user changes a level at the §6 gate. Item 18a
+writes `consent.end_all_run`, the End an `all` run after landing answer: asked
+only when the units' `owns` include a plugin the run itself loads — one
+installed in the session that runs `/vwf:execute all`, which keeps running the
+stale copy until it restarts; on yes, `/vwf:execute all` ends after this plan
+and reports "restart, then `/vwf:execute all`" — and written `false` unasked
+otherwise.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
@@ -382,7 +374,7 @@ in a later wave waits, the failing test each names; the execution mode, with
 its reason; every new dependency
 (package, what for, which unit); the unit gate, the wave gate and the plan
 gate, the after-landing steps, the gates the orchestrator keeps, and the
-derived priority with its arithmetic; the consent, the LSP answers and the
+derived priority with its arithmetic; the consent, the
 End an `all` run after landing answer included; the release levels, each with
 its reason; the
 acceptance criteria the units cover; the blind spots and the visual-review
@@ -404,15 +396,14 @@ advisory, when any; the parked list. Then wait for explicit approval. Offer:
 ### 7. Write the folder
 
 Write `docs/plans/<date>-<HHMM>-<slice>/` from
-`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following
-[Writing the plan folder](references/plan-doc.md): `index.json` — every key
-of the template with `type` `vwf-plan`, the cycle-only keys `covers`,
-`acceptance` and `consent.lsp` included, and `exposure` when the slice ships
-dark; `status` at `DRAFT`; the `consent`; the `release_levels` list; the
-`decisions` list; the `units` list; the `waves` list, one `pending` entry
-per wave with empty `started` and `ended`, as on every unit and stage — then
-`index.md`, the prose sections with
-the cycle-only Slice section, plus one `NN-<unit>.md` per unit. Write
+`${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, following [Writing the
+plan folder](references/plan-doc.md): `index.json` — every key of the template
+with `type` `vwf-plan`, the cycle-only keys `covers` and `acceptance` included,
+and `exposure` when the slice ships dark; `status` at `DRAFT`; the `consent`;
+the `release_levels` list; the `decisions` list; the `units` list; the `waves`
+list, one `pending` entry per wave with empty `started` and `ended`, as on every
+unit and stage — then `index.md`, the prose sections with the cycle-only Slice
+section, plus one `NN-<unit>.md` per unit. Write
 `index.json` **once**, whole, with the Write tool, then run
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs validate <folder>/index.json`
 — the Write and its validate are one step, the creation. A red validate

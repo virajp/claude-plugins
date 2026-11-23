@@ -70,13 +70,11 @@ ships behind a flag, else no `exposure` key. **`execution`** is `solo` or
 `plan-management add` sets `APPROVED`; from then on that skill rewrites it on
 the executor's behalf, and `requires` is never re-pointed by anyone.
 
-**`consent`** carries `merge` (the landing answer), `end_all_run`, and
-`lsp` — one key per language §2 asked about, `installed` or
-`proceed without`, `{}` when none was asked. **`after_landing`** lists each
-confirmed step as `{id, step, mode, notes}`, `mode` always `run`.
-**`release_levels`** has one `{id, level, reason}` per project the units
-touch, the project name as `id`, `NONE` included. **`dependencies`** lists
-each new third-party package as
+**`consent`** carries `merge` (the landing answer) and `end_all_run`.
+**`after_landing`** lists each confirmed step as `{id, step, mode, notes}`,
+`mode` always `run`. **`release_levels`** has one `{id, level, reason}` per
+project the units touch, the project name as `id`, `NONE` included.
+**`dependencies`** lists each new third-party package as
 `{id, package, purpose, preferred_over, unit}`. **`decisions`** lists each
 assumed decision as `{id, decision, ruling, rejected, units}`.
 **`shared_files`** lists each file two units would write, as

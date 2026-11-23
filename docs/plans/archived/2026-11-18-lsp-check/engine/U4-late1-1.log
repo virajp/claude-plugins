@@ -1,0 +1,9 @@
+/security-review over d62d5370..79e1928b (worktree all-2026-11-23-0333), round 1 of loop U4-late1 (re-run 1)
+
+No high-confidence vulnerabilities found in d62d5370..79e1928b.
+
+The property holds: no captured value can become a log.mjs flag.
+- Injection: log() at start.mjs:191-192 calls spawnSync(process.execPath, [LOG, ...args]) with an argument array and no shell.
+- Values starting with --: start.mjs:769-771 turns each value into a string and prefixes a space when it starts with --; fields() at log.mjs:128-133 treats an argument as a flag only when it begins with --, so " --x" is a value.
+- Edge cases: a leading space or tab, - alone and "" are read as values; undefined or null become the text "undefined" or "null".
+- Minor, not a vulnerability: value() at log.mjs:107-117 still turns number-like text into a number and "true"/"false" into booleans.

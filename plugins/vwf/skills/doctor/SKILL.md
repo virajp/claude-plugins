@@ -208,15 +208,30 @@ that holds it (§6) — and the bundle rows (§§3, 5): a bundle tool not select
 or not linked to its project, a materialized entry with no `tools:` key, an
 LSP server of `bootstrap lsp --json` missing from `vwf-tools`, a design tool
 with no reference in `vwf-tools`, an addon absent from the `claude` tool's
-`plugins.project`, and a lockfile row of a retired pack kind — each
-**degraded**. It prints one
+`plugins.project`, a lockfile row of a retired pack kind, and the
+`lsp-check` rows — each **degraded**. The `lsp-check` rows come from
+bootstrap's `code:lsp:check`, run once from the base repo root (a member
+repo's servers are not checked): each output line
+`<server>: <command> not found - <fix>` is one row, `project` `null`,
+`subject` the server as the task prints it, `message` the line without its
+colour and label, `remedy` the fix after ` - `. When `mise tasks ls --hidden`
+does not list the task, one row with `subject` `code:lsp:check` names the fix
+`bootstrap sync`, which writes it; any other failure — a non-zero exit with no
+not-found line, a failed `mise tasks ls`, a failed spawn, a signal, the
+60-second timeout, or no `mise` on `PATH` — is one row with `subject`
+`code:lsp:check`, the last stderr line mise did not write as its `message`
+and its `remedy` (else `code:lsp:check failed with exit <n>`, remedy
+`run mise run code:lsp:check and fix what it prints`). A pass makes no row,
+and the rows alone never make the exit 1. It prints one
 JSON object, `{base, projects, findings}`, each finding
 `{rule, severity, project, subject, message, remedy}` — `project` `null` on a
 repo-level row, `severity` one of `blocking`, `degraded`, `drift`, `missing`,
 `unavailable`, `info`. Exit 0 when no row is `blocking`, 1 when one is, 2 on a
 usage or internal error. `--projects` scopes the project checks, `--projects ""`
 runs the repo-level checks alone, and no flag checks every registry project. It
-runs no audit, no drift check, no network read and no bootstrap dry-run.
+runs no audit, no drift check and no bootstrap dry-run, and reads the network
+in one call only: `code:lsp:check` runs `bootstrap lsp --json`, and an offline
+failure of it is an `lsp-check` row.
 
 Doctor runs it once per full run, scoped as this run is (§1's membership rows
 included), and reports its rows as they come, under the finding kinds of §9: it
@@ -380,12 +395,10 @@ its `start.mjs`, scoped to the plan's projects, and halts on its `blocking`
 rows. **All three halt on a `blocking` finding** — the mandated tooling is what
 the pipeline is built on, and the stack menu is what its conventions and harness
 come from, so proceeding without either produces a run that fails later and less
-clearly, or one that fails to fail at all. The LSP findings are `/vwf:plan`'s
-question: at its stack gate it asks, per flagged language, whether to install
-now or proceed without, and records the answer as `consent.lsp.<language>` in
-the plan folder's `index.json` (`installed` or `proceed without`).
-`/vwf:execute` does not read that key until its LSP check returns
-(`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`); it never asks.
+clearly, or one that fails to fail at all. The `lsp-check` rows are degraded
+here, and no plan asks about them; `/vwf:execute` stops a plan with a code unit
+on any `lsp-check` row — a missing server, a missing `code:lsp:check` or a
+failed check — and the user fixes it before the run continues.
 `/vwf:recall` calls the `baseline` invocation alone, at session start, and
 prints its result as one shape-drift line per remedy — it never runs doctor
 whole, never reads the forge, and runs no mise task and no bootstrap command

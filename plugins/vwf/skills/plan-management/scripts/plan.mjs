@@ -44,7 +44,7 @@
 //
 // A path is dot-separated keys. A segment that follows a list chooses the
 // entry whose `id` equals the segment — `units.U3.status`, `gaps.G2.state`,
-// `plans.2026-10-24-x.status`, `consent.lsp.dart`. A wrong id is an error,
+// `plans.2026-10-24-x.status`, `consent.merge`. A wrong id is an error,
 // never a new entry.
 //
 // `validate` examines the file against its schema: a path ending in

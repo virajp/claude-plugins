@@ -64,6 +64,11 @@ Each item is one point in the run and the call made there. Fill the names in ang
   same keys on both. A marker may carry its true time as an optional field, `--started <ISO time>` on a `phase.start`
   and `--ended <ISO time>` on a `phase.end`, when it is written after the boundary it marks: a fresh run's `checks`
   markers, which `start.mjs` writes right after the log start, carry the real times of checks that ran before it.
+- **Each `lsp-check` row of a plan with no `code` unit:**
+  `event lsp-check --subject <server> --message "<line>" --remedy "<fix>"`, after the checks markers, one per row of
+  `code:lsp:check`, a value that starts with `--` written with a leading space, so it never reads as a flag. `start.mjs`
+  writes these on every start, fresh or resume, not you. The final report lists the ones after the last `run.start`
+  ([final-report.md](final-report.md)). A plan with a `code` unit stops on such a row instead, and writes none.
 - **The execution mode, once decided, and again if the run falls back:** `event execution --mode <solo|teams> --reason "<why>"`,
   per [preflight.md](preflight.md). Drop `--reason` when the mode is what the plan recorded.
 - **Every gate line:** `run --tier <tier> --unit <id> --wave <n> -- <the gate line>`, the tier one of `unit`, `wave`,

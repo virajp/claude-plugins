@@ -28,6 +28,10 @@ resource-cap handoff. The record is the account that survived all three intact. 
   For a folder whose `release_levels` is `[]`, the one line *old-shape folder — no release levels
   recorded*. When a `bootstrap config` call failed after the merge, the hand step: the exact
   `config set` lines and the completion command, per *The release-levels write* in [land.md](land.md)
+- for a plan with no `code` unit, each `lsp-check` event of the action log after its last `run.start`, its
+  `subject`, `message` and `remedy`, all three on every event, a value that starts with `--` carrying a
+  leading space: a server `code:lsp:check` could not resolve, or the check that could not run. An earlier
+  start's events are not listed, so a server fixed before the latest start leaves the report
 - the execution mode the run used, from the action log's `execution` event, and the reason when it fell
   back from what the plan recorded
 - the worktree path

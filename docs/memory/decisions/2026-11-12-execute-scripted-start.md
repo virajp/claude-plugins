@@ -74,7 +74,7 @@ checks of `doctor/scripts/checks.mjs` and the claim, printed as one JSON result.
   Rejected: start the log after the checks.
 - D22: the LSP check is **parked** until bootstrap installs LSP servers; until
   then a run with a `code` unit has no LSP gate. Record:
-  `docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`. Rejected: guess
+  `docs/memory/gaps/2026-11-13-execute-lsp-check-resolved.md`. Rejected: guess
   which `claude plugin list --json` entries mean enabled.
 - D24: every fixture holds fake data only. Rejected: copies of real configs.
 - D25: under `next`, a picked plan that fails a refusal stops; only a lost

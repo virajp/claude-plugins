@@ -47,9 +47,23 @@ type Json = any;
  * A `mise` that answers `tasks ls --json --no-global --hidden` from the
  * .mise-tasks-stub.json of its cwd (none reads as no task), in the shape the
  * real mise prints (an array of {name, ...}); a .mise-tasks-fail there fails
- * it. Every other call runs what follows `--` (D22).
+ * it. `tasks ls --json --hidden`, the lsp-check read, lists code:lsp:check
+ * unless a .mise-lsp-absent is there, a .mise-lsp-tasks-fail fails it, and a
+ * .mise-lsp-tasks-kill ends it on SIGTERM;
+ * `run code:lsp:check` passes unless a .mise-lsp-check.sh is there, which it
+ * runs instead (lsp-check D22). Every other call runs what follows `--` (D22).
  */
 const MISE = `#!/bin/sh
+if [ "$*" = "tasks ls --json --hidden" ]; then
+  if [ -f .mise-lsp-tasks-kill ]; then kill -TERM $$; fi
+  if [ -f .mise-lsp-tasks-fail ]; then echo "mise ERROR the tasks do not load" >&2; exit 1; fi
+  if [ -f .mise-lsp-absent ]; then echo "[]"; exit 0; fi
+  echo '[{"name":"code:lsp:check"}]'; exit 0
+fi
+if [ "$*" = "run code:lsp:check" ]; then
+  if [ -f .mise-lsp-check.sh ]; then exec /bin/sh .mise-lsp-check.sh; fi
+  exit 0
+fi
 if [ "$1" = tasks ]; then
   if [ "$*" != "tasks ls --json --no-global --hidden" ]; then echo "mise stub: unexpected $*" >&2; exit 2; fi
   if [ -f .mise-tasks-fail ]; then echo "mise ERROR the config does not parse" >&2; exit 1; fi
@@ -286,7 +300,7 @@ describe("single repo", () => {
   it("early still runs the repo-level checks", () => {
     rmSync(registry());
     const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
-    expect(rules(r.json)).toEqual(["early:info", "mise:blocking"]);
+    expect(rules(r.json)).toEqual(["early:info", "mise:blocking", "lsp-check:degraded"]);
     expect(r.status).toBe(1);
   });
 
@@ -308,7 +322,7 @@ describe("single repo", () => {
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
       const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.status).toBe(0);
-      expect(rules(r.json)).toEqual(["mise:degraded"]);
+      expect(rules(r.json)).toEqual(["mise:degraded", "lsp-check:degraded"]);
     });
 
     it("a services pin alone makes it blocking", () => {
@@ -317,7 +331,7 @@ describe("single repo", () => {
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
       edit(config(), "services: []", "services: [ kite-store ]");
       const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
-      expect(rules(r.json)).toEqual(["mise:blocking"]);
+      expect(rules(r.json)).toEqual(["mise:blocking", "lsp-check:degraded"]);
     });
 
     it("a repo with no mise config is the same finding", () => {
@@ -802,7 +816,7 @@ describe("single repo", () => {
     it("an empty list runs the repo-level checks only", () => {
       const r = checks(base, ["--projects", ""], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.json.projects).toEqual([]);
-      expect(rules(r.json)).toEqual(["mise:blocking"]);
+      expect(rules(r.json)).toEqual(["mise:blocking", "lsp-check:degraded"]);
     });
 
     it("a name the registry lacks is an error, exit 2", () => {
@@ -948,5 +962,166 @@ describe("multi repo", () => {
     // the base has no materialized kite-app, so the folder member's pin is not materialized there
     expect(find(r.json, "not-materialized")[0]).toMatchObject({ project: "dock-absent" });
     expect(find(r.json, "not-materialized")[0].message).toContain(base);
+  });
+
+  it("code:lsp:check runs in the base only: a member's check is not read (lsp-check D16)", () => {
+    writeFileSync(join(member, ".mise-lsp-absent"), "");
+    writeFileSync(join(member, ".mise-lsp-check.sh"), "exit 1\n");
+    const r = checks(base);
+    expect(find(r.json, "lsp-check")).toEqual([]);
+  });
+});
+
+describe("code:lsp:check (lsp-check D1, D2, D13, D19, D22, D24)", () => {
+  let base: string;
+  const TASK = "code:lsp:check";
+  const FAILED = "run mise run code:lsp:check and fix what it prints";
+
+  beforeEach(() => {
+    base = repo("single", "lumen", "kite-service.md");
+  });
+
+  /** The task's run, as a shell script the stub runs in its place. */
+  function check(script: string) {
+    writeFileSync(join(base, ".mise-lsp-check.sh"), script);
+  }
+
+  function repoLevel() {
+    return checks(base, ["--projects", ""]);
+  }
+
+  it("exit 0 makes no row", () => {
+    check("echo '[OK] kite-lsp: /bin/kite-ls'\nexit 0\n");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([]);
+  });
+
+  it("exit 1 makes one row per not-found line, its label and colour stripped", () => {
+    check(
+      [
+        "echo '[OK] kite-lsp: /bin/kite-ls'",
+        "echo '[ERROR] dart-lsp: dart not found - run MISE_ENV=dev mise install' >&2",
+        "printf '\\342\\235\\214 \\033[31msourcekit-lsp: sourcekit-lsp not found - install the Xcode Command Line"
+        + " Tools (xcode-select --install) or Xcode\\033[0m\\n' >&2",
+        "echo '[code:lsp:check] ERROR task failed' >&2",
+        "exit 1",
+        "",
+      ]
+        .join("\n"),
+    );
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      {
+        rule: "lsp-check",
+        severity: "degraded",
+        project: null,
+        subject: "dart-lsp",
+        message: "dart-lsp: dart not found - run MISE_ENV=dev mise install",
+        remedy: "run MISE_ENV=dev mise install",
+      },
+      {
+        rule: "lsp-check",
+        severity: "degraded",
+        project: null,
+        subject: "sourcekit-lsp",
+        message: "sourcekit-lsp: sourcekit-lsp not found - install the Xcode Command Line Tools"
+          + " (xcode-select --install) or Xcode",
+        remedy: "install the Xcode Command Line Tools (xcode-select --install) or Xcode",
+      },
+    ]);
+  });
+
+  it("exit 2 is one row: the last stderr line mise did not write", () => {
+    check(
+      [
+        "echo '[ERROR] code:lsp:check needs bootstrap.' >&2",
+        "echo '[code:lsp:check] ERROR task failed' >&2",
+        "exit 2",
+        "",
+      ]
+        .join("\n"),
+    );
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      {
+        rule: "lsp-check",
+        severity: "degraded",
+        project: null,
+        subject: TASK,
+        message: "code:lsp:check needs bootstrap.",
+        remedy: "code:lsp:check needs bootstrap.",
+      },
+    ]);
+  });
+
+  it("exit 3 with only mise's line is one row with the D13 message", () => {
+    check("echo '[code:lsp:check] ERROR task failed' >&2\nexit 3\n");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({ subject: TASK, message: "code:lsp:check failed with exit 3", remedy: FAILED }),
+    ]);
+  });
+
+  it("a failed mise tasks ls is one row", () => {
+    writeFileSync(join(base, ".mise-lsp-tasks-fail"), "");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({
+        severity: "degraded",
+        subject: TASK,
+        message: "mise ERROR the tasks do not load",
+      }),
+    ]);
+  });
+
+  it("an absent task is one row with the bootstrap sync remedy", () => {
+    writeFileSync(join(base, ".mise-lsp-absent"), "");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    const rows = find(r.json, "lsp-check");
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ severity: "degraded", project: null, subject: TASK });
+    expect(rows[0].remedy).toContain("bootstrap sync");
+  });
+
+  // The stand-in for the 60-second timeout (D24, D25): a timeout ends the spawn
+  // with SIGTERM, the same null-status path, so no real timeout is waited out.
+  it("a signal, as a timeout sends, is one row: the check did not run (D22, D25)", () => {
+    check("kill -TERM $$\n");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({
+        subject: TASK,
+        message: "code:lsp:check did not run: SIGTERM",
+        remedy: FAILED,
+      }),
+    ]);
+  });
+
+  it("a signal on the tasks ls read, as a timeout sends, is one row: the check did not run (D24)", () => {
+    writeFileSync(join(base, ".mise-lsp-tasks-kill"), "");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({
+        subject: TASK,
+        message: "code:lsp:check did not run: SIGTERM",
+        remedy: FAILED,
+      }),
+    ]);
+  });
+
+  it("no mise on PATH is one row beside the mise row (D19)", () => {
+    const r = checks(base, ["--projects", ""], { PATH: `${boot}:/usr/bin:/bin` });
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({ subject: TASK, remedy: FAILED }),
+    ]);
+    expect(find(r.json, "lsp-check")[0].message).toMatch(/^code:lsp:check did not run: .*ENOENT/);
   });
 });

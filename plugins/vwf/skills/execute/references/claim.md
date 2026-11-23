@@ -35,7 +35,11 @@ In order, it:
    in the repo that holds it, or the repo-level checks alone when none matches.
    A registry project with no `repo.projects.<name>` entry is skipped, and its
    row is `degraded`;
-6. on any `blocking` row, stops with `blocked` and claims nothing;
+6. on any `blocking` row, stops with `blocked` and claims nothing; on an
+   `lsp-check` row — bootstrap's `code:lsp:check` found a server missing, or the
+   task is absent or failed — stops a plan with a `code` unit the same way, and
+   a plan with no `code` unit goes on, each row logged as one `lsp-check` event
+   for the final report;
 7. runs the claim phase when the run is fresh — `plan.mjs claim`, per
    *Writing a row — the claim* in
    `${CLAUDE_PLUGIN_ROOT}/skills/plan-management/references/plan-index.md`.
@@ -65,7 +69,7 @@ usage or internal error, with nothing on stdout — report the stderr line and s
 | `has_code_unit`  | whether a `units` entry has `kind` `code`                                                          |
 | `has_covers`     | whether the folder has `covers`: a cycle plan, whose blueprint-bound steps run                     |
 | `projects`       | the plan's projects the checks were scoped to                                                      |
-| `findings`       | each `{rule, severity, project, subject, message, remedy}`: the rows of the checks phase; only a `blocking` row stops the run, a `degraded` row never does; `project` is `null` on a repo-level row |
+| `findings`       | each `{rule, severity, project, subject, message, remedy}`: the rows of the checks phase: the `blocking` rows, and the `degraded` `lsp-check` rows of `code:lsp:check`; no other `degraded` row is kept. A `blocking` row stops every run; an `lsp-check` row stops a plan with a `code` unit only; `project` is `null` on a repo-level row |
 | `open_questions` | `null` on a fresh run; on a resume, `{gaps, events}`: the ids of the open `QUESTION` gaps, and the `question` events with no `answer` |
 | `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the landing left one: a worktree it could not remove, or the task's output when the claim landed but the task's restoring checkout failed) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed` (with `unpushed: true` when the merge commit was not pushed), or `pr` with `url`, `branch` and `repo` on a pending claim; `null` when no claim ran |
 | `message`        | one line for the user                                                                              |
@@ -87,7 +91,13 @@ Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
   folder too.
 - **`blocked`** → print `message`, then each finding with its remedy, and stop.
   A blocking row is mandated tooling or the closed stack menu, so this is a hard
-  halt with the remedy, not a question.
+  halt with the remedy, not a question. A plan with a `code` unit is also
+  blocked by an `lsp-check` row: `message` reads
+  `<folder>: LSP check: <subject> — <remedy>; …`, one entry per row, and the
+  user fixes each before a re-run. On a fresh run that stop comes before the
+  log start, so it writes no log; on a resume it closes the log. With a
+  `blocking` row beside it, the run takes the blocking stop, and `message`
+  names both kinds of row. No consent applies.
 - **`nothing`** → print `message` and stop: no runnable plan, with each `APPROVED`
   row and what it waits on, or that no approved plan was found.
 

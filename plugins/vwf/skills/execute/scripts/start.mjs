@@ -23,7 +23,14 @@
 //    kind, priority, has_code_unit, has_covers, projects, findings,
 //    open_questions, claim, message}
 //
-// findings holds the blocking rows; a degraded row never stops the run (D28).
+// findings holds the blocking rows and the degraded lsp-check rows of
+// code:lsp:check (lsp-check D4, D17); no other degraded row is kept, and none
+// stops the run (D28). An lsp-check row stops a plan with a code unit: a fresh
+// run returns blocked with no log start and no claim, a resume stops its log
+// (lsp-check D14); a blocking row beside it takes the blocking path, and the
+// message names both (D19). A plan with no code unit goes on, and each
+// lsp-check row is one free lsp-check event of the log, {subject, message,
+// remedy}, after the log start, for the final report (D23, D24).
 // projects are the registry projects the owns paths fall under, each by its
 // folder in the repo that holds it (bootstrap's repo.projects.<name>.folder,
 // D11); a project bootstrap has no entry for is skipped (D26). open_questions
@@ -583,6 +590,20 @@ function parseArgs(argv) {
   return { target, worktree, branch, memberBranch };
 }
 
+/** The rows the result keeps: the blocking rows and the lsp-check rows (lsp-check D17). */
+function kept(rows) {
+  return rows.filter((r) => r.severity === "blocking" || r.rule === "lsp-check");
+}
+
+function lspRows(rows) {
+  return rows.filter((r) => r.rule === "lsp-check");
+}
+
+/** The LSP part of a blocked message: each server and its remedy (lsp-check D4). */
+function lspText(rows) {
+  return `LSP check: ${rows.map((r) => `${r.subject} — ${r.remedy}`).join("; ")}`;
+}
+
 function result(over) {
   return {
     result: "refused",
@@ -694,6 +715,19 @@ function start({ target, worktree, branch, memberBranch }) {
         failed = e;
       }
       const ended = new Date().toISOString();
+      // lsp-check D14: a fresh code-unit plan stopped by the LSP check alone writes no log.
+      if (failed === null && !checks.findings.some((r) => r.severity === "blocking")) {
+        const lsp = lspRows(checks.findings);
+        if (base_.has_code_unit && lsp.length > 0) {
+          return result({
+            ...base_,
+            result: "blocked",
+            projects,
+            findings: kept(checks.findings),
+            message: `${folder}: ${lspText(lsp)}`,
+          });
+        }
+      }
       log(f.logCwd, ["start", "--folder", f.folderDir, "--mode", f.mode]);
       log(f.logCwd, ["event", "phase.start", "--phase", "checks", "--started", started]);
       log(f.logCwd, ["event", "phase.end", "--phase", "checks", "--ended", ended]);
@@ -711,11 +745,32 @@ function start({ target, worktree, branch, memberBranch }) {
       stop(`the checks failed: ${failed.message}`, "blocked");
       throw failed;
     }
-    const findings = checks.findings.filter((r) => r.severity === "blocking");
-    if (findings.length > 0) {
-      const why = `blocking findings: ${findings.map((r) => `${r.rule} ${r.subject}`).join(", ")}`;
+    const findings = kept(checks.findings);
+    const blocking = findings.filter((r) => r.severity === "blocking");
+    const lsp = lspRows(findings);
+    if (blocking.length > 0) {
+      // lsp-check D19: the blocking path, the message naming both kinds of row.
+      const why = `blocking findings: ${blocking.map((r) => `${r.rule} ${r.subject}`).join(", ")}${
+        lsp.length > 0 ? `; ${lspText(lsp)}` : ""
+      }`;
       stop(why, "blocked");
       return result({ ...base_, result: "blocked", projects, findings, message: `${folder}: ${why}` });
+    }
+    if (lsp.length > 0 && base_.has_code_unit) {
+      // lsp-check D4, D14: only a resume reaches here; its log start is written.
+      const why = lspText(lsp);
+      stop(why, "blocked");
+      return result({ ...base_, result: "blocked", projects, findings, message: `${folder}: ${why}` });
+    }
+    // lsp-check D23, D24: a plan with no code unit goes on; the final report reads these.
+    // A captured value that starts with `--` would read as a flag to log.mjs: a leading space keeps it a value.
+    for (const r of lsp) {
+      const args = ["event", "lsp-check"];
+      for (const k of ["subject", "message", "remedy"]) {
+        const v = String(r[k]);
+        args.push(`--${k}`, v.startsWith("--") ? ` ${v}` : v);
+      }
+      log(f.logCwd, args);
     }
 
     if (f.mode !== "fresh") {

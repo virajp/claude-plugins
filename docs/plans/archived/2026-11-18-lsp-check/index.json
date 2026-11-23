@@ -16,8 +16,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-18 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — 5c0319fc 8c1a8988 a80a157d 8a823b96 d62d5370 79e1928b bda4e06c"
   },
   "consent": {
     "merge": true,
@@ -93,11 +93,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T13:01:08.661Z",
+      "ended": "2026-11-23T13:34:19.428Z",
+      "commit": "8a823b96",
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -117,11 +117,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T13:01:08.733Z",
+      "ended": "2026-11-23T13:06:27.148Z",
+      "commit": "8c1a8988",
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -143,11 +143,11 @@
         "U1"
       ],
       "waits": "its tests run the doctor checks of U1, which must make the lsp rows first",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T13:39:28.799Z",
+      "ended": "2026-11-23T13:48:01.746Z",
+      "commit": "79e1928b",
+      "rounds": 3
     },
     {
       "id": "U4",
@@ -163,14 +163,14 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T13:51:47.889Z",
+      "ended": "2026-11-23T14:04:42.985Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "b35f7a28",
+        "to": "d62d5370"
       }
     },
     {
@@ -196,11 +196,11 @@
         "U4"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-23T14:05:02.251Z",
+      "ended": "2026-11-23T14:08:20.589Z",
+      "commit": "bda4e06c",
+      "rounds": 2
     },
     {
       "id": "U6",
@@ -214,43 +214,43 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T14:14:24.782Z",
+      "ended": "2026-11-23T14:16:26.147Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T13:01:08.623Z",
+      "ended": "2026-11-23T13:39:12.454Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T13:39:28.762Z",
+      "ended": "2026-11-23T13:51:28.479Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T13:51:47.851Z",
+      "ended": "2026-11-23T14:04:43.061Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T14:05:02.215Z",
+      "ended": "2026-11-23T14:14:09.257Z"
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T14:14:24.745Z",
+      "ended": "2026-11-23T14:17:31.313Z"
     }
   ],
   "shared_files": [
@@ -486,36 +486,59 @@
         "U1",
         "U3"
       ]
+    },
+    {
+      "id": "D25",
+      "decision": "Q1: D24 sets the code:lsp:check spawn timeout at 60 seconds and asks for a test of it. How should the doctor tests cover the timeout?",
+      "ruling": "Keep the SIGTERM signal test as the stand-in for the 60-second timeout test — it runs the same null-status path without a real timeout; no env override, no slow test.",
+      "rejected": "Add an env override of the timeout, read by lsp.mjs; A real test that waits more than 60s",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Q2: D18 says the start.mjs block on an lsp-check row also names the unknown-language rows, but start.mjs keeps no unknown-language rows today. Should the LSP block message name something else in their place?",
+      "ruling": "Leave it as is — the LSP block message names nothing in place of the unknown-language rows; D18 applies once start.mjs keeps unknown-language rows.",
+      "rejected": "Name the degraded language-tool rows in the LSP block message",
+      "units": [
+        "U3"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T14:05:01.820Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T14:05:01.605Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T14:05:01.713Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
-      "started": "",
-      "ended": ""
+      "state": "skipped",
+      "detail": "no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
+      "started": "2026-11-23T14:05:01.966Z",
+      "ended": "2026-11-23T14:05:02.003Z"
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-18-lsp-check.jsonl"
