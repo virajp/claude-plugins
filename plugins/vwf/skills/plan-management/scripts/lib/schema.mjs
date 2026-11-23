@@ -3,11 +3,12 @@
 // { path, message }; an empty list is a valid file.
 //
 // An object allows only the keys its schema names. One object is open:
-// `consent.lsp` (its keys are language names). `run` is `{}`, or exactly
+// `consent.lsp` (its keys are language names), an old, optional key that no
+// script reads and no planner writes. `run` is `{}`, or exactly
 // `{ worktree, log }`, both non-empty strings, which claim writes. A
 // cycle-only key — `covers`, `exposure`, `acceptance`, `consent.lsp` — is
-// required on a vwf-plan (`exposure` optional) and a finding on a
-// vwf-change-plan. `execution` is optional on both kinds; no key reads as solo.
+// required on a vwf-plan (`exposure` and `consent.lsp` optional) and a
+// finding on a vwf-change-plan. `execution` is optional on both kinds; no key reads as solo.
 //
 // Each unit, wave, stage and index row carries `started` and `ended`: "" or a
 // UTC time as `new Date().toISOString()` prints it. `waves` lists exactly
@@ -80,7 +81,11 @@ const FOLDER = obj({
   consent: obj({
     merge: bool(),
     end_all_run: bool(),
-    lsp: obj({}, { cycle: true, open: str({ enum: ["installed", "proceed without"] }) }),
+    lsp: obj({}, {
+      cycle: true,
+      optional: true,
+      open: str({ enum: ["installed", "proceed without"] }),
+    }),
   }),
   gates: obj({
     unit: strings(),

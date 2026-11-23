@@ -83,14 +83,6 @@ sets that row's `gaps` to an `open` of `0`, with this folder in `moved_to`.
    acceptance — is a blueprint gap, routed before the plan is written, never
    settled in it.
 
-9a. **LSP servers.** For every language `/vwf:doctor` reports without an LSP
-server, ask once: install now, or proceed without. The answer is
-`consent.lsp.<language>` in `index.json` — `installed` or
-`proceed without`. `/vwf:execute` does not read it until its parked LSP check
-lands (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`), and never
-asks it.
-*Change plans:* not asked — no code unit.
-
 10. **Ordering.** Which units can run concurrently (disjoint paths, no
     dependency) and which must wait. The user overrides the derived order only
     where they know something the survey did not.

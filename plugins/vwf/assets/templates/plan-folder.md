@@ -42,7 +42,7 @@ through `plan.mjs`:
   `<file>: valid`, or one finding per line on stderr and exit 1.
 
 A path is dot-separated keys; a segment after a list chooses the entry whose
-`id` equals it — `units.U3.status`, `gaps.G2.state`, `consent.lsp.dart`. A
+`id` equals it — `units.U3.status`, `gaps.G2.state`, `consent.merge`. A
 wrong id is an error, never a new entry. `set`, `append`, `remove` and
 `rewave` validate the result before they write, and write nothing on any
 error.
@@ -191,8 +191,7 @@ A cycle plan:
   "status": { "state": "DRAFT", "detail": "DRAFT 2026-09-04" },
   "consent": {
     "merge": true,
-    "end_all_run": false,
-    "lsp": { "dart": "installed" }
+    "end_all_run": false
   },
   "gates": {
     "unit": ["mise x -- mise run code:format --all"],
@@ -321,13 +320,14 @@ A cycle plan:
 The rules for each key — JSON has no comments, so they sit here:
 
 - **Every key** in the samples is required, for both kinds, save the
-  *cycle-only* keys `covers`, `exposure`, `acceptance` and `consent.lsp`: each
-  is required on a `vwf-plan` (`exposure` optional) and a `validate` finding on
-  a `vwf-change-plan`. An empty list is written `[]`. An object allows only the
-  keys named here — an unknown key is a finding — save `consent.lsp`, which
-  is open: its keys are language names. `execution` is the one other key that
-  `validate` does not require, so an older folder stays valid; a planner
-  always writes it.
+  *cycle-only* keys `covers`, `exposure` and `acceptance`: each is required on
+  a `vwf-plan` (`exposure` optional) and a `validate` finding on a
+  `vwf-change-plan`. `consent.lsp` is an old, optional cycle key that no script
+  reads and that a planner no longer writes: an older folder that has it stays
+  valid, its keys language names. An empty list is written `[]`. An object
+  allows only the keys named here — an unknown key is a finding. `execution` is
+  the one other key that `validate` does not require, so an older folder stays
+  valid; a planner always writes it.
 - **Empty strings.** `validate` refuses `""` in these places only: the plan
   `title`, a unit's `title` and `file`, a gap's `text`, `run`'s `worktree`
   and `log`, and every `id`. Every other string may be `""` — a `commit` not
@@ -377,12 +377,7 @@ The rules for each key — JSON has no comments, so they sit here:
   until it restarts — and the user chose to end there — `/vwf:execute all`
   then stops after this plan and reports "restart, then
   `/vwf:execute all`" — and `false` otherwise, written unasked when the plan
-  touches no such plugin. `lsp` *(cycle)* holds one key per language
-  `/vwf:doctor` flagged without a server, `installed` or `proceed without`,
-  answered at `/vwf:plan`'s stack gate. `/vwf:execute` does not read it until
-  its parked LSP check lands
-  (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`), and never asks
-  it; `{}` when none was flagged.
+  touches no such plugin.
 - **`gates`** — the exact commands confirmed in the interview, one string per
   line; `[]` for none. `unit`: `/vwf:execute` runs every line once before each
   commit it makes on a unit's behalf — the unit's own commit and each fix

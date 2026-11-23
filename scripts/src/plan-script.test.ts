@@ -937,6 +937,15 @@ describe("validate", () => {
     expect(plan(["validate", cycle]).status).toBe(0);
   });
 
+  it("accepts a cycle plan without the old consent.lsp", () => {
+    const doc = parse(cycle);
+    delete doc.consent.lsp;
+    writeFileSync(cycle, bytes(doc));
+    const r = plan(["validate", cycle]);
+    expect(r.stderr).toBe("");
+    expect(r.status).toBe(0);
+  });
+
   it.each([
     ["the change plan", () => change],
     ["the cycle plan", () => cycle],
