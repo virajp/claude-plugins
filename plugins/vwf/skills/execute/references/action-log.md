@@ -66,7 +66,8 @@ Each item is one point in the run and the call made there. Fill the names in ang
   markers, which `start.mjs` writes right after the log start, carry the real times of checks that ran before it.
 - **Each `lsp-check` row of a plan with no `code` unit:**
   `event lsp-check --subject <server> --message "<line>" --remedy "<fix>"`, after the checks markers, one per row of
-  `code:lsp:check`. `start.mjs` writes these on every start, fresh or resume, not you. The final report lists the
+  `code:lsp:check`, a value that starts with `--` left out, since it would read as a flag. `start.mjs` writes
+  these on every start, fresh or resume, not you. The final report lists the
   ones after the last `run.start` ([final-report.md](final-report.md)). A plan with a `code` unit stops on such a row
   instead, and writes none.
 - **The execution mode, once decided, and again if the run falls back:** `event execution --mode <solo|teams> --reason "<why>"`,
