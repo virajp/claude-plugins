@@ -98,6 +98,61 @@ Four sources define it, and none of them is a history:
    offers only the rows that remain, since every row is idempotent. The
    **machine part** is not a migrate row: it runs on every `/vwf:setup` run,
    beside the claims reconcile in the [materialize pass](materialize.md).
+   **`config_format` 26 → 27** moves the repo facts to bootstrap's
+   `.config/bootstrap/repo.toml`, each key as the
+   [format lineage](format-lineage.md) row for 27 maps it. It runs once the
+   stamp reads 26, including when this pass just moved it there, and reaches
+   bootstrap only through its CLI, by
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. **The base step:**
+   1. For each moved key, read `bootstrap config get <repo key> --json`.
+   2. If its `source` is `default` (no value), run
+      `bootstrap config set <repo key> <value> --json` with the `vwf.yaml`
+      value, a list or a table as JSON.
+   3. If the two values are the same, only remove the key from `vwf.yaml`.
+   4. If they differ, ask the user which to keep, one key at a time, per
+      `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`, and set the kept value.
+   5. Remove the moved keys from `vwf.yaml`, add `projects.<p>.repo` from
+      `members[].projects`, and set `config_format: 27`.
+   6. Run `bootstrap sync --json` in the base, since a set of
+      `repo.product_name` or `repo.members` is a key a sync reads.
+
+   **Members are compared field by field.** A member that `repo.members` does
+   not list yet is set as one whole table:
+   `bootstrap config set repo.members.<name> '<JSON table>' --json`. A member
+   it lists is set one field at a time:
+   `bootstrap config set repo.members.<name>.<field> <value> --json`. One
+   difference is a known result of bootstrap's own `init`, which wrote each old
+   member as `sibling`: when `linkage` is `submodule`, `.gitmodules` lists the
+   member's path and `repo.toml` says `sibling`, set `submodule` with no
+   question. Every other difference asks. A member with no `url` takes it
+   from `.gitmodules` (a submodule) or `git -C <folder> remote get-url origin`;
+   when neither gives one, ask the user.
+
+   **Projects.** A project a member lists with no `projects.<p>` entry gets
+   one holding only `repo`, and the report names it. A project two members
+   list stops the base step with one question: which member owns it.
+
+   **Then each present member.** Delete its `.config/vwf-membership.yaml` once
+   `bootstrap config get repo.home --json`, run in that member, resolves to
+   the base. A submodule or sibling member whose back-link does not resolve
+   keeps the file, and the report names it with the fix: from the base repo,
+   run `setup:configs` with the member's flag (`--<member>`). A member with no
+   `.config/bootstrap/` keeps the file too, and the report names the fix: run
+   `bootstrap init` in the member, then, from the base repo, `setup:configs`
+   with the member's flag. A `folder` member is a folder of the base repo's
+   tree and has no `vwf-membership.yaml` to delete.
+
+   **Order and commits.** The base step's sets (steps 1-6) come first; then
+   each member commits the deletion of its `vwf-membership.yaml` through
+   `/vwf:git-workflow`; then the base makes its step commit — the spine's
+   approval-gate commit, after its validation and doctor steps — carrying
+   `vwf.yaml`, what bootstrap wrote, the sync's output and the new submodule
+   pointers. A failed `bootstrap` call stops that repo's step with
+   bootstrap's `errors` messages, and nothing of that repo's step is
+   committed. The step's questions come before the plan, and each repo is one
+   consent row of it, per [migration and consent](migration-and-consent.md):
+   a declined row writes nothing, the stamp stays at 26, and the next migrate
+   pass offers the step again.
 2. **Resolve every unrecognised spelling through
    [format lineage](format-lineage.md)** before recording it as a gap. A tree
    written against an older format is usually *correct for that format* and

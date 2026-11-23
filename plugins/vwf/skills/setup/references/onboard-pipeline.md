@@ -36,14 +36,23 @@ In order:
    `${CLAUDE_PLUGIN_ROOT}/assets/templates/project-claude.md` into the repo's
    `CLAUDE.md`, preserving everything already there, per
    [the CLAUDE.md section](claude-md.md).
-4. **The one question.** `product.name`, one MCQ, proposed from the repo
+4. **The one question.** The product name, `repo.product_name` in
+   bootstrap's `repo.toml`, one MCQ, proposed from the repo
    directory name. It is the **only** question this path asks.
 
-Return `product.name` and both stamps. Write **no** `topology`,
-`linkage`, `members`, `harness`, `ui`, `enforcement`, or per-project block: a
+Return the product name, which the spine sets with `bootstrap config set
+repo.product_name <name> --json`, and both stamps. Set **no**
+`repo.topology` or `repo.members`, and write no `harness`, `ui`,
+`enforcement`, or per-project block: a
 key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
 `/vwf:doctor` reads as early rather than as drift.
+
+On a repo that is still **unshaped** — `init` declined, no
+`.config/bootstrap/` — that `config set` exits 2. Setup then **defers** the
+name: it leaves `repo.product_name` unset, writes nothing in its place, says so
+in the report, and sets it on the next `/vwf:setup` run once the repo is
+shaped, per the spine's step 2.
 
 ## The shape check defers rather than halting
 
@@ -119,7 +128,7 @@ Per [topology detection](topology-detection.md):
    consumer-domain rows. It is an index, never a gate; the platforms are what
    the rest of vwf branches on.
 4. **Topology** from the repo signals — a workspace declaration, a single root
-   manifest, `.gitmodules`, a `members:` list, a `.config/vwf-membership.yaml`.
+   manifest, `.gitmodules`, a `repo.members` table, a `repo.home` value.
    Present the matching template from [structure](workspace-structure.md) for
    confirmation; do not summarize all three.
 
@@ -137,13 +146,16 @@ what would supply it, and let `/vwf:architecture` settle it, per
 
 ### Multi-repo takes two more questions, in order
 
-**Linkage** first — `submodule` (recommend it, and say why) or `siblings`.
-Recommend, never enforce: a product whose repos already exist independently is a
-legitimate `siblings` answer. **Then the members** — each one's `name`, `path`
-relative to the base repo, git `url`, and which projects live in it. Under
-`submodule` linkage `.gitmodules` already states all four; read them, present
-them, confirm. Under `siblings` the `url` is the one fact nothing else records,
-and the absent-member clone offer depends on it, so never leave it blank.
+**The link** first — `submodule` (recommend it, and say why) or `sibling`,
+recorded as each member's `type`. Recommend, never enforce: a product whose
+repos already exist independently is a legitimate `sibling` answer. **Then the
+members** — each one's `name`, `folder` relative to the base repo, git `url`,
+and which projects live in it. For a `submodule` member `.gitmodules` already
+states all four; read them, present them, confirm. For a `sibling` the `url` is
+the one fact nothing else records, and the absent-member clone offer depends on
+it, so never leave it blank. The spine sets each new member as one table,
+`bootstrap config set repo.members.<name> '<JSON table>' --json`, and writes
+each of its projects' `projects.<p>.repo` in `.config/vwf.yaml`.
 
 **Which members are present is detected, never asked and never recorded.** A
 product with most members not on this machine is normal; note what is here and
@@ -185,6 +197,7 @@ each recorded as a written recommendation naming the target layout from
 moves no source file, so nothing here is applied — the report is the
 deliverable, and `/vwf:doctor` is what keeps it visible.
 
-Return to the spine with: the confirmed topology and linkage, the members, the
-per-project role/platforms/stack pins, the harness block, `product.name`, any
+Return to the spine with: the confirmed topology and each member's type, the
+members, the per-project role/platforms/stack pins, the harness block, the
+product name, any
 `enforcement:` decline recorded during the run, and the recommendations.

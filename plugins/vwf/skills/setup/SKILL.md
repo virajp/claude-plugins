@@ -101,7 +101,8 @@ from a forge-state row sets only what drifted.
 **The shape check comes first, before the mode fork**, and on a multi-repo
 product it asks its two questions of **every repo in the product**. Resolve the
 base per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, and take with it every
-member that base declares and that is present on this machine — the same set
+member that base's `repo.members` lists (`bootstrap config get repo.members
+--json`) and that is present on this machine — the same set
 `/vwf:doctor` evaluates. A run started inside a member therefore checks the
 product rather than the one repo it is standing in, and an **absent** member is
 a blind spot, never a finding. On a single-repo product the set is one repo and
@@ -162,7 +163,14 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The current stamp is `config_format: 26`. The latest config step, `25 → 26`,
+The current stamp is `config_format: 27`. The latest config step, `26 → 27`,
+moves the repo facts — the product name, the topology, the members and the
+deploy environments — out of `vwf.yaml` into bootstrap's `repo.toml` through
+`bootstrap config set`, asks only where the two disagree, and deletes each
+member's `.config/vwf-membership.yaml` once its `repo.home` resolves; the
+[format lineage](references/format-lineage.md) row for 27 maps the keys and
+[migrate pipeline](references/migrate-pipeline.md) step 1 runs it. The step
+before it, `25 → 26`,
 makes every MCP server the user's to install: its repo part removes the retired
 tools from `addons:` and each lockfile, deletes every MCP record left in each
 lockfile, re-pins every project on `claude-design` to claude-code, lovable or
@@ -277,10 +285,21 @@ point, since a stamp written before validation describes a tree nothing checked:
    carries no secret values. A bundle that fails here never reaches a stamp.
 2. **Write `.config/vwf.yaml`.** `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` is
    authoritative for every key — write the two stamps plus exactly what the
-   pipeline elicited, and nothing it did not. For a multi-repo product also
-   write each member's `.config/vwf-membership.yaml`, per
-   `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; which members are on this machine is
-   detected every run and never recorded.
+   pipeline elicited, and nothing it did not. The repo facts are not
+   `vwf.yaml` keys: set each the pipeline returned — `repo.product_name`,
+   `repo.topology`, `repo.topology_reason`, and for a multi-repo product each
+   `repo.members.<name>` — with `bootstrap config set <key> <value> --json`,
+   by `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and write each
+   member's project placement as `projects.<p>.repo`. A member's way back to
+   the base is its `repo.home`, which bootstrap writes when `setup:configs`
+   runs from the base with the member's flag (`--<member>`), per
+   `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; setup writes no file into a
+   member. Which members are on this machine is detected every run and never
+   recorded. When the repo is unshaped, `config set` exits 2 and the product
+   name is **deferred**: left unset and named in the report. On every later
+   run, once `bootstrap config get repo.product_name --json` reads `source`
+   `default` in a shaped repo, ask the onboard path's one product-name question
+   and set the answer here.
 
    **Then run [the materialize pass](#the-materialize-pass)**, before step 3 —
    the config it reads and writes is the one just written, and a stack that
@@ -352,8 +371,8 @@ recurring, not the finding: `/vwf:doctor` keeps reporting it as a warning,
 which is the honest state of a repo that chose its own shape.
 
 **Persist the decisions.** Per `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`, write the
-durable onboarding decisions and their rationale — topology, linkage, roles and
-platforms, screen surfaces, stack pins — as `docs/memory/decisions/<date>-<slug>.md`
+durable onboarding decisions and their rationale — topology, each member's
+`type`, roles and platforms, screen surfaces, stack pins — as `docs/memory/decisions/<date>-<slug>.md`
 records (a slug already taken that day takes `-2`, then `-3`; no record is
 overwritten), skipping what the docs capture verbatim. **Recall** them before
 Step 0 so a re-run builds on what was settled: list the folder's file names and

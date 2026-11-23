@@ -9,28 +9,33 @@ MCQ.
   task-runner config spanning several projects → **monorepo**.
 - a **single root manifest** with no workspace globs → **repo** (or, inside a
   base repo, a multi-repo member).
-- a `.gitmodules` naming child repos, **or** a `.config/vwf.yaml` carrying a
-  `members:` list, **or** a `.config/vwf-membership.yaml` in this repo →
-  **multi-repo**. See
+- a `.gitmodules` naming child repos, **or** a `repo.members` table
+  (`bootstrap config get repo.members --json`), **or** a `repo.home` value in
+  this repo → **multi-repo**. See
   [structure](workspace-structure.md)
   for the topology menu and how a choice is recorded.
 
-**Which linkage** — multi-repo only, recorded as `linkage:`:
+**Which type, per member** — multi-repo only, recorded as
+`repo.members.<name>.type`:
 
-- `.gitmodules` naming the members → **`submodule`**.
-- a `members:` list whose paths escape the repo, with no `.gitmodules` →
-  **`siblings`**.
-- both → the submodules win, and the `members:` paths should already agree;
-  report a disagreement rather than picking.
+- `.gitmodules` naming the member's folder → **`submodule`**.
+- a member folder that escapes the repo, with no `.gitmodules` entry →
+  **`sibling`**.
+- a member folder inside the base repo's tree that is not a submodule →
+  **`folder`**: a folder of the base repo, with no worktree, clone or landing
+  of its own.
+- `.gitmodules` and a recorded `type` that disagree → report the disagreement
+  rather than picking.
 
 **Where the base repo is.** Resolve it per
 [membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md) before anything else — a run
 started inside a member must operate on the product, not on the one repo it
-happens to be standing in. The base repo carries `.config/vwf.yaml`; every
-member carries `.config/vwf-membership.yaml` and none carries the config.
+happens to be standing in. The base repo carries `.config/vwf.yaml`; a
+submodule or sibling member reads its way back as `repo.home`
+(`bootstrap config get repo.home --json`) and none carries the config.
 
 **Which members are present.** Detect on every run; never read it from config
-and never write it there. A member is present when its resolved `path` exists
+and never write it there. A member is present when its resolved `folder` exists
 and is a git work tree. A twenty-repo product with three cloned is a normal
 state, not a degraded one — the absent-member sequence in
 [membership](${CLAUDE_PLUGIN_ROOT}/assets/membership.md) is what handles the rest.
