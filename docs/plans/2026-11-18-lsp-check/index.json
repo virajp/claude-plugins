@@ -163,14 +163,14 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T13:51:47.889Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "374ef4f0",
+        "to": "b35f7a28"
       }
     },
     {
@@ -236,8 +236,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T13:51:47.851Z",
       "ended": ""
     },
     {

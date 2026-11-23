@@ -48,12 +48,14 @@ type Json = any;
  * .mise-tasks-stub.json of its cwd (none reads as no task), in the shape the
  * real mise prints (an array of {name, ...}); a .mise-tasks-fail there fails
  * it. `tasks ls --json --hidden`, the lsp-check read, lists code:lsp:check
- * unless a .mise-lsp-absent is there, and a .mise-lsp-tasks-fail fails it;
+ * unless a .mise-lsp-absent is there, a .mise-lsp-tasks-fail fails it, and a
+ * .mise-lsp-tasks-kill ends it on SIGTERM;
  * `run code:lsp:check` passes unless a .mise-lsp-check.sh is there, which it
  * runs instead (lsp-check D22). Every other call runs what follows `--` (D22).
  */
 const MISE = `#!/bin/sh
 if [ "$*" = "tasks ls --json --hidden" ]; then
+  if [ -f .mise-lsp-tasks-kill ]; then kill -TERM $$; fi
   if [ -f .mise-lsp-tasks-fail ]; then echo "mise ERROR the tasks do not load" >&2; exit 1; fi
   if [ -f .mise-lsp-absent ]; then echo "[]"; exit 0; fi
   echo '[{"name":"code:lsp:check"}]'; exit 0
@@ -1091,6 +1093,19 @@ describe("code:lsp:check (lsp-check D1, D2, D13, D19, D22, D24)", () => {
   // with SIGTERM, the same null-status path, so no real timeout is waited out.
   it("a signal, as a timeout sends, is one row: the check did not run (D22, D25)", () => {
     check("kill -TERM $$\n");
+    const r = repoLevel();
+    expect(r.status).toBe(0);
+    expect(find(r.json, "lsp-check")).toEqual([
+      expect.objectContaining({
+        subject: TASK,
+        message: "code:lsp:check did not run: SIGTERM",
+        remedy: FAILED,
+      }),
+    ]);
+  });
+
+  it("a signal on the tasks ls read, as a timeout sends, is one row: the check did not run (D24)", () => {
+    writeFileSync(join(base, ".mise-lsp-tasks-kill"), "");
     const r = repoLevel();
     expect(r.status).toBe(0);
     expect(find(r.json, "lsp-check")).toEqual([

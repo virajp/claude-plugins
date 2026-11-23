@@ -62,7 +62,11 @@ function taskNames(stdout) {
 }
 
 export function lspCheckRows({ base }) {
-  const ls = spawnSync("mise", ["tasks", "ls", "--json", "--hidden"], { cwd: base, encoding: "utf8" });
+  const ls = spawnSync("mise", ["tasks", "ls", "--json", "--hidden"], {
+    cwd: base,
+    encoding: "utf8",
+    timeout: TIMEOUT,
+  });
   if (ls.status === null) {
     return [didNotRun(ls)];
   }
