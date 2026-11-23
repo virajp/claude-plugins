@@ -11,8 +11,12 @@
 //
 // --projects scopes the project checks; --projects "" runs the repo-level
 // checks only; no flag checks every registry project. No audit, no drift, no
-// network, no bootstrap dry-run. An LSP server of `bootstrap lsp --json`
-// missing from the vwf-tools plugin is a degraded row (R5b D8).
+// bootstrap dry-run, and no network read but one: the checks run bootstrap's
+// code:lsp:check once from the base root, which runs `bootstrap lsp --json`,
+// and report each LSP server it cannot resolve as a degraded lsp-check row; a
+// task that is absent or fails is one lsp-check row too. An LSP server of
+// `bootstrap lsp --json` missing from the vwf-tools plugin is a degraded row
+// (R5b D8).
 
 import {
   ChecksError,

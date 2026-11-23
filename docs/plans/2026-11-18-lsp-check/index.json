@@ -16,8 +16,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-18 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-23 18:30 in .worktrees/all-2026-11-23-0333"
   },
   "consent": {
     "merge": true,
@@ -93,11 +93,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T13:01:08.661Z",
+      "ended": "2026-11-23T13:34:19.428Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U2",
@@ -117,11 +117,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T13:01:08.733Z",
+      "ended": "2026-11-23T13:06:27.148Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -224,8 +224,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T13:01:08.623Z",
       "ended": ""
     },
     {
@@ -486,6 +486,15 @@
         "U1",
         "U3"
       ]
+    },
+    {
+      "id": "D25",
+      "decision": "Q1: D24 sets the code:lsp:check spawn timeout at 60 seconds and asks for a test of it. How should the doctor tests cover the timeout?",
+      "ruling": "Keep the SIGTERM signal test as the stand-in for the 60-second timeout test — it runs the same null-status path without a real timeout; no env override, no slow test.",
+      "rejected": "Add an env override of the timeout, read by lsp.mjs; A real test that waits more than 60s",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
@@ -515,7 +524,12 @@
     }
   },
   "gaps": [],
-  "overrides": [],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-18-lsp-check.jsonl"

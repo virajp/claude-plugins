@@ -11,8 +11,8 @@ registry project with no `repo.projects.<name>` entry in bootstrap, a bundle
 tool not selected or not linked, a materialized entry with no `tools:` key and
 an LSP server missing from `vwf-tools` (§3), and a design tool with no
 reference in `vwf-tools`, an addon absent from `plugins.project` and a
-lockfile row of a retired pack kind (§5) are each a **degraded** row, never
-blocking.
+lockfile row of a retired pack kind (§5), and an `lsp-check` row of
+`code:lsp:check` (§3) are each a **degraded** row, never blocking.
 
 **These checks are one script.** The findings `/vwf:execute` stops on —
 pinned not materialized (§3), a `custom` pin, template platform coverage, the
@@ -121,6 +121,28 @@ under `lspServers`. An absent manifest holds none. Each server it lacks is one
 **degraded** row naming the server and the repo, remedy `/vwf:setup`, whose
 materialize pass copies it there. A language `bootstrap lsp` lists no server
 for needs none, and is no row.
+
+**The LSP servers resolve** (`checks.mjs` row `lsp-check`). Once, from the
+base repo root, run bootstrap's `mise run code:lsp:check` (a member repo's
+servers are not checked). The task reads `bootstrap lsp --json` and prints
+`<server>: <path>` for each server that resolves, or
+`<server>: <command> not found - <fix>`; the fix is
+`run MISE_ENV=dev mise install`, or for `sourcekit-lsp` "install the Xcode
+Command Line Tools (xcode-select --install) or Xcode". It exits 0 when each
+server resolves or the repo has none, 1 when one is missing, and 2 with no
+bootstrap or no `.config/bootstrap/`. Each not-found line is one **degraded**
+row, `project` `null`, `subject` the server as printed, `message` the line
+without its colour and label, `remedy` the fix. A task `mise tasks ls --hidden`
+does not list is one degraded row, `subject` `code:lsp:check`, remedy
+`bootstrap sync`, which writes it. Any other failure — exit 2, a non-zero
+exit with no not-found line, a failed `mise tasks ls`, a failed spawn, a
+signal or the 60-second timeout, `mise` absent from `PATH` — is one degraded
+row with `subject` `code:lsp:check`, the last stderr line mise did not write
+as `message` and `remedy`, else `code:lsp:check failed with exit <n>` and
+`run mise run code:lsp:check and fix what it prints`. `bootstrap lsp --json`
+is the one call of these checks that can read the network; an offline failure
+is such a row. The rows never block doctor; `/vwf:execute` stops a plan with a
+code unit on any of them.
 
 For each linked language tool of a project, resolve its row in the stack
 vocabulary by the tool name:
