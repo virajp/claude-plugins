@@ -232,9 +232,9 @@ adopting it.
 - **Structure and stacks are both menus.** `vwf` ships three topology templates
   (`repo` / `monorepo` / `multi-repo`) and `/vwf:architecture` presents stack
   templates per axis — you pick, and the choice plus its reason is recorded so
-  it is never re-litigated. A multi-repo product picks a **linkage** too:
-  `submodule` (recommended) or `siblings`, so a product whose repos are ordinary
-  clones needs no restructuring to be onboarded.
+  it is never re-litigated. A multi-repo product picks each member's **type**
+  too: `submodule` (recommended), `sibling` or `folder`, so a product whose
+  repos are ordinary clones needs no restructuring to be onboarded.
 - **Solo / small-team focus.** It is highly opinionated — one workflow, one set
   of conventions. Great for a solo dev or small team; not a configurable
   framework for a large org.
@@ -369,7 +369,7 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 ```text
 .config/
 └── vwf.yaml                     # the vwf config — how vwf operates here (stamp,
-                                 # harness, enforcement opt-outs, knobs, environments)
+                                 # harness, enforcement opt-outs, knobs)
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
 │   ├── product.md               # problem, users, measurable goals, slice priority
@@ -450,7 +450,9 @@ provider", and stay true when you swap either.
 
 Structure is a **menu**, like stacks. `vwf` ships three topology templates and
 `/vwf:setup` presents the one it detects for confirmation; the choice and its
-reason land in `.config/vwf.yaml` and are never re-litigated.
+reason land in bootstrap's `.config/bootstrap/repo.toml` (`repo.topology` and
+`repo.topology_reason`, written through `bootstrap config`) and are never
+re-litigated.
 
 | Topology     | What it is                                             | `docs/blueprint/` lives |
 | ------------ | ------------------------------------------------------ | ----------------------- |
@@ -466,9 +468,13 @@ graph with TypeScript.
 
 A multi-repo product has a **base repo** holding the blueprint, the config and
 the plan index — and no product code — plus one or more **members** holding the
-code. How the members are wired is the `linkage:` choice:
+code. The members live in the base's `.config/bootstrap/repo.toml`, one
+`[members.<name>]` table each with its `folder`, clone `url` and `type`, which
+`/vwf:architecture` writes through `bootstrap config`; which member holds a
+project is `projects.<name>.repo` in `.config/vwf.yaml`. How each member is
+wired is its `type`:
 
-**`linkage: submodule`** (recommended) — the members are git submodules, so one
+**`type = "submodule"`** (recommended) — the members are git submodules, so one
 `clone --recurse-submodules` reproduces the product at a known-good set of
 commits, and the pointer commits record which member versions were ever
 consistent together:
@@ -485,10 +491,12 @@ my-product/           # base repo — vwf lives here
 └── app/              # submodule — a single repo (Flutter)
 ```
 
-**`linkage: siblings`** — the members are ordinary repos cloned next to the
-base. Nothing wires them in git, so vwf does it: the base's `members:` list
-names each one (with the git URL to clone it from), and each member carries
-`.config/vwf-membership.yaml` pointing back. That back-link is load-bearing —
+**`type = "sibling"`** — the members are ordinary repos cloned next to the
+base. Nothing wires them in git, so the repo facts do it: the base's
+`[members.<name>]` table names each one (with the git URL to clone it from), and
+each member's own `repo.toml` carries bootstrap's `[home]` pointing back,
+written by bootstrap's sync when `setup:configs` runs from the base. That
+back-link is load-bearing —
 without it, running `/vwf:plan` from inside a member would find no config and
 report a perfectly onboarded repo as un-onboarded.
 
@@ -496,12 +504,16 @@ report a perfectly onboarded repo as un-onboarded.
 ~/Projects/acme/
 ├── acme-product/     # base repo — docs only
 │   ├── docs/blueprint/
-│   └── .config/vwf.yaml     # members: [...]
+│   └── .config/bootstrap/repo.toml   # [members.*]
 ├── acme-api/         # plain repo
-│   └── .config/vwf-membership.yaml
+│   └── .config/bootstrap/repo.toml   # [home]
 └── acme-app/
-    └── .config/vwf-membership.yaml
+    └── .config/bootstrap/repo.toml   # [home]
 ```
+
+**`type = "folder"`** — a member folder inside the base repo's own tree that is
+not a submodule. It is not a repo of its own: it has no `[home]`, no separate
+worktree, clone or landing, and its work is the base repo's work.
 
 **Not every member has to be on your machine.** A twenty-repo product doesn't
 fit on one laptop, and vwf detects what's present on every run rather than
@@ -971,8 +983,10 @@ so the set is never one it was told. The base is resolved by the membership
 contract, walking up out of a member or a linked worktree, so a run started
 inside a member shapes the whole product rather than the one repo you were
 standing in. The members are the **union** of two sources — the submodule paths
-`.gitmodules` declares, walked recursively, and the `members:` list in
-`.config/vwf.yaml` — deduped on realpath. Where only one of the two exists,
+`.gitmodules` declares, walked recursively, and the `submodule` and `sibling`
+members of bootstrap's `repo.members` — deduped on realpath. A `folder` member
+is shaped with the base, never as a row of its own. Where only one of the two
+exists,
 which is the ordinary case, that list *is* the member set. Only where **both**
 exist does a path in one and not the other become a **membership disagreement**:
 it is reported in the plan, naming both sources, and never shaped — settling it
@@ -981,8 +995,8 @@ by picking a side would write a repo into the product on `init`'s own authority.
 **A member that is not on this machine gets a clone row, not a second
 question.** An empty submodule directory or a declared sibling that is not there
 is *absent*; its section of the plan opens with the command that would fetch it
-— `git submodule update --init <path>` under submodule linkage,
-`git clone <url> <path>` under siblings — followed by *then survey and shape
+— `git submodule update --init <path>` for a `submodule` member,
+`git clone <url> <path>` for a `sibling` — followed by *then survey and shape
 it*, and that row is covered by the same one yes as everything else. On a no
 nothing is cloned and the member is exactly as absent as before. A member with
 no clone source recorded anywhere gets no row at all: it is listed under
@@ -1420,8 +1434,26 @@ only once every part is applied; until then setup offers only what is left. Its
 other repos that claim one, and setup lists the servers for you to install by
 hand. Declined, nothing is written and it is offered again next run.
 
-Whichever path runs, it detects your topology (repo, monorepo, or multi-repo +
-linkage; project roles and platforms — `watch`, `tv` and `spatial` from an Xcode
+**`config_format` 27 moves the repo facts to bootstrap.** The product name, the
+topology and its reason, the members and the deploy environments leave
+`.config/vwf.yaml` for bootstrap's `.config/bootstrap/repo.toml`
+(`repo.product_name`, `repo.topology`, `repo.topology_reason`,
+`repo.members.<name>`, `repo.deploy.<env>.<project>`, `repo.release_env`), read
+and written through `bootstrap config`; which member holds a project stays in
+`vwf.yaml` as `projects.<name>.repo`. The step sets each value `repo.toml` does
+not have yet, only removes one both files agree on, and **asks only where
+`repo.toml` and `vwf.yaml` differ**, one key at a time — except a member
+bootstrap's own `init` recorded as `sibling` that `.gitmodules` lists, set to
+`submodule` with no question. `linkage` becomes each member's `type`, and
+`.config/vwf-membership.yaml` gives way to bootstrap's `[home]` back-link: each
+present member deletes the file, in its own commit before the base's, once its
+`repo.home` resolves, and the report names the fix where it does not. One row
+per repo; a declined row writes nothing, the stamp stays at 26, and the next
+pass offers it again.
+
+Whichever path runs, it detects your topology (repo, monorepo, or multi-repo
+with each member's type; project roles and platforms — `watch`, `tv` and
+`spatial` from an Xcode
 target's SDK or an `AndroidManifest.xml` feature, Wear OS from
 `android.hardware.type.watch`, Android TV from `android.software.leanback`, and
 `auto` from the Car App Library metadata or `android.hardware.type.automotive`;
@@ -1447,7 +1479,9 @@ E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
 blueprint and config format versions, harness inventory, enforcement opt-outs,
 and per-project nuances (a coverage-target override, a non-conventional health
 path) — so a later run detects drift, and every command knows how vwf operates
-in this repo (pipeline knobs, verify environments).
+in this repo (pipeline knobs). The repo facts — the product name, the
+topology, the members and the verify environments — are bootstrap's, in
+`.config/bootstrap/repo.toml`.
 
 #### The materialize pass
 
@@ -1556,8 +1590,14 @@ foundation and accept/adapt/defer per core one, recorded as cross-cutting
 tokens), and writes **both** `docs/blueprint/registry.yaml` — the
 machine-readable registry every other command depends on — and
 `docs/blueprint/architecture.md`, its prose view with a system-shape mermaid
-diagram kept in sync with it. Re-run it any time the topology changes; it asks
-only about genuine deltas, never re-eliciting what's confirmed.
+diagram kept in sync with it. The topology and its reason, and under
+`multi-repo` each member — its folder, clone url and type (`submodule` or
+`sibling` from your link answer, `folder` for a member folder inside the base
+repo's tree that is not a submodule) — it writes through `bootstrap config` into
+the base's `.config/bootstrap/repo.toml`, never into `.config/vwf.yaml`; each
+project placed in a member gets `projects.<name>.repo` in `vwf.yaml`. Re-run it
+any time the topology changes; it asks only about genuine deltas, never
+re-eliciting what's confirmed.
 
 **With no registry yet but a `product.md` in place, it derives rather than
 interviews.** The structural questions — which surfaces exist, which projects
@@ -3203,7 +3243,9 @@ deployed project in the named environment, then re-runs the blueprint's flow
 flows, not just the last plan's, so regressions in untouched flows surface).
 Failures route like feedback: a behavior regression becomes a gap with a
 `/vwf:blueprint` / `/vwf:plan` offer; an infrastructure failure is reported as
-operational, not filed as a blueprint gap.
+operational, not filed as a blueprint gap. Each project's URL in the named
+environment is `repo.deploy.<env>.<project>`, read through `bootstrap config`
+from the base's `repo.toml`; one it has to ask for, it offers to record there.
 
 ```text
 /vwf:verify staging
@@ -3211,7 +3253,8 @@ operational, not filed as a blueprint gap.
 ```
 
 A clean run against the **production** environment (the env named `production`,
-or whatever `production_env` in `.config/vwf.yaml` names) offers to record a
+or whatever `repo.release_env` in bootstrap's `repo.toml` names) offers to
+record a
 **release**: each deployed `service` project's living OpenAPI contract is frozen
 into `docs/blueprint/apis/released/<project>@<version>.openapi.yaml`, and every
 entity's `schema.yaml` into `apis/released/entities/<entity>@<date>.schema.yaml`

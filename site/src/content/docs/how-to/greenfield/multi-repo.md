@@ -132,7 +132,7 @@ not exist yet.
 
 ### 5. Wire the members, then onboard each one
 
-Stallfront wires its members as `submodule`, the recommended linkage —
+Stallfront wires its members as `submodule`, the recommended member type —
 [Submodules or siblings](#submodules-or-siblings) is where that choice is worth
 making deliberately. So: create the three code repos empty, and add each as a
 submodule of the base.
@@ -153,10 +153,13 @@ Recording a repo's membership in a vwf product **is** a setup run from inside
 that repo. Finding no config of its own, the run onboards it; base-repo
 resolution reaches Stallfront's config from there, so it acts on that one
 member's delta instead of re-onboarding the product. What it records is the
-membership in both directions — the base gains an entry naming the member, where
-it sits, the git URL to clone it from, and which registry projects live in it,
-and the member gains a small file naming the product and the way back to the
-base. Neither direction is decoration: the entry is what lets a command running
+membership in both directions — the base's `.config/bootstrap/repo.toml` gains
+a `[members.<name>]` table naming the member, where it sits, the git URL to
+clone it from and its type, and its `.config/vwf.yaml` names the member each
+registry project lives in, and the member's own `repo.toml` gains bootstrap's
+`[home]`, the way back to the base, written when `setup:configs` runs from the
+base with that member's flag. Neither direction is decoration: the entry is what
+lets a command running
 in the base find code it does not contain, and the back-link is what stops a
 command running inside a member reporting a perfectly onboarded repo as
 un-onboarded. Where each one lives, and why both directions matter:
@@ -247,10 +250,11 @@ The stage pipeline, the finding loops and the landing per the folder's consent
 are unchanged: [`/vwf:execute`](./single-repo.md#vwfexecute). Two things are
 multi-repo-specific.
 
-**The worktree follows the linkage.** Under Stallfront's `submodule` linkage the
+**The worktree follows the member type.** With Stallfront's `submodule` members
+the
 worktree is of the base repo with the members populated inside it, so one tree
 holds both the code being written and the blueprint docs being stamped, and
-nothing about the run is cross-repo. Under `siblings` it is not — see
+nothing about the run is cross-repo. With `sibling` members it is not — see
 [Submodules or siblings](#submodules-or-siblings).
 
 **Absence is a halt here, not an offer.** Where `plan` proceeds with a blind
@@ -308,8 +312,10 @@ by construction.
 
 ### Submodules or siblings
 
-Both linkages are first-class and the difference is only how the members are
-wired, never how vwf behaves.
+Both member types are first-class and the difference is only how the members
+are wired, never how vwf behaves. A third type, `folder`, is a member folder
+inside the base repo's own tree that is not a submodule: it is part of the base
+repo, and its work is the base repo's work.
 
 `submodule` is recommended, and Stallfront took it: one
 `clone --recurse-submodules` reproduces the whole product, the pointer commits
@@ -318,7 +324,7 @@ find its product structurally by walking up. The cost is real — detached HEADs
 a pointer commit in the base for every member commit, and a plain `clone` that
 silently yields an empty checkout.
 
-`siblings` means the members are ordinary repos cloned next to the base, wired
+`sibling` means the members are ordinary repos cloned next to the base, wired
 by nothing in git at all. Pick it when the repos already exist independently and
 are not going to be re-wired, when one of them is shared with another product
 and so cannot be any single product's submodule, or when there are more of them
@@ -331,12 +337,13 @@ first of these surfaces at `/vwf:execute`:
   of the member, not of the base. The blueprint writes that close the run —
   implementation stamps, docs sync — then reach the base checkout as a second
   working tree, and the two commit separately with the base last.
-- **The back-link file stops being belt-and-braces and becomes load-bearing**,
+- **The `[home]` back-link stops being belt-and-braces and becomes
+  load-bearing**,
   since there is no superproject walk to fall back on.
-- **Each member adopts bootstrap on its own.** Under `siblings` each member is
-  its own repository, and bootstrap's `docs/sync` takes the paths from
-  `members:`
-  in `.config/vwf.yaml`, per its Siblings section. Bootstrap's member flags, on
+- **Each member adopts bootstrap on its own.** A `sibling` member is its own
+  repository, and bootstrap's `docs/sync` takes the paths from `repo.members`
+  in the base's `.config/bootstrap/repo.toml`, per its Siblings section.
+  Bootstrap's member flags, on
   `setup` and `code:worktrees`, cover git submodules only.
 
 Neither answer is permanent — both are written uniformly enough that switching

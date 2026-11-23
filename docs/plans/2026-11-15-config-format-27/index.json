@@ -247,7 +247,9 @@
         "readme.md",
         ".claude/docs/**",
         ".claude/skills/**",
-        "site/src/content/docs/**"
+        "site/src/content/docs/**",
+        "plugins/vwf/assets/bootstrap-contract.md",
+        "plugins/stackgen/assets/bootstrap-contract.md"
       ],
       "depends_on": [
         "U1",
@@ -257,11 +259,11 @@
         "U7"
       ],
       "waits": "docs-sync reads the delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T06:14:46.557Z",
+      "ended": "2026-11-23T07:48:02.153Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U9",
@@ -297,8 +299,8 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T06:14:46.482Z",
       "ended": ""
     },
     {
@@ -671,32 +673,39 @@
         "U4",
         "U6"
       ]
+    },
+    {
+      "id": "D39",
+      "decision": "Q5: How are the two bootstrap-contract.md copies reconciled, now that only vwf carries the pane exception?",
+      "ruling": "Name the difference: edit line 4 of each bootstrap-contract.md copy to say the bodies match except for vwf one pane exception; this touches one stackgen line beyond D15, and stackgen stays PATCH.",
+      "rejected": "Copy the exception paragraph into stackgen copy too; Leave both lines as they are",
+      "units": []
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T06:14:23.026Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T06:14:22.805Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "no covers: a change plan has no acceptance criteria or Screens contract",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T06:14:22.917Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
-      "started": "",
-      "ended": ""
+      "state": "skipped",
+      "detail": "no covers and no code unit: no stamps, nothing to persist; no Reconcile commit",
+      "started": "2026-11-23T06:14:23.168Z",
+      "ended": "2026-11-23T06:14:23.207Z"
     }
   },
   "gaps": [
@@ -705,6 +714,13 @@
       "unit": "",
       "stage": "",
       "text": "R1 wave review: 7 findings round 1, 5 round 2 (cap 2), closing pass left 3 fold-width regressions (membership.md:124, doctor/SKILL.md:164,168) · settled by one targeted rewrap and a narrow column check, no ruling owed",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U8",
+      "stage": "",
+      "text": "Line 4 of both bootstrap-contract.md copies falsified by the D14 pane exception, no owner (U1 committed, stackgen out of scope per D27) · U8 owns widened to both copies under D39 and the fix applied",
       "state": "closed"
     }
   ],

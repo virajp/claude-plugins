@@ -66,9 +66,17 @@ move, never as a question. Jotter's `.config/vwf.yaml` still carries the
 `memory:` block an older format wrote, and its root a `mempalace.yaml`: the
 `config_format` 24 step offers each for removal as one numbered row.
 
-Seven lineage rows are about recent formats rather than about old spellings, and
-they behave differently from each other. `config_format` **26**, the current
-one, makes every MCP server yours to install. Its repo part runs once: it
+Eight lineage rows are about recent formats rather than about old spellings,
+and they behave differently from each other. `config_format` **27**, the
+current one, moves the repo facts — the product name, the topology, the members
+and the deploy environments — out of `.config/vwf.yaml` into bootstrap's
+`.config/bootstrap/repo.toml`, read and written through `bootstrap config`. It
+sets each value `repo.toml` does not have yet, asks only where `repo.toml` and
+`vwf.yaml` differ, one key at a time, and replaces each member's
+`.config/vwf-membership.yaml` with bootstrap's `[home]` back-link. It is one row
+per repo; declined, the stamp stays at 26 and the next pass offers it again.
+`config_format` **26** makes every MCP server yours to install. Its repo part
+runs once: it
 removes the retired `context7` and `notion` tools and their `addons:` entries,
 asks one question that re-pins every project on `claude-design` to `claude-code`
 (the default), `lovable` or `stitch` — offering `taste-skill` with `claude-code`
@@ -86,7 +94,7 @@ the next pass offers it again. `config_format` **23** retires the top-level
 read live, and the dependency-bot key goes with the bot config it chose. Its
 step is applied by `/vwf:setup reshape`, and until then a repo still stamped 22
 stays as it is: its `answers:` block is ignored wherever it would have been
-read, and `/vwf:doctor` reports 22 against 26. A repo carrying
+read, and `/vwf:doctor` reports 22 against 27. A repo carrying
 `.config/stackgen.yaml`, `.config/mise/conf.d/tools.toml`,
 `.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` that
 bootstrap's shaped test refuses is **shaped on the old layout**: setup and
