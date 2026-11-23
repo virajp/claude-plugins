@@ -146,8 +146,8 @@
       "status": "green",
       "started": "2026-11-23T13:39:28.799Z",
       "ended": "2026-11-23T13:48:01.746Z",
-      "commit": "a80a157d",
-      "rounds": 2
+      "commit": "d62d5370",
+      "rounds": 3
     },
     {
       "id": "U4",
@@ -167,10 +167,10 @@
       "started": "2026-11-23T13:51:47.889Z",
       "ended": "",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "374ef4f0",
-        "to": "b35f7a28"
+        "from": "b35f7a28",
+        "to": "d62d5370"
       }
     },
     {

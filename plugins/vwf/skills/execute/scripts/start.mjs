@@ -763,13 +763,12 @@ function start({ target, worktree, branch, memberBranch }) {
       return result({ ...base_, result: "blocked", projects, findings, message: `${folder}: ${why}` });
     }
     // lsp-check D23, D24: a plan with no code unit goes on; the final report reads these.
-    // A captured value that starts with `--` would read as a flag to log.mjs: it is left out.
+    // A captured value that starts with `--` would read as a flag to log.mjs: a leading space keeps it a value.
     for (const r of lsp) {
       const args = ["event", "lsp-check"];
       for (const k of ["subject", "message", "remedy"]) {
-        if (!String(r[k]).startsWith("--")) {
-          args.push(`--${k}`, r[k]);
-        }
+        const v = String(r[k]);
+        args.push(`--${k}`, v.startsWith("--") ? ` ${v}` : v);
       }
       log(f.logCwd, args);
     }

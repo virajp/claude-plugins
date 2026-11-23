@@ -808,15 +808,16 @@ describe("the LSP check (lsp-check D4, D14, D17, D19, D23)", () => {
     });
   });
 
-  it("leaves out of the lsp-check event a captured value that starts with --", () => {
+  it("keeps all three keys of an lsp-check event whose captured value starts with --", () => {
     editSeed();
-    const r = start([`docs/plans/${A}`], { STUB_LSP: "--evil-ls: --evil-ls not found - run mise install" });
+    const line = "--evil-ls: --evil-ls not found - run mise install";
+    const r = start([`docs/plans/${A}`], { STUB_LSP: line });
     expect(r.json).toMatchObject({ result: "ready", findings: [expect.objectContaining({ subject: "--evil-ls" })] });
     const e = events(A)[4];
-    expect(e).toMatchObject({ remedy: "run mise install" });
-    for (const k of ["subject", "message", "evil_ls"]) {
-      expect(e).not.toHaveProperty(k);
-    }
+    expect(e).toMatchObject({ subject: " --evil-ls", message: ` ${line}`, remedy: "run mise install" });
+    expect(Object.keys(e).sort()).toEqual(
+      ["agent", "event", "message", "remedy", "run", "session", "subject", "ts"],
+    );
   });
 
   it("keeps no degraded row of another rule, and blocks on none (D17)", () => {

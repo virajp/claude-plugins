@@ -1,0 +1,6 @@
+/security-review over b35f7a28..d62d5370 (worktree all-2026-11-23-0333), round 2 of loop U4
+
+No high-confidence vulnerabilities found in b35f7a28..d62d5370.
+
+- Fix 1 (no timeout on mise tasks ls): holds. lsp.mjs:65-69 passes timeout: TIMEOUT (60000, line 17); a timeout leaves status null and line 70 returns didNotRun. argv array, no shell.
+- Fix 2 (a -- value read as a flag): holds. start.mjs:768-774 leaves out any subject, message or remedy that starts with --. log.mjs fields() (log.mjs:121-138) treats only -- as a key marker; -x stays a plain string; a value with = is never split. log() at start.mjs:191-192 passes an argv array with no shell.
