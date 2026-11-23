@@ -80,7 +80,7 @@
       "status": "green",
       "started": "2026-11-23T08:59:27.161Z",
       "ended": "2026-11-23T09:12:47.894Z",
-      "commit": "",
+      "commit": "939b032c",
       "rounds": 2,
       "kind": "edit",
       "model": "opus",
@@ -217,9 +217,9 @@
   "waves": [
     {
       "id": "W1",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T08:59:27.119Z",
-      "ended": ""
+      "ended": "2026-11-23T10:13:06.365Z"
     },
     {
       "id": "W2",
