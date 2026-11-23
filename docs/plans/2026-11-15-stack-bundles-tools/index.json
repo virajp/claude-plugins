@@ -196,11 +196,11 @@
         "U4"
       ],
       "waits": "bumps versions and runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:36:53.207Z",
+      "ended": "2026-11-23T11:43:40.478Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "edit",
       "model": "opus",
       "wave": 5,
@@ -241,8 +241,8 @@
     },
     {
       "id": "W5",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T11:36:53.167Z",
       "ended": ""
     }
   ],

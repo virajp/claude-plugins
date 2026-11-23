@@ -4,8 +4,8 @@ axis: deploy
 kind: cloud-provider
 tools: []
 packs:
-- cloud-provider/gcp@0.1.1
-- cloud-service/gke@0.1.1
+- cloud-provider/gcp@1.0.0
+- cloud-service/gke@1.0.0
 artifact: container-image
 ---
 

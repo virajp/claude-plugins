@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/queues@0.1.1
+- cloud-service/queues@1.0.0
 ---
 
 # Backing — Cloudflare Queues

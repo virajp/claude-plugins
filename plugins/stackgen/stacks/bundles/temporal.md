@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/temporal@0.1.1
+- capability-provider/temporal@1.0.0
 ---
 
 # Backing — Temporal

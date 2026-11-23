@@ -5,7 +5,7 @@ kind: app-framework
 tools:
 - swift
 packs:
-- app-framework/swiftui@1.0.1
+- app-framework/swiftui@2.0.0
 platforms:
 - mobile
 - tablet

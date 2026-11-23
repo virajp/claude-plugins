@@ -4,7 +4,7 @@ axis: stylesheet
 kind: stylesheet
 tools: []
 packs:
-- stylesheet/tailwindcss@0.2.2
+- stylesheet/tailwindcss@1.0.0
 ---
 
 # Stylesheet — Tailwind CSS

@@ -4,7 +4,7 @@ axis: deploy
 kind: deploy-target
 tools: []
 packs:
-- deploy-target/container-image@0.2.2
+- deploy-target/container-image@1.0.0
 artifact: container-image
 ---
 

@@ -4,11 +4,11 @@ axis: backing
 kind: cloud-provider
 tools: []
 packs:
-- cloud-provider/gcp@0.1.1
-- cloud-service/firestore@0.1.1
-- cloud-service/firebase-auth@0.1.1
-- cloud-service/firebase-storage@0.1.1
-- cloud-service/firebase-messaging@0.1.1
+- cloud-provider/gcp@1.0.0
+- cloud-service/firestore@1.0.0
+- cloud-service/firebase-auth@1.0.0
+- cloud-service/firebase-storage@1.0.0
+- cloud-service/firebase-messaging@1.0.0
 ---
 
 # Backing — Google Cloud · Firebase

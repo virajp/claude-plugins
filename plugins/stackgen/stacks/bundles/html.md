@@ -6,7 +6,7 @@ tools:
 - node
 - pnpm
 packs:
-- framework/html@0.2.1
+- framework/html@1.0.0
 platforms:
 - site
 ---

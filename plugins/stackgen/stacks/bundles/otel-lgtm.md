@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/otel-lgtm@0.1.1
+- capability-provider/otel-lgtm@1.0.0
 ---
 
 # Backing — OpenTelemetry · Grafana OTel-LGTM

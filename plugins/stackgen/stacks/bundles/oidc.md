@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/oidc@0.1.1
+- capability-provider/oidc@1.0.0
 ---
 
 # Backing — OIDC issuer

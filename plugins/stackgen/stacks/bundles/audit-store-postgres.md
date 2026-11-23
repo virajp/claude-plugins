@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/audit-store-postgres@0.1.1
+- capability-provider/audit-store-postgres@1.0.0
 ---
 
 # Backing — Audit store · PostgreSQL

@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/images@0.1.2
+- cloud-service/images@1.0.0
 ---
 
 # Backing — Cloudflare Images

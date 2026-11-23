@@ -4,7 +4,7 @@ axis: stylesheet
 kind: stylesheet
 tools: []
 packs:
-- stylesheet/stylex@0.2.2
+- stylesheet/stylex@1.0.0
 ---
 
 # Stylesheet — StyleX

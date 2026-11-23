@@ -4,7 +4,7 @@ axis: stylesheet
 kind: stylesheet
 tools: []
 packs:
-- stylesheet/plain-css@0.2.2
+- stylesheet/plain-css@1.0.0
 ---
 
 # Stylesheet — Plain CSS

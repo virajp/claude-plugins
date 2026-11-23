@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/ai-search@0.1.1
+- cloud-service/ai-search@1.0.0
 ---
 
 # Backing — Cloudflare AI Search

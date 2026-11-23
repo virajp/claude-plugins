@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/fnox@3.0.1
+- capability-provider/fnox@4.0.0
 ---
 
 # Backing — fnox

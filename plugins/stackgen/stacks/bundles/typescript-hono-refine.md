@@ -7,7 +7,7 @@ tools:
 - pnpm
 packs:
 - framework/hono@generated
-- framework/effect@0.1.0
+- framework/effect@1.0.0
 - framework/react@generated
 - framework/refine@generated
 platforms:

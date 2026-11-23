@@ -4,7 +4,7 @@ axis: backing
 kind: database
 tools: []
 packs:
-- datastore/postgres@0.1.1
+- datastore/postgres@1.0.0
 ---
 
 # Backing — PostgreSQL

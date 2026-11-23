@@ -4,7 +4,7 @@ axis: backing
 kind: capability-provider
 tools: []
 packs:
-- capability-provider/audit-store-d1@0.1.1
+- capability-provider/audit-store-d1@1.0.0
 ---
 
 # Backing — Audit store · Cloudflare D1

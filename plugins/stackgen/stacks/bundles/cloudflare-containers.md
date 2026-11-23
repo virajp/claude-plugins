@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/containers@0.2.3
+- cloud-service/containers@1.0.0
 artifact: container-image
 ---
 
