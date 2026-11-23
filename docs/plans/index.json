@@ -28,8 +28,8 @@
       "title": "R5a — stackgen bundles over bootstrap tools: tool knowledge, slim packs, design tools in vwf-tools",
       "target_repo": null,
       "priority": 70,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-23T08:56:56.643Z",
       "ended": "",
       "gaps": null,
       "requires": [
