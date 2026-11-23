@@ -1,3 +1,49 @@
 {
-  "repo.topology": "repo"
+  "repo.topology": "repo",
+  "repo.projects.orbit-api.folder": "apps/orbit-api",
+  "repo.projects.orbit-infra.folder": ".",
+  "describe": {
+    "repo": {
+      "format": 3
+    },
+    "tools": [
+      {
+        "name": "mise",
+        "category": "core",
+        "values": {}
+      },
+      {
+        "name": "kite",
+        "category": "languages",
+        "values": {
+          "projects": [
+            "orbit-api"
+          ]
+        }
+      },
+      {
+        "name": "skein",
+        "category": "package-managers",
+        "values": {
+          "projects": [
+            "orbit-api"
+          ]
+        }
+      }
+    ],
+    "members": [],
+    "ports": [
+      {
+        "name": "test:e2e",
+        "present": false
+      },
+      {
+        "name": "test:golden",
+        "present": false
+      }
+    ],
+    "lsp": {
+      "servers": {}
+    }
+  }
 }

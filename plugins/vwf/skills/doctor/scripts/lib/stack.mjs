@@ -1,10 +1,13 @@
 // The stack checks execute stops on (references/stack-checks.md): mise, a
-// custom pin, template platform coverage, iac inside another repo with the
-// D7 decline, pinned not materialized, unknown language, and binaries with
-// their probes. Severities follow stack-checks.md; D9 settles the rest. An
-// unknown language is the one exception (D39): known means the materialized
-// template lists the token, no installed plugin is read, so its row is
-// degraded even while pinned and never blocks; execute asks the user on it.
+// custom pin, template platform coverage, an iac project that is not its own
+// repo with the D7 decline, pinned not materialized, and binaries with their
+// probes. Severities follow stack-checks.md; D9 settles the rest. Two rows are
+// degraded and never stop execute (D28): a registry project bootstrap has no
+// repo.projects.<name> for (D26), and a project no bootstrap tool of category
+// languages links (D18, D27). A project's folder and its language tools are
+// read through bootstrap in the repo that holds it (D9, D11); the language
+// walk uses the tool name. A capability a project's platforms imply and its
+// repo lacks is a degraded harness row too (D37, lib/harness.mjs).
 
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -12,26 +15,33 @@ import {
   existsSync,
   readFileSync,
 } from "node:fs";
+import { join } from "node:path";
 import {
-  join,
-  resolve,
-} from "node:path";
-import { memberRepo } from "./bootstrap.mjs";
+  BootstrapError,
+  describe,
+  linkedTools,
+  projectFolder,
+  projectRepo,
+} from "./bootstrap.mjs";
 import {
-  git,
+  harnessRows,
+  miseTasks,
+} from "./harness.mjs";
+import {
+  ChecksError,
   isObject,
   isPinned,
-  isWorkTree,
   onPath,
   readFrontmatter,
   readYaml,
-  real,
   row,
   slugOf,
 } from "./util.mjs";
 
 const PROBE_TIMEOUT_MS = 30_000;
-const STACK_AXES = ["template", "backing_template", "deploy_template"];
+const STACK_AXES = ["template", "services", "deploy"];
+/** The platforms that need no language tool (D27). */
+const TOOLLESS = ["iac", "cicd", "misc"];
 const PROJECT_AXES = ["design", "cicd", "stylesheet"];
 
 function stackOf(config, name) {
@@ -39,7 +49,7 @@ function stackOf(config, name) {
   return isObject(project) ? project : {};
 }
 
-/** D9 (a): any axis pinned anywhere, or any harness capability claimed. */
+/** D9 (a): any axis pinned anywhere; the pins alone decide (D25). */
 function needsMise(config) {
   const projects = isObject(config.projects) ? Object.values(config.projects) : [];
   for (const project of projects.filter(isObject)) {
@@ -51,11 +61,7 @@ function needsMise(config) {
       return true;
     }
   }
-  if (isPinned(config.repo?.stack?.template)) {
-    return true;
-  }
-  const harness = isObject(config.harness) ? Object.values(config.harness) : [];
-  return harness.some((cap) => cap === true || (isObject(cap) && cap.present === true));
+  return isPinned(config.repo?.stack?.template);
 }
 
 export function miseRows({ base, config }) {
@@ -101,20 +107,6 @@ export function repoPinRows({ config }) {
     : [];
 }
 
-/**
- * The repo a project lives in: the member its projects.<p>.repo names, else
- * the base. A folder member is part of the base's tree (D17).
- */
-function targetRepo(base, config, members, name) {
-  const repo = stackOf(config, name).repo;
-  const member = typeof repo === "string" ? members.find((m) => m.name === repo) : undefined;
-  if (member === undefined) {
-    return { dir: base, present: true };
-  }
-  const dir = memberRepo(base, member);
-  return { dir, present: dir === base || isWorkTree(dir) };
-}
-
 function sha256(file) {
   return createHash("sha256").update(readFileSync(file)).digest("hex");
 }
@@ -147,7 +139,7 @@ function materialized(dir, adapters, slug) {
   return null;
 }
 
-/** The language token's facts of a template's frontmatter, or null. */
+/** The language tool's facts of a template's frontmatter, or null. */
 function factsOf(frontmatter, token) {
   const facts = frontmatter?.language_facts;
   return isObject(facts) && isObject(facts[token]) ? facts[token] : null;
@@ -167,17 +159,27 @@ function binaryEntries(facts) {
   });
 }
 
-/** The iac rule: a project declaring iac whose path sits inside another repo. */
-function iacRow(base, config, project) {
+/** A bootstrap read, its failure a ChecksError (a refusal). */
+function bootstrapRead(read) {
+  try {
+    return read();
+  } catch (error) {
+    if (error instanceof BootstrapError) {
+      throw new ChecksError(error.message);
+    }
+    throw error;
+  }
+}
+
+/**
+ * The iac rule (D21): a project declaring iac whose folder in its own repo is
+ * not "." is not its own repo.
+ */
+function iacRow(config, project, folder, dir) {
   if (!Array.isArray(project.platforms) || !project.platforms.includes("iac")) {
     return null;
   }
-  if (typeof project.path !== "string") {
-    return null;
-  }
-  const dir = resolve(base, project.path);
-  const top = existsSync(dir) ? git(dir, ["rev-parse", "--show-toplevel"]) : { ok: false };
-  if (!top.ok || real(top.out) === real(dir)) {
+  if (folder === null || folder === "." || folder === "./") {
     return null;
   }
   const decline = config.enforcement?.rules?.[`topology/iac-own-repo/${project.name}`];
@@ -186,10 +188,10 @@ function iacRow(base, config, project) {
     "iac-own-repo",
     waived ? "degraded" : "blocking",
     project.name,
-    project.path,
+    folder,
     waived
-      ? `iac project ${project.name} sits inside ${top.out}; its extraction is declined on the record`
-      : `iac project ${project.name} sits inside ${top.out}, not its own repo`,
+      ? `iac project ${project.name} sits in ${folder} of ${dir}; its extraction is declined on the record`
+      : `iac project ${project.name} sits in ${folder} of ${dir}, not its own repo`,
     "/vwf:setup",
   );
 }
@@ -205,6 +207,22 @@ export function projectRows({ base, config, members, registry, scope }) {
     .filter((p) => isObject(p) && scope.includes(p.name));
   /** name → {probe, severity, cwd, hashOk, projects} */
   const binaries = new Map();
+  /** repo dir → its describe data, read once */
+  const described = new Map();
+  const describeOf = (dir) => {
+    if (!described.has(dir)) {
+      described.set(dir, bootstrapRead(() => describe(dir)));
+    }
+    return described.get(dir);
+  };
+  /** repo dir → its mise task names, read once and only when needed (D37) */
+  const tasks = new Map();
+  const tasksOf = (dir) => {
+    if (!tasks.has(dir)) {
+      tasks.set(dir, miseTasks(dir));
+    }
+    return tasks.get(dir);
+  };
 
   for (const project of projects) {
     const name = project.name;
@@ -214,10 +232,42 @@ export function projectRows({ base, config, members, registry, scope }) {
     const pinned = isPinned(template);
     const severity = pinned ? "blocking" : "degraded";
 
-    const iac = iacRow(base, config, project);
+    const target = projectRepo(base, config, members, name);
+    if (!target.present) {
+      continue; // an absent member is a blind spot, not a finding
+    }
+    const folder = bootstrapRead(() => projectFolder(target.dir, name));
+    if (folder === null) {
+      rows.push(
+        row(
+          "project-folder",
+          "degraded", // D28: never stops execute
+          name,
+          name,
+          `bootstrap in ${target.dir} has no repo.projects.${name}, so project ${name} has no folder`,
+          `bootstrap config set repo.projects.${name} '{"folder":"<path>"}' --json`,
+        ),
+      );
+    }
+    const iac = iacRow(config, project, folder, target.dir);
     if (iac !== null) {
       rows.push(iac);
     }
+    const platforms = Array.isArray(project.platforms) ? project.platforms : [];
+    const tools = linkedTools(describeOf(target.dir), "languages", name);
+    if (tools.length === 0 && !platforms.every((p) => TOOLLESS.includes(p))) {
+      rows.push(
+        row(
+          "language-tool",
+          "degraded", // D28: never stops execute
+          name,
+          name,
+          `no bootstrap tool of category languages in ${target.dir} links project ${name}`,
+          "bootstrap detect --add, or bootstrap add tool <tool>",
+        ),
+      );
+    }
+    rows.push(...harnessRows(name, platforms, target.dir, describeOf(target.dir), () => tasksOf(target.dir)));
     if (isCustom(template)) {
       rows.push(
         row(
@@ -234,14 +284,10 @@ export function projectRows({ base, config, members, registry, scope }) {
 
     let frontmatter = null;
     let found = null;
-    const target = targetRepo(base, config, members, name);
     if (pinned && adapters.length === 0) {
       continue; // D38: no stacks: adapter, so no pin is walked — doctor's to catch
     }
     if (pinned && typeof template === "string") {
-      if (!target.present) {
-        continue; // an absent member is a blind spot, not a finding
-      }
       const slug = slugOf(template);
       found = materialized(target.dir, adapters, slug);
       if (found === null) {
@@ -255,7 +301,7 @@ export function projectRows({ base, config, members, registry, scope }) {
             "/vwf:setup",
           ),
         );
-        continue; // the token walk is skipped
+        continue; // the language walk is skipped
       }
       frontmatter = readFrontmatter(found.file);
       if (frontmatter !== null && Array.isArray(frontmatter.platforms)) {
@@ -276,30 +322,10 @@ export function projectRows({ base, config, members, registry, scope }) {
       }
     }
 
-    const optional = Array.isArray(frontmatter?.optional_languages) ? frontmatter.optional_languages : [];
-    for (const token of Array.isArray(stack.languages) ? stack.languages : []) {
-      const facts = factsOf(frontmatter, token);
+    for (const tool of tools) {
+      const facts = factsOf(frontmatter, tool);
       if (facts === null) {
-        rows.push(
-          optional.includes(token)
-            ? row(
-              "unknown-language",
-              "info",
-              name,
-              token,
-              `${token} is an optional language of ${template}: known, its facts unverified`,
-              "none",
-            )
-            : row(
-              "unknown-language",
-              "degraded", // D39: execute asks whether to continue; never blocking here
-              name,
-              token,
-              `no materialized template of project ${name} lists the language ${token}`,
-              "install the stack plugin that declares the language, or write one",
-            ),
-        );
-        continue;
+        continue; // D6: the known/unknown check against language_facts is R5's
       }
       for (const { name: binary, probe } of binaryEntries(facts)) {
         const seen = binaries.get(binary);

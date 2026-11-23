@@ -1,11 +1,13 @@
 // The repo facts bootstrap keeps, read through its CLI (assets/bootstrap-
-// contract.md): `bootstrap config get <key> --json`, run bare from PATH in the
-// repo it reads, its envelope's data.value parsed. A failed call throws
-// BootstrapError with the envelope's errors text; an absent binary throws it
-// with the contract's install hint. Each caller turns it into its own refusal.
+// contract.md): `bootstrap config get <key> --json` and
+// `bootstrap describe --json`, run bare from PATH in the repo they read, each
+// envelope's data parsed. A failed call throws BootstrapError with the
+// envelope's errors text; an absent binary throws it with the contract's
+// install hint. Each caller turns it into its own refusal.
 
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
+import { isWorkTree } from "./util.mjs";
 
 export const INSTALL_HINT = "bootstrap 4.1.0 or newer is required: install it as bootstrap's README says "
   + "(https://github.com/virajp/bootstrap)";
@@ -22,9 +24,10 @@ export class BootstrapError extends Error {
   }
 }
 
-/** The value of `key` in the repo at `cwd`: data.value of the envelope. */
-export function configGet(cwd, key) {
-  const r = spawnSync("bootstrap", ["config", "get", key, "--json"], { cwd, encoding: "utf8" });
+/** The data of the envelope `bootstrap <args> --json` prints in `cwd`. */
+function call(cwd, args) {
+  const what = `bootstrap ${args.join(" ")}`;
+  const r = spawnSync("bootstrap", [...args, "--json"], { cwd, encoding: "utf8" });
   if (r.error?.code === "ENOENT") {
     throw new BootstrapError(INSTALL_HINT);
   }
@@ -37,7 +40,7 @@ export function configGet(cwd, key) {
   if (envelope === null || typeof envelope !== "object") {
     const why = ((r.stderr ?? "") || (r.error?.message ?? "")).trim();
     throw new BootstrapError(
-      `bootstrap config get ${key} failed in ${cwd}${why ? `: ${why}` : ""}`,
+      `${what} failed in ${cwd}${why ? `: ${why}` : ""}`,
       r.status,
     );
   }
@@ -45,11 +48,47 @@ export function configGet(cwd, key) {
     const errors = Array.isArray(envelope.errors) ? envelope.errors : [];
     const text = errors.map((e) => e?.message).filter((m) => typeof m === "string" && m !== "").join("; ");
     throw new BootstrapError(
-      `bootstrap config get ${key} failed in ${cwd}: ${text || `exit ${envelope.code ?? r.status}`}`,
+      `${what} failed in ${cwd}: ${text || `exit ${envelope.code ?? r.status}`}`,
       r.status,
     );
   }
-  return envelope.data?.value ?? null;
+  return envelope.data ?? null;
+}
+
+/** The value of `key` in the repo at `cwd`: data.value of the envelope. */
+export function configGet(cwd, key) {
+  return call(cwd, ["config", "get", key])?.value ?? null;
+}
+
+/**
+ * The data of `bootstrap describe --json` in the repo at `cwd`: {repo, tools,
+ * members, ports, lsp}; a tool is {name, category, values}, its linked
+ * projects values.projects, and a port is {name, present}.
+ */
+export function describe(cwd) {
+  const data = call(cwd, ["describe"]);
+  return data !== null && typeof data === "object" ? data : {};
+}
+
+/**
+ * The names of the tools of `category` (languages, package-managers) whose
+ * values.projects list names the project, in a describe's data (D9).
+ */
+export function linkedTools(data, category, project) {
+  return (Array.isArray(data.tools) ? data.tools : [])
+    .filter((t) => t !== null && typeof t === "object" && t.category === category)
+    .filter((t) => Array.isArray(t.values?.projects) && t.values.projects.includes(project))
+    .map((t) => t.name);
+}
+
+/**
+ * A project's folder, relative to the repo that holds it: its
+ * repo.projects.<name>.folder there (D11), or null when bootstrap has no entry
+ * for it (D26).
+ */
+export function projectFolder(cwd, name) {
+  const folder = configGet(cwd, `repo.projects.${name}.folder`);
+  return typeof folder === "string" && folder !== "" ? folder : null;
 }
 
 /**
@@ -86,4 +125,20 @@ export function readHome(dir) {
  */
 export function memberRepo(base, member) {
   return member.type === "folder" ? base : resolve(base, member.folder);
+}
+
+/**
+ * The repo a project lives in: the member its projects.<p>.repo in vwf.yaml
+ * names, else the base. A folder member is part of the base's tree (D17).
+ * `present` is false for a member repo absent on this machine.
+ */
+export function projectRepo(base, config, members, name) {
+  const entry = config?.projects?.[name];
+  const repo = entry !== null && typeof entry === "object" ? entry.repo : undefined;
+  const member = typeof repo === "string" ? members.find((m) => m.name === repo) : undefined;
+  if (member === undefined) {
+    return { dir: base, present: true };
+  }
+  const dir = memberRepo(base, member);
+  return { dir, present: dir === base || isWorkTree(dir) };
 }

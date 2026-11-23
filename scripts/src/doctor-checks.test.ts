@@ -42,8 +42,19 @@ const FIXTURES = join(import.meta.dirname, "fixtures", "doctor-checks");
 /** A parsed result. */
 type Json = any;
 
-/** A `mise` that runs what follows `--`. */
+/**
+ * A `mise` that answers `tasks ls --json --no-global --hidden` from the
+ * .mise-tasks-stub.json of its cwd (none reads as no task), in the shape the
+ * real mise prints (an array of {name, ...}); a .mise-tasks-fail there fails
+ * it. Every other call runs what follows `--` (D22).
+ */
 const MISE = `#!/bin/sh
+if [ "$1" = tasks ]; then
+  if [ "$*" != "tasks ls --json --no-global --hidden" ]; then echo "mise stub: unexpected $*" >&2; exit 2; fi
+  if [ -f .mise-tasks-fail ]; then echo "mise ERROR the config does not parse" >&2; exit 1; fi
+  if [ -f .mise-tasks-stub.json ]; then exec /bin/cat .mise-tasks-stub.json; fi
+  echo "[]"; exit 0
+fi
 while [ "$#" -gt 0 ] && [ "$1" != "--" ]; do shift; done
 shift
 exec "$@"
@@ -51,23 +62,36 @@ exec "$@"
 
 /**
  * A `bootstrap` that answers `config get <key> --json` from the
- * .bootstrap-stub.json of its cwd (a key it lacks reads null); with no such
- * file it exits 2 as a repo with no .config/bootstrap/ does.
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null), and
+ * `describe --json` from that file's describe key, in the shape the real
+ * bootstrap prints (D29): data.tools[] {name, category, values.projects},
+ * data.ports[] {name, present}. With no such file it exits 2 as a repo with
+ * no .config/bootstrap/ does; a describe key of "fail" fails the describe.
  */
 const BOOTSTRAP = `#!${process.execPath}
 const { existsSync, readFileSync } = require("node:fs");
-const [cmd, sub, key, flag] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const command = args[0] === "describe" ? "describe" : "config get";
 const out = (ok, code, data, errors) => {
-  process.stdout.write(JSON.stringify({ contract: 1, command: "config get", ok, code, data, errors, warnings: [] }) + "\\n");
+  process.stdout.write(JSON.stringify({ contract: 1, command, ok, code, data, errors, warnings: [] }) + "\\n");
   process.exit(code);
 };
-if (cmd !== "config" || sub !== "get" || flag !== "--json") {
-  out(false, 2, null, [{ code: "usage", message: "the stub answers config get only" }]);
+const describe = args.length === 2 && args[0] === "describe" && args[1] === "--json";
+const get = args.length === 4 && args[0] === "config" && args[1] === "get" && args[3] === "--json";
+if (!describe && !get) {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get and describe only" }]);
 }
 if (!existsSync(".bootstrap-stub.json")) {
   out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
 }
 const facts = JSON.parse(readFileSync(".bootstrap-stub.json", "utf8"));
+if (describe) {
+  if (facts.describe === "fail") {
+    out(false, 1, null, [{ code: "describe", message: "the values file does not parse" }]);
+  }
+  out(true, 0, facts.describe ?? { repo: {}, tools: [], members: [], ports: [], lsp: {} }, []);
+}
+const key = args[2];
 out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
 `;
 
@@ -178,10 +202,8 @@ describe("single repo", () => {
   const registry = () => join(base, "docs", "blueprint", "registry.yaml");
 
   beforeEach(() => {
+    // the iac project's folder is "." unless a case says otherwise
     base = repo("single", "lumen", "kite-service.md");
-    // the iac project is its own repo unless a case says otherwise
-    mkdirSync(join(base, "infra", "orbit"), { recursive: true });
-    git(join(base, "infra", "orbit"), "init", "-q");
   });
 
   it("a clean repo exits 0 with no finding, and the probe ran", () => {
@@ -222,7 +244,7 @@ describe("single repo", () => {
   });
 
   it("--repo runs from another directory", () => {
-    const r = checks(root, ["--repo", join(base, "infra")]);
+    const r = checks(root, ["--repo", join(base, "docs")]);
     expect(r.status).toBe(0);
     expect(r.json.base).toBe(base);
   });
@@ -281,23 +303,20 @@ describe("single repo", () => {
       });
     });
 
-    it("is degraded when nothing is pinned and no capability is claimed", () => {
+    it("is degraded when nothing is pinned: the pins alone decide (D25)", () => {
       edit(config(), "template: project/kite-service", "template: unresolved");
-      edit(config(), "languages: [ kite ]", "languages: []");
       edit(config(), "template: repo/lumen-workspace", "template: unresolved");
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
-      edit(config(), "dev: true", "dev: false");
       const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.status).toBe(0);
       expect(rules(r.json)).toEqual(["mise:degraded"]);
     });
 
-    it("a claimed capability alone makes it blocking", () => {
+    it("a services pin alone makes it blocking", () => {
       edit(config(), "template: project/kite-service", "template: unresolved");
-      edit(config(), "languages: [ kite ]", "languages: []");
       edit(config(), "template: repo/lumen-workspace", "template: unresolved");
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
-      edit(config(), "dev: true", "dev: { present: true }");
+      edit(config(), "services: []", "services: [ kite-store ]");
       const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(rules(r.json)).toEqual(["mise:blocking"]);
     });
@@ -345,19 +364,45 @@ describe("single repo", () => {
     expect(find(r.json, "platform-coverage")).toEqual([]);
   });
 
-  describe("iac own repo", () => {
+  describe("iac own repo (D21)", () => {
     beforeEach(() => {
-      rmSync(join(base, "infra"), { recursive: true });
-      mkdirSync(join(base, "infra", "orbit"), { recursive: true });
+      facts(base, (f) => (f["repo.projects.orbit-infra.folder"] = "infra/orbit"));
     });
 
-    it("is blocking inside another repo", () => {
+    it("is blocking when its folder in its own repo is not .", () => {
       const r = checks(base);
       expect(r.status).toBe(1);
       expect(find(r.json, "iac-own-repo")[0]).toMatchObject({
         severity: "blocking",
         project: "orbit-infra",
+        subject: "infra/orbit",
       });
+    });
+
+    it("is no finding when it is its own member repo, its folder .", () => {
+      facts(base, (f) => {
+        f["repo.members"] = {
+          "orbit-infra": {
+            folder: "infra/orbit",
+            type: "submodule",
+            url: "git@forge.example.test:lumen/orbit-infra.git",
+          },
+        };
+      });
+      const dir = join(base, "infra", "orbit");
+      mkdirSync(dir, { recursive: true });
+      git(dir, "init", "-q");
+      writeFileSync(
+        join(dir, ".bootstrap-stub.json"),
+        JSON.stringify({
+          "repo.home": { folder: "../..", type: "submodule" },
+          "repo.projects.orbit-infra.folder": ".",
+        }),
+      );
+      edit(config(), "  orbit-infra:\n", "  orbit-infra:\n    repo: orbit-infra\n");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(r.json.findings).toEqual([]);
     });
 
     it("is degraded under the D7 decline", () => {
@@ -372,9 +417,9 @@ describe("single repo", () => {
     });
   });
 
-  it("a pin with no lockfile entry is not materialized, and skips the token walk", () => {
+  it("a pin with no lockfile entry is not materialized, and skips the language walk", () => {
     rmSync(join(base, ".claude", "stackgen", "lock.yaml"));
-    edit(config(), "languages: [ kite ]", "languages: [ kite, zorn ]");
+    rmSync(join(bin, "kitec"));
     const r = checks(base);
     expect(r.status).toBe(1);
     expect(rules(r.json)).toEqual(["not-materialized:blocking"]);
@@ -384,7 +429,7 @@ describe("single repo", () => {
   it.each([["stacks: []"], [""]])("with %j for stacks: no pin is walked (D38)", (line) => {
     rmSync(join(base, ".claude", "stackgen", "lock.yaml"));
     edit(config(), "stacks: [ stackgen ]", line);
-    edit(config(), "languages: [ kite ]", "languages: [ kite, zorn ]");
+    rmSync(join(bin, "kitec"));
     const r = checks(base);
     expect(r.status).toBe(0);
     expect(r.json.findings).toEqual([]);
@@ -396,34 +441,128 @@ describe("single repo", () => {
     expect(checks(base).json.findings).toEqual([]);
   });
 
-  describe("languages", () => {
-    it("a token with no facts is unknown and degraded even while pinned (D39), exit 0", () => {
-      edit(config(), "languages: [ kite ]", "languages: [ kite, zorn ]");
+  describe("languages (D9, D18)", () => {
+    const tools = (f: Json) => f.describe.tools.find((t: Json) => t.name === "kite");
+
+    it("a project no languages tool links is degraded, exit 0 (D28)", () => {
+      facts(base, (f) => (tools(f).values.projects = []));
       const r = checks(base);
       expect(r.status).toBe(0);
-      expect(rules(r.json)).toEqual(["unknown-language:degraded"]);
-      expect(find(r.json, "unknown-language")[0]).toMatchObject({
-        severity: "degraded",
-        project: "orbit-api",
-        subject: "zorn",
-      });
+      expect(rules(r.json)).toEqual(["language-tool:degraded"]);
+      expect(find(r.json, "language-tool")[0]).toMatchObject({ project: "orbit-api", subject: "orbit-api" });
     });
 
-    it("is degraded while the template reads unresolved", () => {
-      edit(config(), "languages: []", "languages: [ zorn ]");
+    it("a package-managers tool alone does not count as a language", () => {
+      facts(base, (f) => (tools(f).category = "package-managers"));
       const r = checks(base);
-      expect(r.status).toBe(0);
-      expect(find(r.json, "unknown-language")[0]).toMatchObject({
-        severity: "degraded",
-        project: "orbit-infra",
-      });
+      expect(rules(r.json)).toEqual(["language-tool:degraded"]);
     });
 
-    it("an optional token is known, its rows unverified: info", () => {
-      edit(config(), "languages: [ kite ]", "languages: [ kite, quill ]");
+    it("an iac, cicd or misc project needs no language tool (D27)", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, cicd, misc ]");
+      expect(find(checks(base).json, "language-tool")).toEqual([]);
+      edit(registry(), "platforms: [ iac, cicd, misc ]", "platforms: [ iac, worker ]");
+      expect(find(checks(base).json, "language-tool")[0]).toMatchObject({ project: "orbit-infra" });
+    });
+
+    it("a linked tool the template has no facts for is no finding (D6)", () => {
+      facts(
+        base,
+        (f) => f.describe.tools.push({ name: "zorn", category: "languages", values: { projects: ["orbit-api"] } }),
+      );
       const r = checks(base);
       expect(r.status).toBe(0);
-      expect(rules(r.json)).toEqual(["unknown-language:info"]);
+      expect(r.json.findings).toEqual([]);
+    });
+
+    it("a failed describe is a refusal with bootstrap's errors text", () => {
+      facts(base, (f) => (f.describe = "fail"));
+      const r = checks(base);
+      expect(r.status).toBe(2);
+      expect(r.stderr).toMatch(/bootstrap describe failed in .*: the values file does not parse/);
+    });
+  });
+
+  describe("harness capabilities (D37)", () => {
+    const tasks = (...names: string[]) =>
+      writeFileSync(join(base, ".mise-tasks-stub.json"), JSON.stringify(names.map((name) => ({ name }))));
+    const caps = (json: Json) => find(json, "harness").map((f: Json) => `${f.project}:${f.subject}:${f.severity}`);
+
+    it("a browser platform with no dev and no screenshots task is two degraded rows, exit 0", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, webapp ]");
+      tasks("lint", "test:e2e");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(caps(r.json)).toEqual(["orbit-infra:dev:degraded", "orbit-infra:screenshots:degraded"]);
+      expect(find(r.json, "harness")[0].message).toBe(`dev missing: no dev task in ${base}`);
+    });
+
+    it("the fixed task names make them present; an alias does not count", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, site ]");
+      tasks("dev", "screenshots");
+      expect(caps(checks(base).json)).toEqual([]);
+      writeFileSync(
+        join(base, ".mise-tasks-stub.json"),
+        JSON.stringify([{ name: "dev" }, { name: "shots", aliases: ["screenshots"] }]),
+      );
+      expect(caps(checks(base).json)).toEqual(["orbit-infra:screenshots:degraded"]);
+    });
+
+    it("a device platform needs dev and the test:golden port", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, mobile ]");
+      tasks("dev", "test:golden");
+      const r = checks(base);
+      expect(caps(r.json)).toEqual(["orbit-infra:goldens:degraded"]);
+      expect(find(r.json, "harness")[0].message).toContain("the test:golden port is not present");
+      facts(base, (f) => (f.describe.ports[1].present = true));
+      expect(caps(checks(base).json)).toEqual([]);
+    });
+
+    it("no screen platform reads no mise task", () => {
+      writeFileSync(join(base, ".mise-tasks-fail"), "");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(r.json.findings).toEqual([]);
+    });
+
+    it("a failed mise call is a refusal with its error text (D25)", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, webapp ]");
+      writeFileSync(join(base, ".mise-tasks-fail"), "");
+      const r = checks(base);
+      expect(r.status).toBe(2);
+      expect(r.stderr).toMatch(
+        /mise tasks ls --json --no-global --hidden failed in .*: mise ERROR the config does not parse/,
+      );
+    });
+
+    it("an absent mise is the same refusal, before the mise row (D25, D38)", () => {
+      edit(registry(), "platforms: [ iac ]", "platforms: [ iac, webapp ]");
+      const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
+      expect(r.status).toBe(2);
+      expect(r.stderr).toMatch(
+        /mise tasks ls --json --no-global --hidden failed in .*: mise is not on PATH/,
+      );
+    });
+  });
+
+  describe("project folders (D11, D26)", () => {
+    it("a project with no repo.projects entry is degraded, with the config set fix", () => {
+      facts(base, (f) => delete f["repo.projects.orbit-api.folder"]);
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(find(r.json, "project-folder")).toEqual([
+        expect.objectContaining({
+          severity: "degraded",
+          project: "orbit-api",
+          remedy: `bootstrap config set repo.projects.orbit-api '{"folder":"<path>"}' --json`,
+        }),
+      ]);
+    });
+
+    it("an iac project with no entry gets the folder row and no iac row", () => {
+      facts(base, (f) => delete f["repo.projects.orbit-infra.folder"]);
+      const r = checks(base);
+      expect(rules(r.json)).toEqual(["project-folder:degraded"]);
     });
   });
 
@@ -456,13 +595,17 @@ describe("single repo", () => {
       edit(
         registry(),
         "  - name: orbit-infra",
-        "  - name: orbit-web\n    role: backend\n    platforms: [ worker ]\n    path: apps/orbit-web\n  - name: orbit-infra",
+        "  - name: orbit-web\n    role: backend\n    platforms: [ worker ]\n  - name: orbit-infra",
       );
       edit(
         config(),
         "  orbit-infra:",
-        "  orbit-web:\n    stack:\n      template: project/kite-service\n      languages: [ kite ]\n  orbit-infra:",
+        "  orbit-web:\n    stack:\n      template: project/kite-service\n  orbit-infra:",
       );
+      facts(base, (f) => {
+        f["repo.projects.orbit-web.folder"] = "apps/orbit-web";
+        f.describe.tools.find((t: Json) => t.name === "kite").values.projects.push("orbit-web");
+      });
       rmSync(join(bin, "kitec"));
       const r = checks(base);
       const rows = find(r.json, "binary");
@@ -473,7 +616,7 @@ describe("single repo", () => {
 
   describe("--projects", () => {
     beforeEach(() => {
-      edit(config(), "languages: [ kite ]", "languages: [ kite, zorn ]");
+      facts(base, (f) => delete f["repo.projects.orbit-api.folder"]);
     });
 
     it("scopes the project checks", () => {
@@ -585,6 +728,28 @@ describe("multi repo", () => {
     const r = checks(base);
     expect(r.status).toBe(0);
     expect(find(r.json, "membership")[0]).toMatchObject({ severity: "drift", subject: "dock-app" });
+  });
+
+  it("a member project's folder and tools are read in the member repo", () => {
+    facts(member, (f) => delete f["repo.projects.dock-app.folder"]);
+    facts(member, (f) => (f.describe.tools[1].values.projects = []));
+    const r = checks(base);
+    expect(r.status).toBe(0);
+    expect(rules(r.json)).toEqual(["project-folder:degraded", "language-tool:degraded"]);
+    expect(find(r.json, "project-folder")[0].message).toContain(member);
+  });
+
+  it("a member project's capabilities are read in the member repo (D24)", () => {
+    rmSync(join(member, ".mise-tasks-stub.json"));
+    facts(member, (f) => (f.describe.ports[1].present = false));
+    writeFileSync(join(base, ".mise-tasks-stub.json"), JSON.stringify([{ name: "dev" }]));
+    const r = checks(base);
+    expect(r.status).toBe(0);
+    expect(find(r.json, "harness")).toEqual([
+      expect.objectContaining({ severity: "degraded", project: "dock-app", subject: "dev" }),
+      expect.objectContaining({ severity: "degraded", project: "dock-app", subject: "goldens" }),
+    ]);
+    expect(find(r.json, "harness")[0].message).toContain(member);
   });
 
   it("a folder member needs no url and no repo.home, and its project reads the base's template", () => {

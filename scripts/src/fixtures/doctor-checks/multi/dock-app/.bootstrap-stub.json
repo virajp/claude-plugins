@@ -2,5 +2,50 @@
   "repo.home": {
     "folder": "../harbor",
     "type": "sibling"
+  },
+  "repo.projects.dock-app.folder": ".",
+  "describe": {
+    "repo": {
+      "format": 3
+    },
+    "tools": [
+      {
+        "name": "mise",
+        "category": "core",
+        "values": {}
+      },
+      {
+        "name": "kite",
+        "category": "languages",
+        "values": {
+          "projects": [
+            "dock-app"
+          ]
+        }
+      },
+      {
+        "name": "skein",
+        "category": "package-managers",
+        "values": {
+          "projects": [
+            "dock-app"
+          ]
+        }
+      }
+    ],
+    "members": [],
+    "ports": [
+      {
+        "name": "test:e2e",
+        "present": false
+      },
+      {
+        "name": "test:golden",
+        "present": true
+      }
+    ],
+    "lsp": {
+      "servers": {}
+    }
   }
 }
