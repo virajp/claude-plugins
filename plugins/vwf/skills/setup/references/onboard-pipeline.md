@@ -42,7 +42,7 @@ In order:
 
 Return the product name, which the spine sets with `bootstrap config set
 repo.product_name <name> --json`, and both stamps. Set **no**
-`repo.topology` or `repo.members`, and write no `harness`, `ui`,
+`repo.topology`, `repo.members` or `repo.projects`, and write no `ui`,
 `enforcement`, or per-project block: a
 key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
@@ -176,10 +176,11 @@ four facts and acts on that delta alone.
   empty `apis/` and `apis/released/` directories, `docs/plans/` and
   `docs/plans/archived/`.
 - **Harness detection** per `${CLAUDE_PLUGIN_ROOT}/assets/harness.md` — which
-  verification capabilities the repo can already run, and any non-canonical task
-  names. Missing capabilities are **recorded, never built**;
-  `/vwf:plan` injects their bootstrap when a cycle first needs
-  one.
+  verification capabilities the repo can already run, a capability being
+  present when its task exists, so nothing is recorded in `.config/vwf.yaml`.
+  A task under a non-canonical name is reported for the user to rename.
+  Missing capabilities are **never built** here; `/vwf:plan` injects their
+  bootstrap when a cycle first needs one.
 - **The environment catalog**, when the detected integrations or a
   secrets-manager `config` call for it, per
   [environment bootstrap](environment-bootstrap.md). Names only, never a value.
@@ -198,6 +199,6 @@ moves no source file, so nothing here is applied — the report is the
 deliverable, and `/vwf:doctor` is what keeps it visible.
 
 Return to the spine with: the confirmed topology and each member's type, the
-members, the per-project role/platforms/stack pins, the harness block, the
-product name, any
+members, the per-project role/platforms/stack pins, each project's folder in
+the repo that holds it, the product name, any
 `enforcement:` decline recorded during the run, and the recommendations.

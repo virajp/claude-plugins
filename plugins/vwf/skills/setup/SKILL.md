@@ -163,7 +163,16 @@ check](#the-second-shape-check) under the pass.
 Read `.config/vwf.yaml`, then compare its `blueprint_format` and `config_format`
 against the shipped integers (`${CLAUDE_PLUGIN_ROOT}/assets/blueprint-format`, and the
 current `config_format` named in `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`).
-The current stamp is `config_format: 27`. The latest config step, `26 → 27`,
+The current stamp is `config_format: 28`. The latest config step, `27 → 28`,
+renames `backing_template` and `deploy_template` to `services` and `deploy`,
+drops `languages`, `package_manager`, `repo.stack.package_manager`,
+`repo.stack.tools` and the workspace `harness` block — a project's language
+and package-manager tools are bootstrap's, linked by `bootstrap detect --add`,
+and a capability is present when its task exists — and moves each registry
+`path` to bootstrap's `repo.projects.<name>.folder`, stamping
+`blueprint_format: 26`; the [format lineage](references/format-lineage.md)
+row for 28 maps the keys and [migrate pipeline](references/migrate-pipeline.md)
+step 1 runs it, each member before the base. The step before it, `26 → 27`,
 moves the repo facts — the product name, the topology, the members and the
 deploy environments — out of `vwf.yaml` into bootstrap's `repo.toml` through
 `bootstrap config set`, asks only where the two disagree, and deletes each
@@ -290,9 +299,13 @@ point, since a stamp written before validation describes a tree nothing checked:
    `repo.topology`, `repo.topology_reason`, and for a multi-repo product each
    `repo.members.<name>` — with `bootstrap config set <key> <value> --json`,
    by `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and write each
-   member's project placement as `projects.<p>.repo`. A member's way back to
-   the base is its `repo.home`, which bootstrap writes when `setup:configs`
-   runs from the base with the member's flag (`--<member>`), per
+   member's project placement as `projects.<p>.repo`. A project's folder is
+   bootstrap's too, never a registry `path`: in the repo that holds it, run
+   `bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json`,
+   the folder relative to that repo, for each project whose folder exists. A
+   member's way back to the base is its `repo.home`, which bootstrap writes
+   when `setup:configs` runs from the base with the member's flag
+   (`--<member>`), per
    `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`; setup writes no file into a
    member. Which members are on this machine is detected every run and never
    recorded. When the repo is unshaped, `config set` exits 2 and the product
@@ -313,15 +326,12 @@ point, since a stamp written before validation describes a tree nothing checked:
    **Halt on a `blocking` finding, and revert the stamp** — delete
    `.config/vwf.yaml` if this run created it, else `git checkout --` it — so no
    stamped-but-unrunnable artifact survives the halt. Report the finding with
-   its remedy. **Halt the same way on an unknown language** (doctor's
-   `unknown-language` row) of a project whose `template` is pinned: doctor and
-   `/vwf:execute` only report it, as a degradation, but setup is the one-time
-   place for the setup-shape checks, so setup alone stops on it
-   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`). It is the stop an
-   otherwise-onboarded repo reaches: say plainly that the menu is closed to what
-   the installed plugins define
-   (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`), and never invent a template to
-   get past it.
+   its remedy.
+
+   **A pinned project no language tool links does not halt.** A project whose
+   `template` is pinned but that no bootstrap tool of category `languages`
+   links is a `degraded` row like any other: setup reports it with its fix,
+   `bootstrap add tool <tool>` then `bootstrap detect --add`, and continues.
 
    **A declined landing is the expected way to reach "pinned, not
    materialized".** That finding is blocking, so it halts here and reverts the

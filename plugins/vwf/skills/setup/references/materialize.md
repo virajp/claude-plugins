@@ -34,8 +34,8 @@ to read.
   with `bootstrap config get <key> --json`
   (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`).
 - **`.config/vwf.yaml`** — each `projects.<name>.repo`, and every stack
-  axis: each `projects.<name>.stack.template`, `backing_template` and
-  `deploy_template`, plus `repo.stack.template` and, since `config_format` 19,
+  axis: each `projects.<name>.stack.template`, `services` and `deploy`,
+  plus `repo.stack.template` and, since `config_format` 19,
   each `projects.<name>.stylesheet`
   (`${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md`, "The three axis states"), and,
   since `config_format` 25, the product-level `addons:` list.
@@ -243,8 +243,8 @@ stack is a repo the rest of the workflow cannot build in, and
 ## Write `unresolved` on an absent axis
 
 After the landings, every stack axis that is **absent** — no
-`projects.<name>.stack.template`, no `backing_template`, no `deploy_template`,
-no `repo.stack.template`, and no `projects.<name>.stylesheet` **on a project
+`projects.<name>.stack.template`, no `services`, no `deploy`, no
+`repo.stack.template`, and no `projects.<name>.stylesheet` **on a project
 whose registry entry declares a `site` or a `webapp` platform** — is written as
 the bare scalar `unresolved`, and the run continues.
 
@@ -262,8 +262,7 @@ Grow no block here: fill axes inside the blocks the pipeline wrote.
 An absent axis on a repo `/vwf:architecture` has not run on
 records nothing at all about whether anyone was asked; `unresolved` says
 plainly that the question is open and names `/vwf:architecture` as what closes
-it. Where `template` is now `unresolved`, write `languages: []` with it — the
-one legal empty on a project whose stack is undecided.
+it.
 
 **A slug is never rewritten.** Not to `unresolved`, not to anything else. A pin
 that was never materialized is not an unanswered question; it is an answered
