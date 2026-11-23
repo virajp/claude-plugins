@@ -80,7 +80,7 @@
       "status": "green",
       "started": "2026-11-23T08:59:27.161Z",
       "ended": "2026-11-23T09:12:47.894Z",
-      "commit": "939b032c",
+      "commit": "04e475df",
       "rounds": 2,
       "kind": "edit",
       "model": "opus",
@@ -117,11 +117,11 @@
         "U1"
       ],
       "waits": "commits after U1: the checker and the tree land first (D21, D40)",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T10:13:18.547Z",
+      "ended": "2026-11-23T10:56:31.161Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "kind": "edit",
       "model": "opus",
       "wave": 2,
@@ -223,8 +223,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T10:13:18.509Z",
       "ended": ""
     },
     {
@@ -645,6 +645,24 @@
       "rejected": "Accept: keep the 81-char line",
       "units": [
         "U1"
+      ]
+    },
+    {
+      "id": "D44",
+      "decision": "Q2: With LSP servers from bootstrap lsp --json (D9) and the lock key local_plugin.lsp_servers kept (D41), what does each entry packs (owners) list hold?",
+      "ruling": "The bundle slugs that landed the server; doctor still reads the owners.",
+      "rejected": "Leave the list empty — doctor skips the entry",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D45",
+      "decision": "Q3: Does a repo bundle written by compose (D5) carry kind:, and is the prefix of an uncovered <prefix>/<slug>@generated ref a pack type or a kind?",
+      "ruling": "Type prefix, as in the shipped bundles, with compose taking the bundle kind as an input; repo bundles match shipped ones.",
+      "rejected": "Kind prefix, used as the bundle kind",
+      "units": [
+        "U2"
       ]
     }
   ],

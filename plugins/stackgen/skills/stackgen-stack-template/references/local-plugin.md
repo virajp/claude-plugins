@@ -2,7 +2,8 @@
 
 The tier-3 target — how stackgen actually writes and registers
 `~/.claude/plugins/local/vwf-tools/`, the one local plugin that holds every
-LSP server this machine's repos materialized — LSP servers only. The
+LSP server this machine's repos materialized and the design tools their
+projects name — nothing else. The
 **contract** (why it exists, the consent tier, the lockfile key) is
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`; the host rules a declaration
 must satisfy are `${CLAUDE_PLUGIN_ROOT}/assets/artifact-doctrine.md` §5.
@@ -16,62 +17,50 @@ claims sections, and from `/stackgen:stackgen-sync` when a lockfile carries a
 machine. A collaborator who pulls the commit gets the `local_plugin`
 lockfile block and nothing else — say that at the gate, every time.
 
-## What a component declares
+## What lands here
 
-One key, landing in this plugin's manifest:
+Two things, and both are the machine's, never the repo's:
 
-| Pack key       | Lands in                        | Consent |
-| -------------- | ------------------------------- | ------- |
-| `lsp_servers:` | the local plugin's `lspServers` | tier 3  |
+| Source                                   | Lands in                           | Consent |
+| ---------------------------------------- | ---------------------------------- | ------- |
+| `data.servers` of `bootstrap lsp --json` | the manifest's `lspServers`        | tier 3  |
+| a design tool a project's `design` names | `skills/` beside `.claude-plugin/` | tier 3  |
 
-It is user-scoped: the machine's, never the repo's. **No MCP server lands
-here.** The `user_mcp_servers:` key is retired, as the project-scoped
-`mcp_servers:` key that wrote a repo's `.mcp.json` was before it: the user
-owns every MCP install, and a pack that needs a server names it in its
-`conventions.md`'s `## MCP servers` section
+**An LSP server is bootstrap's.** Run `mise x -- bootstrap lsp --json` in
+the repo; each key of `data.servers` is one server, already in Claude's
+`lspServers` shape — `command`, `args`, `extensionToLanguage`,
+`startupTimeout` — and it is copied **unchanged**. No pack and no generator
+declares a server, and stackgen researches none. A failed call stops the
+local-plugin step with the envelope's `errors`, as bootstrap gives them;
+every other line lands.
+
+**An entry with no `extensionToLanguage` map is invalid output and is
+never written** — not a warning, not a default filled in. The map is the
+only thing that keeps a user-scoped declaration from starting a server in
+every repo on the machine. Halt the server and name it.
+
+**A design tool is stackgen's own files**, copied from
+`${CLAUDE_PLUGIN_ROOT}/design-tools/`: the three role skills once, as
+`skills/<role>/`; the tool's `references/<role>.md` as
+`skills/<role>/references/<tool>.md`; and the tool's own skills as
+`skills/<skill>/`. One machine runs one stackgen, so a tool's files are
+always written as this stackgen ships them.
+
+**No MCP server lands here.** The `user_mcp_servers:` key is retired, as the
+project-scoped `mcp_servers:` key that wrote a repo's `.mcp.json` was before
+it: the user owns every MCP install, and a pack that needs a server names it
+in its `conventions.md`'s `## MCP servers` section
 (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). An MCP key an older stackgen
 left in this manifest is someone's, merged around and never rewritten, until
 `/vwf:setup`'s machine cleanup removes it through
 [`remove: key <name>`](materializer.md#removing-a-component).
 
-Each `lsp_servers:` entry is a complete manifest entry, verbatim as it
-will appear under `lspServers`:
-
-```yaml
-lsp_servers:
-  <server-name>:
-    command: <binary>
-    args: [ … ]
-    extensionToLanguage: { ".<ext>": <language id> }
-    startupTimeout: <ms>
-```
-
-`command` is the binary and `args` is the list after it, verbatim — never
-fold the two into one shell string. Where the binary is a tool runner,
-the tool it runs is the first `args` element, not part of `command`.
-
-**An entry with no `extensionToLanguage` map is invalid output and is
-never written** — not a warning, not a default filled in. The map is the
-only thing that keeps a user-scoped declaration from starting a server in
-every repo on the machine, so a component that cannot supply one has not
-declared a server. Halt and name the component.
-
-Generation emits these under the same rule it emits everything else: the
-component declares, the materializer writes. The generator itself never
-writes a manifest (`generator.md` step 4).
-
-**A generated declaration bound for `vwf-tools` is researched from fresh
-sources**, resolved from the technology's name by the generator's own research
-channel, at first generation and at every regeneration alike. Its `command`,
-`args` and `env` never come from a citations file or any other text the
-repo holds: whoever wrote the repo wrote those, and this declaration runs in
-every repo on the machine.
-
 ## The two files
 
-Both under `~/.claude/plugins/local/vwf-tools/.claude-plugin/`. The
-path and both names are **fixed** — never assembled from the stack pin,
-per `artifact-doctrine.md` §3.
+Both under `~/.claude/plugins/local/vwf-tools/.claude-plugin/`, with the
+design tools' `skills/` beside that folder. The path and both names are
+**fixed** — never assembled from the stack pin, per
+`artifact-doctrine.md` §3.
 
 `plugin.json` — the union across every repo that has materialized here:
 
@@ -80,7 +69,7 @@ per `artifact-doctrine.md` §3.
   "$schema": "https://www.schemastore.org/claude-code-plugin-manifest.json",
   "name": "vwf-tools",
   "version": "0.1.0",
-  "description": "The one local plugin that holds every LSP server this machine's repos materialized. Generated — edit the pins, not this file.",
+  "description": "The one local plugin that holds every LSP server this machine's repos materialized and the design tools their projects name. Generated — edit the pins, not this file.",
   "lspServers": {}
 }
 ```
@@ -106,7 +95,8 @@ directory holding `.claude-plugin/`, not `.claude-plugin/` itself. And
 the version unset, it resolves by accident and the plugin lists as
 `0.0.0`. Keep it equal to the manifest's.
 
-**Bump both versions on every manifest change**, patch-wise. A manifest
+**Bump both versions on every manifest change**, patch-wise — a design
+tool's files added or removed count as one. A plugin
 already registered is served from what Claude read at registration time,
 so a second repo's servers land in the file and never reach a session
 until the marketplace is re-read. That is the failure mode this whole
@@ -123,17 +113,23 @@ and ask, on the same terms as the registration pair below.
 ## The claims file
 
 `~/.claude/plugins/local/vwf-tools/.claude-plugin/claims.json` maps each
-`lspServers` key to the absolute paths of the repos that claim
-it, so one repo's removal never takes a server another repo still uses. It
-sits inside the manifest folder because that folder is the only place
-stackgen writes outside a repo.
+`lspServers` key, and each design tool as the key `design-tool:<tool>`, to
+the absolute paths of the repos that claim it, so one repo's removal never
+takes a server or a design tool another repo still uses. It sits inside the
+manifest folder because `vwf-tools` is the only place stackgen writes
+outside a repo.
 
 ```json
 {
   "typescript-lsp": ["/abs/path/to/repo-a", "/abs/path/to/repo-b"],
-  "kotlin-lsp": ["/abs/path/to/repo-a"]
+  "kotlin-lsp": ["/abs/path/to/repo-a"],
+  "design-tool:claude-code": ["/abs/path/to/repo-a"]
 }
 ```
+
+A repo claims a design tool while a `projects.<name>.design` value of its
+`.config/vwf.yaml` names it. The three role skills stay while any
+`design-tool:` key is claimed.
 
 - **It is written beside the manifest, in the same consented step.** A
   materialization adds this repo's path to every key this repo contributes,
@@ -151,8 +147,9 @@ stackgen writes outside a repo.
 ## The merge — it merges, never owns
 
 Read the existing `plugin.json` if there is one; treat every key in it as
-someone's. For each key this repo contributes, classify it, and report
-the classification at the gate:
+someone's. For each `lspServers` key this repo contributes, classify it, and
+report the classification at the gate (a design tool is not classified: it
+is new or already present, and written as this stackgen ships it):
 
 | State                   | Condition                                                     | Action                      |
 | ----------------------- | ------------------------------------------------------------- | --------------------------- |
@@ -164,8 +161,8 @@ the classification at the gate:
 **"Ours" is read from `claims.json`, never from the lockfile.** The claims file
 lives on this machine; the lockfile is committed, so whoever wrote the repo
 wrote it, and a key it merely names is unclaimed by us. A rewrite only ever
-writes what a shipped pack declares or a generator run on this machine emitted,
-never a declaration read from a repo file.
+writes what `bootstrap lsp --json` printed on this machine in this run, never
+a declaration read from a repo file.
 
 A conflict is a real outcome, not an error to route around: another repo
 pinned a different spelling of the same server name. Say which key, say
@@ -184,13 +181,14 @@ each other**. Declining either leaves everything else landed.
 **1 — the manifest write.** Show the exact `lspServers` keys, each with its
 state from the table above and its full declaration as it would be written:
 `command`, `args`, the `env` keys and their values. A key and a state alone
-are not consent to a process. The tier-3 consent covers LSP servers only.
+are not consent to a process. Show each design tool with every file it adds.
+The tier-3 consent covers LSP servers and design tools only.
 Say plainly that this writes outside the repo, onto this machine, at user
 scope, that collaborators get none of it, and that a server landing in
 `vwf-tools` starts in every repo on this machine whose files match its
 extension map, not only the one that picked it. The claims file is written
-in this step. Declined → the servers are simply absent; the plan says so and
-no `local_plugin` block is written.
+in this step. Declined → the servers and design tools are simply absent; the
+plan says so and no `local_plugin` block is written.
 
 **2 — the registration.** Print the two commands and ask. **Never run
 them unprompted:**
@@ -210,12 +208,13 @@ the state could not be read.
 Declined → a valid plugin directory nobody has installed. Reprint both
 commands for later and record `registered: false`. That is a complete,
 resumable state, not a partial landing. The next materialization that
-lands an LSP server offers the registration again.
+lands an LSP server or a design tool offers the registration again.
 
 ## The lockfile block
 
 Written only when the manifest write was consented — **absent means this
-repo contributed nothing, and removal touches the machine not at all**.
+repo contributed no server**; its design-tool claims are read from its
+`.config/vwf.yaml`, never from the lockfile.
 The full shape is in `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`; two
 fields decide whether it is right:
 
@@ -223,9 +222,12 @@ fields decide whether it is right:
   new and already-present alike (an already-present key this repo also needs
   is claimed by both, which is what keeps the last repo standing from removing
   a server another still uses). A conflict key is claimed by neither.
-- Each listed key records its owners, as `{ name: <key>, packs: [ <component ref>, … ] }`.
-  A list of bare names, the old shape, is read with owners unknown and
-  rewritten on the next sync; `/vwf:doctor` reads the owners from here and
+- Each listed key records its owners, as
+  `{ name: <key>, packs: [ <bundle slug>, … ] }`: the slugs of the bundles
+  whose materialization landed the server. A list of bare names, the old
+  shape, is read with owners unknown and rewritten on the next sync; an
+  older entry listing component refs is converted by sync
+  (`/stackgen:stackgen-sync`). `/vwf:doctor` reads the owners from here and
   skips an entry whose owners are unknown.
 - `registered:` follows the answer to item 2, never the answer to item 1.
 
@@ -235,19 +237,26 @@ reports nothing — and `/vwf:setup`'s step 26 deletes it.
 
 ## Removal — by subtraction
 
-No `local_plugin` block → nothing to do. Otherwise:
+No `local_plugin` block and no `design-tool:` claim of this repo → nothing to
+do. Otherwise:
 
-1. **Subtract.** For each key this repo's `local_plugin.lsp_servers` names —
-   and, for [`remove:`](materializer.md#removing-a-component) alone, its
-   `local_plugin.mcp_servers` — drop this repo's path from the key's list
-   in the claims file, and delete the key from `plugin.json` only when no repo
-   claims it any more. A key the claims file does not list is kept. Every
-   other key stays, whoever put it there.
-2. **Stop unless the manifest is now empty.** A manifest still holding
-   any server is another repo's working wiring. Rewrite it, drop the
-   `local_plugin` block, and finish.
-3. **Only when no servers remain**, print these and ask, on the same
-   terms as the registration pair:
+1. **Subtract.** For each key this repo gives up — an `lspServers` key this
+   repo's `local_plugin.lsp_servers` names that `bootstrap lsp --json` no
+   longer lists, every such key when the whole repo leaves, a
+   `design-tool:<tool>` key whose tool no project of this repo names any
+   more, and, for [`remove:`](materializer.md#removing-a-component) alone,
+   its `local_plugin.mcp_servers` — drop this repo's path from the key's list
+   in the claims file. A server leaves `plugin.json`, and a design tool's
+   files leave `skills/`, only when no repo claims the key any more; the
+   three role skills leave with the last `design-tool:` key. A key the
+   claims file does not list is kept. Every other key stays, whoever put it
+   there.
+2. **Stop unless the plugin is now empty.** A manifest still holding any
+   server, or a `skills/` folder still holding a design tool, is another
+   repo's working wiring. Rewrite it, drop the keys given up from the
+   `local_plugin` block — the block itself once it lists none — and finish.
+3. **Only when no server and no design tool remain**, print these and ask,
+   on the same terms as the registration pair:
 
    ```sh
    claude plugin uninstall vwf-tools@vwf-tools --scope user
@@ -258,22 +267,20 @@ No `local_plugin` block → nothing to do. Otherwise:
    success the directory is stackgen's own and is deleted outright: the
    fixed path above, never the lockfile's `local_plugin.path`.
    Declined → leave the empty manifest and the registration in place and
-   say so; an empty manifest starts nothing, so the cost of stopping
+   say so; an empty plugin starts nothing, so the cost of stopping
    here is zero.
 
 The invariant, and it is the same one this toolkit's installer lives by:
 **removal removes exactly what was added, and nothing another repo
 contributed.**
 
-**One pack leaving, not the whole repo** — a removed component is the case.
-Only the keys whose `packs:` list holds no other component are subtracted, by
-the steps above. A key another component of this repo still needs stays
-claimed, without the pack in its list. A key whose owners are unknown stays
-and is reported. Step 2's `local_plugin` block is dropped only when it then
-lists no key.
+**A server bootstrap no longer lists** — a tool removed from the repo is the
+case. Only that key is subtracted, by the steps above, and only this repo's
+claim on it. A key whose owners are unknown stays and is reported.
 
 **A key dropped on another machine** — this repo's path is in the claims file
-and, after a pull, its lockfile no longer names the key. The steps above run for
+and, after a pull, its lockfile no longer names the key, or its
+`.config/vwf.yaml` no longer names the design tool. The steps above run for
 that key, behind the normal tier-3 gate, from the `reconcile-claims:` call
 [the materializer](materializer.md#reconciling-this-repos-claims) describes,
 which `/vwf:setup` makes once per run; there is no lockfile block to change.
@@ -304,8 +311,8 @@ full declaration and the reach of user scope.
 
 **The seed.** The migration writes the current repo's path into the claims
 file for each key this repo's lockfile claims and the old manifest holds, only
-when the old manifest's declaration of that key matches the shipped pack's, or
-the one a generator run emitted on this machine in this same run; a copy in a
+when the old manifest's declaration of that key matches the one
+`bootstrap lsp --json` prints on this machine in this same run; a copy in a
 repo file is not that record. The lockfile is committed, so naming a key earns
 no claim. Any other key stays unclaimed and is kept. The gate lists each seeded
 claim. A seed is a claim and carries no declaration; a conflict key gets none.
@@ -335,17 +342,10 @@ rewritten to the `vwf-tools` names with no prompt. The repo's servers then merge
 into `vwf-tools` behind the normal tier-3 consent, as a first write when
 `vwf-tools` does not exist yet.
 
-## No registry, and the fact beside the declaration
+## No registry
 
-stackgen holds **no registry of servers** — a component declares its own,
-which is the whole reason the local plugin scales where a curated list
-would not. There is nowhere here to look a server up, deliberately: the
-pack that needs one carries it, and a server no pack declares is a server
-no repo asked for.
-
-A language component's `facts.lsp` and its `lsp_servers:` answer two
-different questions and must agree. `facts.lsp` is prose for
-`/vwf:doctor` — *how* a server is provided — and where the answer is this
-plugin, it says so and names the server key. A pack whose `facts.lsp`
-claims a server nobody declares is the dishonest-fact gap the reviewer
-already fails.
+stackgen holds **no registry of servers** — bootstrap does. A tool that has a
+language server ships it in its own block, and `bootstrap lsp --json` prints
+the servers of the tools a repo selects, so a server no selected tool ships is
+a server no repo asked for. There is nowhere in stackgen to look one up,
+deliberately.

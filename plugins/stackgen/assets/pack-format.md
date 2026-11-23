@@ -1,20 +1,19 @@
 # Pack Format
 
-A **pack** is a curated, pre-created **component** — the dispatch rule's
-preferred path, one pack per component: `typescript`, `pnpm`, `postgres`,
+A **pack** is a curated, pre-created **knowledge** component — the dispatch
+rule's preferred path, one pack per component: `postgres`, `astro`,
 `cloud-run`. A whole stack is never one pack: a **bundle** is a recorded
-composition of component refs, not a directory (see Bundles below). Packs
+composition of bootstrap tools and pack refs, not a directory (see Bundles
+below). Packs
 ship as stackgen **assets**, not live plugin skills: installing stackgen
 floods no session with every stack's doctrine, because nothing under
 `stacks/` is discovered by Claude Code — it only reaches a session once the
 materializer copies it into a repo's `.claude/` tree.
 
-**Every pack in the tree is authored here.** The `toolchain-gate` type ships
-eight packs under `stacks/toolchain-gate/` — `analysis-options`, `detekt`,
-`eslint`, `ktlint`, `ruff`, `swift-format`, `swiftlint` and `tsconfig` — and
-no curated plugin stands behind any pack: the tree is each pack's only home.
-This file is the contract every pack is folded into, so an author targets a
-shape the materializer already reads.
+**Every pack in the tree is authored here**, and no curated plugin stands
+behind any pack: the tree is each pack's only home. This file is the contract
+every pack, tool-knowledge entry and design tool is folded into, so an author
+targets a shape the materializer already reads.
 
 ## Layout
 
@@ -29,15 +28,16 @@ stacks/<type>/<slug>/
 │   ├── <name>.sh        #   the script, copied into .claude/hooks/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo files — tree mirrors the repo root
-    ├── .config/…        #   e.g. .config/mise/tasks/test/<name> (consent-gated)
+    ├── .config/…        #   e.g. .config/mise/tasks/p/_project/<name> (consent-gated)
     └── _<name>/…        #   pack-private payload — NEVER copied
 ```
 
 **Two sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
-  mirrors the repo root, so `config/.config/mise/tasks/test/golden` lands at
-  `<repo>/.config/mise/tasks/test/golden` and `config/wrangler.jsonc` at
+  mirrors the repo root, so `config/.config/mise/tasks/p/_project/deploy`
+  lands at `<repo>/.config/mise/tasks/p/<id>/deploy` and
+  `config/wrangler.jsonc` at
   `<repo>/wrangler.jsonc`.
   A path landing at the **root** must be on the fixed allowlist
   (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`); anything else belongs
@@ -57,9 +57,10 @@ stacks/<type>/<slug>/
 **A pack ships no toolchain.** No tool pin, no gate, no gate config, no
 generic task (`setup:deps`, `code:format`, `code:lint`, `code:check`), no
 pre-commit hook, no ignore line and no editor setting: all of them are
-bootstrap's. A pack names no bootstrap tool either. The materializer
-chooses the tools a composition needs from `bootstrap catalog --json`, and
-asks for them with `bootstrap add tool` — the stack-template skill's
+bootstrap's. A pack names no bootstrap tool either: a bundle names the
+tools it needs, the materializer checks them against
+`bootstrap catalog --json`, and asks for them with `bootstrap add tool` —
+the stack-template skill's
 bootstrap handoff. What a pack adds is what is specific to the repo, in
 `config/` (below).
 
@@ -69,30 +70,31 @@ plugin. The artifact set is closed to the output vocabulary
 (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): skills, agents, hooks,
 rules — **never MCP or LSP configuration**.
 
-**Hook scripts are pack-only.** A pack may ship them because they were
+**Hook scripts are shipped only.** A pack or a tool-knowledge entry may ship
+them because they were
 curated and tested here; generation never emits an executable — a generated
 "hook" is at most a recommendation in the conventions prose. The
 `hooks.yaml` entries land in `.claude/settings.json` only behind the
 materializer's separate settings-consent line.
 
 **`config/` is a target, not a fifth artifact kind.** It mirrors the repo
-root rather than `.claude/`, so `config/.config/mise/tasks/test/golden` lands
-at `<repo>/.config/mise/tasks/test/golden`, behind its own consent line, and
+root rather than `.claude/`, so `config/.config/mise/tasks/p/_project/deploy`
+lands at `<repo>/.config/mise/tasks/p/<id>/deploy`, behind its own consent
+line, and
 merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
 the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. **The tier is an allowlist**,
 and `p:plugins:check` rule 11 refuses any other path:
 
-- `config/.config/mise/tasks/test/<name>` — a test task, which needs a
-  model decision and so stays with the pack;
 - `config/.config/mise/tasks/p/_project/<name>` — a task of the project the
   stack is pinned for;
 - a root file on the allowlist of
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`;
 - `config/_<name>/` — pack-private payload, never copied.
 
-A language manifest, a CI workflow, editor settings and CLAUDE.md stay out —
+A test task is bootstrap's — a tool part — and stays out, as do a language
+manifest, a CI workflow, editor settings and CLAUDE.md —
 the editor is the user's to configure. **Mode is
 preserved**: anything under `config/.config/mise/tasks/**` must be authored
 executable (755), which `p:plugins:check` asserts, because mise runs a task
@@ -111,110 +113,27 @@ version: <semver — what sync diffs against, per component>
 type: <component type> # assets/taxonomy.md
 category: <token> # required where the type has categories
 capability: <token> # the vwf capability realized — where one applies
-kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | design-tool | stylesheet | addon # the bundle kind it composes into (assets/kinds.md)
-axis: project | backing | deploy | repo | design | cicd | stylesheet | addon # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
-platforms: [ <platform> ] # language components only — the bundle root
-languages: # language and app-framework components only
-  - token: <language token>
-    role: primary | platform-edge # app-framework components only
-    facts: # what /vwf:doctor verifies for this language
-      lsp: <how a language server is provided — or n/a>
-      mise_tool: <the mise tool name — or n/a>
-      manifest: <the manifest file doctor checks deps against — or n/a>
-      binaries: [ <name> | { name: <name>, probe: <command> } ] # optional — executables mise does not manage (xcodebuild, say); absent means none; see below
-package_manager: <token> # package-manager components only
-lockfile: [ <path or glob> ] # package-manager components only — where the lockfile lives, repo-root relative; any match passes
+kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | stylesheet # the bundle kind it composes into (assets/kinds.md)
+axis: project | backing | deploy | repo | cicd | stylesheet # omitted by cloud-provider components, which compose into both a backing- and a deploy-axis bundle; each bundle naming one declares its own
+platforms: [ <platform> ] # app-framework components only — where the SDK runs
 artifact: <token> # deploy-target components, and deploy-side cloud-service ones
-lsp_servers: {} # <name> -> the verbatim lspServers entry; extensionToLanguage mandatory — the generated local plugin's, tier 3
-harness:
-  <capability>: { task: <name>, mechanism: <one line> } # what this component satisfies — or n/a
 ```
 
-**`lsp_servers:` is the one server key.** It is user-scoped and lands in the
-generated local plugin's manifest. This changes no artifact: the landed set
-is still closed to skills, agents, hooks and rules, and this is payload the
-materializer writes elsewhere.
+**A pack carries no toolchain facts.** No languages and their facts, no
+server, no package manager, no lockfile and no harness: a language's facts,
+its LSP server (`bootstrap lsp --json`), its package manager, its lockfile
+and its tasks are bootstrap's, and `p:plugins:check` rule 11 refuses the
+retired keys.
 
 **A pack declares no MCP server.** The `user_mcp_servers:` key is retired:
 `p:plugins:check` refuses it in any `pack.yaml`, and nothing installs an MCP
 server for a repo — the user owns every MCP install. A pack that needs one
 names it in a `## MCP servers` section of its `conventions.md` (below).
 
-### The `addon` type, kind and axis
-
-An `addon` pack is an optional tool. It is **never `default: true`**, it is
-picked only through the tools menu and recorded in `.config/vwf.yaml`'s
-`addons:` list, and it carries a `## Claude plugins` section. Its bundle is
-one `addon` component alone, with the same token for its type, kind and axis.
-
-### `binaries:` — a name, or a name and its probe
-
-A `binaries:` entry takes one of two forms, and one list may mix them:
-
-```yaml
-binaries:
-  - swift
-  - { name: xcodebuild, probe: "xcodebuild -version" }
-```
-
-A **bare name** is a `PATH` lookup, as it always was. A **map** carries
-exactly `name` and an optional `probe` — a shell command `/vwf:doctor` runs
-instead of the lookup, requiring exit 0. The probe is for a binary whose
-presence on `PATH` proves nothing: `/usr/bin/xcodebuild` exists on a Mac with
-only the Command Line Tools and fails the moment it is run, so the lookup
-passes and the build does not. Severity is the same in either form —
-blocking once the project's template is pinned, a degradation while its pin
-still reads `unresolved`. A probe is a command the repo's committed
-template entry carries, so doctor runs it only while that entry matches the
-hash its lockfile records; on drift it runs nothing and reports the probe
-as not run, at a failed probe's severity. The procedure is doctor's.
-
-### `lockfile:` — where a package manager locks
-
-A package-manager pack declares where its lockfile lives, beside its
-`package_manager:` token: a non-empty list of repo-root-relative paths or
-globs, no `..`, and **any match passes**. `/vwf:doctor`'s
-package-manager check reads it rather than guessing a filename from prose.
-
-```yaml
-package_manager: swiftpm
-lockfile:
-  - Package.resolved
-  - "*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved"
-```
-
-The second entry is why the key is a list: an app's lockfile sits inside
-the Xcode project Xcode writes it into, a library's at the root, and one
-pack serves both.
-
-A package-manager pack also states, in its `conventions.md` or its
-skill, that the lockfile is never edited by hand, with an editor tool,
-`sed` or a script, and names the CLI commands that write it — `pnpm install`,
-`uv lock`, `swift package resolve`, a Gradle `--write-locks` run. The
-generator writes that passage into the `conventions.md` of every
-package-manager pack it generates, with how a merge conflict in the lockfile
-is resolved by that CLI rather than by merging its lines.
-
-### `## Claude plugins` — a plugin the component needs
-
-An `addon` pack, and only an `addon` pack, may name a Claude Code plugin, in its
-`conventions.md`, under a `## Claude plugins` heading, one line for each
-plugin: `<name>@<marketplace>`, the source of its marketplace for
-`claude plugin marketplace add`, and the scope, `user` or `project`.
-
-```markdown
-## Claude plugins
-
-- `taste-skill@taste-skill` — marketplace `Leonxlnx/taste-skill`, user scope.
-```
-
-The materializer reads the section and asks bootstrap to install each
-plugin, through the same handoff as the tools. There is no `pack.yaml` key.
-
 ### `## MCP servers` — a server the component needs
 
-Any pack may name an MCP server its skills reach, in its `conventions.md`,
-under a `## MCP servers` heading beside `## Claude plugins`, one bullet for
+Any pack or tool-knowledge entry may name an MCP server its skills reach, in
+its `conventions.md`, under a `## MCP servers` heading, one bullet for
 each server: its exact name, what it is for, and its official install page —
 never an install command, never a config block. A server the pack can work
 without carries the marker `(optional)` after its name.
@@ -240,32 +159,98 @@ composition time** now: a bundle's `frameworks:` is its framework
 components' slugs, its `capabilities:` its components' `capability` tokens.
 A pack states only what its own component is.
 
-## Bundle files — the recorded composition
+## Tool knowledge — `tools/<slug>/`
 
-A bundle is **one file**, `stacks/bundles/<slug>.md`: YAML frontmatter naming
-its component refs, and a body carrying the composition's own conventions —
-what this combination is for, and what it decides that no single component
-decides alone.
+A **tool-knowledge entry** is the doctrine of one or more bootstrap tools —
+a language, a package manager, a gate meaningful for one toolchain. It is
+keyed by the tools, not picked: no bundle lists it, and the materializer
+lands it where a project links, or a bundle names, one of its tools.
+
+```text
+tools/<slug>/
+├── tool.yaml            # name, summary, version, tools
+├── conventions.md       # folded into the template entry's body
+├── skills/<name>/…      # optional: copied into .claude/skills/
+└── hooks/               # optional: a script + its hooks.yaml, as a pack's
+```
 
 ```yaml
 name: <display name>
-axis: project | backing | deploy | repo | design | cicd | stylesheet | addon
+summary: <one line>
+version: <semver — what sync diffs against>
+tools: [ <bootstrap tool name> ] # [] — the entry lands in every repo
+```
+
+An entry carries no `config/` tree, no `platforms:` and no toolchain fact:
+the tools' pins, tasks, test parts and servers are bootstrap's. Its landed
+files are lockfile entries of the component `tool/<slug>`.
+
+## Design tools — `design-tools/`
+
+The design adapters install into the local plugin `vwf-tools`, never into a
+repo. `design-tools/skills/` holds the three generic role skills at their
+fixed names — `design-import-screens`, `design-import-design-system`,
+`design-import-conversations` — each of which reads the named project's
+`design` value and follows that tool's reference in its own folder. Each
+tool is a folder:
+
+```text
+design-tools/<tool>/
+├── tool.yaml                 # name, summary, version
+├── conventions.md            # the tool's conventions — the design pin's payload body
+├── references/<role>.md      # one per role — lands as skills/<role>/references/<tool>.md
+└── skills/<skill>/…          # optional: a skill only this tool has
+```
+
+The folder name is the design token `projects.<name>.design` holds, and the
+menu's `design`-axis slug.
+
+## Addons — `assets/addons.yaml`
+
+An addon is an optional Claude plugin the user picks for the whole product,
+recorded in `.config/vwf.yaml`'s `addons:` list. It is no pack: bootstrap
+installs it. Each item of `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml` names
+it, its `summary`, its marketplace `source`, and the `design_tools` it
+serves.
+
+## Bundle files — the recorded composition
+
+A bundle is **one file**, `stacks/bundles/<slug>.md` — or, for a repo
+bundle, `.claude/stackgen/bundles/<slug>.md` in the repo: YAML frontmatter
+naming its bootstrap tools and its pack refs, and a body carrying the
+composition's own conventions — what this combination is for, and what it
+decides that no single component decides alone.
+
+```yaml
+name: <display name>
+axis: project | backing | deploy | repo | cicd | stylesheet
 kind: <bundle kind> # assets/kinds.md
 platforms: [ <platform> ] # project axis only
 os: # optional, project axis only — the OS tokens each platform targets
   <platform>: [ <os> ] # a key in platforms:; first token is the primary
 artifact: <token> # deploy axis only
-default: true # optional — what vwf preselects; one per axis per platform; never on the addon axis
-components:
+default: true # optional — what vwf preselects; one per axis per platform
+tools: # bootstrap tool names, no version; [] when none
+  - <tool>
+packs: # knowledge packs; [] when none
   - <type>/<slug>@<version> # a shipped pack, at its current version
   - <type>/<slug>@generated # no pack covers it — generated on first fetch
 ```
+
+**A repo bundle has the same frontmatter**, `kind` included, and its
+`@generated` refs the same pack-type prefix; it never carries `default`.
+
+**Tool knowledge is never listed**: it follows the tools. A bundle with
+empty `tools:` and `packs:` is valid. `p:plugins:check` rule 14 checks each
+tool against bootstrap's catalog snapshot and each pack ref against
+`stacks/`.
 
 **This is what a user picks.** A component answers "what is TypeScript";
 a bundle answers "what is a TypeScript service" — and those are different
 questions, which is why a menu of components alone leaves nothing pickable.
 
-**Every bundle is a menu entry.** The repo baseline is no bundle: the
+**Every bundle is a menu entry**, a repo bundle in its own repo. The
+repo baseline is no bundle: the
 toolchain manager, the gates and the hygiene configs are bootstrap's, and the
 prose files are `/vwf:init`'s own assets. Nothing about it is recorded in
 `.config/vwf.yaml` — nothing was chosen.
@@ -301,19 +286,18 @@ frame, so no bundle carries a size or a chrome. A bundle with no `os:`, or a pla
 gets vwf's generic frame for that platform.
 
 **A `@generated` ref is a first-class outcome, not a gap.** A bundle may mix
-copied and generated components freely: the covered ones land verbatim, the
+copied and generated packs freely: the covered ones land verbatim, the
 uncovered ones run the generation pipeline on first fetch, and the lockfile
 records which was which per component. That mixing is the dispatch rule
 working at bundle scale.
 
-**A `stylesheet` component and its bundle take neither `platforms:` nor
-`languages:`**, and the absence is a ruling rather than an omission.
-`platforms:` is the `project` axis's, and vwf's condition on the stylesheet
-axis — asked of a project declaring `site` or `webapp` — lives in vwf's own
-rules, so repeating it here as a platform list would make one answer read as
-several. `languages:` belongs to the components that bring a language, and a
-stylesheet approach brings none: it is authored inside whatever the project
-already writes.
+**A `stylesheet` component and its bundle take no `platforms:`**, and the
+absence is a ruling rather than an omission. `platforms:` is the `project`
+axis's, and vwf's condition on the stylesheet axis — asked of a project
+declaring `site` or `webapp` — lives in vwf's own rules, so repeating it here
+as a platform list would make one answer read as several. A stylesheet
+approach brings no language either: it is authored inside whatever the
+project already writes.
 
 **No bundle directory exists**, which is what keeps a bundle a composition
 rather than a fourth kind of artifact tree.
@@ -321,21 +305,20 @@ rather than a fourth kind of artifact tree.
 ## Bundles — how the kinds compose
 
 A bundle is the composition rooted per kind
-(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): a Language-Bundle is a
-`language` component + its `package-manager`, `framework` and
-`toolchain-gate` components; a Cloud-Bundle a `cloud-provider` + its
+(`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`): a Language-Bundle is rooted at
+a language tool, with its package manager and gates as tools and its
+`framework` packs; a Cloud-Bundle a `cloud-provider` + its
 `cloud-service`s; a Datastore-Bundle category doctrine + an instance
-component; a Deploy-Bundle one `deploy-target` component alone; a
-Design-Bundle one `design-tool` component alone, a CI-Bundle one
-`ci-system`, and a Stylesheet-Bundle one `stylesheet` component — the three
-**tool axes**, whose bundle slug is the token the project config already
-holds. An Addon-Bundle is one `addon` component alone, and its slug is the
-token `addons:` holds. No bundle directory exists anywhere: the materializer
-folds the resolved composition into **one**
+component; a Deploy-Bundle one `deploy-target` component alone; a CI-Bundle
+one `ci-system`, and a Stylesheet-Bundle one `stylesheet` component — the
+two **tool axes** a bundle serves, whose bundle slug is the token the
+project config already holds. The third tool axis, `design`, is served by
+the design tools, not by a bundle. No bundle directory exists anywhere: the
+materializer folds the resolved composition into **one**
 `.claude/stackgen/templates/<slug>.md` — the vwf payload as frontmatter,
-including the `components:` refs
-(`<type>/<slug>@<version>`, or `@generated`), with the components'
-conventions as body — copies each component's artifact directories into
+including the `tools:` and the `packs:` refs (`<type>/<slug>@<version>`, or
+`@generated`), with the conventions of the bundle, its packs and its tool
+knowledge as body — copies each component's artifact directories into
 `.claude/`, and records every landing in the lockfile **per component**,
 which is the grain `stackgen-sync` acts at.
 
@@ -346,7 +329,7 @@ which is the grain `stackgen-sync` acts at.
   `version` and the lockfile's landing hashes — per component, so one
   pack's bump never churns the rest of its bundle.
 - **A bundle pins the pack's current `version`.** Every
-  `<type>/<slug>@<version>` component must name an existing pack at that
+  `<type>/<slug>@<version>` ref must name an existing pack at that
   exact version, or be `@generated`; `p:plugins:inventory` fails generation
   otherwise, rather than rendering a row for a composition nothing can
   copy. So bumping a pack means re-pinning every bundle that names it —
@@ -387,17 +370,9 @@ which is the grain `stackgen-sync` acts at.
   decisions a reader cannot look up — layout, placement, testing shape, what
   bills and what breaks. API reference belongs to Context7 at use time,
   when Context7 is installed; else the official documentation.
-- **Facts are per language and honest.** `n/a` is an answer; an invented
-  mise tool or manifest name surfaces as a doctor finding in every repo that
-  pins the pack. A tool the stack cannot run without whose `mise_tool` is
-  `n/a` — Xcode's `xcodebuild`, which mise does not install — belongs in
-  `binaries`, so doctor reports it missing rather than skipping the `n/a`
-  silently — blocking once the project's template is pinned, a degradation
-  while its pin still reads `unresolved`. Where being on `PATH` does not
-  prove the tool works, the entry carries a `probe` and doctor runs it.
 - **A generated pack may ship the `config/` tier too.** Nothing about
   `config/.config/…` is reserved to curated packs: a generated component
-  that genuinely owns a test task may declare one, and it lands through
+  that genuinely owns a project task may declare one, and it lands through
   the same consent line and the same lockfile record. Teaching the
   generator to **emit** them is a separate piece of work and is not done —
   so the honest statement today is that the format allows it and the

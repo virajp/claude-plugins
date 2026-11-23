@@ -12,16 +12,13 @@ local plugin on the developer's machine (below).
 
 Server configuration stays **excluded from the repo**: a language server
 is a plugin-manifest feature no project file can express, so no `.claude/`
-artifact and no project file can carry one. The need still travels as
-`language_facts` in the template payload for `/vwf:doctor` to read — that
-tells doctor *how* a server is provided and provides nothing itself. What
-actually provides one is the local plugin, which holds LSP servers only.
+artifact and no project file can carry one. The servers are bootstrap's —
+`bootstrap lsp --json` prints them — and what provides one is the local
+plugin, which holds LSP servers and the design tools, nothing else.
 
-The facts the template payload carries for its callers, all passed through
-from `pack.yaml` as declared (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`):
-`language_facts` per language — `binaries` entries included, in either form,
-a bare name or a `{ name, probe }` map; and `package_manager` and, beside
-it, `lockfile`, the paths or globs doctor's resolve check reads.
+The template payload carries no language facts, no package manager, no
+lockfile and no harness: a language's facts, its package manager and its
+tasks are bootstrap's, read from the repo through the bootstrap CLI.
 
 **`.mcp.json` is no longer written.** It was the second target from Wave D
 until stackgen's next major retired it, and the numbers below keep their names.
@@ -40,10 +37,15 @@ repo's `.mcp.json`, and it never copies a declaration out of that file.
 ├── rules/<name>.md            # short path-scoped constraints
 └── stackgen/                  # bookkeeping — not discovered by Claude Code
     ├── lock.yaml              # the materialization record (below)
+    ├── bundles/<slug>.md      # repo bundles, written by the menu's compose: verb
     ├── templates/<slug>.md    # template payloads: frontmatter (incl. the
-    │                          #   components: composition) + conventions body
+    │                          #   tools: and packs: composition) + conventions body
     └── citations/<component-slug>.yaml  # per-component research sources with URLs + fetch dates
 ```
+
+A pack's files and a tool-knowledge entry's land in the same places: skills
+in `skills/`, a hook script in `hooks/`, its `conventions.md` folded into the
+template entry's body.
 
 **Skills vs rules — one mechanism per content, never both.** Doctrine that
 needs references and judgment is a paths-scoped skill; a one-screen
@@ -54,16 +56,25 @@ constraint bound to a glob is a rule. The kind definitions
 
 An LSP server can only be declared in a plugin manifest, so the one way to
 provide one is to **be** a plugin. stackgen generates `vwf-tools`, the one local
-plugin that holds every LSP server this machine's repos materialized — LSP
-servers only — and registers it with Claude:
+plugin that holds every LSP server this machine's repos materialized — each
+copied unchanged from `data.servers` of `bootstrap lsp --json` — and the
+design tools their projects name, and registers it with Claude:
 
 ```text
 ~/.claude/plugins/local/vwf-tools/
-└── .claude-plugin/
-    ├── plugin.json       # lspServers, union across the user's stacks
-    ├── marketplace.json  # a single-plugin directory marketplace, also vwf-tools
-    └── claims.json       # server key -> the absolute repo paths that claim it
+├── .claude-plugin/
+│   ├── plugin.json       # lspServers, union across the user's stacks
+│   ├── marketplace.json  # a single-plugin directory marketplace, also vwf-tools
+│   └── claims.json       # server key or design-tool:<tool> -> the absolute repo paths that claim it
+└── skills/
+    ├── <role>/SKILL.md            # the three design-import role skills, once
+    ├── <role>/references/<tool>.md  # each claimed design tool's reference for that role
+    └── <skill>/                   # a skill only one design tool has, such as design-session
 ```
+
+The design tools come from `${CLAUDE_PLUGIN_ROOT}/design-tools/`: a role skill
+reads the named project's `design` value and follows that tool's reference in
+its own folder. Nothing of a design tool lands in a repo.
 
 Registration is two commands, and **stackgen prints them and asks — it never
 runs them unprompted**:
@@ -79,7 +90,8 @@ one tier-3 migration first: write `vwf-tools`, register it, uninstall
 old directory. Declined, it writes nothing and comes back on the next run. The
 procedure is the stack-template skill's local-plugin reference.
 
-An `addon` pin is materialized only in the base repo, and lands no server.
+An addon is no pin of this plugin's: it is a Claude plugin bootstrap installs,
+listed in `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`.
 
 The path and the plugin name are **fixed**, never constructed from the stack
 pin — one plugin per machine, holding the union.
@@ -106,9 +118,10 @@ and `.mcp.json` is no longer a path a server can take; an MCP server key left in
 the manifest by an older stackgen is removed by `/vwf:setup`'s machine cleanup,
 through the stack-template skill's `remove: key <name>`.
 
-**It merges, never owns.** The manifest is a union across every repo that
+**It merges, never owns.** The plugin is a union across every repo that
 materialized into it, so a landing adds its keys and leaves the rest. The claims
-file records which repos claim each key: a materialization adds this repo's
+file records which repos claim each key — a server, or a design tool as
+`design-tool:<tool>`: a materialization adds this repo's
 path, and a removal drops only this repo's path and deletes the key from the
 manifest only when its list is empty. An absent claims file means every key is
 unclaimed and kept; any write drops a claimed repo path that no longer exists on
@@ -132,16 +145,14 @@ stacks/<type>/<slug>/
 └── config/              # tree mirrors the repo root
 ```
 
-`config/.config/mise/tasks/test/golden` lands at
-`<repo>/.config/mise/tasks/test/golden`, the same way `skills/` mirrors
-`.claude/skills/`.
+`config/.config/mise/tasks/p/_project/deploy` lands at
+`<repo>/.config/mise/tasks/p/<id>/deploy`, the same way `skills/` mirrors
+`.claude/skills/`. A tool-knowledge entry declares no `config/` tree.
 
 **What the tier covers is an allowlist**, and `p:plugins:check` rule 11
-refuses any other path:
+refuses any other path — a test task among them: the test tasks are
+bootstrap's tool parts.
 
-- **A test task** — `.config/mise/tasks/test/<name>`, for example
-  `test/golden` or `test/e2e`. A test task needs a model decision, so it
-  stays with the pack and is not bootstrap's.
 - **A project task** — `.config/mise/tasks/p/_project/<name>`.
   `_project` is a **marked position** the materializer renames to the
   pinned project's id, not a task group. A deploy target ships its deploy
@@ -217,15 +228,14 @@ The rules mirror the ones the other targets already have:
   invisible exec bit has cleared every other gate in this repo before.
 
 **Composition order, since more than one component may write one tree.**
-By component type: `toolchain-gate`, then
-`package-manager` / `language`, then `app-framework`, then
+By component type: `app-framework`, then
 `capability-provider`, then `cloud-provider`, then `cloud-service` — a
 later component's file wins, and the lockfile records per file which
 component supplied the version that landed.
 
 The two ends are what the order is for. The baseline every pack lands
-beside — the whole task library and the toolchain — is bootstrap's,
-synced before any pack lands. The **deploy target
+beside — the whole task library, the test tasks and the toolchain — is
+bootstrap's, synced before any pack lands. The **deploy target
 goes last** because it is the most specific thing a repo pins: a
 `cloud-service` pack's `wrangler.jsonc`, and the `p/<id>/deploy` task beside
 it, are the answer to how this repo actually ships, and nothing may
@@ -237,8 +247,8 @@ plain reason rather than an oversight: no `cloud-provider` or
 theirs to compose. `cloud-service/workers-static-assets` is the first that
 does, and is what put them on it.
 
-**Precedent, and its limit.** The `package-manager/pnpm` pack already ships
-a hook script copied into a target repo, so packs already write outside
+**Precedent, and its limit.** The `pnpm` tool-knowledge entry already ships
+a hook script copied into a target repo, so stackgen already writes outside
 `.claude/`. This generalizes that from
 `hooks/` to a declared tree, for this reason: the alternative is that the one
 thing which writes a repo's config lives in a plugin that exists for no other
@@ -247,10 +257,9 @@ reason.
 **The fence, and where it now runs.** The tier was opened on 2026-09-05 for
 gate and provider config files, and closed again for them on 2026-10-23, when
 bootstrap took the toolchain: a gate's config, a provider's environment and
-every generic task are bootstrap's now. What stays is what only the repo's
-own stack decides — its test tasks, its project tasks, and a deploy target's
-root config. A framework whose doctrine names a test the repo must run, and
-then ships no task, has described a command rather than given one.
+every generic task are bootstrap's now, and the test tasks followed as
+bootstrap's tool parts. What stays is what only the repo's own stack
+decides — its project tasks, and a deploy target's root config.
 
 Four things stay **outside** the fence, and they are the whole of it:
 
@@ -297,10 +306,11 @@ never meant stackgen put it there.
    not a top-level key and removal needs a name for exactly one group.
 3. **The local plugin gets its own, larger gate** — writing outside the repo
    and registering with a user-scoped tool is a bigger act than editing a
-   project file, and is gated as two separate items: the manifest write, and
-   the registration. Declining either is fine and leaves the rest landed; a
-   declined registration leaves a valid plugin directory nobody has
-   installed, and says so, with the two commands printed for later.
+   project file, and is gated as two separate items: the write of its
+   servers and design tools, and the registration. Declining either is
+   fine and leaves the rest landed; a declined registration leaves a valid
+   plugin directory nobody has installed, and says so, with the two
+   commands printed for later.
 
 **CLAUDE.md is vwf's domain.** stackgen never writes it. After a
 materialization lands, stackgen recommends `/vwf:setup` as the next step —
@@ -315,22 +325,25 @@ each carrying the **component** it landed for — the grain sync acts at:
 
 ```yaml
 entries:
-  - path: .claude/skills/go/SKILL.md
-    slug: generated/go # the template (bundle) it landed with
-    component: language/go # the component ref — <type>/<slug> (assets/taxonomy.md)
+  - path: .claude/skills/gin/SKILL.md
+    slug: go-service # the template (bundle) it landed with
+    component: framework/gin # the component ref — <type>/<slug> (assets/taxonomy.md)
     source: generated # or pack/<type>/<slug>@<version>
     hash: <content hash — at landing>
-  - path: .config/mise/tasks/test/golden # a `config/` tier file — outside .claude/
-    slug: swift-swiftui
-    component: app-framework/swiftui # which component's version won, per file
-    source: pack/app-framework/swiftui@<version>
+  - path: .claude/skills/typescript/SKILL.md
+    slug: ts-service
+    component: tool/typescript # a tool-knowledge entry — tools/<slug>/
+    source: tool/typescript@<version>
+    hash: <content hash — at landing>
+  - path: .config/mise/tasks/p/web/deploy # a `config/` tier file — outside .claude/
+    slug: cloudflare-workers-static
+    component: cloud-service/workers-static-assets # which component's version won, per file
+    source: pack/cloud-service/workers-static-assets@<version>
     hash: <content hash — at landing>
     mode: "755" # preserved for .config/mise/tasks/** — mise runs the file itself
 bootstrap: # what stackgen asked bootstrap for — absent when it asked for nothing
   tools:
-    <tool>: [ <component ref>, … ] # a tool this repo did not select before; the components that need it
-  plugins:
-    <name>@<marketplace>: { scope: user, source: <marketplace source>, components: [ <component ref>, … ] }
+    <tool>: [ <slug>, … ] # a tool this repo did not select before; the bundles that name it
 settings_keys: [] # exact settings.json keys stackgen added, with consent — a hooks entry is spelled `hooks.<Event>[<matcher>]`
 required_mcp_servers: # each `## MCP servers` line of a landed component's conventions.md — a record; nothing installs it
   - { name: <server name>, purpose: <one line>, install: <official URL>, optional: true, components: [ <component ref>, … ] } # optional: only on a line marked (optional)
@@ -339,14 +352,16 @@ local_plugin: # the generated local plugin — absent when none was written
   marketplace: vwf-tools # the name given to `claude plugin marketplace add`
   plugin: vwf-tools@vwf-tools # what `claude plugin install` was given
   scope: user
-  lsp_servers: # exact lspServers keys THIS repo contributed to the union
-    - { name: <key>, packs: [ <component ref>, … ] }
+  lsp_servers: # exact lspServers keys THIS repo contributed to the union, from bootstrap lsp --json
+    - { name: <key>, packs: [ <bundle slug>, … ] } # the bundles that landed it
   registered: true # false when the manifest landed but registration was declined
 ```
 
 **Every item records its owners as a list**: a `local_plugin` server its
-`packs:`, a `bootstrap.plugins` entry and a `required_mcp_servers` line its
-`components:`, a skill entry its `component:`. A lockfile with no
+`packs:` (the bundle slugs that landed it), a `bootstrap.tools` entry its
+slugs, a `required_mcp_servers` line its `components:`, a skill entry its
+`component:`. No design tool is
+recorded: a repo's claim on one is its `.config/vwf.yaml`. A lockfile with no
 `required_mcp_servers` key declares no server; `/stackgen:stackgen-sync` fills
 it when it updates a component to a version whose `conventions.md` has a
 `## MCP servers` section. A `local_plugin` list of bare names, the old
@@ -361,7 +376,10 @@ rewritten with no prompt. They may also carry **MCP records** — a
 `local_plugin.mcp_servers` list, or a top-level `mcp_servers` list of
 `.mcp.json` keys. Every verb but `remove:` ignores an MCP record: it lands no
 server, adds no claim and reports nothing. `/vwf:setup`'s step 26 deletes them.
-The sample above shows none of these.
+And they may carry rows of the retired `language`, `package-manager`,
+`toolchain-gate`, `design-tool` and `addon` packs, of the test task files the
+packs no longer ship, and a `bootstrap.plugins` block: `/stackgen:stackgen-sync`
+converts those once. The sample above shows none of these.
 
 Rules the lockfile enforces:
 
@@ -385,15 +403,16 @@ Rules the lockfile enforces:
   `settings_keys`, nothing else — the same receipt invariant this repo's
   installer CLI lives by. A recorded path that resolves outside the repo root
   is refused and reported, never deleted: the lockfile is committed, so a path
-  is not trusted for being recorded. A tool or plugin under `bootstrap:` is
-  removed only when no remaining component needs it, through bootstrap's own
+  is not trusted for being recorded. A tool under `bootstrap:` is
+  removed only when no remaining slug names it, through bootstrap's own
   `remove` instruction; one the repo selected itself has no record and is
   never removed.
 - **The local plugin is removed by subtraction, not deletion.** Removal drops
   this repo's claim on the keys under `local_plugin.lsp_servers` (and, for
-  `remove:`, an older `local_plugin.mcp_servers`), and a key leaves the
-  generated manifest only when no repo claims it — another repo's
-  keys stay. Only when that leaves the manifest with no servers at all is the
+  `remove:`, an older `local_plugin.mcp_servers`), and on the
+  `design-tool:<tool>` keys of the tools its projects named; a key leaves the
+  generated plugin only when no repo claims it — another repo's
+  keys stay. Only when that leaves no server and no design tool at all is the
   plugin uninstalled, the marketplace removed and the directory deleted:
 
   ```sh

@@ -50,10 +50,12 @@ edits. You never write files.
    documentation. A web-source supplement used on a topic not disclosed thin
    is a gap; a registry citation for a package name or version never is —
    the registries are always read.
-4. **Emitted facts are honest.** Per-language facts (LSP provision, mise
-   tool, manifest) and every `harness` entry name real, verifiable things or
-   `n/a` — an invented task name or mechanism is a gap, because doctor will
-   check it in every repo that pins this template.
+4. **No toolchain facts.** A generated component carries no language facts,
+   no server declaration, no package-manager or lockfile key and no
+   `harness` — a language's facts, its server, its package manager and its
+   tasks are bootstrap's. Any of them in the artifact is a gap, and so is a
+   tool pin or a task the conventions invent rather than name as
+   bootstrap's.
 5. **Configure, not conjure.** The artifact wires and documents existing
    tools; anything that implements a server, invents a tool, or scaffolds
    beyond the declared stack is a gap.
@@ -69,9 +71,8 @@ edits. You never write files.
    each skill's invocation mode matches the kind's ruling, and nothing
    outside the output vocabulary (no executables from generation, no MCP or
    LSP configuration) appears at all. **The generated local plugin is not
-   an artifact** — `lsp_servers:` is a payload field the materializer lands
-   behind its own consent line, so its absence from the artifact set is
-   correct and never a gap; what it must satisfy is check 9. A generated
+   an artifact** — its servers come from bootstrap, so a generated server
+   declaration is a gap and its absence never is. A generated
    `user_mcp_servers:` entry **is** a gap: the key is retired, and a
    component that needs an MCP server names it in a `## MCP servers` section
    of its `conventions.md` — one line per server, its exact name, what it is
@@ -103,35 +104,17 @@ edits. You never write files.
    invocation state contradicting its kind's ruling; a skill **or plugin**
    name assembled from configuration rather than fixed at materialization;
    a hook verdict shape that does not match its event; a `settings.json`
-   edit not behind its own consent line; an `lspServers` entry with no
-   `extensionToLanguage` map; or a local-plugin write or registration not
-   behind its own tier-3 consent line. **Every one of these fails
-   silently at run time**, which is why they are checked here and nowhere
+   edit not behind its own consent line; or a local-plugin write or
+   registration not behind its own tier-3 consent line. **Every one of these
+   fails silently at run time**, which is why they are checked here and nowhere
    downstream — a landed artifact that never fires looks exactly like one
    that fired and had nothing to say.
 10. **Every name has a verdict.** Grep the generated component for every
-    concrete third-party name it emits — `mise_tool` entries, runner-invoked
-    tools in harness tasks (`dlx`, `npx`, `uv run --with`, `uvx`),
-    `lsp_servers:` commands, every package a server's
-    runner chain fetches (nested runners, `--package`, `-p`, `--from`,
-    `pipx run --spec`, whose name is the one vetted, `--with`, `dlx`, the
-    positional a runner starts when it has no package flag),
-    the host of any URL or bare host (a hostname or IP address with no
-    scheme) in an entry's `args` or `env` values, action references, image
-    references — and look each one up in the verdict table you were handed.
-    A name with no row is a gap; a row reading `block` is a gap. Each of these
-    is a gap whatever the table says: a chain whose fetched packages cannot be
-    read (a fetching runner the generator's rule does not name, a package spec
-    that is no registry name); a server's command, or any link of its chain,
-    that is a shell (`sh`, `bash`, `zsh`, `dash`, `ksh`, `fish`, by any path,
-    with or without `-c`, and a shell that `env` starts, as in `env sh -c`),
-    an interpreter's inline-code form (`node -e`,
-    `python -c`, `perl -e`, `npx -c` and the like) or a flag that loads code
-    beside the tool named (`node --import`, `node --require`); an `args` or
-    `env` value that is or embeds a `data:` or `file:` URL; and a code-loading
-    variable (`NODE_OPTIONS`, `NODE_PATH`, `PYTHONPATH`, `BASH_ENV`,
-    `LD_PRELOAD`, `DYLD_*`, `PATH` and the like) set as an `env` key or a
-    `VAR=value` element of `args`. You do
+    concrete third-party name it emits — every package its skills or
+    conventions tell a repo to add or run, action references, image
+    references, `Package.swift` dependencies, Maven dependencies and Gradle
+    plugins — and look each one up in the verdict table you were handed.
+    A name with no row is a gap; a row reading `block` is a gap. You do
     **no lookup of your own** — no registry, no network, nothing beyond the
     table: the verdicts are the generator's to obtain and yours only to
     reconcile against what the artifact actually names.

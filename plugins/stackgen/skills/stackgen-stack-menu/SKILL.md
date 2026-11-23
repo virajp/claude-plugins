@@ -1,9 +1,12 @@
 ---
 name: stackgen-stack-menu
 description: Return the stack options the stackgen plugin offers — its shipped
-  packs plus the one open entry, generate-for-anything-uncovered — as a vwf
-  menu payload. Invoked by /vwf:architecture and /vwf:setup when `stackgen` is
-  listed in the config's `stacks:` — not a general-purpose skill.
+  bundles, the repo's own bundles, the design tools and the addons, plus the
+  one open entry, compose-a-bundle — as a vwf menu payload; and, as
+  `compose:`, write a repo bundle. Invoked by /vwf:architecture and
+  /vwf:setup when `stackgen` is listed in the config's `stacks:` — not a
+  general-purpose skill.
+argument-hint: "[compose:]"
 disable-model-invocation: false
 user-invocable: false
 model: sonnet
@@ -15,6 +18,8 @@ effort: low
 Return the options this plugin offers, per the vwf stack-adapter contract.
 **Return the payload and nothing else** — no prose, no recommendation, no
 comparison. Choosing is the user's job and presenting the choice is vwf's.
+Called with `compose:`, it writes one repo bundle instead
+([Composing a bundle](#composing-a-bundle)).
 
 > **`disable-model-invocation` must stay `false`, and `user-invocable` must
 > stay `false` too.** A user-only skill is removed from the model's context
@@ -25,11 +30,12 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
 
 ## How to answer
 
-1. List `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/*.md`. **Each is one menu
-   entry** — a bundle is what a user picks, because a component answers
-   "what is this language" and a bundle answers "what is a service in it".
-   Its slug is the filename, and `name`, `axis`, `kind`, `platforms` and
-   `artifact` come from the frontmatter
+1. **The bundles.** List `${CLAUDE_PLUGIN_ROOT}/stacks/bundles/*.md`, then
+   the repo's own bundles, `.claude/stackgen/bundles/*.md` at the root of
+   the current repo. **Each is one menu entry** — a bundle is what a user
+   picks, because a component answers "what is this language" and a bundle
+   answers "what is a service in it". Its slug is the filename, and `name`,
+   `axis`, `kind`, `platforms` and `artifact` come from the frontmatter
    (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the `summary` from
    the body's opening sentence.
 
@@ -38,9 +44,11 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    the prose files from its own assets — so nothing here is a choice that
    is not one.
 
-   **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files are
-   the parts a bundle composes, not options — offering them would ask the user
-   to assemble a stack rather than choose one.
+   **Never list bare components.** `stacks/<type>/<slug>/pack.yaml` files,
+   the tool-knowledge entries under `${CLAUDE_PLUGIN_ROOT}/tools/` and the
+   bootstrap tools themselves are the parts a bundle composes, not options —
+   offering them would ask the user to assemble a stack rather than choose
+   one. Tool knowledge is never offered at all: it follows the tools.
 
    **Copy `default: true` from the bundle, never compute it.** An entry
    carries the key exactly when its bundle file's frontmatter does, and omits
@@ -51,40 +59,51 @@ comparison. Choosing is the user's job and presenting the choice is vwf's.
    platform on its axis; which of them a round highlights is vwf's per-round
    rule, applied after it has filtered the entries by the project's
    platforms, not this skill's. Two overlapping on a platform is the
-   checker's to refuse, not this skill's to resolve. The `addon` axis never
-   carries the key: no optional tool is preselected.
-
-   **Add `needed_by` to an `addon` entry a shipped pack needs**, and to no
-   other: `taste-skill` → "the claude-code design tool's design-session".
-2. Return the payload below. The `generate` block is present on **every**
-   answer — it is the open entry, and it is what makes an empty pack list read
-   as a decision rather than a fault.
+   checker's to refuse, not this skill's to resolve. A repo bundle never
+   carries the key.
+2. **The design tools.** List the folders of
+   `${CLAUDE_PLUGIN_ROOT}/design-tools/` that hold a `tool.yaml` — the
+   `skills/` folder beside them is the three generic role skills, not a
+   tool. **Each is one `design`-axis entry**: the folder name is the slug,
+   and the token `projects.<name>.design` holds; `name` and `summary` come
+   from its `tool.yaml`. No design entry carries `default: true` or a
+   `kind`.
+3. **The addons.** Read `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`. **Each
+   item is one `addon`-axis entry**: its `name` is the slug and the display
+   name, its `summary` the summary. An item whose `design_tools` list is
+   not empty carries `needed_by`, naming those tools: "the claude-code
+   design tool". No addon entry carries `default: true` or a `kind`.
+4. Return the payload below. The `compose` block is present on **every**
+   answer — it is the open entry, and it is what makes an empty bundle list
+   read as a decision rather than a fault.
 
 ```yaml
 plugin: stackgen
-note: Packs listed here are curated and copied verbatim. Any technology no
-  pack covers can be GENERATED — pin `generated/<technology-slug>` on the
-  axis that needs it, and the first template fetch runs the generation
-  pipeline (researched from current sources, Context7 first when Context7
-  is installed, else the official documentation and the package
-  registries; instantiated against vwf's principles catalog, gated by
-  review and your consent) directly into the repo's committed .claude/
+note: Bundles listed here are curated and their packs copied verbatim. Any
+  combination no bundle covers can be COMPOSED — name its bootstrap tools
+  and its knowledge packs, an item no pack covers as the ref
+  <type>/<slug>@generated, and the first template fetch runs the generation
+  pipeline for that ref (researched from current sources, Context7 first
+  when Context7 is installed, else the official documentation and the
+  package registries; instantiated against vwf's principles catalog, gated
+  by review and your consent) directly into the repo's committed .claude/
   tree.
 templates:
-  - slug: <bundle filename without .md>
-    axis: <bundle frontmatter axis>
-    kind: <bundle frontmatter kind> # assets/kinds.md
+  - slug: <bundle filename without .md, design-tool folder name, or addon name>
+    axis: <bundle frontmatter axis, design, or addon>
+    kind: <bundle frontmatter kind> # assets/kinds.md — bundles only
     platforms: [ <platform> ] # project axis only
     name: <display name>
     summary: <one line>
     default: true # only when the bundle frontmatter carries it — omitted otherwise
     needed_by: <what needs it> # addon axis only — omitted when nothing does
-generate:
-  pin: generated/<technology-slug>
-  axes: [ project, backing, deploy, repo, design, cicd, stylesheet ]
-  kinds: [ language-bundle, database, cloud-provider, capability-provider, ci-system, app-framework, deploy-target, design-tool, stylesheet ] # the generatable kinds
-  summary: Generate principles-grounded skills and conventions for any stack
-    no pack covers. Explicit, reviewed, consent-gated — never a silent run.
+compose:
+  verb: compose
+  axes: [ project, backing, deploy, repo, cicd, stylesheet ]
+  kinds: [ language-bundle, database, cloud-provider, capability-provider, ci-system, app-framework, deploy-target, stylesheet ] # the bundle kinds compose takes
+  summary: Compose a repo bundle from bootstrap tools and knowledge packs;
+    an item no pack covers is generated with principles-grounded skills and
+    conventions. Explicit, reviewed, consent-gated — never a silent run.
 ```
 
 **`kinds:` omits `workspace` deliberately**, and the omission is a recorded
@@ -102,38 +121,79 @@ bootstrap's):
 It is a `kinds.md` kind regardless, and may be added here once the
 condition above stops holding.
 
-**If no bundle exists** — `stacks/bundles/` is empty — **return
-`templates: []`** with the same
-`note` and `generate` block — the open entry is what makes an empty list read as a
-decision rather than a fault.
+**If no bundle exists** — `stacks/bundles/` and the repo's bundles both
+empty — **return the bundle entries as none**, with the design tools, the
+addons, the same `note` and the `compose` block — the open entry is what
+makes an empty list read as a decision rather than a fault.
 
 **The `stylesheet` axis answers like every other axis, and filters on
-nothing.** Every `axis: stylesheet` bundle is an entry, the `generate` block
+nothing.** Every `axis: stylesheet` bundle is an entry, the `compose` block
 carries the open door, and vwf offers *defer this axis* the way it does on the
 technology axes — a deferral is recorded `unresolved` and elicited again later.
 vwf asks the round only of a project declaring a `site` or `webapp` platform,
 and **that condition is vwf's, not this skill's**: filtering here would mean
 reading the registry, which the rules below forbid, and for exactly this
-reason — a menu that varied by repo would be a second place for the platform
-condition to live, and two places for one rule is how they disagree.
+reason — a menu that varied by project would be a second place for the
+platform condition to live, and two places for one rule is how they disagree.
 
 **The `addon` axis is the tools round, and it is multi-select.** Every
-`axis: addon` bundle is an entry — slug, name and summary, none marked default,
+`addons.yaml` item is an entry — slug, name and summary, none marked default,
 each with its `needed_by` note where it has one — and the user picks any number
-of them, or none. The `generate` block's `axes` and `kinds` leave `addon` out on
-purpose: the open entry is not offered on this round, because an optional tool
+of them, or none. The `compose` block's `axes` leave `addon` and `design` out
+on purpose: an addon is a Claude plugin bootstrap installs, and a design tool
 is one this plugin ships, not a technology to research.
 
-**A bundle whose components are partly `@generated` is listed normally**, with
+**A bundle whose packs are partly `@generated` is listed normally**, with
 no warning and no asterisk. Mixing copied and generated components is the
 dispatch rule working, and the lockfile records which was which; flagging it in
 the menu would present a routine outcome as a defect.
 
+## Composing a bundle
+
+`/stackgen:stackgen-stack-menu compose:` writes a **repo bundle** for a
+combination no shipped bundle covers. `/vwf:architecture` calls it; a bundle
+is never mandatory, and a pick from the menu needs no call. The caller passes,
+one per line beside the argument:
+
+```yaml
+slug: <kebab> # the bundle's slug — the template slug vwf pins
+axis: project | backing | deploy | repo | cicd | stylesheet
+kind: <bundle kind> # one of the compose block's kinds
+platforms: [ <platform> ] # project axis only
+tools: [ <bootstrap tool name> ] # no version
+packs: [ <type>/<slug>@<version> | <type>/<slug>@generated ]
+```
+
+1. **Check the slug.** A slug a shipped bundle already holds is refused:
+   return `ERROR: <slug> is a shipped bundle — pin it instead.` and write
+   nothing. A repo bundle of that slug is rewritten. A `kind` outside the
+   compose block's `kinds` is refused the same way, naming the kind.
+2. **Check each tool** against `mise x -- bootstrap catalog --json`: a name
+   that is not a `name` of its `data.tools` is refused. A failed call stops
+   the verb with the envelope's `errors`, as bootstrap gives them, and
+   nothing is written.
+3. **Check each pack ref.** A `<type>/<slug>@<version>` ref must name
+   `${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/pack.yaml` at exactly that
+   `version`. An `@generated` ref takes a pack type as its prefix, as a
+   shipped bundle's does (`${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`); it
+   names an item no pack covers and is researched on the first template
+   fetch. A refused tool or ref returns
+   `ERROR:` naming each one, and nothing is written.
+4. **Write** `.claude/stackgen/bundles/<slug>.md` at the root of the current
+   repo: the frontmatter `name` (the slug), `axis`, `kind`, `platforms`
+   where given, `tools` and `packs`, in the shape of
+   `${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`'s bundle files, and a body of
+   one heading and one sentence naming the tools and packs. It commits
+   nothing: the file joins the caller's own commit.
+5. **Return** one line, the slug.
+
 ## Rules
 
-- **Packs are exhaustive; generation is the only open door.** Never invent a
-  pack entry, and never present generation as if it were a curated pack — the
-  trust level differs and the user is choosing between them.
-- Do not read the repo, the registry, or `.config/vwf.yaml`. This skill
-  answers the same way in every product; the dispatch happens in
-  `/stackgen:stackgen-stack-template`, not here.
+- **Bundles are exhaustive; composing is the only open door.** Never invent a
+  bundle entry, and never present a composed or generated item as if it were
+  a curated pack — the trust level differs and the user is choosing between
+  them.
+- Do not read the registry or `.config/vwf.yaml`. The one repo read is the
+  repo's own bundles, `.claude/stackgen/bundles/`, and the one repo write is
+  `compose:`'s; every other answer is the same in every product, and the
+  dispatch happens in `/stackgen:stackgen-stack-template`, not here.

@@ -1,8 +1,8 @@
 # The Materializer
 
 Read this on a **first pin** — a slug with no
-`.claude/stackgen/templates/` entry yet — and for the calls at the end of this
-file: [an addon already materialized](#an-addon-already-materialized),
+`.claude/stackgen/templates/` entry yet — on a design-tool pin, and for the
+calls at the end of this file:
 [removing a component](#removing-a-component) and
 [reconciling claims](#reconciling-this-repos-claims). It is the one code path
 that writes to a repo, and every write it makes is consent-gated and committed
@@ -10,17 +10,21 @@ once.
 
 ## Inputs
 
-- The resolved composition — one source per component: a pack directory
+- The resolved composition — the bundle's `tools:`, and one source per
+  pack ref: a pack directory
   (`${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/`), or the generator's
   output for that component (an in-memory pack in the same shape —
   `pack.yaml` fields including the classification, conventions prose,
   artifacts).
+- The tool knowledge those tools call for — entries under
+  `${CLAUDE_PLUGIN_ROOT}/tools/<slug>/` ([tool knowledge](#tool-knowledge)).
 - The target repo root — the current repo by default, or the repo the
   invocation's `repo: <path>` line names, a path relative to the current
   repo's root. Every write below, and the lockfile, resolve under that
   root: read "the repo" throughout as that repo.
-- **The repo's bootstrap tools** — the tools and plugins it already
-  selects, read with `bootstrap describe --json`. A repo that fails the
+- **The repo's bootstrap tools** — the tools it already selects and the
+  projects each links, read with `bootstrap describe --json`, and its LSP
+  servers, read with `bootstrap lsp --json`. A repo that fails the
   shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
   stops the landing set before anything is written
   ([the bootstrap handoff](bootstrap-handoff.md), step 1).
@@ -35,24 +39,23 @@ once.
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`):
 
    - `.claude/stackgen/templates/<slug>.md` — **one entry for the bundle**:
-     the payload fields (including `kind`, the `components:` refs,
-     per-language `facts` with `binaries` entries in either form, a bare
-     name or a `{ name, probe }` map, `lockfile` beside
-     `package_manager`) as
-     frontmatter, the components' conventions prose as body.
+     the payload fields (including `kind`, the `tools:` and the `packs:`
+     refs) as frontmatter, the conventions prose of the bundle, of its
+     packs and of the tool knowledge it lands as body.
    - `.claude/stackgen/citations/<component-slug>.yaml` — per component:
      the research sources with URLs and fetch dates (generation; a pack
      lists its provenance here).
    - `.claude/skills/<name>/…`, `.claude/agents/<name>.md`,
      `.claude/rules/<name>.md` — copied verbatim from each component's
-     source.
-   - `.claude/hooks/<name>.sh` — **pack-sourced scripts only**; generation
+     source, a tool-knowledge entry among them.
+   - `.claude/hooks/<name>.sh` — **shipped scripts only**, a pack's or a
+     tool-knowledge entry's (`tools/pnpm/hooks/` is the case); generation
      never emits an executable.
    - **The repo config files a component declares** — each component's
      `config/` tree (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`)
      mirrors the **repo root**, not `.claude/`, so
-     `config/.config/mise/tasks/test/golden` lands at
-     `<repo>/.config/mise/tasks/test/golden`, exactly the way `skills/`
+     `config/.config/mise/tasks/p/_project/deploy` lands at
+     `<repo>/.config/mise/tasks/p/<id>/deploy`, exactly the way `skills/`
      mirrors `.claude/skills/`. It is a **target, not a fifth artifact
      kind**: copied verbatim like every other pack file, but a **tier-2**
      one, so it is presented at its own consent line in step 3 rather
@@ -106,15 +109,13 @@ once.
      - **A pack ships no pre-commit hook fragment and no gate.** A
        toolchain gate, its config and its `code:lint:<tool>` or
        `code:format:<tool>` task are bootstrap's, asked for below.
-   - **The bootstrap instructions** — the tools and the Claude plugins
-     the composition needs that the repo does not select yet, the tools
-     chosen from `bootstrap catalog --json` and sent with
-     `bootstrap add tool`, the plugins written to the `claude` tool's
-     values with `bootstrap config set` and installed by `setup:ai`.
+   - **The bootstrap instructions** — the tools the bundle names that the
+     repo does not select yet, each checked against
+     `bootstrap catalog --json` and sent with `bootstrap add tool`.
      **The procedure is [the bootstrap handoff](bootstrap-handoff.md)**:
-     steps 1 to 6 run here, step 7 is a consent line in step 3, and steps
-     8 to 10 run in step 5. No pack names a bootstrap tool, and stackgen
-     never writes a file in `.config/bootstrap/` itself.
+     steps 1 to 5 run here, step 6 is a consent line in step 3, and steps
+     7 to 9 run in step 5. No pack names a bootstrap tool — the bundle does
+     — and stackgen never writes a file in `.config/bootstrap/` itself.
    - The lockfile update — every path above, with its component ref,
      source and content hash, plus the **mode** for a `config/` file, and
      the `bootstrap:` block the handoff records. The
@@ -139,10 +140,9 @@ once.
    **Composition order, and why a bug in it is silent.** More than one
    component may write into one `config/` tree — `.config/mise/tasks/` is
    the first destination that happens for. Compose by component type in
-   the order `toolchain-gate`, then
-   `package-manager` / `language`, then
-   `app-framework`, then `capability-provider`, then `cloud-provider`,
-   then `cloud-service`; a **later component's file wins**, and the
+   the order `app-framework`, then `capability-provider`, then
+   `cloud-provider`, then `cloud-service`; a **later component's file
+   wins**, and the
    lockfile records per file which one that was. The baseline library
    every pack lands beside is bootstrap's, synced before any pack lands,
    and no pack ships a path a bootstrap tool ships; the deploy
@@ -157,8 +157,9 @@ once.
    **The fence: stackgen writes only what a pack declares in `config/`.**
    Landing a config tree does not make stackgen the owner of a repo's
    configuration. What a pack **may** declare is the repo-specific rest:
-   its `test:*` tasks, its `p/_project/` tasks and the root files on the
-   allowlist. Gate configs, tool pins and generic tasks are bootstrap's.
+   its `p/_project/` tasks and the root files on the allowlist. Gate
+   configs, tool pins, generic and test tasks are bootstrap's, and a
+   tool-knowledge entry declares no `config/` tree at all.
    What stays outside is enumerated
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`): a language manifest, a
    CI workflow, editor settings — the editor is the user's to configure —
@@ -174,21 +175,16 @@ once.
 
    **Server configuration is not in the set, for a different reason**: it
    does not go in a repo at all. A language server is a plugin-manifest
-   feature no project file can express. A component's `languages[].facts.lsp`
-   still travels in the payload for `/vwf:doctor` to read, and what actually
-   provides the server is the **generated local plugin**, a tier-3 target
-   outside the repo, handled at its own consent line in step 4. **No MCP
+   feature no project file can express: it comes from
+   `bootstrap lsp --json`, and what provides it is the **generated local
+   plugin**, a tier-3 target outside the repo, handled at its own consent
+   line in step 4. **No MCP
    server is landed anywhere**: the user owns every MCP install, and a
    component that needs one names it in its `## MCP servers` section, which
    the lockfile records (above) and nothing installs.
 
-   **An `addon`-axis pin is materialized like any other bundle**: its
-   `## Claude plugins` section goes to the bootstrap handoff, and it lands no
-   server. It is materialized only in the repo vwf names for it, the base
-   repo: a member gets no addon skill files.
-
    **A pin whose pack no longer exists is reported and skipped**, on every
-   axis — `addon`, `design` and the rest — never an error: a component ref
+   axis, never an error: a pack ref
    with no `${CLAUDE_PLUGIN_ROOT}/stacks/<type>/<slug>/pack.yaml` lands
    nothing, and the plan names it. Its materialized files stay until
    `/vwf:setup`'s step 26 removes them through
@@ -202,7 +198,7 @@ once.
    the lockfile is not stackgen's to touch.
 
    **A `config/` target is checked by exactly this rule, not a softer
-   one.** A repo that already has `.config/mise/tasks/test/golden` and no
+   one.** A repo that already has `.config/mise/tasks/p/<id>/deploy` and no
    lockfile entry for it wrote that file itself; it is a conflict, and
    overwriting it would be the one silent write this whole design exists
    to prevent. The tier **merges, never owns**: only paths this repo's
@@ -262,21 +258,27 @@ once.
    presented as a separate, individually skippable item listing **every
    target path** — not folded into the file plan above. State the decline
    outcome in the plan, in these terms: **the skills stay landed and the
-   tasks are simply absent** — a repo with the test doctrine in
-   `.claude/skills/` and no `mise run test:<name>` behind it. Say that at
+   tasks are simply absent** — a repo with the deploy doctrine in
+   `.claude/skills/` and no `mise run p:<id>:deploy` behind it. Say that at
    the gate, because the failure it prevents is a user discovering it a
    week later as a missing task.
 
-   **The bootstrap instructions are their own consent line too** — step 7
+   **The bootstrap instructions are their own consent line too** — step 6
    of [the bootstrap handoff](bootstrap-handoff.md). List each instruction
-   as it will be sent, and for each tool and plugin the components that
-   need it. A delta with no instruction shows no line.
+   as it will be sent, and for each tool the bundle that names it. A delta
+   with no instruction shows no line.
 
-4. **The local plugin — its own gate, and a larger one.** A component that
-   declares an `lsp_servers:` entry is served by the generated local plugin at
-   `~/.claude/plugins/local/vwf-tools/`
+4. **The local plugin — its own gate, and a larger one.** Two things land in
+   the generated local plugin at `~/.claude/plugins/local/vwf-tools/`
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md` — the fixed path, the
-   manifest shape, the lockfile key). **The procedure is
+   manifest shape, the lockfile key): the repo's **LSP servers**, each entry
+   of `data.servers` of `mise x -- bootstrap lsp --json`, copied unchanged,
+   and the **design tools** the repo's projects name
+   ([the design tools](#the-design-tools)). No pack and no generator
+   declares a server. This gate is asked once step 5 has sent the
+   bootstrap instructions, so the servers it shows are the ones
+   `bootstrap lsp --json` lists then, a server of a tool this landing added
+   among them. **The procedure is
    [the local plugin](local-plugin.md)**: the merge classification, the
    file shapes, the claims file, the already-registered detection, the
    version bump a re-read depends on, and removal by subtraction.
@@ -304,11 +306,14 @@ once.
    - **The manifest write.** Show the exact `lspServers` keys being added,
      each with its full declaration (`command`, `args`, the `env` keys and
      their values) and whether it is new or already
-     present from another repo. It **merges, never owns** — an existing key the
+     present from another repo, and each design tool's files being added.
+     It **merges, never owns** — an existing key the
      claims file does not list for this repo is left untouched, whatever the
      committed lockfile names, and a key another repo already
      contributed is reported, not rewritten. This repo's path joins each key
-     in the claims file beside the manifest, in the same step.
+     in the claims file beside the manifest, in the same step, and each
+     key's `local_plugin.lsp_servers` entry gains this bundle's slug in its
+     `packs:` list — the owners `/vwf:doctor` reads.
    - **The registration.** Print the two commands and ask; **never run
      them unprompted**:
 
@@ -338,7 +343,7 @@ once.
    [`remove: key <name>`](#removing-a-component).
 
 5. **Write and commit.** On approval: write the set, then, when the
-   bootstrap line was consented, send its instructions — steps 8 to 10 of
+   bootstrap line was consented, send its instructions — steps 7 to 9 of
    [the bootstrap handoff](bootstrap-handoff.md). A stop that
    bootstrap reports is shown as it is; the files already written
    stay, and the plan names the tools that are absent. Update the
@@ -360,7 +365,7 @@ once.
    The reason is not self-evident and the failure does not read as a
    permission problem: mise runs a task file **directly**, so a file that
    lands 644 is reported as an **unknown task** —
-   `mise run test:golden` claims the task does not exist while the
+   `mise run p:<id>:deploy` claims the task does not exist while the
    file sits right there. The restore is `mise run init`, which re-marks
    the task library
    executable; say so rather than leaving a user to chmod by hand. The
@@ -388,15 +393,58 @@ call of that run, beside the `repo:` line. A call carrying one treats that offer
 as declined without asking. The next run starts without the line, so the offer
 comes back.
 
-## An addon already materialized
+## Tool knowledge
 
-`/vwf:setup` calls this skill for every `addons:` slug on every run. An addon
-lands no server, so on an entry whose `axis:` is `addon` the call is the plain
-read of the resolution order's step 1: it returns the payload from the entry
-and does nothing else — no gate, no write, no repo copy touched, no bootstrap
-instruction sent, nothing diffed. An addon's plugin, `addon/taste-skill`'s
-among them, reaches a machine through the repo's committed
-`.config/bootstrap/`, which bootstrap writes.
+A bundle never lists tool knowledge: it follows the tools. Each entry
+`${CLAUDE_PLUGIN_ROOT}/tools/<slug>/` holds a `tool.yaml` whose `tools:`
+list names bootstrap tools, a `conventions.md`, and optionally `skills/` and
+`hooks/`. The landing set takes:
+
+- **every entry whose `tools:` meets a tool this project links** — a tool
+  whose `projects` list in `data.tools` of `bootstrap describe --json` names
+  the project the pin is for — **or a tool the bundle names**. When
+  `describe` lists no project yet, every tool the bundle names counts as
+  linked;
+- **every entry whose `tools:` is `[]`** — `bash` and `markdown` apply to
+  every repo.
+
+An entry lands where a pack's files land: its skills in `.claude/skills/`,
+its `hooks/` script in `.claude/hooks/` with its `hooks.yaml` wiring behind
+the settings consent line of step 3, and its `conventions.md` folded into the
+template entry's body. Each landed file is a lockfile entry with the
+component `tool/<slug>` and the source `tool/<slug>@<version>`. An entry
+already landed in this repo by another slug is not landed twice: its records
+stay with the slug that landed it.
+
+## The design tools
+
+`${CLAUDE_PLUGIN_ROOT}/design-tools/` holds three generic role skills,
+`skills/design-import-screens/`, `skills/design-import-design-system/` and
+`skills/design-import-conversations/`, and one folder per tool: `tool.yaml`,
+`conventions.md`, one `references/<role>.md` per role, and `skills/` for a
+skill only that tool has, such as `claude-code`'s `design-session`. Nothing
+of it lands in the repo: it installs into `vwf-tools`.
+
+1. **Which tools.** A design-tool pin names one; a bundle materialization
+   takes each tool a `projects.<name>.design` value of `.config/vwf.yaml`
+   names. A tool no project names is not installed.
+2. **What lands**, under `~/.claude/plugins/local/vwf-tools/`:
+   the three role skills as `skills/<role>/`, once, whatever the tool;
+   each tool's `references/<role>.md` as
+   `skills/<role>/references/<tool>.md`; and each skill of the tool's
+   `skills/` as `skills/<skill>/`. A tool already present is not added
+   twice; this repo's claim is added to it.
+3. **Claims and version.** The tool's files join `claims.json` under the key
+   `design-tool:<tool>`, as an LSP key does
+   ([the local plugin](local-plugin.md#the-claims-file)): a repo whose
+   projects name the tool claims it. Adding or removing them bumps the
+   `vwf-tools` version and prints the update pair. The role skills stay while
+   any `design-tool:` key is claimed.
+4. **The gate** is step 4's manifest-write item: each tool with every file
+   it adds, and whether it is new or already present from another repo.
+
+The repo's claim is read from `.config/vwf.yaml`, never from the lockfile,
+which records no design tool.
 
 ## Removing a component
 
@@ -405,9 +453,11 @@ names — `/vwf:setup` calls it once inside each member repo, the way it
 materializes members, and it takes no repo argument of its own. `/vwf:setup`
 is the caller, since `/stackgen:stackgen-sync` is user-only.
 
-- **`remove: <slug>`** takes out one materialized slug, on any axis: a dropped
-  addon, a component whose pack was removed, a re-pinned design tool. It
-  deletes the component with all its records and keys, MCP ones included.
+- **`remove: <slug>`** takes out one materialized slug, on any axis: a
+  component whose pack was removed, a re-pinned design tool. It deletes the
+  component with all its records and keys, MCP ones included. For a design
+  tool it drops this repo's `design-tool:<tool>` claim, by the local
+  plugin's subtraction.
 - **`remove: key <name>`** deletes one server key from the `vwf-tools`
   manifest and its entry from `claims.json`, whichever repos claim it, and
   returns the removed key name. It touches no lockfile and commits nothing.
@@ -419,13 +469,15 @@ question. A call without one asks its own consent at step 3.
 
 1. **Collect what the lockfile records.** Every `entries` record with this
    `slug:` — the template entry, the skill files, the citations. Every
-   `bootstrap:` tool and plugin
+   `bootstrap:` tool
    [the handoff's removal](bootstrap-handoff.md#removal) selects for this
-   component. Every `local_plugin` key
-   [a pack leaving](local-plugin.md#removal--by-subtraction) subtracts, its
-   MCP keys included, and the component's `required_mcp_servers` records. The
+   slug. Every `local_plugin` key
+   [a slug leaving](local-plugin.md#removal--by-subtraction) subtracts, its
+   MCP keys included, and the component's `required_mcp_servers` records.
+   For a design tool, this repo's `design-tool:<tool>` claim. The
    `key` form collects the one named key alone, with no lockfile read. Nothing
-   outside the lockfile is ever in the set. The lockfile is committed, so a
+   outside the lockfile and that claim is ever in the set. The lockfile is
+   committed, so a
    recorded path is not trusted for being recorded: one that is absolute, climbs
    out with `..`, or whose parent directory resolves outside the repo root once
    symlinks are followed is **refused** — never deleted, named in the plan and
@@ -450,7 +502,7 @@ question. A call without one asks its own consent at step 3.
    [the bumped manifest](local-plugin.md#the-two-files) calls for and asking
    on its own terms. The `key` form deletes the key from the manifest and from
    `claims.json` outright. A failed call or a stop bootstrap reports is shown
-   as it is, and that tool or plugin keeps its record, where sync's bootstrap
+   as it is, and that tool keeps its record, where sync's bootstrap
    delta finds it.
 5. **Update the lockfile and commit.** Drop the entries, the bootstrap records,
    the `required_mcp_servers` records and the subtracted keys, then commit
@@ -464,7 +516,8 @@ question. A call without one asks its own consent at step 3.
 the base repo, after its `remove:` calls. It is for an LSP server dropped on
 another machine: after a pull this repo's lockfile no longer records the
 server, so no `remove:` call is made, while this machine's claims file still
-holds this repo's claim. It acts on LSP keys only: an MCP key in the manifest
+holds this repo's claim — and for a design tool `.config/vwf.yaml` no longer
+names. It acts on LSP and `design-tool:` keys only: an MCP key in the manifest
 or the claims file, and an MCP record in the lockfile, are ignored and not
 reported — `/vwf:setup`'s machine cleanup removes them through
 `remove: key <name>`. It returns no payload: one line, **removed**,
@@ -473,7 +526,10 @@ reported — `/vwf:setup`'s machine cleanup removes them through
 1. **Collect what the claims file holds.** Every `lspServers` key in
    `claims.json` under `~/.claude/plugins/local/vwf-tools/.claude-plugin/`
    whose list holds this repo's path and that the lockfile's
-   `local_plugin.lsp_servers` does not name. No claims file, or no such key →
+   `local_plugin.lsp_servers` does not name, and every `design-tool:<tool>`
+   key whose list holds this repo's path and whose tool no
+   `projects.<name>.design` of `.config/vwf.yaml` names. No claims file, or
+   no such key →
    no gate and no write: return **unchanged**.
 2. **The migration comes first**, when a key is in the set and
    `~/.claude/plugins/local/stackgen-lsp/` exists. Declined or stopped, now or
@@ -500,11 +556,13 @@ reported — `/vwf:setup`'s machine cleanup removes them through
   diff and the user takes it.
 - **The lockfile is the ownership boundary** — sync diffs against it, and
   paths outside it are invisible to every stackgen write path.
-- **A pack dropped from a composition takes its bootstrap tools with it**
-  — only the ones this handoff added and no other component needs
-  ([the bootstrap handoff](bootstrap-handoff.md#removal)). Its recorded
-  files are removed with its lockfile entries — and so are a dropped
-  generated component's, its `.claude/` skill and citations included.
+- **A slug removed takes its bootstrap tools with it** — only the ones
+  this handoff added and no other slug needs
+  ([the bootstrap handoff](bootstrap-handoff.md#removal)). A pack dropped
+  from a composition has its recorded files removed with its lockfile
+  entries — and so has a dropped generated component, its `.claude/` skill
+  and citations included, and a tool-knowledge entry no remaining tool
+  calls for.
 - **Three targets, and nothing else.** Inside `.claude/`, nothing lands
   outside the output vocabulary. Outside `.claude/` but inside the repo,
   there is exactly one: the repo config files a
@@ -512,10 +570,10 @@ reported — `/vwf:setup`'s machine cleanup removes them through
   own consent line, and **merging, never owning**, so only what the
   lockfile records is ever rewritten or removed. Outside the repo, the
   **only** path stackgen may write is
-  `~/.claude/plugins/local/vwf-tools/.claude-plugin/`, behind the tier-3
+  `~/.claude/plugins/local/vwf-tools/`, behind the tier-3
   gate. **Server configuration never lands in the repo** whatever the
-  source ships; an LSP server goes to the local plugin, and an LSP need still
-  travels as `language_facts` in the payload for `/vwf:doctor` to read. **No
+  source ships; an LSP server goes from `bootstrap lsp --json` to the local
+  plugin, and the design tools go there too. **No
   MCP server lands anywhere**: the user installs it. A repo's `.mcp.json` is
   never written, and no declaration is ever copied out of it.
 - **The `config/` tier is what a pack declares, and no more.** The
