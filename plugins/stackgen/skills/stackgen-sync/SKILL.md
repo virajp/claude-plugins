@@ -8,8 +8,9 @@ description: Diff the repo's materialized entries — the .claude/ tree and
   diffs the generated local plugin on this machine, and converts, once, a
   lockfile written before tool knowledge and design tools. Run after
   upgrading stackgen,
-  or any time you want to see how far the repo's copies have drifted.
-disable-model-invocation: true
+  or any time you want to see how far the repo's copies have drifted;
+  /vwf:setup also invokes it, on consent, to convert old lock rows.
+disable-model-invocation: false
 ---
 
 # stackgen-sync
@@ -18,9 +19,9 @@ The explicit re-sync. Everything stackgen materializes is **repo-owned** —
 copies the project may edit, that a pack upgrade must never overwrite
 silently. This skill is the one place drift becomes visible and the user
 decides what to take, and it works **per component**: one component's drift
-or upgrade never churns the rest of its bundle. It is user-only by design:
-nothing invokes it programmatically, so a sync only ever happens on the
-user's clock.
+or upgrade never churns the rest of its bundle. The user runs it, and
+`/vwf:setup` invokes it on consent to convert old lock rows — so a sync only
+ever happens on the user's say-so.
 
 ## Steps
 

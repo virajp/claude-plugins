@@ -92,17 +92,18 @@ re-run**.
    removed pin's materialized skills stay until `/vwf:setup`'s step 26
    takes them out through `remove:`.
 
-   **An `addon` slug is this case.** An addon is a Claude plugin that
-   bootstrap installs, listed in `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`;
-   this skill materializes nothing for it, and its **skipped** line says the
-   plugin is bootstrap's to install.
+   **An `addon` slug is this case.** An addon is a Claude plugin listed in
+   `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`; vwf's setup declares a picked
+   one in the `claude` tool's `plugins.project` and runs `setup:ai`. This
+   skill materializes nothing for it, and its **skipped** line says the
+   plugin is vwf's setup to declare.
 
 ## Removing a component
 
 `/stackgen:stackgen-stack-template remove:` is the one call that takes a
-component out, because `/stackgen:stackgen-sync` is user-only and `/vwf:setup`
-has to reach it. It skips the resolution order and returns no payload: one
-line, **removed** or **declined**. It has two forms:
+component out, and the one `/vwf:setup` reaches to do it. It skips the
+resolution order and returns no payload: one line, **removed** or
+**declined**. It has two forms:
 
 - **`remove: <slug>`** — any materialized slug, on any axis: a pin whose
   bundle was removed, a re-pinned design tool. It deletes the component with
@@ -151,7 +152,7 @@ calls for:
 slug: <the requested slug>
 axis: project | backing | deploy | repo | design | cicd | stylesheet
 kind: language-bundle | database | cloud-provider | workspace | capability-provider | ci-system | app-framework | deploy-target | stylesheet # assets/kinds.md — omitted on the design axis
-tools: [ <bootstrap tool name> ] # the bundle's tools: — omitted on the design axis
+tools: [ <bootstrap tool name> ] # the bundle's tools:, from the entry's frontmatter — omitted on the design axis
 packs: # the bundle's packs: — the per-component dispatch record; omitted on the design axis
   - <type>/<slug>@<pack version> # pack-sourced
   - <type>/<slug>@generated # generated

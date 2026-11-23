@@ -174,7 +174,7 @@
       "status": "green",
       "started": "2026-11-23T11:53:00.009Z",
       "ended": "2026-11-23T12:01:19.864Z",
-      "commit": "",
+      "commit": "8ec01c1e",
       "rounds": 1,
       "kind": "edit",
       "model": "opus",
