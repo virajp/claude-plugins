@@ -111,8 +111,8 @@
       "status": "green",
       "started": "2026-11-23T11:52:59.793Z",
       "ended": "2026-11-23T12:19:13.793Z",
-      "commit": "7d31b673",
-      "rounds": 4,
+      "commit": "83daa4b3",
+      "rounds": 5,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -220,11 +220,11 @@
         "U10"
       ],
       "waits": "reviews the committed delta of wave 1",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T12:17:05.353Z",
-      "ended": "",
+      "ended": "2026-11-23T12:21:40.738Z",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "kind": "review",
       "model": "opus",
       "wave": 2,
@@ -234,7 +234,7 @@
       "owns": [],
       "range": {
         "from": "3e1cfdc6",
-        "to": "5066b57e"
+        "to": "83daa4b3"
       }
     },
     {
@@ -687,6 +687,15 @@
         "U1",
         "U3"
       ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q5: Should the shell-quoting rule of materialize.md step 4 also cover the bootstrap config set lines at setup migrate-pipeline.md:121, :204 and onboard-pipeline.md:157, which write values from a cloned repo?",
+      "ruling": "Backlog a follow-up change-plan for U3 other references (those three lines); this plan does not grow.",
+      "rejected": "Widen this row to U3 now; Leave as is",
+      "units": [
+        "U3"
+      ]
     }
   ],
   "stages": {
@@ -722,6 +731,13 @@
       "stage": "",
       "text": "R1 rule-5 finding: plugins/stackgen/.claude-plugin/plugin.json:5 description still says bootstrap adds the tools and installs addons; no unit owned it · U8 owns widened to that file under the plan Goal, the passage handed to U8 as DOCS FALSIFIED",
       "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "",
+      "text": "Follow-up owed (D40): the bootstrap config set lines at plugins/vwf/skills/setup/references/migrate-pipeline.md:121, :204 and onboard-pipeline.md:157 write values from a cloned repo with no shell-quoting rule (security engine, U7 round 2: command injection, confidence 8) · not fixed here by ruling; a backlog item and a change-plan applying the materialize.md step 4 quoting rule are owed",
+      "state": "open"
     }
   ],
   "overrides": [

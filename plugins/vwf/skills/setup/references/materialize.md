@@ -153,7 +153,7 @@ payload. Then, in that repo:
    and run
    `bootstrap config set tools.<t>.projects '<JSON list>' --json` with that
    project added — an empty project folder is the usual cause. The value is
-   a shell argument, quoted as the next section's **Quote** step says. A
+   a shell argument, quoted as Declare the addons' **Quote** step says. A
    project with no `repo.projects.<name>` is skipped here; doctor reports it.
 
 ## Invoke the adapter, once per entry
