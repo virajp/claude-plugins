@@ -268,11 +268,11 @@
         "U8"
       ],
       "waits": "runs the gates over the whole delta",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T12:51:51.460Z",
+      "ended": "2026-11-23T12:52:42.668Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "edit",
       "model": "opus",
       "wave": 4,
@@ -305,8 +305,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T12:51:51.426Z",
       "ended": ""
     }
   ],
