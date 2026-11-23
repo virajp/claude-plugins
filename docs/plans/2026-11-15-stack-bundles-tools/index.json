@@ -148,11 +148,11 @@
         "U2"
       ],
       "waits": "reviews the committed delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:05:34.757Z",
+      "ended": "2026-11-23T11:06:38.238Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "kind": "review",
       "model": "opus",
       "wave": 3,
@@ -161,8 +161,8 @@
       "file": "03-review.md",
       "owns": [],
       "range": {
-        "from": "",
-        "to": ""
+        "from": "5fb7d359",
+        "to": "b4d03c40"
       }
     },
     {
@@ -229,9 +229,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-23T11:05:34.829Z",
+      "ended": "2026-11-23T11:07:36.176Z"
     },
     {
       "id": "W4",
