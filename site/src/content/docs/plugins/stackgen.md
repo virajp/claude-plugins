@@ -33,21 +33,28 @@ stacks: [ stackgen ] # the only stack plugin there is
 
 ## Components and bundles
 
-**Components** are the atoms — the language, its package manager, each
-framework, each toolchain gate, a datastore instance, a cloud service. Each is a
-pack (or a generated artifact set) declaring a **type**, a finer **category**,
-and the vwf **capability** token it realizes where one applies; the type and
-category vocabularies are closed, in `assets/taxonomy.md`, extended
-deliberately.
+**Components** are the atoms — each framework, a datastore instance, a cloud
+service. Each is a knowledge pack (or a generated artifact set) declaring a
+**type**, a finer **category**, and the vwf **capability** token it realizes
+where one applies; the type and category vocabularies are closed, in
+`assets/taxonomy.md`, extended deliberately. A language, its package manager and
+a toolchain gate are no component since 2026-11-15: each is a
+[bootstrap](https://github.com/virajp/bootstrap) **tool**, and its doctrine is
+**tool knowledge** — an entry under `tools/<slug>/` whose `tool.yaml` names the
+bootstrap tools it serves, landed wherever a project links one of them or a
+bundle names one. `bash` and `markdown` name none and land in every repo.
 
-**Bundles** are recorded compositions of component refs —
-`<type>/<slug>@<version>`, or `@generated` — never directories. Four bundle
-shapes exist today: a Language-Bundle is the composition rooted at a language
-component (language + package manager + framework components + toolchain gates);
-a Cloud-Bundle is provider + service components; a Datastore-Bundle is
-category-level doctrine + an instance component; and the standing-alone shape —
-a Deploy-, Design- or **Stylesheet-Bundle**, exactly one component with no
-second half.
+**Bundles** are recorded compositions, never directories: `tools:`, bootstrap
+tool names with no version, and `packs:`, knowledge-pack refs —
+`<type>/<slug>@<version>`, or `@generated`. Tool knowledge is never listed; it
+follows the tools. Four bundle shapes exist today: a Language-Bundle is rooted
+at a language tool (the language, its package manager and gates as tools, plus
+its framework packs); a Cloud-Bundle is provider + service components; a
+Datastore-Bundle is category-level doctrine + an instance component; and the
+standing-alone shape — a Deploy- or **Stylesheet-Bundle**, exactly one
+component with no second half. A bundle is never mandatory: a combination no
+shipped bundle covers is composed into a **repo bundle**,
+`.claude/stackgen/bundles/<slug>.md`, with the same frontmatter.
 
 The taxonomy splits at the existing seam: **capability tokens stay vwf's**
 (`capability-vocabulary.md`); the finer **category taxonomy is stackgen's**. vwf
@@ -194,11 +201,12 @@ design system's semantic roles to something a component can reference is the one
 topic nothing else in the tree carries. None of them ships token **values** — a
 pack shipping a palette would have replaced the product's contract with a
 default — and none of them names a component library. An approach none of the
-three covers takes the same `generate` door every other axis has.
+three covers takes the same `compose` door every other axis has.
 
 ## The dispatch rule
 
-Given a bundle a project pins, stackgen resolves its composition and dispatches
+Given a bundle a project pins, stackgen asks bootstrap for the bundle's
+`tools:`, lands the tool knowledge keyed by them, and dispatches its `packs:`
 **per component**:
 
 1. **Pre-created pack first, per component.** Curated packs ship as stackgen
@@ -213,8 +221,7 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
    else the official documentation read with `WebFetch`, and the package
    registries always → instantiate vwf's principles catalog with citations → vet
    every concrete third-party name the component emits — packages,
-   runner-invoked tools, a generated language server's command and runner chain
-   and the hosts in its `args` and `env`, GitHub Actions, container images,
+   runner-invoked tools, GitHub Actions, container images,
    SwiftPM packages, Maven artifacts and Gradle plugins, and mise tools on any
    backend — through `stackgen-reputation`, one verdict per name (`pass`,
    `warn`, `block`); a **`block` halts that component** with the verdict table
@@ -228,7 +235,7 @@ Given a bundle a project pins, stackgen resolves its composition and dispatches
    itself is uncovered, the pin is `generated/<technology-slug>`.
 
 Mixed compositions are the ordinary case — a covered language beside an
-uncovered framework copies the language's packs and generates only the
+uncovered framework lands the language's tool knowledge and generates only the
 framework's artifact — so a later re-sync can act on one component alone.
 
 **The full pack and bundle inventory is generated from the tree** —
@@ -251,7 +258,8 @@ The retirement wave then took the four that were left — `typescript`, `flutter
 ordering is the no-skill-lost rule: a pack is the destination that must exist
 *before* a plugin retires, never a replacement the moment it lands.
 
-**The TypeScript pack's `ux-gate`** captures each changed screen of a web
+**The `typescript` tool knowledge's `ux-gate`** captures each changed screen of
+a web
 project (`site` or `webapp`) in the browser, in its default view and each pinned
 state it can reach, as `<code>--<state>.png`, and returns the captures as vwf's
 `renders:` list. [`/vwf:execute`](./vwf.md#vwfexecute) keeps them after the run,
@@ -281,34 +289,34 @@ Android Gradle plugin owns the module's build as a meta-framework owns an app's
 **Swift** arrived on 2026-09-23 as the fourth language a language-bundle is
 rooted at, after TypeScript and the Markdown and Bash pair the
 `claude-code-plugin` bundle composes: `swift-package`, a Swift library on the
-`packages` platform, pins four new packs. `language/swift` is the root — the
-12-topic doctrine, the sourcekit-lsp declaration, and `binaries: [swift]`, since
-the toolchain is the host's rather than mise's and `/vwf:doctor` blocks when
-`swift` is not on `PATH`. `package-manager/swiftpm` carries SwiftPM's doctrine
-and lands no file, and declares where its lockfile lives — `Package.resolved` at
-the root, or inside an `.xcodeproj` for an app — as a `lockfile` fact doctor's
-package-manager check reads; its skill sends an app whose lockfile Xcode manages
-to `mise run setup` rather than `swift package resolve`; no pack lands
-`Package.swift`, which `swift package init` creates.
-`toolchain-gate/swift-format` and `toolchain-gate/swiftlint` carry the two
-gates' doctrine and land no file. The pins, the format and lint tasks and the
+`packages` platform, names the bootstrap tool `swift`. Four tool-knowledge
+entries keyed by it land with it. `tools/swift` is the 12-topic doctrine; the
+toolchain is the host's rather than mise's, and the facts `/vwf:doctor` reads
+about it and its language server, sourcekit-lsp, are bootstrap's.
+`tools/swiftpm` carries SwiftPM's doctrine and lands no file; where its
+lockfile lives — `Package.resolved` at the root, or inside an `.xcodeproj` for
+an app — is bootstrap's tool's to say. Its skill sends an app whose lockfile
+Xcode manages to `mise run setup` rather than `swift package resolve`; nothing
+lands `Package.swift`, which `swift package init` creates. `tools/swift-format`
+and `tools/swiftlint` carry the two gates' doctrine and land no file. The pins,
+the format and lint tasks and the
 gate configs come from bootstrap, which the materializer asks for them. No Swift
 pack ships a task: `mise run setup` resolves the packages, and
 `mise run code:format` and `mise run code:lint` run the gates.
 
 **SwiftUI** followed the same day as the second `app-framework` pack, and the
 first in the `native-ui` category. `app-framework/swiftui` is the root of the
-`swift-swiftui` bundle, which pins it with `package-manager/swiftpm`,
-`toolchain-gate/swift-format` and `toolchain-gate/swiftlint` and serves
+`swift-swiftui` bundle, which names the `swift` tool beside it — so the four
+Swift tool-knowledge entries land too — and serves
 `mobile`, `tablet`, `desktop`, `auto`, `watch`, `tv` and `spatial` from one
 project — `auto` being CarPlay through the same iOS app, so it is declared
 beside `mobile` and never alone. The app is a **committed Xcode project**,
 created once by a person in Xcode: no pack lands the `.xcodeproj` and no
-generator writes one, so the tasks call `xcodebuild` and `swift` alone. The pack
-declares `swift` as a bare binary and `xcodebuild` with a **probe**,
-`xcodebuild -version`, which `/vwf:doctor` runs rather than looking the name up:
-a Mac with only the Command Line Tools has an `xcodebuild` on `PATH` that fails
-the moment it runs. Bootstrap's tasks find the selected Xcode and export it as
+generator writes one, so the tasks call `xcodebuild` and `swift` alone. A Mac
+with only the Command Line Tools has an `xcodebuild` on `PATH` that fails the
+moment it runs, so `xcodebuild -version` is the probe that matters; the binaries
+and their probes are bootstrap's tool facts since 2026-11-15, not the pack's.
+Bootstrap's tasks find the selected Xcode and export it as
 `XCODE_VERSION`. A repo that must build with one Xcode sets `XCODE_VERSION` in
 the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it, and
 every task that builds checks `xcodebuild -version` against it and fails fast.
@@ -316,10 +324,11 @@ The tasks read the values from the environment mise exports, never from a file.
 A value set in the environment or in a gitignored `mise.local.toml` is a
 machine's deliberate override and is left alone. The app's dependencies are
 added through Xcode and locked in the
-`Package.resolved` the project keeps — a path the swiftpm pack's `lockfile` fact
-names, so doctor finds it — and the swiftpm component governs only a local
-package the app splits out. Goldens run through swift-snapshot-testing in a
-`SnapshotTests` target under `test:golden`, on the simulator named by
+`Package.resolved` the project keeps, and the swiftpm doctrine governs only a
+local package the app splits out. Goldens run through swift-snapshot-testing in
+a `SnapshotTests` target under `test:golden` — a task the pack shipped until
+2026-11-15 and bootstrap's `swift` tool is to ship as a part — on the simulator
+named by
 `SIMULATOR_DEVICE`, `SIMULATOR_OS` and `SIMULATOR_PLATFORM`. Without a value,
 bootstrap's tasks pick the newest iOS runtime and its newest plain iPhone; that
 choice moves when a machine installs a newer runtime, so a repo that commits
@@ -356,29 +365,31 @@ is installed; else the official documentation.
 
 **Kotlin** arrived on 2026-10-09 as the fifth language a language-bundle is
 rooted at: `kotlin-library`, a Kotlin/JVM library published as a JAR on the
-`packages` platform, pins four new packs. `language/kotlin` is the root — the
-12-topic doctrine, with tests on `kotlin.test` and JUnit 5,
+`packages` platform, names the bootstrap tool `kotlin`, and four tool-knowledge
+entries keyed by it land with it. `tools/kotlin` is the 12-topic doctrine, with
+tests on `kotlin.test` and JUnit 5,
 `kotlinx-coroutines-test` and Kover. The JDK the Gradle wrapper and the Kotlin
 Gradle plugin run on — Temurin, on the LTS line — and **kotlin-lsp**,
 JetBrains' language server, come from bootstrap, which the materializer asks
 for them. The compiler is the Kotlin Gradle plugin's and Gradle is the committed
-wrapper's, so mise pins neither. `package-manager/gradle` carries the wrapper,
-Kotlin DSL and version-catalog doctrine (`gradle/libs.versions.toml`), lands no
-file and no task, and declares its lockfiles — `gradle.lockfile` at the root and
-beside each module, and `settings-gradle.lockfile` — as a `lockfile` fact. No
-Kotlin pack ships a task: `mise run setup` resolves every project against its
+wrapper's, so mise pins neither. `tools/gradle` carries the wrapper, Kotlin DSL
+and version-catalog doctrine (`gradle/libs.versions.toml`) and lands no file and
+no task; the lockfiles — `gradle.lockfile` at the root and beside each module,
+and `settings-gradle.lockfile` — are bootstrap's tool's to name. No Kotlin entry
+ships a task: `mise run setup` resolves every project against its
 lockfile and fails when the graph disagrees with one, and
-`mise run setup --upgrade` writes new lockfiles. `toolchain-gate/ktlint` and
-`toolchain-gate/detekt` carry the formatting, style-lint and static-analysis
+`mise run setup --upgrade` writes new lockfiles. `tools/ktlint` and
+`tools/detekt` carry the formatting, style-lint and static-analysis
 doctrine, detekt leaving every layout rule to ktlint, and land no file: the
 pins, the tasks and the gate configs are bootstrap's, and `mise run code` runs
 the gates. The bundle carries no Android and no Kotlin Multiplatform.
 
-**Android** followed the same day on those four packs, as two bundles:
+**Android** followed the same day on that doctrine, as two bundles:
 `kotlin-compose`, the third `app-framework` bundle and the second under
 `native-ui`, serving `mobile`, `tablet`, `watch`, `tv` and `auto` from one
 Gradle project, and `android-library`, a language-bundle publishing an **AAR**
-on `packages`. Both pin `framework/android` — the Android Gradle plugin, the
+on `packages`. Both name the `kotlin` and `android` tools and pin
+`framework/android` — the Android Gradle plugin, the
 Android SDK, Android Lint and the emulator — and `kotlin-compose` adds
 `app-framework/compose`. The SDK levels live in the build files alone — each
 module's `android {}` block, or a `build-logic/` convention plugin. Bootstrap
@@ -387,9 +398,10 @@ installs `platform-tools`, the compile platform, the emulator and one system
 image with this host's ABI appended. It finds the compile level (`COMPILE_SDK`)
 and the image (`EMULATOR_IMAGE`) in the build files; a repo that needs another
 value sets it in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml`.
-`mise run code:lint` runs Android Lint. The pack ships one task: `test:e2e` runs
-the
-instrumented Compose UI tests on a **Gradle Managed Device**, an emulator AGP
+`mise run code:lint` runs Android Lint. The pack shipped one task until
+2026-11-15, and bootstrap's `android` tool is to ship it as a part: `test:e2e`
+runs the instrumented Compose UI tests on a **Gradle Managed Device**, an
+emulator AGP
 creates, boots headless and tears down: by default
 `./gradlew e2eDebugAndroidTest` on the managed device `e2e`, with `--device` and
 `--variant` naming another, while `mise run test:e2e -- --connected` runs
@@ -409,7 +421,8 @@ Credential Manager and Play In-App Updates. Its topic files add localization
 with string resources, the share sheet, the SplashScreen API and keep-screen-on.
 Its goldens are [Roborazzi](https://github.com/takahirom/roborazzi) captures
 rendered on the JVM under Robolectric, committed under `src/test/screenshots/`:
-`test:golden` verifies them, `mise run test:golden -- --record` re-records them.
+`test:golden` verifies them, `mise run test:golden -- --record` re-records them
+— a task the pack shipped until 2026-11-15, now bootstrap's to ship as a part.
 Its `ux-gate` runs them on a Pixel 7 qualifier for `mobile`, a medium tablet for
 `tablet`, a large round Wear OS watch for `watch` and a 1080p television for
 `tv`, reads the Accessibility Test Framework's checks off the same run, and
@@ -482,33 +495,44 @@ an engine of its own, so neither ships a migration and both declare
 `local_stack: n/a`. What separates them is where the invariants are enforced:
 real grants on one side, the code path holding the only binding on the other.
 
-The newest **type** and the newest **kind** are both
-[`addon`](#optional-tools--the-addon-kind). Before them came `stylesheet`,
-minted
-on 2026-09-14 for an axis vwf had not had before — with three categories of
+The newest **type** and the newest **kind** are both `stylesheet` — the
+`design-tool` and `addon` types and kinds, which came later, left on
+2026-11-15, when design tools and [addons](#optional-tools--the-addon-kind)
+stopped being packs. `stylesheet` was minted on 2026-09-14 for an axis vwf had
+not had before — with three categories of
 their own
 (`utility`, `compile-time`, `plain`, the three ways the token mapping can be
 paid for) and three packs filling them at once. It is the first kind whose
 single required artifact is named by the kind itself: every pack in it ships a
 `tokens.md`.
 
-The newest **design tool** is the terminal itself — `claude-code`, the fourth
-`design-tool` pack beside `lovable` and `stitch` (`claude-design`, the other,
-was removed on 2026-11-09), and the first
-with a **file canvas**: there is no hosted server and no key. The design system,
+**Design tools** are no packs since 2026-11-15. They live in `design-tools/`:
+three generic role skills at the fixed names vwf calls —
+`design-import-screens`, `design-import-design-system` and
+`design-import-conversations` — and one folder per tool, holding its
+`tool.yaml`, its `conventions.md`, one reference per role and, optionally, a
+skill only it has. Materializing installs the role skills once, and a named
+tool's references and skills, into the local plugin `vwf-tools`; a role skill
+reads the named project's `design` value and follows that tool's reference.
+Nothing of a design tool lands in the repo, and the design axis preselects none.
+
+The newest design tool is the terminal itself — `claude-code`, beside `lovable`
+and `stitch` (`claude-design`, the other, was removed on 2026-11-09), and the
+first with a **file canvas**: there is no hosted server and no key. The design
+system,
 the logo and a flow's screens are authored
 in session, through the `taste-skill` plugin's design skills, into a committed
 `docs/design/<project>/` — `design-system.md` in the shape that plugin authors,
 `brand/logo.svg` and its variants, `screens/<flow>--<platform>/<CODE>.html` one
 per pinned screen code with a stitched `index--<platform>.html`, and
-`comments/<flow>--<platform>.yaml` — which the three fixed import skills read as
-files. The pack ships a fourth, **user-invocable** skill beside them,
+`comments/<flow>--<platform>.yaml` — which the three role skills read as files,
+through its references. It ships one **user-invocable** skill of its own,
 `design-session`, which runs those sessions; vwf never calls it. It does not
 install the `taste-skill` plugin, which is an
 [optional tool](#optional-tools--the-addon-kind): `design-session` halts with
 one
 plain sentence naming the tools menu when the plugin is absent, and the three
-import skills do not need it and keep working.
+role skills do not need it and keep working.
 
 The review loop is four lines. `/design-session screens <flow>` authors the
 pages from the brief `/vwf:screens prompt <flow>` wrote.
@@ -523,38 +547,40 @@ lists what changed. `/vwf:screens import <flow>` diffs the reviewed screens
 against the contract, and `/vwf:feedback canvas` sees whatever is still `open`.
 The comments are **committed**: one YAML list per flow page, each item
 `{ id, screen, selector, text, status, created_at, applied_at }` with
-`applied_at: null` while open. Its bundle is the first to carry
-**`default: true`** — the optional frontmatter key that marks the entry vwf's
-architecture menu preselects on that axis, highlighted and never assumed, so a
-product with no opinion on its design tool lands here and one with an opinion
-picks another. The menu skill copies the key onto every entry whose bundle
+`applied_at: null` while open. Its bundle was the first to carry
+**`default: true`**, until design tools stopped being bundles on 2026-11-15 —
+the optional frontmatter key that marks the entry vwf's architecture menu
+preselects on that axis, highlighted and never assumed. The menu skill copies
+the key onto every entry whose bundle
 carries it and computes none; at most one bundle per axis **per platform**
 carries it — two flagged bundles on one axis conflict when either declares no
 `platforms:` list or their lists intersect — and `p:plugins:check` refuses the
 pair, naming both files and the platform they share. That is what lets
-`astro-ssg` be flagged too, on the `project` axis for `site` alone, without
-being preselected on any other platform's round.
+`astro-ssg` — the one flagged bundle today — carry it on the `project` axis for
+`site` alone, without being preselected on any other platform's round.
 
 **stackgen is now the only stack plugin.** Its packs are the covered path, and
-the menu keeps its open `generate` entry for the rest — the stack you use that
-nobody wrote a pack for.
+the menu keeps its open `compose` entry for the rest — a repo bundle for the
+stack you use that nobody wrote a pack for, each uncovered part a
+`<type>/<slug>@generated` ref.
 
 ## Optional tools — the `addon` kind
 
 Some tools serve the agent rather than the product, and installing them for
-everyone is a decision nobody made. Each is a pack and a bundle of type, kind
-and
-axis `addon`, none flagged `default: true`, and generation never produces one:
-the round has no `generate` entry and no deferral. `/vwf:architecture` offers
+everyone is a decision nobody made. Each is a Claude plugin listed in
+stackgen's `assets/addons.yaml` — no pack, no bundle and, since 2026-11-15, no
+kind — offered on axis `addon`, none flagged `default: true`, and bootstrap
+installs it. Generation never produces one: the round has no `compose` entry
+and no deferral. `/vwf:architecture` offers
 them
 in a tools menu with nothing preselected, `.config/vwf.yaml`'s `addons:` records
 the pick, and `/vwf:setup` materializes each slug in the base repo alone, on
 every
 run, and removes a dropped one.
 
-| Tool          | Lands                                                                    | Who needs it                                                                                 |
-| ------------- | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------- |
-| `taste-skill` | a Claude plugin at user scope, which the materializer asks bootstrap for | the `claude-code` design tool's `design-session`, which halts without it; its imports do not |
+| Tool          | Lands                                                   | Who needs it                                                                                 |
+| ------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `taste-skill` | a Claude plugin at user scope, which bootstrap installs | the `claude-code` design tool's `design-session`, which halts without it; its imports do not |
 
 **The halt says:** add the tool in `/vwf:architecture`'s tools menu, run
 `/vwf:setup`, restart the session. Nothing else blocks on a missing tool, and
@@ -573,10 +599,10 @@ When a skill needs the server and it is missing, the agent asks you to install
 it
 under that exact name and waits. `/vwf:doctor` runs `claude mcp list` and
 reports a declared server it does not list as drift, never blocking, and an
-optional one not at all. The `lovable` pack names `lovable`, Lovable's server;
-the `stitch`
-pack names `stitch` (optional), Stitch's remote server at
-`https://stitch.googleapis.com/mcp`, which needs an API key — the pack works
+optional one not at all. The `lovable` design tool names `lovable`, Lovable's
+server; the `stitch` design tool names `stitch` (optional), Stitch's remote
+server at
+`https://stitch.googleapis.com/mcp`, which needs an API key — the tool works
 through Stitch's SDK without it. The generator never asks for a Context7 server:
 it uses one when Context7 is installed, and the official documentation when not.
 
@@ -595,23 +621,25 @@ Every pack and generation run declares a **kind**, and the kind — not the run 
 decides the output's structure and scope, so generated output is deterministic
 in shape while only content varies:
 
-| Kind                  | vwf axis               | Shape                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------------- | ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `language-bundle`     | project (+ repo facts) | the composition rooted at a `language` component — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns (archetypes: the `language/typescript` bundle, `swift-package` rooted at `language/swift`, and `android-library` rooted at `language/kotlin` with `framework/android`)                                                                                                                                        |
-| `database`            | backing                | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                                                                                              |
-| `capability-provider` | backing                | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                                                                                                       |
-| `cloud-provider`      | backing + deploy       | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                                                                                                         |
-| `workspace`           | repo                   | the `package-manager` component that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                                                                                          |
-| `ci-system`           | cicd                   | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage                                                                            |
-| `app-framework`       | project                | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` and `kotlin-compose` rooted at `app-framework/swiftui` and `app-framework/compose`)                                                                                                                                                                                          |
-| `deploy-target`       | deploy                 | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                                                                                             |
-| `design-tool`         | design                 | one component, standing alone — a **5-topic bar** on the three imports, reach & credentials, and the naming contract. Lands three skills at **fixed names** in the repo's `.claude/`, all mandatorily model-invocable, because a user-only one is invisible to vwf rather than a smaller feature. The tool's source may be a hosted canvas or a **committed directory** the imports read as files, and a pack may ship one extra, user-invocable authoring skill beyond the three the checker counts |
-| `stylesheet`          | stylesheet             | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                                                                                                   |
-| `addon`               | addon                  | one component, standing alone — an optional tool, picked and never defaulted, whose pack declares a `## Claude plugins` section. See [Optional tools](#optional-tools--the-addon-kind)                                                                                                                                                                                                                                                                                                               |
+| Kind                  | vwf axis         | Shape                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------- | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `language-bundle`     | project          | the composition rooted at a language tool — a **12-topic bar** behind a lean router skill → on-demand references, plus paths-scoped doctrine per config file the toolchain owns, carried by the tool knowledge of its tools and its `framework` packs (archetypes: the TypeScript bundles on `node` and `pnpm`, `swift-package` on `swift`, and `android-library` on `kotlin` and `android` with `framework/android`)     |
+| `database`            | backing          | a **6-topic bar** on the instance component — pick & trade, data-model constraints, clause-by-clause satisfaction of the neutral datastore contract *by citation*, connection & access incl. credentials, cost shape, the Docker-composed `local_stack`                                                                                                                                                                   |
+| `capability-provider` | backing          | the same two halves as `database` — the neutral capability contract plus one provider component that realizes it, citing rather than restating                                                                                                                                                                                                                                                                            |
+| `cloud-provider`      | backing + deploy | **4 provider topics** (cost, IAM, local-dev map, networking & private plane) + **5 per `cloud-service` component**, plus a **deploy-target extension** — artifact/pipeline/health — where the service's category is `compute` or `static-hosting`, the two categories that are deploy targets (archetypes: the `cloud-provider/gcp` and `cloudflare-workers-static` bundles)                                              |
+| `workspace`           | repo             | the package manager that installs and locks the repo's members, plus a `build-orchestrator` where there is one — a **5-topic bar**, no router. The only repo-axis kind you **pick**: it is what `repo.stack.template` selects from. A single-package repo pins none, which is the kind's edge rather than a gap                                                                                                           |
+| `ci-system`           | cicd             | the **release-trigger contract** + **exactly one** `ci-system` component, a **6-topic bar** behind a router skill with one reference per system. Three layers, none duplicated: vwf's delivery-pipeline rules say what a deploy must guarantee, the contract is the recommended mechanism above any one system, the component is how that system spells it. A second CI system in one bundle is a gap, not extra coverage |
+| `app-framework`       | project          | rooted at the SDK that owns the manifest and build, carrying its languages as members with a `role` — one `primary`, any number of `platform-edge` (archetypes: the `app-framework/flutter` bundle, and `swift-swiftui` and `kotlin-compose` rooted at `app-framework/swiftui` and `app-framework/compose`)                                                                                                               |
+| `deploy-target`       | deploy           | **one component, standing alone** — the only bundle with no second half. A **6-topic bar** covering pick & trade, the artifact, hygiene, promotion, config/secrets and health. Its discipline is a scope fence: the pipeline, the cloud and the local stack each belong to a kind that already owns them                                                                                                                  |
+| `stylesheet`          | stylesheet       | one component, standing alone — a **7-topic bar** on tokens, authoring, theming, responsive, the single integration hook, performance and (conditionally) testing. `tokens.md` is required of every pack in the kind: the mapping from the design system's semantic roles to something a component can reference is the one topic nothing else in the tree carries                                                        |
 
-Every kind in that table is defined; no reservations are outstanding. Three of
-the eight axes — `design`, `cicd` and `stylesheet` — are **tool axes**, where
-the bundle slug is the token the project config already holds, so picking from
+Every kind in that table is defined; no reservations are outstanding. The
+`design-tool` and `addon` kinds left on 2026-11-15: the `design` axis lists the
+design tools of `design-tools/`, and the `addon` axis the
+[addons](#optional-tools--the-addon-kind). Three of the eight axes — `design`,
+`cicd` and `stylesheet` — are **tool axes**, where the bundle slug — or, on
+`design`, the design tool's folder name — is the token the project config
+already holds, so picking from
 the menu and writing the config key are one act. Kinds compose through vwf's
 capability vocabulary — a language bundle says "the datastore", never a database
 by name — so each stays independently re-syncable.
@@ -627,12 +655,12 @@ hanging already pays that bill. A cap would only cap depth, pressuring research
 to stop early. An artifact that has outgrown one sitting is decomposed into a
 router skill plus on-demand references, never trimmed.
 
-The **composition** covers the bar, whichever components supply each topic: the
-language component owns standards, errors, async, testing, build and
-config/observability wiring; the package-manager component owns the manifest and
-workspace/supply-chain topics; toolchain-gate components own the compiler config
-and lint/format gates; and each framework component supplies one usage reference
-of its own.
+The **composition** covers the bar, whichever of its tool knowledge and packs
+supply each topic: the language's tool knowledge owns standards, errors, async,
+testing, build and config/observability wiring; the package manager's owns the
+manifest and workspace/supply-chain topics; the gates' own the compiler config
+and lint/format gates; and each framework pack supplies one usage reference of
+its own.
 
 The **framework ruling**: generation is selection-neutral and usage-opinionated
 — it never opines on *which* framework (the pin and the packs own selection),
@@ -663,18 +691,18 @@ than something that rides the landing:
   [yours](#mcp-servers--yours-to-install).
 - **A repo's own config files** belong to the repo, not to `.claude/`. A pack
   declares the repo-specific ones in a `config/` tree mirroring the repo root,
-  and they land there. The tier is an allowlist: a `test:*` task, a
-  `p/_project/` task the materializer renames to the project's id, and a root
+  and they land there. The tier is an allowlist: a `p/_project/` task the
+  materializer renames to the project's id, and a root
   file on the allowlist — which is how `cloud-service/workers-static-assets`,
   `cloud-service/workers-ssr` and `cloud-service/containers` each ship a
   `wrangler.jsonc` and the `p:<id>:deploy` task beside it. **A pack ships no
   toolchain**: the tool pins, the gates, their configs, the generic tasks
-  (`setup:deps`, `code:format`, `code:lint`), the pre-commit hooks and the
-  ignore and editor files are
+  (`setup:deps`, `code:format`, `code:lint`), the test tasks, the pre-commit
+  hooks and the ignore and editor files are
   [bootstrap](https://github.com/virajp/bootstrap)'s. The repo selects
   bootstrap's tools through the `bootstrap` CLI, and `bootstrap sync` writes
-  their files. The materializer reads `bootstrap catalog --json` to choose the
-  tools a composition needs, and adds them with
+  their files. The materializer checks the bundle's `tools:` against
+  `bootstrap catalog --json`, and adds them with
   `bootstrap add tool <t> --json --dry-run`, then `--yes`, behind their own
   consent line; a plugin a pack names is written to the `claude` tool's values
   with `bootstrap config set` (`config unset` on removal), and
@@ -692,16 +720,16 @@ than something that rides the landing:
   is preserved, because a task file arriving without its exec bit fails as an
   *unknown task* rather than as a permission error.
 
-The need still travels as `language_facts` in the template payload for
-`/vwf:doctor` to verify; the local plugin is what actually provides the server.
-Its scope is `user`, so **your collaborators get none of it** — a teammate's
+The servers are bootstrap's: the local plugin takes them unchanged from
+`data.servers` of `bootstrap lsp --json`, and the template payload carries no
+language facts. The local plugin is what actually provides the server, and it
+also holds the design tools the repo's projects name. Its scope is `user`, so
+**your collaborators get none of it** — a teammate's
 language server is their machine's business, the same line your editor already
 draws, and what user scope buys is one registration serving every repo instead
 of a per-repo obligation nobody maintains. What makes that safe is the
-`extensionToLanguage` map every generated language server declaration must
-carry:
-a repo with no matching files never starts the server, and a declaration without
-a map is forbidden outright.
+`extensionToLanguage` map every server bootstrap gives carries: a repo with no
+matching files never starts the server.
 
 **A machine with the older `stackgen-lsp` plugin is offered one migration.** The
 first materialization or sync that finds its directory offers, in order: write
@@ -725,7 +753,8 @@ still claims it.
 ├── skills/  agents/  hooks/  rules/   # the artifacts, auto-discovered
 └── stackgen/                          # bookkeeping, not discovered
     ├── lock.yaml                      # one entry per path, per component
-    ├── templates/<slug>.md            # payload (incl. components:) + prose
+    ├── bundles/<slug>.md              # a repo bundle compose wrote, if any
+    ├── templates/<slug>.md            # payload (incl. tools: and packs:) + prose
     └── citations/<component>.yaml     # sources per component, keyed by topic
 ```
 
@@ -789,20 +818,17 @@ materialization landed in `.claude/hooks/` is inert and may be deleted by hand.
 The **lockfile** is the ownership boundary: `.claude/` also holds your own
 hand-written skills, so sync diffs only what the lockfile lists — anything else
 is invisible to every stackgen write path. Each entry carries the component and
-source it came from (`pack/<type>/<slug>@<version>` or `generated`), which is
-the grain sync acts at — one framework's bump never churns the language
+source it came from (`pack/<type>/<slug>@<version>`, `tool/<slug>@<version>`
+for tool knowledge, or `generated`), which is the grain sync acts at — one
+framework's bump never churns the language
 component beside it. A file bootstrap's sync writes has no entry: it is
 bootstrap's. **CLAUDE.md is vwf's domain**: stackgen never edits it, and ends a
 materialization by recommending `/vwf:setup`.
 
 `templates/<slug>.md` is what makes later fetches pure reads: frontmatter
-carries every payload field (kind, axis, the `components:` refs this bundle
-composes — `<type>/<slug>@<version>` or `@generated` — languages **with the
-facts `/vwf:doctor` verifies** — LSP provision, mise tool, manifest, and the
-optional `binaries` list of executables the stack needs that mise does not
-manage, each a bare name looked up on `PATH` or a name with a `probe` command
-doctor runs instead, such as Xcode's `xcodebuild` — plus the package manager's
-`lockfile` paths, harness tasks and mechanisms, with `frameworks`/`capabilities`
+carries every payload field (kind, axis, the bundle's `tools:` and its `packs:`
+refs — `<type>/<slug>@<version>` or `@generated` — the languages, the tools
+whose bootstrap category is `languages`, with `frameworks`/`capabilities`
 derived from the composition, and on the project axis the bundle's optional
 `os:` map copied as it stands), and the body is the `conventions:` prose `plan`
 sizes against and `execute` writes to. The `os:` map names, for each platform in
@@ -864,14 +890,15 @@ both for any other forge.
 ### What a pack adds
 
 A pack adds no subtask to bootstrap's library: a stack's own dependency, format
-and lint tasks are bootstrap's. What a pack's `config/` tree adds is a test task
-or a project task: `app-framework/swiftui` and `app-framework/compose` add
-`test/golden`, `framework/android` adds `test/e2e`, `framework/astro` and
+and lint tasks are bootstrap's, and so are its test tasks: the `test/golden`
+`app-framework/swiftui` and `app-framework/compose` shipped and the `test/e2e`
+of `framework/android` left the packs on 2026-11-15 for bootstrap. What a
+pack's `config/` tree adds is a project task: `framework/astro` and
 `framework/html` add `p:<id>:icons`, and the three Cloudflare deploy packs add
-`p:<id>:deploy`. The pnpm pack ships no `.npmrc` any more: it names the two
+`p:<id>:deploy`. The pnpm tool knowledge ships no `.npmrc`: it names the two
 settings the file should hold (`ignore-scripts=true` and `fund=false`), and the
-repo sets them itself. bootstrap's sync lands first; composition then runs
-`toolchain-gate`, then `package-manager`/`language`, then `app-framework`, then
+repo sets them itself. bootstrap's sync lands first; composition then lands
+the tool knowledge, then `app-framework`, then
 `capability-provider`, then `cloud-provider`, then `cloud-service`, and the
 lockfile records per file which component supplied it. The **deploy target goes
 last** because it is the most specific thing a repo pins — a `cloud-service`
@@ -884,9 +911,10 @@ tasks, or set by the repo in the `[env]` of
 `.config/mise/conf.d/zz-repo/mise.<env>.toml`. A pack ships no `templates/` tree
 and no `values:` list, and the toolkit's checker refuses a `templates/` folder,
 a
-`tool-config:`, `machine_env:`, `values:` or `conditional:` key, and any
-`config/`
-path off the pack allowlist.
+retired key — `tool-config:`, `machine_env:`, `values:`, `conditional:`,
+`user_mcp_servers:`, `languages:`, `lsp_servers:`, `package_manager:`,
+`lockfile:` or `harness:` — any `config/` path off the pack allowlist, and any
+`config/` tree in a tool-knowledge entry.
 
 A pack can still contribute **one task** to a project's group without knowing
 its name: a `config/` tree's `.config/mise/tasks/p/_project/` directory is
@@ -903,13 +931,13 @@ that segment, so an id carrying a dot silently loses everything after it.
 
 ## Skills and the agent
 
-| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `stackgen-stack-menu`     | adapter, skill-invoked | The packs + the one open `generate` entry, as a vwf menu payload. Answers the same in every product                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition and dispatches **per component**, packs copied and uncovered components generated, landing once behind one consent gate in the repo the optional `repo:` line names. The payload passes the bundle's `os:` map through as it stands. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
-| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: lockfile-anchored diff against current component packs, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. What bootstrap syncs carries no lockfile record and are never diffed here; a record whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report. The lockfile's `bootstrap:` block is diffed against the tools and plugins the current composition needs, read from `bootstrap catalog --json`: a `bootstrap add tool` or `remove tool` call, and a plugin's `bootstrap config set` or `config unset` followed by `mise run setup:ai`, is its own consent line. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync          |
-| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of eight: `npm:`, `pypi:`, `pub:`, `action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo), `maven:` (group:artifact, a Gradle plugin as its marker coordinate) or `mise:` (backend:path, the full backend form only), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`, `spm:github.com/apple/swift-argument-parser@1.5.0`, `mise:aqua:realm/SwiftLint@0.57.0`) pinning what the advisory check runs against. Go, Cargo, Ruby and .NET tools have no prefix of their own and are reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or `mise:dotnet:…`; the mise backend decides which checks run, and a backend with no registry to ask warns at most — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere |
-| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Name                      | Kind                   | Does                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| ------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `stackgen-stack-menu`     | adapter, skill-invoked | The shipped bundles, the repo's own bundles, the design tools and the addons, plus the open `compose` entry, as a vwf menu payload. As `compose:`, writes a repo bundle at `.claude/stackgen/bundles/<slug>.md`, checking its tools against `bootstrap catalog --json` and its pack refs against the packs                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `stackgen-stack-template` | adapter, skill-invoked | The dispatch: materialized entry → pure read; a first pin — which arrives from `/vwf:setup`'s materialize pass — resolves the bundle's composition — its `tools:` asked of bootstrap, the tool knowledge keyed by them landed, its `packs:` dispatched **per component**, packs copied and `@generated` refs generated — and installs a named design tool into `vwf-tools`, landing once behind one consent gate in the repo the optional `repo:` line names. The payload passes the bundle's `os:` map through as it stands. Unknown slug → error, never a guess                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| `stackgen-sync`           | user-only              | The explicit re-sync, **per component**: first converts, once, a lockfile written before tool knowledge and design tools — tool-pack rows become `tool/<slug>@1.0.0`, design-tool rows go and the tool moves into `vwf-tools`, addon rows and rows of the deleted test tasks go with their files left in place, each change reported — then a lockfile-anchored diff against current packs and tool knowledge, regeneration offered per generated component, the delta presented for consent. Repo edits never overwritten by default. What bootstrap syncs carries no lockfile record and are never diffed here; a record whose path its component no longer ships and whose file is gone is dropped with no delta row and named in the report. The lockfile's `bootstrap:` block is diffed against the tools and plugins the current composition needs, read from `bootstrap catalog --json`: a `bootstrap add tool` or `remove tool` call, and a plugin's `bootstrap config set` or `config unset` followed by `mise run setup:ai`, is its own consent line. Closes by **re-checking the repo shape** — `/vwf:setup`'s Step 0 check, in-session, over the base and every member against the lockfile just updated — and on drift offers `/vwf:setup reshape` and invokes it on a yes; clean says nothing. A fragment that moved is folded into the merged config there, by the reshape, never by the sync |
+| `stackgen-reputation`     | user **and** model     | A verdict on every name it is given — `/stackgen:stackgen-reputation <ecosystem>:<name> …`, the prefix one of eight: `npm:`, `pypi:`, `pub:`, `action:` (owner/repo), `image:` (registry/repo), `spm:` (host/owner/repo), `maven:` (group:artifact, a Gradle plugin as its marker coordinate) or `mise:` (backend:path, the full backend form only), an optional version or ref (`npm:left-pad@1.3.0`, `action:actions/checkout@v4`, `image:docker.io/library/nginx:1.27`, `spm:github.com/apple/swift-argument-parser@1.5.0`, `mise:aqua:realm/SwiftLint@0.57.0`) pinning what the advisory check runs against. Go, Cargo, Ruby and .NET tools have no prefix of their own and are reached as `mise:go:…`, `mise:cargo:…`, `mise:gem:…` or `mise:dotnet:…`; the mise backend decides which checks run, and a backend with no registry to ask warns at most — one row per name reading `pass`, `warn` or `block`, with the signals that decided it, from public read APIs. The generator calls it over every concrete name a generated component emits; you call it on a name before typing it anywhere                                                                                                                                                                                                                                                                                                      |
+| `stackgen-skill-reviewer` | subagent               | The stateless trust gate on generation: catalog fidelity, the **when-not-to-apply** checks, citations that resolve and support, honest emitted facts, **kind conformance**, **topic-bar coverage** against the composition, and every emitted name carrying a verdict-table row that does not read `block` — read off the table it is handed, never looked up                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 
 **"skill-invoked" is two frontmatter keys, not one.** The two adapter skills
 carry `disable-model-invocation: false`, so vwf can reach them by their

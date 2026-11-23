@@ -34,9 +34,9 @@ claude plugin install vwf@virajp-plugins
 One name is the whole list: `stackgen` is a vwf dependency and arrives with it
 at the same scope. `stackgen` is what supplies every bundle Relay will pin — the
 project-axis template with its TypeScript language doctrine, Postgres on the
-backing axis, and the design-tool pack that answers the design imports. vwf
+backing axis, and the design tool that answers the design imports. vwf
 ships no stack templates of its own, so without `stackgen` the stack menus come
-back empty and, with no design pack materialized, `/vwf:design-system` cannot
+back empty and, with no design tool materialized, `/vwf:design-system` cannot
 run at all. Scopes and upgrades:
 [the installer CLI](../../installer/usage.md#installing-plugins).
 

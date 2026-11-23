@@ -44,7 +44,7 @@ contract behind it — the covering rule, what a template payload carries, how
 
 **The project axis is almost always the first pin**, because a project with no
 covering bundle on its menu cannot be pinned and therefore cannot be planned.
-stackgen's `language/typescript` bundle and its framework components cover
+stackgen's TypeScript bundles and their framework packs cover
 TypeScript and JavaScript; `app-framework/flutter` covers Dart and Flutter and
 serves `mobile`, `tablet`, `desktop` and `auto` from a single codebase — `auto`
 being the same mobile binary reaching CarPlay and Android Auto through the
@@ -65,14 +65,14 @@ library on the same platform pins `kotlin-library` — Gradle through the
 committed wrapper, ktlint and detekt, on the Temurin JDK the repo's toolchain
 pins; it carries no Android target and no Kotlin Multiplatform. A native Android
 app pins `kotlin-compose` — Jetpack Compose with Material 3 over the same
-Kotlin, Gradle, ktlint and detekt packs plus `framework/android`, whose SDK
+Kotlin, Gradle, ktlint and detekt tools plus `framework/android`, whose SDK
 levels live in the module build files, where the repo's setup task reads them —
 serving `mobile`, `tablet`, `watch` (Wear OS), `tv` (Android TV and Google TV)
 and `auto` (Android Auto and Automotive OS, Car App Library templates declared
 alongside `mobile`) from one Gradle project; it does not serve `spatial`
 (Android XR). An Android library published as an AAR on `packages` pins
 `android-library`, the same stack without Compose. Anything else takes the
-**generate** entry — see below.
+**compose** entry — see below.
 
 **A mobile app picks between three.** Pick `kotlin-compose` when the app is
 Android-only or Android-first, or reaches Wear OS or Android TV, which Flutter's
@@ -188,13 +188,14 @@ no lock-in at all, paid for in nothing checking anything and no deduplication.
 The design system is **not** consulted in this round: the tokens are the
 contract whatever the answer is, and the stylesheet is only how they get written
 down — which is why deferring it costs the doc surfaces nothing. Anything else
-takes the same **generate** entry every axis has. A service, a CLI, a native app
+takes the same **compose** entry every axis has. A service, a CLI, a native app
 or an `iac` project is never asked and records no key.
 
 **The repo axis** is the package manager and workspace layout: `pnpm-workspace`,
 `pnpm-turbo`, or `bun`. A single-package repo pins no workspace bundle — that is
-the kind's edge, not a gap — and a Flutter checkout's `pub` is a pack inside the
-`dart-flutter` project bundle, not a repo bundle of its own.
+the kind's edge, not a gap — and a Flutter checkout's `pub` is tool knowledge
+that lands with the `dart-flutter` project bundle's `flutter` tool, not a repo
+bundle of its own.
 
 **The addon axis is the optional tools**, shown as a tools menu after the other
 rounds, once per product, with **nothing preselected**: only what you pick is
@@ -219,8 +220,10 @@ defines supplies no conventions to plan against, no harness to build against and
 no UX gate, so a run against it would lose every guarantee while reporting
 itself healthy. See [stack templates](../../plugins/vwf.md#stack-templates).
 
-What keeps that from being a wall is stackgen's one open entry. A stack no pack
-covers is **generated** — researched topic by topic against current
+What keeps that from being a wall is stackgen's one open entry, **compose**,
+which writes a repo bundle for your combination; a part no pack covers is named
+`<type>/<slug>@generated` there and is **generated** — researched topic by topic
+against current
 documentation, instantiated from vwf's principles catalog, every third-party
 name it emits vetted for reputation (a `block` halts until you name a
 replacement), gated by a reviewer agent and your explicit consent, and landed in
@@ -243,7 +246,7 @@ whether it has screens.
 | [Stallfront](../greenfield/multi-repo.md)        | E-commerce in four repos: a docs-only base plus storefront, API and IaC | `typescript-hono-refine` | `postgres` | `container-generic` |
 
 Relay is the full case in miniature: one project serves both an API and its own
-web app, `postgres` answers the backing axis, and a `design-tool` bundle is what
+web app, `postgres` answers the backing axis, and a design tool is what
 makes `/vwf:design-system` runnable at all — a declared screen platform makes
 the design system a foundation, and without a materialized adapter there is
 nothing to import from. Centwise drops the datastore rather than the design

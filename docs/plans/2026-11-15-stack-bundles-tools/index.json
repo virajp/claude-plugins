@@ -172,11 +172,11 @@
         "U3"
       ],
       "waits": "docs-sync reads the delta of waves 1 and 2",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T11:07:55.406Z",
+      "ended": "2026-11-23T11:29:21.142Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "kind": "edit",
       "model": "opus",
       "wave": 4,
@@ -235,8 +235,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T11:07:55.367Z",
       "ended": ""
     },
     {
@@ -664,32 +664,41 @@
       "units": [
         "U2"
       ]
+    },
+    {
+      "id": "D46",
+      "decision": "Q4: The site page plugins/stackgen.md heading Optional tools — the addon kind is stale, and vwf.md:634 links to its anchor (vwf passages are R5b). Rename now, or keep until R5b?",
+      "ruling": "Keep the heading until R5b, then rename it together with the vwf.md:634 link; the site link check stays green.",
+      "rejected": "Rename it to ...the addon axis now",
+      "units": [
+        "U4"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T11:07:54.764Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T11:07:54.880Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T11:07:54.991Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-23T11:07:55.140Z"
     }
   },
   "gaps": [
@@ -705,6 +714,13 @@
       "unit": "U1",
       "stage": "",
       "text": "R1 Q1: who rewrites knowledge-pack prose citing the harness key D16 removed (fnox, queues, pipelines) · settled by the run rules: the files are in U1 Owns, so the finding looped to U1, which reworded them",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U4",
+      "stage": "",
+      "text": "U4 reported vwf passages falsified (site plugins/vwf.md:127,580,621-637,731-735,1618,4253; .claude/skills/vwf-plugin/SKILL.md:58,219,338-341; vwf-plugin/references/dependencies.md:94,110-114; vwf-plugin/references/assets.md:45 per R4) · left to R5b by the 04-docs.md ruling (vwf passages are R5b), with the stackgen.md addon heading per D46",
       "state": "closed"
     }
   ],

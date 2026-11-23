@@ -37,9 +37,9 @@ the ordering matters more here, because the repo already has languages in it.
 Each project's languages are the bootstrap tools `bootstrap detect --add` links
 to it; a project no language tool links is reported by doctor and setup as a
 degraded row, with its fix, and the onboard carries on.
-Bookable is TypeScript throughout, so stackgen's `language/typescript` bundle
-covers both apps and the shared package, its `postgres` bundle answers the API's
-backing axis, and its design-tool pack answers the import that `apps/web` will
+Bookable is TypeScript throughout, so stackgen's TypeScript bundles cover both
+apps and the shared package, its `postgres` bundle answers the API's
+backing axis, and its design tool answers the import that `apps/web` will
 make mandatory.
 
 Restart Claude Code, then `cd` into the Bookable repo — on a clean working tree,
