@@ -1,6 +1,5 @@
 // A YAML subset reader for vwf's own config files: .config/vwf.yaml, the
-// registry, .claude/<adapter>/lock.yaml, .config/vwf-membership.yaml and a
-// template's frontmatter.
+// registry, .claude/<adapter>/lock.yaml and a template's frontmatter.
 //
 // It reads block maps and lists, flow lists and maps (across lines, a
 // trailing comma allowed), comments, single- and double-quoted scalars,

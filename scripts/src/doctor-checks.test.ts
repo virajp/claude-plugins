@@ -49,6 +49,28 @@ shift
 exec "$@"
 `;
 
+/**
+ * A `bootstrap` that answers `config get <key> --json` from the
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null); with no such
+ * file it exits 2 as a repo with no .config/bootstrap/ does.
+ */
+const BOOTSTRAP = `#!${process.execPath}
+const { existsSync, readFileSync } = require("node:fs");
+const [cmd, sub, key, flag] = process.argv.slice(2);
+const out = (ok, code, data, errors) => {
+  process.stdout.write(JSON.stringify({ contract: 1, command: "config get", ok, code, data, errors, warnings: [] }) + "\\n");
+  process.exit(code);
+};
+if (cmd !== "config" || sub !== "get" || flag !== "--json") {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get only" }]);
+}
+if (!existsSync(".bootstrap-stub.json")) {
+  out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
+}
+const facts = JSON.parse(readFileSync(".bootstrap-stub.json", "utf8"));
+out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
+`;
+
 /** A probe binary: records that it ran, fails when KITE_FAIL is set. */
 const KITEPROBE = `#!/bin/sh
 touch "$PROBE_MARK"
@@ -58,11 +80,13 @@ exit 0
 
 let root: string;
 let bin: string;
+/** The bootstrap stub's own PATH dir, kept when a case drops `mise`. */
+let boot: string;
 let env: NodeJS.ProcessEnv;
 
-function stub(name: string, body: string) {
-  writeFileSync(join(bin, name), body);
-  chmodSync(join(bin, name), 0o755);
+function stub(name: string, body: string, dir = bin) {
+  writeFileSync(join(dir, name), body);
+  chmodSync(join(dir, name), 0o755);
 }
 
 function git(cwd: string, ...args: string[]) {
@@ -110,6 +134,14 @@ function checks(cwd: string, args: string[] = [], extra: NodeJS.ProcessEnv = {})
   return { status: r.status, json, stderr: r.stderr };
 }
 
+/** Rewrite the bootstrap stub facts of a repo. */
+function facts(dir: string, change: (f: Json) => void) {
+  const file = join(dir, ".bootstrap-stub.json");
+  const f = existsSync(file) ? JSON.parse(readFileSync(file, "utf8")) : {};
+  change(f);
+  writeFileSync(file, JSON.stringify(f));
+}
+
 function rules(json: Json) {
   return json.findings.map((f: Json) => `${f.rule}:${f.severity}`);
 }
@@ -125,9 +157,12 @@ beforeEach(() => {
   stub("mise", MISE);
   stub("kitec", "#!/bin/sh\nexit 0\n");
   stub("kiteprobe", KITEPROBE);
+  boot = join(root, "boot");
+  mkdirSync(boot);
+  stub("bootstrap", BOOTSTRAP, boot);
   env = {
     HOME: root,
-    PATH: `${bin}:/usr/bin:/bin`,
+    PATH: `${bin}:${boot}:/usr/bin:/bin`,
     PROBE_MARK: join(root, "probe-ran"),
     GIT_CONFIG_NOSYSTEM: "1",
   };
@@ -158,6 +193,34 @@ describe("single repo", () => {
     expect(existsSync(join(root, "probe-ran"))).toBe(true);
   });
 
+  describe("a submodule falls back to its superproject (D38)", () => {
+    let pier: string;
+
+    beforeEach(() => {
+      const src = join(root, "pier-src");
+      mkdirSync(src);
+      git(src, "init", "-q");
+      writeFileSync(join(src, "readme.md"), "pier\n");
+      git(src, "add", "-A");
+      git(src, "-c", "user.name=Example", "-c", "user.email=example@example.com", "commit", "-q", "-m", "seed");
+      git(base, "-c", "protocol.file.allow=always", "submodule", "add", "-q", src, "pier");
+      pier = join(base, "pier");
+    });
+
+    it("with repo.home null", () => {
+      facts(pier, () => {});
+      const r = checks(pier);
+      expect(r.status).toBe(0);
+      expect(r.json.base).toBe(base);
+    });
+
+    it("when bootstrap exits 2", () => {
+      const r = checks(pier);
+      expect(r.status).toBe(0);
+      expect(r.json.base).toBe(base);
+    });
+  });
+
   it("--repo runs from another directory", () => {
     const r = checks(root, ["--repo", join(base, "infra")]);
     expect(r.status).toBe(0);
@@ -168,11 +231,26 @@ describe("single repo", () => {
     const bare = join(root, "bare");
     mkdirSync(bare);
     git(bare, "init", "-q");
+    facts(bare, () => {});
     const r = checks(bare);
     expect(r.status).toBe(0);
     expect(r.json.base).toBeNull();
     expect(rules(r.json)).toEqual(["not-onboarded:info"]);
     expect(r.json.findings[0].project).toBeNull();
+  });
+
+  it("a repo with no .config/bootstrap/ is refused with bootstrap's errors text", () => {
+    rmSync(join(base, ".bootstrap-stub.json"));
+    const r = checks(base);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/no \.config\/bootstrap\/ here: run bootstrap migrate/);
+  });
+
+  it("an absent bootstrap is refused with the install hint", () => {
+    rmSync(join(boot, "bootstrap"));
+    const r = checks(base);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/bootstrap 4\.1\.0 or newer is required/);
   });
 
   it("early (no registry) is info and skips the project checks", () => {
@@ -186,14 +264,14 @@ describe("single repo", () => {
 
   it("early still runs the repo-level checks", () => {
     rmSync(registry());
-    const r = checks(base, [], { PATH: "/usr/bin:/bin" });
+    const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
     expect(rules(r.json)).toEqual(["early:info", "mise:blocking"]);
     expect(r.status).toBe(1);
   });
 
   describe("mise", () => {
     it("is blocking when an axis is pinned", () => {
-      const r = checks(base, [], { PATH: "/usr/bin:/bin" });
+      const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.status).toBe(1);
       const [row] = find(r.json, "mise");
       expect(row).toMatchObject({
@@ -209,7 +287,7 @@ describe("single repo", () => {
       edit(config(), "template: repo/lumen-workspace", "template: unresolved");
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
       edit(config(), "dev: true", "dev: false");
-      const r = checks(base, [], { PATH: "/usr/bin:/bin" });
+      const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.status).toBe(0);
       expect(rules(r.json)).toEqual(["mise:degraded"]);
     });
@@ -220,7 +298,7 @@ describe("single repo", () => {
       edit(config(), "template: repo/lumen-workspace", "template: unresolved");
       edit(config(), "cicd: lumen-ci", "cicd: unresolved");
       edit(config(), "dev: true", "dev: { present: true }");
-      const r = checks(base, [], { PATH: "/usr/bin:/bin" });
+      const r = checks(base, [], { PATH: `${boot}:/usr/bin:/bin` });
       expect(rules(r.json)).toEqual(["mise:blocking"]);
     });
 
@@ -406,7 +484,7 @@ describe("single repo", () => {
     });
 
     it("an empty list runs the repo-level checks only", () => {
-      const r = checks(base, ["--projects", ""], { PATH: "/usr/bin:/bin" });
+      const r = checks(base, ["--projects", ""], { PATH: `${boot}:/usr/bin:/bin` });
       expect(r.json.projects).toEqual([]);
       expect(rules(r.json)).toEqual(["mise:blocking"]);
     });
@@ -454,7 +532,7 @@ describe("multi repo", () => {
   });
 
   it("a member with no url is blocking", () => {
-    edit(config(), "    url: git@forge.example.test:harbor/dock-absent.git\n", "");
+    facts(base, (f) => delete f["repo.members"]["dock-absent"].url);
     const r = checks(base);
     expect(r.status).toBe(1);
     expect(find(r.json, "member-url")[0]).toMatchObject({
@@ -465,39 +543,58 @@ describe("multi repo", () => {
   });
 
   it("a multi-repo topology with no members is blocking", () => {
-    const text = readFileSync(config(), "utf8");
-    writeFileSync(config(), text.replace(/members:\n(?: {2}.*\n)+/, ""));
+    facts(base, (f) => delete f["repo.members"]);
     const r = checks(base);
     expect(r.status).toBe(1);
     expect(rules(r.json)).toContain("membership:blocking");
   });
 
-  it("a present member with no membership file is blocking", () => {
-    rmSync(join(member, ".config", "vwf-membership.yaml"));
+  it("a present sibling member with no repo.home is drift, with the setup:configs fix", () => {
+    facts(member, (f) => delete f["repo.home"]);
     const r = checks(base);
-    expect(r.status).toBe(1);
-    expect(find(r.json, "membership")[0].subject).toBe("dock-app");
+    expect(r.status).toBe(0);
+    expect(find(r.json, "membership")).toEqual([
+      expect.objectContaining({
+        severity: "drift",
+        subject: "dock-app",
+        remedy: "from the base repo, run setup:configs --dock-app",
+      }),
+    ]);
   });
 
-  it("a member naming another product is blocking", () => {
-    edit(join(member, ".config", "vwf-membership.yaml"), "product: harbor", "product: quay");
+  it("a present submodule member with no repo.home is drift too", () => {
+    facts(base, (f) => (f["repo.members"]["dock-app"].type = "submodule"));
+    facts(member, (f) => delete f["repo.home"]);
     const r = checks(base);
-    expect(r.status).toBe(1);
-    expect(find(r.json, "membership")).toHaveLength(1);
+    expect(find(r.json, "membership")[0]).toMatchObject({ severity: "drift", subject: "dock-app" });
   });
 
-  it("a repo carrying a membership file the base does not list is blocking", () => {
-    const stray = join(root, "dock-stray");
-    mkdirSync(join(stray, ".config"), { recursive: true });
+  it("a member with no .config/bootstrap/ is refused", () => {
+    rmSync(join(member, ".bootstrap-stub.json"));
+    const r = checks(base);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/run bootstrap migrate/);
+  });
+
+  it("a vwf-membership.yaml left in a member whose repo.home resolves is drift", () => {
+    mkdirSync(join(member, ".config"), { recursive: true });
     writeFileSync(
-      join(stray, ".config", "vwf-membership.yaml"),
+      join(member, ".config", "vwf-membership.yaml"),
       "vwf_membership: 1\nproduct: harbor\nhost: ../harbor\n",
     );
-    git(stray, "init", "-q");
-    const r = checks(stray);
-    expect(r.status).toBe(1);
-    expect(find(r.json, "membership")[0].subject).toBe(stray);
-    // the half that checks the starting repo only: not from the base
-    expect(checks(base).status).toBe(0);
+    const r = checks(base);
+    expect(r.status).toBe(0);
+    expect(find(r.json, "membership")[0]).toMatchObject({ severity: "drift", subject: "dock-app" });
+  });
+
+  it("a folder member needs no url and no repo.home, and its project reads the base's template", () => {
+    facts(base, (f) => (f["repo.members"]["dock-yard"] = { folder: "yard", type: "folder" }));
+    edit(config(), "  dock-absent:\n    repo: dock-absent\n", "  dock-absent:\n    repo: dock-yard\n");
+    const r = checks(base);
+    expect(find(r.json, "member-url")).toEqual([]);
+    expect(find(r.json, "membership")).toEqual([]);
+    // the base has no materialized kite-app, so the folder member's pin is not materialized there
+    expect(find(r.json, "not-materialized")[0]).toMatchObject({ project: "dock-absent" });
+    expect(find(r.json, "not-materialized")[0].message).toContain(base);
   });
 });

@@ -35,16 +35,19 @@ import {
   resolve as resolvePath,
 } from "node:path";
 import {
+  BootstrapError,
+  memberRepo,
+  readHome,
+  readMembers,
+} from "../../../doctor/scripts/lib/bootstrap.mjs";
+import {
   abandon,
   close,
   LandError,
   open,
   worktreeDir,
 } from "../../../git-workflow/scripts/lib/land.mjs";
-import {
-  parseFrontmatter,
-  parseYaml,
-} from "./yaml.mjs";
+import { parseFrontmatter } from "./yaml.mjs";
 
 /** A refusal that is not a queue answer; plan.mjs exits 2 on it. */
 export class QueueError extends Error {
@@ -75,14 +78,26 @@ function must(cwd, args) {
   return r.out;
 }
 
-function readYaml(file) {
-  return existsSync(file) ? parseYaml(readFileSync(file, "utf8")) : null;
+/** A bootstrap read (D7), its failure a QueueError (D23). */
+function fromBootstrap(read) {
+  try {
+    return read();
+  } catch (e) {
+    if (e instanceof BootstrapError) {
+      throw new QueueError(e.message);
+    }
+    throw e;
+  }
 }
 
 /**
  * The main checkout of the base repo from `cwd`, per assets/membership.md: a
  * linked worktree is read as its main checkout first, since every queue edit
- * is made there and never in a worktree.
+ * is made there and never in a worktree. A repo whose bootstrap repo.home has
+ * a value is a member, and its home folder names the base; with null it acts
+ * as a base (D4, D25). A folder member's base is its git top level (D17).
+ * A submodule with no repo.home, or none to read (bootstrap exit 2), falls
+ * back to its git superproject (D38).
  */
 export function resolveBase(cwd) {
   let dir = cwd;
@@ -104,25 +119,28 @@ export function resolveBase(cwd) {
       dir = dirname(common);
       continue;
     }
+    let home;
+    try {
+      home = readHome(dir);
+    } catch (e) {
+      if (e instanceof BootstrapError && e.code === 2 && super_ !== "") {
+        dir = super_; // no .config/bootstrap/ in a submodule: its superproject (D38)
+        continue;
+      }
+      throw e instanceof BootstrapError ? new QueueError(e.message) : e;
+    }
+    if (home !== null) {
+      dir = resolvePath(dir, home.folder);
+      continue;
+    }
     if (existsSync(join(dir, ".config", "vwf.yaml"))) {
       return dir;
     }
-    const membership = join(dir, ".config", "vwf-membership.yaml");
-    if (existsSync(membership)) {
-      const host = readYaml(membership)?.host;
-      if (typeof host !== "string" || host === "") {
-        throw new QueueError(`${membership} names no host`);
-      }
-      dir = resolvePath(dir, host);
-      continue;
-    }
     if (super_ !== "") {
-      dir = super_;
+      dir = super_; // repo.home null in a submodule: its superproject (D38)
       continue;
     }
-    throw new QueueError(
-      `${dir} is not a vwf repo: no .config/vwf.yaml and no .config/vwf-membership.yaml`,
-    );
+    throw new QueueError(`${dir} is not a vwf repo: no .config/vwf.yaml and no repo.home back-link`);
   }
 }
 
@@ -185,8 +203,15 @@ class Product {
     this.base = base;
     this.branches = branches ?? {};
     this.tips = new Map();
-    const config = readYaml(join(base, ".config", "vwf.yaml"));
-    this.members = Array.isArray(config?.members) ? config.members : [];
+    this.listed = null;
+  }
+
+  /** The base's repo.members, read once (D7). */
+  get members() {
+    if (this.listed === null) {
+      this.listed = fromBootstrap(() => readMembers(this.base));
+    }
+    return this.listed;
   }
 
   tip(dir) {
@@ -203,12 +228,12 @@ class Product {
 
   /** { dir } of a cloned member, or { reason } when it is unknown or not cloned. */
   member(name) {
-    const m = this.members.find((x) => x && x.name === name);
-    if (!m || typeof m.path !== "string") {
-      return { reason: `member ${name} is not listed under members: in .config/vwf.yaml` };
+    const m = this.members.find((x) => x.name === name);
+    if (!m) {
+      return { reason: `member ${name} is not listed in bootstrap's repo.members` };
     }
-    const dir = resolvePath(this.base, m.path);
-    if (!existsSync(join(dir, ".git"))) {
+    const dir = memberRepo(this.base, m);
+    if (dir !== this.base && !existsSync(join(dir, ".git"))) {
       return { reason: `member ${name} is not cloned; clone it to resolve this requirement` };
     }
     return { dir };
@@ -222,7 +247,7 @@ class Product {
   clonedMembers() {
     return this
       .members
-      .filter((m) => m && typeof m.name === "string")
+      .filter((m) => m.type !== "folder")
       .map((m) => this.member(m.name).dir)
       .filter((d) => d !== undefined);
   }

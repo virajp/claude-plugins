@@ -1,117 +1,79 @@
-// Membership both directions and the member url (doctor SKILL.md §1,
-// assets/membership.md). Every row is blocking and repo-level. The
-// file-not-listed half checks only the repo the run started in (D9 (c)).
+// Membership and the member url (doctor SKILL.md §1, assets/membership.md).
+// The base lists its members in bootstrap's repo.members; each submodule or
+// sibling member back-links through its own repo.home (D7, D25). A folder
+// member is part of the base's tree: no url, no home to check (D17). Every
+// row is repo-level.
 
+import { existsSync } from "node:fs";
 import {
-  dirname,
   join,
   resolve,
 } from "node:path";
-import { repoRoot } from "./base.mjs";
+import { homeOf } from "./base.mjs";
 import {
-  git,
-  isObject,
   isWorkTree,
-  readYaml,
-  real,
   row,
 } from "./util.mjs";
 
 const MEMBERSHIP = join(".config", "vwf-membership.yaml");
 
-/** The main checkout of a linked worktree, else the repo root itself. */
-function mainCheckout(root) {
-  const gitDir = git(root, ["rev-parse", "--path-format=absolute", "--git-dir"]);
-  const common = git(root, ["rev-parse", "--path-format=absolute", "--git-common-dir"]);
-  return gitDir.ok && common.ok && gitDir.out !== common.out ? dirname(common.out) : root;
-}
-
-export function membershipRows({ base, config, start }) {
+export function membershipRows({ base, topology, members }) {
   const rows = [];
-  const members = Array.isArray(config.members) ? config.members.filter(isObject) : [];
-  const product = config.product?.name;
-
-  if (config.topology === "multi-repo") {
-    if (members.length === 0) {
+  if (topology === "multi-repo" && members.length === 0) {
+    rows.push(
+      row(
+        "membership",
+        "blocking",
+        null,
+        base,
+        "a multi-repo topology with no members in bootstrap's repo.members",
+        "/vwf:setup",
+      ),
+    );
+  }
+  for (const member of members) {
+    const name = member.name;
+    if (member.type === "folder") {
+      continue; // a folder of the base's tree
+    }
+    if (member.url === null) {
       rows.push(
         row(
-          "membership",
+          "member-url",
           "blocking",
           null,
-          base,
-          "a multi-repo topology with no members: list",
+          name,
+          `member ${name} has no url in repo.members, so an absent member cannot be cloned`,
           "/vwf:setup",
         ),
       );
     }
-    for (const member of members) {
-      const name = member.name ?? member.path ?? "?";
-      if (typeof member.url !== "string" || member.url === "") {
-        rows.push(
-          row(
-            "member-url",
-            "blocking",
-            null,
-            name,
-            `member ${name} has no url:, so an absent member cannot be cloned`,
-            "/vwf:setup",
-          ),
-        );
-      }
-      if (typeof member.path !== "string") {
-        continue;
-      }
-      const dir = resolve(base, member.path);
-      if (!isWorkTree(dir)) {
-        continue; // presence is not a finding
-      }
-      const link = readYaml(join(dir, MEMBERSHIP));
-      if (link === null) {
-        rows.push(
-          row(
-            "membership",
-            "blocking",
-            null,
-            name,
-            `member ${name} carries no .config/vwf-membership.yaml`,
-            "/vwf:setup",
-          ),
-        );
-        continue;
-      }
-      const host = typeof link.host === "string" ? real(resolve(dir, link.host)) : null;
-      if (link.product !== product || host !== real(base)) {
-        rows.push(
-          row(
-            "membership",
-            "blocking",
-            null,
-            name,
-            `member ${name} back-links to product ${JSON.stringify(link.product ?? null)}`
-              + ` at host ${JSON.stringify(link.host ?? null)}, not ${JSON.stringify(product ?? null)}`
-              + ` at the base`,
-            "/vwf:setup",
-          ),
-        );
-      }
+    const dir = resolve(base, member.folder);
+    if (!isWorkTree(dir)) {
+      continue; // presence is not a finding
     }
-  }
-
-  const root = repoRoot(start);
-  if (real(root) !== real(base) && readYaml(join(root, MEMBERSHIP)) !== null) {
-    const own = new Set([real(root), real(mainCheckout(root))]);
-    const listed = members.some(
-      (m) => typeof m.path === "string" && own.has(real(resolve(base, m.path))),
-    );
-    if (!listed) {
+    if (homeOf(dir) === null) {
       rows.push(
         row(
           "membership",
-          "blocking",
+          "drift",
           null,
-          root,
-          "this repo carries .config/vwf-membership.yaml and the base does not list it under members:",
-          "/vwf:setup",
+          name,
+          `member ${name} has no repo.home back-link to the base`,
+          `from the base repo, run setup:configs --${name}`,
+        ),
+      );
+      continue;
+    }
+    if (existsSync(join(dir, MEMBERSHIP))) {
+      rows.push(
+        row(
+          "membership",
+          "drift",
+          null,
+          name,
+          `member ${name} still carries .config/vwf-membership.yaml, which nothing reads since its repo.home resolves`,
+          "on consent, doctor deletes it and commits the deletion in the member through /vwf:git-workflow",
         ),
       );
     }

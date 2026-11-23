@@ -139,6 +139,28 @@ if [ -n "$RACE" ] && [ -f "$RACE" ]; then sh "$RACE" >/dev/null 2>&1; rm -f "$RA
 exit $status
 `;
 
+/**
+ * A `bootstrap` that answers `config get <key> --json` from the
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null); with no such
+ * file it exits 2 as a repo with no .config/bootstrap/ does.
+ */
+const BOOTSTRAP = `#!${process.execPath}
+const { existsSync, readFileSync } = require("node:fs");
+const [cmd, sub, key, flag] = process.argv.slice(2);
+const out = (ok, code, data, errors) => {
+  process.stdout.write(JSON.stringify({ contract: 1, command: "config get", ok, code, data, errors, warnings: [] }) + "\\n");
+  process.exit(code);
+};
+if (cmd !== "config" || sub !== "get" || flag !== "--json") {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get only" }]);
+}
+if (!existsSync(".bootstrap-stub.json")) {
+  out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
+}
+const facts = JSON.parse(readFileSync(".bootstrap-stub.json", "utf8"));
+out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
+`;
+
 function git(cwd: string, ...args: string[]) {
   const r = spawnSync("git", args, { cwd, env, encoding: "utf8" });
   if (r.status !== 0) {
@@ -241,7 +263,13 @@ function seed({ rows, build = () => {}, config = "after_landing: []\n", skip = [
   stubTasks(base);
 }
 
-/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, kept out of git status. */
+/** The bootstrap stub's facts in `dir`, kept out of git status. */
+function facts(dir: string, value: Json = {}) {
+  writeFileSync(join(dir, ".bootstrap-stub.json"), JSON.stringify(value));
+  appendFileSync(join(dir, ".git", "info", "exclude"), "/.bootstrap-stub.json\n");
+}
+
+/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, and empty bootstrap facts, kept out of git status. */
 function stubTasks(dir: string) {
   const tasks = join(dir, ".config", "mise", "tasks", "git");
   const files: [string, string][] = [
@@ -254,6 +282,7 @@ function stubTasks(dir: string) {
     write(join(tasks, path), text);
   }
   appendFileSync(join(dir, ".git", "info", "exclude"), "/.config/mise/tasks/git/\n");
+  facts(dir);
 }
 
 /** A `gh` stub that opens a pull request and reports its URL. */
@@ -298,6 +327,8 @@ beforeEach(() => {
   mkdirSync(bin);
   writeFileSync(join(bin, "mise"), MISE);
   chmodSync(join(bin, "mise"), 0o755);
+  writeFileSync(join(bin, "bootstrap"), BOOTSTRAP);
+  chmodSync(join(bin, "bootstrap"), 0o755);
   const gitconfig = join(root, "gitconfig");
   writeFileSync(gitconfig, "[init]\n\tdefaultBranch = develop\n[advice]\n\tdetachedHead = false\n");
   env = {
@@ -422,14 +453,39 @@ describe("the refusals", () => {
     expect(start([`docs/plans/${A}`]).json.message).toMatch(/neither in the plan index nor archived/);
   });
 
-  it("refuses an absent target repo with the command that fetches it", () => {
-    seed({
-      rows: [row(A, { target_repo: "dock-app", kind: "cycle" })],
-      config: "members:\n  - name: dock-app\n    path: ../dock-app\n    url: git@example.com:harbor/dock-app.git\n",
+  it("refuses an absent sibling target repo with the clone that fetches it", () => {
+    seed({ rows: [row(A, { target_repo: "dock-app", kind: "cycle" })] });
+    facts(base, {
+      "repo.members": {
+        "dock-app": { folder: "../dock-app", type: "sibling", url: "git@example.com:harbor/dock-app.git" },
+      },
     });
     const r = start([`docs/plans/${A}`]);
     expect(r.status).toBe(1);
     expect(r.json.message).toMatch(/git clone git@example.com:harbor\/dock-app.git \.\.\/dock-app/);
+  });
+
+  it("refuses an absent submodule target repo with the submodule update that fetches it", () => {
+    seed({ rows: [row(A, { target_repo: "dock-app", kind: "cycle" })] });
+    facts(base, { "repo.members": { "dock-app": { folder: "apps/dock-app", type: "submodule" } } });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(1);
+    expect(r.json.message).toMatch(/git submodule update --init apps\/dock-app/);
+  });
+
+  it("refuses a target repo that repo.members does not list", () => {
+    seed({ rows: [row(A, { target_repo: "dock-app", kind: "cycle" })] });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(1);
+    expect(r.json.message).toMatch(/dock-app of .* is not listed in bootstrap's repo\.members/);
+  });
+
+  it("refuses a base with no .config/bootstrap/ with bootstrap's errors text", () => {
+    seed({ rows: [row(A)] });
+    rmSync(join(base, ".bootstrap-stub.json"));
+    const r = startRaw([`docs/plans/${A}`, "--branch", "develop"]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/no \.config\/bootstrap\/ here: run bootstrap migrate/);
   });
 
   it("refuses when the working copy differs from the tip", () => {
@@ -480,6 +536,14 @@ describe("the refusals", () => {
 });
 
 describe("a fresh run", () => {
+  it("runs a folder member's plan in the base repo, with no clone and no member branch", () => {
+    seed({ rows: [row(A, { target_repo: "dock-yard" })] });
+    facts(base, { "repo.members": { "dock-yard": { folder: "yard", type: "folder" } } });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.json).toMatchObject({ result: "ready", mode: "fresh", claim: { claimed: true } });
+    expect(rowAtOrigin(A).status).toBe("RUNNING");
+  });
+
   it("stops when the merge task's hook pass fails, the log closed claim-failed", () => {
     seed({ rows: [row(A)], build: (s) => write(join(s, ".stub-hook-fail"), "") });
     const r = start([`docs/plans/${A}`]);

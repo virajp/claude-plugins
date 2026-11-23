@@ -142,6 +142,28 @@ if [ -n "$RACE" ] && [ -f "$RACE" ]; then sh "$RACE" >/dev/null 2>&1; rm -f "$RA
 exit $status
 `;
 
+/**
+ * A `bootstrap` that answers `config get <key> --json` from the
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null); with no such
+ * file it exits 2 as a repo with no .config/bootstrap/ does.
+ */
+const BOOTSTRAP = `#!${process.execPath}
+const { existsSync, readFileSync } = require("node:fs");
+const [cmd, sub, key, flag] = process.argv.slice(2);
+const out = (ok, code, data, errors) => {
+  process.stdout.write(JSON.stringify({ contract: 1, command: "config get", ok, code, data, errors, warnings: [] }) + "\\n");
+  process.exit(code);
+};
+if (cmd !== "config" || sub !== "get" || flag !== "--json") {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get only" }]);
+}
+if (!existsSync(".bootstrap-stub.json")) {
+  out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
+}
+const facts = JSON.parse(readFileSync(".bootstrap-stub.json", "utf8"));
+out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
+`;
+
 function git(cwd: string, ...args: string[]) {
   const r = spawnSync("git", args, { cwd, env, encoding: "utf8" });
   if (r.status !== 0) {
@@ -234,7 +256,13 @@ function seed(rows: Json[], build: (seed: string) => void = () => {}, config = "
   stubTasks(base);
 }
 
-/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, kept out of git status. */
+/** The bootstrap stub's facts in `dir`, kept out of git status. */
+function facts(dir: string, value: Json = {}) {
+  writeFileSync(join(dir, ".bootstrap-stub.json"), JSON.stringify(value));
+  appendFileSync(join(dir, ".git", "info", "exclude"), "/.bootstrap-stub.json\n");
+}
+
+/** The stub git:* tasks in `dir`'s .config/mise/tasks/git/, and empty bootstrap facts, kept out of git status. */
 function stubTasks(dir: string) {
   const tasks = join(dir, ".config", "mise", "tasks", "git");
   const files: [string, string][] = [
@@ -248,6 +276,7 @@ function stubTasks(dir: string) {
     write(join(tasks, path), text);
   }
   appendFileSync(join(dir, ".git", "info", "exclude"), "/.config/mise/tasks/git/\n");
+  facts(dir);
 }
 
 /** A `gh` stub that opens a pull request and reports its URL. */
@@ -283,6 +312,8 @@ beforeEach(() => {
   mkdirSync(bin);
   writeFileSync(join(bin, "mise"), MISE);
   chmodSync(join(bin, "mise"), 0o755);
+  writeFileSync(join(bin, "bootstrap"), BOOTSTRAP);
+  chmodSync(join(bin, "bootstrap"), 0o755);
   const gitconfig = join(root, "gitconfig");
   writeFileSync(gitconfig, "[init]\n\tdefaultBranch = develop\n[advice]\n\tdetachedHead = false\n");
   env = {
@@ -475,14 +506,45 @@ describe("resolve", () => {
         }),
         row(ID, { requires: ["docs/plans/2026-11-01-0900-remote"] }),
       ],
-      () => {},
-      "members:\n  - name: example-api\n    path: ../example-api\n    url: git@example.com:example/api.git\n    projects: [ api ]\n",
     );
+    facts(base, {
+      "repo.members": {
+        "example-api": { folder: "../example-api", type: "sibling", url: "git@example.com:example/api.git" },
+      },
+    });
     const r = plan(base, ["resolve", ID]);
     expect(r.status).toBe(1);
     expect(r.json.entries[0].reason).toBe(
       "2026-11-01-0900-remote: member example-api is not cloned; clone it to resolve this requirement",
     );
+  });
+
+  it("reads a cycle requirement of a folder member from the base tip", () => {
+    seed(
+      [
+        row("2026-11-01-0900-yard", {
+          kind: "cycle",
+          target_repo: "example-yard",
+          status: "COMPLETE",
+          started: NOW,
+          ended: NOW,
+        }),
+        row(ID, { requires: ["docs/plans/2026-11-01-0900-yard"] }),
+      ],
+      (s) => cycleFolder(s, "docs/plans/2026-11-01-0900-yard", []),
+    );
+    facts(base, { "repo.members": { "example-yard": { folder: "yard", type: "folder" } } });
+    const r = plan(base, ["resolve", ID]);
+    expect(r.status).toBe(0);
+    expect(r.json.entries[0]).toMatchObject({ entry: "2026-11-01-0900-yard", kind: "cycle", satisfied: true });
+  });
+
+  it("is refused in a repo with no .config/bootstrap/, with bootstrap's errors text", () => {
+    seed([row(ID)]);
+    rmSync(join(base, ".bootstrap-stub.json"));
+    const r = plan(base, ["resolve", ID]);
+    expect(r.status).toBe(2);
+    expect(r.stderr).toMatch(/no \.config\/bootstrap\/ here: run bootstrap migrate/);
   });
 
   it("exits 2 on a folder with no row", () => {
@@ -682,6 +744,7 @@ describe("origin/develop absent", () => {
     git(s, "commit", "-q", "-m", "seed");
     git(s, "push", "-q", "origin", "main");
     git(root, "clone", "-q", "-b", "main", origin, base);
+    facts(base);
   });
 
   it("refuses pick and resolve with exit 2", () => {
@@ -791,7 +854,8 @@ describe("the branch flags", () => {
     changeFolder(member, FOLDER);
     git(member, "add", "-A");
     git(member, "commit", "-q", "-m", "the folder");
-    local(base, "develop", [memberRow], "members:\n  - name: example-api\n    path: ../example-api\n");
+    local(base, "develop", [memberRow]);
+    facts(base, { "repo.members": { "example-api": { folder: "../example-api", type: "sibling" } } });
     const without = plan(base, ["claim", FOLDER]);
     expect(without.status).toBe(1);
     expect(without.json).toMatchObject({ claimed: false, kind: "failed" });
@@ -800,5 +864,45 @@ describe("the branch flags", () => {
     expect(r.status).toBe(0);
     expect(git(base, "log", "-1", "--format=%s", "develop^2")).toBe(MESSAGE);
     expect(git(member, "log", "-1", "--format=%s", "trunk^2")).toBe(MESSAGE);
+  });
+
+  it("resolves the base from a sibling member through its repo.home", () => {
+    const member = join(root, "example-api");
+    local(member, "trunk", []);
+    facts(member, { "repo.home": { folder: "../base", type: "sibling" } });
+    local(base, "main", [row(ID)]);
+    facts(base, { "repo.members": { "example-api": { folder: "../example-api", type: "sibling" } } });
+    expect(plan(member, ["pick", "--branch", "main"]).json).toEqual({
+      pick: { folder: FOLDER, kind: "change", priority: 10 },
+    });
+  });
+
+  /** A submodule `example-api` of the base, with no .config/vwf.yaml of its own. */
+  function submodule(): string {
+    const src = join(root, "api-src");
+    git(root, "init", "-q", "-b", "trunk", src);
+    write(join(src, "readme.md"), "api\n");
+    git(src, "add", "-A");
+    git(src, "commit", "-q", "-m", "seed");
+    git(base, "-c", "protocol.file.allow=always", "submodule", "add", "-q", src, "example-api");
+    git(base, "commit", "-q", "-m", "the submodule");
+    return join(base, "example-api");
+  }
+
+  it("resolves a submodule member with repo.home null to its superproject (D38)", () => {
+    local(base, "main", [row(ID)]);
+    const member = submodule();
+    writeFileSync(join(member, ".bootstrap-stub.json"), JSON.stringify({ "repo.home": null }));
+    expect(plan(member, ["pick", "--branch", "main"]).json).toEqual({
+      pick: { folder: FOLDER, kind: "change", priority: 10 },
+    });
+  });
+
+  it("resolves a submodule member whose bootstrap exits 2 to its superproject (D38)", () => {
+    local(base, "main", [row(ID)]);
+    const member = submodule();
+    expect(plan(member, ["pick", "--branch", "main"]).json).toEqual({
+      pick: { folder: FOLDER, kind: "change", priority: 10 },
+    });
   });
 });
