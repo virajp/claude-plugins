@@ -1,27 +1,33 @@
 // The stack checks execute stops on (references/stack-checks.md): mise, a
 // custom pin, template platform coverage, an iac project that is not its own
-// repo with the D7 decline, pinned not materialized, and binaries with their
-// probes. Severities follow stack-checks.md; D9 settles the rest. Two rows are
-// degraded and never stop execute (D28): a registry project bootstrap has no
-// repo.projects.<name> for (D26), and a project no bootstrap tool of category
-// languages links (D18, D27). A project's folder and its language tools are
-// read through bootstrap in the repo that holds it (D9, D11); the language
-// walk uses the tool name. A capability a project's platforms imply and its
-// repo lacks is a degraded harness row too (D37, lib/harness.mjs).
+// repo with the D7 decline, and pinned not materialized. Severities follow
+// stack-checks.md; D9 settles the rest. Every other row is degraded and never
+// stops execute (D28): a registry project bootstrap has no
+// repo.projects.<name> for (D26), a project no bootstrap tool of category
+// languages links (D18, D27), a bundle tool not selected or not linked to its
+// project, a materialized entry with no tools: key, an LSP server of
+// `bootstrap lsp --json` missing from vwf-tools, a design tool with no
+// reference in vwf-tools, an addon absent from the claude tool's
+// plugins.project, and a lockfile row of a retired pack kind (R5b D8). A
+// project's folder and its tools are read through bootstrap in the repo that
+// holds it (D9, D11). A capability a project's platforms imply and its repo
+// lacks is a degraded harness row too (D37, lib/harness.mjs).
 
-import { spawnSync } from "node:child_process";
-import { createHash } from "node:crypto";
 import {
   existsSync,
   readFileSync,
 } from "node:fs";
+import { homedir } from "node:os";
 import { join } from "node:path";
 import {
   BootstrapError,
+  configGet,
   describe,
   linkedTools,
+  lspServers,
   projectFolder,
   projectRepo,
+  selectedTool,
 } from "./bootstrap.mjs";
 import {
   harnessRows,
@@ -38,11 +44,16 @@ import {
   slugOf,
 } from "./util.mjs";
 
-const PROBE_TIMEOUT_MS = 30_000;
 const STACK_AXES = ["template", "services", "deploy"];
 /** The platforms that need no language tool (D27). */
 const TOOLLESS = ["iac", "cicd", "misc"];
 const PROJECT_AXES = ["design", "cicd", "stylesheet"];
+/** The bootstrap tool categories whose tools link a project (D29). */
+const LINKED = ["languages", "package-managers"];
+/** The design-import role skills a design tool has a reference for (D8). */
+const DESIGN_ROLES = ["design-import-screens", "design-import-design-system", "design-import-conversations"];
+/** The pack kinds R5a retired; a lockfile row of one awaits conversion (D6). */
+const RETIRED_KINDS = ["language", "package-manager", "toolchain-gate", "design-tool", "addon"];
 
 function stackOf(config, name) {
   const project = config.projects?.[name];
@@ -107,56 +118,194 @@ export function repoPinRows({ config }) {
     : [];
 }
 
-function sha256(file) {
-  return createHash("sha256").update(readFileSync(file)).digest("hex");
-}
-
-function bareHash(value) {
-  return typeof value === "string" ? value.replace(/^sha256:/, "").toLowerCase() : null;
+/** The entries: list of an adapter's lockfile in `dir`, or null. */
+function lockEntries(dir, adapter) {
+  const entries = readYaml(join(dir, ".claude", adapter, "lock.yaml"))?.entries;
+  return Array.isArray(entries) ? entries.filter(isObject) : null;
 }
 
 /**
  * D9 (b): the adapter whose lockfile in `dir` names the slug, with the
- * template file and whether it still hashes to what that lockfile records;
- * null when no adapter in stacks: materialized it.
+ * template file; null when no adapter in stacks: materialized it.
  */
 function materialized(dir, adapters, slug) {
   for (const adapter of adapters) {
-    const entries = readYaml(join(dir, ".claude", adapter, "lock.yaml"))?.entries;
-    if (!Array.isArray(entries)) {
+    const entries = lockEntries(dir, adapter);
+    if (entries === null) {
       continue;
     }
     const path = `.claude/${adapter}/templates/${slug}.md`;
-    const hit = entries.filter(isObject).filter((e) => e.slug === slug || e.path === path);
-    if (hit.length === 0) {
-      continue;
+    if (entries.some((e) => e.slug === slug || e.path === path)) {
+      return { adapter, file: join(dir, path) };
     }
-    const file = join(dir, path);
-    const recorded = bareHash(entries.find((e) => isObject(e) && e.path === path)?.hash);
-    const hashOk = recorded !== null && existsSync(file) && sha256(file) === recorded;
-    return { adapter, file, hashOk };
   }
   return null;
 }
 
-/** The language tool's facts of a template's frontmatter, or null. */
-function factsOf(frontmatter, token) {
-  const facts = frontmatter?.language_facts;
-  return isObject(facts) && isObject(facts[token]) ? facts[token] : null;
+/**
+ * D6, D8: one degraded row per repo whose adapter lockfile still holds rows
+ * of a retired pack kind — source pack/<kind>/<slug>@<version> — naming the
+ * refs; /vwf:setup converts them through stackgen-sync.
+ */
+export function oldPackRows(dir, adapters) {
+  const rows = [];
+  for (const adapter of adapters) {
+    const refs = new Set(
+      (lockEntries(dir, adapter) ?? [])
+        .map((e) => (typeof e.source === "string" ? e.source : ""))
+        .filter((source) => RETIRED_KINDS.some((kind) => source.startsWith(`pack/${kind}/`))),
+    );
+    if (refs.size > 0) {
+      rows.push(
+        row(
+          "old-pack-row",
+          "degraded",
+          null,
+          `.claude/${adapter}/lock.yaml`,
+          `${dir}: .claude/${adapter}/lock.yaml holds rows of a retired pack kind: ${[...refs].join(", ")}`,
+          "/vwf:setup",
+        ),
+      );
+    }
+  }
+  return rows;
 }
 
-function binaryEntries(facts) {
-  const list = Array.isArray(facts?.binaries) ? facts.binaries : [];
-  return list.flatMap((entry) => {
-    if (typeof entry === "string" && entry !== "") {
-      return [{ name: entry, probe: null }];
-    }
-    if (isObject(entry) && typeof entry.name === "string") {
-      const probe = typeof entry.probe === "string" && entry.probe !== "" ? entry.probe : null;
-      return [{ name: entry.name, probe }];
-    }
+/** The vwf-tools local plugin on this machine (stackgen's output tree). */
+function vwfTools() {
+  return join(homedir(), ".claude", "plugins", "local", "vwf-tools");
+}
+
+/** The lspServers keys of the vwf-tools manifest; none when it is absent. */
+function vwfToolsServers() {
+  const file = join(vwfTools(), ".claude-plugin", "plugin.json");
+  if (!existsSync(file)) {
     return [];
-  });
+  }
+  let manifest;
+  try {
+    manifest = JSON.parse(readFileSync(file, "utf8"));
+  } catch (error) {
+    throw new ChecksError(`${file}: ${error.message}`);
+  }
+  return isObject(manifest?.lspServers) ? Object.keys(manifest.lspServers) : [];
+}
+
+/**
+ * D8, D35: each server of `bootstrap lsp --json` run in `dir` that the
+ * vwf-tools manifest does not hold is one degraded row.
+ */
+function lspRows(dir, held) {
+  return bootstrapRead(() => lspServers(dir))
+    .filter((server) => !held().includes(server))
+    .map((server) =>
+      row(
+        "lsp",
+        "degraded",
+        null,
+        server,
+        `LSP server ${server}, which bootstrap lsp lists in ${dir}, is not in the vwf-tools plugin`,
+        "/vwf:setup",
+      )
+    );
+}
+
+/**
+ * D8, D23, D25, D29, D33: each tools: name of the project's materialized
+ * entry is selected in its repo, and one of category languages or
+ * package-managers links the project. An entry with no tools: key is one row.
+ */
+function toolLinkRows(name, template, frontmatter, data, dir) {
+  if (!Array.isArray(frontmatter?.tools)) {
+    return [
+      row(
+        "bundle-tools",
+        "degraded",
+        name,
+        template,
+        `the materialized entry of ${template} in ${dir} has no tools: list`,
+        "/vwf:setup",
+      ),
+    ];
+  }
+  const rows = [];
+  for (const tool of frontmatter.tools.filter((t) => typeof t === "string" && t !== "")) {
+    const entry = selectedTool(data, tool);
+    const needsLink = entry !== null && LINKED.includes(entry.category);
+    const linked = needsLink && Array.isArray(entry.values?.projects) && entry.values.projects.includes(name);
+    if (entry !== null && (!needsLink || linked)) {
+      continue;
+    }
+    rows.push(
+      row(
+        "tool-link",
+        "degraded",
+        name,
+        tool,
+        entry === null
+          ? `${template} names tool ${tool}, which bootstrap in ${dir} has not selected`
+          : `${template} names tool ${tool}, which bootstrap in ${dir} does not link to project ${name}`,
+        `bootstrap add tool ${tool}, then bootstrap detect --add`,
+      ),
+    );
+  }
+  return rows;
+}
+
+/**
+ * D8: a project's design tool has its reference for each design-import role
+ * in the vwf-tools plugin; one row naming the roles that lack it.
+ */
+function designRows(name, entry) {
+  const tool = entry.design;
+  if (!isPinned(tool) || typeof tool !== "string") {
+    return [];
+  }
+  const missing = DESIGN_ROLES.filter(
+    (role) => !existsSync(join(vwfTools(), "skills", role, "references", `${tool}.md`)),
+  );
+  return missing.length === 0
+    ? []
+    : [
+      row(
+        "design-tool",
+        "degraded",
+        name,
+        tool,
+        `the vwf-tools plugin has no ${tool} reference for ${missing.join(", ")}`,
+        "/vwf:setup",
+      ),
+    ];
+}
+
+/**
+ * D8, D24, D26, D31: each addons: name has a key starting with <name>@ in
+ * the base's tools.claude.plugins.project; the claude tool not selected is
+ * the same row, never a refusal.
+ */
+export function addonRows({ base, config }) {
+  const addons = (Array.isArray(config.addons) ? config.addons : [])
+    .filter((a) => typeof a === "string" && a !== "");
+  if (addons.length === 0) {
+    return [];
+  }
+  const selected = selectedTool(bootstrapRead(() => describe(base)), "claude") !== null;
+  const plugins = selected ? bootstrapRead(() => configGet(base, "tools.claude.plugins.project")) : null;
+  const keys = isObject(plugins) ? Object.keys(plugins) : [];
+  return addons
+    .filter((name) => !keys.some((key) => key.startsWith(`${name}@`)))
+    .map((name) =>
+      row(
+        "addon",
+        "degraded",
+        null,
+        name,
+        selected
+          ? `addon ${name} has no ${name}@<marketplace> key in tools.claude.plugins.project`
+          : `addon ${name} is not declared: the claude tool is not selected in ${base}`,
+        "/vwf:setup",
+      )
+    );
 }
 
 /** A bootstrap read, its failure a ChecksError (a refusal). */
@@ -197,16 +346,20 @@ function iacRow(config, project, folder, dir) {
 }
 
 /**
- * The per-project rows for the registry projects named in `scope`, and the
- * binaries those projects need, reported once each.
+ * The per-project rows for the registry projects named in `scope`, then once
+ * per repo that holds one: its retired pack rows (the base's are repo-level,
+ * lib/index.mjs) and, where a pin of it materialized, its LSP servers.
  */
 export function projectRows({ base, config, members, registry, scope }) {
   const rows = [];
   const adapters = Array.isArray(config.stacks) ? config.stacks.filter((s) => typeof s === "string") : [];
   const projects = (Array.isArray(registry?.projects) ? registry.projects : [])
     .filter((p) => isObject(p) && scope.includes(p.name));
-  /** name → {probe, severity, cwd, hashOk, projects} */
-  const binaries = new Map();
+  /** repo dir → whether a pin materialized there, in first-seen order */
+  const repos = new Map();
+  /** the vwf-tools manifest's servers, read once and only when needed */
+  let held = null;
+  const heldOf = () => (held ??= vwfToolsServers());
   /** repo dir → its describe data, read once */
   const described = new Map();
   const describeOf = (dir) => {
@@ -230,11 +383,13 @@ export function projectRows({ base, config, members, registry, scope }) {
     const stack = isObject(entry.stack) ? entry.stack : {};
     const template = stack.template;
     const pinned = isPinned(template);
-    const severity = pinned ? "blocking" : "degraded";
 
     const target = projectRepo(base, config, members, name);
     if (!target.present) {
       continue; // an absent member is a blind spot, not a finding
+    }
+    if (!repos.has(target.dir)) {
+      repos.set(target.dir, false);
     }
     const folder = bootstrapRead(() => projectFolder(target.dir, name));
     if (folder === null) {
@@ -268,6 +423,7 @@ export function projectRows({ base, config, members, registry, scope }) {
       );
     }
     rows.push(...harnessRows(name, platforms, target.dir, describeOf(target.dir), () => tasksOf(target.dir)));
+    rows.push(...designRows(name, entry));
     if (isCustom(template)) {
       rows.push(
         row(
@@ -282,110 +438,53 @@ export function projectRows({ base, config, members, registry, scope }) {
       continue;
     }
 
-    let frontmatter = null;
-    let found = null;
-    if (pinned && adapters.length === 0) {
+    if (!pinned || typeof template !== "string" || adapters.length === 0) {
       continue; // D38: no stacks: adapter, so no pin is walked — doctor's to catch
     }
-    if (pinned && typeof template === "string") {
-      const slug = slugOf(template);
-      found = materialized(target.dir, adapters, slug);
-      if (found === null) {
+    const slug = slugOf(template);
+    const found = materialized(target.dir, adapters, slug);
+    if (found === null) {
+      rows.push(
+        row(
+          "not-materialized",
+          "blocking",
+          name,
+          template,
+          `project ${name} pins ${template} and ${target.dir} has no materialized entry for ${slug}`,
+          "/vwf:setup",
+        ),
+      );
+      continue; // the bundle's tools are unread
+    }
+    repos.set(target.dir, true);
+    const frontmatter = readFrontmatter(found.file);
+    if (frontmatter !== null && Array.isArray(frontmatter.platforms)) {
+      const missing = platforms.filter((p) => !frontmatter.platforms.includes(p));
+      if (missing.length > 0) {
         rows.push(
           row(
-            "not-materialized",
+            "platform-coverage",
             "blocking",
             name,
             template,
-            `project ${name} pins ${template} and ${target.dir} has no materialized entry for ${slug}`,
-            "/vwf:setup",
+            `${template} does not cover ${missing.join(", ")}, which project ${name} declares`,
+            "/vwf:architecture",
           ),
         );
-        continue; // the language walk is skipped
-      }
-      frontmatter = readFrontmatter(found.file);
-      if (frontmatter !== null && Array.isArray(frontmatter.platforms)) {
-        const missing = (Array.isArray(project.platforms) ? project.platforms : [])
-          .filter((p) => !frontmatter.platforms.includes(p));
-        if (missing.length > 0) {
-          rows.push(
-            row(
-              "platform-coverage",
-              "blocking",
-              name,
-              template,
-              `${template} does not cover ${missing.join(", ")}, which project ${name} declares`,
-              "/vwf:architecture",
-            ),
-          );
-        }
       }
     }
-
-    for (const tool of tools) {
-      const facts = factsOf(frontmatter, tool);
-      if (facts === null) {
-        continue; // D6: the known/unknown check against language_facts is R5's
-      }
-      for (const { name: binary, probe } of binaryEntries(facts)) {
-        const seen = binaries.get(binary);
-        if (seen === undefined) {
-          binaries.set(binary, {
-            probe,
-            severity,
-            cwd: target.dir,
-            hashOk: found?.hashOk ?? false,
-            projects: [name],
-          });
-        } else {
-          seen.projects.push(name);
-          if (severity === "blocking") {
-            seen.severity = "blocking";
-          }
-        }
-      }
+    if (folder !== null) { // D25: no repo.projects.<name>, no link to check
+      rows.push(...toolLinkRows(name, template, frontmatter, describeOf(target.dir), target.dir));
     }
   }
 
-  for (const [name, b] of binaries) {
-    const result = checkBinary(name, b);
-    if (result !== null) {
-      rows.push(
-        row(
-          "binary",
-          b.severity,
-          null,
-          name,
-          `${result} (needed by ${b.projects.join(", ")})`,
-          `install ${name} and put it on PATH`,
-        ),
-      );
+  for (const [dir, landed] of repos) {
+    if (dir !== base) {
+      rows.push(...oldPackRows(dir, adapters));
+    }
+    if (landed) {
+      rows.push(...lspRows(dir, heldOf));
     }
   }
   return rows;
-}
-
-/** null when the binary is usable, else the message of its finding. */
-function checkBinary(name, { probe, cwd, hashOk }) {
-  if (probe === null) {
-    return onPath(name) === null ? `${name} is not on PATH` : null;
-  }
-  if (!hashOk) {
-    return `${name}: probe not run — the template entry no longer matches the hash its lockfile records`;
-  }
-  const r = spawnSync("mise", ["x", "--", "sh", "-c", probe], {
-    cwd,
-    timeout: PROBE_TIMEOUT_MS,
-    stdio: "ignore",
-  });
-  if (r.error?.code === "ETIMEDOUT") {
-    return `${name}: probe ${JSON.stringify(probe)} timed out`;
-  }
-  if (r.error !== undefined) {
-    return `${name}: probe ${JSON.stringify(probe)} could not run: ${r.error.message}`;
-  }
-  if (r.status !== 0) {
-    return `${name}: probe ${JSON.stringify(probe)} exited ${r.status ?? r.signal}`;
-  }
-  return null;
 }

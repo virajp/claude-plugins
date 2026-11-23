@@ -1,26 +1,27 @@
 # Stack Checks (§§3–5)
 
 Read this before running §3. It covers the three per-project stack checks:
-languages (LSP + toolchain + binaries), frameworks and dependencies against each
-manifest, and the repo/axis tooling. **Blocking** findings live in §3 (a
-materialized `binaries` entry missing from `PATH` or whose declared probe exits
-non-zero — blocking once the project's `template` is pinned, a degradation
-while it reads `unresolved` — and a pin not materialized) and §5 (a `custom`
-template pin, a missing `mise`, an `iac` project inside another repo the user
-has not declined to extract, a template that does not cover its project's
-platforms, the vwf plugin installed at no scope). A project no bootstrap
-language tool links, and a registry project with no `repo.projects.<name>`
-entry in bootstrap, are each a **degraded** row, never blocking (§3). A
-package manager's lockfile is looked for where the pack's `lockfile:` fact
-says, when it declares one (§5).
+languages (LSP + toolchain + the bundle's tools), frameworks and dependencies
+against each manifest, and the repo/axis tooling. **Blocking** findings live
+in §3 (a pin not materialized) and §5 (a `custom` template pin, a missing
+`mise`, an `iac` project inside another repo the user has not declined to
+extract, a template that does not cover its project's platforms, the vwf
+plugin installed at no scope). A project no bootstrap language tool links, a
+registry project with no `repo.projects.<name>` entry in bootstrap, a bundle
+tool not selected or not linked, a materialized entry with no `tools:` key and
+an LSP server missing from `vwf-tools` (§3), and a design tool with no
+reference in `vwf-tools`, an addon absent from `plugins.project` and a
+lockfile row of a retired pack kind (§5) are each a **degraded** row, never
+blocking.
 
 **These checks are one script.** The findings `/vwf:execute` stops on —
-pinned not materialized and binaries with their probes (§3), a `custom` pin,
-template platform coverage, the `iac` own-repo rule and `mise` (§5) — are
+pinned not materialized (§3), a `custom` pin, template platform coverage, the
+`iac` own-repo rule and `mise` (§5) — and every degraded row above are
 implemented by
 `${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs` (*The checks script* in
 `SKILL.md`), which doctor runs and reports as it comes. Each rule below names
 its row's `rule` id; the text keeps the reason, and the script is the source.
+A failed `bootstrap` call stops doctor with bootstrap's `errors`.
 
 ## An unresolved axis is a degradation, and it makes two others conditional
 
@@ -78,7 +79,7 @@ slug, whose adapter is a **materializing** one, and whose target repo carries no
 materialized entry for that slug in its `.claude/stackgen/lock.yaml` is
 **pinned, not materialized — `/vwf:setup` materializes it** (`checks.mjs` row
 `not-materialized`): raise that finding, name the repo in it, and **skip the
-language walk for that project**. The facts it would check languages against
+bundle-tools check for that project**. The bundle's `tools:` it would check
 come from the payload the repo lacks, so they are **unread**, not absent. It is
 **blocking**, on the second row of the table above, and its remedy is that one
 line: one finding per project, never one per language. The target repo is the
@@ -96,24 +97,34 @@ fix `bootstrap add tool <tool>` (or `bootstrap detect --add`) run in that repo
 needs no language tool and gets no row. A failed `bootstrap` call stops doctor
 with bootstrap's `errors`.
 
+**The bundle's tools are linked** (`checks.mjs` rows `bundle-tools` and
+`tool-link`). A materialized project entry,
+`.claude/stackgen/templates/<slug>.md` in the repo that holds the project,
+lists its bundle's bootstrap tools under `tools:`. An entry with no `tools:`
+key — one materialized before the bundles carried tools — is one **degraded**
+row naming the pin, remedy `/vwf:setup`, which lands it again; never a
+refusal, and never read as an empty list. Otherwise each name must be a tool
+`bootstrap describe --json` lists in that repo; one of category `languages` or
+`package-managers` must also name the project in its `projects` list, and a
+tool of any other category only needs to be selected. Each miss is one
+**degraded** row naming the project and the tool, remedy
+`bootstrap add tool <tool>`, then `bootstrap detect --add`, run in that repo.
+A project with no `repo.projects.<name>` entry is skipped: bootstrap refuses a
+link to it, and its folder row above already reports it.
+
+**The LSP servers are bootstrap's** (`checks.mjs` row `lsp`). In each repo
+that holds a project whose pin materialized, run `bootstrap lsp --json`: every
+key of its `data.servers` is a server that repo needs, and the generated
+`vwf-tools` plugin's manifest,
+`~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json`, must hold it
+under `lspServers`. An absent manifest holds none. Each server it lacks is one
+**degraded** row naming the server and the repo, remedy `/vwf:setup`, whose
+materialize pass copies it there. A language `bootstrap lsp` lists no server
+for needs none, and is no row.
+
 For each linked language tool of a project, resolve its row in the stack
 vocabulary by the tool name:
 
-- **LSP** — the row names a plugin. Check it is active
-  (`claude plugin list --scope project`, falling back to user scope). Missing →
-  finding, with `/plugin` as the remedy. Row says `none` → report *no LSP
-  available in this marketplace* and move on.
-  **The project's pin resolves to a materialized template whose payload carries
-  `language_facts` under the tool name** (the materialized escape,
-  `${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`) — read from the **target
-  repo's** own `.claude/` tree, resolved as the gate above → verify against
-  those facts: the LSP per how the facts say it is provided, which for a stack
-  stackgen materialized is a server in its generated `vwf-tools` local plugin,
-  the mise tool and manifest per the fact values, `n/a` accepted silently as an
-  answer. A tool the pinned template carries no facts for is checked against
-  its vocabulary row alone, and is never a finding of its own: whether a
-  template knows a language is no longer checked here (R5 moves that check
-  with the packs).
 - **Toolchain** — the row names a mise tool. Check it appears in the repo's mise
   tool pins (`.config/mise/conf.d/*/mise*.toml`, `.local` variants excluded) or
   resolves on `PATH`. Missing → finding; the pins are bootstrap's, so the
@@ -123,38 +134,9 @@ vocabulary by the tool name:
   A tool pinned only in `.config/mise.toml` or a `.config/mise.<env>.toml`
   counts as pinned, not a miss.
   A `—` in the column means the toolchain is not mise-managed; skip silently.
-- **Binaries** — only where the language is known through materialized
-  `language_facts` that carry a `binaries` list (absent means none; a language
-  plugin's row has no such column). An entry takes one of two forms. A **bare
-  name** is looked up with `command -v <name>`; missing → finding naming the
-  binary. A **map**, `{ name: <binary>, probe: "<command>" }`, has its `probe`
-  run instead — from the repo root, inside the repo's mise environment, the
-  command held in a variable and passed to the shell as **one argument**
-  (`mise x -- sh -c "$cmd"`), never spliced into a quoted string, so the
-  quotes and `$` references a probe carries reach the shell intact; stdout
-  and stderr discarded, stopped after 30 seconds — and exit 0 is required;
-  anything else, a timeout included, is a finding naming the binary, the
-  probe and its exit status (or `timed out`). **The probe runs only while its
-  entry matches what the lockfile last recorded:** it is run only when the
-  committed template entry it was read from
-  (`.claude/<adapter>/templates/<slug>.md`) still hashes to the value its
-  adapter lockfile records. On a mismatch it is not run — the entry changed
-  after it was recorded, and doctor stays report-only — and the binary is
-  reported **probe not run**, the drift as the reason, at the severity a
-  failed probe would carry. A probe is what tells a
-  binary that is present but unusable from one that works — for example,
-  `xcodebuild -version` exits non-zero on a machine that has only a stub on
-  `PATH`, where `command -v` would pass. A map with no `probe` is a bare name.
-  Either finding carries the remedy that installs the binary (for
-  `xcodebuild`: install Xcode, then `sudo xcode-select -s` at it).
-  **Blocking once this project's `template` is pinned** (`checks.mjs` row
-  `binary`) — mise will not supply it, so the skip above would otherwise hide
-  it and the build fails on first run. **A degradation while that `template`
-  reads `unresolved`** — the same severity for a failed probe as for a missing
-  name.
 
-Report per language, not per project — one missing Dart LSP is one finding even
-when three projects link `dart`.
+Report per tool, not per project — one missing toolchain is one finding even
+when three projects link it.
 
 ## 4. Frameworks and dependencies — manifests
 
@@ -234,32 +216,26 @@ exactly the product-wide assumption format 13 removed. A config still carrying a
 product-wide `backing:`, `deploy:` or `design.tool` key is `12` drift: report it
 and nudge `/vwf:setup`.
 
-**Addons.** `addons:` is the top-level list of optional tools the product picked
-in `.config/vwf.yaml`; absent or `[]` means no optional tool. `[]` is a completed
-answer, **never a pending decision**, and the list never holds `unresolved`, so
-neither is a finding. Every mismatch below is **drift**, remedied by
-`/vwf:setup`, and **never blocking**: a missing tool blocks no `execute`, since
-what needs a tool halts on its own when it does.
+**Addons.** `addons:` is the top-level list of optional Claude plugins the
+product picked in `.config/vwf.yaml`; absent or `[]` means none. `[]` is a
+completed answer, **never a pending decision**, and the list never holds
+`unresolved`, so neither is a finding. An addon is no pack: `/vwf:setup`
+declares it in the base repo's `claude` tool, as a
+`<plugin>@<marketplace>` key of `tools.claude.plugins.project`, and
+`mise run setup:ai` installs it. An addon's name is its plugin's name, so in
+the **base repo** read `bootstrap config get tools.claude.plugins.project
+--json` and look, for each name in `addons:`, for a key that starts with
+`<name>@` — the marketplace is not read (`checks.mjs` row `addon`). No such
+key is one **degraded** row naming the addon, remedy `/vwf:setup`, never
+blocking: a missing tool blocks no `execute`, since what needs a tool halts on
+its own when it does. When `bootstrap describe --json` in the base lists no
+`claude` tool, that `config get` cannot run: every name in `addons:` is the
+same row, saying the `claude` tool is not selected, never a refusal. Whether
+`setup:ai` installed the plugin is bootstrap's to report, not this check's.
 
-Read the **base repo's** `.claude/stackgen/lock.yaml` for this check, never a
-member's: addon pins materialize in the base repo alone. **Read every owner from
-that lockfile**, and never match keys against pack declarations. Each item
-carries its owners as a list:
+The `vwf-tools` manifest has three more rows, each **drift**, remedied by
+`/vwf:setup`, and never blocking:
 
-- a `bootstrap.plugins` map entry lists its owners in `components: [...]`;
-- a skill entry names its owner by its component.
-
-An item is **owned by `addon/<slug>`** when that owner is a ref to that pack, at
-whatever version the ref carries. An entry with no owners — the old shape — reads
-as **owners unknown** and is skipped; the next sync rewrites it. An addon lands
-no server, so no server is an addon's item; an MCP server record a lockfile
-still carries is ignored here, and the `25 → 26` format step deletes it.
-
-- **Forward** — for each slug in `addons:`: no lockfile item is owned by
-  `addon/<slug>`; or an owned bootstrap plugin is not installed
-  (`claude plugin list`).
-- **Reverse** — any lockfile item (skill entry, bootstrap plugin) owned by
-  `addon/<slug>` whose slug is not in `addons:`.
 - **An MCP server key in `vwf-tools`** — the manifest,
   `~/.claude/plugins/local/vwf-tools/.claude-plugin/plugin.json`, holds LSP
   servers only, so any MCP server key in it is drift, remedy `/vwf:setup`: its
@@ -274,6 +250,27 @@ still carries is ignored here, and the `25 → 26` format step deletes it.
   whatever the lockfile says, stays drift until its migration is accepted, and
   `/vwf:setup` is what offers it again (stackgen migrates it). The row says what
   the wait costs: until then the repo's LSP servers land nowhere.
+
+**A design tool is in `vwf-tools`** (`checks.mjs` row `design-tool`). A
+project's `design` pin names a design tool, and the vwf design wrappers call
+the `vwf-tools` role skills with the project's name; each role follows that
+tool's reference in its own folder. For each project in scope whose `design`
+is a slug, `~/.claude/plugins/local/vwf-tools/skills/<role>/references/<tool>.md`
+must exist for each of the three roles — `design-import-screens`,
+`design-import-design-system` and `design-import-conversations`. A tool
+missing any is one **degraded** row naming the project, the tool and the roles
+that lack it, remedy `/vwf:setup`, whose materialize pass installs it. A
+`design` reading `unresolved` is not checked.
+
+**A lockfile row of a retired pack kind** (`checks.mjs` row `old-pack-row`).
+The `language`, `package-manager`, `toolchain-gate`, `design-tool` and `addon`
+packs are retired: their knowledge is a tool entry, a design tool or an addon
+now. In each repo that holds a project in scope, and in the base always, an
+`entries:` row of `.claude/stackgen/lock.yaml` whose `source:` is
+`pack/<kind>/<slug>@<version>` for one of those kinds is a row awaiting
+conversion: one **degraded** row per lockfile naming every such ref, remedy
+`/vwf:setup`, whose materialize pass converts them through
+`/stackgen:stackgen-sync` on consent, before anything lands.
 
 **Declared MCP servers.** No plugin installs an MCP server: each is the user's.
 A pack that needs one declares it in the `## MCP servers` section of its
@@ -420,26 +417,11 @@ that one when it is behind.
 Then check each package manager: the `data.tools` entries of category
 `package-managers` that `bootstrap describe --json` links to a project, in the
 repo that holds it (§3). Each resolves — its lockfile present, the tool on
-`PATH` or in mise config. Since `config_format` 28 `repo.stack` holds only its
-`template` pin; an absent `repo.stack` block is `10` drift, reported with a
-nudge to `/vwf:setup`.
-
-**Where the lockfile is looked for comes from the pack.** A `lockfile:` list —
-paths or globs relative to the repo root — rides whichever template payload
-composes the package manager, on **any** axis: `repo.stack.template`, and a
-project's `template` as much, since a package manager can ship inside a
-project bundle only. So read it from **every pinned, materialized payload
-that carries one**, each in the repo that pin materialized in, not from the
-package-manager tool's name alone. The lockfile is present when **any** entry
-matches at least one file; the finding, when none does, names the slug and
-every entry it tried, at the severity of the package-manager check above. A glob
-reaches into a project bundle as readily as the root: a package manager whose
-lockfile an IDE keeps inside its project directory declares that path beside
-the root one (for example
-`*.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`).
-Where **no** pinned payload carries a `lockfile:` list, the package manager's
-conventional lockfile at the repo root, judged from the tool name, is what is
-looked for — and that is the only case read that way.
+`PATH` or in mise config. The lockfile looked for is the package manager's
+conventional one at the repo root, judged from the tool name: no payload
+carries a `lockfile:` fact any more. Since `config_format` 28 `repo.stack`
+holds only its `template` pin; an absent `repo.stack` block is `10` drift,
+reported with a nudge to `/vwf:setup`.
 
 **The forge CLI is recommended, never required.** `/vwf:backlog` keeps the
 product's backlog on the base repo's forge and needs that forge's CLI to read
@@ -541,18 +523,21 @@ a repo the user declined to clone would describe a shape nobody here can read.
 the adapter's materialization record — its `-sync` skill owns the file, and
 this check reads one thing out of it: the `entries:` list. Each entry names
 the component it landed for and a `source:` of the form
-`pack/<type>/<slug>@<version>`; an entry sourced `generated` carries no
-version and is skipped, as is everything outside `entries:`. Compare each
+`pack/<type>/<slug>@<version>`, or `tool/<slug>@<version>` for a
+tool-knowledge entry; an entry sourced `generated` carries no version and is
+skipped, as is everything outside `entries:`, and so is a row of a retired
+pack kind, which §5's own row reports. Compare each
 recorded version against the version the adapter ships **now** for that ref,
 and resolve "now" from the adapter rather than by guessing: the
 `-stack-template` payload for a pinned template carries the same
 `<type>/<slug>@<version>` composition refs, so a component named there is read
 off the payload. A component no pinned template names is read from
-`stacks/<type>/<slug>/pack.yaml` inside the installed adapter plugin's own
+`stacks/<type>/<slug>/pack.yaml` — a tool row's from
+`tools/<slug>/tool.yaml` — inside the installed adapter plugin's own
 tree, located from `claude plugin list` the way this section locates `mise` —
 vwf's own plugin-root token names vwf and can never spell another plugin's
 root. For a
-**pack** record — and only a pack record — a recorded version **older** than
+**pack** or **tool** record — and only those — a recorded version **older** than
 the shipped one is one drift row naming the component and both versions. A
 **newer** recorded version is not a finding here: the adapter went
 backwards, which is the sync skill's conversation, not doctor's. **No
