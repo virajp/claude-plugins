@@ -98,14 +98,19 @@ two, each call from the directory the step runs in, per
    Record that path in the status line. Once the preflight below is green, append the
    one `overrides` entry the reference describes.
 
-   **In a `multi-repo` product, the linkage decides which repo the worktree is of**.
+   **In a `multi-repo` product, the target member's own `type` decides which repo the
+   worktree is of** — `bootstrap config get repo.members.<name>.type --json`, the member
+   being the one `projects.<p>.repo` names (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`).
    `/vwf:git-workflow` resolves it:
 
-   - **`linkage: submodule`** — unchanged from every previous release. The worktree is
+   - **`type: folder`** — the member is a folder of the base repo's tree, with no
+     worktree, clone or landing of its own. The worktree is of the **base** repo, and
+     the member's work is the base's work. Nothing here is cross-repo.
+   - **`type: submodule`** — unchanged from every previous release. The worktree is
      of the **base** repo (the outermost superproject). The members are populated
      inside it, so one tree holds both the code and the blueprint. Nothing here is
      cross-repo. The member's pointer commit is part of landing the branch.
-   - **`linkage: siblings`** — the base repo's tree does **not** contain the members,
+   - **`type: sibling`** — the base repo's tree does **not** contain the members,
      so the worktree is of the **target member**. The base's writes go to the base checkout as a second working tree. These are Reconcile's
      `implementation:` stamps, and the docs unit's edits to the base's own docs. Commit the two separately, **base repo
      last** — a half-finished run never leaves a doc claiming work that has not landed.

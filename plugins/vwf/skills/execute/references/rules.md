@@ -165,9 +165,9 @@ These rules hold on every run. `execute-stages.md` below means
     `docs/memory/gaps/` whose slug or title matches that unit's slice, newest first, at most ten.
     Pass the hits to the coder.
   - **Persist incrementally**: write each unit's durable decisions as `docs/memory/decisions/`
-    files as it lands. Write them inside the run's worktree, so they land with the merge. Under
-    multi-repo `linkage: siblings`, write them in the base checkout as the second working tree,
-    as Reconcile writes its stamps, per the run exception in `memory.md`. Leave them unstaged
+    files as it lands. Write them inside the run's worktree, so they land with the merge. When
+    the target member's `type` is `sibling`, write them in the base checkout as the second
+    working tree, as Reconcile writes its stamps, per the run exception in `memory.md`. Leave them unstaged
     until the Reconcile commit carries them.
   - A run writes no other record and files no finding.
   - An **`edit` unit** takes neither: its ruling is in its file, and its `DECIDED:` lines ride

@@ -26,9 +26,10 @@ It halts if no approved plan exists: "No approved plan found. Run `/vwf:plan` or
 `/vwf:change-plan` first."
 
 **It halts if the target repo is absent**, reporting the missing repo and the command
-that fetches it, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md`:
-`git submodule update --init <path>` under submodule linkage,
-`git clone <url> <path>` under siblings. Then the run stops; it clones nothing. The
+that fetches it, per `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` and the member's
+`type` in `repo.members`: `git submodule update --init <folder>` for a `submodule`,
+`git clone <url> <folder>` for a `sibling`; a `folder` member is part of the base's
+tree and is never absent on its own. Then the run stops; it clones nothing. The
 person fetches it and re-runs `/vwf:execute <folder>`. Unlike `plan` and `doctor`,
 there is no honest partial result — you cannot write code into a repo you do not
 have.

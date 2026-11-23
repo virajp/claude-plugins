@@ -152,17 +152,25 @@ never as a finding, and never as a setup nudge, since setup has nothing left to
 do here. §§3–5 have no projects to scope to and are skipped, saying so; §§6–8
 run in full, as they always do.
 
-**Membership, both directions** (multi-repo only). Compare `members:` against
-what each member repo's `.config/vwf-membership.yaml` claims, and report as
-**blocking**: a member whose file names a different `product` or `host`, a
-member listed with no file, a repo carrying a file the base does not list, and a
-`multi-repo` topology with no `members:` at all. Each of these leaves exactly
-one of the two entry paths silently wrong — a command run from the base works
-while the same command run inside the member reports an un-onboarded repo, or
-the reverse — which is the whole failure the two-file contract exists to
-prevent. A **missing `url:`** on a member is blocking too: the absent-member
-clone offer has nothing to clone from without it, and that only surfaces on the
-day someone needs the repo. `checks.mjs` implements both (its `membership` and
+**Membership, both directions** (multi-repo only). The base lists its members
+in bootstrap's `repo.members` (`bootstrap config get repo.members --json`, each
+keyed by name with its `folder`, `type` and `url`), and each `submodule` or
+`sibling` member back-links to the base through its own `repo.home`
+(`bootstrap config get repo.home --json`, run in that member). A repo is a
+member when its `repo.home` has a value; with `null` it acts as a base. A
+`folder` member is a folder of the base's tree: its base is the git top level,
+and it has no `repo.home` to check. Report as **blocking** a `multi-repo`
+topology with no `repo.members` at all. Report as **drift** a listed
+`submodule` or `sibling` member whose own `repo.home` is `null` — a command
+run from the base works while the same command run inside the member reports an
+un-onboarded repo — with its fix: from the base repo, run `setup:configs` with
+the member's flag (`--<member>`). Report as **drift** too a
+`.config/vwf-membership.yaml` left in a member whose `repo.home` resolves —
+the format 26 back-link, which nothing reads any more; on consent, doctor
+deletes it and commits the deletion in that member through `/vwf:git-workflow`.
+A **missing `url`** on a member is blocking: the absent-member clone offer has
+nothing to clone from without it, and that only surfaces on the day someone
+needs the repo. `checks.mjs` implements these (its `membership` and
 `member-url` rows; *The checks script* below).
 
 **Presence is not a finding.** Detect which members are cloned here and say so
@@ -197,7 +205,7 @@ platform coverage, an `iac` project inside another repo with its recorded
 decline, pinned not materialized, an unknown language, and binaries with their
 probes. It prints one JSON object, `{base, projects, findings}`, each finding
 `{rule, severity, project, subject, message, remedy}` — `project` `null` on a
-repo-level row, `severity` one of `blocking`, `degraded`, `missing`,
+repo-level row, `severity` one of `blocking`, `degraded`, `drift`, `missing`,
 `unavailable`, `info`. Exit 0 when no row is `blocking`, 1 when one is, 2 on a
 usage or internal error. `--projects` scopes the project checks, `--projects ""`
 runs the repo-level checks alone, and no flag checks every registry project. It

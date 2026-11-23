@@ -139,21 +139,30 @@ table in step 4 is `init`'s own.
    repo at all — which is the right answer for every command that reads the
    file and the wrong one here, because a repo that has never been shaped is
    precisely what `init` exists for and that file is written *after* it, by
-   `/vwf:setup`. So: follow the asset's hops — the superproject walk and the
-   linked-worktree hop — and then, **where it would stop for want of that
-   file, take the repo those hops landed in as the base.** `init` never halts
-   for a missing `.config/vwf.yaml`; it halts only where the asset's hops
-   leave it outside a repository altogether. A base with no config simply has
-   no `members:` source, which Step 2 already handles.
+   `/vwf:setup`. So: follow the asset's hops — `repo.home` first, resolved
+   from the main checkout across the linked-worktree hop, then, on a null
+   `repo.home` or bootstrap's exit 2, the superproject walk, so `init` started
+   in an unshaped `submodule` member still reaches the product — and then,
+   **where it would stop for want of that file, or after exit 2 for want of a
+   `.config/bootstrap/` folder, take the repo those hops landed in as the
+   base.** `init` never halts for a missing `.config/vwf.yaml`; it halts only
+   where the asset's hops leave it outside a repository altogether, or where
+   bootstrap reports a `.config/bootstrap/` that exists but is broken. A base
+   with no `.config/bootstrap/` simply has no `repo.members` source, which
+   Step 2 already handles.
 2. **The members.** Two sources, and the answer is their **union**: the paths
    `.gitmodules` declares, walked recursively so a member's own members are
-   members too, and the `members:` list in `.config/vwf.yaml` — the key
-   `${CLAUDE_PLUGIN_ROOT}/assets/vwf-config.md` owns. **Dedupe on realpath**,
-   since the same repo is reachable by more than one spelling of its path.
+   members too, and the `submodule` and `sibling` members of bootstrap's
+   `repo.members` (`bootstrap config get repo.members --json`, each member's
+   `folder` resolved from the base), the table
+   `${CLAUDE_PLUGIN_ROOT}/assets/membership.md` reads. A `folder` member is a
+   folder of the base's own tree, not a repo of its own: it is shaped with the
+   base and is never a separate row. **Dedupe on realpath**, since the same
+   repo is reachable by more than one spelling of its path.
 
    **A source that does not exist is not a disagreement.** Where only one of
    the two is present — the usual case, a submodule product with no
-   `members:` key yet, or a sibling product with no `.gitmodules` — that
+   `repo.members` yet, or a sibling product with no `.gitmodules` — that
    source's list **is** the member set, whole, and every path in it is
    shaped. Requiring a second declaration nobody wrote would shape nothing on
    the products this exists for.
@@ -252,8 +261,8 @@ owns.
 **`init` makes no separate offer.** The clone is a **row in the plan**,
 covered by the same one yes as everything else, so an absent member is not a
 second question in front of the one consent. The row is the asset's **full**
-clone sequence for the linkage in force — the clone command it spells for
-that linkage, and, under submodule linkage, the branch checkout that follows
+clone sequence for the member's `type` — the clone command it spells for
+that type, and, for a `submodule` member, the branch checkout that follows
 it — the remote branch whose history holds the recorded gitlink commit,
 checked out at its remote tip, or, where none holds it, a branch at the
 recorded commit with the member reported as diverged and deferred — never the

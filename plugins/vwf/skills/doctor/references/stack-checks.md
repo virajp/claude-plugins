@@ -508,8 +508,9 @@ remedy once with the rows that led to it:
 
 **The five run per repo** — the base and every **locally-present** member,
 resolved the way `/vwf:init`'s **Step 0** resolves them: the paths
-`.gitmodules` declares union the `members:` list the config carries, deduped
-on realpath. That step owns the rule and it is not restated here; a path only
+`.gitmodules` declares union the `submodule` and `sibling` members bootstrap's
+`repo.members` lists, deduped on realpath; a `folder` member is part of the
+base's tree and is checked with it. That step owns the rule and it is not restated here; a path only
 one of the two sources names where both exist is the disagreement `init`
 refuses to shape, and this check does not walk into it either. Every finding
 is printed **under the repo it was found in**, so a row says which repo before

@@ -47,8 +47,8 @@ For the unit (skip it when its `status` in `index.json` already reads `green` wi
    question went unanswered or was answered stop, per [questions.md](questions.md)).
    Its `commit` is the short commit hash, and its `rounds` is the round reached.
    - Write the unit's durable decisions as `docs/memory/decisions/` files, per the run exception in `memory.md`.
-     Write them in the run's worktree, or in the base checkout under multi-repo `linkage: siblings`, as Reconcile
-     writes its stamps. Leave them unstaged: no unit's Owns holds `docs/memory/`, so they ride the Reconcile commit.
+     Write them in the run's worktree, or in the base checkout when the target member's `type` is `sibling`, as
+     Reconcile writes its stamps. Leave them unstaged: no unit's Owns holds `docs/memory/`, so they ride the Reconcile commit.
    - Write no other record, and file no finding.
    - Set each field, and log its `row` event, **as the node returns** (step 2), not batched here. Write one `row`
      event per execution before the next dispatch. It holds the wave, the unit, the status, the outcome and model

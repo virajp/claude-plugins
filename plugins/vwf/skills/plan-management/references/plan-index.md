@@ -60,7 +60,7 @@ set, and `set` and `append` refuse to write a file it would report.
 | `folder`         | the folder's path relative to its repo's root; re-pointed to `docs/plans/archived/<id>` when the folder is archived           |
 | `kind`           | `cycle` or `change`, read from the folder's `index.json` `type` — `vwf-plan` is `cycle`, `vwf-change-plan` is `change`        |
 | `title`          | the `title` of the folder's `index.json`                                                                                      |
-| `target_repo`    | for a cycle plan, the member repo whose code it changes, resolved per `assets/membership.md`; `null` for a change plan, and for any plan in a `repo` or `monorepo` topology |
+| `target_repo`    | for a cycle plan, the member repo whose code it changes — the member its projects' `projects.<p>.repo` names in `.config/vwf.yaml`, resolved per `assets/membership.md`; `null` for a change plan, and for any plan in a `repo` or `monorepo` topology |
 | `priority`       | the derived integer — `10 + max(priority of every unarchived plan in its requires)`, or `10` when it requires none of them; never asked, never edited by hand |
 | `status`         | `APPROVED`, `RUNNING` or `COMPLETE` — nothing else                                                                            |
 | `started`        | `""`, or the ISO-8601 UTC time with milliseconds (`new Date().toISOString()`) the row went `RUNNING`; `add` writes `""`        |

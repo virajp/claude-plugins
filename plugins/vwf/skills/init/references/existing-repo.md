@@ -47,7 +47,7 @@ repo**: each reads, and reports on, the repo it is running in and no other.
 **An absent member is surveyed once its clone has run.** A member the resolution
 found and this machine does not have has nothing on disk to read, so its section
 opens with a **clone row** — the command the membership asset names for this
-product's linkage (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, *An absent
+member's `type` (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`, *An absent
 member*) — followed by the words *surveyed after the clone*. At apply time that
 member's clone runs first, then the passes run inside it, then its rows print,
 and only then does its own apply proceed. **Nothing is written into an absent
