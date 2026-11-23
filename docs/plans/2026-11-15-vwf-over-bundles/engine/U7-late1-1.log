@@ -1,0 +1,5 @@
+/security-review engine, U7-late1 round 1, range 83daa4b3..9074e651
+
+No high-confidence findings.
+
+Checked the only change in the range: one prose line at plugins/vwf/skills/setup/references/materialize.md:156, a cross-reference to Declare the addons' Quote step. No command, code, quoting rule or data flow changed.
