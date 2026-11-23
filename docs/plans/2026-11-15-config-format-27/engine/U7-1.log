@@ -1,0 +1,25 @@
+/security-review engine, loop U7, round 1, range 7defc85c..0bcd9434
+(The skill's own prompt read the main checkout's develop delta, not this
+branch; its analysis was re-run as a sub-task scoped to this range.)
+
+No high-confidence vulnerabilities found.
+
+Candidates considered and discarded:
+
+- Command injection via spawnSync("bootstrap", [...]) in
+  doctor/scripts/lib/bootstrap.mjs:28 — argument array, no shell, key always a
+  hard-coded literal; bootstrap is resolved from PATH (trusted env).
+- fetchCommand building "git clone ${member.url} ${member.folder}" in
+  execute/scripts/start.mjs:380 — only rendered into a refusal message, never
+  executed; same pattern pre-existed with config.members.
+- Path traversal via a member repo's repo.home folder (base.mjs, queue.mjs,
+  monitor/plan.ts) — back-links legitimately point outside the member tree;
+  equivalent to the prior vwf-membership.yaml host:; only reads, no new writes.
+- Path traversal via a member folder in repo.members (memberRepo, targetRepo,
+  memberPaths) — from the base repo's own developer-written config, same reach
+  as prior members[].path; used for reads, .git existence checks, git cwd.
+- Hand-rolled TOML parser in monitor/plan.ts — regex and slicing only, no
+  evaluation; keys go into a Map, no prototype pollution.
+- JSON.parse of bootstrap stdout — safe parse of trusted binary output.
+- git invoked inside member directories (rev-parse) — pre-existing exposure,
+  rev-parse runs no hooks; not changed by this range.
