@@ -68,9 +68,9 @@ bump regenerates one pack without churning the language baseline.
   (Context7 serves that at use time, when Context7 is installed; else the
   official documentation), never the datastore's or cloud's
   judgment.
-- **Facts**: per language — `lsp` (how a language server is provided;
-  stackgen ships none, so this recommends the mise tool or marketplace
-  plugin that does), `mise_tool`, `manifest`.
+- **Facts**: none in the pack — a language's facts and its language
+  server come from bootstrap (`bootstrap lsp --json`), never from
+  `pack.yaml`.
 - **Invocation**: routers paths-scoped; doctrine paths-scoped
   (`**/*.<ext>` plus the config files); rules for one-screen constraints.
 
