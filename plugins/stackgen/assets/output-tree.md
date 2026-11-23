@@ -90,8 +90,9 @@ one tier-3 migration first: write `vwf-tools`, register it, uninstall
 old directory. Declined, it writes nothing and comes back on the next run. The
 procedure is the stack-template skill's local-plugin reference.
 
-An addon is no pin of this plugin's: it is a Claude plugin bootstrap installs,
-listed in `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`.
+An addon is no pin of this plugin's: it is a Claude plugin listed in
+`${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`, which vwf's setup declares in the
+`claude` tool's `plugins.project` and installs with `setup:ai`.
 
 The path and the plugin name are **fixed**, never constructed from the stack
 pin — one plugin per machine, holding the union.

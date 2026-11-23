@@ -167,7 +167,7 @@ shape of a pack is `../assets/pack-format.md`.
 | `swiftlint` | 1.0.0 | `swift` |
 | `swiftpm` | 1.0.0 | `swift` |
 | `tsconfig` | 1.0.0 | `node`, `bun` |
-| `typescript` | 1.0.0 | `node`, `bun` |
+| `typescript` | 1.0.1 | `node`, `bun` |
 | `uv` | 1.0.0 | `python` |
 
 ## Design tools

@@ -24,10 +24,12 @@ payload, and both are called by vwf rather than by users — the menu by
 `/vwf:architecture` and `/vwf:setup`, the template by `/vwf:setup` (whose
 materialize pass lands a first pin), `/vwf:plan` and `/vwf:execute` (pure
 conventions reads). `/vwf:architecture` decides a pin and materializes nothing.
-`skills/stackgen-sync` is the one user-only skill: the explicit, lockfile-diffed
-re-sync, which also converts, once, a lockfile written before tool knowledge
-and design tools. `skills/stackgen-reputation` is the one skill invocable
-**both** ways —
+`skills/stackgen-sync` is the explicit, lockfile-diffed re-sync, which also
+converts, once, a lockfile written before tool knowledge and design tools —
+`disable-model-invocation: false`, so `/vwf:setup`'s materialize pass invokes it
+on consent to convert old lock rows, and the user runs it as
+`/stackgen:stackgen-sync` too.
+`skills/stackgen-reputation` is invocable **both** ways too —
 `disable-model-invocation: false` and no `user-invocable` line — so the
 generator can call it over every concrete third-party name a generated component
 emits, and a person can run `/stackgen:stackgen-reputation <ecosystem>:<name> …`
@@ -54,7 +56,7 @@ restate a count or a rule that an asset below already owns.
 | `assets/taxonomy.md`          | the closed component **types** and **categories**; capability tokens stay vwf's                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `assets/kinds.md`             | the **kind vocabulary** — each kind a closed topic bar, one artifact per topic                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `assets/pack-format.md`       | the shape of a pack (`<type>/<slug>/pack.yaml` + prose + optional skills/agents/`config/`), of a tool-knowledge entry, of a design tool, of a bundle's `tools:` and `packs:`, and of an addon                                                                                                                                                                                                                                                                                                                 |
-| `assets/addons.yaml`          | the **addons** — the optional Claude plugins the `addon` axis offers, which bootstrap installs                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `assets/addons.yaml`          | the **addons** — the optional Claude plugins the `addon` axis offers — `name`, `summary`, `plugin`, `marketplace`, `repo`, `design_tools` — which `/vwf:setup` declares in the `claude` tool's `plugins.project` and `setup:ai` installs                                                                                                                                                                                                                                                                      |
 | `assets/output-tree.md`       | where a materialization lands, the lockfile, the two targets outside `.claude/`                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | `assets/ids.md`               | one **slug rule**, two independent tokens: a project's **id** (`p:<id>/` and the commit scopes) and a repo's **name** (`REPO_NAME`, the checkout folder); flags name member **repos**                                                                                                                                                                                                                                                                                                                         |
 | `assets/artifact-doctrine.md` | the **host rules** deciding whether a generated skill, agent or hook is valid at all                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -195,16 +197,23 @@ and the three role skills do not need it.
 
 **The `addon` axis holds the optional Claude plugins** that
 `assets/addons.yaml` lists — no pack, no bundle and no kind, none flagged
-`default: true`; bootstrap installs each. One ships today: `taste-skill`
+`default: true`; each entry carries `name` (equal to its `plugin`), `summary`,
+`plugin`, `marketplace`, `repo` (the marketplace's owner/repo) and
+`design_tools`. One ships today: `taste-skill`
 (`taste-skill@taste-skill`, from the `Leonxlnx/taste-skill` marketplace),
 serving the `claude-code` design tool. The menu carries them for
 `/vwf:architecture`'s tools round, with a `needed_by` note on an entry that
 serves a design tool. `.config/vwf.yaml`'s product-level `addons:` list records
 the
-pick, and `/vwf:setup` materializes each slug in the base repo alone, on every
-run, and removes a dropped one through the stack-template's `remove: <slug>`,
-which takes any materialized slug on any axis; `remove: key <name>` deletes one
-server key from `vwf-tools`. `addon` is the eighth axis and not a tool axis:
+pick, and `/vwf:setup` declares each in the base repo's `claude` tool as
+`tools.claude.plugins.project."<plugin>@<marketplace>" = "<repo>"` through
+`bootstrap config set`, unsets a dropped one, and runs `mise run setup:ai`,
+which installs it — an addon is never landed or removed by the stack-template.
+The stack-template's `remove: <slug>` takes any slug a lockfile records, the
+form setup's format steps use to retire a component — a pin dropped from an axis
+setup deletes itself, its bootstrap tools left selected;
+`remove: key <name>` deletes one server key from `vwf-tools`. `addon` is the
+eighth axis and not a tool axis:
 "the three tool axes" stays `design`, `cicd` and `stylesheet`.
 
 A project-axis bundle may also carry an **`os:` map**, `<platform>: [ <os> ]`,

@@ -1,6 +1,6 @@
 // runChecks({cwd, projects}) → {base, projects, findings}: the blocking set
-// of doctor (D16, LSP parked by D22). `projects` absent checks every registry
-// project; [] runs the repo-level checks only (D37).
+// of doctor (D16) and its degraded rows (R5b D8). `projects` absent checks
+// every registry project; [] runs the repo-level checks only (D37).
 
 import { loadProduct } from "./base.mjs";
 import {
@@ -10,7 +10,9 @@ import {
 } from "./bootstrap.mjs";
 import { membershipRows } from "./membership.mjs";
 import {
+  addonRows,
   miseRows,
+  oldPackRows,
   projectRows,
   repoPinRows,
 } from "./stack.mjs";
@@ -65,6 +67,8 @@ export function runChecks({ cwd, projects } = {}) {
     ...membershipRows({ base, topology, members }),
     ...miseRows({ base, config }),
     ...repoPinRows({ config }),
+    ...oldPackRows(base, Array.isArray(config.stacks) ? config.stacks.filter((s) => typeof s === "string") : []),
+    ...addonRows({ base, config }),
   ];
   if (registry !== null) {
     findings.push(...projectRows({ base, config, members, registry, scope }));

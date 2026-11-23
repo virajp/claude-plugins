@@ -208,10 +208,19 @@ menu's `design`-axis slug.
 ## Addons — `assets/addons.yaml`
 
 An addon is an optional Claude plugin the user picks for the whole product,
-recorded in `.config/vwf.yaml`'s `addons:` list. It is no pack: bootstrap
-installs it. Each item of `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml` names
-it, its `summary`, its marketplace `source`, and the `design_tools` it
-serves.
+recorded in `.config/vwf.yaml`'s `addons:` list. It is no pack: vwf's
+setup declares a picked addon in the `claude` tool's `plugins.project` as
+`"<plugin>@<marketplace>" = "<repo>"` and runs `setup:ai`. Each item of
+`${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml` carries:
+
+```yaml
+- name: <slug> # the menu slug; equals plugin
+  summary: <one line>
+  plugin: <plugin name>
+  marketplace: <marketplace name>
+  repo: <owner/repo> # the marketplace's repo
+  design_tools: [ <design tool> ] # the design tools it serves; [] when none
+```
 
 ## Bundle files — the recorded composition
 

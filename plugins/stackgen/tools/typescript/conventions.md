@@ -17,7 +17,7 @@ off the main thread rather than being awaited around.
 pipeline.** Barrels are for public surfaces only.
 
 **Config is read once at the composition root** — names-not-values, catalogued
-in `docs/blueprint/environment.md`, never `process.env` reads scattered through
+in the repo's environment catalog, never `process.env` reads scattered through
 the code.
 
 **Telemetry is OTLP.** The product emits it and never imports a vendor SDK.

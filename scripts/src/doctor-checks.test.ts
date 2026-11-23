@@ -1,7 +1,8 @@
 /**
- * vwf's doctor checks.mjs — the blocking checks /vwf:execute stops on — run
- * for real over invented repos copied into temp dirs, with `mise` and the
- * fixture binaries stubbed on a temp PATH. Every fixture name is invented.
+ * vwf's doctor checks.mjs — the blocking checks /vwf:execute stops on and
+ * its degraded rows — run for real over invented repos copied into temp dirs,
+ * with `mise` and `bootstrap` stubbed on a temp PATH and HOME a temp dir.
+ * Every fixture name is invented.
  */
 import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -62,24 +63,27 @@ exec "$@"
 
 /**
  * A `bootstrap` that answers `config get <key> --json` from the
- * .bootstrap-stub.json of its cwd (a key it lacks reads null), and
+ * .bootstrap-stub.json of its cwd (a key it lacks reads null),
  * `describe --json` from that file's describe key, in the shape the real
  * bootstrap prints (D29): data.tools[] {name, category, values.projects},
- * data.ports[] {name, present}. With no such file it exits 2 as a repo with
- * no .config/bootstrap/ does; a describe key of "fail" fails the describe.
+ * data.ports[] {name, present}, and `lsp --json` from its lsp key,
+ * data.servers {<key>: <declaration>} (D35). With no such file it exits 2 as a
+ * repo with no .config/bootstrap/ does; a describe or lsp key of "fail" fails
+ * that call.
  */
 const BOOTSTRAP = `#!${process.execPath}
 const { existsSync, readFileSync } = require("node:fs");
 const args = process.argv.slice(2);
-const command = args[0] === "describe" ? "describe" : "config get";
+const command = ["describe", "lsp"].includes(args[0]) ? args[0] : "config get";
 const out = (ok, code, data, errors) => {
   process.stdout.write(JSON.stringify({ contract: 1, command, ok, code, data, errors, warnings: [] }) + "\\n");
   process.exit(code);
 };
 const describe = args.length === 2 && args[0] === "describe" && args[1] === "--json";
+const lsp = args.length === 2 && args[0] === "lsp" && args[1] === "--json";
 const get = args.length === 4 && args[0] === "config" && args[1] === "get" && args[3] === "--json";
-if (!describe && !get) {
-  out(false, 2, null, [{ code: "usage", message: "the stub answers config get and describe only" }]);
+if (!describe && !lsp && !get) {
+  out(false, 2, null, [{ code: "usage", message: "the stub answers config get, describe and lsp only" }]);
 }
 if (!existsSync(".bootstrap-stub.json")) {
   out(false, 2, null, [{ code: "config", message: "no .config/bootstrap/ here: run bootstrap migrate" }]);
@@ -91,15 +95,14 @@ if (describe) {
   }
   out(true, 0, facts.describe ?? { repo: {}, tools: [], members: [], ports: [], lsp: {} }, []);
 }
+if (lsp) {
+  if (facts.lsp === "fail") {
+    out(false, 1, null, [{ code: "lsp", message: "the tool values do not parse" }]);
+  }
+  out(true, 0, facts.lsp ?? { servers: {} }, []);
+}
 const key = args[2];
 out(true, 0, { key, value: key in facts ? facts[key] : null, source: "file" }, []);
-`;
-
-/** A probe binary: records that it ran, fails when KITE_FAIL is set. */
-const KITEPROBE = `#!/bin/sh
-touch "$PROBE_MARK"
-if [ -n "$KITE_FAIL" ]; then exit 3; fi
-exit 0
 `;
 
 let root: string;
@@ -179,15 +182,12 @@ beforeEach(() => {
   bin = join(root, "bin");
   mkdirSync(bin);
   stub("mise", MISE);
-  stub("kitec", "#!/bin/sh\nexit 0\n");
-  stub("kiteprobe", KITEPROBE);
   boot = join(root, "boot");
   mkdirSync(boot);
   stub("bootstrap", BOOTSTRAP, boot);
   env = {
     HOME: root,
     PATH: `${bin}:${boot}:/usr/bin:/bin`,
-    PROBE_MARK: join(root, "probe-ran"),
     GIT_CONFIG_NOSYSTEM: "1",
   };
 });
@@ -206,13 +206,12 @@ describe("single repo", () => {
     base = repo("single", "lumen", "kite-service.md");
   });
 
-  it("a clean repo exits 0 with no finding, and the probe ran", () => {
+  it("a clean repo exits 0 with no finding", () => {
     const r = checks(base);
     expect(r.status).toBe(0);
     expect(r.json.base).toBe(base);
     expect(r.json.projects).toEqual(["orbit-api", "orbit-infra"]);
     expect(r.json.findings).toEqual([]);
-    expect(existsSync(join(root, "probe-ran"))).toBe(true);
   });
 
   describe("a submodule falls back to its superproject (D38)", () => {
@@ -417,9 +416,9 @@ describe("single repo", () => {
     });
   });
 
-  it("a pin with no lockfile entry is not materialized, and skips the language walk", () => {
+  it("a pin with no lockfile entry is not materialized, and skips the bundle tools", () => {
     rmSync(join(base, ".claude", "stackgen", "lock.yaml"));
-    rmSync(join(bin, "kitec"));
+    facts(base, (f) => (f.describe.tools.find((t: Json) => t.name === "skein").values.projects = []));
     const r = checks(base);
     expect(r.status).toBe(1);
     expect(rules(r.json)).toEqual(["not-materialized:blocking"]);
@@ -429,7 +428,6 @@ describe("single repo", () => {
   it.each([["stacks: []"], [""]])("with %j for stacks: no pin is walked (D38)", (line) => {
     rmSync(join(base, ".claude", "stackgen", "lock.yaml"));
     edit(config(), "stacks: [ stackgen ]", line);
-    rmSync(join(bin, "kitec"));
     const r = checks(base);
     expect(r.status).toBe(0);
     expect(r.json.findings).toEqual([]);
@@ -448,7 +446,7 @@ describe("single repo", () => {
       facts(base, (f) => (tools(f).values.projects = []));
       const r = checks(base);
       expect(r.status).toBe(0);
-      expect(rules(r.json)).toEqual(["language-tool:degraded"]);
+      expect(rules(r.json)).toEqual(["language-tool:degraded", "tool-link:degraded"]);
       expect(find(r.json, "language-tool")[0]).toMatchObject({ project: "orbit-api", subject: "orbit-api" });
     });
 
@@ -465,7 +463,7 @@ describe("single repo", () => {
       expect(find(checks(base).json, "language-tool")[0]).toMatchObject({ project: "orbit-infra" });
     });
 
-    it("a linked tool the template has no facts for is no finding (D6)", () => {
+    it("a linked languages tool the bundle does not name is no finding", () => {
       facts(
         base,
         (f) => f.describe.tools.push({ name: "zorn", category: "languages", values: { projects: ["orbit-api"] } }),
@@ -566,51 +564,226 @@ describe("single repo", () => {
     });
   });
 
-  describe("binaries", () => {
-    it("a bare name missing from PATH is blocking", () => {
-      rmSync(join(bin, "kitec"));
+  describe("bundle tools (D8, D23, D25, D29, D33)", () => {
+    const template = () => join(base, ".claude", "stackgen", "templates", "kite-service.md");
+    const tool = (f: Json, name: string) => f.describe.tools.find((t: Json) => t.name === name);
+
+    it("a materialized entry with no tools: key is degraded, with /vwf:setup", () => {
+      edit(template(), "tools: [ kite, skein ]\n", "");
       const r = checks(base);
-      expect(r.status).toBe(1);
-      expect(find(r.json, "binary")[0]).toMatchObject({ severity: "blocking", subject: "kitec" });
+      expect(r.status).toBe(0);
+      expect(find(r.json, "bundle-tools")).toEqual([
+        expect.objectContaining({
+          severity: "degraded",
+          project: "orbit-api",
+          subject: "project/kite-service",
+          remedy: "/vwf:setup",
+        }),
+      ]);
     });
 
-    it("a failing probe is blocking", () => {
-      const r = checks(base, [], { KITE_FAIL: "1" });
-      expect(r.status).toBe(1);
-      const [row] = find(r.json, "binary");
-      expect(row.subject).toBe("kiteprobe");
-      expect(row.message).toContain("exited 3");
-    });
-
-    it("the hash gate: a changed template entry is not probed", () => {
-      const template = join(base, ".claude", "stackgen", "templates", "kite-service.md");
-      edit(template, "An invented template", "An edited template");
+    it("a package-managers tool not linked to the project is degraded, with the add and detect fix", () => {
+      facts(base, (f) => (tool(f, "skein").values.projects = []));
       const r = checks(base);
-      expect(r.status).toBe(1);
-      expect(find(r.json, "binary")[0].message).toContain("probe not run");
-      expect(existsSync(join(root, "probe-ran"))).toBe(false);
-    });
-
-    it("a binary is reported once, not per project", () => {
-      edit(
-        registry(),
-        "  - name: orbit-infra",
-        "  - name: orbit-web\n    role: backend\n    platforms: [ worker ]\n  - name: orbit-infra",
-      );
-      edit(
-        config(),
-        "  orbit-infra:",
-        "  orbit-web:\n    stack:\n      template: project/kite-service\n  orbit-infra:",
-      );
-      facts(base, (f) => {
-        f["repo.projects.orbit-web.folder"] = "apps/orbit-web";
-        f.describe.tools.find((t: Json) => t.name === "kite").values.projects.push("orbit-web");
+      expect(r.status).toBe(0);
+      expect(rules(r.json)).toEqual(["tool-link:degraded"]);
+      expect(find(r.json, "tool-link")[0]).toMatchObject({
+        project: "orbit-api",
+        subject: "skein",
+        remedy: "bootstrap add tool skein, then bootstrap detect --add",
       });
-      rmSync(join(bin, "kitec"));
+      expect(find(r.json, "tool-link")[0].message).toContain("does not link");
+    });
+
+    it("a bundle tool bootstrap has not selected is the same row", () => {
+      facts(base, (f) => (f.describe.tools = f.describe.tools.filter((t: Json) => t.name !== "skein")));
       const r = checks(base);
-      const rows = find(r.json, "binary");
-      expect(rows).toHaveLength(1);
-      expect(rows[0].message).toContain("orbit-api, orbit-web");
+      expect(rules(r.json)).toEqual(["tool-link:degraded"]);
+      expect(find(r.json, "tool-link")[0].message).toContain("has not selected");
+    });
+
+    it("a tool of another category only needs to be selected (D29)", () => {
+      edit(template(), "tools: [ kite, skein ]", "tools: [ kite, skein, mise ]");
+      expect(checks(base).json.findings).toEqual([]);
+      edit(template(), "tools: [ kite, skein, mise ]", "tools: [ kite, skein, mise, lintel ]");
+      expect(find(checks(base).json, "tool-link")[0]).toMatchObject({ subject: "lintel" });
+    });
+
+    it("a project with no repo.projects entry is skipped (D25)", () => {
+      facts(base, (f) => {
+        delete f["repo.projects.orbit-api.folder"];
+        tool(f, "skein").values.projects = [];
+      });
+      const r = checks(base);
+      expect(rules(r.json)).toEqual(["project-folder:degraded"]);
+    });
+  });
+
+  describe("LSP servers (D8, D35)", () => {
+    const manifest = (servers: string[]) => {
+      const dir = join(root, ".claude", "plugins", "local", "vwf-tools", ".claude-plugin");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(
+        join(dir, "plugin.json"),
+        JSON.stringify({ name: "vwf-tools", lspServers: Object.fromEntries(servers.map((k) => [k, {}])) }),
+      );
+    };
+
+    beforeEach(() => {
+      facts(
+        base,
+        (f) => (f.lsp = { servers: { "kite-ls": { command: "kite-ls" }, "skein-ls": { command: "skein-ls" } } }),
+      );
+    });
+
+    it("a server bootstrap lists and vwf-tools lacks is degraded, once per server", () => {
+      manifest(["kite-ls"]);
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(find(r.json, "lsp")).toEqual([
+        expect.objectContaining({ severity: "degraded", project: null, subject: "skein-ls", remedy: "/vwf:setup" }),
+      ]);
+    });
+
+    it("no vwf-tools plugin misses every server", () => {
+      expect(find(checks(base).json, "lsp").map((f: Json) => f.subject)).toEqual(["kite-ls", "skein-ls"]);
+    });
+
+    it("every server held is no finding", () => {
+      manifest(["kite-ls", "skein-ls", "quill-ls"]);
+      expect(checks(base).json.findings).toEqual([]);
+    });
+
+    it("a repo with no materialized pin is not read", () => {
+      edit(config(), "stacks: [ stackgen ]", "stacks: []");
+      expect(find(checks(base).json, "lsp")).toEqual([]);
+    });
+
+    it("a failed lsp call is a refusal with bootstrap's errors text", () => {
+      facts(base, (f) => (f.lsp = "fail"));
+      const r = checks(base);
+      expect(r.status).toBe(2);
+      expect(r.stderr).toMatch(/bootstrap lsp failed in .*: the tool values do not parse/);
+    });
+  });
+
+  describe("design tools (D8)", () => {
+    const reference = (role: string) => {
+      const dir = join(root, ".claude", "plugins", "local", "vwf-tools", "skills", role, "references");
+      mkdirSync(dir, { recursive: true });
+      writeFileSync(join(dir, "lumen-draw.md"), "invented\n");
+    };
+
+    beforeEach(() => {
+      edit(config(), "    cicd: lumen-ci\n", "    cicd: lumen-ci\n    design: lumen-draw\n");
+    });
+
+    it("a design tool with no vwf-tools reference is degraded, naming the roles", () => {
+      reference("design-import-screens");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(find(r.json, "design-tool")).toEqual([
+        expect.objectContaining({
+          severity: "degraded",
+          project: "orbit-api",
+          subject: "lumen-draw",
+          remedy: "/vwf:setup",
+        }),
+      ]);
+      expect(find(r.json, "design-tool")[0].message).toContain(
+        "design-import-design-system, design-import-conversations",
+      );
+    });
+
+    it("all three references is no finding", () => {
+      ["design-import-screens", "design-import-design-system", "design-import-conversations"].forEach(reference);
+      expect(checks(base).json.findings).toEqual([]);
+    });
+
+    it("an unresolved design pin is not checked", () => {
+      edit(config(), "design: lumen-draw", "design: unresolved");
+      expect(find(checks(base).json, "design-tool")).toEqual([]);
+    });
+  });
+
+  describe("addons (D8, D24, D26, D31)", () => {
+    const claude = (plugins: Json) =>
+      facts(base, (f) => {
+        f.describe.tools.push({ name: "claude", category: "ai", values: {} });
+        f["tools.claude.plugins.project"] = plugins;
+      });
+
+    beforeEach(() => {
+      edit(config(), "stacks: [ stackgen ]", "stacks: [ stackgen ]\naddons: [ loom-kit ]");
+    });
+
+    it("the claude tool not selected is a degraded repo-level row, not a refusal (D26)", () => {
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(find(r.json, "addon")).toEqual([
+        expect.objectContaining({ severity: "degraded", project: null, subject: "loom-kit", remedy: "/vwf:setup" }),
+      ]);
+      expect(find(r.json, "addon")[0].message).toContain("not selected");
+    });
+
+    it("a plugins.project key starting with <name>@ declares it, whatever the marketplace (D31)", () => {
+      claude({ "loom-kit@loom-market": "example/loom-kit" });
+      expect(checks(base).json.findings).toEqual([]);
+    });
+
+    it("no such key is the row", () => {
+      claude({ "loom-kitten@loom-market": "example/loom-kitten" });
+      const r = checks(base);
+      expect(rules(r.json)).toEqual(["addon:degraded"]);
+      expect(find(r.json, "addon")[0].message).toContain("tools.claude.plugins.project");
+    });
+
+    it("runs with --projects \"\" too: the check is the product's", () => {
+      expect(rules(checks(base, ["--projects", ""]).json)).toEqual(["addon:degraded"]);
+    });
+  });
+
+  describe("retired pack rows (D6, D8)", () => {
+    it("a lockfile row of a retired kind is one degraded row naming the refs", () => {
+      const lock = join(base, ".claude", "stackgen", "lock.yaml");
+      writeFileSync(
+        lock,
+        readFileSync(lock, "utf8")
+          .replace(
+            "source: tool/kite@1.0.0\n    hash: sha256:0000",
+            "source: pack/language/kite@1.0.0\n    hash: sha256:0000",
+          ),
+      );
+      writeFileSync(
+        lock,
+        `${readFileSync(lock, "utf8")}  - path: .claude/skills/skein/SKILL.md\n    slug: kite-service\n`
+          + "    component: package-manager/skein\n    source: pack/package-manager/skein@2.0.0\n    hash: sha256:0000\n",
+      );
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(find(r.json, "old-pack-row")).toEqual([
+        expect.objectContaining({
+          severity: "degraded",
+          project: null,
+          subject: ".claude/stackgen/lock.yaml",
+          remedy: "/vwf:setup",
+        }),
+      ]);
+      expect(find(r.json, "old-pack-row")[0].message).toContain(
+        "pack/language/kite@1.0.0, pack/package-manager/skein@2.0.0",
+      );
+    });
+
+    it("a current pack row is no finding", () => {
+      const lock = join(base, ".claude", "stackgen", "lock.yaml");
+      writeFileSync(
+        lock,
+        readFileSync(lock, "utf8").replace(
+          "source: tool/kite@1.0.0\n    hash: sha256:0000",
+          "source: pack/framework/kite-web@1.0.0\n    hash: sha256:0000",
+        ),
+      );
+      expect(checks(base).json.findings).toEqual([]);
     });
   });
 
@@ -750,6 +923,20 @@ describe("multi repo", () => {
       expect.objectContaining({ severity: "degraded", project: "dock-app", subject: "goldens" }),
     ]);
     expect(find(r.json, "harness")[0].message).toContain(member);
+  });
+
+  it("a member's retired pack rows and LSP servers are read in the member repo", () => {
+    const lock = join(member, ".claude", "stackgen", "lock.yaml");
+    writeFileSync(
+      lock,
+      readFileSync(lock, "utf8").replace("source: tool/kite@1.0.0", "source: pack/language/kite@1.0.0"),
+    );
+    facts(member, (f) => (f.lsp = { servers: { "kite-ls": { command: "kite-ls" } } }));
+    const r = checks(base);
+    expect(r.status).toBe(0);
+    expect(rules(r.json)).toEqual(["old-pack-row:degraded", "lsp:degraded"]);
+    expect(find(r.json, "old-pack-row")[0].message).toContain(member);
+    expect(find(r.json, "lsp")[0].message).toContain(member);
   });
 
   it("a folder member needs no url and no repo.home, and its project reads the base's template", () => {

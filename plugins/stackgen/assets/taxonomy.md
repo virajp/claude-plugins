@@ -75,8 +75,9 @@ The closed list. A component is exactly one of:
   platform. Composes into a Stylesheet-Bundle.
 - **A design tool and an addon are no type** since 2026-11-15. A design
   tool is a folder of `${CLAUDE_PLUGIN_ROOT}/design-tools/`, installed into
-  the local plugin `vwf-tools`; an addon is a Claude plugin bootstrap
-  installs, listed in `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`.
+  the local plugin `vwf-tools`; an addon is a Claude plugin listed in
+  `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`, which vwf's setup declares in
+  the `claude` tool's `plugins.project` and installs with `setup:ai`.
 
 ## Categories
 

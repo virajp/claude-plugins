@@ -451,7 +451,7 @@ which records no design tool.
 `remove:` takes two forms, in the current repo or the one a `repo:` line
 names — `/vwf:setup` calls it once inside each member repo, the way it
 materializes members, and it takes no repo argument of its own. `/vwf:setup`
-is the caller, since `/stackgen:stackgen-sync` is user-only.
+is the caller.
 
 - **`remove: <slug>`** takes out one materialized slug, on any axis: a
   component whose pack was removed, a re-pinned design tool. It deletes the

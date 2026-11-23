@@ -19,9 +19,11 @@ Read it from the materializer (step 1 and step 5), from
 bootstrap tool from memory.** A tool name comes from a bundle's `tools:`,
 and it is sent only when it is a `name` of `data.tools` of
 `bootstrap catalog --json`. stackgen asks for tools with
-`bootstrap add tool` and `bootstrap remove tool`. A Claude plugin is no
-part of this handoff: an addon is a plugin bootstrap installs, listed in
-`${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`, and no pack names one.
+`bootstrap add tool` and `bootstrap remove tool`. An addon is no part of
+this handoff: it is a Claude plugin listed in
+`${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`, which vwf's setup declares in
+the `claude` tool's `plugins.project` and installs with `setup:ai`, and no
+pack names one.
 
 ## Steps
 

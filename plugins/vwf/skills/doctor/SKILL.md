@@ -106,10 +106,10 @@ nothing. With no `prefer:`, doctor offers as §9 says.
   `prefer: report only` drops the offer (see Caller Preferences).
 - **Never install anything, and never build anything.** Report the command; the
   user runs it. This matches the installer CLI's own rule.
-- **Unavailable ≠ missing ≠ not linked ≠ not materialized.** A language with no
-  LSP shipped in this marketplace is reported as *unavailable* with no suggested
-  command; only a language that *has* a plugin and isn't installed is a
-  *missing* finding. A language is a bootstrap tool of category `languages`
+- **Unavailable ≠ missing ≠ not linked ≠ not materialized.** An LSP server is
+  bootstrap's: a language `bootstrap lsp --json` lists no server for has none
+  to install, and only a listed server absent from `vwf-tools` is a
+  **degraded** row (§3). A language is a bootstrap tool of category `languages`
   linked to the project (`bootstrap describe --json`); a project no such tool
   links is a **degraded** row, never blocking, unless every platform it declares
   is `iac`, `cicd` or `misc` (§3). A registry project with no bootstrap
@@ -202,17 +202,21 @@ It covers exactly: not onboarded and early (both `info`), membership both
 directions and the member url, a missing `mise`, a `custom` pin, template
 platform coverage, an `iac` project inside another repo with its recorded
 decline, pinned not materialized, a project no language tool links, a registry
-project with no bootstrap folder entry, binaries with their probes, and the
-`harness` row — a capability a project's platforms imply (`dev`, `screenshots`,
-`goldens`) absent in the repo that holds it, **degraded** (§6). It prints one
+project with no bootstrap folder entry, the `harness` row — a capability a
+project's platforms imply (`dev`, `screenshots`, `goldens`) absent in the repo
+that holds it (§6) — and the bundle rows (§§3, 5): a bundle tool not selected
+or not linked to its project, a materialized entry with no `tools:` key, an
+LSP server of `bootstrap lsp --json` missing from `vwf-tools`, a design tool
+with no reference in `vwf-tools`, an addon absent from the `claude` tool's
+`plugins.project`, and a lockfile row of a retired pack kind — each
+**degraded**. It prints one
 JSON object, `{base, projects, findings}`, each finding
 `{rule, severity, project, subject, message, remedy}` — `project` `null` on a
 repo-level row, `severity` one of `blocking`, `degraded`, `drift`, `missing`,
 `unavailable`, `info`. Exit 0 when no row is `blocking`, 1 when one is, 2 on a
 usage or internal error. `--projects` scopes the project checks, `--projects ""`
 runs the repo-level checks alone, and no flag checks every registry project. It
-runs no audit, no drift check, no network read, no bootstrap dry-run and no LSP
-check.
+runs no audit, no drift check, no network read and no bootstrap dry-run.
 
 Doctor runs it once per full run, scoped as this run is (§1's membership rows
 included), and reports its rows as they come, under the finding kinds of §9: it
@@ -228,7 +232,7 @@ optional, and no reference restates a rule that lives above.
 
 | Sections                                                   | Reference                                                 | Covers                                                                                            |
 | ------------------------------------------------------------ | ----------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP + toolchain per linked language tool, required binaries on `PATH` or their declared probes, a project no language tool links, a registry project with no bootstrap folder entry, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the base repo's lockfile and the `vwf-tools` manifest, drift only), the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each package-manager tool's lockfile where a pinned payload's `lockfile:` fact says (project templates included), the recommended forge CLI, the vwf plugin at any scope (`claude plugin list --json`, blocking when installed at no scope) and the base's `virajp-plugins` tool (`bootstrap describe --json`, drift when missing; a note when the catalog lacks it), and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
+| **3–5** — languages, manifests, repo tooling               | [Stack checks](references/stack-checks.md)                | LSP servers against `bootstrap lsp --json`, the toolchain per linked language tool, each bundle tool selected and linked, a project no language tool links, a registry project with no bootstrap folder entry, framework/dependency drift per manifest, the eight stack axes, the Addons check (`addons:` against the `claude` tool's `plugins.project`, degraded, and the `vwf-tools` manifest, drift), each design tool's references in `vwf-tools`, a lockfile row of a retired pack kind, the Declared MCP servers check (each lockfile's `required_mcp_servers` against `claude mcp list`, drift only, never blocking), a declared backing capability with no provider, the `iac` own-repo rule, `mise`, `repo.stack`, each package-manager tool's lockfile at the repo root, the recommended forge CLI, the vwf plugin at any scope (`claude plugin list --json`, blocking when installed at no scope) and the base's `virajp-plugins` tool (`bootstrap describe --json`, drift when missing; a note when the catalog lacks it), and the repo shape against its baseline, evaluated **per repo** — the adapter lockfile's pack and tool versions, the registry ids behind the task groups, the bootstrap contract check (blocking when it fails), whether the repo is shaped by the contract's shaped test (blocking when it refuses), `bootstrap check --json` and `bootstrap sync --json --dry-run` showing a finding or a change as drift (stated below this table), every pack-copied file's content against the hash the lockfile recorded — a mismatch re-tested with every marked position spliced out before it counts — and the forge state — the default branch, each core branch's protection, a stray `develop` in a one-branch repo, the base's backlog project — read from the forge when its CLI answers for the origin host and noted as not checked otherwise. **Blocking findings live here** |
 | **6–7** — harness & health, memory                         | [Harness & memory](references/harness-and-memory.md)      | Each required capability's task and health paths; the `docs/memory/` store's handoff ignore line |
 | **8** — leftovers                                          | below                                                     | Files, keys and folders of retired tools — drift, never blocking |
 
@@ -288,9 +292,8 @@ One table, findings first, grouped by kind — **blocking** (something *mandator
 is absent or misplaced, or the stack is one no installed plugin defines: an
 `iac` project
 inside another repo whose extraction the user has **not** declined on the
-record, `mise` and a `binaries` name missing from
-`PATH` or failing its declared probe — the last two **conditionally**, once a
-stack axis is pinned (§5, §3) — a project whose pinned template its adapter
+record, `mise` missing from `PATH` — **conditionally**, once a stack axis is
+pinned (§5) — a project whose pinned template its adapter
 never **materialized** in that project's target repo (§3) — the pin is an answer
 and the payload absent, a `custom` template pin, a project whose template does
 not cover every platform it declares, a broken membership link (§1), an unwaived
@@ -334,9 +337,11 @@ the repo-shape check unread (§5)
 axis reading `unresolved`, whose dependent checks report
 `not checked — no stack resolved` (§§3–5), a project no language tool links or
 with no bootstrap `repo.projects.<name>` entry (§3), a harness capability its
-platforms imply and its repo lacks (§6), a `binaries` name missing from `PATH`
-or failing its probe while its project's `template` reads `unresolved` (§3),
-and an `iac` extraction declined under `enforcement:`, each reported every run
+platforms imply and its repo lacks (§6), a bundle tool not selected or not
+linked, a materialized entry with no `tools:` key, an LSP server missing from
+`vwf-tools` (§3), a design tool with no reference there, an addon absent from
+`plugins.project`, a lockfile row of a retired pack kind (§5), and an `iac`
+extraction declined under `enforcement:`, each reported every run
 and never escalating back to blocking). §8's leftovers are **drift**, listed
 under their own heading. State the count of checks that passed rather than
 listing them.

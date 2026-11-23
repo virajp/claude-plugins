@@ -351,10 +351,11 @@ outside that fence: they declare what the project *is*, and no pack decides
 either. The packs, bundles, tool knowledge, design tools and kinds that ship are
 inventoried in [`stacks/inventory.md`](plugins/stackgen/stacks/inventory.md),
 generated from the tree itself. vwf's eighth axis is `addon` — **optional
-tools**, Claude plugins bootstrap installs, `taste-skill` today, offered by a
+tools**, Claude plugins, `taste-skill` today, offered by a
 tools menu in `/vwf:architecture` with nothing preselected, recorded in the
-product-level `addons:` list of `.config/vwf.yaml`, and installed by
-`/vwf:setup` only while picked. The newest kind is `stylesheet`, the one that
+product-level `addons:` list of `.config/vwf.yaml`, and declared by
+`/vwf:setup` in the `claude` tool's `plugins.project` only while picked, which
+bootstrap's `setup:ai` installs. The newest kind is `stylesheet`, the one that
 answers vwf's seventh axis — how a web
 frontend's styles are authored, with `tailwindcss`, `stylex` and `plain-css`
 filling it and the design system's tokens staying the contract each of them

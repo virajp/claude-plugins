@@ -1,7 +1,7 @@
 # TypeScript — config & env
 
-The contract is vwf's: **names, not values**, catalogued in
-`docs/blueprint/environment.md`. This is how TypeScript satisfies it.
+The contract is vwf's: **names, not values**, catalogued in the repo's
+environment catalog. This is how TypeScript satisfies it.
 
 ## Read the environment once, at the composition root
 
@@ -12,7 +12,7 @@ this rule exists to prevent, and the reasons compound:
 - A missing variable is discovered **when that line first runs**, which may be
   in a rare branch, in production, at 3am — rather than at boot.
 - Nothing enumerates what the service actually needs, so
-  `environment.md` drifts and nobody can tell.
+  the repo's environment catalog drifts and nobody can tell.
 - The value's type is `string | undefined` at every site, so every site invents
   its own coercion and default.
 
@@ -50,8 +50,8 @@ the backstop, not the control. Local development uses a secret injector that
 puts values in the process environment at run time; production uses the
 platform's own mechanism.
 
-**What goes in `environment.md` is the name, what it is for, and which projects
-need it.** Never the value, not even a redacted-looking one.
+**What goes in the repo's environment catalog is the name, what it is for, and
+which projects need it.** Never the value, not even a redacted-looking one.
 
 ## Distinguish configuration from secrets
 

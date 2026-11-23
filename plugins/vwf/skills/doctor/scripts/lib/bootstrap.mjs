@@ -1,6 +1,6 @@
 // The repo facts bootstrap keeps, read through its CLI (assets/bootstrap-
-// contract.md): `bootstrap config get <key> --json` and
-// `bootstrap describe --json`, run bare from PATH in the repo they read, each
+// contract.md): `bootstrap config get <key> --json`,
+// `bootstrap describe --json` and `bootstrap lsp --json`, run bare from PATH in the repo they read, each
 // envelope's data parsed. A failed call throws BootstrapError with the
 // envelope's errors text; an absent binary throws it with the contract's
 // install hint. Each caller turns it into its own refusal.
@@ -68,6 +68,21 @@ export function configGet(cwd, key) {
 export function describe(cwd) {
   const data = call(cwd, ["describe"]);
   return data !== null && typeof data === "object" ? data : {};
+}
+
+/**
+ * The server keys of `data.servers` of `bootstrap lsp --json` in the repo at
+ * `cwd`: the LSP servers that repo needs (D35).
+ */
+export function lspServers(cwd) {
+  const servers = call(cwd, ["lsp"])?.servers;
+  return servers !== null && typeof servers === "object" && !Array.isArray(servers) ? Object.keys(servers) : [];
+}
+
+/** The tool entry named `name` in a describe's data, or null when not selected. */
+export function selectedTool(data, name) {
+  return (Array.isArray(data.tools) ? data.tools : [])
+    .find((t) => t !== null && typeof t === "object" && t.name === name) ?? null;
 }
 
 /**

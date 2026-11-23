@@ -1,0 +1,9 @@
+/security-review engine, round 2, range 5066b57e..83daa4b3 (fix delta)
+
+The fix in materialize.md is sound: keys checked against name@marketplace; ' escaped as '\'' and the whole JSON single-quoted, for both the plugin map and tools.<t>.projects. No new problem.
+
+Out-of-range, same pattern:
+# Vuln 1: Command injection: plugins/vwf/skills/setup/references/migrate-pipeline.md:121 — bootstrap config set repo.members.<name>.<field> <value> --json, unquoted; value (url, folder) from the clone's .gitmodules or committed config. High, confidence 8.
+# Vuln 2: Command injection: plugins/vwf/skills/setup/references/migrate-pipeline.md:204 — tools.<tool>.projects '<JSON list>' with entries from the clone's committed repo.toml, no escaping stated. High, confidence 8.
+# Vuln 3: Command injection: plugins/vwf/skills/setup/references/onboard-pipeline.md:157 — repo.members.<name> '<JSON table>' built from .gitmodules, no escaping stated; user confirms facts first. Medium, confidence 8.
+workspace-structure.md:81 same shape, values from the user in a new repo — below threshold.

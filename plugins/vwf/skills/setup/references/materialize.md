@@ -32,7 +32,12 @@ to read.
 
 - **bootstrap's repo facts** — `repo.topology` and `repo.members`, each read
   with `bootstrap config get <key> --json`
-  (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`).
+  (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), and, per repo, the
+  tools it selects with their category and each `repo.projects.<name>`, read
+  with `bootstrap describe --json`.
+- **The stack adapter's menu payload** — each bundle's `tools:`, and each
+  `addons.yaml` entry's `plugin`, `marketplace` and `repo`
+  (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, the menu payload).
 - **`.config/vwf.yaml`** — each `projects.<name>.repo`, and every stack
   axis: each `projects.<name>.stack.template`, `services` and `deploy`,
   plus `repo.stack.template` and, since `config_format` 19,
@@ -43,9 +48,10 @@ to read.
   materialization record. Read the **slugs** its `entries:` carry and nothing
   else: which paths landed, with what hash, is the adapter's bookkeeping, and
   setup has no business reading it. An absent lockfile means nothing in that
-  repo is materialized. One exception: removing a dropped pack, below, reads
-  the component packs the entries record (`pack/<type>/<slug>@<version>`) and
-  the files recorded for them.
+  repo is materialized. Two exceptions: converting old rows, below, looks for
+  a row of a removed kind, and removing a dropped pack reads the component
+  packs the entries record (`pack/<type>/<slug>@<version>`) and the files
+  recorded for them.
 
 The pass reads nothing from `.config/stackgen.yaml`, which is the old layout's.
 
@@ -65,14 +71,42 @@ in the base's lockfile, with no `repo:` line, as
 `repo` and `monorepo` there are no
 members and everything is the base's. The `repo.stack.template` axis describes
 a checkout rather than a project, so its target is the repo that declares it.
-Every `addons:` slug targets the **base**: in a multi-repo product members get
-no `addon` pin, and in a single repo the repo is the base.
+The `addons:` list belongs to the **base**: in a multi-repo product members
+declare no addon, and in a single repo the repo is the base.
 
 A member that is declared but **not on this machine** — an uncloned sibling, or
 an empty submodule directory — is a blind spot, never a finding. Report it
 with its checkout line (`git submodule update --init <folder>` for a
 `submodule` member, the recorded `url` for a `sibling`) and skip every axis
 that targets it. Nothing is written on its behalf.
+
+## The order, per repo
+
+The pass runs these steps per repo of the product, base first, in order:
+
+1. [convert old lock rows](#convert-old-lock-rows);
+2. [add and link the bundle tools](#add-and-link-the-bundle-tools), for the
+   repo's [landing list](#build-the-landing-list);
+3. [invoke the adapter](#invoke-the-adapter-once-per-entry), once per entry;
+4. in the base alone, [declare the addons](#declare-the-addons).
+
+**A declined step stops that repo's pass** with a report line naming the step;
+the other repos go on. **A failed `bootstrap` or `mise` call stops that repo's
+pass** with the errors it printed, as returned; the other repos go on.
+
+## Convert old lock rows
+
+Read the repo's `.claude/stackgen/lock.yaml`. A row
+`pack/<kind>/...` whose `<kind>` is `language`, `package-manager`,
+`toolchain-gate`, `design-tool` or `addon` was written before tool knowledge
+and design tools, and those kinds are gone. When the lockfile holds any such
+row, setup offers, before anything else in that repo, one consent naming each
+row, and on a yes invokes `/stackgen:stackgen-sync` in that repo, whose
+one-time conversion turns tool-pack rows into tool rows, moves a design tool
+into `vwf-tools` and removes addon rows. The conversion takes no consent line
+of its own, so this one is its gate; anything else the sync offers is on the
+sync's own consent lines, and setup adds none. A lockfile with no such row
+asks nothing, and a decline stops that repo's pass.
 
 ## Build the landing list
 
@@ -90,19 +124,37 @@ that slug, record one entry `(repo, slug)`. Then:
 - **`[]` on a list axis is a decision, not a landing** — the project ships
   through nothing / talks to no backing service, and that is complete.
 
-**`addons:` joins the list as one more list axis, with one difference: its
-slugs are fetched on every run.** Each element is an entry `(base, slug)`, in
-list order after the project axes. A slug the base's lockfile already names is
-still passed to the adapter's template skill below, because the pick is
-committed and what a pack lands per machine must reach each machine, so another
-person's first run has something to do. That per-machine landing is an LSP
-server and nothing else: an addon lands no server, and no pack lands an MCP
-server — each one is the user's to install. An absent `addons:` and `[]` both
-mean no tool: nothing is landed, and this pass never writes `unresolved` there.
+**The landing list holds bundle slugs only.** An `addons:` name is no landing
+entry and goes to no `-stack-template` call: an addon is a Claude plugin the
+`claude` tool declares, and [declare the addons](#declare-the-addons) is what
+adds and drops it. An absent `addons:` and `[]` both mean no addon, and this
+pass never writes `unresolved` there.
 
 An empty landing list is the ordinary state of a re-run: say every pinned axis
 is materialized, and move on. That sentence is what makes the pass idempotent
 on a repo setup stamped minutes ago.
+
+## Add and link the bundle tools
+
+For each landing `(repo, slug)`, read the bundle's `tools:` from the menu
+payload. Then, in that repo:
+
+1. **Add.** Every bundle tool the repo does not select is added with
+   `bootstrap add tool <t> --yes --json`. In the base, `claude` joins the list
+   when `addons:` names an addon and the base does not select it. One consent
+   line per repo lists every tool to add; nothing to add asks nothing.
+2. **Link.** `bootstrap detect --add --yes --json` links the tools to the
+   projects, on that same consent.
+3. **Link what detect missed.** Only a tool whose category in
+   `bootstrap describe --json` is `languages` or `package-managers` gets a
+   project link; any other bundle tool only needs to be selected. For each
+   such tool, when detect proposes no link of it to the project whose axis
+   names the bundle, read `tools.<t>.projects` with `bootstrap config get`
+   and run
+   `bootstrap config set tools.<t>.projects '<JSON list>' --json` with that
+   project added — an empty project folder is the usual cause. The value is
+   a shell argument, quoted as Declare the addons' **Quote** step says. A
+   project with no `repo.projects.<name>` is skipped here; doctor reports it.
 
 ## Invoke the adapter, once per entry
 
@@ -132,8 +184,41 @@ calls included. The next run starts without the line, so the offer comes back.
 own.** The adapter lands one set and takes one commit per slug — that rule is
 the adapter's and this pass does not change it. Setup does not batch two slugs
 into one gate, and does not present a plan of its own in front of the
-adapter's. The adapter copies each component's `config/` payload and hands the
-tools the component needs to bootstrap, on that same consent gate.
+adapter's. The adapter materializes the bundle's packs, its tool knowledge,
+the LSP servers and the design tool, on that same consent gate.
+
+## Declare the addons
+
+In the base only, after its landings. Each addon is a key
+`<plugin>@<marketplace>` = `<owner/repo>` in the `claude` tool's
+`plugins.project` map, built from the `plugin`, `marketplace` and `repo` of its
+`addons.yaml` entry in the menu payload.
+
+1. **`claude` first.** When the base does not select `claude` and the add step
+   did not add it, this step asks its own consent to add it with
+   `bootstrap add tool claude --yes --json`; `addons:` empty or absent with no
+   key to drop asks nothing.
+2. **Read** the map with
+   `bootstrap config get tools.claude.plugins.project --json`.
+3. **Edit** it: add the key of each `addons:` name; drop each key that matches
+   an `addons.yaml` entry not in `addons:`; keep every other key, the user's
+   own plugins among them. A key that is not `<name>@<marketplace>` — a
+   name and a marketplace of letters, digits, `.`, `_` and `-`, one `@`
+   between them — stops the base's pass with a report naming it; setup
+   writes nothing.
+4. **Quote.** `bootstrap config set` takes the value as one positional
+   argument, with no stdin or file form. The map, like any `<JSON list>`
+   this pass writes, comes from the repo's committed config, which a cloned
+   repo controls: in the serialized JSON replace each `'` with `'\''`, then
+   wrap the whole in single quotes. Never pass it unquoted or in double
+   quotes.
+5. **Write** the whole map back, on one consent line naming the keys it adds
+   and drops, with
+   `bootstrap config set tools.claude.plugins.project '<JSON object>' --json`.
+   A map that would not change asks nothing and writes nothing.
+6. **Install.** When `claude` is selected and this run added or dropped a key,
+   `mise run setup:ai` installs the added plugins and uninstalls the dropped
+   ones.
 
 ## Record the payload's OS map
 
@@ -164,28 +249,21 @@ additive and moves no `config_format`.
 ## Remove a dropped pack
 
 A slug a repo's lockfile records that no axis targeting that repo names any
-more — `/vwf:architecture` replaced it — has been **dropped**. `addons:`
-counts as an axis targeting the base, so a slug removed from it is dropped
-there, and a slug still listed is not dropped by a move off another axis.
-
-**A slug dropped from `addons:` leaves through one call**, made for each such
-slug in the base: `/<plugin>:<plugin>-stack-template remove: <slug>`, the
-removal path in `${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, which takes
-any materialized slug. Setup deletes no file for it.
-The call shows its own plan on its own consent, takes
-out everything the lockfile records for the slug and commits once, returning
-**removed** or **declined**. A declined slug stays recorded, so the next run
-offers it again.
+more — `/vwf:architecture` replaced it — has been **dropped**. An addon
+dropped from `addons:` is no dropped slug: [declare the
+addons](#declare-the-addons) drops its key, and no `remove:` call is made for
+it.
 
 **After every removal in this section, one more call reconciles this
 machine's claims**,
 made once per run in the base on each plugin named in `stacks:`, whether or not
 a slug was dropped: `/<plugin>:<plugin>-stack-template reconcile-claims:`. It
-takes no slug and is not a landing-list entry. An addon dropped on another
+takes no slug and is not a landing-list entry. A slug dropped on another
 machine reaches this one by a pull, so no `remove:` call is made for it, and
-this call is what lets go of it. It asks on its own consent and returns one
-line, **removed**, **declined** or **unchanged**; setup wraps it in no consent
-and no commit. A decline changes nothing, and the next run offers it again.
+this call is what lets go of its claims. It asks on its own consent and
+returns one line, **removed**, **declined** or **unchanged**; setup wraps it
+in no consent and no commit. A decline changes nothing, and the next run
+offers it again.
 
 **Beside the claims reconcile, on every run, the machine part of the
 `config_format` `25 → 26` step.** When this machine's stack plugin manifest
@@ -201,7 +279,7 @@ the next run offers it again. A manifest with no MCP server key asks nothing
 and prints nothing. Each repo's own lockfile records are its `25 → 26` repo
 part's, never this call's.
 
-Every other dropped slug is setup's own. For each of
+Setup removes a dropped slug itself, with no `remove:` call. For each of
 its component packs that no slug still pinned in that repo also composes,
 show the files the lockfile records for that component — its `config/`
 copies — as one consent per repo.
@@ -214,8 +292,9 @@ records with them — and commit, one commit per slug; the claims reconcile then
 subtracts the slug's LSP claims from this machine, since the lockfile no
 longer records them.
 A decline leaves everything as it stands and is reported; `/vwf:setup`
-offers it again on the next run. A tool bootstrap selected for the pack leaves
-through the bootstrap delta of `/stackgen:stackgen-sync`.
+offers it again on the next run. Setup removes no bootstrap tool: the
+dropped bundle's `tools:` stay selected in bootstrap, and the report names
+them.
 
 ## A declined landing
 
@@ -276,10 +355,18 @@ This is the one place setup writes `unresolved`, and it is narrow by design:
 
 One block, carried back to the spine:
 
-- one line per entry in the landing list, `addons:` slugs included — the repo,
-  the slug, and one of **landed**, **declined**, or **already materialized**;
+- one line per repo whose old lock rows were offered for conversion —
+  **converted** or **declined**;
+- one line per repo for the bundle tools — the tools **added**, the projects
+  **linked** by `config set`, or **declined**;
+- one line per entry in the landing list — the repo, the slug, and one of
+  **landed**, **declined**, or **already materialized**;
+- one line for the addons — the `plugins.project` keys **added** and
+  **dropped**, whether `setup:ai` ran, or **declined**;
+- one line per repo whose pass stopped on a failed `bootstrap` or `mise` call,
+  with its errors;
 - one line per dropped pack — the repo, the slug, and **removed** or
-  **declined**;
+  **declined**, naming the bundle's tools that stay selected in bootstrap;
 - one line per plugin for the claims reconcile — the plugin, and **removed**,
   **declined** or **unchanged**;
 - one line for the MCP server cleanup when it was offered — **removed**, with

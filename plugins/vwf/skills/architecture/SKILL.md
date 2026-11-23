@@ -252,26 +252,38 @@ entry declares a `site` or a `webapp` platform**, and it runs **after** the
 design round — the tokens are the contract and the stylesheet is how they are
 realized, so the order is not arbitrary. The menus, what each axis records, and
 the recording rules are in [the stack menu](references/stack-menu.md) — read it
-before eliciting any of them. Two rules hold whatever the answers are: vwf
-ships **no default and no recommended template** — the one preselection it
-honours is an entry the adapter's menu payload flags `default: true`, among the
-entries offered on that round, which is highlighted, never assumed — and
-**every project gets a written `stack` block**, because that block is what
-`/vwf:doctor` checks the repo against and it cannot check what was never
-recorded.
+before eliciting any of them. Each technology round offers the menu's
+**bundles** — the adapter's shipped ones and the repo's own — for its axis and
+the project's platforms, plus one more entry, **compose a bundle**, which asks
+for a slug (`<project>-<axis>` proposed, the user confirming), the kind (an
+MCQ over the menu's `compose.kinds`), the bootstrap tools, the knowledge packs
+and the items no pack covers, and records the slug the adapter's `compose:`
+verb returns; a bundle is never mandatory, and a project with no pick keeps
+`unresolved`. The design round offers the menu's design tools. Two rules hold
+whatever the answers are: vwf ships **no default and no recommended template** —
+the one preselection it honours is an entry the adapter's menu payload flags
+`default: true`, among the entries offered on that round, which is highlighted,
+never assumed — and **every project gets a written `stack` block**, because that
+block is what `/vwf:doctor` checks the repo against and it cannot check what was
+never recorded.
 
 **The tools round comes last.** After the last axis round, the `addon` axis is
 shown as one multi-select list of optional tools, the stack menu's **Tools
 round**. `addons:` is **never preselected** and is written only from the user's
 pick — `[]` when nothing is picked, never `unresolved` — and a re-run shows the
-current pick and asks only whether to change it.
+current pick and asks only whether to change it. Installing a pick is
+`/vwf:setup`'s: it declares each in the `claude` tool's `plugins.project` and
+runs `mise run setup:ai`.
 
 **You record the decision, and only the decision.** What this step writes is a
 slug — or `unresolved` where the user defers — into
 `projects.<name>.stack.template` in `.config/vwf.yaml`. Nothing is materialized
 here: no template is landed, no adapter is asked for one, and no repo tree is
-touched by the pick. The repo a pin will be materialized **into** is the member
-named by the project's `projects.<name>.repo` — the membership asset
+touched by the pick. The one file a round may write is a composed repo bundle,
+`.claude/stackgen/bundles/<slug>.md`, which the adapter's `compose:` verb
+writes and which joins this command's commit. The repo a pin will be
+materialized **into** is the member named by the project's
+`projects.<name>.repo` — the membership asset
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`); a project with no `repo` key is
 the base repo's, and so is a project of a `folder` member, materialized into the
 base with no `repo:` line. Landing it there, once per (repo, slug), is
@@ -380,7 +392,8 @@ per-project `design` (screen-platform projects) and `cicd` keys, the repo-level
 `repo.stack` and the top-level `addons:`. The writer never touches config, and
 never sees a stack — that separation is what keeps the blueprint vendor-free.
 
-Writing those keys is the **whole** of what this command does about the stack.
+Writing those keys, beside any repo bundle a compose wrote in 3b, is the
+**whole** of what this command does about the stack.
 Materialization is `/vwf:setup`'s, per Step 3b; Step 7 invokes it.
 
 **Write the topology and the members through bootstrap**, never into

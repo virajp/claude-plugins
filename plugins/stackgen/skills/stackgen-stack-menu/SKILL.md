@@ -35,9 +35,11 @@ Called with `compose:`, it writes one repo bundle instead
    the current repo. **Each is one menu entry** — a bundle is what a user
    picks, because a component answers "what is this language" and a bundle
    answers "what is a service in it". Its slug is the filename, and `name`,
-   `axis`, `kind`, `platforms` and `artifact` come from the frontmatter
-   (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the `summary` from
-   the body's opening sentence.
+   `axis`, `kind`, `platforms`, `artifact` and `tools` come from the
+   frontmatter (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`). Take the
+   `summary` from the body's opening sentence. **The `tools:` list is copied
+   as the bundle gives it** — `/vwf:setup` reads it from this payload to add
+   and link the bootstrap tools before it materializes.
 
    **The repo baseline is no bundle.** The toolchain manager, the gates and
    the hygiene configs are bootstrap's, and `/vwf:init` writes
@@ -70,9 +72,13 @@ Called with `compose:`, it writes one repo bundle instead
    `kind`.
 3. **The addons.** Read `${CLAUDE_PLUGIN_ROOT}/assets/addons.yaml`. **Each
    item is one `addon`-axis entry**: its `name` is the slug and the display
-   name, its `summary` the summary. An item whose `design_tools` list is
-   not empty carries `needed_by`, naming those tools: "the claude-code
-   design tool". No addon entry carries `default: true` or a `kind`.
+   name, its `summary` the summary, and its `plugin`, `marketplace` and
+   `repo` are copied as they stand — `/vwf:setup` declares a picked addon in
+   the `claude` tool's `plugins.project` as
+   `"<plugin>@<marketplace>" = "<repo>"` and runs `setup:ai`. An item whose
+   `design_tools` list is not empty carries `needed_by`, naming those tools:
+   "the claude-code design tool". No addon entry carries `default: true` or a
+   `kind`.
 4. Return the payload below. The `compose` block is present on **every**
    answer — it is the open entry, and it is what makes an empty bundle list
    read as a decision rather than a fault.
@@ -93,9 +99,13 @@ templates:
     axis: <bundle frontmatter axis, design, or addon>
     kind: <bundle frontmatter kind> # assets/kinds.md — bundles only
     platforms: [ <platform> ] # project axis only
+    tools: [ <bootstrap tool name> ] # bundles only — the bundle's tools:, [] when none
     name: <display name>
     summary: <one line>
     default: true # only when the bundle frontmatter carries it — omitted otherwise
+    plugin: <plugin name> # addon axis only — equals the slug
+    marketplace: <marketplace name> # addon axis only
+    repo: <owner/repo> # addon axis only — the marketplace's repo
     needed_by: <what needs it> # addon axis only — omitted when nothing does
 compose:
   verb: compose
@@ -137,11 +147,13 @@ reason — a menu that varied by project would be a second place for the
 platform condition to live, and two places for one rule is how they disagree.
 
 **The `addon` axis is the tools round, and it is multi-select.** Every
-`addons.yaml` item is an entry — slug, name and summary, none marked default,
-each with its `needed_by` note where it has one — and the user picks any number
-of them, or none. The `compose` block's `axes` leave `addon` and `design` out
-on purpose: an addon is a Claude plugin bootstrap installs, and a design tool
-is one this plugin ships, not a technology to research.
+`addons.yaml` item is an entry — slug, name, summary, plugin, marketplace and
+repo, none marked default, each with its `needed_by` note where it has one —
+and the user picks any number of them, or none. The `compose` block's `axes`
+leave `addon` and `design` out on purpose: an addon is a Claude plugin that
+vwf's setup declares in the `claude` tool's `plugins.project` and installs
+with `setup:ai`, and a design tool is one this plugin ships, not a technology
+to research.
 
 **A bundle whose packs are partly `@generated` is listed normally**, with
 no warning and no asterisk. Mixing copied and generated components is the

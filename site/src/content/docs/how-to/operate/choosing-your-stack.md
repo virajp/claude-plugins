@@ -202,7 +202,10 @@ rounds, once per product, with **nothing preselected**: only what you pick is
 ever installed, and picking nothing is a complete answer. It holds what serves
 the agent rather than the product. One ships today: `taste-skill`, the plugin
 the `claude-code` design tool's `design-session` authors through, and that skill
-halts without it. No tool on the menu installs an MCP server: every MCP server
+halts without it. `/vwf:setup` declares a picked tool in the `claude` tool's
+`plugins.project` and runs `mise run setup:ai`, which installs it — and
+uninstalls one you drop. No tool on the menu installs an MCP server: every MCP
+server
 is yours to install. A pack that needs one names it in its `conventions.md`, and
 the agent asks you to install it when a skill needs it. stackgen's generator
 asks for none: it uses Context7 when Context7 is installed, else the official
@@ -312,13 +315,15 @@ replacing one.
 
 Most of what a bundle materializes is plain files in your repo, which every
 collaborator gets with a `git pull`. The toolchain a stack needs — its tool
-pins, gates and their tasks — is not a pack's: stackgen asks
-[bootstrap](https://github.com/virajp/bootstrap) for those tools, behind its own
-consent line, through `bootstrap add tool`, and bootstrap's sync writes them. A
+pins, gates and their tasks — is not a pack's: a bundle names the
+[bootstrap](https://github.com/virajp/bootstrap) tools it needs, and
+`/vwf:setup` adds each missing one with `bootstrap add tool` and links it to
+its project, behind one consent line, and bootstrap's sync writes them. A
 **language server** cannot be — it is a plugin-manifest feature no project file
 can express — so stackgen writes one small local plugin on your machine,
-`vwf-tools`, which holds language servers only, and prints the two commands that
-register it, rather than running them. It installs no MCP server: those are
+`vwf-tools`, which holds the language servers `bootstrap lsp --json` lists and
+the design tools your projects name, and prints the two commands that register
+it, rather than running them. It installs no MCP server: those are
 yours. It is user-scoped, so it serves every repo you work in and **your
 collaborators get none of it**: their editor tooling is their own machine's
 business. Expect to do that once, and to be asked before it happens.

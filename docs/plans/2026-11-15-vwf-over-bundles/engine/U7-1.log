@@ -1,0 +1,5 @@
+/security-review engine, round 1, range 3e1cfdc6..5066b57e (run over the row range in the worktree)
+
+No high-confidence findings.
+
+Checked: the spawnSync calls in doctor/scripts/lib/bootstrap.mjs (an argv array with no shell, and stack.mjs no longer spawns anything); the lock.yaml, plugin.json and reference paths in stack.mjs (read with existsSync and readFileSync only); the plugin-shipped addons.yaml; and setup's bootstrap config set '<JSON object>' step, whose names come from plugin assets and the user's own config, so no attacker controls them.

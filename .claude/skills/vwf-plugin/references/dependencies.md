@@ -118,10 +118,13 @@ before standalone Claude Design closes on 2026-12-14; `config_format` 26 re-pins
 a project that used it to `claude-code`, `lovable` or `stitch`.
 
 The seam is **two hops of fixed names**, and no constructed name anywhere. vwf
-calls its own three skills; those delegate to three more fixed names in the
-repo's own `.claude/` — `design-import-screens`, `design-import-design-system`,
-`design-import-conversations` — which is what the project's `design:` pin
-materializes. It is the same mechanism that dissolved `<plugin>-ux-gate`, reused
+calls its own three skills; those call three role skills of the local
+`vwf-tools` plugin — `vwf-tools:design-import-screens`,
+`vwf-tools:design-import-design-system`,
+`vwf-tools:design-import-conversations` — with the project's name first, each
+following the `references/<tool>.md` the project's `design:` pin installed
+there. The repo's own `.claude/` is not read. It is the same mechanism that
+dissolved `<plugin>-ux-gate`, reused
 rather than reinvented.
 
 Two consequences worth knowing. **The technology-free guard's allowlist got

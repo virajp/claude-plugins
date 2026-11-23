@@ -2,6 +2,6 @@
 entries:
   - path: .claude/stackgen/templates/kite-app.md
     slug: kite-app
-    component: language/kite
-    source: pack/language/kite@1.0.0
+    component: tool/kite
+    source: tool/kite@1.0.0
     hash: sha256:TEMPLATE_HASH
