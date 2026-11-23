@@ -46,8 +46,8 @@
       "title": "Doctor and execute run bootstrap's LSP check, and consent.lsp is retired",
       "target_repo": null,
       "priority": 90,
-      "status": "APPROVED",
-      "started": "",
+      "status": "RUNNING",
+      "started": "2026-11-23T12:58:56.256Z",
       "ended": "",
       "gaps": null,
       "requires": [
