@@ -2,36 +2,19 @@
   "format": 1,
   "plans": [
     {
-      "id": "2026-11-15-config-format-28",
-      "folder": "docs/plans/archived/2026-11-15-config-format-28",
-      "kind": "change",
-      "title": "R4b — vwf.yaml format 28: the slim stack, capabilities from tasks, project folders and languages from bootstrap",
-      "target_repo": null,
-      "priority": 60,
-      "status": "COMPLETE",
-      "started": "2026-11-23T07:57:23.892Z",
-      "ended": "2026-11-23T08:54:41.658Z",
-      "gaps": {
-        "open": 0,
-        "moved_to": []
-      },
-      "requires": [
-        "2026-11-15-config-format-27"
-      ],
-      "backlog": [],
-      "backlog_pieces": []
-    },
-    {
       "id": "2026-11-15-stack-bundles-tools",
-      "folder": "docs/plans/2026-11-15-stack-bundles-tools",
+      "folder": "docs/plans/archived/2026-11-15-stack-bundles-tools",
       "kind": "change",
       "title": "R5a — stackgen bundles over bootstrap tools: tool knowledge, slim packs, design tools in vwf-tools",
       "target_repo": null,
       "priority": 70,
-      "status": "RUNNING",
+      "status": "COMPLETE",
       "started": "2026-11-23T08:56:56.643Z",
-      "ended": "",
-      "gaps": null,
+      "ended": "2026-11-23T11:48:44.248Z",
+      "gaps": {
+        "open": 0,
+        "moved_to": []
+      },
       "requires": [
         "2026-11-15-config-format-28"
       ],
