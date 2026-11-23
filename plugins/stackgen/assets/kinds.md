@@ -328,8 +328,9 @@ workspace adds. That is the seam working, not a mis-declared pack.
   when every member shares one build file.
 - **Facts & harness**: `harness:` is `n/a` — a workspace satisfies no vwf
   harness capability. What it contributes is the `repo`-axis facts of the
-  package-manager token and the manifest and lockfile names, which is what
-  `/vwf:setup` detects the repo's manager by.
+  package-manager token and the manifest and lockfile names. The repo's
+  own manager is not read from them: it is the linked tool of category
+  `package-managers` in `bootstrap describe --json`.
 - **Invocation**: the config doctrine paths-scoped to the workspace manifest
   and the orchestrator config, and **not** user-invocable. Topic 1's
   reference model-invocable.
@@ -353,7 +354,7 @@ never silently absent.
    that globs `packages/*`, and the difference is what happens to a
    directory someone adds. This topic also names the committed **lockfile**,
    which is what identifies the package manager where the manifest key does
-   not — the reason `/vwf:setup` detects by lockfile rather than by
+   not — the reason a manager is detected by lockfile rather than by
    `workspaces`.
 3. **Cross-member orchestration** — whether a `build-orchestrator` exists at
    all, and the consequence either way. With one: the task graph, the

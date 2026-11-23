@@ -174,8 +174,7 @@ as not run, at a failed probe's severity. The procedure is doctor's.
 A package-manager pack declares where its lockfile lives, beside its
 `package_manager:` token: a non-empty list of repo-root-relative paths or
 globs, no `..`, and **any match passes**. `/vwf:doctor`'s
-`package_manager resolves` check reads it rather than guessing a filename
-from prose.
+package-manager check reads it rather than guessing a filename from prose.
 
 ```yaml
 package_manager: swiftpm

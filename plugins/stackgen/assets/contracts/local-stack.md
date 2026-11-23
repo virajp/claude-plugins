@@ -12,9 +12,9 @@ Components cite it. They do not restate it.
 
 ## Why the mechanism is fixed
 
-vwf's harness contract lets a repo name the `local_stack` task whatever it
-likes, but **not** change how it works: when a repo needs a local stack it
-is Docker-composed services behind `wait-on` readiness gates.
+vwf's harness contract fixes the `local_stack` task's name, `stack:up`,
+and **not** only its name: when a repo needs a local stack it is
+Docker-composed services behind `wait-on` readiness gates.
 
 The reason is the acceptance verifier. It needs a deterministic ready
 signal before it runs anything, and a container that is *running* is not a
@@ -57,9 +57,9 @@ test runs:
    what a container healthcheck cannot see: the endpoint *your* code will
    call. A datastore accepting connections is not a migrated schema.
 
-Both go behind the repo's own task, so the same command runs locally and in
-CI, and that task name is what `.config/vwf.yaml`'s `harness:` block
-records. **Vary the task name freely; never vary the mechanism.**
+Both go behind the repo's own `stack:up` task, so the same command runs
+locally and in CI; the capability is present when that task exists, and
+nothing in `.config/vwf.yaml` records it. **Never vary the mechanism.**
 
 ## Findings, not variants
 
@@ -77,8 +77,8 @@ records. **Vary the task name freely; never vary the mechanism.**
 
 A product whose local E2E needs no backing services **needs no local stack
 at all**, and adding one to satisfy a checklist is the speculative work
-minimalism rejects. Record `local_stack: n/a` in the harness stamp and move
-on.
+minimalism rejects. Write no `stack:up` task, which records the absence,
+and move on.
 
 ## The line against the deploy artifact
 

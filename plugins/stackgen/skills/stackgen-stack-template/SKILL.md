@@ -59,9 +59,14 @@ packs by copy, uncovered components by generation. Materialization is
    curated it. There, and only there, infer the composition: resolve the root's
    kind and the component types that compose it
    (`${CLAUDE_PLUGIN_ROOT}/assets/kinds.md`,
-   `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) by reading the repo's manifests
-   and the config's `stack` block, and name every component as a
-   `<type>/<slug>` ref.
+   `${CLAUDE_PLUGIN_ROOT}/assets/taxonomy.md`) by reading the repo's
+   manifests, the config's `stack` block — its `services` and `deploy` among it
+   — and the
+   project's languages and package manager, which `.config/vwf.yaml` no longer
+   records: run `mise x -- bootstrap describe --json` in the repo that holds
+   the project and take the `data.tools` entries of category `languages` or
+   `package-managers` whose `projects` list names it. Name every component as
+   a `<type>/<slug>` ref.
 3. **Dispatch each component.** A component with a shipped pack
    (`stacks/<type>/<slug>/pack.yaml`) is a copy — read
    [the materializer](references/materializer.md). An uncovered component
