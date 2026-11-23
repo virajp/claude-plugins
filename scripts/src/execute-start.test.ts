@@ -119,9 +119,20 @@ exit 1
 /**
  * A `mise` that runs `run git:<x> -- <args>` as the stub file
  * .config/mise/tasks/git/<x> of the main checkout; every other call runs what
- * follows `--`, then the race script once, if any.
+ * follows `--`, then the race script once, if any. `tasks ls --json --hidden`
+ * lists code:lsp:check, and `run code:lsp:check` passes, $MISE_FAIL or not
+ * (lsp-check D22); $STUB_LSP_ABSENT lists no task, and $STUB_LSP is the
+ * output of a check that fails with exit 1.
  */
 const MISE = `#!/bin/sh
+if [ "$*" = "tasks ls --json --hidden" ]; then
+  if [ -n "$STUB_LSP_ABSENT" ]; then echo "[]"; else echo '[{"name":"code:lsp:check"}]'; fi
+  exit 0
+fi
+if [ "$*" = "run code:lsp:check" ]; then
+  if [ -n "$STUB_LSP" ]; then printf '%s\n' "$STUB_LSP"; exit 1; fi
+  exit 0
+fi
 if [ "$1" = run ]; then
   name=$2; shift 2
   if [ "$1" = -- ]; then shift; fi
@@ -360,6 +371,8 @@ beforeEach(() => {
   delete env.RACE;
   delete env.MISE_FAIL;
   delete env.STUB_LANDING;
+  delete env.STUB_LSP;
+  delete env.STUB_LSP_ABSENT;
   git(root, "init", "-q", "--bare", "-b", "develop", origin);
 });
 
@@ -734,6 +747,92 @@ describe("a fresh run", () => {
   });
 });
 
+describe("the LSP check (lsp-check D4, D14, D17, D19, D23)", () => {
+  const MISSING = "kite-ls: kite-ls not found - run MISE_ENV=dev mise install";
+  const LSP = { STUB_LSP: MISSING };
+
+  /** A plan of edit units alone: U2 made an edit unit. */
+  function editSeed(over: Partial<Seed> = {}) {
+    seed({ rows: [row(A)], build: (s) => folder(s, `docs/plans/${A}`, (d) => d.units[1].kind = "edit"), ...over });
+  }
+
+  it("blocks a fresh plan with a code unit: no log start, no claim", () => {
+    seed({ rows: [row(A)] });
+    const r = start([`docs/plans/${A}`], LSP);
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ result: "blocked", mode: "fresh", has_code_unit: true, claim: null });
+    expect(r.json.findings).toEqual([
+      expect.objectContaining({ rule: "lsp-check", severity: "degraded", subject: "kite-ls", message: MISSING }),
+    ]);
+    expect(r.json.message).toBe(`docs/plans/${A}: LSP check: kite-ls — run MISE_ENV=dev mise install`);
+    expect(existsSync(join(logs, "base", `${A}.jsonl`))).toBe(false);
+    expect(rowAtOrigin(A).status).toBe("APPROVED");
+  });
+
+  it("blocks on an absent code:lsp:check task (D2)", () => {
+    seed({ rows: [row(A)] });
+    const r = start([`docs/plans/${A}`], { STUB_LSP_ABSENT: "1" });
+    expect(r.json).toMatchObject({ result: "blocked", claim: null });
+    expect(r.json.message).toMatch(/LSP check: code:lsp:check — run bootstrap sync/);
+  });
+
+  it("takes the blocking path when a blocking row is beside it, the message naming both (D19)", () => {
+    seed({ rows: [row(A)], config: "repo:\n  stack:\n    template: repo/custom\n" });
+    const r = start([`docs/plans/${A}`], LSP);
+    expect(r.json).toMatchObject({ result: "blocked", claim: null });
+    expect(r.json.message).toMatch(/blocking findings: .*custom-pin.*; LSP check: kite-ls — /);
+    expect(r.json.findings.map((f: Json) => f.rule)).toEqual(expect.arrayContaining(["custom-pin", "lsp-check"]));
+    expect(trail(A).slice(-2)).toEqual(["stop", "run.end"]);
+    expect(events(A).at(-1).outcome).toBe("blocked");
+  });
+
+  it("goes on for a plan of edit units, the row in findings and one lsp-check event (D23)", () => {
+    editSeed();
+    const r = start([`docs/plans/${A}`], LSP);
+    expect(r.status).toBe(0);
+    expect(r.json).toMatchObject({ result: "ready", has_code_unit: false, claim: { claimed: true } });
+    expect(r.json.findings).toEqual([expect.objectContaining({ rule: "lsp-check", subject: "kite-ls" })]);
+    expect(trail(A)).toEqual([
+      "run.start",
+      "plan.snapshot",
+      "phase.start:checks",
+      "phase.end:checks",
+      "lsp-check",
+      "phase.start:claim",
+      "phase.end:claim",
+    ]);
+    expect(events(A)[4]).toMatchObject({
+      subject: "kite-ls",
+      message: MISSING,
+      remedy: "run MISE_ENV=dev mise install",
+    });
+  });
+
+  it("keeps no degraded row of another rule, and blocks on none (D17)", () => {
+    seed({
+      rows: [row(A)],
+      config: "projects:\n  tool:\n    stack:\n      template: unresolved\n",
+      build: (s) =>
+        write(
+          join(s, "docs", "blueprint", "registry.yaml"),
+          "vwf_registry: 3\nprojects:\n  - name: tool\n    platforms: [cli]\n",
+        ),
+    });
+    facts(base, { "repo.projects.tool.folder": "scripts" });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.status).toBe(0);
+    expect(r.json).toMatchObject({ result: "ready", findings: [] });
+    expect(trail(A)).not.toContain("lsp-check");
+  });
+
+  it("changes nothing with no lsp-check row", () => {
+    seed({ rows: [row(A)] });
+    const r = start([`docs/plans/${A}`]);
+    expect(r.json).toMatchObject({ result: "ready", findings: [] });
+    expect(trail(A)).not.toContain("lsp-check");
+  });
+});
+
 describe("a resume", () => {
   function resumeSeed() {
     seed({
@@ -776,6 +875,16 @@ describe("a resume", () => {
       mode: "resume",
       folder: join(base, ".worktrees", "alpha", "docs", "plans", A),
     });
+  });
+
+  it("stops a resume of a plan with a code unit on an lsp-check row (lsp-check D14)", () => {
+    resumeSeed();
+    const r = start([`docs/plans/${A}`], { STUB_LSP: "kite-ls: kite-ls not found - run MISE_ENV=dev mise install" });
+    expect(r.status).toBe(1);
+    expect(r.json).toMatchObject({ result: "blocked", mode: "resume", claim: null });
+    expect(r.json.message).toMatch(/LSP check: kite-ls — run MISE_ENV=dev mise install/);
+    expect(trail(A).slice(-4)).toEqual(["phase.start:checks", "phase.end:checks", "stop", "run.end"]);
+    expect(events(A).at(-1).outcome).toBe("blocked");
   });
 
   it("refuses when another session's marker names the plan log", () => {

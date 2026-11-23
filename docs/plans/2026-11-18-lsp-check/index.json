@@ -143,11 +143,11 @@
         "U1"
       ],
       "waits": "its tests run the doctor checks of U1, which must make the lsp rows first",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T13:39:28.799Z",
+      "ended": "2026-11-23T13:48:01.746Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -230,8 +230,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T13:39:28.762Z",
       "ended": ""
     },
     {
@@ -494,6 +494,15 @@
       "rejected": "Add an env override of the timeout, read by lsp.mjs; A real test that waits more than 60s",
       "units": [
         "U1"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Q2: D18 says the start.mjs block on an lsp-check row also names the unknown-language rows, but start.mjs keeps no unknown-language rows today. Should the LSP block message name something else in their place?",
+      "ruling": "Leave it as is — the LSP block message names nothing in place of the unknown-language rows; D18 applies once start.mjs keeps unknown-language rows.",
+      "rejected": "Name the degraded language-tool rows in the LSP block message",
+      "units": [
+        "U3"
       ]
     }
   ],

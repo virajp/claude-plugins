@@ -118,9 +118,8 @@ two, each call from the directory the step runs in, per
    already ran before the claim, in `start.mjs` ([claim.md](claim.md)); a blocking row
    stopped the run there.
 
-   **The LSP check waits on the parked bootstrap work**
-   (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`): this step checks no LSP
-   server, and a run with a `code` unit proceeds without an LSP gate until then.
+   The LSP check is a start check too: an `lsp-check` row stopped a plan with a
+   `code` unit there, and a plan with none carries its rows to the final report.
 
    Run every line of the folder's `gates.unit` and `gates.wave`, in that order,
    once, from the worktree root. Run what is written and infer nothing. A gate the plan

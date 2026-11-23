@@ -61,14 +61,16 @@ A `teams` run has the same permission rule as a `solo` one, and asks the user th
 ## The `code`-unit preflight (Setup steps 2 and 3)
 
 Read this at Setup step 2 **only when the plan has a `code` unit**, a `units` entry whose `kind` is `code`. A plan of
-`edit` units alone writes no code, so neither branch below applies to it. There, a missing LSP server is a line in the
-final report, and no conventions are fetched. A `blocking` row of the start result's `findings` is a hard halt handled in
-[claim.md](claim.md), not here, whatever the plan's units.
+`edit` units alone writes no code: it fetches no conventions, and its `lsp-check` rows are action-log events the final
+report lists (below). A `blocking` row of the start result's `findings` is a hard halt handled in [claim.md](claim.md),
+not here, whatever the plan's units.
 
 ### The LSP check (Setup step 2)
 
-The LSP check waits on the bootstrap work (`docs/memory/gaps/2026-11-13-execute-lsp-check-parked.md`). Until it lands,
-this step checks no LSP server and reads no `consent.lsp`, and a run with a `code` unit proceeds without an LSP gate.
+The start checks already ran bootstrap's `code:lsp:check` ([claim.md](claim.md)). A plan with a `code` unit never reaches
+this step with an `lsp-check` row: `start.mjs` stopped it with `blocked` and each server's remedy. For a plan of `edit`
+units alone, the `lsp-check` rows are `lsp-check` events of the action log, and go to the final report
+([final-report.md](final-report.md)). This step checks nothing more, and asks nothing.
 
 A project the start result's `findings` reports as linked to no bootstrap language tool, or as having no
 `repo.projects.<name>` entry, is a `degraded` row: it is not a missing LSP, is not handled here, and never stops the run.
