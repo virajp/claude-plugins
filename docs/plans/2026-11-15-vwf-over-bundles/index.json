@@ -245,7 +245,7 @@
       "status": "green",
       "started": "2026-11-23T12:25:39.299Z",
       "ended": "2026-11-23T12:31:24.843Z",
-      "commit": "",
+      "commit": "a69b2d24",
       "rounds": 2,
       "kind": "edit",
       "model": "opus",
@@ -299,9 +299,9 @@
     },
     {
       "id": "W3",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T12:25:39.259Z",
-      "ended": ""
+      "ended": "2026-11-23T12:51:39.541Z"
     },
     {
       "id": "W4",
@@ -764,6 +764,13 @@
       "unit": "U9",
       "stage": "",
       "text": "Wave-3 vitest marketplace test red: U8 plugin.json description edit left .claude-plugin/marketplace.json stale · settled by D41: U9 owns widened to .claude-plugin/marketplace.json and it regenerates it with p:plugins:marketplace",
+      "state": "closed"
+    },
+    {
+      "id": "G5",
+      "unit": "U8",
+      "stage": "",
+      "text": "U8 plugins/stackgen/.claude-plugin/plugin.json description edit cannot be committed alone: the plugins-marketplace pre-commit hook checks marketplace.json against it · it rides U9 commit with the regenerated .claude-plugin/marketplace.json (D41)",
       "state": "closed"
     }
   ],
