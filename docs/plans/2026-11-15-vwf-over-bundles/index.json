@@ -72,7 +72,7 @@
       "status": "green",
       "started": "2026-11-23T11:52:59.654Z",
       "ended": "2026-11-23T12:11:45.791Z",
-      "commit": "",
+      "commit": "34f362f5",
       "rounds": 3,
       "kind": "edit",
       "model": "opus",

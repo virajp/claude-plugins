@@ -17,14 +17,14 @@ the second is `.config/vwf.yaml`'s own stamp. The enum lives in
 
 | Axis           | Scope       | Menu                    | Recorded as                      |
 | -------------- | ----------- | ----------------------- | -------------------------------- |
-| **project**    | per project | project-axis entries    | `projects.<name>.stack.template` |
-| **backing**    | per project | backing-axis entries    | `projects.<name>.stack.services` |
-| **deploy**     | per project | deploy-axis entries     | `projects.<name>.stack.deploy`   |
-| **repo**       | per repo    | repo-axis entries       | `repo.stack.template`            |
-| **design**     | per project | design-axis entries     | `projects.<name>.design`         |
-| **cicd**       | per project | cicd-axis entries       | `projects.<name>.cicd`           |
-| **stylesheet** | per project | stylesheet-axis entries | `projects.<name>.stylesheet`     |
-| **addon**      | per product | addon-axis entries      | the top-level `addons:` list     |
+| **project**    | per project | project-axis bundles    | `projects.<name>.stack.template` |
+| **backing**    | per project | backing-axis bundles    | `projects.<name>.stack.services` |
+| **deploy**     | per project | deploy-axis bundles     | `projects.<name>.stack.deploy`   |
+| **repo**       | per repo    | repo-axis bundles       | `repo.stack.template`            |
+| **design**     | per project | design tools            | `projects.<name>.design`         |
+| **cicd**       | per project | cicd-axis bundles       | `projects.<name>.cicd`           |
+| **stylesheet** | per project | stylesheet-axis bundles | `projects.<name>.stylesheet`     |
+| **addon**      | per product | addons                  | the top-level `addons:` list     |
 
 Elicit each as its **own** round (per `assets/elicitation.md` — one decision),
 and per §3a of that protocol **every question names the project it decides**.
@@ -35,7 +35,7 @@ Since format 13 the three
 technology axes are per project, so "which datastore?" is never a question about
 the product — it is a question about `api`, or about `website`:
 
-- **project** — once per project, filtered to the templates whose `platforms:`
+- **project** — once per project, filtered to the bundles whose `platforms:`
   cover every platform that project declares in the registry.
 - **backing** — once per project, filtered to the capabilities that project
   declares in the registry. Records a **list**: one slug per capability it needs
@@ -52,7 +52,9 @@ the product — it is a question about `api`, or about `website`:
 - **repo** — once per repo, filtered to templates whose `topologies` include
   this repo's.
 - **design** — once per project, for **UI projects only** (a project declaring
-  a screen platform). A project with no screen platform is not asked.
+  a screen platform), over the menu's design tools. The slug is the tool's
+  folder name, the token `projects.<name>.design` holds. A project with no
+  screen platform is not asked.
 - **cicd** — once per project, for a project the pipeline builds. Ask once and
   offer the same answer for the rest; in a monorepo they will all match.
 - **stylesheet** — once per project, for a project declaring a `site` or a
@@ -80,6 +82,46 @@ products do run every project on one cloud, and re-asking from scratch per
 project would be tedious for the common case — but the answer is recorded per
 project either way, so the moment one diverges the config can say so. Never
 collapse the recorded values back into a shared pin.
+
+## Bundles, and composing one
+
+On every technology round — project, backing, deploy, repo, cicd and
+stylesheet — the entries are the menu's **bundles** for that axis and, on the
+project axis, the project's platforms: the bundles the adapter ships and the
+repo's own, which an earlier compose wrote into `.claude/stackgen/bundles/`.
+Both are picked alike and pinned by their slug
+(`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "The menu payload").
+
+**Every such round also offers *compose a bundle*** when the axis is one of
+the menu's `compose.axes`. A bundle is never mandatory: a project with no
+pick, picked or composed, keeps `unresolved`. Picking compose asks, each as
+its own question naming the project:
+
+1. **The slug** — propose `<project>-<axis>` (on the repo round,
+   `<repo>-repo`) and ask the user to confirm it or type another kebab slug.
+2. **The kind** — an MCQ over the compose block's `kinds`.
+3. **The tools** — a multi-select over the `data.tools` of
+   `mise x -- bootstrap catalog --json`, those of category `languages` and
+   `package-managers` listed first. A failed `bootstrap` call stops this
+   command with the envelope's `errors` as bootstrap gives them.
+4. **The packs** — free text, since the menu lists no packs: the knowledge
+   packs the bundle composes, each a ref `<type>/<slug>@<version>`. The
+   `compose:` call checks them.
+5. **The items no pack covers** — each a ref `<type>/<slug>@generated`, which
+   the adapter researches and generates on the first template fetch, in
+   `/vwf:setup`, behind its own consent.
+
+Then call `/<plugin>:<plugin>-stack-menu compose:` of the plugin whose menu
+carried the block, with the lines the stack-adapter asset's "Composing a
+bundle" names — the confirmed `slug:`, the round's `axis:`, the picked
+`kind:`, the project's `platforms:` on the project round, `tools:`, and the
+packs and the `@generated` refs together under `packs:`. Record the slug it
+returns as the round's pick — on the project round,
+`projects.<name>.stack.template`. An `ERROR:` return names each refused
+item: show it, re-ask that question, and call again; nothing is recorded
+until a slug comes back. The call writes the repo bundle
+`.claude/stackgen/bundles/<slug>.md`, which joins this command's commit; it
+materializes nothing.
 
 ## Every stack round also offers *defer this axis*
 
@@ -174,15 +216,17 @@ project's web surface, the same as any other deferred axis.
 
 The `addon` axis, shown to the user as **optional tools**, runs after the last
 axis round. It is one multi-select `AskUserQuestion` over the menu's `addon`
-entries, **nothing preselected**: no entry is highlighted, whatever the adapter
+entries — the adapter's addons list, stackgen's `assets/addons.yaml` —
+**nothing preselected**: no entry is highlighted, whatever the adapter
 or a previous answer says, and only what the user picks is ever installed. Each
 option's description is the entry's summary plus its `needed_by` note where it
 carries one, so the user sees what would halt without the tool.
 
 **Write the answer as `addons:`**, a top-level list in `.config/vwf.yaml`, one
 per product — `[]` when nothing is picked. Installing a picked tool and removing
-a dropped one are `/vwf:setup`'s, which Step 7 hands off to. This file names no
-tool: the options come from the menu.
+a dropped one are `/vwf:setup`'s, which Step 7 hands off to: it sets the
+`claude` tool's `plugins.project` through `bootstrap config set` and runs
+`mise run setup:ai`. This file names no tool: the options come from the menu.
 
 **The round offers no *defer this axis*, and it never writes `unresolved`.**
 `addons:` is always a list, and `[]` is a completed answer, never a pending
@@ -213,19 +257,18 @@ recorded nowhere in `.config/vwf.yaml`, a project's language being the linked
 bootstrap tool of category `languages` (`bootstrap describe --json`).
 
 **The menu is the whole answer — there is no *other (describe)*.** Every axis
-must resolve to a template an installed plugin ships. A materializing
-adapter's menu may include its one open entry — *generate for an uncovered
-technology*, pinned as `generated/<technology-slug>` — which is a legitimate
-pick, not a free-text escape: the pin only resolves once the consent-gated
-materialization lands, and that materialization is **`/vwf:setup`'s**, never
-this command's. Architecture records the pin and hands off at its last step;
-setup's materialize pass invokes the adapter once per (repo, slug), passing the
-principles-catalog paths and the
-`repo:` line per *the catalog handover* and *the target repo* in that same
-asset. So a freshly recorded pin is expected to sit unmaterialized until setup
-runs — that is the handoff working, not a gap.
+must resolve to a bundle an installed plugin ships, or a repo bundle composed
+through its menu's open entry (Bundles, and composing one, above). A composed
+bundle is a legitimate pick, not a free-text escape: its `@generated` items
+only resolve once the consent-gated materialization lands, and that
+materialization is **`/vwf:setup`'s**, never this command's. Architecture
+records the pin and hands off at its last step; setup's materialize pass
+invokes the adapter once per (repo, slug), passing the principles-catalog paths
+and the `repo:` line per *the catalog handover* and *the target repo* in that
+same asset. So a freshly recorded pin is expected to sit unmaterialized until
+setup runs — that is the handoff working, not a gap.
 
-When nothing on any menu fits and no installed adapter offers generation, say
+When nothing on any menu fits and no installed adapter offers compose, say
 so and name the **three** ways forward: install the stack plugin that has it,
 write one (`${CLAUDE_PLUGIN_ROOT}/assets/stack-adapter.md`, "Writing a stack
 plugin"), or **defer the axis** and carry on defining the product. Before
