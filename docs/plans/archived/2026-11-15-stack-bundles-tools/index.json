@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-23T08:58:00Z in .worktrees/all-2026-11-23-0333"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-23 — 3d4f5ce8 ee7d3706 083e2e54 22ccb05c cc41ceb5 939b032c"
   },
   "consent": {
     "merge": true,
