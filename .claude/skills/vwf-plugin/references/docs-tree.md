@@ -138,9 +138,12 @@ window: any stamp reconciles to the shipped one. **Do not restate the per-format
 history here** — what each past format changed is git's job; a second narrative
 copy is precisely the drift the density doctrine warns about, and it was 105
 lines of this file before format 16. The *current* shape is what this section
-describes throughout; the paired `config_format` (currently **27**, the bump
-that moved product, topology, members and environments to bootstrap's
-`repo.toml`) is described under
+describes throughout; the paired `config_format` (currently **28**, the bump
+that slimmed each project's stack — `services` and `deploy` in place of
+`backing_template` and `deploy_template`, no `languages` or
+`package_manager`, no workspace `harness:` block — and moved each project's
+folder to bootstrap's `repo.projects.<name>.folder`, shipped with
+`blueprint_format` 26, which drops the registry `path`) is described under
 `assets/vwf-config.md`, and its own
 `N → N+1` deltas do still live there — state-based reconciliation replaced the
 **blueprint** ladder only. **Neither line issues 13 or 17.** From
@@ -154,7 +157,8 @@ in `skills/setup/references/format-lineage.md` is where that history lives.
 The two stamps are separate number lines, which have now drifted apart in both
 directions: config `14`, `16`, `18`, `20`, `21`, `22` and `23` shipped without a
 blueprint bump (the first closed the stack menu; the second gave each stack axis
-its `unresolved` state and made `deploy_template` a list; the third added
+its `unresolved` state and made the deploy axis, then `deploy_template`, a
+list; the third added
 `enforcement.kept_files`; the fourth added an editor-key record; the fifth added
 the top-level `answers:` block; the sixth retired the editor axis and that
 record; the seventh retired the `answers:` block) and blueprint `21` shipped
@@ -168,4 +172,6 @@ for the `plugin` platform, retires no spelling, and needs no config key.
 earlier pairs did: the `stylesheet` axis is a config key and the per-screen
 `Metadata` block is a blueprint section, but the choice and the contract arrived
 in one change, so a repo on one but not the other is a state neither side
-expects.
+expects. `28`/`26` shipped **together** too: a project's folder left the
+registry's `path` for bootstrap in the same step that moved its languages
+there.

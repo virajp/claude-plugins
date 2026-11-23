@@ -66,9 +66,24 @@ move, never as a question. Jotter's `.config/vwf.yaml` still carries the
 `memory:` block an older format wrote, and its root a `mempalace.yaml`: the
 `config_format` 24 step offers each for removal as one numbered row.
 
-Eight lineage rows are about recent formats rather than about old spellings,
-and they behave differently from each other. `config_format` **27**, the
-current one, moves the repo facts — the product name, the topology, the members
+Nine lineage rows are about recent formats rather than about old spellings,
+and they behave differently from each other. `config_format` **28**, the
+current one, with `blueprint_format` **26**, slims each project's stack to a
+decision record and moves each project's folder to bootstrap. Per repo, each
+present member before the base, it sets `repo.projects.<name>.folder` from the
+registry `path`, runs `bootstrap detect` and, on your yes,
+`bootstrap detect --add`, which links each project's language and
+package-manager tools, and reports a project no language tool links as a
+degraded row with its fix, carrying on. In the base it renames
+`backing_template` to `services` and `deploy_template` to `deploy`, removes
+`languages`, `package_manager`, `repo.stack.package_manager`,
+`repo.stack.tools` and the workspace `harness:` block — a capability is present
+when its task exists, so a task the old block recorded under another name is
+reported for you to rename — and removes `path` from the registry. The base
+runs only once every member has succeeded, and a member not cloned locally
+stops the step with its name; declined, the stamp stays at 27 and the next
+pass offers it again. `config_format` **27** moves the repo facts — the product
+name, the topology, the members
 and the deploy environments — out of `.config/vwf.yaml` into bootstrap's
 `.config/bootstrap/repo.toml`, read and written through `bootstrap config`. It
 sets each value `repo.toml` does not have yet, asks only where `repo.toml` and
@@ -94,7 +109,7 @@ the next pass offers it again. `config_format` **23** retires the top-level
 read live, and the dependency-bot key goes with the bot config it chose. Its
 step is applied by `/vwf:setup reshape`, and until then a repo still stamped 22
 stays as it is: its `answers:` block is ignored wherever it would have been
-read, and `/vwf:doctor` reports 22 against 27. A repo carrying
+read, and `/vwf:doctor` reports 22 against 28. A repo carrying
 `.config/stackgen.yaml`, `.config/mise/conf.d/tools.toml`,
 `.config/mise/conf.d/env.toml` or a root `.config/mise.dev.toml` that
 bootstrap's shaped test refuses is **shaped on the old layout**: setup and
@@ -207,12 +222,12 @@ Each of these is a genuine stop, and each is explained where it is enforced.
   `/vwf:doctor` with its remedy, and the stamp still moves to 24.
   [`/vwf:setup`](../../plugins/vwf.md#vwfsetup)
 - **A stack pin no installed plugin defines is blocking** — the likeliest reason
-  an old repo halts here, since free-text pins have been retired — and setup
-  stops on a language the pinned template does not list, which counts as
-  unknown (`/vwf:doctor` only reports it).
+  an old repo halts here, since free-text pins have been retired. A project no
+  bootstrap language tool links is not: setup and `/vwf:doctor` report it as a
+  degraded row with its fix, and the run carries on.
   [Stack templates](../../plugins/vwf.md#stack-templates)
 - **A pin whose template was never landed is blocking too**, reported as
-  *pinned, not materialized* rather than as an unknown language — the state an
+  *pinned, not materialized* — the state an
   old repo is in when its pins predate materialization altogether. Setup's
   [materialize pass](../../plugins/vwf.md#the-materialize-pass) offers the
   landing in the same run; declining it is what leaves the block standing.

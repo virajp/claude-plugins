@@ -67,9 +67,11 @@ Your global mise config is `~/.config/mise/config.toml`: add each tool to its
 regardless, so the first thing to run afterwards is **`/vwf:doctor`** — it
 reports a missing required one as a **blocking** finding, and both `/vwf:setup`
 and `/vwf:execute` halt on one — with one condition on `mise` since
-`config_format` 16: with no stack axis pinned anywhere and no harness capability
-claimed there is nothing for it to resolve, so its absence degrades rather than
-blocks until one is. An earlier installer refused the install outright and
+`config_format` 16: with no stack axis pinned anywhere there is nothing for it
+to resolve, so its absence degrades rather than blocks until one is — unless a
+project's platforms imply a harness task (`dev`, `screenshots`), whose read
+needs `mise`, and then doctor refuses to run without it. An earlier installer
+refused the install outright and
 printed the command to fix each; that gate did not come back when the
 installer's plugin flags did, so the failure now arrives at first use rather
 than at install. `gh` is the exception: [`/vwf:backlog`](#vwfbacklog) and the
@@ -220,7 +222,8 @@ adopting it.
   coverage gate. A project without a test runner won't fit the execute stage;
   missing coverage tooling is tolerated (the coder reports `coverage: n/a` and
   the gate decides). The verification harness (dev server, E2E suites, staging
-  mode) is self-healing: `setup` detects and stamps what exists, and `plan`
+  mode) is self-healing: a capability is present when its task exists, and
+  `plan`
   injects bootstrap steps for whatever a slice's gates need — so harness gaps
   surface at plan time with their fix attached, not as surprises at a gate.
 - **Assumes a registry-described workspace.** `plan` and `execute` map each
@@ -369,7 +372,7 @@ blueprint is the desired state; the plans are the changes you apply to reach it.
 ```text
 .config/
 └── vwf.yaml                     # the vwf config — how vwf operates here (stamp,
-                                 # harness, enforcement opt-outs, knobs)
+                                 # enforcement opt-outs, knobs)
 docs/
 ├── blueprint/                   # the always-current blueprint (desired state)
 │   ├── product.md               # problem, users, measurable goals, slice priority
@@ -440,7 +443,8 @@ the same facts and no command reads it.
 
 The registry carries **no stack**. Which technology each project is built with
 lives in `.config/vwf.yaml`, as a structured block naming the template you
-picked plus its languages, frameworks and key dependencies. That split is not
+picked plus its frameworks and key dependencies; its languages and package
+manager are the bootstrap tools linked to it. That split is not
 bookkeeping: it means no blueprint-authoring or reviewing surface can see a
 technology name, so a blueprint that mentions your database, cloud, or payment
 vendor fails review by construction. Docs say "the datastore" and "the payment
@@ -558,9 +562,11 @@ than coming back quietly short.
 A stack is composed from **eight independent axes** — you answer each one, and
 they never merge because they never overlap. `project` and `repo` take a single
 template; `backing` and `deploy` take a **list**, one entry per capability and
-one per delivery mechanism (`deploy_template` became a list in `config_format`
+one per delivery mechanism (the deploy axis became a list in `config_format`
 **16**, because a project routinely publishes to a package registry *and* ships
-a container image):
+a container image). Since `config_format` **28** a project's stack records the
+two lists as `services` and `deploy`, renamed from `backing_template` and
+`deploy_template` with every slug kept:
 
 | Axis           | Scope       | Takes                                                                                                          |
 | -------------- | ----------- | -------------------------------------------------------------------------------------------------------------- |
@@ -693,8 +699,9 @@ A template reaches vwf as a **payload**, never as a file: its stack facts
 (**languages**, **frameworks**, **dependencies**, plus the optional languages a
 template admits — Flutter's Kotlin and Swift) and its **conventions** prose,
 carrying the layout, testing and deployment rules. How a stack plugin stores
-that template is its own business. Picking one fills those facts into
-`.config/vwf.yaml`; you can then customize any of them. **Picking is
+that template is its own business. Picking one fills its frameworks and
+dependencies into `.config/vwf.yaml`; you can then customize any of them.
+**Picking is
 `/vwf:architecture`'s and landing is `/vwf:setup`'s** — architecture records the
 slug and materializes nothing, then invokes setup, whose materialize pass asks
 the plugin for the template once per (repo, slug) and lands it in the repo that
@@ -709,31 +716,38 @@ conventions that said nothing. The prose reaches `docs/plans/` and your source,
 and never `docs/blueprint/`: it names technology, which is exactly what a
 blueprint doc may not.
 
-**vwf names no language, but the menu is closed.** A language token is whatever
-a template declares, and the facts the tooling acts on — which LSP server covers
-it, which manifest identifies it, which mise tool installs it — come from the
-template that lists it. vwf holds no table of its own; the project's pinned,
-materialized template **is** the vocabulary. `/vwf:doctor` reads
+**vwf names no language, and records none.** Since `config_format` **28** a
+project's languages and package manager are not keys of `.config/vwf.yaml`:
+a language is a bootstrap tool of category `languages` (`node`, `go`,
+`python`, …) linked to the project, and its package manager a tool of category
+`package-managers` linked the same way — read with `bootstrap describe --json`
+in the repo that holds the project, and linked by `bootstrap detect --add`.
+vwf holds no table of its own, and the language's name is the tool name.
+`/vwf:doctor` reads
 the block back and checks the repo agrees: an LSP server and toolchain per
-declared language, every binary a materialized template's `binaries` fact names
+linked language tool, every binary a materialized template's `binaries` fact
+names
 resolving on `PATH` — or, where the entry carries a `probe`, that command
 exiting 0, run only while the template entry matches its lockfile hash (blocking
 once the project's template is pinned, a degradation while it reads
 `unresolved`), every framework and dependency present in the project's manifest,
 the repo's package manager and tooling — its lockfile found at one of the paths
-the package-manager pack's `lockfile` fact names — harness task names, health
-paths. It reports drift in both directions, including a framework doing obvious
-structural work that your config never mentions.
+the package-manager pack's `lockfile` fact names — the harness capabilities'
+tasks, health paths. It reports drift in both directions, including a framework
+doing obvious structural work that your config never mentions. A harness
+capability is present when its fixed task exists in the repo that holds the
+project — `test:e2e` and `test:golden` read from `bootstrap describe --json`,
+any other from `mise tasks ls` — and its `harness` row reports a `dev`,
+`screenshots` or `goldens` capability a project's platforms imply and its repo
+lacks, as a **degradation**; a failed `mise` call, or a `mise` absent once a
+platform implies a task capability, stops doctor instead.
 
-A language the project's pinned template does not list — under
-`language_facts` or `optional_languages`, whatever plugin is installed — is
-reported as *unknown*. `/vwf:doctor` reports it as a **degradation**, and
-`/vwf:execute`'s start checks stop before the claim to ask you whether to
-continue or stop; **`/vwf:setup` alone stops on it**, once the project's
-`template` is pinned, since setup is the one-time place for the setup-shape
-checks. While the `template` reads `unresolved` the token is only reported —
-the template that would list it is exactly what has not been chosen yet — and
-such a project legally records `languages: []`. There is likewise no *other
+A project no bootstrap language tool links is a **degradation**, with the fix
+`bootstrap add tool <tool>` then `bootstrap detect --add` — unless every
+platform it declares is `iac`, `cicd` or `misc`, which have no language tool by
+nature. So is a registry project with no bootstrap `repo.projects.<name>`
+entry. `/vwf:doctor` reports both, and neither stops `/vwf:execute` or
+`/vwf:setup`. There is no *other
 (describe)* option and no `template: custom` — an axis nothing on the menu fits
 has three ways forward, none of them a free-text pin. vwf is an opinionated
 workflow that plans against a template's conventions, builds against its harness
@@ -744,13 +758,12 @@ healthy*. Many stacks are supported — every one of them defined by a template.
 
 That template is the one door: a materializing adapter (the
 [`stackgen`](./stackgen.md) plugin) can land a template directly in the repo's
-committed `.claude/` tree through consent-gated, reviewer-gated generation, and
-a language whose pin carries that template's emitted `language_facts` (LSP
-provision, mise tool, manifest, and an optional `binaries` list — executables
-mise does not manage, each a name looked up on `PATH` or a name with a `probe`
-command) is *known* — doctor verifies against the facts instead of a language
-plugin. A token it does not list stays unknown; nothing about the door re-opens
-free text.
+committed `.claude/` tree through consent-gated, reviewer-gated generation,
+carrying its emitted `language_facts` (LSP provision, mise tool, manifest, and
+an optional `binaries` list — executables mise does not manage, each a name
+looked up on `PATH` or a name with a `probe` command), which doctor verifies
+against instead of a language plugin. Nothing about the door re-opens free
+text.
 
 That landing happens in **`/vwf:setup`'s materialize pass**, once per (repo,
 slug), never at the moment the pin is made — so a freshly recorded pin is
@@ -1451,6 +1464,24 @@ present member deletes the file, in its own commit before the base's, once its
 per repo; a declined row writes nothing, the stamp stays at 26, and the next
 pass offers it again.
 
+**`config_format` 28 slims the stack and moves the project folders to
+bootstrap**, with `blueprint_format` **26**. Per repo, each present member
+before the base: it sets each project's folder in bootstrap
+(`repo.projects.<name>.folder`) from its registry `path`, made relative to the
+repo that holds it; runs `bootstrap detect` and, on your yes,
+`bootstrap detect --add`, which links each project's language and
+package-manager tools; and reports each project no language tool links as a
+**degraded** row with its fix, and carries on. In the base it renames
+`backing_template` to `services` and `deploy_template` to `deploy`, every slug
+kept; removes `languages`, `package_manager`, `repo.stack.package_manager`,
+`repo.stack.tools` and the workspace `harness:` block — a capability is
+present when its task exists, so a task the old block recorded under another
+name is reported for you to rename to its fixed name; removes `path` from every
+registry project; and runs `bootstrap sync`. The base's step runs only once
+every member's has succeeded, and a member not cloned locally stops the step
+with its name; a declined row writes nothing, the stamp stays at 27, and the
+next pass offers it again.
+
 Whichever path runs, it detects your topology (repo, monorepo, or multi-repo
 with each member's type; project roles and platforms — `watch`, `tv` and
 `spatial` from an Xcode
@@ -1475,8 +1506,9 @@ in another project's repo, both end the run as written recommendations rather
 than as moves. It merges a vwf section into your `CLAUDE.md`, bootstraps
 `environment.md` from the repo's existing env-var and secret usage
 (names only), detects the repo's verification-harness capabilities (dev server,
-E2E, staging mode), and stamps the **vwf config** at `.config/vwf.yaml` — the
-blueprint and config format versions, harness inventory, enforcement opt-outs,
+E2E, staging mode) — each present when its task exists, so none is recorded —
+and stamps the **vwf config** at `.config/vwf.yaml` — the
+blueprint and config format versions, enforcement opt-outs,
 and per-project nuances (a coverage-target override, a non-conventional health
 path) — so a later run detects drift, and every command knows how vwf operates
 in this repo (pipeline knobs). The repo facts — the product name, the
@@ -1595,7 +1627,11 @@ diagram kept in sync with it. The topology and its reason, and under
 `sibling` from your link answer, `folder` for a member folder inside the base
 repo's tree that is not a submodule) — it writes through `bootstrap config` into
 the base's `.config/bootstrap/repo.toml`, never into `.config/vwf.yaml`; each
-project placed in a member gets `projects.<name>.repo` in `vwf.yaml`. Re-run it
+project placed in a member gets `projects.<name>.repo` in `vwf.yaml`. A
+project's folder is bootstrap's too, never a registry key: for each project
+whose folder exists, it runs `bootstrap config set repo.projects.<name>` in the
+repo that holds it, and the plan unit that creates a missing folder sets it
+then. Re-run it
 any time the topology changes; it asks only about genuine deltas, never
 re-eliciting what's confirmed.
 
@@ -2173,7 +2209,7 @@ Four guardrails keep a plan from building on a gap — which is what keeps
 blueprint coverage stamp reads complete**; it **halts on a stack no template
 defines, and on one nobody has chosen yet** — once the chain is resolved it runs
 `/vwf:doctor` scoped to the chain's projects and stops on any blocking finding
-(an unknown language is reported and planning continues), and it stops outright
+(a degraded row is reported and planning continues), and it stops outright
 on an axis reading `unresolved`, naming it and
 pointing at `/vwf:architecture`, because a plan's units are sized against the
 selected templates' conventions and an undefined or unchosen stack has none (a
@@ -2440,14 +2476,13 @@ format test, the `next` pick or the named folder's resolve and refusals, the
 action-log start, the **start checks** and the claim, printed as one JSON
 result. It no longer runs the `/vwf:doctor` skill. The start checks are
 `checks.mjs`, the script doctor runs for its blocking findings, scoped to the
-plan's projects — the registry projects its units' `owns` fall under, or the
+plan's projects — the registry projects its units' `owns` fall under, each
+project's folder read from bootstrap (`repo.projects.<name>.folder`), or the
 repo-level checks alone when none matches; they run no dependency audit, no
 drift check and no bootstrap dry-run. A `blocking` row halts the run there,
-with no claim, no worktree and no status edit to undo. An **unknown language**
-is not blocking: when it is the only finding, the script stops before the claim
-and execute asks you to continue or stop. Continue re-runs the script with
-`--continue-unknown-language`, which claims; stop leaves nothing to undo. The
-question is asked only, recorded nowhere, and never asked again on a resume.
+with no claim, no worktree and no status edit to undo. A `degraded` row — a
+project no language tool links, or one with no bootstrap folder entry, which
+the checks then skip — never stops the run and is never asked about.
 Then the script **claims the row**: the folder's row is set `RUNNING`, and the
 folder's `run` to the
 worktree and [action log](#the-action-log) paths the run will use, in one
@@ -2698,7 +2733,7 @@ What it does, by rule:
 - **The blueprint learns what's built — with `covers`.** The end-of-run
   reconcile stamps each covered blueprint doc's `implementation:` state — the
   single sanctioned blueprint edit (state only, never content) — and reconciles
-  the registry, `environment.md` and the `harness:` stamp. Everywhere else the
+  the registry and `environment.md`. Everywhere else the
   blueprint is the source of truth: code that contradicts it is surfaced and
   conformed, or you consciously amend the contract via `/vwf:blueprint`. A plan
   without `covers` skips this step whole.
@@ -3545,7 +3580,8 @@ trade-offs, and records every ruling with the alternative it rejected. Three
 things are always agreed before anything is written:
 
 - **The three gates** — the exact commands the run must pass, proposed from the
-  repo's own task list, its `harness:` stamp and what CI already runs over the
+  repo's own task list, the harness capabilities whose tasks exist and what CI
+  already runs over the
   touched trees, in three tiers: the **unit gate**, run once before each unit's
   commit; the **wave gate**, run once after every wave; and the **plan gate**,
   run once over the finished tree. When the repo has them, the proposal is

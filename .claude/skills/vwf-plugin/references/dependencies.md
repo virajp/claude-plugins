@@ -62,8 +62,10 @@ stayed retired when the CLI's plugin installs came back as a thin wrapper.
 the binaries vwf shells out to, `/vwf:doctor` — and `/vwf:execute`'s start
 checks, the same `checks.mjs` rows — blocks on **`mise` conditionally**
 — since `config_format` 16 a missing `mise` is blocking only once some axis in
-the repo is pinned or some harness capability is claimed, and a degradation
-before that, since a repo with no stack has no toolchain to resolve. A missing
+the repo is pinned, and a degradation before that, since a repo with no stack
+has no toolchain to resolve; since `config_format` 28, once a project's
+platforms imply a harness task (`dev`, `screenshots`), a missing `mise` is a
+refusal instead, since the capability read runs `mise tasks ls`. A missing
 language server is an ordinary finding; a **degradation** finding in its Repo
 tooling checks is,
 since 2026-09-18, a forge CLI (`gh`) that is absent, not logged in, or without
