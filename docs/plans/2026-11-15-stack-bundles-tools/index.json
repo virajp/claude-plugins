@@ -235,9 +235,9 @@
     },
     {
       "id": "W4",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-23T11:07:55.367Z",
-      "ended": ""
+      "ended": "2026-11-23T11:36:37.135Z"
     },
     {
       "id": "W5",
