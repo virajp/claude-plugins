@@ -188,7 +188,7 @@ The user stopped the first R5 interview: "packs go" was read as "bundles go
 too". A brainstorm on 2026-11-15 replaced the R5 line of the Ownership section
 ("Stack: packs go") and the "every `*_template` key" removal of the format 27
 section with these rulings. Background:
-`docs/memory/gaps/2026-11-15-r5-stack-without-packs-parked.md`.
+`docs/memory/gaps/2026-11-15-r5-stack-without-packs-resolved.md`.
 
 - **Bundles stay (B1).** A bundle is the curated unit a consumer picks. It is
   never mandatory. It lists bootstrap `tools` and knowledge `packs`.
@@ -198,8 +198,8 @@ section with these rulings. Background:
 - **Tool knowledge (B3).** The 18 `language`, `package-manager` and
   `toolchain-gate` packs stop being packs. Their conventions, skills and hook
   stay in stackgen, keyed by the bootstrap tool name, and apply when a project
-  links that tool. bootstrap ships no model prose. `ux-gate` and the
-  `docs/blueprint/` references move to vwf.
+  links that tool. bootstrap ships no model prose. `ux-gate` stays in
+  stackgen as the web stack's UX adapter (R5b D1).
 - **Knowledge packs (B4).** The other packs stay, without the data bootstrap
   owns (`lsp_servers`, `mise_tool`, `binaries`, `package_manager`,
   `lockfile`). Their task files ship as `NN-<name>` parts.
@@ -211,8 +211,10 @@ section with these rulings. Background:
   adapters outside the packs and installs them into `vwf-tools`: one skill per
   role at the fixed names, plus `references/<tool>.md` for each tool a repo
   picks.
-- **Addons (B8).** The `addon` kind goes. An addon is a Claude plugin that
-  `bootstrap add plugin` installs; `addons:` stays in `vwf.yaml`.
+- **Addons (B8).** The `addon` kind goes. An addon is a Claude plugin, and
+  `addons:` stays in `vwf.yaml`. bootstrap has no `add plugin` verb: setup
+  declares an addon in `tools.claude.plugins.project` and runs `setup:ai`
+  (R5b D4).
 - **Templates stay (B9).** `stack.template` and `repo.stack.template` name a
   bundle, shipped or repo. No `vwf.yaml` format 29.
 - **Existing repos (B10).** `stackgen-sync` converts tool-pack rows of
