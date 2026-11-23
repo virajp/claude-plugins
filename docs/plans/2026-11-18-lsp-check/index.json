@@ -516,5 +516,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/all-2026-11-23-0333",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-18-lsp-check.jsonl"
+  }
 }
