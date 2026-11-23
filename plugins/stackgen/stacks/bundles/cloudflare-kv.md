@@ -2,7 +2,8 @@
 name: Cloudflare Workers KV
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/kv@0.1.1
 ---

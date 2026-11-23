@@ -2,7 +2,8 @@
 name: Cloudflare Workers SSR
 axis: deploy
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/workers-ssr@0.1.5
 artifact: worker-script

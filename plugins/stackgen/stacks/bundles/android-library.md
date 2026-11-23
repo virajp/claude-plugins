@@ -2,11 +2,10 @@
 name: Android · library
 axis: project
 kind: language-bundle
-components:
-- language/kotlin@1.0.0
-- package-manager/gradle@0.1.1
-- toolchain-gate/ktlint@1.0.0
-- toolchain-gate/detekt@1.0.0
+tools:
+- kotlin
+- android
+packs:
 - framework/android@1.0.0
 platforms:
 - packages

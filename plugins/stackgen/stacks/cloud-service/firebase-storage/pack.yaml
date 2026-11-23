@@ -9,9 +9,3 @@ category: object-storage
 capability: object-file-storage
 kind: cloud-provider
 axis: backing
-harness:
-  local_stack:
-    task: stack:up
-    mechanism: >-
-      The Firebase Emulator Suite's storage emulator, part of the same suite
-      start; lifecycle rules and storage classes are not simulated

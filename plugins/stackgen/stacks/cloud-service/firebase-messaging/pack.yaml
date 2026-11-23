@@ -8,9 +8,3 @@ category: messaging
 capability: push-notifications
 kind: cloud-provider
 axis: backing
-harness:
-  local_stack:
-    task: n/a
-    mechanism: >-
-      None — nothing local delivers to a device. Keep sending behind a seam and
-      assert the constructed payload instead

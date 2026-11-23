@@ -2,7 +2,8 @@
 name: Google Cloud · GKE Autopilot · Artifact Registry
 axis: deploy
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/gcp@0.1.1
 - cloud-service/gke@0.1.1
 artifact: container-image

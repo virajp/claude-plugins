@@ -2,7 +2,8 @@
 name: OIDC issuer
 axis: backing
 kind: capability-provider
-components:
+tools: []
+packs:
 - capability-provider/oidc@0.1.1
 ---
 

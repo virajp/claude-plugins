@@ -2,7 +2,8 @@
 name: Package registry · npm
 axis: deploy
 kind: deploy-target
-components:
+tools: []
+packs:
 - deploy-target/npm-registry@generated
 artifact: npm-package
 ---

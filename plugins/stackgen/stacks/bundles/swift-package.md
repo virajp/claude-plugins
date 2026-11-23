@@ -2,11 +2,9 @@
 name: Swift · package
 axis: project
 kind: language-bundle
-components:
-- language/swift@1.0.0
-- package-manager/swiftpm@0.3.2
-- toolchain-gate/swift-format@1.0.0
-- toolchain-gate/swiftlint@1.0.0
+tools:
+- swift
+packs: []
 platforms:
 - packages
 ---

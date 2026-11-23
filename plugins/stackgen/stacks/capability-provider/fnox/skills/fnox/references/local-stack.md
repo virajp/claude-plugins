@@ -6,7 +6,7 @@ The `capability-provider` kind expects one of two shapes here: a real engine
 run behind a readiness gate, or — for a hosted-only provider — a seam plus a
 fake, with the gap named. fnox is neither. It is a binary that resolves
 secrets and execs a command, so it starts no service, listens on no port and
-has no state to wait for. Its `pack.yaml` declares `harness: n/a` for exactly
+has no state to wait for. Its local-stack answer is `n/a` for exactly
 that reason, and a repo pinning fnox composes no extra container.
 
 What fnox contributes to the harness is not a service but a **wrapper**: it

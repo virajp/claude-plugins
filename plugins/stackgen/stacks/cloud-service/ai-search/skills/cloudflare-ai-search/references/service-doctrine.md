@@ -193,7 +193,7 @@ wrangler ai-search jobs list <instance-name>
 queries still answer, confidently, from content that has changed or been
 withdrawn. So freshness is checked rather than assumed: the job's
 terminal state says the pipeline ran, and a query whose expected top
-source is known says the index answers — the harness block asks for both
+source is known says the index answers — the harness asks for both
 together, and neither alone is a health check.
 
 **Deletion is the path that gets forgotten**, exactly as it is for a

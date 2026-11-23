@@ -8,14 +8,3 @@ category: audit
 capability: audit-store
 kind: capability-provider
 axis: backing
-harness:
-  local_stack:
-    task: n/a
-    mechanism: >-
-      n/a — the datastore pack's own local stack serves. The `datastore/postgres`
-      component composes Postgres on production's major version behind a wait-on
-      readiness gate and owns that loop; this pack adds no engine, only a schema
-      and three roles inside the same server, so a second local stack here would
-      be a duplicate nobody runs. What the local run must add is the roles: a
-      laptop that connects as the owner exercises none of the grants this pack's
-      guarantees rest on

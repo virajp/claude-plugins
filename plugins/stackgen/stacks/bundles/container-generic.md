@@ -2,7 +2,8 @@
 name: OCI image · any container host
 axis: deploy
 kind: deploy-target
-components:
+tools: []
+packs:
 - deploy-target/container-image@0.2.2
 artifact: container-image
 ---

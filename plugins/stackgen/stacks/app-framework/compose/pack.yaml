@@ -9,20 +9,3 @@ category: native-ui
 kind: app-framework
 axis: project
 # No platforms: list — the surfaces are the bundle's (kotlin-compose).
-languages:
-  - token: kotlin
-    role: primary
-    facts:
-      lsp: >-
-        kotlin-lsp, JetBrains' Kotlin language server; declared by the
-        language/kotlin pack as `kotlin-lsp` and provisioned via the generated
-        local plugin
-      mise_tool: java
-      manifest: gradle/libs.versions.toml
-harness:
-  goldens:
-    task: test:golden
-    mechanism: >-
-      Roborazzi image goldens of Compose screens, rendered on the JVM under
-      Robolectric — recorded under --record, verified otherwise — with the
-      Accessibility Test Framework's checks run over the same captures

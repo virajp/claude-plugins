@@ -108,5 +108,5 @@ and the models are simply reachable over the network.
 **So cost and failure behaviour are verified in a deployed environment or
 not at all.** That is not a gap to close with more local machinery; it is
 what local can mean for a service with no local form, and it is why the
-harness block's `local_stack` says `n/a` rather than naming a task that
+component's `local_stack` answer is `n/a` rather than naming a task that
 would only pretend.

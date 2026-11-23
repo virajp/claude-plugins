@@ -2,8 +2,9 @@
 name: pnpm · workspace
 axis: repo
 kind: workspace
-components:
-- package-manager/pnpm@1.1.2
+tools:
+- pnpm
+packs: []
 ---
 
 # Monorepo — pnpm · workspace

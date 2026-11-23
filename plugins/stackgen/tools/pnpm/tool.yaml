@@ -1,0 +1,5 @@
+name: pnpm
+summary: Dependency installation, locking and workspace layout for the Node
+  ecosystem — the manifest contract and the monorepo shape.
+version: 1.0.0
+tools: [ pnpm ]

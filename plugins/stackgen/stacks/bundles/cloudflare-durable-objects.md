@@ -2,7 +2,8 @@
 name: Cloudflare Durable Objects
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/durable-objects@0.1.1
 ---

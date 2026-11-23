@@ -1,0 +1,150 @@
+[
+  {
+    "name": "_security_base",
+    "category": "security"
+  },
+  {
+    "name": "android",
+    "category": "languages"
+  },
+  {
+    "name": "apko",
+    "category": "containers"
+  },
+  {
+    "name": "aube",
+    "category": "package-managers"
+  },
+  {
+    "name": "bun",
+    "category": "languages"
+  },
+  {
+    "name": "claude",
+    "category": "editor-ai"
+  },
+  {
+    "name": "cloudflare",
+    "category": "cloud"
+  },
+  {
+    "name": "cosign",
+    "category": "containers"
+  },
+  {
+    "name": "crane",
+    "category": "containers"
+  },
+  {
+    "name": "docker",
+    "category": "containers"
+  },
+  {
+    "name": "doppler",
+    "category": "secrets"
+  },
+  {
+    "name": "dprint",
+    "category": "format-lint"
+  },
+  {
+    "name": "firebase",
+    "category": "cloud"
+  },
+  {
+    "name": "flutter",
+    "category": "languages"
+  },
+  {
+    "name": "fnox",
+    "category": "secrets"
+  },
+  {
+    "name": "gcloud",
+    "category": "cloud"
+  },
+  {
+    "name": "git",
+    "category": "core"
+  },
+  {
+    "name": "github",
+    "category": "forge"
+  },
+  {
+    "name": "gitlab",
+    "category": "forge"
+  },
+  {
+    "name": "gitleaks",
+    "category": "security"
+  },
+  {
+    "name": "go",
+    "category": "languages"
+  },
+  {
+    "name": "grype",
+    "category": "security"
+  },
+  {
+    "name": "java",
+    "category": "languages"
+  },
+  {
+    "name": "kotlin",
+    "category": "languages"
+  },
+  {
+    "name": "linter",
+    "category": "format-lint"
+  },
+  {
+    "name": "melange",
+    "category": "containers"
+  },
+  {
+    "name": "mise",
+    "category": "core"
+  },
+  {
+    "name": "node",
+    "category": "languages"
+  },
+  {
+    "name": "osv-scanner",
+    "category": "security"
+  },
+  {
+    "name": "pnpm",
+    "category": "package-managers"
+  },
+  {
+    "name": "pre-commit",
+    "category": "core"
+  },
+  {
+    "name": "pulumi",
+    "category": "cloud"
+  },
+  {
+    "name": "python",
+    "category": "languages"
+  },
+  {
+    "name": "rust",
+    "category": "languages"
+  },
+  {
+    "name": "swift",
+    "category": "languages"
+  },
+  {
+    "name": "virajp-plugins",
+    "category": "editor-ai"
+  },
+  {
+    "name": "vscode",
+    "category": "editor-ai"
+  }
+]

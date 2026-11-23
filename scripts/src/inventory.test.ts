@@ -17,10 +17,12 @@ import {
 } from "vitest";
 import {
   BUNDLES_DIR,
+  DESIGN_TOOLS_DIR,
   INVENTORY_PATH,
   readInventory,
   renderInventory,
   STACKS_DIR,
+  TOOLS_DIR,
 } from "./inventory.ts";
 
 const repoRoot = join(import.meta.dirname, "..", "..");
@@ -84,20 +86,52 @@ describe("the generated stackgen inventory", () => {
         capability: "",
       }],
       bundles: [],
+      tools: [],
+      designTools: [],
     });
     expect(rendered).toContain("| a \\| b |");
     expect(rendered).toContain("| line one line two |");
   });
 });
 
-describe("component refs", () => {
+describe("tool entries and design tools", () => {
+  it("lists every tools/<slug>/tool.yaml and every design tool folder", () => {
+    const tools = readdirSync(join(repoRoot, TOOLS_DIR)).length;
+    const design = readdirSync(join(repoRoot, DESIGN_TOOLS_DIR))
+      .filter((d) => d !== "skills")
+      .length;
+    expect(inventory.tools.length).toBe(tools);
+    expect(inventory.designTools.length).toBe(design);
+    expect(generated).toContain(`${tools} tool entries, ${design} design tools.**`);
+  });
+
+  it("renders an entry naming no tool as one for every repo", () => {
+    const rendered = renderInventory({
+      kinds: [],
+      packs: [],
+      bundles: [],
+      tools: [
+        { slug: "bash", version: "1.0.0", tools: [] },
+        { slug: "pnpm", version: "1.0.0", tools: ["pnpm"] },
+      ],
+      designTools: [{ slug: "acme", name: "Acme", version: "1.0.0" }],
+    });
+    expect(rendered).toContain("| `bash` | 1.0.0 | every repo |");
+    expect(rendered).toContain("| `pnpm` | 1.0.0 | `pnpm` |");
+    expect(rendered).toContain("| `acme` | Acme | 1.0.0 |");
+  });
+});
+
+describe("pack refs", () => {
   // A temp root mirroring the three sources `readInventory` reads, so a pin
   // that resolves to nothing can be asserted without authoring a broken bundle
   // into the real tree. The corpus itself resolves today, so the tests above
   // stay green.
   function root(options: {
     readonly pack?: { readonly path: string; readonly version: string };
-    readonly components: readonly string[];
+    readonly packs: readonly string[];
+    /** Frontmatter lines in place of the tools and packs lists. */
+    readonly lists?: readonly string[];
   }): string {
     const dir = mkdtempSync(join(tmpdir(), "inventory-"));
     write(
@@ -124,8 +158,11 @@ describe("component refs", () => {
         "name: A Bundle",
         "kind: cloud-provider",
         "axis: backing",
-        "components:",
-        ...options.components.map((c) => `- ${c}`),
+        ...(options.lists ?? [
+          "tools: []",
+          "packs:",
+          ...options.packs.map((c) => `- ${c}`),
+        ]),
         "---",
         "",
         "# A Bundle",
@@ -144,9 +181,9 @@ describe("component refs", () => {
   it("resolves a ref pinned to the pack's own version", () => {
     const dir = root({
       pack: { path: "cloud-provider/acme", version: "0.1.0" },
-      components: ["cloud-provider/acme@0.1.0"],
+      packs: ["cloud-provider/acme@0.1.0"],
     });
-    expect(readInventory(dir).bundles[0]?.components).toEqual([
+    expect(readInventory(dir).bundles[0]?.packs).toEqual([
       "cloud-provider/acme@0.1.0",
     ]);
   });
@@ -154,17 +191,17 @@ describe("component refs", () => {
   it("throws on a ref shaped unlike <type>/<slug>@<version>", () => {
     const dir = root({
       pack: { path: "cloud-provider/acme", version: "0.1.0" },
-      components: ["cloud-provider/acme"],
+      packs: ["cloud-provider/acme"],
     });
     expect(() => readInventory(dir)).toThrow(
-      /a-bundle\.md component ref "cloud-provider\/acme" is not <type>\/<slug>@<version>/,
+      /a-bundle\.md pack ref "cloud-provider\/acme" is not <type>\/<slug>@<version>/,
     );
   });
 
   it("throws on a ref naming a slug with no pack.yaml", () => {
     const dir = root({
       pack: { path: "cloud-provider/acme", version: "0.1.0" },
-      components: ["cloud-provider/ghost@0.1.0"],
+      packs: ["cloud-provider/ghost@0.1.0"],
     });
     expect(() => readInventory(dir)).toThrow(
       /a-bundle\.md pins "cloud-provider\/ghost@0\.1\.0" but there is no plugins\/stackgen\/stacks\/cloud-provider\/ghost\/pack\.yaml/,
@@ -174,17 +211,32 @@ describe("component refs", () => {
   it("throws on a ref pinned to a version the pack no longer carries", () => {
     const dir = root({
       pack: { path: "cloud-provider/acme", version: "0.2.0" },
-      components: ["cloud-provider/acme@0.1.0"],
+      packs: ["cloud-provider/acme@0.1.0"],
     });
     expect(() => readInventory(dir)).toThrow(
       /pins "cloud-provider\/acme@0\.1\.0" but that pack\.yaml is at version 0\.2\.0/,
     );
   });
 
+  it("throws on the retired components list", () => {
+    const dir = root({
+      packs: [],
+      lists: ["components:", "- cloud-provider/acme@0.1.0"],
+    });
+    expect(() => readInventory(dir)).toThrow(/carries the retired `components:`/);
+  });
+
+  it("throws on a bundle missing its tools list, and accepts two empty lists", () => {
+    const missing = root({ packs: [], lists: ["packs: []"] });
+    expect(() => readInventory(missing)).toThrow(/is missing `tools:`/);
+    const empty = root({ packs: [], lists: ["tools: []", "packs: []"] });
+    expect(readInventory(empty).bundles[0]?.tools).toEqual([]);
+  });
+
   it("skips an @generated ref, which names no pack by design", () => {
     const dir = root({
       pack: { path: "cloud-provider/acme", version: "0.1.0" },
-      components: ["cloud-provider/acme@0.1.0", "cloud-service/none@generated"],
+      packs: ["cloud-provider/acme@0.1.0", "cloud-service/none@generated"],
     });
     expect(readInventory(dir).packs.length).toBe(1);
   });

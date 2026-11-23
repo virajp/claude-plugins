@@ -2,7 +2,8 @@
 name: fnox
 axis: backing
 kind: capability-provider
-components:
+tools: []
+packs:
 - capability-provider/fnox@3.0.1
 ---
 

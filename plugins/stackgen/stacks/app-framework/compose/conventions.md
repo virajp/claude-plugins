@@ -72,11 +72,10 @@ source set that sets one screen in one state and captures it.
   Roborazzi's accessibility-check module with the Accessibility Test
   Framework's latest preset, so a golden run is also the audit.
 
-## The task this pack owns
+## The golden task
 
-This pack ships one task, `config/.config/mise/tasks/test/golden`, landing at
-the repo's own `.config/mise/tasks/test/golden` behind the materializer's
-config consent line. It calls only the committed Gradle wrapper.
+The task is bootstrap's: its tool ships `test:golden` as a part, and this pack
+lands none. It calls only the committed Gradle wrapper.
 
 | Task          | Does                                                                                                                                                                                                                         |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

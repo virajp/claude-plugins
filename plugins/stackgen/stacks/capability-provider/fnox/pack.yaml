@@ -10,7 +10,3 @@ category: secrets-manager
 # vwf's move, and nothing here fills the hole.
 kind: capability-provider
 axis: backing
-# fnox is a binary, not a service — there is nothing to compose behind a
-# readiness gate, so it satisfies no harness capability. What it contributes is
-# the injector that WRAPS every harness task; see the local-stack reference.
-harness: n/a

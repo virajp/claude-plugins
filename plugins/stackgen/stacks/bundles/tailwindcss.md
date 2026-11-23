@@ -2,7 +2,8 @@
 name: Tailwind CSS
 axis: stylesheet
 kind: stylesheet
-components:
+tools: []
+packs:
 - stylesheet/tailwindcss@0.2.2
 ---
 

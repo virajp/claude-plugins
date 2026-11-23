@@ -120,7 +120,7 @@ The end-to-end suite needs the real thing, and needs it **per
 environment** — its own queue, its own dead-letter queue, bound by name
 under that environment's block. It asserts on the consumer's own side
 effect, with a bounded wait, and never on ordering or latency. That is
-the same rule the pack's `harness` block states, for the same reason:
+the same rule this component's harness answer states, for the same reason:
 delivery is at-least-once and unordered, so a suite that asserts either
 is asserting something the service never promised, and will fail
 eventually for a reason nobody can reproduce.

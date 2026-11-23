@@ -2,7 +2,8 @@
 name: Cloudflare Images
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/images@0.1.2
 ---

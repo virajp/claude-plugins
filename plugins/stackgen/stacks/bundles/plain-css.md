@@ -2,7 +2,8 @@
 name: Plain CSS
 axis: stylesheet
 kind: stylesheet
-components:
+tools: []
+packs:
 - stylesheet/plain-css@0.2.2
 ---
 

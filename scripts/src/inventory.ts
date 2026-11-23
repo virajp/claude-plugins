@@ -1,11 +1,13 @@
 /**
  * Generates `plugins/stackgen/stacks/inventory.md` from the stacks tree.
  *
- * The inventory is a projection of three sources and nothing else:
+ * The inventory is a projection of five sources and nothing else:
  *
  *   plugins/stackgen/stacks/<type>/<slug>/pack.yaml   one row per pack
  *   plugins/stackgen/stacks/bundles/<slug>.md         one row per bundle
  *   plugins/stackgen/assets/kinds.md                  the closed kind vocabulary
+ *   plugins/stackgen/tools/<slug>/tool.yaml           one row per tool entry
+ *   plugins/stackgen/design-tools/<tool>/tool.yaml    one row per design tool
  *
  * It exists because the pack, bundle and kind counts used to be typed into four
  * prose files by hand, and drifted — one said 36 packs while 38 shipped, and the
@@ -22,14 +24,17 @@
  * `plugins/**` is excluded from dprint, so the table lands exactly as rendered.
  *
  * Four things fail the generation outright rather than rendering a wrong row: a
- * pack or bundle missing a field the format requires; a `kind` no heading in
- * `kinds.md` defines — the vocabulary is closed, and an undefined kind is a
- * typo, not a new kind; a bundle component ref that is not
+ * pack, bundle, tool entry or design tool missing a field the format
+ * requires — a bundle's `tools:` and `packs:` lists included, either of which
+ * may be empty, and a retired `components:` list refused; a `kind` no heading
+ * in `kinds.md` defines — the vocabulary is closed, and an undefined kind is a
+ * typo, not a new kind; a bundle pack ref that is not
  * `<type>/<slug>@<version>`; and a ref that names no `pack.yaml`, or pins a
  * version differing from the one that pack.yaml carries. A pin that resolves to
  * nothing, or to a version the pack no longer has, would otherwise advertise a
  * composition the materializer cannot copy. `@generated` refs are skipped —
- * they name no pack by design.
+ * they name no pack by design. Whether a bundle's tool names are bootstrap's
+ * is the checker's rule 14, against the committed snapshot.
  */
 
 import {
@@ -47,6 +52,8 @@ export const STACKS_DIR = "plugins/stackgen/stacks";
 export const BUNDLES_DIR = `${STACKS_DIR}/bundles`;
 export const KINDS_PATH = "plugins/stackgen/assets/kinds.md";
 export const INVENTORY_PATH = `${STACKS_DIR}/inventory.md`;
+export const TOOLS_DIR = "plugins/stackgen/tools";
+export const DESIGN_TOOLS_DIR = "plugins/stackgen/design-tools";
 
 export interface Pack {
   readonly type: string;
@@ -65,13 +72,33 @@ export interface Bundle {
   readonly name: string;
   readonly kind: string;
   readonly axis: string;
-  readonly components: readonly string[];
+  /** Bootstrap tool names, no version. */
+  readonly tools: readonly string[];
+  /** Knowledge pack refs, `<type>/<slug>@<version>`. */
+  readonly packs: readonly string[];
+}
+
+/** A tool knowledge entry under `tools/`, keyed by bootstrap tool. */
+export interface ToolEntry {
+  readonly slug: string;
+  readonly version: string;
+  /** The bootstrap tools it applies to; empty applies to every repo. */
+  readonly tools: readonly string[];
+}
+
+/** A design tool folder under `design-tools/`. */
+export interface DesignTool {
+  readonly slug: string;
+  readonly name: string;
+  readonly version: string;
 }
 
 export interface Inventory {
   readonly kinds: readonly string[];
   readonly packs: readonly Pack[];
   readonly bundles: readonly Bundle[];
+  readonly tools: readonly ToolEntry[];
+  readonly designTools: readonly DesignTool[];
 }
 
 // ---------------------------------------------------------------------------
@@ -91,8 +118,10 @@ export function readInventory(repoRoot: string): Inventory {
     assertKind(defined, bundle.kind, `${BUNDLES_DIR}/${bundle.slug}.md`);
   }
   assertComponents(packs, bundles);
+  const tools = readToolEntries(join(repoRoot, TOOLS_DIR));
+  const designTools = readDesignTools(join(repoRoot, DESIGN_TOOLS_DIR));
 
-  return { kinds, packs, bundles };
+  return { kinds, packs, bundles, tools, designTools };
 }
 
 /**
@@ -162,19 +191,72 @@ function readBundles(bundlesDir: string): Bundle[] {
       throw new Error(`${rel} has no frontmatter`);
     }
     const doc = record(parseYaml(block), rel);
-    const components = doc["components"];
-    if (!Array.isArray(components) || components.length === 0) {
-      throw new Error(`${rel} declares no components`);
+    if (doc["components"] !== undefined) {
+      throw new Error(
+        `${rel} carries the retired \`components:\` — a bundle lists `
+          + `\`tools:\` and \`packs:\``,
+      );
     }
     bundles.push({
       slug: file.slice(0, -".md".length),
       name: required(doc, "name", rel),
       kind: required(doc, "kind", rel),
       axis: required(doc, "axis", rel),
-      components: components.map(String),
+      tools: list(doc, "tools", rel),
+      packs: list(doc, "packs", rel),
     });
   }
   return bundles;
+}
+
+/** Every `tools/<slug>/tool.yaml`, sorted by slug; none when the tree is absent. */
+function readToolEntries(toolsDir: string): ToolEntry[] {
+  if (!existsSync(toolsDir)) {
+    return [];
+  }
+  const entries: ToolEntry[] = [];
+  for (const slug of subdirs(toolsDir)) {
+    const path = join(toolsDir, slug, "tool.yaml");
+    const rel = `${TOOLS_DIR}/${slug}/tool.yaml`;
+    if (!existsSync(path)) {
+      throw new Error(`${TOOLS_DIR}/${slug} has no tool.yaml`);
+    }
+    const doc = record(parseYaml(readFileSync(path, "utf8")), rel);
+    required(doc, "name", rel);
+    required(doc, "summary", rel);
+    entries.push({
+      slug,
+      version: required(doc, "version", rel),
+      tools: list(doc, "tools", rel),
+    });
+  }
+  return entries;
+}
+
+/** Every `design-tools/<tool>/tool.yaml`, sorted; the role skills are not a tool. */
+function readDesignTools(designDir: string): DesignTool[] {
+  if (!existsSync(designDir)) {
+    return [];
+  }
+  const tools: DesignTool[] = [];
+  for (const slug of subdirs(designDir)) {
+    if (slug === "skills") {
+      continue;
+    }
+    const path = join(designDir, slug, "tool.yaml");
+    const rel = `${DESIGN_TOOLS_DIR}/${slug}/tool.yaml`;
+    if (!existsSync(path)) {
+      throw new Error(`${DESIGN_TOOLS_DIR}/${slug} has no tool.yaml`);
+    }
+    const doc = record(parseYaml(readFileSync(path, "utf8")), rel);
+    required(doc, "summary", rel);
+    tools.push({
+      slug,
+      name: required(doc, "name", rel),
+      version: required(doc, "version", rel),
+    });
+  }
+  return tools;
 }
 
 // ---------------------------------------------------------------------------
@@ -182,18 +264,20 @@ function readBundles(bundlesDir: string): Bundle[] {
 // ---------------------------------------------------------------------------
 
 export function renderInventory(inventory: Inventory): string {
-  const { kinds, packs, bundles } = inventory;
+  const { kinds, packs, bundles, tools, designTools } = inventory;
   const lines: string[] = [
     "<!-- Generated by scripts/src/inventory.ts — `mise run p:plugins:inventory`. Do not edit. -->",
     "",
     "# Inventory",
     "",
     "What this tree ships, rendered from the tree itself: every `<type>/<slug>/pack.yaml`",
-    "under `stacks/`, every `bundles/<slug>.md` frontmatter, and the kind headings in",
-    "`../assets/kinds.md`. The narrative — which wave landed what, and why — is",
-    "[`readme.md`](readme.md); the shape of a pack is `../assets/pack-format.md`.",
+    "under `stacks/`, every `bundles/<slug>.md` frontmatter, the kind headings in",
+    "`../assets/kinds.md`, every `../tools/<slug>/tool.yaml` and every",
+    "`../design-tools/<tool>/tool.yaml`. The narrative is [`readme.md`](readme.md); the",
+    "shape of a pack is `../assets/pack-format.md`.",
     "",
-    `**${packs.length} packs, ${bundles.length} bundles, ${kinds.length} kinds.**`,
+    `**${packs.length} packs, ${bundles.length} bundles, ${kinds.length} kinds, `
+    + `${tools.length} tool entries, ${designTools.length} design tools.**`,
     "",
     "## Kinds",
     "",
@@ -230,8 +314,8 @@ export function renderInventory(inventory: Inventory): string {
     "",
     "## Bundles",
     "",
-    "| Bundle | Name | Kind | Axis | Components |",
-    "| ------ | ---- | ---- | ---- | ---------- |",
+    "| Bundle | Name | Kind | Axis | Tools | Packs |",
+    "| ------ | ---- | ---- | ---- | ----- | ----- |",
   );
   for (const b of bundles) {
     lines.push(row([
@@ -239,11 +323,43 @@ export function renderInventory(inventory: Inventory): string {
       b.name,
       `\`${b.kind}\``,
       b.axis,
-      b.components.map((c) => `\`${c}\``).join(", "),
+      codes(b.tools),
+      codes(b.packs),
     ]));
   }
 
+  lines.push(
+    "",
+    "## Tool knowledge",
+    "",
+    "| Entry | Version | Tools |",
+    "| ----- | ------- | ----- |",
+  );
+  for (const t of tools) {
+    lines.push(row([
+      `\`${t.slug}\``,
+      t.version,
+      t.tools.length > 0 ? codes(t.tools) : "every repo",
+    ]));
+  }
+
+  lines.push(
+    "",
+    "## Design tools",
+    "",
+    "| Tool | Name | Version |",
+    "| ---- | ---- | ------- |",
+  );
+  for (const d of designTools) {
+    lines.push(row([`\`${d.slug}\``, d.name, d.version]));
+  }
+
   return `${lines.join("\n")}\n`;
+}
+
+/** A list as comma-separated code spans; an empty list as an empty cell. */
+function codes(items: readonly string[]): string {
+  return items.map((item) => `\`${item}\``).join(", ");
 }
 
 /** One table row; a cell's pipes and newlines cannot be allowed to split it. */
@@ -282,6 +398,19 @@ function required(
   return value.trim();
 }
 
+/** A required list of strings, which may be empty. */
+function list(
+  doc: Record<string, unknown>,
+  key: string,
+  rel: string,
+): string[] {
+  const value = doc[key];
+  if (!Array.isArray(value)) {
+    throw new Error(`${rel} is missing \`${key}:\` (a list, which may be empty)`);
+  }
+  return value.map(String);
+}
+
 function optional(doc: Record<string, unknown>, key: string): string {
   const value = doc[key];
   return typeof value === "string" ? value.trim() : "";
@@ -296,7 +425,7 @@ function assertKind(defined: Set<string>, kind: string, rel: string): void {
 }
 
 /**
- * Every bundle pin resolves to a pack.yaml at exactly that version.
+ * Every bundle pack pin resolves to a pack.yaml at exactly that version.
  *
  * A bundle is the recorded composition, so a pin is a claim about what the
  * materializer will copy. `@generated` is the one ref that names no pack: the
@@ -309,11 +438,11 @@ function assertComponents(
   const byRef = new Map(packs.map((p) => [`${p.type}/${p.slug}`, p]));
   for (const bundle of bundles) {
     const rel = `${BUNDLES_DIR}/${bundle.slug}.md`;
-    for (const entry of bundle.components) {
+    for (const entry of bundle.packs) {
       const match = /^([a-z0-9-]+)\/([a-z0-9-]+)@(.+)$/.exec(entry);
       if (!match) {
         throw new Error(
-          `${rel} component ref "${entry}" is not <type>/<slug>@<version>`,
+          `${rel} pack ref "${entry}" is not <type>/<slug>@<version>`,
         );
       }
       const [, type, slug, version] = match;
@@ -350,7 +479,7 @@ if (import.meta.main) {
     const committed = existsSync(target) ? readFileSync(target, "utf8") : "";
     if (committed !== generated) {
       console.error(
-        `${INVENTORY_PATH} is not what the stacks tree generates.\n`,
+        `${INVENTORY_PATH} is not what the stackgen tree generates.\n`,
       );
       console.error(firstDifference(committed, generated));
       console.error(

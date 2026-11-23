@@ -2,11 +2,10 @@
 name: Kotlin · Compose
 axis: project
 kind: app-framework
-components:
-- language/kotlin@1.0.0
-- package-manager/gradle@0.1.1
-- toolchain-gate/ktlint@1.0.0
-- toolchain-gate/detekt@1.0.0
+tools:
+- kotlin
+- android
+packs:
 - framework/android@1.0.0
 - app-framework/compose@0.5.2
 platforms:

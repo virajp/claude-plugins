@@ -104,5 +104,5 @@ stack needs and this index is simply reachable over the network.
 **So the retrieval quality is verified against a real corpus or not at
 all.** That is not a gap to close with more local machinery; it is what
 local can mean for a similarity index, and it is why the pre-production
-index in the harness block is seeded deliberately rather than left to
+index the harness uses is seeded deliberately rather than left to
 whatever the last run put in it.

@@ -12,10 +12,3 @@ kind: language-bundle
 axis: project
 # No platforms: list — the surfaces are the bundles' (kotlin-compose,
 # android-library).
-harness:
-  e2e_local:
-    task: test:e2e
-    mechanism: >-
-      instrumented UI tests on a Gradle Managed Device — an emulator AGP
-      creates, boots headless, tests on and tears down — run through
-      ./gradlew <device><Variant>AndroidTest

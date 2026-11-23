@@ -11,8 +11,8 @@
   "gaps_of": [],
   "execution": "solo",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-15 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-23T08:58:00Z in .worktrees/all-2026-11-23-0333"
   },
   "consent": {
     "merge": true,
@@ -77,11 +77,11 @@
     {
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-23T08:59:27.161Z",
+      "ended": "2026-11-23T09:12:47.894Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "kind": "edit",
       "model": "opus",
       "wave": 1,
@@ -217,8 +217,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-23T08:59:27.119Z",
       "ended": ""
     },
     {
@@ -637,6 +637,15 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D43",
+      "decision": "Q1: Wave 1 review left one contested finding: plugins/stackgen/design-tools/claude-code/conventions.md:91 is 81 characters in a hand-folded file whose other lines are 79 or less. Fix it or accept it?",
+      "ruling": "Fix: one targeted refold moving the word lands to line 92, then a narrow check; the file keeps its fold width.",
+      "rejected": "Accept: keep the 81-char line",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
@@ -665,8 +674,28 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U1",
+      "stage": "",
+      "text": "R1 found U1 rewrote the falsified not-yet-reachable passage and a heading in tools/uv and tools/ruff conventions.md beyond Part A item 4 · kept: the old text was falsified by the plan, so the edit is in scope under the plan Goal",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U1",
+      "stage": "",
+      "text": "R1 Q1: who rewrites knowledge-pack prose citing the harness key D16 removed (fnox, queues, pipelines) · settled by the run rules: the files are in U1 Owns, so the finding looped to U1, which reworded them",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-23-0333; skip as deduped: mise run p:plugins:local"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-23-0333",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-15-stack-bundles-tools.jsonl"

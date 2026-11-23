@@ -9,4 +9,3 @@ category: agent-sdk
 kind: language-bundle
 axis: project
 # Topic 2 of the language-bundle bar — one artifact per detected framework.
-harness: n/a

@@ -2,7 +2,8 @@
 name: Google Cloud · Cloud SQL
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/gcp@0.1.1
 - cloud-service/cloud-sql@0.1.1
 - cloud-service/firebase-auth@0.1.1

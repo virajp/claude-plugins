@@ -2,7 +2,8 @@
 name: StyleX
 axis: stylesheet
 kind: stylesheet
-components:
+tools: []
+packs:
 - stylesheet/stylex@0.2.2
 ---
 

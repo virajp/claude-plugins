@@ -8,9 +8,3 @@ category: identity
 capability: third-party-auth
 kind: cloud-provider
 axis: backing
-harness:
-  local_stack:
-    task: stack:up
-    mechanism: >-
-      The Firebase Emulator Suite's auth emulator, part of the same suite start;
-      no real provider handshake, so federated flows are stubbed

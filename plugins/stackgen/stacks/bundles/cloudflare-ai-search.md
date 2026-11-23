@@ -2,7 +2,8 @@
 name: Cloudflare AI Search
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/ai-search@0.1.1
 ---
@@ -78,7 +79,7 @@ never production's, seeded by a repeatable command, and safe to
 recreate.
 
 **Retrieval quality is verified against a real corpus or not at all**,
-which is what makes the pre-production instance in the harness block
+which is what makes the pre-production instance the harness uses
 something to seed deliberately rather than something to leave to whatever
 the last run put in it. A stale index does not fail; it answers
 confidently from content that has changed.

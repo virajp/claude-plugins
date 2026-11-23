@@ -8,8 +8,3 @@ category: workflow
 capability: durable-workflows
 kind: capability-provider
 axis: backing
-harness:
-  local_stack:
-    task: stack:up
-    mechanism: >-
-      Docker-composed dev server behind a wait-on readiness gate, plus the engine's own time-skipping test framework

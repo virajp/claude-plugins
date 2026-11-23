@@ -8,9 +8,3 @@ category: sql
 capability: relational-datastore
 kind: cloud-provider
 axis: backing
-harness:
-  local_stack:
-    task: stack:up
-    mechanism: >-
-      Docker-composed Postgres on production's major version, behind a wait-on
-      readiness gate — there is no emulator for this service

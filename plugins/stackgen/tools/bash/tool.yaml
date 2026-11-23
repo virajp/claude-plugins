@@ -1,0 +1,7 @@
+name: Bash
+summary: Shell as a project's incidental second language — the hook scripts
+  and
+  small executables a markdown-authored project ships, held to portability and
+  exit-code discipline rather than to a toolchain.
+version: 1.0.0
+tools: []

@@ -1,0 +1,6 @@
+name: Markdown
+summary: Markdown as a project's own language — the case where prose with
+  frontmatter is the deliverable rather than documentation beside one, and the
+  toolchain is the repo axis's rather than the language's.
+version: 1.0.0
+tools: []

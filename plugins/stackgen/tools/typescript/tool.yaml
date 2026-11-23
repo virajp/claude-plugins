@@ -1,0 +1,6 @@
+name: TypeScript
+summary: The Node/TypeScript language baseline — standards, error semantics,
+  the
+  async model, testing, build and run, config and observability wiring.
+version: 1.0.0
+tools: [ node, bun ]

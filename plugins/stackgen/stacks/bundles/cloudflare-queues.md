@@ -2,7 +2,8 @@
 name: Cloudflare Queues
 axis: backing
 kind: cloud-provider
-components:
+tools: []
+packs:
 - cloud-provider/cloudflare@0.1.2
 - cloud-service/queues@0.1.1
 ---
@@ -88,7 +89,7 @@ a queue, not to a field in the message body, so a shared production
 queue with a discriminator is not an isolation mechanism at all — the
 suite's message is delivered to the production consumer and does the
 production thing. The split is a correctness boundary rather than a
-security one, and it is the reason the pack's harness block states a
+security one, and it is the reason the component's harness rule states a
 queue and a dead-letter queue per environment rather than a prefix.
 
 Full judgment: the components' own skills and their references.
