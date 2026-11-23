@@ -745,7 +745,14 @@ tool, linked to the project; a design tool must have its reference in
 `vwf-tools`; a picked addon must be in the `claude` tool's `plugins.project`; a
 lockfile row of a retired pack kind and a materialized entry with no `tools:`
 key are flagged too — each of these a **degradation** remedied by
-`/vwf:setup`. It reports drift in both directions, including a framework
+`/vwf:setup`. Doctor also runs bootstrap's `code:lsp:check` once, from the base
+repo root, with a 60-second timeout on each `mise` call: each server it cannot
+find is one degraded `lsp-check` row with the fix the task prints, and a missing
+task (fix: `bootstrap sync`) or a failed check is one row too. The rows never
+make doctor fail, but `/vwf:execute` stops a plan with a code unit on any of
+them. `code:lsp:check` runs `bootstrap lsp --json`, the one call of these checks
+that can read the network. It reports drift in both directions, including a
+framework
 doing obvious structural work that your config never mentions. A harness
 capability is present when its fixed task exists in the repo that holds the
 project — `test:e2e` and `test:golden` read from `bootstrap describe --json`,
@@ -2246,10 +2253,9 @@ defines, and on one nobody has chosen yet** — once the chain is resolved it ru
 (a degraded row is reported and planning continues), and it stops outright
 on an axis reading `unresolved`, naming it and
 pointing at `/vwf:architecture`, because a plan's units are sized against the
-selected templates' conventions and an undefined or unchosen stack has none (a
-**missing LSP server** is asked here, once — install now, or proceed without —
-and recorded in `consent.lsp` of the folder's `index.json`; `execute` does not
-read it until its parked LSP check returns, and never asks it); it resolves the
+selected templates' conventions and an undefined or unchosen stack has none (it
+asks no LSP question: a **missing LSP server** stops `/vwf:execute` on a plan
+with a code unit, and `consent.lsp` is retired); it resolves the
 slice's **dependency
 chain** — every flow or entity the slice stands on whose `implementation:` stamp
 isn't `complete` becomes **its own plan**, planned dependency-first behind its
@@ -2285,8 +2291,8 @@ written: the **three gates** — the **unit gate**, run once before each unit's
 commit, the **wave gate**, run once before wave 1 and after every wave, and
 the **plan gate**, run once over the finished tree — the
 **after-landing steps** (each recorded `run`, or dropped), and the **consent
-block** — whether the run may merge and push on green, the LSP answers, and
-whether to end an `all` run after landing — asked only when the plan edits a
+block** — whether the run may merge and push on green, and whether to end an
+`all` run after landing — asked only when the plan edits a
 plugin the session running `/vwf:execute all` has loaded, `false` otherwise. No
 after-landing step releases anything: a release is always a hand step,
 `/release` or the repo's own. The **priority** is stated, never asked:
@@ -2514,9 +2520,16 @@ plan's projects — the registry projects its units' `owns` fall under, each
 project's folder read from bootstrap (`repo.projects.<name>.folder`), or the
 repo-level checks alone when none matches; they run no dependency audit, no
 drift check and no bootstrap dry-run. A `blocking` row halts the run there,
-with no claim, no worktree and no status edit to undo. A `degraded` row — a
-project no language tool links, or one with no bootstrap folder entry, which
-the checks then skip — never stops the run and is never asked about.
+with no claim, no worktree and no status edit to undo. The checks also run
+bootstrap's `code:lsp:check` once, from the base repo root, and make one
+`lsp-check` row for each server it cannot find, or one row when the task is
+absent or the check fails. An `lsp-check` row stops a plan with a `code` unit
+the same way, with each server's remedy, and you fix it before the run
+continues; no consent applies. A plan with no `code` unit continues, writes each
+row as an `lsp-check` event of its action log (a value that starts with `--`
+gets a leading space), and its final report lists them. Any other `degraded`
+row — a project no language tool links, or one with no bootstrap folder entry,
+which the checks then skip — never stops the run and is never asked about.
 Then the script **claims the row**: the folder's row is set `RUNNING`, and the
 folder's `run` to the
 worktree and [action log](#the-action-log) paths the run will use, in one
@@ -2565,9 +2578,8 @@ unit's ruling is in its file. Nothing else differs by kind: the claim, the
 worktree, the wave loop, the review, the gate, the report and the landing are
 the same for both.
 
-Then the preflight. The run checks no LSP server and reads no `consent.lsp`
-until its parked LSP check returns, with bootstrap installing the servers; a
-run with a `code` unit proceeds without an LSP gate until then. Then every line
+Then the preflight. The LSP check already ran at the start, so the preflight
+checks no LSP server and asks nothing. Then every line
 of
 the folder's unit gate and wave gate, once, before the first unit — what is
 written and nothing inferred; a red line
@@ -2845,15 +2857,16 @@ and with `covers`, the coverage, the acceptance and ux results,
 written, and the consolidated gap list marked by cap or guard. It **reads this
 back out of the run state in the folder's `index.json`** — each unit's `status`,
 `commit` and `rounds`, a review row's `range`, the `gaps` and `stages` lists —
-together with `git log`, rather than recalling the run: by then the run may have
-spanned dozens of dispatches, a compaction, or a handoff-and-resume, and the
-committed folder is the only account that survived all three. Each field is
-written as its unit or stage returns, so round counts are counted rather than
-remembered and a skipped stage is visible as `skipped` with its reason instead
-of an absence. Only when the folder cannot be read does the report fall back to
-`git log` and the action log, and then it says so and marks itself
-**reconstructed** — you should know whether you're reading a record or a
-recollection.
+together with `git log` and, for a plan with no `code` unit, the action log's
+`lsp-check` events after its last `run.start`, rather than recalling the run: by
+then the run may have spanned dozens of dispatches, a compaction, or a
+handoff-and-resume, and the committed folder is the only account that survived
+all three. Each field is written as its unit or stage returns, so round counts
+are counted rather than remembered and a skipped stage is visible as `skipped`
+with its reason instead of an absence. Only when the folder cannot be read does
+the report fall back to `git log` and the action log, and then it says so and
+marks itself **reconstructed** — you should know whether you're reading a record
+or a recollection.
 
 **Then it lands per the recorded consent.** When the plan's `consent.merge` is
 `true`, every gate line is green, every unit is green or an explained skip, and
@@ -2973,7 +2986,9 @@ never by its arguments. `SessionEnd` appends `session.end` and releases the
 session. They cost nothing outside a run: the hook exits at once unless a run
 has marked its session as logging. The orchestrator logs what only it knows,
 through the execute skill's `log.mjs`: a snapshot of the plan's units at each
-start, each phase from the start checks to the after-landing steps, every gate
+start, each phase from the start checks to the after-landing steps, each
+`code:lsp:check` row of a plan with no `code` unit as an `lsp-check` event,
+which `start.mjs` writes on every start, every gate
 line — run
 through the script, so its duration and exit code are measured rather than
 reported — every commit, each review round with its range and finding counts,
@@ -3702,9 +3717,10 @@ with its reason in the `decisions` list. The row sits in a wave strictly later
 than the units it covers, and covers every earlier-wave unit no earlier row
 covers — not only the units that land the code — since it reviews the whole
 range since the previous row. The keys and
-sections the template marks cycle-only — `covers`, `exposure`, `acceptance`,
-`consent.lsp` and the slice — are omitted, and `plan.mjs validate` refuses a
-change plan that carries one. Every unit sits in **wave 1** unless it has a
+sections the template marks cycle-only — `covers`, `exposure`, `acceptance`
+and the slice — are omitted, and `plan.mjs validate` refuses a change plan that
+carries one, or the retired `consent.lsp`. Every unit sits in **wave 1** unless
+it has a
 named reason to wait — it edits a path an earlier unit creates or moves, or its
 verification needs an earlier unit's output — and that unit's `waits` states the
 reason, which the self-review checks: the `edit` units of one wave run at once,
