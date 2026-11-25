@@ -771,8 +771,8 @@ allowed to read. Otherwise, three checks:
   required** when that branch's own landing value reads `pr` — the
   `data.value` of `bootstrap config get repo.branches.<branch>.landing --json`
   in that repo, the branch name checked first (`## Passing values` of
-  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), `pr`, `direct-merge` or `direct-commit`, an unset key reading
-  the default `direct-merge` (on
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), `pr`, `direct-merge`
+  or `direct-commit`, an unset key reading the default `direct-merge` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and
   `required_pull_request_reviews`; on GitLab `allow_force_push` and a
