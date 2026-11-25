@@ -58,9 +58,11 @@ names it — linked by `bootstrap detect --add` and read with
 structural signals above regardless. Detection is **recognition**, and a
 project no language tool links is a legitimate scan result — it is what lets
 setup describe the repo accurately instead of refusing to look at it. Report
-it with the fix, `bootstrap add tool <tool>` then `bootstrap detect --add`,
-unless every platform of the project is `iac`, `cicd` or `misc`, which have
-no language tool by nature; `/vwf:doctor` reports it as `degraded` until then.
+it with the fix, `bootstrap add tool <tool>` then `bootstrap detect --add`
+(a form whose `<tool>` follows `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), unless every
+platform of the project is `iac`, `cicd` or `misc`, which have no language
+tool by nature; `/vwf:doctor` reports it as `degraded` until then.
 
 ## Role and platforms
 

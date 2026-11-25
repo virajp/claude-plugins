@@ -302,12 +302,15 @@ point, since a stamp written before validation describes a tree nothing checked:
    pipeline elicited, and nothing it did not. The repo facts are not
    `vwf.yaml` keys: set each the pipeline returned — `repo.product_name`,
    `repo.topology`, `repo.topology_reason`, and for a multi-repo product each
-   `repo.members.<name>` — with `bootstrap config set <key> <value> --json`,
+   `repo.members.<name>` — with `bootstrap config set <key> '<value>' --json`,
    by `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and write each
    member's project placement as `projects.<p>.repo`. A project's folder is
    bootstrap's too, never a registry `path`: in the repo that holds it, run
    `bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json`,
-   the folder relative to that repo, for each project whose folder exists. A
+   the folder relative to that repo, for each project whose folder exists.
+   Each value is quoted and each member or project name in a key is checked
+   per `## Passing values` of that file: a bad name stops that one write with
+   a report that names it, and nothing is written for it. A
    member's way back to the base is its `repo.home`, which bootstrap writes
    when `setup:configs` runs from the base with the member's flag
    (`--<member>`), per
@@ -336,7 +339,9 @@ point, since a stamp written before validation describes a tree nothing checked:
    **A pinned project no language tool links does not halt.** A project whose
    `template` is pinned but that no bootstrap tool of category `languages`
    links is a `degraded` row like any other: setup reports it with its fix,
-   `bootstrap add tool <tool>` then `bootstrap detect --add`, and continues.
+   `bootstrap add tool <tool>` then `bootstrap detect --add`, a form whose
+   `<tool>` follows `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and continues.
 
    **A declined landing is the expected way to reach "pinned, not
    materialized".** That finding is blocking, so it halts here and reverts the
