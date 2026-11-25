@@ -1,0 +1,632 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "Every bootstrap write quotes its values and checks its key names",
+  "requires": [],
+  "source": [
+    "B152"
+  ],
+  "backlog": [
+    "B152"
+  ],
+  "backlog_pieces": [],
+  "gaps_of": [
+    "docs/plans/2026-11-15-vwf-over-bundles"
+  ],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-25 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": false
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format --all"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint --all",
+      "mise x -- pnpm vitest run",
+      "mise x -- mise run p:plugins:check"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts",
+      "mise x -- mise run p:plugins:check",
+      "mise x -- mise run p:site:check"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "command grep -rnE 'bootstrap (config (set|unset)|add tool|remove tool)|--answer ' plugins/vwf/skills plugins/stackgen/skills plugins/vwf/assets plugins/stackgen/assets",
+        "pass": "Each hit either is a constant command with no value or name from outside the skill (for example bootstrap add tool claude), or its own sentence or step cites the Passing values section of bootstrap-contract.md, or it is a read (config get) or a mention in prose that runs nothing. A form that shows only placeholders is covered when it cites the rule (D20). Also accepted: the literal placeholder that doctor stack.mjs:421 prints; the remedies of doctor stack.mjs at about lines 248 and 403, which print a command only after the D6 or D13 name check that the tests prove (D26); and the hits in the ## The calls the plugins use and ## Passing values sections of both contract copies, which are the rule itself. The run report lists each hit and what covers it. Mentions with no command line, accepted by D27: setup/SKILL.md:253, setup/references/workspace-structure.md:27, assets/stack-vocabulary.md:21, stackgen materializer.md:114, stackgen-stack-template/SKILL.md:244, stackgen assets/pack-format.md:62 (line numbers before the run)."
+      },
+      {
+        "id": "K2",
+        "check": "bash -c 'diff <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f\" plugins/vwf/assets/bootstrap-contract.md) <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f\" plugins/stackgen/assets/bootstrap-contract.md)'",
+        "pass": "No output: the Passing values section is the same in both copies."
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "A security fix: every bootstrap write that vwf's skills make quotes its value and checks its key names, and doctor's project-folder remedy prints no command for a bad name. No new behaviour."
+    },
+    {
+      "id": "stackgen",
+      "level": "PATCH",
+      "reason": "A security fix: stackgen's bootstrap hand-off quotes its --answer values under the shared rule. No new behaviour."
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "The Passing values rule in both contract copies",
+      "wave": 1,
+      "file": "01-contract.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/assets/bootstrap-contract.md",
+        "plugins/stackgen/assets/bootstrap-contract.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Setup cites the rule at every bootstrap write",
+      "wave": 1,
+      "file": "02-setup.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/setup/SKILL.md",
+        "plugins/vwf/skills/setup/references/migrate-pipeline.md",
+        "plugins/vwf/skills/setup/references/onboard-pipeline.md",
+        "plugins/vwf/skills/setup/references/workspace-structure.md",
+        "plugins/vwf/skills/setup/references/materialize.md",
+        "plugins/vwf/skills/setup/references/topology-detection.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "The other vwf skills cite the rule at every bootstrap write",
+      "wave": 1,
+      "file": "03-skills.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/architecture/SKILL.md",
+        "plugins/vwf/skills/verify/SKILL.md",
+        "plugins/vwf/skills/execute/references/land.md",
+        "plugins/vwf/skills/plan/references/delta-checks.md",
+        "plugins/vwf/skills/init/SKILL.md",
+        "plugins/vwf/skills/init/references/new-repo.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Doctor's remedies check the names they print",
+      "wave": 1,
+      "file": "04-doctor.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/scripts/lib/stack.mjs",
+        "scripts/src/doctor-checks.test.ts",
+        "scripts/src/fixtures/doctor-checks/**"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U5",
+      "title": "Review: U1 to U4 and U8",
+      "wave": 2,
+      "file": "05-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U8"
+      ],
+      "waits": "reviews the committed wave-1 delta, U4's stack.mjs change in focus",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U6",
+      "title": "Docs",
+      "wave": 3,
+      "file": "06-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/**",
+        ".claude/skills/vwf-plugin/**",
+        ".claude/skills/stackgen-plugin/**",
+        "CLAUDE.md",
+        "readme.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U5",
+        "U8"
+      ],
+      "waits": "documents the whole delta after the review",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U7",
+      "title": "Gates",
+      "wave": 4,
+      "file": "07-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U6"
+      ],
+      "waits": "the final gate runs over the documented tree",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U8",
+      "title": "The vwf assets and doctor references follow the rule",
+      "wave": 1,
+      "file": "08-assets.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/doctor/references/stack-checks.md",
+        "plugins/vwf/assets/vwf-config.md",
+        "plugins/vwf/assets/stack-adapter.md",
+        "plugins/vwf/assets/topologies/monorepo.md",
+        "plugins/vwf/assets/stack-vocabulary.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "site/src/content/docs/**, readme.md, CLAUDE.md",
+      "why": "human-facing docs; only the docs unit edits them",
+      "owner": "U6"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "Which bootstrap writes does this plan make safe?",
+      "ruling": "All of vwf and stackgen, under one rule: every bootstrap config set, config unset, add tool, remove tool and --answer line in plugins/vwf/skills, plugins/stackgen/skills and plugins/vwf/assets (D18) that carries a value or a name. The three lines of gap G2 (setup migrate-pipeline.md:121, :204 and onboard-pipeline.md:157) are among them.",
+      "rejected": "Setup only, the rest parked; the three lines of G2 only.",
+      "units": []
+    },
+    {
+      "id": "D2",
+      "decision": "Where does the one rule live?",
+      "ruling": "In a new section, headed exactly ## Passing values, of plugins/vwf/assets/bootstrap-contract.md and plugins/stackgen/assets/bootstrap-contract.md, with the same body in both copies, placed after ## The calls the plugins use and before any later section. Every skill line cites it by that heading, through ${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md of its own plugin.",
+      "rejected": "A new vwf-only asset, stackgen left as it is.",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "Which values must a skill quote?",
+      "ruling": "Every value, always, whatever its source: the value argument of bootstrap config set and every value of an --answer <tool>.<key>=<value> pair. Serialize a list or a table value as JSON; pass a scalar, free text included, as its raw text, never encoded as a JSON string (D25). Then replace each ' with '\\'' and wrap the whole value in single quotes. Never pass it unquoted or in double quotes. For --answer, quote the whole <tool>.<key>=<value> argument as one single-quoted word.",
+      "rejected": "Quote only values from a cloned repo or free text, leaving enums and constants bare.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U8"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "What does the rule do with names that build a key path or a tool name?",
+      "ruling": "Check them, and stop on a bad one. A name that becomes one segment of a key path contains only letters, digits, _ and -; a . is not allowed, because it splits the path into a nested key. The key shapes are: repo.members.<name>, the <field> of repo.members.<name>.<field>, repo.projects.<name>, the name of config unset repo.projects.<old name>, tools.<tool>.projects, releases.<key>, and the <env> and <project> of repo.deploy.<env>.<project>. A tool name given to add tool or remove tool is also a name of bootstrap catalog --json data.tools. A bad name stops that one write with a report that names it, and nothing is written for it. A . stays allowed inside a JSON value, for example the <name>@<marketplace> keys of tools.claude.plugins.project in materialize.md step 3.",
+      "rejected": "Quote the whole key argument the same way as a value, with no check.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U4",
+        "U8"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "Does the rule cover commands printed for the user to run by hand?",
+      "ruling": "Yes, with the same quoting and the same name check: setup migrate-pipeline.md:210, execute land.md:113, and the remedy text that doctor's stack.mjs builds. The user copies and runs them.",
+      "rejected": "Only the two printed lines in .md files; stack.mjs left as a parked gap.",
+      "units": [
+        "U2",
+        "U3",
+        "U4"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "What does doctor's project-folder remedy show when the project name fails the D4 check?",
+      "ruling": "The row stays as it is (rule project-folder, severity degraded), but its remedy prints no command. It reads: project <name> is not a valid bootstrap key (letters, digits, _ and - only); rename the project by hand in docs/blueprint/registry.yaml and in each projects.<name> key of .config/vwf.yaml, then run /vwf:setup and /vwf:doctor again (D21, D32). A valid name keeps today's remedy, bootstrap config set repo.projects.<name> '{\"folder\":\"<path>\"}' --json, where <path> stays a literal placeholder.",
+      "rejected": "Print the command with the key single-quoted and escaped.",
+      "units": [
+        "U4",
+        "U8"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "Does this change plan need a review unit?",
+      "ruling": "Yes, one, U5 in wave 2, covering U1 to U4 and U8 (D24). U4 changes stack.mjs, a shipped script that runs, and the plan is a security fix.",
+      "rejected": "The wave review only.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "Execution mode.",
+      "ruling": "teams. Wave 1 holds four edit units; U2 and U3 cite the section that U1 writes, so they can agree on its heading and wording while they work.",
+      "rejected": "solo, with the heading fixed in the rulings and the wave review catching a difference.",
+      "units": []
+    },
+    {
+      "id": "D9",
+      "decision": "Backlog and gaps.",
+      "ruling": "No backlog item covered G2, so the hand-off added B152 (P0) on 2026-11-25; this plan finishes it (source and backlog). The plan takes the open gap of docs/plans/2026-11-15-vwf-over-bundles (gaps_of).",
+      "rejected": "Leave G2 open on the landed plan.",
+      "units": []
+    },
+    {
+      "id": "D10",
+      "decision": "Rulings review gap 1: K2 compared the sed range, which takes the next heading of vwf copy only, and used <(...), which fish lacks.",
+      "ruling": "K2 runs in bash -c and compares only the section body, from the ## Passing values heading to the line before the next ## heading or the end of the file (awk range).",
+      "rejected": "Drop K2 and leave the comparison to the wave review.",
+      "units": []
+    },
+    {
+      "id": "D11",
+      "decision": "Rulings review gap 10: how does bootstrap config set store a single-quoted value?",
+      "ruling": "Checked in a scratch repo on 2026-11-23: the shell removes the single quotes, so bootstrap gets the same string. config set repo.topology_reason with the value it's a \"test\"; $(echo hi) stored that exact text and ran nothing; a JSON object value is parsed into a table; the scalar 42 is stored as the string \"42\". Quoting changes no stored value.",
+      "rejected": "none: a fact, not a choice",
+      "units": []
+    },
+    {
+      "id": "D12",
+      "decision": "Rulings review gap 2: U3 quoted a D4 with repo.deploy and without tools.<tool>.projects.",
+      "ruling": "D4 holds one full list of key shapes, repo.deploy.<env>.<project> included, and U1, U2 and U3 quote it word for word.",
+      "rejected": "Leave repo.deploy out; the deploy URL is quoted as a value but env and project are not checked.",
+      "units": []
+    },
+    {
+      "id": "D13",
+      "decision": "Rulings review gap 3: doctor stack.mjs:248 prints bootstrap add tool ${tool} from a materialized entry tools: list, with no check.",
+      "ruling": "U4 also checks the tool name of the tool-link remedy with /^[A-Za-z0-9_-]+$/. A name that fails gets no command: the remedy says that tool <name> is not a valid bootstrap tool name. The row stays as it is. Doctor makes no bootstrap catalog call for this check.",
+      "rejected": "Check against bootstrap catalog --json (one more bootstrap read in doctor); leave the tool-link remedy out of scope.",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "Rulings review gap 4: doctor/references/stack-checks.md:71 and assets/vwf-config.md:195 give the repo.projects fix that D6 makes false for a bad name, and no unit owned them.",
+      "ruling": "A new wave-1 edit unit, U8, owns the vwf assets and doctor references that hold a bootstrap write or a doctor remedy, and states D6 at both passages.",
+      "rejected": "Add the two files to the docs unit U6.",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "Rulings review gap 5: init/SKILL.md:424 runs bootstrap migrate with --answer, in a step no edit listed.",
+      "ruling": "U3 quotes it too, per D3: every --answer of bootstrap migrate and of add tool.",
+      "rejected": "Leave line 424 as an accepted case.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Rulings review gap 6: printed bootstrap add tool <tool> fixes at setup/SKILL.md:339, migrate-pipeline.md:170, topology-detection.md:61 and doctor/references/stack-checks.md:95 and :111 had no unit.",
+      "ruling": "D4 and D5 cover them as forms, per D20: each cites ## Passing values once, and the D4 check applies to the real name that fills the placeholder. U2 takes the setup lines and owns topology-detection.md; U8 takes stack-checks.md:95 and :111.",
+      "rejected": "Accept them as placeholders.",
+      "units": [
+        "U2",
+        "U8"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Rulings review gap 7: materialize.md:154 writes tools.<t>.projects, a D4 key shape, with no check; does step 3 stay separate?",
+      "ruling": "Line 154 gets the D4 check on <t> before the write (letters, digits, _ and -, and a name of the catalog). Step 3 of Declare the addons stays a separate check, because it checks keys inside a JSON value, where a . is allowed.",
+      "rejected": "Rely on the catalog check of line 143 alone.",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Rulings review gap 8: assets/stack-adapter.md:362, assets/vwf-config.md:152 and assets/topologies/monorepo.md:93 run bootstrap config set with values, outside D1 scope.",
+      "ruling": "D1 also covers plugins/vwf/assets. U8 owns stack-adapter.md and topologies/monorepo.md too, and quotes each write with a citation of ## Passing values. K1 also searches plugins/vwf/assets and plugins/stackgen/assets; the hits inside the Passing values section itself are the rule.",
+      "rejected": "Leave the assets out of scope.",
+      "units": [
+        "U8"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "Rulings review gap 9: the sentence near the top of each bootstrap-contract.md copy names only the pane exception, but vwf also has the section ## The git ports that stackgen lacks.",
+      "ruling": "U1 changes that sentence in both copies so that it names both differences: the pane exception and ## The git ports. index.md facts are corrected.",
+      "rejected": "Correct only the index.md facts.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Rulings review round 2, gaps 1, 2, 3, 4 and 8: what do the rule and K1 do with a command that shows only placeholders?",
+      "ruling": "A command that shows only placeholders (for example bootstrap add tool <tool>) is a form, not a write. In a .md file it cites ## Passing values once at the form, and whoever fills it in applies the rule; the D4 check applies to the real name, not to the placeholder. A script that prints a literal placeholder (doctor stack.mjs:421, the language-tool remedy) stays as it is. The call list of ## The calls the plugins use in both contract copies is the rule's own text. K1 accepts all three. U8 owns assets/stack-vocabulary.md and cites the rule at its line 39, and at vwf-config.md:924 (the 27 to 28 add tool fix) and vwf-config.md:901 (the 26 to 27 config set of member, env and project names, a real write: quoted per D3 and checked per D4).",
+      "rejected": "A separate ruling for each placeholder line.",
+      "units": [
+        "U2",
+        "U8"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "Rulings review round 2, gap 5: the D6 remedy said rename it in .config/vwf.yaml, but doctor reads the project name from docs/blueprint/registry.yaml.",
+      "ruling": "The remedy says: rename the project by hand in docs/blueprint/registry.yaml and in each projects.<name> key of .config/vwf.yaml, then run /vwf:setup and /vwf:doctor again (amended by D32: /vwf:architecture has no rename step).",
+      "rejected": "Name registry.yaml only, for an edit by hand.",
+      "units": [
+        "U4",
+        "U8"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Rulings review round 2, gap 6: a key of .config/releases.yaml fails the D4 check during the landing move in execute land.md:90-113.",
+      "ruling": "Skip only that key and report it; write the valid keys. Do not remove .config/releases.yaml while it holds a skipped key, so the key is not lost. The landing continues.",
+      "rejected": "Treat a bad key as a failed call, so step 5 abandons the whole move.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "Rulings review round 2, gap 7: a member, env or project name fails the D4 check during the 26 to 27 or 27 to 28 migration step of setup.",
+      "ruling": "Check every name of the step before its first write. On a bad name, stop the migration step for that repo before any write: report the bad name and how to rename it. vwf.yaml keeps the key and the stamp stays at the old config_format, so the next /vwf:setup offers the step again. Other repos continue.",
+      "rejected": "Skip only that key, keep it in vwf.yaml, and stamp the new format.",
+      "units": [
+        "U2",
+        "U8"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "Rulings review round 2, gap 9: D7 named U1 to U4 while U5 also covers U8, and U5 focus named only plugins/*/skills.",
+      "ruling": "D7 names U1 to U4 and U8. U5 focus adds plugins/vwf/assets and the D20, D22 and D23 rulings.",
+      "rejected": "Keep the review on plugins/*/skills and stack.mjs only.",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "Rulings review round 3, gap 1: is a free-text scalar encoded as a JSON string before it is quoted?",
+      "ruling": "No. A scalar is passed as its raw text; only a list or a table value is encoded as JSON. Checked in a scratch repo on 2026-11-23: for a string key, bootstrap stored [wip] text, {x} and [\"a\",\"b\"] as the raw strings, and stored \"quoted\" with its double quotes, so a JSON-encoded scalar would store the extra quotes.",
+      "rejected": "Encode every value as JSON.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U8"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "Rulings review round 3, gap 2: do the stack.mjs remedy templates at about lines 248 and 403 pass K1?",
+      "ruling": "Yes. K1 accepts a script remedy that prints a command only after the D6 or D13 name check, when the tests prove the check. K1 names stack.mjs:248 and :403.",
+      "rejected": "U7 reports them as K1 failures.",
+      "units": []
+    },
+    {
+      "id": "D27",
+      "decision": "Rulings review round 3, gap 3: prose that names a bootstrap write with no command line (setup/SKILL.md:253, setup/references/workspace-structure.md:27, assets/stack-vocabulary.md:21, stackgen materializer.md:114, stackgen-stack-template/SKILL.md:244, stackgen assets/pack-format.md:62).",
+      "ruling": "A sentence that names a write without the command line the model runs is a mention. The rule applies at the step that holds the command. K1 accepts these six lines, and the run report names each one. No unit edits them.",
+      "rejected": "Treat each as a form that cites the rule, with a new stackgen owner.",
+      "units": []
+    },
+    {
+      "id": "D28",
+      "decision": "Rulings review round 3, gap 4: the rename route that the D23 report gives for a bad member name or a bad deploy env name.",
+      "ruling": "Member and env names still sit in .config/vwf.yaml before the step moves them. The report says to rename the name in .config/vwf.yaml by hand (for a submodule member, also its name in .gitmodules), then run /vwf:setup again. A bad project name uses the D21 route, /vwf:architecture.",
+      "rejected": "Report the bad name and its key with no rename route.",
+      "units": [
+        "U2",
+        "U8"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Rulings review round 3, gap 5: does the hand-step report of execute land.md:113 print a config set line for a releases key that D22 skipped?",
+      "ruling": "No. For a skipped key the report prints no command: it names the key, says that it is not a valid bootstrap key, and says that it stays in .config/releases.yaml.",
+      "rejected": "Print the line with the key quoted.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Rulings review round 4, gap 1: the escape is safe only in POSIX shells; in fish a backslash inside single quotes escapes the next quote, so a value with a backslash breaks the quoting (tested 2026-11-23: fish failed to parse the line, sh and zsh kept it one string).",
+      "ruling": "A value that holds a backslash, a newline or another control character stops that one write with a report that names the key, and nothing is written for it. Without these characters the quote-escape form is the same in sh, bash, zsh and fish.",
+      "rejected": "Run every bootstrap write inside /bin/sh -c; accept the fish case as an open gap.",
+      "units": [
+        "U1",
+        "U2",
+        "U3",
+        "U8"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Rulings review round 4, gap 2: after D22 skips a bad key of .config/releases.yaml, what happens to the moved valid keys?",
+      "ruling": "The moved keys are removed from .config/releases.yaml, so only the skipped keys stay. The landing commit carries the edited file. Each later landing reports the same skip until the user renames the key; no key is written twice.",
+      "rejected": "Keep the file whole, so each later landing moves the same keys again.",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Rulings review round 4, gap 3: /vwf:architecture has no step that renames a project, so the route of D6, D21 and D28 does not exist.",
+      "ruling": "The remedy and the reports say: rename the project by hand in docs/blueprint/registry.yaml and in each projects.<name> key of .config/vwf.yaml, then run /vwf:setup and /vwf:doctor again. A parked gap, docs/memory/gaps/2026-11-25-architecture-has-no-project-rename-parked.md, records that architecture has no rename step.",
+      "rejected": "Name no route; keep through /vwf:architecture as an open gap.",
+      "units": [
+        "U2",
+        "U4",
+        "U8"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "Rulings review round 4, gap 4: does D3 encode an --answer list or table as JSON? Only config set was tested, and bootstrap help gives no list form for --answer.",
+      "ruling": "No. An --answer value is never encoded as JSON. It is passed in the form that bootstrap questions --json shows for that question, then the whole <tool>.<key>=<value> argument is quoted per D3 and checked per D30. JSON encoding applies to config set only.",
+      "rejected": "Keep D3 as it is and record the --answer list form as an open gap.",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "Rulings review round 4, gap 5: init/references/new-repo.md:65 is prose (add tool virajp-plugins --json --dry-run, then --yes with the answers) with no --answer argument to quote.",
+      "ruling": "U3 adds a short clause at with the answers: each answer is passed as a quoted --answer per ## Passing values, so the line agrees with init/SKILL.md.",
+      "rejected": "Treat it as a D27 mention.",
+      "units": [
+        "U3"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
