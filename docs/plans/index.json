@@ -12,13 +12,32 @@
       "started": "2026-11-23T11:50:48.573Z",
       "ended": "2026-11-23T12:56:39.407Z",
       "gaps": {
-        "open": 1,
-        "moved_to": []
+        "open": 0,
+        "moved_to": [
+          "2026-11-23-bootstrap-value-quoting"
+        ]
       },
       "requires": [
         "2026-11-15-stack-bundles-tools"
       ],
       "backlog": [],
+      "backlog_pieces": []
+    },
+    {
+      "id": "2026-11-23-bootstrap-value-quoting",
+      "folder": "docs/plans/2026-11-23-bootstrap-value-quoting",
+      "kind": "change",
+      "title": "Every bootstrap write quotes its values and checks its key names",
+      "target_repo": null,
+      "priority": 10,
+      "status": "APPROVED",
+      "started": "",
+      "ended": "",
+      "gaps": null,
+      "requires": [],
+      "backlog": [
+        "B152"
+      ],
       "backlog_pieces": []
     }
   ]
