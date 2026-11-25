@@ -65,7 +65,9 @@ decides a pin rather than landing it.
 **First, the project's folder and its repo.** A project lives in the repo
 `projects.<name>.repo` names, else in the base repo, and its folder is
 bootstrap's: `bootstrap config get repo.projects.<name>.folder --json`, run in
-that repo (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). Since
+that repo (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), its name
+checked per `## Passing values` there; doctor's script already reports a bad
+name as the `project-folder` row below. Since
 `blueprint_format` 26 the registry carries no `path`. A registry project with
 no `repo.projects.<name>` entry is a **degraded** row naming the project, with
 the fix `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`
@@ -768,7 +770,8 @@ allowed to read. Otherwise, three checks:
   have set — **no force-push and no deletion**, always; **a pull request
   required** when that branch's own landing value reads `pr` — the
   `data.value` of `bootstrap config get repo.branches.<branch>.landing --json`
-  in that repo, `pr`, `direct-merge` or `direct-commit`, an unset key reading
+  in that repo, the branch name checked first (`## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), `pr`, `direct-merge` or `direct-commit`, an unset key reading
   the default `direct-merge` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and

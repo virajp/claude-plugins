@@ -18,7 +18,8 @@
 #   - `path` — removed in blueprint format 26 (`vwf_registry: 3`). A
 #     project's folder is bootstrap's `repo.projects.<name>.folder`, read
 #     with `bootstrap config get repo.projects.<name>.folder --json` in the
-#     repo that holds it: `projects.<name>.repo`, else the base repo.
+#     repo that holds it: `projects.<name>.repo`, else the base repo; the
+#     name is checked first (`## Passing values` of bootstrap-contract.md).
 #   - enforcement opt-outs — vwf operating config, `.config/vwf.yaml`.
 #   - prose, rationale, or hosting narrative — architecture.md.
 

@@ -192,7 +192,8 @@ registry (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
 
 - **The folder** is `repo.projects.<name>.folder`, repo-relative, `.` for the
   repo root:
-  `bootstrap config get repo.projects.<name>.folder --json`. The registry's
+  `bootstrap config get repo.projects.<name>.folder --json`, the name checked
+  first per `## Passing values`. The registry's
   `path` is gone (`blueprint_format` 26, `vwf_registry: 3`). A registry
   project with no `repo.projects.<name>` entry is a **degraded**
   `/vwf:doctor` row with the fix

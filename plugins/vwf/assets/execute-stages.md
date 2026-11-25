@@ -134,8 +134,10 @@ Per-stage dispatch contract:
   `acceptance` list of the folder's `index.json`, each criterion's `text`
   with its source flow, its `flow`, the registry with each project's folder —
   `bootstrap config get repo.projects.<name>.folder --json`, run in
-  `projects.<name>.repo`, else the base repo — the **plan folder path**
-  and the **`covers` doc names** for the gap lines it returns, and the
+  `projects.<name>.repo`, else the base repo, the name checked first
+  (`## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`) — the **plan folder
+  path** and the **`covers` doc names** for the gap lines it returns, and the
   **slice** and **round number**). It
   independently maps each criterion to an E2E test (never trusting the coder's
   mapping), boots the repo's own E2E harness, runs it, and returns per-criterion
