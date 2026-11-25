@@ -71,7 +71,9 @@ Then act on that consent:
 ## The release-levels read — before the merge
 
 On `yes`, before the hand-off to `/vwf:git-workflow` step 4, read the folder's `release_levels` and run, in the
-run's worktree, `bootstrap config get releases.<id> --json` for each entry. The read only proves that the contract
+run's worktree, `bootstrap config get releases.<id> --json` for each entry, each `<id>` checked first per
+`## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — a bad `<id>` gets no call, and the
+final report names it. The read only proves that the contract
 works; its values are not the "from" level of the write. A failed call stops the run before the merge, with the
 `errors` messages of bootstrap's envelope as bootstrap gives them, per
 `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. The folder's status reads `BLOCKED` with that text, and the
@@ -95,8 +97,8 @@ after `complete` edits the row, and before the row edit is committed with `land.
 1. **The move from `.config/releases.yaml`**. Whenever `.config/releases.yaml` exists in the worktree, before
    anything else, even for an empty `release_levels` list: for each of its keys that is not `NONE`, run
    `bootstrap config get releases.<key> --json`, then `bootstrap config set releases.<key> '<level>' --json`, then the
-   same get again. A key that fails the name check is skipped: nothing is written for it, and the final report names
-   it as *not a valid bootstrap key, kept in `.config/releases.yaml`*. The valid keys are still written, and the
+   same get again. Each key is checked before its first get. A key that fails the name check is skipped: nothing is
+   run for it, and the final report names it as *not a valid bootstrap key, kept in `.config/releases.yaml`*. The valid keys are still written, and the
    landing continues. When no key was skipped, delete the file with `rm`. When a key was skipped, do not delete the
    file: remove the moved keys from it, so only the skipped keys stay. Each later landing reports the same skip until
    the user renames the key, and no key is written twice. The final report lists each key moved as *moved from

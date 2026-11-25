@@ -32,7 +32,9 @@ In order, it:
    (`${CLAUDE_PLUGIN_ROOT}/skills/doctor/scripts/checks.mjs`), scoped to the plan's
    projects — the registry projects its units' `owns` fall under, each
    project's folder read with `bootstrap config get repo.projects.<name>.folder --json`
-   in the repo that holds it, or the repo-level checks alone when none matches.
+   in the repo that holds it, `<name>` checked first per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` (a bad name gets no read, and the
+   report names it), or the repo-level checks alone when none matches.
    A registry project with no `repo.projects.<name>` entry is skipped, and its
    row is `degraded`;
 6. on any `blocking` row, stops with `blocked` and claims nothing; on an

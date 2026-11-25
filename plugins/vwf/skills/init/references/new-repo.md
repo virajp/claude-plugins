@@ -186,8 +186,10 @@ the list that knows which projects live in a member is the base's:
 sub-project directories are its projects' folders — each one's
 `bootstrap config get repo.projects.<name>.folder --json`, run in the repo that
 holds it, the registry having no `path` since `blueprint_format` 26 — and
-nothing else in the tree is one. A failed `bootstrap` call stops with
-bootstrap's `errors`. Where none does, the term is live in **`source` mode
+nothing else in the tree is one. Each `<name>` is checked before its read, per
+`## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a
+bad name stops that one read with a report that names it, and nothing is run
+for it. A failed `bootstrap` call stops with bootstrap's `errors`. Where none does, the term is live in **`source` mode
 only**, and means a non-root directory that carries its **own language manifest**
 from the table below, or that a **workspace file** at the root enumerates as a
 member. `docs/`, `scripts/`, `.config/`, `.github/` and any dot-directory never
@@ -406,7 +408,10 @@ built from these reads, in this order:
 - **The protection, each core branch, always**: no force-push and no deletion.
   Then **per branch, from that branch's own landing** —
   `bootstrap config get repo.branches.<b>.landing --json`, the value being the
-  envelope's `data.value`, a missing key reading `direct-merge`: where the value
+  envelope's `data.value`, a missing key reading `direct-merge`, `<b>` checked
+  first per `## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` (a bad branch name gets
+  no read, and the report names the branch): where the value
   is **`pr`**, additionally **require a pull request**, with no approval count,
   because the landing says that branch lands through a request, so a direct
   push to it is exactly what the forge should refuse. Where it is `direct-merge`

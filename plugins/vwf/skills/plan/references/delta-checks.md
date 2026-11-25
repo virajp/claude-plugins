@@ -62,8 +62,12 @@ order **before** the units whose verification depends on them.
 A project's folder is bootstrap's, `repo.projects.<name>.folder`, never the
 registry's, and `/vwf:architecture` writes that entry only for a folder that
 already exists. So when a unit of this plan **creates a registry project's
-folder** and `bootstrap config get repo.projects.<name>.folder --json`, run in
-the repo that holds the project (`projects.<name>.repo`, else the base repo),
+folder**, check `<name>` first, per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: letters, digits, `_` and
+`-` only, no `.`. A bad name gets no read and no line: the plan reports it, and
+nothing is run for it. For a good name, when
+`bootstrap config get repo.projects.<name>.folder --json`, run in the repo that
+holds the project (`projects.<name>.repo`, else the base repo),
 does not answer it, that same unit also runs
 
 ```sh
@@ -74,9 +78,7 @@ in that repo once the folder exists, `<folder>` relative to that repo's root.
 Write the line into the unit's steps with the value quoted per
 `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`:
 each `'` replaced with `'\''`, the whole JSON value in single quotes, and a
-stop on a backslash, a newline or another control character. Check `<name>`
-first: letters, digits, `_` and `-` only, no `.`. A bad name gets no line: the
-plan reports it, and nothing is written for it. Until it runs, `/vwf:doctor`
+stop on a backslash, a newline or another control character. Until it runs, `/vwf:doctor`
 reports the missing entry as a degraded row, which never stops `/vwf:execute`.
 
 ## Deferred-core-token check (every element, when the slice is production-bound)
