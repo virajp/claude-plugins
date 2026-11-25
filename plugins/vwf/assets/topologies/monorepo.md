@@ -90,6 +90,10 @@ projects that use it (`${CLAUDE_PLUGIN_ROOT}/assets/stack-vocabulary.md`).
 
 Adding a project is a registry entry, a directory, and bootstrap's
 `[projects.<name>]` entry naming that directory as its `folder`, set with
-`bootstrap config set` once the directory exists. Removing one **archives**
+`bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json` once
+the directory exists. The value is quoted in single quotes, and `<name>` must
+be letters, digits, `_` and `-` only, with no `.`; a bad name stops that write
+with a report that names it (`## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). Removing one **archives**
 its flows and entities under `docs/blueprint/archived/` — vwf never deletes
 blueprint docs — and recomputes the coverage stamp without them.

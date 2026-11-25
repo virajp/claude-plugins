@@ -37,7 +37,9 @@ rather than *missing*, because there is no install command to suggest.
 
 **A project with no linked language tool is drift.** `/vwf:doctor` reports it
 as a **degraded** row, with the fix `bootstrap add tool <t>` or
-`bootstrap detect --add`; a degraded row never stops `/vwf:execute`. A project
+`bootstrap detect --add` (a form: the real tool name follows
+`## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`);
+a degraded row never stops `/vwf:execute`. A project
 whose platforms are **all** `iac`, `cicd` or `misc` needs no language tool and
 gets no row.
 
