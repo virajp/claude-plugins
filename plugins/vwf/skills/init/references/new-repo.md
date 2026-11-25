@@ -189,13 +189,13 @@ holds it, the registry having no `path` since `blueprint_format` 26 — and
 nothing else in the tree is one. Each `<name>` is checked before its read, per
 `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a
 bad name stops that one read with a report that names it, and nothing is run
-for it. A failed `bootstrap` call stops with bootstrap's `errors`. Where none does, the term is live in **`source` mode
-only**, and means a non-root directory that carries its **own language manifest**
-from the table below, or that a **workspace file** at the root enumerates as a
-member. `docs/`, `scripts/`, `.config/`, `.github/` and any dot-directory never
-qualify, whatever they carry. A `blank` repo proposes none. The workspace files
-that enumerate members are these, read for the member paths or globs they list and
-nothing else:
+for it. A failed `bootstrap` call stops with bootstrap's `errors`. Where none
+does, the term is live in **`source` mode only**, and means a non-root directory
+that carries its **own language manifest** from the table below, or that a
+**workspace file** at the root enumerates as a member. `docs/`, `scripts/`,
+`.config/`, `.github/` and any dot-directory never qualify, whatever they carry.
+A `blank` repo proposes none. The workspace files that enumerate members are
+these, read for the member paths or globs they list and nothing else:
 
 ```text
 pnpm-workspace.yaml     the `packages:` globs

@@ -78,8 +78,9 @@ in that repo once the folder exists, `<folder>` relative to that repo's root.
 Write the line into the unit's steps with the value quoted per
 `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`:
 each `'` replaced with `'\''`, the whole JSON value in single quotes, and a
-stop on a backslash, a newline or another control character. Until it runs, `/vwf:doctor`
-reports the missing entry as a degraded row, which never stops `/vwf:execute`.
+stop on a backslash, a newline or another control character. Until it runs,
+`/vwf:doctor` reports the missing entry as a degraded row, which never stops
+`/vwf:execute`.
 
 ## Deferred-core-token check (every element, when the slice is production-bound)
 

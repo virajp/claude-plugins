@@ -57,8 +57,8 @@ request:
   being `bootstrap config get repo.projects.<name>.folder --json` in the repo
   that holds it, `<name>` checked first per `## Passing values` of
   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — a bad name gets no
-  read, and the survey reports it. Otherwise take the repo's top-level directories as the
-  projects.
+  read, and the survey reports it. Otherwise take the repo's top-level
+  directories as the projects.
 - The gates that already cover those trees: the task runner's list
   (`mise tasks ls --hidden`), the harness capabilities whose tasks it lists
   and the ports `bootstrap describe --json` reports present

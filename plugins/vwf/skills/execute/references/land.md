@@ -98,11 +98,11 @@ after `complete` edits the row, and before the row edit is committed with `land.
    anything else, even for an empty `release_levels` list: for each of its keys that is not `NONE`, run
    `bootstrap config get releases.<key> --json`, then `bootstrap config set releases.<key> '<level>' --json`, then the
    same get again. Each key is checked before its first get. A key that fails the name check is skipped: nothing is
-   run for it, and the final report names it as *not a valid bootstrap key, kept in `.config/releases.yaml`*. The valid keys are still written, and the
-   landing continues. When no key was skipped, delete the file with `rm`. When a key was skipped, do not delete the
-   file: remove the moved keys from it, so only the skipped keys stay. Each later landing reports the same skip until
-   the user renames the key, and no key is written twice. The final report lists each key moved as *moved from
-   `.config/releases.yaml`: `<key>` `<level>`*.
+   run for it, and the final report names it as *not a valid bootstrap key, kept in `.config/releases.yaml`*. The
+   valid keys are still written, and the landing continues. When no key was skipped, delete the file with `rm`. When a
+   key was skipped, do not delete the file: remove the moved keys from it, so only the skipped keys stay. Each later
+   landing reports the same skip until the user renames the key, and no key is written twice. The final report lists
+   each key moved as *moved from `.config/releases.yaml`: `<key>` `<level>`*.
 2. Read the folder's `release_levels`: `plan.mjs get docs/plans/archived/<basename>/index.json release_levels` when
    step 3 archived it, at its live path otherwise. An empty list, `[]`, is the old-shape case, which only a migrated
    folder can have. Set nothing. The final report says *old-shape folder — no release levels recorded*.

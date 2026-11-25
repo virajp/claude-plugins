@@ -50,14 +50,13 @@ disable-model-invocation: false
   `direct-merge` (the default) or `direct-commit`, `<b>` checked first per
   `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
   (a bad branch name gets no read, and the report names the branch).
-  `direct-merge` merges the
-  branch to the destination and pushes; `pr` pushes the branch and opens a
-  pull request instead, merging nothing locally; `direct-commit` also allows a
-  commit made on `<b>` itself. A landing always runs
-  `mise x -- mise run git:merge:<b> -- <branch>`, and the task applies the
-  model itself. This skill reads the model only to tell the user what a
-  landing will do (Step 4), and to refuse a direct commit on `<b>` where the
-  value is not `direct-commit`
+  `direct-merge` merges the branch to the destination and pushes; `pr` pushes
+  the branch and opens a pull request instead, merging nothing locally;
+  `direct-commit` also allows a commit made on `<b>` itself. A landing always
+  runs `mise x -- mise run git:merge:<b> -- <branch>`, and the task applies the
+  model itself. This skill reads the model only to tell the user what a landing
+  will do (Step 4), and to refuse a direct commit on `<b>` where the value is
+  not `direct-commit`
 - **The `git:merge:<b>` task refuses a dirty tree** where it runs —
   untracked files, uncommitted changes, or unpushed commits on the branch each
   stop the merge before it touches git. That is not a nuisance: whatever is
