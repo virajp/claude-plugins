@@ -63,11 +63,13 @@ time, then `bootstrap migrate --json --yes` with the answers, in each repo that
 takes it, the base first, after the clone rows and the clean-tree check — and in
 the base alone its last part, the `virajp-plugins` tool:
 `bootstrap add tool virajp-plugins --json --dry-run`, then `--yes` with the
-answers, inside the same consent, skipped with a warning where
-`bootstrap catalog --json` lists no such tool, and reported *stopped* on a
-non-zero exit while the base goes on to hygiene, commit and forge. Its
-gate — the shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
-— decides which repos reach the rest of this file, and its green read decides
+answers, each passed as a quoted `--answer` per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, inside the same consent,
+skipped with a warning where `bootstrap catalog --json` lists no such tool, and
+reported *stopped* on a non-zero exit while the base goes on to hygiene,
+commit and forge. Its gate — the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — decides which repos
+reach the rest of this file, and its green read decides
 where `.config/stackgen.yaml` goes. The toolchain, the gates, the hooks, the
 branch model, the secrets tools and the record of the repo — its
 `.config/bootstrap/` folder — are all bootstrap's, and `init` passes nothing to
@@ -184,14 +186,16 @@ the list that knows which projects live in a member is the base's:
 sub-project directories are its projects' folders — each one's
 `bootstrap config get repo.projects.<name>.folder --json`, run in the repo that
 holds it, the registry having no `path` since `blueprint_format` 26 — and
-nothing else in the tree is one. A failed `bootstrap` call stops with
-bootstrap's `errors`. Where none does, the term is live in **`source` mode
-only**, and means a non-root directory that carries its **own language manifest**
-from the table below, or that a **workspace file** at the root enumerates as a
-member. `docs/`, `scripts/`, `.config/`, `.github/` and any dot-directory never
-qualify, whatever they carry. A `blank` repo proposes none. The workspace files
-that enumerate members are these, read for the member paths or globs they list and
-nothing else:
+nothing else in the tree is one. Each `<name>` is checked before its read, per
+`## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a
+bad name stops that one read with a report that names it, and nothing is run
+for it. A failed `bootstrap` call stops with bootstrap's `errors`. Where none
+does, the term is live in **`source` mode only**, and means a non-root directory
+that carries its **own language manifest** from the table below, or that a
+**workspace file** at the root enumerates as a member. `docs/`, `scripts/`,
+`.config/`, `.github/` and any dot-directory never qualify, whatever they carry.
+A `blank` repo proposes none. The workspace files that enumerate members are
+these, read for the member paths or globs they list and nothing else:
 
 ```text
 pnpm-workspace.yaml     the `packages:` globs
@@ -404,7 +408,10 @@ built from these reads, in this order:
 - **The protection, each core branch, always**: no force-push and no deletion.
   Then **per branch, from that branch's own landing** —
   `bootstrap config get repo.branches.<b>.landing --json`, the value being the
-  envelope's `data.value`, a missing key reading `direct-merge`: where the value
+  envelope's `data.value`, a missing key reading `direct-merge`, `<b>` checked
+  first per `## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` (a bad branch name gets
+  no read, and the report names the branch): where the value
   is **`pr`**, additionally **require a pull request**, with no approval count,
   because the landing says that branch lands through a request, so a direct
   push to it is exactly what the forge should refuse. Where it is `direct-merge`

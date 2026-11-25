@@ -47,14 +47,16 @@ disable-model-invocation: false
 - **How a branch lands is the repo's choice, not this skill's.** The repo sets
   it **per destination** `<b>`: the landing model is the `data.value` of
   `bootstrap config get repo.branches.<b>.landing --json` — `pr`,
-  `direct-merge` (the default) or `direct-commit`. `direct-merge` merges the
-  branch to the destination and pushes; `pr` pushes the branch and opens a
-  pull request instead, merging nothing locally; `direct-commit` also allows a
-  commit made on `<b>` itself. A landing always runs
-  `mise x -- mise run git:merge:<b> -- <branch>`, and the task applies the
-  model itself. This skill reads the model only to tell the user what a
-  landing will do (Step 4), and to refuse a direct commit on `<b>` where the
-  value is not `direct-commit`
+  `direct-merge` (the default) or `direct-commit`, `<b>` checked first per
+  `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
+  (a bad branch name gets no read, and the report names the branch).
+  `direct-merge` merges the branch to the destination and pushes; `pr` pushes
+  the branch and opens a pull request instead, merging nothing locally;
+  `direct-commit` also allows a commit made on `<b>` itself. A landing always
+  runs `mise x -- mise run git:merge:<b> -- <branch>`, and the task applies the
+  model itself. This skill reads the model only to tell the user what a landing
+  will do (Step 4), and to refuse a direct commit on `<b>` where the value is
+  not `direct-commit`
 - **The `git:merge:<b>` task refuses a dirty tree** where it runs —
   untracked files, uncommitted changes, or unpushed commits on the branch each
   stop the merge before it touches git. That is not a nuisance: whatever is
@@ -250,7 +252,9 @@ or `direct-commit`. The task applies it; this read only words the options
 below. When the command fails or its envelope's `ok` is false, stop with the
 envelope's `errors` messages as bootstrap gives them
 (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`) and offer no landing
-option: a model that cannot be read is not guessed.
+option: a model that cannot be read is not guessed. Check `<b>` before the
+read, per `## Passing values` of that file: a bad branch name gets no read —
+stop with a report that names the branch, and offer no landing option.
 
 Otherwise, after a successful commit, ask the user to choose what to do next via
 `AskUserQuestion` with these three options — the first is the same in every

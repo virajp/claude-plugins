@@ -150,7 +150,9 @@ repo: <path> # OPTIONAL — relative to the BASE repo root
 The value is the **member's `folder`**, and vwf is what resolves it: the
 member that `projects.<name>.repo` of `.config/vwf.yaml` names for the project
 being materialized for, its `folder` read with
-`bootstrap config get repo.members.<member> --json`, per the membership asset
+`bootstrap config get repo.members.<member> --json`, the member name checked
+first (`## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), per the membership asset
 (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`). A project with no `repo` key
 lives in the base repo, and so does a project of a `folder` member, a folder of
 the base repo's tree whose work is the base repo's work: neither passes
@@ -360,17 +362,18 @@ declares each `addons:` slug in the `claude` tool's
 entry — and in a multi-repo product members get none. In a single repo, the
 repo is the base. Setup reads the map with `bootstrap config get`, edits it,
 and writes the whole map back with `bootstrap config set
-tools.claude.plugins.project '<JSON object>'`; a `claude` tool the repo has not
-selected is added first with `bootstrap add tool claude`, on a consent. **A
-slug dropped from `addons:` is unset in the same write**: each key that matches
-an addon entry no longer in `addons:` leaves the map, and every other key
-stays. When this run set or unset a key and `claude` is selected, setup runs
-`mise run setup:ai`, which installs what the map lists and uninstalls a project
-plugin that left it. **An addon is no stack-template pin**: setup makes no
-`-stack-template` call for it and no `remove:` call when it is dropped.
-**An addon lands no server**: no pack lands an MCP server, each is the user's
-to install, and a pack that needs one names it in the `## MCP servers` section
-of its conventions.
+tools.claude.plugins.project '<JSON object>'`, the JSON quoted in single quotes
+per `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`;
+a `claude` tool the repo has not selected is added first with
+`bootstrap add tool claude`, on a consent. **A slug dropped from `addons:` is
+unset in the same write**: each key that matches an addon entry no longer in
+`addons:` leaves the map, and every other key stays. When this run set or
+unset a key and `claude` is selected, setup runs `mise run setup:ai`, which
+installs what the map lists and uninstalls a project plugin that left it. **An
+addon is no stack-template pin**: setup makes no `-stack-template` call for it
+and no `remove:` call when it is dropped. **An addon lands no server**: no pack
+lands an MCP server, each is the user's to install, and a pack that needs one
+names it in the `## MCP servers` section of its conventions.
 
 **A slug leaves a lockfile through one call of its own**,
 `/<plugin>:<plugin>-stack-template remove: <slug>`, the form `/vwf:setup`'s

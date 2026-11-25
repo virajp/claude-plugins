@@ -149,7 +149,11 @@ The facts that say what the product's repos *are* live in bootstrap's
 reads and writes them only through the bootstrap CLI
 (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
 `bootstrap config get <key> --json` and
-`bootstrap config set <key> <value> --json`. Each format 26 key has one home:
+`bootstrap config set <key> '<value>' --json`. Each write quotes its value in
+single quotes, and checks each name that goes into the key path (letters,
+digits, `_` and `-` only, no `.`), per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. Each format 26 key has
+one home:
 
 - The product's display name, format 26's `product.name`, is
   `repo.product_name`.
@@ -188,13 +192,21 @@ registry (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`):
 
 - **The folder** is `repo.projects.<name>.folder`, repo-relative, `.` for the
   repo root:
-  `bootstrap config get repo.projects.<name>.folder --json`. The registry's
+  `bootstrap config get repo.projects.<name>.folder --json`, the name checked
+  first per `## Passing values`. The registry's
   `path` is gone (`blueprint_format` 26, `vwf_registry: 3`). A registry
   project with no `repo.projects.<name>` entry is a **degraded**
   `/vwf:doctor` row with the fix
   `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`,
   and `/vwf:execute`'s start skips that project. The entry is written only
-  once the folder exists.
+  once the folder exists. The fix is a command only for a name that is a
+  valid bootstrap key (`## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). For a name that is
+  not valid, the row stays the same, but its remedy prints no command. It
+  reads: project `<name>` is not a valid bootstrap key (letters, digits, `_`
+  and `-` only); rename the project by hand in `docs/blueprint/registry.yaml`
+  and in each `projects.<name>` key of `.config/vwf.yaml`, then run
+  `/vwf:setup` and `/vwf:doctor` again.
 - **The languages and the package manager** are the `data.tools` entries of
   `bootstrap describe --json` of category `languages` and `package-managers`
   whose `projects` list names the project. A language's name is the tool name
@@ -898,9 +910,21 @@ earlier than 65/90/80), never loosen.
   `environments.<env>.<project>` → `repo.deploy.<env>.<project>`;
   `production_env` → `repo.release_env`; and each member's
   `.config/vwf-membership.yaml` → its `repo.home`. Each value is set with
-  `bootstrap config set` where `repo.toml` has none, dropped when both hold
-  the same value, and asked about, one key at a time, when they differ; then
-  the keys leave this file in the same commit. Each member commits the
+  `bootstrap config set <key> '<value>'` where `repo.toml` has none, dropped
+  when both hold the same value, and asked about, one key at a time, when they
+  differ; then the keys leave this file in the same commit. Each value is
+  quoted in single quotes, per `## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. Before the first
+  write of the step, every member, env and project name that goes into a key
+  path is checked: letters, digits, `_` and `-` only, no `.`. On a bad name,
+  the step stops for that repo before any write. The report names the bad
+  name and how to rename it. For a member or env name: rename it in
+  `.config/vwf.yaml` by hand (for a submodule member, also its name in
+  `.gitmodules`), then run `/vwf:setup` again. For a project name: rename it
+  by hand in `docs/blueprint/registry.yaml` and in each `projects.<name>` key
+  of `.config/vwf.yaml`, then run `/vwf:setup` again. `vwf.yaml` keeps the
+  key and the stamp stays at 26, so the next `/vwf:setup` offers the step
+  again. Other repos continue. Each member commits the
   deletion of its `vwf-membership.yaml` first, once its back-link resolves,
   and the base commits last. The cases, the questions and the fix lines are
   the setup skill's `format-lineage` row for 27.
@@ -918,10 +942,23 @@ earlier than 65/90/80), never loosen.
   **the stack slims, and the projects move to bootstrap.** Per repo, in order:
   set each project's `repo.projects.<name>.folder` from its registry `path`,
   made repo-relative (`.` when it is the repo's own folder), skipping a project
-  whose folder does not exist yet and showing its fix line; run
+  whose folder does not exist yet and showing its fix line — each value quoted
+  per `## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. Before the first write
+  of the step, every name it puts into a key path is checked: each project
+  name of `repo.projects.<name>`, each `<tool>` of `tools.<tool>.projects` and
+  each `<old name>` it unsets. On a bad name, the step stops for that repo
+  before any write. The report names the bad name; for a project name it also
+  gives the rename route: rename it by hand in `docs/blueprint/registry.yaml`
+  and in each `projects.<name>` key of `.config/vwf.yaml`, then run
+  `/vwf:setup` again. A bad `<tool>` or `<old name>` is named only, with no
+  rename route. `vwf.yaml` keeps the key and the stamp stays at 27, so the
+  next `/vwf:setup` offers the step again. Other repos continue. Then run
   `bootstrap detect --json` and, on the user's yes, `detect --add --yes`;
   report each project with no linked language tool, with the fix
-  `bootstrap add tool <t>`, skipping a project whose platforms are all `iac`,
+  `bootstrap add tool <t>` (a form: the real tool name follows
+  `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`),
+  skipping a project whose platforms are all `iac`,
   `cicd` or `misc`; rename `backing_template` → `services` and
   `deploy_template` → `deploy`, the slugs unchanged; remove `languages` and
   `package_manager` from every project's stack, `repo.stack.package_manager`,

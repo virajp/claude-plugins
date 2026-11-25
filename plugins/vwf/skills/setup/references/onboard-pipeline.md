@@ -41,8 +41,9 @@ In order:
    directory name. It is the **only** question this path asks.
 
 Return the product name, which the spine sets with `bootstrap config set
-repo.product_name <name> --json`, and both stamps. Set **no**
-`repo.topology`, `repo.members` or `repo.projects`, and write no `ui`,
+repo.product_name '<name>' --json`, the name quoted per `## Passing values`
+of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, and both stamps.
+Set **no** `repo.topology`, `repo.members` or `repo.projects`, and write no `ui`,
 `enforcement`, or per-project block: a
 key describing projects that do not exist yet is not a default, it is a claim
 the repo cannot support. Their absence is the **structure-pending** state, which
@@ -155,7 +156,10 @@ states all four; read them, present them, confirm. For a `sibling` the `url` is
 the one fact nothing else records, and the absent-member clone offer depends on
 it, so never leave it blank. The spine sets each new member as one table,
 `bootstrap config set repo.members.<name> '<JSON table>' --json`, and writes
-each of its projects' `projects.<p>.repo` in `.config/vwf.yaml`.
+each of its projects' `projects.<p>.repo` in `.config/vwf.yaml`. The member
+name is checked and the table quoted per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a bad name stops that
+member's write with a report that names it.
 
 **Which members are present is detected, never asked and never recorded.** A
 product with most members not on this machine is normal; note what is here and

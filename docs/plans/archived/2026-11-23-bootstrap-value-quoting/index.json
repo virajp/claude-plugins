@@ -15,8 +15,8 @@
   ],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-25 by the user"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-25 — 48e5725b,9903e235,c7ff16a4,e587f418,c7cd48a9,40dbdd5d,c32bfa1f,0df85047,6ccaa00c,0591bcc4,9327b0d2,735d622a"
   },
   "consent": {
     "merge": true,
@@ -46,8 +46,8 @@
       },
       {
         "id": "K2",
-        "check": "bash -c 'diff <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f\" plugins/vwf/assets/bootstrap-contract.md) <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f\" plugins/stackgen/assets/bootstrap-contract.md)'",
-        "pass": "No output: the Passing values section is the same in both copies."
+        "check": "bash -c 'diff <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f&&/^\\$/{n++;next} f{while(n>0){print \\\"\\\";n--};print}\" plugins/vwf/assets/bootstrap-contract.md) <(awk \"/^## Passing values/{f=1} f&&/^## /&&!/^## Passing values/{exit} f&&/^\\$/{n++;next} f{while(n>0){print \\\"\\\";n--};print}\" plugins/stackgen/assets/bootstrap-contract.md)'",
+        "pass": "No output: the Passing values section is the same in both copies, trailing blank lines of each range ignored (D35)."
       }
     ]
   },
@@ -80,11 +80,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T05:24:50.788Z",
+      "ended": "2026-11-25T05:29:51.102Z",
+      "commit": "40dbdd5d",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -99,15 +99,16 @@
         "plugins/vwf/skills/setup/references/onboard-pipeline.md",
         "plugins/vwf/skills/setup/references/workspace-structure.md",
         "plugins/vwf/skills/setup/references/materialize.md",
-        "plugins/vwf/skills/setup/references/topology-detection.md"
+        "plugins/vwf/skills/setup/references/topology-detection.md",
+        "plugins/vwf/skills/setup/references/format-lineage.md"
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T05:24:50.859Z",
+      "ended": "2026-11-25T05:29:51.177Z",
+      "commit": "c32bfa1f",
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -122,15 +123,20 @@
         "plugins/vwf/skills/execute/references/land.md",
         "plugins/vwf/skills/plan/references/delta-checks.md",
         "plugins/vwf/skills/init/SKILL.md",
-        "plugins/vwf/skills/init/references/new-repo.md"
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/change-plan/references/recall-survey.md",
+        "plugins/vwf/skills/git-workflow/SKILL.md",
+        "plugins/vwf/skills/git-workflow/references/landing.md",
+        "plugins/vwf/skills/execute/references/claim.md",
+        "plugins/vwf/skills/execute/references/setup.md"
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T05:24:50.934Z",
+      "ended": "2026-11-25T05:27:01.156Z",
+      "commit": "0591bcc4",
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -146,11 +152,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T05:24:51.007Z",
+      "ended": "2026-11-25T05:27:01.229Z",
+      "commit": "e587f418",
+      "rounds": 1
     },
     {
       "id": "U5",
@@ -168,14 +174,14 @@
         "U8"
       ],
       "waits": "reviews the committed wave-1 delta, U4's stack.mjs change in focus",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-25T05:37:19.846Z",
+      "ended": "2026-11-25T14:16:23.760Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "190fe55c",
+        "to": "6ccaa00c"
       }
     },
     {
@@ -201,11 +207,11 @@
         "U8"
       ],
       "waits": "documents the whole delta after the review",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T14:20:28.235Z",
+      "ended": "2026-11-25T14:23:02.126Z",
+      "commit": "735d622a",
+      "rounds": 3
     },
     {
       "id": "U7",
@@ -219,11 +225,11 @@
         "U6"
       ],
       "waits": "the final gate runs over the documented tree",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-25T14:29:27.462Z",
+      "ended": "2026-11-25T14:31:52.811Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -237,41 +243,43 @@
         "plugins/vwf/assets/vwf-config.md",
         "plugins/vwf/assets/stack-adapter.md",
         "plugins/vwf/assets/topologies/monorepo.md",
-        "plugins/vwf/assets/stack-vocabulary.md"
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/templates/registry.yaml"
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T05:24:51.079Z",
+      "ended": "2026-11-25T05:27:01.300Z",
+      "commit": "9327b0d2",
+      "rounds": 4
     }
   ],
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T05:24:50.751Z",
+      "ended": "2026-11-25T05:37:03.204Z"
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T05:37:19.803Z",
+      "ended": "2026-11-25T14:20:05.062Z"
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T14:20:28.194Z",
+      "ended": "2026-11-25T14:29:12.421Z"
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T14:29:27.425Z",
+      "ended": "2026-11-25T14:32:56.899Z"
     }
   ],
   "shared_files": [
@@ -598,36 +606,99 @@
       "units": [
         "U3"
       ]
+    },
+    {
+      "id": "D35",
+      "decision": "Q1: Keep check K2 fails only on a trailing blank line (vwf section ends before ## The git ports, stackgen section is at end of file where end-of-file-fixer strips the blank). How should K2 pass?",
+      "ruling": "Change K2 so its awk drops trailing blank lines before the diff — K2 compares the section text only",
+      "rejected": "Leave a trailing blank line at the end of stackgen file — end-of-file-fixer removes it at commit, so K2 fails again",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "Q2: In setup 27-to-28 migration, which rename route does the stop report give for a bad <old name> from repo.projects or a bad <tool>, names that come from .config/bootstrap/repo.toml?",
+      "ruling": "Report the bad name only, with no rename route, as written now — the user fixes repo.toml by hand",
+      "rejected": "Name a route: edit .config/bootstrap/repo.toml by hand, then run /vwf:setup again — adds a hand-edit instruction for bootstrap own file",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "Q3: Should the ## Passing values name check also cover bootstrap reads (config get, config unset) that build a key from a name, such as config get repo.projects.<name>.folder --json, which the U5 security reviewer found run unchecked before the write?",
+      "ruling": "Extend the name check to every bootstrap call that builds a key from a name, reads included, and cite it at each read site — closes the path where an unchecked read runs before the write; widens U1, U3 and U8, plus one change-plan file",
+      "rejected": "Keep it to writes and record the reads as a parked follow-up; Accept as is",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q4: Should the D37 name check (letters, digits, _ and - only) also apply to <b> in repo.branches.<b>.landing reads (git-workflow SKILL.md:49, :245, landing.md:25, init new-repo.md:408, doctor stack-checks.md:770)?",
+      "ruling": "Apply the check and name the bad branch in the report — matches D37; a core branch with a . or / in its name can no longer have its landing model read",
+      "rejected": "Check only for shell metacharacters, allowing / and . (separate branch rule); Leave branch reads unchecked",
+      "units": [
+        "U3"
+      ]
     }
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.445Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.219Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.332Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.591Z"
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U2",
+      "stage": "",
+      "text": "U2 owns widened by format-lineage.md (read site at :138) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "",
+      "text": "U3 owns widened by change-plan recall-survey.md, git-workflow SKILL.md and landing.md, execute claim.md and setup.md (read sites) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U8",
+      "stage": "",
+      "text": "U8 owns widened by assets execute-stages.md and templates/registry.yaml (read sites) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-25-1049"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-25-1049",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-23-bootstrap-value-quoting.jsonl"

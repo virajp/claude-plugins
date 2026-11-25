@@ -65,13 +65,24 @@ decides a pin rather than landing it.
 **First, the project's folder and its repo.** A project lives in the repo
 `projects.<name>.repo` names, else in the base repo, and its folder is
 bootstrap's: `bootstrap config get repo.projects.<name>.folder --json`, run in
-that repo (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). Since
+that repo (`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), its name
+checked per `## Passing values` there; doctor's script already reports a bad
+name as the `project-folder` row below. Since
 `blueprint_format` 26 the registry carries no `path`. A registry project with
 no `repo.projects.<name>` entry is a **degraded** row naming the project, with
 the fix `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`
 run in that repo — the expected state for a project whose folder a later plan
-unit creates, which runs that line then. Every check below that needs the
-folder reports `not checked — no folder` for that project. A failed
+unit creates, which runs that line then. The fix line is a command only for
+a name that is a valid bootstrap key: letters, digits, `_` and `-`, and no
+`.` (`## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`). For a name that is not
+valid, the row stays the same (`project-folder`, **degraded**), but its remedy
+prints no command. It reads: project `<name>` is not a valid bootstrap key
+(letters, digits, `_` and `-` only); rename the project by hand in
+`docs/blueprint/registry.yaml` and in each `projects.<name>` key of
+`.config/vwf.yaml`, then run `/vwf:setup` and `/vwf:doctor` again. Every
+check below that needs the folder reports `not checked — no folder` for that
+project. A failed
 `bootstrap` call stops doctor with bootstrap's `errors`.
 
 **Before the language walk, once per project.** A project whose `template` is a
@@ -92,9 +103,11 @@ category `languages` linked to the project. Run `bootstrap describe --json` in
 the repo that holds the project and take the `data.tools` entries of category
 `languages` whose `projects` list names it; the tool name is the language. A
 project no such tool links is a **degraded** row naming the project, with the
-fix `bootstrap add tool <tool>` (or `bootstrap detect --add`) run in that repo
-— **except** a project whose platforms are all `iac`, `cicd` or `misc`, which
-needs no language tool and gets no row. A failed `bootstrap` call stops doctor
+fix `bootstrap add tool <tool>` (or `bootstrap detect --add`) run in that repo,
+a form whose real tool name follows `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — **except** a project
+whose platforms are all `iac`, `cicd` or `misc`, which needs no language tool
+and gets no row. A failed `bootstrap` call stops doctor
 with bootstrap's `errors`.
 
 **The bundle's tools are linked** (`checks.mjs` rows `bundle-tools` and
@@ -108,7 +121,11 @@ refusal, and never read as an empty list. Otherwise each name must be a tool
 `package-managers` must also name the project in its `projects` list, and a
 tool of any other category only needs to be selected. Each miss is one
 **degraded** row naming the project and the tool, remedy
-`bootstrap add tool <tool>`, then `bootstrap detect --add`, run in that repo.
+`bootstrap add tool <tool>`, then `bootstrap detect --add`, run in that repo;
+the form follows `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. A tool name that is not
+letters, digits, `_` and `-` only gets no command: the remedy says that tool
+`<name>` is not a valid bootstrap tool name, and the row stays the same.
 A project with no `repo.projects.<name>` entry is skipped: bootstrap refuses a
 link to it, and its folder row above already reports it.
 
@@ -753,8 +770,9 @@ allowed to read. Otherwise, three checks:
   have set — **no force-push and no deletion**, always; **a pull request
   required** when that branch's own landing value reads `pr` — the
   `data.value` of `bootstrap config get repo.branches.<branch>.landing --json`
-  in that repo, `pr`, `direct-merge` or `direct-commit`, an unset key reading
-  the default `direct-merge` (on
+  in that repo, the branch name checked first (`## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`), `pr`, `direct-merge`
+  or `direct-commit`, an unset key reading the default `direct-merge` (on
   GitHub the ruleset rules `non_fast_forward`, `deletion` and `pull_request`,
   or the classic `allow_force_pushes`, `allow_deletions` and
   `required_pull_request_reviews`; on GitLab `allow_force_push` and a

@@ -141,7 +141,12 @@ payload. Then, in that repo:
 
 1. **Add.** Every bundle tool the repo does not select is added with
    `bootstrap add tool <t> --yes --json`. In the base, `claude` joins the list
-   when `addons:` names an addon and the base does not select it. One consent
+   when `addons:` names an addon and the base does not select it. A bundle
+   can sit in the cloned repo, so each `<t>` is checked first per
+   `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
+   — letters, digits, `_` and `-`, and a name of
+   `bootstrap catalog --json` `data.tools`: a bad name stops that one add
+   with a report that names it, and nothing is added for it. One consent
    line per repo lists every tool to add; nothing to add asks nothing.
 2. **Link.** `bootstrap detect --add --yes --json` links the tools to the
    projects, on that same consent.
@@ -152,8 +157,12 @@ payload. Then, in that repo:
    names the bundle, read `tools.<t>.projects` with `bootstrap config get`
    and run
    `bootstrap config set tools.<t>.projects '<JSON list>' --json` with that
-   project added — an empty project folder is the usual cause. The value is
-   a shell argument, quoted as Declare the addons' **Quote** step says. A
+   project added — an empty project folder is the usual cause. Before the
+   write, check `<t>` — letters, digits, `_` and `-`, and a name of the
+   catalog — and quote the value, both per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a bad name stops
+   that one write with a report that names it, and nothing is written for
+   it. A
    project with no `repo.projects.<name>` is skipped here; doctor reports it.
 
 ## Invoke the adapter, once per entry
@@ -206,12 +215,9 @@ In the base only, after its landings. Each addon is a key
    name and a marketplace of letters, digits, `.`, `_` and `-`, one `@`
    between them — stops the base's pass with a report naming it; setup
    writes nothing.
-4. **Quote.** `bootstrap config set` takes the value as one positional
-   argument, with no stdin or file form. The map, like any `<JSON list>`
-   this pass writes, comes from the repo's committed config, which a cloned
-   repo controls: in the serialized JSON replace each `'` with `'\''`, then
-   wrap the whole in single quotes. Never pass it unquoted or in double
-   quotes.
+4. **Quote.** Quote the serialized map per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. The map comes from
+   the repo's committed config, which a cloned repo controls.
 5. **Write** the whole map back, on one consent line naming the keys it adds
    and drops, with
    `bootstrap config set tools.claude.plugins.project '<JSON object>' --json`.

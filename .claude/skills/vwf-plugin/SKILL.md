@@ -144,7 +144,9 @@ each repo, the base first: after the contract check (bootstrap 4.1.0 or newer,
 contract 1), it runs `bootstrap migrate --json --dry-run`, asks the user each
 question of `data.plan.pending` one at a time, and runs
 `bootstrap migrate --json --yes` with each answer as
-`--answer <tool>.<key>=<value>`, up to 3 rounds. In the base alone, the step's
+`--answer <tool>.<key>=<value>`, up to 3 rounds — each answer quoted per
+`## Passing values` of `assets/bootstrap-contract.md`, the rule for every value
+and every name in a key of a bootstrap call. In the base alone, the step's
 last part adds bootstrap's `virajp-plugins` tool, which gives vwf's
 `.gitignore` lines and its `vwf@virajp-plugins` entry:
 `bootstrap add tool virajp-plugins --json --dry-run`, then `--yes`, inside the

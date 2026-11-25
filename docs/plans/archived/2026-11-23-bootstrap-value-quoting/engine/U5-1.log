@@ -1,0 +1,21 @@
+# Security review — branch all-2026-11-25-1049 (86d22e2a..190fe55c, docs/plans/ excluded)
+
+No high-confidence vulnerabilities found.
+
+## Filtered (below the confidence threshold of 8, or excluded)
+
+- `plugins/vwf/skills/plan/references/delta-checks.md:65` — command injection via
+  `bootstrap config get repo.projects.<name>.folder --json` reads that put a registry
+  project name into the key with no name check (also `doctor/references/stack-checks.md:67`,
+  `init/references/new-repo.md:187`, `change-plan/references/recall-survey.md:57`).
+  Dropped by the false-positive filter (confidence 8 that it is a false positive):
+  every cited line exists at the base (bfbd53f2), the diff adds no `config get` line;
+  hard exclusions 16 (markdown) and 7 (lack of a hardening measure); registry slugs
+  are kebab-case and confirmed by the user (`architecture/references/stack-menu.md:101`).
+  Possible follow-up: apply the key-name check to reads too.
+
+The candidate pass also found: the `'\''` escape is correct for sh, bash, zsh and fish
+once backslash and control characters are refused; `^[A-Za-z0-9_-]+$` admits no shell
+metacharacter; `stack.mjs` prints no runnable command for a name that fails the check;
+every changed `config set`, `--answer` and `add/remove tool` site quotes its values and
+cites the rule.

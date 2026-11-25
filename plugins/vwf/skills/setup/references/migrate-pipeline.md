@@ -103,11 +103,23 @@ Four sources define it, and none of them is a history:
    [format lineage](format-lineage.md) row for 27 maps it. It runs once the
    stamp reads 26, including when this pass just moved it there, and reaches
    bootstrap only through its CLI, by
-   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. **The base step:**
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. Each value and each
+   name in a key path of this step follows `## Passing values` of that file.
+   **Check the names first.** Before the first write, check every name that
+   the step puts into a key path: each member name of `repo.members.<name>`,
+   and each `<env>` and `<project>` of `repo.deploy.<env>.<project>`. A bad
+   name stops the step for that repo before any write. The report names it
+   and the rename route: for a member or an env name, rename it in
+   `.config/vwf.yaml` by hand (for a submodule member, also its name in
+   `.gitmodules`); for a project name, rename it by hand in
+   `docs/blueprint/registry.yaml` and in each `projects.<name>` key of
+   `.config/vwf.yaml`; then run `/vwf:setup` again. `vwf.yaml` keeps the
+   key, the stamp stays at 26, and the next `/vwf:setup` offers the step
+   again. Other repos continue. **The base step:**
    1. For each moved key, read `bootstrap config get <repo key> --json`.
    2. If its `source` is `default` (no value), run
-      `bootstrap config set <repo key> <value> --json` with the `vwf.yaml`
-      value, a list or a table as JSON.
+      `bootstrap config set <repo key> '<value>' --json` with the `vwf.yaml`
+      value, a list or a table as JSON, quoted per `## Passing values`.
    3. If the two values are the same, only remove the key from `vwf.yaml`.
    4. If they differ, ask the user which to keep, one key at a time, per
       `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`, and set the kept value.
@@ -120,7 +132,7 @@ Four sources define it, and none of them is a history:
    not list yet is set as one whole table:
    `bootstrap config set repo.members.<name> '<JSON table>' --json`. A member
    it lists is set one field at a time:
-   `bootstrap config set repo.members.<name>.<field> <value> --json`. One
+   `bootstrap config set repo.members.<name>.<field> '<value>' --json`. One
    difference is a known result of bootstrap's own `init`, which wrote each old
    member as `sibling`: when `linkage` is `submodule`, `.gitmodules` lists the
    member's path and `repo.toml` says `sibling`, set `submodule` with no
@@ -159,8 +171,19 @@ Four sources define it, and none of them is a history:
    [format lineage](format-lineage.md) rows for 28 and for `blueprint_format`
    26 map them. It runs once the stamp reads 27, including when this pass just
    moved it there, and reaches bootstrap only through its CLI, by
-   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. **The step, per repo
-   of the product** — each present member, then the base:
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. Each value and each
+   name in a key path of this step follows `## Passing values` of that file.
+   **Check the names first.** Before this repo's first write, check every
+   name that the step puts into a key path: each project name of
+   `repo.projects.<name>`, each `<tool>` of `tools.<tool>.projects` and each
+   `<old name>` it unsets. A bad name stops the step for this repo before any
+   write. The report names it and, for a project name, the rename route:
+   rename it by hand in `docs/blueprint/registry.yaml` and in each
+   `projects.<name>` key of `.config/vwf.yaml`, then run `/vwf:setup` again.
+   `vwf.yaml` keeps the key, the stamp stays at 27, and the next
+   `/vwf:setup` offers the step again. Other repos continue.
+   **The step, per repo of the product** — each present member, then the
+   base:
    1. For each registry project this repo holds, run
       `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`
       in this repo, with the folder its registry `path` gives (below).
@@ -168,7 +191,8 @@ Four sources define it, and none of them is a history:
       the user's yes, run `bootstrap detect --add --yes --json`.
    3. Report each project of this repo that no tool of category `languages`
       links, with the fix: `bootstrap add tool <tool>`, then
-      `bootstrap detect --add`. A project whose platforms are all `iac`,
+      `bootstrap detect --add`, a form whose `<tool>` follows
+      `## Passing values`. A project whose platforms are all `iac`,
       `cicd` or `misc` is skipped: it has no language tool by nature. The
       report is a `degraded` row like any other, pinned `template` or not:
       it never stops the step, which continues.
@@ -208,7 +232,8 @@ Four sources define it, and none of them is a history:
    A project whose folder does not exist yet takes no `config set`: the
    report shows the line to run once it does,
    `bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`,
-   and `/vwf:doctor` reports the missing entry as `degraded` until then.
+   with the name checked and the value quoted per `## Passing values`, and
+   `/vwf:doctor` reports the missing entry as `degraded` until then.
 
    **Order and commits.** Each member's step runs and commits first, through
    `/vwf:git-workflow`, carrying what bootstrap wrote and the sync's output;

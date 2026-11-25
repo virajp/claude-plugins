@@ -571,6 +571,19 @@ describe("single repo", () => {
       ]);
     });
 
+    it("a project name that is not a valid bootstrap key gets no command (D4, D6)", () => {
+      edit(registry(), "- name: orbit-api", "- name: web.app");
+      edit(config(), "  orbit-api:", "  web.app:");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      const [folder] = find(r.json, "project-folder");
+      expect(folder).toMatchObject({ severity: "degraded", project: "web.app" });
+      expect(folder.remedy).not.toContain("bootstrap config set");
+      expect(folder.remedy).toBe(
+        "project web.app is not a valid bootstrap key (letters, digits, _ and - only); rename the project by hand in docs/blueprint/registry.yaml and in each projects.web.app key of .config/vwf.yaml, then run /vwf:setup and /vwf:doctor again",
+      );
+    });
+
     it("an iac project with no entry gets the folder row and no iac row", () => {
       facts(base, (f) => delete f["repo.projects.orbit-infra.folder"]);
       const r = checks(base);
@@ -607,6 +620,17 @@ describe("single repo", () => {
         remedy: "bootstrap add tool skein, then bootstrap detect --add",
       });
       expect(find(r.json, "tool-link")[0].message).toContain("does not link");
+    });
+
+    it("a tool name that is not a valid bootstrap name gets no command (D13)", () => {
+      edit(template(), "tools: [ kite, skein ]", "tools: [ kite, skein, \"a'b\" ]");
+      const r = checks(base);
+      expect(r.status).toBe(0);
+      expect(rules(r.json)).toEqual(["tool-link:degraded"]);
+      expect(find(r.json, "tool-link")[0]).toMatchObject({
+        subject: "a'b",
+        remedy: "tool a'b is not a valid bootstrap tool name (letters, digits, _ and - only)",
+      });
     });
 
     it("a bundle tool bootstrap has not selected is the same row", () => {

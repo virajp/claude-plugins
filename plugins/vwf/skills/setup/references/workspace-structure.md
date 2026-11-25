@@ -60,7 +60,9 @@ Adding a topology means **adding a template file** under
 Classify the repo per [topology detection](topology-detection.md),
 present the matching template for confirmation, and set `repo.topology` plus
 `repo.topology_reason` (and each member's `type` for multi-repo) with
-`bootstrap config set <key> <value> --json`. In a
+`bootstrap config set <key> '<value>' --json`, each value quoted and each
+member name in a key checked per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. In a
 multi-repo product, classify **each member on its own signals** — a member may
 be a `repo` or a `monorepo`, and each carries its own `repo.stack` block.
 
@@ -85,8 +87,11 @@ plus its `repo.home` (`setup:configs --<member>` from the base, and
 `onboard`. Removing **archives** the removed unit's flows and
 entities under `docs/blueprint/archived/` — vwf never deletes a blueprint doc —
 deregisters its projects, unsets its `repo.members.<name>` with
-`bootstrap config unset`, and recomputes the coverage
-stamp without them.
+`bootstrap config unset repo.members.<name> --json`, and recomputes the
+coverage stamp without them. Each table is quoted and each member name in a
+key is checked per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a bad name stops that
+one write with a report that names it, and nothing is written for it.
 
 ## Stack templates (a menu)
 

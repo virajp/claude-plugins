@@ -403,11 +403,20 @@ reached only through the CLI
 first, then, in the base repo:
 
 ```sh
-bootstrap config set repo.topology <topology> --json
+bootstrap config set repo.topology '<topology>' --json
 bootstrap config set repo.topology_reason '<one line>' --json
 bootstrap config set repo.members.<name> '<JSON table>' --json
-bootstrap config set repo.members.<name>.<field> <value> --json
+bootstrap config set repo.members.<name>.<field> '<value>' --json
 ```
+
+Pass each value per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: the members table as
+JSON, the topology, the reason and a field value as raw text, each `'` replaced
+with `'\''` and the whole value in single quotes. A value that holds a
+backslash, a newline or another control character stops that write with a
+report that names the key. Check each member `<name>` and `<field>` first:
+letters, digits, `_` and `-` only, no `.`. A bad name stops that write with a
+report that names it, and nothing is written for it.
 
 The third line sets a new member as one whole table — `folder`, `url` and
 `type`; the fourth changes one field of a member already there. A member's
@@ -429,11 +438,17 @@ bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json
 ```
 
 `<folder>` is relative to that repo's root, and `.` when the project is the
-whole repo. **Write the entry only when the folder exists.** A project whose
-folder is not created yet gets no entry here: the plan unit that creates the
-folder also runs this `config set` (`/vwf:plan` says so), and until then
-`/vwf:doctor` reports the missing entry as a degraded row. A failed `bootstrap`
-call stops this command with bootstrap's `errors`.
+whole repo. Pass the JSON value per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: each `'` replaced with
+`'\''`, the whole value in single quotes, and a stop on a backslash, a newline
+or another control character. Check `<name>` first: letters, digits, `_` and
+`-` only, no `.`. A bad name stops that write with a report that names it,
+and nothing is written for it. **Write the entry only when the folder
+exists.** A project whose folder is not created yet gets no entry here: the
+plan unit that creates the folder also runs this `config set` (`/vwf:plan`
+says so), and until then `/vwf:doctor` reports the missing entry as a
+degraded row. A failed `bootstrap` call stops this command with bootstrap's
+`errors`.
 
 ---
 

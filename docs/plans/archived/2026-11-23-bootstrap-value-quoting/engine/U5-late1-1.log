@@ -1,0 +1,5 @@
+# Security review — late re-run U5-late1, 6ccaa00c..9327b0d2 (docs/plans/ excluded)
+
+Word sequences identical before and after in all 6 files (refolds only); every quoting rule, name check and command kept word for word.
+
+No high-confidence vulnerabilities found.

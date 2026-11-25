@@ -23,7 +23,9 @@ pointers current — then remove it. Order matters:
    branch, run its own merge task from the submodule (this lands the
    submodule's branch under the model of
    `bootstrap config get repo.branches.<b>.landing --json` in that member,
-   `<b>` its integration branch).
+   `<b>` its integration branch, checked first per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a bad branch name
+   gets no read, and the report names the branch).
    Repeat per changed submodule:
 
    ```bash

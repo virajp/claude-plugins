@@ -100,8 +100,10 @@ two, each call from the directory the step runs in, per
 
    **In a `multi-repo` product, the target member's own `type` decides which repo the
    worktree is of** — `bootstrap config get repo.members.<name>.type --json`, the member
-   being the one `projects.<p>.repo` names (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`).
-   `/vwf:git-workflow` resolves it:
+   being the one `projects.<p>.repo` names (`${CLAUDE_PLUGIN_ROOT}/assets/membership.md`),
+   `<name>` checked first per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — a bad name gets no read, and
+   the run stops with a report that names it. `/vwf:git-workflow` resolves it:
 
    - **`type: folder`** — the member is a folder of the base repo's tree, with no
      worktree, clone or landing of its own. The worktree is of the **base** repo, and
