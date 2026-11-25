@@ -22,23 +22,6 @@
       ],
       "backlog": [],
       "backlog_pieces": []
-    },
-    {
-      "id": "2026-11-23-bootstrap-value-quoting",
-      "folder": "docs/plans/2026-11-23-bootstrap-value-quoting",
-      "kind": "change",
-      "title": "Every bootstrap write quotes its values and checks its key names",
-      "target_repo": null,
-      "priority": 10,
-      "status": "RUNNING",
-      "started": "2026-11-25T05:21:21.695Z",
-      "ended": "",
-      "gaps": null,
-      "requires": [],
-      "backlog": [
-        "B152"
-      ],
-      "backlog_pieces": []
     }
   ]
 }
