@@ -1,8 +1,9 @@
 # The bootstrap Contract
 
 **How a plugin reaches bootstrap.** vwf cites this file wherever a skill needs
-a bootstrap fact. stackgen carries the same body, less the one exception below
-(the `/vwf:execute` progress pane), in its own `assets/bootstrap-contract.md`,
+a bootstrap fact. stackgen carries the same body, less two parts: the one
+exception below (the `/vwf:execute` progress pane) and the section
+`## The git ports`. It is in stackgen's own `assets/bootstrap-contract.md`,
 because `${CLAUDE_PLUGIN_ROOT}` names only the plugin it is read in.
 
 A plugin reaches bootstrap only through its CLI and the JSON contract it
@@ -102,6 +103,68 @@ With `--json`, `add`, `remove`, `replace`, `migrate` and `detect --add` need
 `--yes` or `--dry-run`, else they stop with code 2. `config set`,
 `config unset` and `sync` need neither. A pending question stops a `--yes` run
 with code 2 and is listed in `data.plan.pending`.
+
+## Passing values
+
+`bootstrap config set` takes the value as one positional argument, with no
+stdin or file form. A value or a name can come from a cloned repo, so a shell
+metacharacter in it can run as a command. Every bootstrap write follows the
+rules below.
+
+**Values.** These rules apply to the value argument of `bootstrap config set`
+and to each `--answer <tool>.<key>=<value>` argument of `bootstrap migrate`,
+`bootstrap add tool` and `bootstrap remove tool`, whatever the source of the
+value:
+
+1. **Refuse.** When the value holds a backslash, a newline or another control
+   character, stop that one write: report the key, and write nothing for it.
+   In fish, a backslash inside single quotes escapes the next quote, so the
+   quoting below is not safe for such a value.
+2. **Serialize.** For `config set`, encode a list or a table as JSON. Pass a
+   scalar, free text included, as its raw text, and never encode it as a JSON
+   string: bootstrap then stores the double quotes too. An `--answer` value is
+   never JSON: pass it in the form that `bootstrap questions --json` shows for
+   that question.
+3. **Quote.** Replace each `'` with `'\''`, then wrap the whole value in
+   single quotes. For `--answer`, wrap the whole `<tool>.<key>=<value>`
+   argument as one single-quoted word: `--answer '<tool>.<key>=<value>'`.
+   Never pass a value unquoted or in double quotes.
+
+For example, the JSON value `{"folder":"it's"}` is written as
+`'{"folder":"it'\''s"}'`. Without a backslash or a control character, this
+form is the same in sh, bash, zsh and fish, and bootstrap stores the value
+exactly, with no command run inside it.
+
+**Names in a key.** A name that becomes one segment of a key path contains
+only letters, digits, `_` and `-`. A `.` is not allowed, because it splits the
+path into a nested key. The key shapes are:
+
+- `repo.members.<name>`, and the `<field>` of `repo.members.<name>.<field>`;
+- `repo.projects.<name>`, and the name of
+  `config unset repo.projects.<old name>`;
+- `tools.<tool>.projects`;
+- `releases.<key>`;
+- the `<env>` and the `<project>` of `repo.deploy.<env>.<project>`.
+
+Check each name before the write. A bad name stops that one write with a
+report that names it, and nothing is written for it. A `.` stays allowed
+inside a JSON value, for example in the `<name>@<marketplace>` keys of
+`tools.claude.plugins.project`.
+
+**Tool names.** A tool name given to `bootstrap add tool` or
+`bootstrap remove tool` passes the name check above, and is also a `name` of
+`data.tools` of `bootstrap catalog --json`. A name that fails either check
+stops that one write with a report that names it, and nothing is written for
+it.
+
+**Printed commands.** A command that a skill or a script prints for the user
+to run by hand follows the same quoting and the same name checks. When a name
+fails, print no command for it: name it, and say why. A command that shows
+only placeholders, for example `bootstrap add tool <tool>`, is a form: whoever
+fills it in applies these rules to the real values and names.
+
+A skill that writes to bootstrap cites this section at the step that builds
+the command.
 
 ## The git ports
 

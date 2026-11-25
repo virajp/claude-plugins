@@ -64,6 +64,10 @@ pack names one.
    mise x -- bootstrap add tool <tool>… --json --dry-run
    ```
 
+   Each `<tool>` is a name that step 3 found in the catalog and that passes
+   the name check of `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`.
+
    It writes nothing. Its `data.plan` holds the changes, the files of
    the sync and, in `pending`, each question with no answer; a warning of
    the envelope goes with it.
@@ -76,10 +80,15 @@ pack names one.
    tasks the tools ship, the pins and the servers.
 
 7. **Send it.** On consent, run the same call again with `--yes` and
-   one `--answer <tool>.<key>=<value>` for each answer of step 6:
+   one `--answer` for each answer of step 6. Quote each one per
+   `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`:
+   the value in the form `bootstrap questions --json` shows, each `'`
+   replaced with `'\''`, and the whole `<tool>.<key>=<value>` argument in
+   single quotes. An answer that holds a backslash or a control character is
+   not sent, and the report names its key:
 
    ```bash
-   mise x -- bootstrap add tool <tool>… --json --yes --answer <tool>.<key>=<value>
+   mise x -- bootstrap add tool <tool>… --json --yes --answer '<tool>.<key>=<value>'
    ```
 
    It writes the values and runs the sync; it commits nothing. A stop
@@ -101,10 +110,13 @@ pack names one.
 When a slug is removed, find each tool in the lockfile's `bootstrap:` block
 whose list holds only that slug. For those tools, run
 `bootstrap remove tool <tool>… --json --dry-run`, then, on consent, the
-same call with `--yes`. Both go through steps 1, 6, 7 and 9, then their
-records are dropped. A tool that another slug still needs keeps its
-record, without the removed slug. A tool with no record is never removed:
-stackgen did not add it.
+same call with `--yes` and each answer as a quoted
+`--answer '<tool>.<key>=<value>'`, both per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: each `<tool>` passes
+its name check, and each answer is quoted as step 7 says. Both go through
+steps 1, 6, 7 and 9, then their records are dropped. A tool that another
+slug still needs keeps its record, without the removed slug. A tool with no
+record is never removed: stackgen did not add it.
 
 A removal called by [the materializer](materializer.md#removing-a-component)
 shows its calls inside that call's one consent rather than on a line of
