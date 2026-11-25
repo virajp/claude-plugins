@@ -421,7 +421,12 @@ or that has a membership disagreement takes no step. In each repo:
    `${CLAUDE_PLUGIN_ROOT}/assets/elicitation.md`. Those answers are the user's
    to give; `init` drafts no values block and proposes no answer of its own.
 3. Run `bootstrap migrate --json --yes`, with each answer as
-   `--answer <tool>.<key>=<value>`.
+   `--answer '<tool>.<key>=<value>'`, per `## Passing values` of
+   `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: the value in the
+   form `bootstrap questions --json` shows for that question, never encoded
+   as JSON, each `'` replaced with `'\''`, and the whole argument in single
+   quotes. An answer with a backslash, a newline or another control
+   character stops that write with a report that names the key.
 4. Where that run still gives code 2 with new items in `data.plan.pending`,
    ask the new questions the same way and run step 3 again, with every answer
    so far. After 3 rounds, stop that repo and list the questions still open.
@@ -453,7 +458,9 @@ enough.
   and show its plan; ask each question of its `data.plan.pending` one at a
   time, as step 2 above does; then run
   `bootstrap add tool virajp-plugins --json --yes`, with each answer as
-  `--answer <tool>.<key>=<value>`, and loop on a new pending question as
+  `--answer '<tool>.<key>=<value>'`, quoted per `## Passing values` of
+  `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` as step 3 above
+  does, and loop on a new pending question as
   step 4 above does. The one consent covers both runs; no second question is
   asked.
 - **A non-zero exit**, from either run, shows the envelope's `errors` as

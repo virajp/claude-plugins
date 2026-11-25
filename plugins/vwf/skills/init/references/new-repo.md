@@ -63,11 +63,13 @@ time, then `bootstrap migrate --json --yes` with the answers, in each repo that
 takes it, the base first, after the clone rows and the clean-tree check — and in
 the base alone its last part, the `virajp-plugins` tool:
 `bootstrap add tool virajp-plugins --json --dry-run`, then `--yes` with the
-answers, inside the same consent, skipped with a warning where
-`bootstrap catalog --json` lists no such tool, and reported *stopped* on a
-non-zero exit while the base goes on to hygiene, commit and forge. Its
-gate — the shaped test of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`
-— decides which repos reach the rest of this file, and its green read decides
+answers, each passed as a quoted `--answer` per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`, inside the same consent,
+skipped with a warning where `bootstrap catalog --json` lists no such tool, and
+reported *stopped* on a non-zero exit while the base goes on to hygiene,
+commit and forge. Its gate — the shaped test of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md` — decides which repos
+reach the rest of this file, and its green read decides
 where `.config/stackgen.yaml` goes. The toolchain, the gates, the hooks, the
 branch model, the secrets tools and the record of the repo — its
 `.config/bootstrap/` folder — are all bootstrap's, and `init` passes nothing to

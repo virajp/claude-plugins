@@ -82,7 +82,11 @@ normal resume, `/vwf:execute <folder>`, applies. An empty `release_levels` list 
 The run bumps no version. It records how far each project it changed must move. A release step a person runs later
 bumps, tags and clears the key. The levels live in `.config/bootstrap/releases.toml`, read and written only through
 `bootstrap config`, per `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`. This skill never reads or writes that
-file itself. Every call below carries `--json` and runs with the worktree as the current folder.
+file itself. Every call below carries `--json` and runs with the worktree as the current folder. Every key and value
+below follows `## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: a `<key>` or `<id>` that
+goes into `releases.<key>` contains only letters, digits, `_` and `-`, no `.`; each `<level>` is passed as raw text,
+each `'` replaced with `'\''`, the whole value in single quotes, and a value with a backslash, a newline or another
+control character stops that write with a report that names the key.
 
 The verbs of `plan-management` never commit, so this skill, the caller that owns the completion commit, makes the
 write itself. It writes in the completion's protected-branch write's worktree, after the merge. The write comes right
@@ -90,29 +94,35 @@ after `complete` edits the row, and before the row edit is committed with `land.
 
 1. **The move from `.config/releases.yaml`**. Whenever `.config/releases.yaml` exists in the worktree, before
    anything else, even for an empty `release_levels` list: for each of its keys that is not `NONE`, run
-   `bootstrap config get releases.<key> --json`, then `bootstrap config set releases.<key> <level> --json`, then the
-   same get again. Then delete the file with `rm`. The final report lists each key moved as *moved from
+   `bootstrap config get releases.<key> --json`, then `bootstrap config set releases.<key> '<level>' --json`, then the
+   same get again. A key that fails the name check is skipped: nothing is written for it, and the final report names
+   it as *not a valid bootstrap key, kept in `.config/releases.yaml`*. The valid keys are still written, and the
+   landing continues. When no key was skipped, delete the file with `rm`. When a key was skipped, do not delete the
+   file: remove the moved keys from it, so only the skipped keys stay. Each later landing reports the same skip until
+   the user renames the key, and no key is written twice. The final report lists each key moved as *moved from
    `.config/releases.yaml`: `<key>` `<level>`*.
 2. Read the folder's `release_levels`: `plan.mjs get docs/plans/archived/<basename>/index.json release_levels` when
    step 3 archived it, at its live path otherwise. An empty list, `[]`, is the old-shape case, which only a migrated
    folder can have. Set nothing. The final report says *old-shape folder — no release levels recorded*.
 3. **The sets**. For each entry whose `level` is not `NONE`, the entry's `id` (the project) names the key:
    - `bootstrap config get releases.<id> --json` gives the "from" level;
-   - `bootstrap config set releases.<id> <level> --json` writes it. bootstrap keeps the higher of the old and the
+   - `bootstrap config set releases.<id> '<level>' --json` writes it. bootstrap keeps the higher of the old and the
      new level, so a key is never lowered. Read no field of the set's output;
    - the same get again gives the "to" level. A key changed when "from" and "to" differ. The final report lists
      each changed key, from and to.
-4. **The commit**. When `.config/bootstrap/releases.toml` changed, or step 1 deleted `.config/releases.yaml`, the
-   one `docs: plan queue — <folder> complete` commit carries `docs/plans/index.json`,
-   `.config/bootstrap/releases.toml` and the deletion of `.config/releases.yaml` — each that changed — and nothing
-   else, by the procedure *Writing a row* in `plan-index.md`. This commit is **the one exception to that procedure's
+4. **The commit**. When `.config/bootstrap/releases.toml` changed, or step 1 deleted or edited `.config/releases.yaml`,
+   the one `docs: plan queue — <folder> complete` commit carries `docs/plans/index.json`,
+   `.config/bootstrap/releases.toml` and the deletion or the edit of `.config/releases.yaml` — each that changed — and
+   nothing else, by the procedure *Writing a row* in `plan-index.md`. This commit is **the one exception to that procedure's
    rule that the write carries the index alone**. When nothing changed, the commit carries the row alone. There is no separate release-levels commit.
 5. **A failed call**. When a `bootstrap config` call fails, or the CLI is absent or has no contract 1, abandon the
    write with `land.mjs`, so a partial `releases.toml` goes with it. The row stays as it is: merged, not `COMPLETE`.
    Stop with the asset's hint, or with the `errors` messages of bootstrap's envelope as bootstrap gives them. The stop
-   is a hand step: the report prints the exact `bootstrap config set releases.<id> <level> --json` lines, the move of
-   step 1 when `.config/releases.yaml` exists, and the completion command, `plan-management complete <folder>` in a
-   protected-branch write's worktree.
+   is a hand step: the report prints the exact `bootstrap config set releases.<id> '<level>' --json` lines, quoted
+   per `## Passing values`, the move of step 1 when `.config/releases.yaml` exists, and the completion command,
+   `plan-management complete <folder>` in a protected-branch write's worktree. For a key that step 1 skipped, the
+   report prints no command: it names the key, says that it is not a valid bootstrap key, and says that it stays in
+   `.config/releases.yaml`.
 6. On a conflict, the procedure abandons the write and opens a new one from the new tip. Re-apply the row, and run
    steps 1 to 3 again there — the move, and each get, set and get. They are safe to repeat, because a set keeps the
    higher level, and "from" is read again at the new tip. Then close again. Two runs landing at once thus both keep

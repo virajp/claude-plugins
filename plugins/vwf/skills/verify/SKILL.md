@@ -57,9 +57,15 @@ own configuration (deploy manifests, env files by **name** via
 `docs/blueprint/environment.md`, mise tasks) — ask the user for anything
 unresolvable, never guess a hostname, and **offer to pin what was
 resolved/asked**, with
-`bootstrap config set repo.deploy.<env>.<project> <url> --json`, so the next
-run asks nothing. A failed `bootstrap` call stops the run
-with the envelope's `errors` as bootstrap gives them. Health probes honor any
+`bootstrap config set repo.deploy.<env>.<project> '<url>' --json`, so the next
+run asks nothing. Pass the URL per `## Passing values` of
+`${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`: raw text, each `'`
+replaced with `'\''`, the whole value in single quotes, and a stop on a
+backslash, a newline or another control character. Check `<env>` and
+`<project>` first: letters, digits, `_` and `-` only, no `.`. A bad name stops
+that write with a report that names it, and nothing is written for it. A
+failed `bootstrap` call stops the run with the envelope's `errors` as
+bootstrap gives them. Health probes honor any
 per-project override
 (`projects.<name>.harness.health` — a declared `n/a` is reported as such, not
 "unverifiable").

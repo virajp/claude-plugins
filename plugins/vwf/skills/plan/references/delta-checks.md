@@ -71,8 +71,13 @@ bootstrap config set repo.projects.<name> '{"folder":"<folder>"}' --json
 ```
 
 in that repo once the folder exists, `<folder>` relative to that repo's root.
-Write the line into the unit's steps. Until it runs, `/vwf:doctor` reports the
-missing entry as a degraded row, which never stops `/vwf:execute`.
+Write the line into the unit's steps with the value quoted per
+`## Passing values` of `${CLAUDE_PLUGIN_ROOT}/assets/bootstrap-contract.md`:
+each `'` replaced with `'\''`, the whole JSON value in single quotes, and a
+stop on a backslash, a newline or another control character. Check `<name>`
+first: letters, digits, `_` and `-` only, no `.`. A bad name gets no line: the
+plan reports it, and nothing is written for it. Until it runs, `/vwf:doctor`
+reports the missing entry as a degraded row, which never stops `/vwf:execute`.
 
 ## Deferred-core-token check (every element, when the slice is production-bound)
 
