@@ -225,11 +225,11 @@
         "U6"
       ],
       "waits": "the final gate runs over the documented tree",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-25T14:29:27.462Z",
+      "ended": "2026-11-25T14:31:52.811Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     },
     {
       "id": "U8",
@@ -277,9 +277,9 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T14:29:27.425Z",
+      "ended": "2026-11-25T14:32:56.899Z"
     }
   ],
   "shared_files": [
