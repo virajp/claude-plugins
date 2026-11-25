@@ -103,7 +103,8 @@ with code 2 and is listed in `data.plan.pending`.
 `bootstrap config set` takes the value as one positional argument, with no
 stdin or file form. A value or a name can come from a cloned repo, so a shell
 metacharacter in it can run as a command. Every bootstrap write follows the
-rules below.
+rules below, and the name check also covers every read whose key is built
+from a name.
 
 **Values.** These rules apply to the value argument of `bootstrap config set`
 and to each `--answer <tool>.<key>=<value>` argument of `bootstrap migrate`,
@@ -129,8 +130,10 @@ For example, the JSON value `{"folder":"it's"}` is written as
 form is the same in sh, bash, zsh and fish, and bootstrap stores the value
 exactly, with no command run inside it.
 
-**Names in a key.** A name that becomes one segment of a key path contains
-only letters, digits, `_` and `-`. A `.` is not allowed, because it splits the
+**Names in a key.** This check covers every bootstrap call whose key is
+built from a name: the writes, and the reads `config get` and `config unset`
+alike. A name that becomes one segment of a key path contains only letters,
+digits, `_` and `-`. A `.` is not allowed, because it splits the
 path into a nested key. The key shapes are:
 
 - `repo.members.<name>`, and the `<field>` of `repo.members.<name>.<field>`;
@@ -138,10 +141,11 @@ path into a nested key. The key shapes are:
   `config unset repo.projects.<old name>`;
 - `tools.<tool>.projects`;
 - `releases.<key>`;
+- `repo.branches.<b>`, the `<b>` of `repo.branches.<b>.landing`;
 - the `<env>` and the `<project>` of `repo.deploy.<env>.<project>`.
 
-Check each name before the write. A bad name stops that one write with a
-report that names it, and nothing is written for it. A `.` stays allowed
+Check each name before the call. A bad name stops that one call with a report
+that names it, and nothing is run for it. A `.` stays allowed
 inside a JSON value, for example in the `<name>@<marketplace>` keys of
 `tools.claude.plugins.project`.
 
