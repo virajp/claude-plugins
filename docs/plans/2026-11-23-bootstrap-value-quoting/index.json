@@ -83,8 +83,8 @@
       "status": "green",
       "started": "2026-11-25T05:24:50.788Z",
       "ended": "2026-11-25T05:29:51.102Z",
-      "commit": "48e5725b",
-      "rounds": 1
+      "commit": "40dbdd5d",
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -99,15 +99,16 @@
         "plugins/vwf/skills/setup/references/onboard-pipeline.md",
         "plugins/vwf/skills/setup/references/workspace-structure.md",
         "plugins/vwf/skills/setup/references/materialize.md",
-        "plugins/vwf/skills/setup/references/topology-detection.md"
+        "plugins/vwf/skills/setup/references/topology-detection.md",
+        "plugins/vwf/skills/setup/references/format-lineage.md"
       ],
       "depends_on": [],
       "waits": "",
       "status": "green",
       "started": "2026-11-25T05:24:50.859Z",
       "ended": "2026-11-25T05:29:51.177Z",
-      "commit": "9903e235",
-      "rounds": 1
+      "commit": "c32bfa1f",
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -122,15 +123,20 @@
         "plugins/vwf/skills/execute/references/land.md",
         "plugins/vwf/skills/plan/references/delta-checks.md",
         "plugins/vwf/skills/init/SKILL.md",
-        "plugins/vwf/skills/init/references/new-repo.md"
+        "plugins/vwf/skills/init/references/new-repo.md",
+        "plugins/vwf/skills/change-plan/references/recall-survey.md",
+        "plugins/vwf/skills/git-workflow/SKILL.md",
+        "plugins/vwf/skills/git-workflow/references/landing.md",
+        "plugins/vwf/skills/execute/references/claim.md",
+        "plugins/vwf/skills/execute/references/setup.md"
       ],
       "depends_on": [],
       "waits": "",
       "status": "green",
       "started": "2026-11-25T05:24:50.934Z",
       "ended": "2026-11-25T05:27:01.156Z",
-      "commit": "c7ff16a4",
-      "rounds": 2
+      "commit": "0591bcc4",
+      "rounds": 4
     },
     {
       "id": "U4",
@@ -168,14 +174,14 @@
         "U8"
       ],
       "waits": "reviews the committed wave-1 delta, U4's stack.mjs change in focus",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-25T05:37:19.846Z",
+      "ended": "2026-11-25T14:16:23.760Z",
       "commit": "",
-      "rounds": 0,
+      "rounds": 2,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "190fe55c",
+        "to": "6ccaa00c"
       }
     },
     {
@@ -237,15 +243,17 @@
         "plugins/vwf/assets/vwf-config.md",
         "plugins/vwf/assets/stack-adapter.md",
         "plugins/vwf/assets/topologies/monorepo.md",
-        "plugins/vwf/assets/stack-vocabulary.md"
+        "plugins/vwf/assets/stack-vocabulary.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/assets/templates/registry.yaml"
       ],
       "depends_on": [],
       "waits": "",
       "status": "green",
       "started": "2026-11-25T05:24:51.079Z",
       "ended": "2026-11-25T05:27:01.300Z",
-      "commit": "c7cd48a9",
-      "rounds": 2
+      "commit": "9327b0d2",
+      "rounds": 4
     }
   ],
   "waves": [
@@ -257,9 +265,9 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T05:37:19.803Z",
+      "ended": "2026-11-25T14:20:05.062Z"
     },
     {
       "id": "W3",
@@ -616,6 +624,24 @@
       "units": [
         "U2"
       ]
+    },
+    {
+      "id": "D37",
+      "decision": "Q3: Should the ## Passing values name check also cover bootstrap reads (config get, config unset) that build a key from a name, such as config get repo.projects.<name>.folder --json, which the U5 security reviewer found run unchecked before the write?",
+      "ruling": "Extend the name check to every bootstrap call that builds a key from a name, reads included, and cite it at each read site — closes the path where an unchecked read runs before the write; widens U1, U3 and U8, plus one change-plan file",
+      "rejected": "Keep it to writes and record the reads as a parked follow-up; Accept as is",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q4: Should the D37 name check (letters, digits, _ and - only) also apply to <b> in repo.branches.<b>.landing reads (git-workflow SKILL.md:49, :245, landing.md:25, init new-repo.md:408, doctor stack-checks.md:770)?",
+      "ruling": "Apply the check and name the bad branch in the report — matches D37; a core branch with a . or / in its name can no longer have its landing model read",
+      "rejected": "Check only for shell metacharacters, allowing / and . (separate branch rule); Leave branch reads unchecked",
+      "units": [
+        "U3"
+      ]
     }
   ],
   "stages": {
@@ -644,7 +670,29 @@
       "ended": ""
     }
   },
-  "gaps": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U2",
+      "stage": "",
+      "text": "U2 owns widened by format-lineage.md (read site at :138) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U3",
+      "stage": "",
+      "text": "U3 owns widened by change-plan recall-survey.md, git-workflow SKILL.md and landing.md, execute claim.md and setup.md (read sites) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    },
+    {
+      "id": "G3",
+      "unit": "U8",
+      "stage": "",
+      "text": "U8 owns widened by assets execute-stages.md and templates/registry.yaml (read sites) · D37, the U5 security finding on unchecked reads",
+      "state": "closed"
+    }
+  ],
   "overrides": [
     {
       "id": "O1",
