@@ -207,11 +207,11 @@
         "U8"
       ],
       "waits": "documents the whole delta after the review",
-      "status": "pending",
-      "started": "",
-      "ended": "",
-      "commit": "",
-      "rounds": 0
+      "status": "green",
+      "started": "2026-11-25T14:20:28.235Z",
+      "ended": "2026-11-25T14:23:02.126Z",
+      "commit": "735d622a",
+      "rounds": 3
     },
     {
       "id": "U7",
@@ -271,9 +271,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-25T14:20:28.194Z",
+      "ended": "2026-11-25T14:29:12.421Z"
     },
     {
       "id": "W4",
@@ -646,28 +646,28 @@
   ],
   "stages": {
     "renders": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.445Z"
     },
     "acceptance": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.219Z"
     },
     "ux": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: the plan has no covers (no blueprint slice, no acceptance criteria or Screens contract)",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.332Z"
     },
     "reconcile": {
-      "state": "pending",
-      "detail": "",
+      "state": "skipped",
+      "detail": "skipped: no covers (no stamps) and no code unit (nothing to persist); no Reconcile commit",
       "started": "",
-      "ended": ""
+      "ended": "2026-11-25T14:20:22.591Z"
     }
   },
   "gaps": [
