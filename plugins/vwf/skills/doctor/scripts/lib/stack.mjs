@@ -211,6 +211,12 @@ function lspRows(dir, held) {
 }
 
 /**
+ * A name that becomes one bootstrap key segment or tool name: a remedy that
+ * prints a command checks it first, and prints no command for a bad one.
+ */
+const BOOTSTRAP_NAME = /^[A-Za-z0-9_-]+$/;
+
+/**
  * D8, D23, D25, D29, D33: each tools: name of the project's materialized
  * entry is selected in its repo, and one of category languages or
  * package-managers links the project. An entry with no tools: key is one row.
@@ -245,7 +251,9 @@ function toolLinkRows(name, template, frontmatter, data, dir) {
         entry === null
           ? `${template} names tool ${tool}, which bootstrap in ${dir} has not selected`
           : `${template} names tool ${tool}, which bootstrap in ${dir} does not link to project ${name}`,
-        `bootstrap add tool ${tool}, then bootstrap detect --add`,
+        BOOTSTRAP_NAME.test(tool)
+          ? `bootstrap add tool ${tool}, then bootstrap detect --add`
+          : `tool ${tool} is not a valid bootstrap tool name (letters, digits, _ and - only)`,
       ),
     );
   }
@@ -400,7 +408,9 @@ export function projectRows({ base, config, members, registry, scope }) {
           name,
           name,
           `bootstrap in ${target.dir} has no repo.projects.${name}, so project ${name} has no folder`,
-          `bootstrap config set repo.projects.${name} '{"folder":"<path>"}' --json`,
+          BOOTSTRAP_NAME.test(name)
+            ? `bootstrap config set repo.projects.${name} '{"folder":"<path>"}' --json`
+            : `project ${name} is not a valid bootstrap key (letters, digits, _ and - only); rename the project by hand in docs/blueprint/registry.yaml and in each projects.${name} key of .config/vwf.yaml, then run /vwf:setup and /vwf:doctor again`,
         ),
       );
     }
