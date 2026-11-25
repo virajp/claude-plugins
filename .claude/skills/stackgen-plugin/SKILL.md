@@ -43,9 +43,10 @@ the editor settings — is [bootstrap](https://github.com/virajp/bootstrap)'s, t
 `setup:*` and `code:*` tasks with them, and `stackgen:tool-config`, which once
 rendered them, was removed on 2026-11-03. Both plugins reach bootstrap only
 through its CLI and JSON contract (bootstrap 4.1.0 or newer), per each plugin's
-`assets/bootstrap-contract.md`. `/vwf:init` runs `bootstrap migrate`,
-`/vwf:setup`'s materialize pass applies packs through the adapter, and
-`/vwf:doctor` judges drift through `bootstrap check --json` and
+`assets/bootstrap-contract.md`, whose `## Passing values` says how each value
+is quoted and each name in a key is checked. `/vwf:init` runs
+`bootstrap migrate`, `/vwf:setup`'s materialize pass applies packs through the
+adapter, and `/vwf:doctor` judges drift through `bootstrap check --json` and
 `bootstrap sync --json --dry-run`, in full mode and in setup's Step 0 only.
 
 **Each asset is authoritative for its own subject.** This file is a map; do not

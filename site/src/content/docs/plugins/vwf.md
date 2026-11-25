@@ -765,7 +765,13 @@ A project no bootstrap language tool links is a **degradation**, with the fix
 `bootstrap add tool <tool>` then `bootstrap detect --add` — unless every
 platform it declares is `iac`, `cicd` or `misc`, which have no language tool by
 nature. So is a registry project with no bootstrap `repo.projects.<name>`
-entry. `/vwf:doctor` reports both, and neither stops `/vwf:execute` or
+entry, with the fix
+`bootstrap config set repo.projects.<name> '{"folder":"<path>"}' --json`. A
+project name with a character other than a letter, a digit, `_` or `-` is not a
+valid bootstrap key, so that row prints no command. It tells you to rename the
+project by hand in `docs/blueprint/registry.yaml` and in each `projects.<name>`
+key of `.config/vwf.yaml`, then to run `/vwf:setup` and `/vwf:doctor` again.
+`/vwf:doctor` reports both, and neither stops `/vwf:execute` or
 `/vwf:setup`. There is no *other
 (describe)* option and no `template: custom` — an axis nothing on the menu fits
 has three ways forward, none of them a free-text pin. vwf is an opinionated
@@ -1209,9 +1215,11 @@ and `/vwf:doctor`'s Forge state predicate reads it back from there. The
 protection is the same on every core branch of that repo's
 `repo.core_branches`, always: **no force-push and no deletion**; then **per
 branch, from `repo.branches.<b>.landing`, read through `bootstrap config`** —
-where the value is `pr`, additionally **a pull request required** (no approval
-count); where it is `direct-merge` or `direct-commit` the merge task pushes the
-merge itself, and that rule would refuse the model you chose. On GitHub each
+the branch name is checked first, and a bad branch name gets no read and the
+report names the branch; where the value is `pr`, additionally **a pull
+request required** (no approval count); where it is `direct-merge` or
+`direct-commit` the merge task pushes the merge itself, and that rule would
+refuse the model you chose. On GitHub each
 branch
 gets one **ruleset** named `vwf-<branch>`; on GitLab a protected branch. **A
 branch
@@ -1477,7 +1485,11 @@ and written through `bootstrap config`; which member holds a project stays in
 not have yet, only removes one both files agree on, and **asks only where
 `repo.toml` and `vwf.yaml` differ**, one key at a time — except a member
 bootstrap's own `init` recorded as `sibling` that `.gitmodules` lists, set to
-`submodule` with no question. `linkage` becomes each member's `type`, and
+`submodule` with no question. Before the first write, each member, env and
+project name that goes into a key must contain only letters, digits, `_` and
+`-`; a bad name stops the step for that repo before any write, the report names
+it and how to rename it, the stamp stays at 26, and the next `/vwf:setup`
+offers the step again. `linkage` becomes each member's `type`, and
 `.config/vwf-membership.yaml` gives way to bootstrap's `[home]` back-link: each
 present member deletes the file, in its own commit before the base's, once its
 `repo.home` resolves, and the report names the fix where it does not. One row
@@ -1671,7 +1683,9 @@ project placed in a member gets `projects.<name>.repo` in `vwf.yaml`. A
 project's folder is bootstrap's too, never a registry key: for each project
 whose folder exists, it runs `bootstrap config set repo.projects.<name>` in the
 repo that holds it, and the plan unit that creates a missing folder sets it
-then. Re-run it
+then. A project, member or field name that goes into a bootstrap key must
+contain only letters, digits, `_` and `-`; a bad name stops that one write, and
+the report names it. Re-run it
 any time the topology changes; it asks only about genuine deltas, never
 re-eliciting what's confirmed.
 
@@ -2881,12 +2895,15 @@ that no `APPROVED` or `RUNNING` row still requires leaves the index, its
 archived folder being the record. The same commit carries the **release
 levels**: for each entry of the folder's `release_levels` list, the run raises
 that project's key in `.config/bootstrap/releases.toml` to the entry's level
-with `bootstrap config set releases.<id> <level> --json`, which keeps the higher
-— the order is `NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR` stays
-`MAJOR` — and never lowers one; only a release step clears a key. The run bumps
-no version and never reads or writes that file itself. Where an old
+with `bootstrap config set releases.<id> '<level>' --json`, which keeps the
+higher — the order is `NONE < PATCH < MINOR < MAJOR`, so `PATCH` after `MAJOR`
+stays `MAJOR` — and never lowers one; only a release step clears a key. The run
+bumps no version and never reads or writes that file itself. Where an old
 `.config/releases.yaml` exists, the run moves each of its keys the same way and
-deletes it, in the same commit. Before the merge, it reads each key once with
+deletes it, in the same commit. A key that is not a valid bootstrap key —
+letters, digits, `_` and `-` only — is not moved: the report names it, and it
+stays in `.config/releases.yaml`, which then keeps only the keys not moved.
+Before the merge, it reads each key once with
 `bootstrap config get`, so a broken bootstrap stops the run before anything
 merges; a write that fails after the merge stops with the exact
 `bootstrap config set` lines to run by hand. The file is written in the
@@ -3969,7 +3986,9 @@ through `bootstrap config`, in `.config/bootstrap/repo.toml`: under
 under `pr` it pushes the branch and opens a pull request and nothing merges
 locally; `direct-commit` also allows a commit made on `<b>` itself. The skill
 reads the value for the destination it is about to land on before it offers
-the landing options, so the two choices read "Merge & push" on one repo and
+the landing options. It checks the branch name first: a name with a `.` or a
+`/` gets no read and no landing option, and the report names the branch. So the
+two choices read "Merge & push" on one repo and
 "Push & open PR" on another — it still names no forge; the task does. The
 integration branch comes from `repo.core_branches`: `develop` when it is one,
 else `main`. The main checkout's uncommitted changes stay uncommitted and are
