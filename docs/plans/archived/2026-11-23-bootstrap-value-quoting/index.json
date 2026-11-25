@@ -15,8 +15,8 @@
   ],
   "execution": "teams",
   "status": {
-    "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-25T05:23:24Z in .worktrees/all-2026-11-25-1049"
+    "state": "COMPLETE",
+    "detail": "COMPLETE 2026-11-25 — 48e5725b,9903e235,c7ff16a4,e587f418,c7cd48a9,40dbdd5d,c32bfa1f,0df85047,6ccaa00c,0591bcc4,9327b0d2,735d622a"
   },
   "consent": {
     "merge": true,
