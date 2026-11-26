@@ -9,6 +9,13 @@ Prepare the landing commit when all of these hold:
 - Every unit gate, wave gate and plan gate line and every orchestrator gate passed.
 - The gap list holds no blocking gap.
 
+**Under an `all` override reading `hold landing`**, do none of the steps below. Invoke
+`plan-management status <folder> RUNNING "RUNNING — green, held to land at the end of the all run on <branch>"`
+in the worktree, and commit it as one `docs:` commit there. Run no after-landing step. End the action log
+`end --outcome ready`, per [the action log](action-log.md), and return `OUTCOME: HELD`, per
+[`all` and runner mode](../workflows/all.md). The loop's landing phase lands the plan later, through a
+resume under `land: yes`.
+
 The steps:
 
 1. **The consent**. Read `consent.merge`: *merge to the integration branch and push on green*,

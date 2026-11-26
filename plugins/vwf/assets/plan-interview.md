@@ -195,9 +195,10 @@ The answer is `execution` in `index.json`, and its reason is an entry in
       edits a plugin the run itself loads does not change it.
 
 The executor follows the plan, and asks the user at run time only what the
-plan missed — beside the run-level questions /vwf:execute all asks once,
-before its first plan. A run question is the planner's miss, never a second
-interview. So the interview is not done while any question the run would
+plan missed — beside the one landing question /vwf:execute all asks at its
+landing phase, when a held plan recorded `consent.merge` `false`. A run
+question is the planner's miss, never a second interview. So the interview is
+not done while any question the run would
 otherwise raise is unanswered: every key of `consent` carries an answer, every
 after-landing step reads `run`, and every decision a unit or the executor
 would otherwise have to pause on is a ruling in the plan.

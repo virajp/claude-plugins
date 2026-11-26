@@ -17,10 +17,10 @@ resume alike.
 step on the same terms: same authorisation, same report, same failure rule. Skip a command the plan's
 own list already ran, so it runs once. An absent key, or an absent file, adds no step.
 
-**Under an `all` override**, a step does not run here when the block names its command under
-`skip as deduped`. This holds for a plan step and a default step alike. Report it as deferred to the loop's exit — *skipped
-(deduped)* — and record it in the final report. The remaining steps run in order without it. It is
-neither a failure nor a step not run.
+**Under an `all` override reading `skip after-landing`**, no step runs here, plan step or default step.
+The loop's landing phase runs each distinct step once, after its last landing, per
+[`all` and runner mode](../workflows/all.md). Report each as deferred to the loop — *deferred (all)* — and
+record it in the final report. It is neither a failure nor a step not run.
 
 **When the branch did not merge**, **no step runs**, plan step or default step. Either the landing was
 not consented, or it was consented and the merge hit a conflict. A conflict is the hard halt of the `yes`

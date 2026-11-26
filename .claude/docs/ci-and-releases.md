@@ -89,13 +89,11 @@ The second line is the **local half** of a release: it publishes nothing,
 commits nothing and cuts no tag. `/vwf:execute` — the folder named, `next`, or
 each plan `all` runs — runs it as the plan folder's after-landing step, recorded
 `run` at the interview: it runs on a green landing without a prompt — except
-that under `all`, when the run's deduped-steps question is answered yes, an
-identical step runs once, from the main checkout, after the last plan that
-landed (`workflows/all.md` in the execute skill) — and the author's next
-**restarted** session is on the plugin that just landed — which is why a plan
-editing a plugin the session running `/vwf:execute all` loads is asked, at its
-interview, whether to end an `all` run after landing — recorded as
-`consent.end_all_run` in the folder's `index.json`; `true` ends the run there.
+that under `all` each distinct step runs once, from the main checkout, after the
+landing phase's last landing (`workflows/all.md` in the execute skill) — and the
+author's next **restarted** session is on the plugin that just landed.
+`consent.end_all_run` in the folder's `index.json` is always written `false`:
+a user who runs `/vwf:execute all` means to run every plan.
 Only the last line reaches users, and it is the one `CLAUDE.md`'s hard rule
 guards.
 

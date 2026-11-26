@@ -7,10 +7,10 @@ this skill's `SKILL.md`. The second half, *Runner mode*, is yours.
 runner subagent. A question a runner cannot settle is relayed: the runner returns it, the loop asks the
 user and resumes the runner with the answer, per *The loop* step 4. It stops at the first point it cannot settle.
 
-The session that typed it is **the loop**. It asks the run's questions once, picks, dispatches, and keeps a
-one-line result per plan. It runs what the answers deferred to its exit, and does nothing else. It never reads
-a unit report or a unit's state itself. Of a plan folder it reads `consent` and `after_landing` alone, once,
-for the questions, with `plan.mjs get`. Of `.config/vwf.yaml` it reads the `after_landing:` key alone.
+The session that typed it is **the loop**. It picks, dispatches, and keeps a one-line result per plan. It
+lands the held plans in its landing phase, and does nothing else. It never reads a unit report or a unit's
+state itself. Of a plan folder it reads `consent` and `after_landing` alone, with `plan.mjs get`, at the
+landing phase. Of `.config/vwf.yaml` it reads the `after_landing:` key alone.
 
 `plan.mjs` names `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs`, as in
 [the plan files](../references/plan-files.md). Plain `/vwf:execute <folder>` and `/vwf:execute next` are
@@ -21,48 +21,42 @@ migration message and stops, asking nothing and dispatching no runner. A repo wi
 `docs/plans/index.md` nor `docs/plans/index.json` has no runnable plan, and the loop ends as step 2 of *The
 loop* does.
 
-## Run-level questions — once, before the first plan
+## Run-level rules — no question before the first plan
 
-A plan's folder answers every question its own run needs. These are questions about the **run of several
-plans**, which no single folder can answer. Each answer is an **override** of the plans' recorded steps for this
-run only. It is passed to each runner in its dispatch prompt, and written by the runner as one entry of that
-folder's `overrides` list. A folder's `consent` is never changed.
+A plan's folder answers every question its own run needs. These rules cover the **run of several plans**,
+which no single folder can answer. The loop asks nothing before its first plan. Each rule is an **override**
+of the plans' recorded steps for this run only. It is passed to each runner in its dispatch prompt, and
+written by the runner as one entry of that folder's `overrides` list. A folder's `consent` is never changed.
 
-1. **The plans the loop will reach**. Invoke `plan-management list`, which reads `docs/plans/index.json`, and take
-   the runnable rows: the `APPROVED` rows `next` would take. Then add every `APPROVED` row whose each `requires`
-   entry is satisfied or is a row already in the set. Repeat until no row joins. None → ask nothing; the loop's
-   first pick ends it as before. Read each reached folder's `consent` and `after_landing`, and nothing else of it.
-   Read the `after_landing:` key of `.config/vwf.yaml`, when there is one.
-2. **Ask the questions that apply, one per turn**, each a yes or no, holding the answers:
-   - **One shared worktree** — always asked. All the reached plans run in one worktree on branch
-     `all-<date>-<HHMM>`, the time this question is asked. It is refreshed from the integration branch before each
-     plan, each plan landing in turn while the worktree is kept. The loop's exit removes it, except on a `STOPPED`
-     end.
-   - **Deduped after-landing steps** — asked when one step command would run after two or more reached plans. That
-     is an `after_landing` `step` recorded by two or more of them. It is also a command in `.config/vwf.yaml`'s
-     `after_landing:` list, which runs after every landing, whenever two or more plans are reached. List each such command and its
-     plans. Yes → each runs once, from the main checkout, after the last plan that landed, on an early stop too, and no
-     runner runs it.
-   - **Landing** — asked when a reached plan's `consent.merge`, *merge to the integration branch and push on green*,
-     reads `false`. List every such plan together first, then ask once per plan, one per turn: land `<folder>` this run?
-     Yes → that runner lands it as if the row read `yes`. No → it stops at its landing as recorded, and that stop ends
-     the run.
-
-   A **no** to any question leaves the plans' steps as recorded.
-3. **After this step, no run-level question is asked**, until the exit. The exit asks nothing either. The one other
-   question the loop asks is a runner's relayed question, per *The loop* step 4; a runner itself asks no one.
+1. **One shared worktree, always**. All the plans of the run commit to one worktree on branch
+   `all-<date>-<HHMM>`, the time the loop starts. The first runner cuts it, per Setup; each later runner
+   reuses it. The loop's exit removes it, except on a `STOPPED` end.
+2. **Land at the end**. A runner does not land its plan. It holds it: the plan is green and committed on
+   the shared branch, and its row stays `RUNNING`. The loop lands every held plan in its **landing
+   phase**, below. That phase runs once at the loop's normal end, and earlier only when a plan the loop
+   would pick next requires a held plan, per *The loop* step 2.
+3. **After-landing steps after the landing**. A held plan runs no after-landing step. The landing phase
+   runs each distinct step once, after its last landing, per *The landing phase* step 4. A phase run early,
+   because a later plan requires a held plan, runs its steps before that later plan starts. So a step
+   that the next plan needs has run, and every other step runs once, after all the plans land.
+4. **The one question is at the landing phase**. When a held plan's `consent.merge` reads `false`, the
+   landing phase asks once whether to land all the held plans, per its step 2. Nothing else is asked at
+   the run level.
 
 ### The overrides block
 
-Each dispatch prompt carries the answers that touch its folder, after the two paths, as this block. A line appears only
-when its answer was yes and it applies to this folder, and `Overrides: none` when no line does:
+Each dispatch prompt carries the overrides that apply to its folder, after the two paths, as this block:
 
 ```text
 Overrides:
 - shared worktree: <branch>
-- skip as deduped: <command>; <command>
+- hold landing
 - land: yes
+- skip after-landing
 ```
+
+A runner that runs a plan's units gets `shared worktree` and `hold landing`. A runner that the landing
+phase dispatches gets `shared worktree`, `land: yes` and `skip after-landing`.
 
 The runner applies each over the folder as Setup ([setup.md](../references/setup.md)), Land ([land.md](../references/land.md))
 and After landing ([after-landing.md](../references/after-landing.md)) describe for an `all` override. Right after its preflight,
@@ -72,7 +66,7 @@ it appends the one entry, the block's lines joined by `; `, `O<n>` one past the 
 node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs append <folder>/index.json overrides --json '{"id": "O<n>", "text": "<line>; <line>"}'
 ```
 
-It never changes `consent`. `Overrides: none`, or no block, appends nothing.
+It never changes `consent`.
 
 ### The answers block
 
@@ -95,7 +89,7 @@ question's `question` event in the action log — before its resume path runs.
 Run it in a session that has done nothing else; it cannot check that, so it trusts it. Each runner is the fresh context its plan
 runs in. The loop's own context grows only by the five-line return of each.
 
-Once the run-level questions above are answered, each iteration, in order:
+Each iteration, in order:
 
 1. **Cap check**. A resource-cap directive is the `PostToolUse` hook's, per the Pause Conditions in
    [pause.md](../references/pause.md). When one has reached this session at any point, start no new plan. The loop ends, stop reason
@@ -103,15 +97,17 @@ Once the run-level questions above are answered, each iteration, in order:
    runner's own context is not measured, only the session's figures the hook reads. The 5-hour and 7-day figures are
    account-wide.
 2. **Pick**. Run `plan.mjs pick --branch <integration>`, with `--member-branch` as [claim.md](../references/claim.md) says (the loop's re-pick: it picks and claims nothing; the runner's `start.mjs` claims). Exit 1,
-   `{nothing: [{folder, waits}]}` → the loop ends, stop reason each `APPROVED` row and what it waits on, or that the index is
-   absent or holds no rows. On a pick, `{pick: {folder, kind, priority}}`, print one line: the folder, its `kind` and its
+   `{nothing: [{folder, waits}]}`:
+   - when a `waits` entry names a plan this run holds, run *The landing phase* now, then go back to step 1;
+   - otherwise the loop ends, stop reason each `APPROVED` row and what it waits on, or that the index is
+     absent or holds no rows. On a pick, `{pick: {folder, kind, priority}}`, print one line: the folder, its `kind` and its
    `priority`. Print nothing of the other rows.
 3. **Dispatch one runner**. Make one `Agent` call, `subagent_type: "vwf:execute-runner"` (the `execute-runner` agent). Start its `description` with `run-<n>` for
    the iteration's number, and give it no `name`: with agent teams on, a `name` makes the runner a teammate, and a teammate's named agents fail. Never pass `isolation: "worktree"`: the runner cuts its own, per Setup, or reuses the shared one. The prompt
    is two paths and the overrides block, and nothing else:
    - the picked folder, repo-relative;
    - the **absolute** path of this skill's `SKILL.md`, the base directory this skill was loaded from plus `/SKILL.md`;
-   - the block for that folder;
+   - the block for that folder: `shared worktree` and `hold landing`;
    - only on the fresh runner of step 4, after a failed resume: *The answers block* above.
 
    Pass no conversation context, no recall, and no instruction beyond *run this folder in runner mode*. Runners never run in parallel: dispatch the next only once this one has
@@ -136,23 +132,49 @@ Once the run-level questions above are answered, each iteration, in order:
      the action log, per *No one to answer* in [questions.md](../references/questions.md).
 
    The loop still reads no unit report, and edits no folder: the question lines are part of the runner's return block.
-5. **Continue or end**. The loop ends on the first row whose `OUTCOME:` is `STOPPED`, stop reason that row's `DETAIL:`. It also ends on the first
+5. **Continue or end**. A row whose `OUTCOME:` is `HELD` adds the plan to the held list, in order, and the loop goes back to step 1.
+   The loop ends on the first row whose `OUTCOME:` is `STOPPED`, stop reason that row's `DETAIL:`. It also ends on the first
    row whose `ENDS RUN:` is `yes`. The stop reason is then *the plan edited a plugin this run loaded — restart, then `/vwf:execute all`*. Otherwise go back to
    step 1.
 
 Nothing is skipped past: a plan that stops ends the run, and the next plan waits for the person. The loop never unclaims, never resumes a stopped plan
-itself, and never edits a folder or the plan index by hand. Its runners change the tree. The loop itself does only at the exit, through the deferred
-steps and the worktree removal below.
+itself, and never edits a folder or the plan index by hand. Its runners change the tree. The loop itself does only in the landing phase, through the
+after-landing steps, and at the exit, through the worktree removal below.
+
+### The landing phase
+
+It lands the held list, in the order the plans were held. An empty list lands nothing.
+
+1. **Read the consents**. For each held plan, read `consent.merge` and `after_landing` with `plan.mjs get`.
+2. **The one question**. When one or more held plans read `false`, list them, then ask once, with one `AskUserQuestion`
+   call: land all the held plans now? The plans share one branch, so the answer is for all of them.
+   - **Yes** → go on to step 3.
+   - **No** → no plan lands. The loop ends, stop reason *held plans not landed*. The exit names the branch and each held folder.
+   - **No one to answer** → the same as **No**.
+
+   When every held plan reads `true`, ask nothing.
+3. **Land each, in order**. For each held plan, dispatch one runner as in *The loop* step 3, its block `shared worktree`,
+   `land: yes` and `skip after-landing`. The runner resumes the folder, finds every unit green, and lands it per
+   [land.md](../references/land.md), keeping the shared worktree. Record its return by *The loop* step 4. A `STOPPED` row ends
+   the phase and the loop, as in step 5; the plans not yet landed stay held.
+4. **The after-landing steps, each once**. From the main checkout, asking nothing, run each distinct command of the landed plans'
+   `after_landing` lists, in the order the first plan that lists it was held, then each command of `.config/vwf.yaml`'s
+   `after_landing:` key, in list order. A command already run in this phase runs not again. A step that exits non-zero stops the
+   rest, as in [after-landing.md](../references/after-landing.md), and ends the loop.
+5. Empty the held list.
 
 ### The exit
 
-On any end, first run what the answers deferred, from the main checkout, in this order and asking nothing:
+On any end other than `STOPPED` or a **No** at the landing phase, first run *The landing phase*, when the held list is not empty. Then:
 
-1. **The deduped steps**. Take each command the deduped answer named that would have run after a plan which landed this run.
-   A landed plan reads `COMPLETE` or `COMPLETE with gaps`. The command is recorded in that plan's table or in the `after_landing:` key. Run each once, on an early stop too. Go in the order the
-   first such plan's table lists them, then the key's commands in list order. None landed → none runs.
-2. **The shared worktree**. Remove it with a plain `git worktree remove <path>` from the main checkout, asking nothing, on every exit except a `STOPPED` one.
-   The stopped plan's resume runs in the worktree its status line names. On a `STOPPED` exit, name its path and branch instead.
+1. **The shared worktree**. Remove it with a plain `git worktree remove <path>` from the main checkout, asking nothing, when every
+   held plan landed. Otherwise name its path and branch.
+2. **A stop lands nothing**. On a `STOPPED` end, the held plans stay held, on the shared branch under the stopped plan's commits.
+   The loop does nothing more by itself: the person decides what comes next. Print the recommended next steps, in this order:
+   - resume the stopped plan in a fresh session with its `RESUME:` command. Say that its landing merges the shared branch, so it
+     lands the held plans' commits too, a held plan that reads `consent.merge` `false` among them;
+   - then, for each held plan, `/vwf:execute <folder>` in a fresh session. Its resume finds every unit green and completes its
+     landing: the status, the archive, the row and the after-landing steps.
 
 A step that exits non-zero stops the rest, as in [after-landing.md](../references/after-landing.md). The exit reports it, its exit code and output, and every
 step not run with its command. Then print one table — a row per runner dispatched, in order — then the stop reason and the one command that continues:
@@ -162,12 +184,13 @@ step not run with its command. Then print one table — a row per runner dispatc
 
 The `ENDS RUN:` column is not printed; a `yes` shows as the stop reason. The continuing command is:
 
-- the stopped row's `RESUME:` when a plan stopped, run by a person in a fresh session;
+- the stopped row's `RESUME:` when a plan stopped, run by a person in a fresh session, with the next steps above;
+- the branch to land by hand, and each held folder, after a **No** at the landing phase;
 - `/vwf:execute all` in a restarted session after an `ENDS RUN: yes`;
 - the stopped row's `RESUME:` after a cap (the runner's own `/vwf:handoff` wrote the reserved `next` handoff; the loop writes none);
 - nothing when no plan was runnable.
 
-Below the table, print one line per deferred step — ran, failed or not run — with its command. A run that dispatched no runner prints the stop reason alone.
+Below the table, print one line per after-landing step of the landing phase — ran, failed or not run — with its command. A run that dispatched no runner prints the stop reason alone.
 The exit asks nothing.
 
 ## Runner mode
@@ -211,7 +234,7 @@ after-landing steps. It covers every stop too, each the stop those files already
 
 ```text
 PLAN: <the folder, as handed>
-OUTCOME: <COMPLETE | COMPLETE with gaps | QUESTION | STOPPED>
+OUTCOME: <COMPLETE | COMPLETE with gaps | HELD | QUESTION | STOPPED>
 DETAIL: <the folder's status.detail, as last written>
 RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
@@ -228,12 +251,14 @@ WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 `Q<n>` is the plan-wide id and `<owner>` the unit, wave or stage, per *Ids and owners* in
 [questions.md](../references/questions.md).
 
-Under an override, `DETAIL:` adds `; skipped: <commands>` for the steps the block deferred to the loop's exit.
+Under `skip after-landing`, `DETAIL:` adds `; after-landing: the loop's`.
 
-- **`COMPLETE`**: the branch merged and pushed, the row went `COMPLETE`, and every after-landing step ran, save those the overrides skipped. The gap list was empty.
+- **`COMPLETE`**: the branch merged and pushed, the row went `COMPLETE`, and every after-landing step ran, save those `skip after-landing` left to the loop. The gap list was empty.
   `RESUME: none`.
 - **`COMPLETE with gaps`**: the same landing with a gap open, or with `plan-management archive` raising a warning, so the folder stayed live.
   `RESUME: none`; the gaps are in the folder's `gaps`.
+- **`HELD`**: under `hold landing`, every unit is green and committed on the shared branch, and the plan waits for the landing
+  phase. The row stays `RUNNING`. `RESUME: /vwf:execute <folder>`, which completes the landing; `ENDS RUN: no`.
 - **`QUESTION`**: the run is not over; it waits for the answers the question lines ask. `RESUME: none`, `ENDS RUN: no`.
 - **`STOPPED`**: every other end. `RESUME:` is `/vwf:execute <folder>`, except where a line says otherwise:
   - a refusal at Resolve;
@@ -241,7 +266,6 @@ Under an override, `DETAIL:` adds `; skipped: <commands>` for the steps the bloc
   - a pause (a cap among them);
   - a blocked final report;
   - a merge conflict;
-  - `consent.merge` reading `false` with no `land: yes` override: the branch waits to be landed by hand, and `RESUME:` names the branch;
   - an after-landing step that exited non-zero: `RESUME:` is that step's command and the ones not run.
 - **`ENDS RUN: yes`** only when the outcome is `COMPLETE` or `COMPLETE with gaps` and the folder's `consent.end_all_run` reads `true`. That key means *end an `all` run after
   landing*. The plan edited a plugin the run itself loads, so the next plan must start in a restarted session. `false` reads `no`. On `STOPPED` it reads `no`; the stop ends the run anyway.

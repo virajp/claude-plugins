@@ -78,8 +78,9 @@ through `bootstrap config set` at landing, moving an old `.config/releases.yaml`
 there at first sight: it runs the step on a green landing without a prompt,
 bumps no version, releases nothing, and at run time asks you only what the plan
 missed — one question at a time, the recommendation first, the answer recorded
-in the folder's `decisions` — beside the run-level questions `/vwf:execute all`
-asks once, before its first plan; every stop is a report with its resume
+in the folder's `decisions` — beside the one landing question `/vwf:execute all`
+asks when a held plan was recorded not to merge; every stop is a report with its
+resume
 command. A repo still on the old markdown plan format (a `docs/plans/index.md`)
 is stopped before any change and pointed to `docs/plans/migrate.md`.
 

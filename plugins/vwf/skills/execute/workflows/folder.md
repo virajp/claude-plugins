@@ -125,7 +125,8 @@ result.
     lists every open gap whose text starts `QUESTION Q<n>: ` (`gaps`) and every
     `question` event of the action log with no `answer` event (`events`). The model
     asks each first, under its own id and once, per *No one to answer* in
-    [questions.md](../references/questions.md). If the status line still reads
+    [questions.md](../references/questions.md) — unless `stopped_outside` is
+    `true`, when the user stopped the last run and nothing is asked first. If the status line still reads
     the same `UNRESOLVED:` with no answer recorded, stop and say which ruling is
     missing.
   - A `degraded` row in the result is not asked about: it never stops a run,

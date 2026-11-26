@@ -270,10 +270,11 @@ level per project it changes, which the landing raises in
 `.config/bootstrap/releases.toml` through `bootstrap config set`, and a release
 is always a hand step. `/vwf:execute all` runs every runnable plan in turn,
 highest priority first, each in its own `execute-runner` subagent, and stops at
-the first plan that stops — keeping one line per plan in the session, and asking
-its run-level questions (one shared worktree, deduped after-landing steps,
-landing a plan recorded not to merge) once, before the first plan; a question a
-runner meets is relayed to you and its answer sent back. Beside both sits
+the first plan that stops — keeping one line per plan in the session, running
+every plan in one shared worktree and landing them together at the end, each
+after-landing step once, and asking one question only when a plan recorded not
+to merge; a question a runner meets is relayed to you and its answer sent back.
+Beside both sits
 `/vwf:backlog`, the sole writer of the backlog project on the repo's forge — a
 GitHub Project named for the base repo, the prioritised list of work that cannot
 be picked up now, which every planning and landing command calls to move an

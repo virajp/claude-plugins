@@ -8,8 +8,8 @@ This file is the one authority for run-time questions. Every other file of this 
 `log.mjs` below means `node ${CLAUDE_PLUGIN_ROOT}/skills/execute/scripts/log.mjs`, and `plan.mjs` means
 `node ${CLAUDE_PLUGIN_ROOT}/skills/plan-management/scripts/plan.mjs`.
 
-The session question and the run-level questions of `all` stay as they are, in `SKILL.md` and
-[all.md](../workflows/all.md). They come before the run starts, and this file does not govern them.
+The session question and the landing question of `all` stay as they are, in `SKILL.md` and
+[all.md](../workflows/all.md). This file does not govern them.
 
 ## What is asked
 

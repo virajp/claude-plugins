@@ -2483,33 +2483,35 @@ are left as they are. A repo with neither file has no plan: `next` and `all`
 report nothing runnable.
 
 `all` runs the whole queue, one plan at a time. The session that typed it is
-**the loop**. Before its first plan it asks the **run-level questions** once,
-one per turn, each a yes or no — questions about the run of several plans, which
-no single folder can answer — then nothing more until it ends:
+**the loop**. It asks nothing before its first plan. Four **run-level rules**
+cover the run of several plans, which no single folder can answer:
 
-- **One shared worktree** — always asked: every plan runs in one worktree on
-  branch `all-<date>-<HHMM>`, brought up to date from the integration branch
-  before each plan, each plan landing in turn while the worktree is kept; the
-  exit removes it, unless the run ends on a `STOPPED` plan, whose resume runs
-  there.
-- **Deduped after-landing steps** — asked when one step command would run after
-  two or more plans the loop will reach: a step two or more of them record
-  `run`, or a command in `.config/vwf.yaml`'s `after_landing:` list, which runs
-  after every landing. It runs once, after the last plan that landed, on an
-  early stop too.
-- **Landing** — asked once per plan whose `consent.merge` is `false`: land it
-  this run? A no leaves it to stop at its landing, which ends the run.
+- **One shared worktree** — every plan runs in one worktree on branch
+  `all-<date>-<HHMM>`; the exit removes it once every plan landed, and keeps it
+  when the run ends on a `STOPPED` plan, whose resume runs there.
+- **Land at the end** — a runner does not land its plan: it **holds** it, green
+  and committed on the shared branch, its row still `RUNNING`. The loop's
+  **landing phase** lands every held plan, in order, once at the end — and
+  earlier only when the plan it would pick next requires a held plan.
+- **After-landing steps after the landing** — the landing phase runs each
+  distinct step once, after its last landing. A phase run early runs its steps
+  before the next plan starts, so a step the next plan needs has run.
+- **One question, at the landing phase** — when a held plan's `consent.merge`
+  is `false`, the loop names it and asks once: land all the held plans now? The
+  plans share one branch, so a no lands none of them, and the run ends with the
+  branch and each held folder named.
 
-Each yes is an **override** for this run only: the loop hands it to each runner
+Each rule is an **override** for this run only: the loop hands it to each runner
 in its dispatch prompt, the runner appends it as one entry of that folder's
-`overrides` list, and no folder's `consent` changes. A no leaves the plans'
-steps as recorded. Then it picks with `next`, prints one line — the folder, its
+`overrides` list, and no folder's `consent` changes. Then it picks with `next`,
+prints one line — the folder, its
 `kind`, its priority — and dispatches one `execute-runner` subagent, handed the
 folder, the path of this skill's own file and that folder's overrides, which the
 runner reads and runs for that one folder exactly as a named run would, save
 that it asks no one itself: it relays its questions. Each runner is the fresh
 context its plan runs in, and returns five lines — `PLAN:`, `OUTCOME:`
-(`COMPLETE`, `COMPLETE with gaps`, `QUESTION` or `STOPPED`), `DETAIL:` (the
+(`COMPLETE`, `COMPLETE with gaps`, `HELD`, `QUESTION` or `STOPPED`), `DETAIL:`
+(the
 folder's `status.detail`), `RESUME:` and `ENDS RUN:` — so the loop's context
 grows by one row per plan. On `OUTCOME: QUESTION` the five lines are followed by
 the open questions, each `QUESTION Q<n> <owner>:`, `OPTIONS Q<n>:` and
@@ -2522,11 +2524,14 @@ With no one to answer, the runner records the questions as open gaps and returns
 ends at the first `STOPPED`; after a plan whose `consent.end_all_run` is `true`,
 because it edited a plugin the loop's session has loaded and the next plan must
 start in a restarted one; once a resource-cap directive has reached the session;
-or when nothing is runnable. It ends by running what the overrides deferred,
-from the main checkout, then printing one table, a row per plan, the stop
-reason, a line per deferred step, and the one command that continues — the
-stopped plan's `/vwf:execute <folder>`, or `/vwf:execute all` in a restarted
-session. A reply that is not those five lines is recorded `STOPPED`, never
+or when nothing is runnable. On a normal end it runs the landing phase, then
+prints one table, a row per plan, the stop reason, a line per after-landing
+step, and the one command that continues. A stop lands nothing by itself: the
+held plans stay on the shared branch under the stopped plan's commits, and the
+loop prints the recommended next steps — resume the stopped plan with its
+`/vwf:execute <folder>`, whose landing merges the held plans' commits too, then
+`/vwf:execute <folder>` for each held plan, which completes its landing. A reply
+that is not those five lines is recorded `STOPPED`, never
 re-dispatched. Plain `/vwf:execute <folder>` and `next` are unchanged. Under
 `all` the subagents sit one layer deeper — the runner at one, its units and
 reviewers at two, the docs-sync surveyor at three — which is the default nesting
@@ -2818,8 +2823,11 @@ inline** — every edit is a subagent's, so the session's context stays the size
 of the reports rather than the size of the diff.
 
 It **asks you only what the plan missed** — the planner recorded every answer it
-could, so a run question exists only for a hole the plan left, and the run-level
-questions `/vwf:execute all` asks once, before its first plan, stay as they are.
+could, so a run question exists only for a hole the plan left, and the one
+landing question of `/vwf:execute all` stays as it is. On a resume, the
+questions
+the last run left open are asked first — unless you stopped that run yourself:
+then nothing is asked first, and a unit that re-runs asks its question again.
 In an open session it waits at a question for as long as necessary. A run with
 no one to answer — a headless `claude -p` run, where `AskUserQuestion` is
 unavailable or fails — takes no assumption either: it records each question as

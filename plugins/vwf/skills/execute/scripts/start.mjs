@@ -250,6 +250,32 @@ function unanswered(file) {
   return [...open.values()];
 }
 
+/**
+ * True when the log's last run.start has no run.end after it: the run was
+ * stopped from outside (the user, or the session ended), not by its own stop.
+ * Read before this start appends its own run.start.
+ */
+function stoppedOutside(file) {
+  let lines;
+  try {
+    lines = readFileSync(file, "utf8").split("\n");
+  } catch {
+    return false;
+  }
+  let open = false;
+  for (const line of lines) {
+    let e;
+    try {
+      e = JSON.parse(line);
+    } catch {
+      continue;
+    }
+    if (e.event === "run.start") { open = true; }
+    else if (e.event === "run.end") { open = false; }
+  }
+  return open;
+}
+
 // --- the folder ----------------------------------------------------------------
 
 const units = (doc) => (Array.isArray(doc?.units) ? doc.units : []);
@@ -537,7 +563,7 @@ function resolveFolder(base, arg) {
       folderDir,
       logCwd: wt,
       mode: "resume",
-      openQuestions: { gaps, events: unanswered(logFile) },
+      openQuestions: { gaps, events: unanswered(logFile), stopped_outside: stoppedOutside(logFile) },
     };
   }
   if (row.status !== "APPROVED") {

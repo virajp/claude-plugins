@@ -255,17 +255,17 @@ exactly as a named run would, waits for its one-line result, and picks again —
 one plan at a time, until nothing is runnable or a plan stops. It ends with a
 table, a row per plan, the reason it stopped, and the command that continues.
 
-Before its first plan, `all` asks you its **run-level questions** once, one at a
-time, each a yes or no — questions about the run of several plans, which no
-single folder can answer: whether every plan runs in **one shared worktree**,
-each landing in turn; whether an after-landing step several plans record runs
-**once**, after the last plan that landed; whether each release a plan records
-is **held** and run once at the end; and, for each plan whose consent says not
-to merge, whether to **land it this run**. Each is asked only when it applies,
-the shared worktree always. A yes is an override for this run only, appended to
-each folder's `overrides` list; a folder's `consent` never changes. After the
-last answer it asks nothing more of its own; a question a runner meets is
-relayed to you, and your answer goes back to that runner.
+`all` asks you nothing before its first plan. Every plan runs in **one shared
+worktree**, and no plan lands when it finishes: it is **held**, and the run
+lands
+every held plan together at the end — earlier only when the next plan requires
+a held one. Each after-landing step then runs **once**, after the last landing.
+The one question comes at that landing: when a held plan's consent says not to
+merge, `all` names it and asks whether to land all the held plans now. These are
+overrides for this run only, appended to each folder's `overrides` list; a
+folder's `consent` never changes. A question a runner meets is relayed to you,
+and your answer goes back to that runner. If a plan stops, nothing lands by
+itself: `all` prints the recommended next steps, and you decide.
 
 The fresh context is the whole point: the planning session's context was a
 survey and an interview, and none of it should ride along into the run. Under

@@ -52,8 +52,9 @@ could, and recorded each answer in the folder. Where the folder is silent and th
 rules do not decide, the run asks the user, per
 [questions.md](references/questions.md), and records the answer in the folder.
 It never re-asks a ruling the folder holds, and never takes an assumption. The
-session question below and the run-level questions of `all`, asked once by the
-loop before its first plan, stay as they are.
+session question below, and the one landing question of `all`, asked at its
+landing phase only when a held plan recorded `consent.merge` `false`, stay as
+they are.
 
 Run in a fresh context: a fresh session, or a runner that `all` dispatches. The
 skill cannot check that. When the person typed `/vwf:execute`, the launch line

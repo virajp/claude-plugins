@@ -228,7 +228,7 @@ The reason for each is on its line, and the correct action follows the semicolon
   but through `bootstrap config`, or set a level anywhere but the release-levels write on a merged
   landing; raise it there alone.
 - Take an assumption where the folder is silent; ask per [questions.md](questions.md). The session
-  question and `all`'s run-level questions are asked before the run starts.
+  question is asked before the run starts, and `all`'s landing question at its landing phase.
 - Write a lock file with Write, Edit, `sed` or a script, or let a unit do it. A lock file is the
   file a package manager or a toolchain manager writes to pin what it resolved. A lock file changes only as the
   output of the CLI that owns it, per the unit contract in

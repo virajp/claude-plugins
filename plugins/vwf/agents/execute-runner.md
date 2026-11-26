@@ -22,22 +22,19 @@ skill's **`SKILL.md`**. Do not invoke the execute skill through `Skill` — a
 model invocation asks the user where to run, and you ask no one — so you
 read the file.
 
-The dispatch prompt may also carry an **`Overrides:`** block — the run-level
-answers the loop asked once, before its first plan, and applies to this run
-only. Any of three lines may appear:
+The dispatch prompt also carries an **`Overrides:`** block — the run-level
+rules of the loop, for this run only. These lines may appear:
 
 - **`shared worktree: <branch>`** — the branch `all-<date>-<HHMM>`: cut no
   worktree of the folder's name; reuse the worktree on that branch, found by
   the branch, or cut it on that branch when none exists yet, and land with
   "keep worktree". Its removal is the loop's, at its exit.
-- **`skip as deduped: <command>; <command>`** — the after-landing step
-  commands to leave unrun, the plan's own or the repo's `after_landing:`
-  defaults, because the loop runs each once after the last landed plan.
-- **`land: yes`** — land this folder although its `consent.merge` is
-  `false`.
-
-`Overrides: none`, or no block at all, means none: the folder's `consent`
-alone decides.
+- **`hold landing`** — do not land: once every unit is green, mark the plan
+  held and return `OUTCOME: HELD`. The loop's landing phase lands it later.
+- **`land: yes`** — land this folder, a held plan resumed by the landing
+  phase, although its `consent.merge` may read `false`: the loop asked.
+- **`skip after-landing`** — run no after-landing step; the loop runs each
+  once, after its last landing.
 
 After the overrides block the prompt may carry an **`Answers:`** block, only
 when the loop could not resume an earlier runner on this folder that returned
@@ -86,7 +83,7 @@ question lines below on `OUTCOME: QUESTION`:
 
 ```text
 PLAN: <plan folder path>
-OUTCOME: <COMPLETE | COMPLETE with gaps | QUESTION | STOPPED>
+OUTCOME: <COMPLETE | COMPLETE with gaps | HELD | QUESTION | STOPPED>
 DETAIL: <the folder's status.detail, as last written>
 RESUME: <the resume command, or none>
 ENDS RUN: <yes | no>
@@ -101,5 +98,5 @@ OPTIONS Q<n>: <option 1, the recommendation> — <consequence> | <option 2> — 
 WHY Q<n>: <path:line or plan section> — <why the plan does not decide it>
 ```
 
-Under an override, `DETAIL:` adds `; skipped: <cmds>` for the steps the block
-deferred to the loop's exit.
+Under `skip after-landing`, `DETAIL:` adds `; after-landing: the loop's`. On
+`OUTCOME: HELD`, `RESUME:` is `/vwf:execute <folder>` and `ENDS RUN:` is `no`.

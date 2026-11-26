@@ -114,10 +114,15 @@ execute skill's `references/questions.md`: a unit or reviewer returns
 at a time, records the answer as a `decisions` entry and resumes the unit; a
 headless run records each as an open `QUESTION Q<n>:` gap and stops at the final
 report; under `all` the runner returns `OUTCOME: QUESTION` with the question
-lines and the loop asks and resumes it. Beside them stay the run-level questions
-`execute all` asks once, before its first plan — one shared worktree, deduped
-after-landing steps, landing a plan recorded not to merge — each an override for
-that run only. On the old markdown plan format — a `docs/plans/index.md` in the
+lines and the loop asks and resumes it. Beside them stay the run-level rules of
+`execute all`, asked nothing before its first plan — one shared worktree, each
+plan held and landed together in a landing phase at the end (earlier only when
+the next plan requires a held one), each after-landing step once after the last
+landing, and one question there only when a held plan recorded not to merge —
+each an override for that run only. A stop lands nothing by itself and prints
+the recommended next steps. A resume after the user stopped a run asks nothing
+first (`start.mjs`'s `open_questions.stopped_outside`). On the old markdown plan
+format — a `docs/plans/index.md` in the
 base repo, or a live folder with `index.md` and no `index.json` — `execute` and
 every `plan-management` verb stop before any change and point to
 `docs/plans/migrate.md` in this repo; no old-format copy of either skill exists.

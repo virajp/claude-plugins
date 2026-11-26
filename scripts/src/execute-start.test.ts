@@ -881,12 +881,35 @@ describe("a resume", () => {
     expect(r.json.open_questions).toEqual({
       gaps: ["G1"],
       events: [{ id: "Q2", unit: "U1", text: "t", options: "o", why: "w" }],
+      stopped_outside: false,
     });
     expect(trail(A).slice(-4)).toEqual(["run.start", "plan.snapshot", "phase.start:checks", "phase.end:checks"]);
     expect(events(A).at(-4)).toMatchObject({
       mode: "resume",
       folder: join(base, ".worktrees", "alpha", "docs", "plans", A),
     });
+  });
+
+  it("reads stopped_outside true when the last run.start has no run.end", () => {
+    const log = resumeSeed();
+    write(
+      log,
+      [{ event: "run.start" }, { event: "stop" }, { event: "run.end" }, { event: "run.start" }]
+        .map((e) => JSON.stringify(e))
+        .join("\n") + "\n",
+    );
+    const r = start([`docs/plans/${A}`]);
+    expect(r.json.open_questions.stopped_outside).toBe(true);
+  });
+
+  it("reads stopped_outside false when the last run.start has a run.end", () => {
+    const log = resumeSeed();
+    write(
+      log,
+      [{ event: "run.start" }, { event: "stop" }, { event: "run.end" }].map((e) => JSON.stringify(e)).join("\n") + "\n",
+    );
+    const r = start([`docs/plans/${A}`]);
+    expect(r.json.open_questions.stopped_outside).toBe(false);
   });
 
   it("stops a resume of a plan with a code unit on an lsp-check row (lsp-check D14)", () => {

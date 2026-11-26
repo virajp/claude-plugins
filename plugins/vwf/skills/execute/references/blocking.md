@@ -75,7 +75,10 @@ A re-run against `BLOCKED` or `RUNNING`:
 2. The index row stays `RUNNING` through the resume, and is not touched. A row found reading `APPROVED` was
    unclaimed, and the Resolve step claims it again before continuing.
 3. **Ask what was not answered first**, per *No one to answer* in [questions.md](questions.md), each id once and
-   under its own id:
+   under its own id — except when the start result's `open_questions.stopped_outside` is `true`. That means the
+   last run has a `run.start` with no `run.end`: the user stopped it, or its session ended, and the run did not
+   stop itself. Then ask nothing here. A unit that re-runs returns its question again, and the run asks it then.
+   Otherwise ask:
    - every `open` gap whose `text` starts `QUESTION Q<n>: `;
    - every `question` event in the plan's action log with no `answer` event of the same id.
 

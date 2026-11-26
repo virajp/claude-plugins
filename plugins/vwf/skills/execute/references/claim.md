@@ -72,7 +72,7 @@ usage or internal error, with nothing on stdout — report the stderr line and s
 | `has_covers`     | whether the folder has `covers`: a cycle plan, whose blueprint-bound steps run                     |
 | `projects`       | the plan's projects the checks were scoped to                                                      |
 | `findings`       | each `{rule, severity, project, subject, message, remedy}`: the rows of the checks phase: the `blocking` rows, and the `degraded` `lsp-check` rows of `code:lsp:check`; no other `degraded` row is kept. A `blocking` row stops every run; an `lsp-check` row stops a plan with a `code` unit only; `project` is `null` on a repo-level row |
-| `open_questions` | `null` on a fresh run; on a resume, `{gaps, events}`: the ids of the open `QUESTION` gaps, and the `question` events with no `answer` |
+| `open_questions` | `null` on a fresh run; on a resume, `{gaps, events, stopped_outside}`: the ids of the open `QUESTION` gaps, the `question` events with no `answer`, and `true` when the log's last `run.start` has no `run.end` |
 | `claim`          | the `plan.mjs claim` result, `{claimed: true, commit}` (a `warning` beside it when the landing left one: a worktree it could not remove, or the task's output when the claim landed but the task's restoring checkout failed) or `{claimed: false, kind, reason}`, `kind` one of `lost`, `member-failed`, `failed` (with `unpushed: true` when the merge commit was not pushed), or `pr` with `url`, `branch` and `repo` on a pending claim; `null` when no claim ran |
 | `message`        | one line for the user                                                                              |
 
@@ -85,7 +85,8 @@ Hold `mode`, `folder`, `has_code_unit` and `has_covers` for every gate below.
   own worktree. On a resume with a non-empty
   `open_questions`, ask each per [questions.md](questions.md) before Setup —
   each gap id and each event under its own id, once, per *No one to answer*
-  there.
+  there — unless its `stopped_outside` is `true`: the user stopped the last
+  run, so ask nothing, per step 3 of *Resume* in [blocking.md](blocking.md).
 - **`pending`** → print `message`, wait for the claim's pull request, then go on
   as *The claim* below says: to Setup on `MERGED`, a stop on `CLOSED`.
 - **`refused`** → print `message` and stop. It names the refusal and its fix, in
