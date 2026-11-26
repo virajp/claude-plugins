@@ -1,16 +1,18 @@
 # §4 — Gates, after landing, release levels
 
-Four sub-steps. Propose (a), (b) and (d) from the survey, and have the user
-confirm them. (c) is derived and stated, never confirmed here: the user changes
-a level at the §5 gate. Write all four into `index.json`. `/vwf:execute` runs
-what is written and nothing it infers.
+Four sub-steps, none asked as a question of its own. (a) is stated, and asks
+only a gate delta (interview item 13). (b) asks only a step the survey cannot
+decide. (c) and (d) are stated. The user changes any of them at the §5 gate,
+with *revise*. Write all four into `index.json`. `/vwf:execute` runs what is
+written and nothing it infers.
 
 ## (a) The three gates
 
-Propose the exact commands the run must pass, one per line, for each tier. Draw
-them from the survey's gate list: the repo's task runner tasks, the capabilities
-whose tasks exist, and the checks CI already runs over the touched trees.
-Confirm them.
+Write the exact commands the run must pass, one per line, for each tier. When
+`mise tasks ls --hidden` lists the default tasks, write the defaults below,
+unasked. Otherwise draw the lines from the survey's gate list: the repo's task
+runner tasks, the capabilities whose tasks exist, and the checks CI already runs
+over the touched trees. Either way, state them; never confirm them one by one.
 
 | List         | `/vwf:execute` runs it                   | Default, when `mise tasks ls --hidden` lists it |
 | ------------ | ---------------------------------------- | ----------------------------------------------- |
@@ -42,14 +44,15 @@ Confirm them.
 
 ## (b) After landing
 
-Propose the ordered steps that follow a consented landing, and walk them by
-interview item 17, which owns `run` or dropped. They become the `after_landing`
+Propose the ordered steps that follow a consented landing. Interview item 17
+records each `run` unasked, and asks only about a step the survey cannot
+decide. They become the `after_landing`
 list; empty is a valid answer, written `[]`.
 
 - Never carry a release step in a plan or record one in `consent` — a release is
   always a later hand step, `/release`.
-- Record only a landing consent you explicitly asked for — the mode recorded is
-  the consent.
+- Write `consent.merge` `true`, unasked (interview item 16). Write `false` only
+  when the user asks for it — the mode recorded is the consent.
 - The executor never stops before a step to ask.
 - Do not propose a command already in `.config/vwf.yaml`'s `after_landing:` list
   — `/vwf:execute` runs it after every green landing.
@@ -69,6 +72,5 @@ that reads those levels.
 
 ## (d) Ending an `all` run
 
-Write `consent.end_all_run`, the answer to interview item 18a. Ask it only when
-the units' `owns` include a plugin the run itself loads. When the plan touches
-no such plugin, write `false` unasked.
+Write `consent.end_all_run` `false`, unasked, on every plan (interview item
+18a). A user who runs `/vwf:execute all` means to run every plan.

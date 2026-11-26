@@ -2300,14 +2300,16 @@ covers, of any `kind`, so the commit range it reviews and the units it covers
 are one set. No
 code unit triggers a review by itself, and `execute` infers no row: a plan whose
 code units no review row covers, or whose rows break either placement rule, is
-refused at its preflight. Three things are always agreed before anything is
-written: the **three gates** — the **unit gate**, run once before each unit's
+refused at its preflight. The items
+[`/vwf:change-plan`](#vwfchange-plan) lists as **stated, never asked** are
+stated here too, and shown at the approval gate. Three things are always settled
+before anything is written: the **three gates** — the **unit gate**, run once
+before each unit's
 commit, the **wave gate**, run once before wave 1 and after every wave, and
 the **plan gate**, run once over the finished tree — the
-**after-landing steps** (each recorded `run`, or dropped), and the **consent
-block** — whether the run may merge and push on green, and whether to end an
-`all` run after landing — asked only when the plan edits a
-plugin the session running `/vwf:execute all` has loaded, `false` otherwise. No
+**after-landing steps** (each recorded `run` unasked, or, when the survey
+cannot decide one, asked and recorded `run` or dropped), and the **consent
+block** — `merge` `true` and `end_all_run` `false`, both unasked. No
 after-landing step releases anything: a release is always a hand step,
 `/release` or the repo's own. The **priority** is stated, never asked:
 `10 + max` over the `priority` of every unarchived plan its `requires` names, or
@@ -2323,22 +2325,27 @@ Its recall also reads the base repo's [backlog project](#vwfbacklog) through
 there — and records the backlog as unreadable, with the reason, when `gh` cannot
 reach it. Every matched id — and a `Bnn` id typed before the slice, the form
 `/vwf:backlog next` prints — goes into the folder's `source` list, the
-items the plan was made for. For each one the interview asks whether this plan
-**finishes** the item or lands **one piece** of it: a finishing id goes into
+items the plan was made for. For each one the plan **finishes** the item,
+unless the request names one part of it or a chain leaves the rest to a later
+folder, when it lands **one piece** of it: a finishing id goes into
 `backlog`, a piece id into `backlog_pieces`, and a piece plan writes what
 remains as `- Bnn: <piece>` lines under *Parked* — at least one per piece id,
 naming the chained folder where one already covers the piece. The last plan of a
 chain moves the id to `backlog`. The hand-off marks the ids of both lists
 `planned` through `/vwf:backlog` — the only thing that writes the project — so
-no item is planned twice. A slice re-derived to close the gaps of a landed plan
-names that folder in `gaps_of`, and the hand-off sets that folder's row in the
+no item is planned twice. A landed plan's gaps close first: when a plan index
+row has a `gaps.open` above `0` and this plan does not take those gaps, `plan`
+stops before the interview and prints the command that plans them. A slice
+re-derived to close the gaps of a landed plan names that folder in `gaps_of`,
+and the hand-off sets that folder's row in the
 plan index to `gaps.open` `0`, with this plan added to `gaps.moved_to`.
 
 Nothing but a parked point's `docs/memory/gaps/` record reaches disk before the
 **approval gate**: the goal and the chain position, the assumed-decisions table,
 the unit map, every new dependency, the gates and the derived priority, the
 consent block, the acceptance criteria the units cover, and the parked list —
-presented for *Approve & plan next* (mid-chain), *Approve only*, or *Reject*.
+presented in one message, with no confirmation per section, for *Approve & plan
+next* (mid-chain), *Approve only*, or *Reject*.
 Once the folder is written, and while it is still `DRAFT`, the **rulings
 review** runs: a fresh, stateless `plan-rulings-reviewer` subagent reads the
 folder and the tree and returns the cases the rulings leave open — an unhandled
@@ -3632,8 +3639,9 @@ falsifies; each one gets an owner in the unit table before the plan is written,
 instead of surfacing at run time as a passage nobody owns.
 
 A request that is really **several independent pieces** is decomposed before
-anything is refined — one folder per piece, in an agreed order, each later
-folder naming the earlier one in its `requires` list. One plan never swallows
+anything is refined — one folder per piece, in the order its dependencies
+give, stated rather than asked, each later folder naming the earlier one in its
+`requires` list. One plan never swallows
 another, and an answer that raises something outside the plan's scope is parked
 durably rather than absorbed: a `docs/memory/gaps/` record at once, and a line
 under *Parked* when the folder is written. The hand-off commits each record with
@@ -3642,10 +3650,25 @@ the folder.
 The interview is one question per turn, worked down the checklist it shares with
 [`/vwf:plan`](#vwfplan) and never batched. It asks only what has more than one
 reasonable answer given the repo, proposes two or three approaches with their
-trade-offs, and records every ruling with the alternative it rejected. Three
-things are always agreed before anything is written:
+trade-offs, and records every ruling with the alternative it rejected.
 
-- **The three gates** — the exact commands the run must pass, proposed from the
+A set of items is **stated, never asked** — each a default you ruled on once,
+written into the folder and shown at the hard gate, where you change it with
+*revise*: one plan unless the survey finds independent pieces; each backlog item
+finished, not landed as a piece; the wave order; `opus` on every unit; the
+`teams` execution mode; the three gates; `consent.merge` `true`; each
+after-landing step the survey proposes, recorded `run`; and `end_all_run`
+`false`. Before it asks about a new third-party dependency, it runs
+`/stackgen:stackgen-reputation` over the package and shows the verdict.
+
+**A landed plan's gaps close first.** When a row of the plan index has a
+`gaps.open` above `0` and the request does not take those gaps, the planner
+stops before the interview, names each folder and its open gaps, and prints the
+command that plans them. It writes nothing.
+
+Three things are always settled before anything is written:
+
+- **The three gates** — the exact commands the run must pass, stated from the
   repo's own task list, the harness capabilities whose tasks exist and what CI
   already runs over the
   touched trees, in three tiers: the **unit gate**, run once before each unit's
@@ -3667,8 +3690,10 @@ things are always agreed before anything is written:
   landed is not a gate line at all. It goes in that unit's *Verification*, and
   again in the gates unit's. A repo with neither task runner nor stamp records
   `none`, and the plan says plainly that the wave review is then the only check.
-- **The after-landing steps** — each recorded `run` or dropped, decided here and
-  written to the folder's `after_landing` list. A `run` step runs on a green
+- **The after-landing steps** — each step the survey proposes is recorded
+  `run`, unasked; only a step whose need the survey cannot decide is asked, and
+  recorded `run` or dropped. They are written to the folder's `after_landing`
+  list. A `run` step runs on a green
   landing with no prompt — the consent given at the interview is the consent. A
   plan never carries a release step: a release is always a later hand step,
   `/release` or the repo's own. A step you want to check first is dropped and
@@ -3689,15 +3714,13 @@ things are always agreed before anything is written:
   version: `/vwf:execute` raises each level in
   `.config/bootstrap/releases.toml`, through `bootstrap config set`, at landing,
   and a later release, cut by hand, reads it.
-- **End an `all` run after landing** — asked only when the units edit a plugin
-  the session running `/vwf:execute all` has loaded, which keeps running its
-  stale copy until restarted: `yes` ends an `all` run after this plan, reporting
-  "restart, then `/vwf:execute all`" — recorded as `consent.end_all_run`.
-  Every other plan records `false`, unasked. `/vwf:plan` writes the same key.
-- **The execution mode** — `solo`, or `teams`, which asks that the `edit` units
-  and the wave reviewer can send messages to each other; `code` units and
-  `review` units do not change. The planner recommends `teams` when a wave holds
-  two or more `edit` units, otherwise `solo`, and you confirm. It is recorded as
+- **End an `all` run after landing** — `consent.end_all_run`, always `false`
+  and never asked: a user who runs `/vwf:execute all` means to run every plan.
+  `/vwf:plan` writes the same key.
+- **The execution mode** — `teams`, which asks that the `edit` units and the
+  wave reviewer can send messages to each other; `code` units and `review` units
+  do not change. The planner writes `solo` only when you ask for it, or when a
+  technical reason it names forces it. It is recorded as
   the folder's `execution` key, with the reason in the `decisions` list, and a
   folder with no key reads as `solo`. [`/vwf:execute`](#vwfexecute) says when a
   `teams` plan falls back. `/vwf:plan` writes the same key.
@@ -3706,7 +3729,9 @@ Nothing but a parked point's record reaches disk before a **hard gate**: the
 goal and any reversal, the
 assumed-decisions table, the unit map, every new third-party dependency a unit
 would introduce, the gates, the consent block, the release levels and the parked
-list — presented for approve / revise / abandon. Only *approve* writes the
+list — presented in one message, with no confirmation per section, for
+approve / revise / abandon. *Revise* names the section or the stated default to
+change. Only *approve* writes the
 folder; *abandon* ends with no folder, any parked record, and a one-line note
 the next
 attempt can recall.

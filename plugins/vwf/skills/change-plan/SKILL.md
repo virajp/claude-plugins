@@ -53,9 +53,9 @@ weaker match.
 | §   | Phase                             | Gate                           | File                                            | Loads  |
 | --- | --------------------------------- | ------------------------------ | ----------------------------------------------- | ------ |
 | 1   | Recall, then survey               | auto                           | [recall-survey.md](references/recall-survey.md) | always |
-| 2   | Scope check                       | user, on several pieces        | [scope-check.md](references/scope-check.md)     | always |
+| 2   | Scope check                       | auto; a split is stated        | [scope-check.md](references/scope-check.md)     | always |
 | 3   | Interview, one question at a time | user, each item                | [interview.md](references/interview.md)         | always |
-| 4   | Gates, after landing, release     | user; the levels are stated    | [gates-consent.md](references/gates-consent.md) | always |
+| 4   | Gates, after landing, release     | auto; the defaults are stated  | [gates-consent.md](references/gates-consent.md) | always |
 | 5   | Present the shape — the hard gate | user: approve, revise, abandon | [shape-gate.md](references/shape-gate.md)       | always |
 | 6   | Write the folder                  | auto                           | [write-folder.md](references/write-folder.md)   | always |
 | 7   | Self-review                       | user, each rulings-review gap  | [self-review.md](references/self-review.md)     | always |
@@ -73,6 +73,7 @@ weaker match.
 | H2  | §8 `plan-management add` refuses: `docs/plans/index.md` of the base repo exists, the old plan format | Stop. The folder stays `DRAFT` and uncommitted, and no later step runs. The output is the refusal as `add` printed it.                                |
 | H3  | §8 finds something unplanned at the check priority                                                   | Print the next planner command above the launch block. End with the second ending under Output.                                                       |
 | H4  | §7 rulings review still returns gaps after round four                                                | Follow item 20 of the interview checklist. Hand off with no unread list.                                                                              |
+| H5  | §1 finds a plan index row with `gaps.open` above `0`, and the request does not take those gaps       | Stop before §3. Name each folder and its open gaps, and print the planner command that plans them first. Write nothing.                               |
 
 ## Output
 

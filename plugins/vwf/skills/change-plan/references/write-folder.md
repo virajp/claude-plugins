@@ -18,8 +18,9 @@ and the unit file shape.
   frontmatter, no table `/vwf:execute` reads, and no Run log.
 - **`type`** is `vwf-change-plan`. Omit the cycle-only keys, and omit the
   `index.md` sections the template marks *cycle plans only*.
-- **`execution`** is `solo` or `teams`, the answer to interview item 10b, with
-  its reason in the `decisions` list.
+- **`execution`** is `teams`, stated by interview item 10b, or `solo` when the
+  user asked for it or a named technical reason forces it. Its reason is an
+  entry in the `decisions` list.
 
 ## The backlog lists
 

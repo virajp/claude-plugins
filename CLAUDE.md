@@ -72,7 +72,7 @@ re-pointing the row when no gap is open; leaving it live when one is, archived
 once you ask) — each plan folder carries this repo's gate lines in three tiers
 (a unit gate before each unit commit, a wave gate after each wave, a plan gate
 once at the end), `mise run p:plugins:local` as an after-landing step, recorded
-`run` at the interview or dropped, and the release levels it derives per
+`run` unasked, and the release levels it derives per
 project, which `/vwf:execute` writes to `.config/bootstrap/releases.toml`
 through `bootstrap config set` at landing, moving an old `.config/releases.yaml`
 there at first sight: it runs the step on a green landing without a prompt,

@@ -356,8 +356,9 @@ The rules for each key — JSON has no comments, so they sit here:
 - **`covers`** *(cycle)* — the blueprint doc(s) this plan implements; the
   list the `implementation:` stamp is written to. **`exposure`** *(cycle,
   optional)* — `dark` when the slice ships behind a flag.
-- **`execution`** — `solo` or `teams`, the answer to interview item 10b, on
-  both kinds. `teams` asks that a plan's `edit` units and its wave reviewer can
+- **`execution`** — `solo` or `teams`, interview item 10b, on both kinds:
+  `teams` unless the user asked for `solo` or a named technical reason forces
+  it. `teams` asks that a plan's `edit` units and its wave reviewer can
   send messages to each other; `code` units and `review` units do not change.
   Talk is a help, never a precondition, so a unit file never depends on a peer.
   A folder with no key reads as `solo`, and `format` stays `1`. A `teams` plan
@@ -371,14 +372,12 @@ The rules for each key — JSON has no comments, so they sit here:
   QUESTION Q3 open; U5 skipped (depends on U4)".
 - **`consent`** — **the mode recorded here is the consent.** `merge`: may a
   fully green run merge to the integration branch and push, `true` or
-  `false`. `end_all_run` is always present: `true` when the interview (item
-  18a) found the plan edits a plugin the run itself loads — one installed in
-  the session that runs `/vwf:execute all`, which keeps running the stale copy
-  until it restarts — and the user chose to end there — `/vwf:execute all`
-  then stops after this plan and reports "restart, then
-  `/vwf:execute all`" — and `false` otherwise, written unasked when the plan
-  touches no such plugin.
-- **`gates`** — the exact commands confirmed in the interview, one string per
+  `false` — `true`, unasked (interview item 16), unless the user asks for
+  `false`. `end_all_run` is always present and the planner writes it `false`,
+  unasked (item 18a). A folder that reads `true` still works:
+  `/vwf:execute all` then stops after this plan and reports "restart, then
+  `/vwf:execute all`".
+- **`gates`** — the exact commands the planner states, one string per
   line; `[]` for none. `unit`: `/vwf:execute` runs every line once before each
   commit it makes on a unit's behalf — the unit's own commit and each fix
   commit — and never while another unit is still editing; a red line is that
@@ -391,8 +390,9 @@ The rules for each key — JSON has no comments, so they sit here:
   scratch-repo run, a smoke test — each with its pass condition.
 - **`after_landing`** — the steps the orchestrator runs after the landing, in
   order, or `[]`. `mode` is always `run`: a `run` step runs on a green landing
-  without a prompt, and a step the interview did not confirm `run` (item 17)
-  is not in the list. Where a step stages something this session already
+  without a prompt. A step the survey proposes is `run` unasked, and a step the
+  interview asked about and did not confirm `run` (item 17) is not in the
+  list. Where a step stages something this session already
   loaded, it is picked up only by a **restarted** session.
 - **`release_levels`** — one entry per project the units touch, `NONE`
   included. `level` is `NONE`, `PATCH`, `MINOR` or `MAJOR`, derived by the

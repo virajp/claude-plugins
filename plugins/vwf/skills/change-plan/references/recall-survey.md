@@ -38,8 +38,9 @@ Before asking anything, read what is already decided:
   - The `priority` key of the rows a new plan will require, of either kind, is
     what §5's derived priority stands on.
   - A row whose `gaps.open` is above `0` is a landed plan with gaps that no plan
-    took yet. A request that takes them puts its folder on `gaps_of` — interview
-    item 2b.
+    took yet. A request that takes them puts its folder on `gaps_of`, unasked.
+    A request that does not take them stops at halt H5 in `SKILL.md`: a landed
+    plan's gaps close before the next plan starts — interview item 2b.
 - The `docs/memory/decisions/` and `docs/memory/gaps/` folders, by the recall
   rule of `${CLAUDE_PLUGIN_ROOT}/assets/memory.md`. Skip silently when a folder
   is absent.

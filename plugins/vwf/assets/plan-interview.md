@@ -13,21 +13,28 @@ Where an item has more than one reasonable answer, propose two or three
 approaches with their trade-offs, recommendation first. Where it has exactly one
 idiomatic answer given the repo, do not ask — state it and move on.
 
+An item marked **Stated** is never asked: write its default, and show it at the
+gate (item 19), where the user changes it with *revise*. Each is a default the
+user ruled on once, so asking it again wastes the user's turn.
+
 ## A. The change
 
 1. **Goal, in one sentence.** What is true after the plan lands that is not true
    now. Reject a goal that names a mechanism instead of an outcome.
    *Cycle plans:* the goal is the slice and its chain position — the blueprint
    doc(s) on `index.json`'s `covers` reading `implementation: complete`.
-2. **Scope check.** Is this one plan or several? A request spanning trees with
-   no shared ruling is split now, each piece its own folder, ordered, chained
-   through `index.json`'s `requires`.
+2. **Scope check.** **Stated.** One plan, unless the survey finds a request
+   spanning trees with no shared ruling. Then split it now, each piece its own
+   folder, in the order the dependencies give, chained through `index.json`'s
+   `requires`, and state the split and the order.
    *Cycle plans:* scope is the resolved dependency chain, one folder per chain
    element, each `requires` the one before it — not a split the user draws.
 
-2a. **Finishes or a piece.** For each backlog id the recall matched — every
-id the arguments named, and every item the request turns out to be — does this
-plan finish the item, or land one piece of it? Each such id goes on
+2a. **Finishes or a piece.** **Stated.** For each backlog id the recall
+matched — every id the arguments named, and every item the request turns out
+to be — the plan finishes the item. Record a piece only when the request
+itself names one part of the item, or a split (item 2) leaves the rest to a
+later folder, and state it. Each such id goes on
 `index.json`'s `source`, the items the plan was made for, and on exactly one
 of the two lists below; an id a plan was made for is never left off both. A
 finishing id goes on `backlog` — landing sets it `Done`; a piece id goes on
@@ -35,10 +42,14 @@ finishing id goes on `backlog` — landing sets it `Done`; a piece id goes on
 written as `- Bnn: <piece>` Parked lines in `index.md`, at least one per piece
 id (section F). The last plan of a chain moves the id to `backlog`.
 
-2b. **Gaps of a landed plan.** Does this plan take the gaps of a landed plan —
-a row of `docs/plans/index.json` whose `gaps.open` is above `0`? Each such
-folder goes on `index.json`'s `gaps_of`; at hand-off `plan-management add`
-sets that row's `gaps` to an `open` of `0`, with this folder in `moved_to`.
+2b. **Gaps of a landed plan.** **Stated.** A landed plan's gaps close before
+the next plan starts. When a row of `docs/plans/index.json` has a `gaps.open`
+above `0` and the request does not take those gaps, stop before item 3: name
+each such folder and its open gaps, and print the planner command that plans
+them first. When the request takes them — it names the folder or its gaps —
+each such folder goes on `index.json`'s `gaps_of`, unasked; at hand-off
+`plan-management add` sets that row's `gaps` to an `open` of `0`, with this
+folder in `moved_to`.
 
 3. **Non-goals.** What the user is explicitly not asking for, especially the
    adjacent thing the survey found. Goes to *Out of scope* with the reason.
@@ -67,7 +78,10 @@ sets that row's `gaps` to an `open` of `0`, with this folder in `moved_to`.
    *Cycle plans:* always yes — a slice lands blueprint behaviour by definition.
 8. **New dependencies.** Does any edit need a package the tree does not already
    have? Name it, what for, and the existing thing it was preferred over. A unit
-   adds no dependency the plan does not list.
+   adds no dependency the plan does not list. Before you ask, invoke
+   `/stackgen:stackgen-reputation` over every package named, and show each
+   verdict — `pass`, `warn` or `block` — with the signals that decided it. A
+   `block` package is not offered; propose another or none.
    *Cycle plans:* named per unit — package plus what it is for — exactly as the
    plan skill's §3 requires; the approval gate is where the user consents to
    each, and `execute` installs none the plan does not name.
@@ -83,9 +97,10 @@ sets that row's `gaps` to an `open` of `0`, with this folder in `moved_to`.
    acceptance — is a blueprint gap, routed before the plan is written, never
    settled in it.
 
-10. **Ordering.** Which units can run concurrently (disjoint paths, no
-    dependency) and which must wait. The user overrides the derived order only
-    where they know something the survey did not.
+10. **Ordering.** **Stated.** Derive which units can run concurrently
+    (disjoint paths, no dependency) and which must wait, and show the order at
+    the gate. The user overrides it there, with *revise*, only where they know
+    something the survey did not.
     *Cycle plans:* TDD order within dependency order — each unit names the
     failing test that defines done, and a harness bootstrap unit orders before
     the units whose verification depends on it. Waves are ordering only;
@@ -108,15 +123,16 @@ in `decisions` says why.
 earlier review unit covers, of any kind — not only the units that land
 code — so no finding in its range falls on a unit it does not cover.
 
-10b. **Execution mode.** `solo`, or `teams`, which asks that the `edit` units
+10b. **Execution mode.** **Stated.** `teams`, which asks that the `edit` units
 and the wave reviewer can send messages to each other; `code` units and
-`review` units do not change. Recommend `teams` when a wave holds two or more
-`edit` units, otherwise `solo`, and have the user confirm. The answer is
-`execution` in `index.json`, and its reason is an entry in `decisions`.
+`review` units do not change. Write `solo` only when the user asked for it, or
+when a technical reason makes `teams` wrong for this plan — name that reason.
+The answer is `execution` in `index.json`, and its reason is an entry in
+`decisions`.
 
-11. **Model per unit.** Default is `opus`, written explicitly into every
-    unit's `model` in `index.json`. A unit the user wants on a stronger or
-    cheaper tier records that tier instead; `inherit` means the session's
+11. **Model per unit.** **Stated.** `opus`, written explicitly into every
+    unit's `model` in `index.json`. A unit the user asks to put on a stronger
+    or cheaper tier records that tier instead; `inherit` means the session's
     model.
 12. **Priority.** Stated, never asked: no folder exists yet, so invoke
     `plan-management priority <requires…>` with the `requires` entries this
@@ -147,11 +163,13 @@ and the wave reviewer can send messages to each other; `code` units and
 
 ## E. Consent
 
-16. **Landing.** May a fully green run merge to the integration branch and push
-    without a further prompt? The answer is `consent.merge` in `index.json`.
-    Default when unanswered is **no** (`false`).
-17. **After-landing steps.** Walk the steps the planner proposed one at a time;
-    each is confirmed as `run` or dropped, and each `run` step is an entry
+16. **Landing.** **Stated.** A fully green run merges to the integration
+    branch and pushes without a further prompt: `consent.merge` in
+    `index.json` is `true`. Write `false` only when the user asks for it.
+17. **After-landing steps.** Record each step the planner proposes from the
+    survey as `run`, unasked. Ask, one step at a time, only about a step whose
+    need the survey cannot decide; that step is confirmed as `run` or dropped.
+    No steps to propose is `[]`, unasked. Each `run` step is an entry
     of `index.json`'s `after_landing`. `run` means a green landing runs
     the step with no prompt — the consent given here is the consent. A step
     the user wants to check first is dropped, and run by hand later; the
@@ -171,14 +189,10 @@ and the wave reviewer can send messages to each other; `code` units and
     landing `/vwf:execute` raises each level in
     `.config/bootstrap/releases.toml`, through `bootstrap config` (the
     highest wins), and a release is cut later, by hand.
-    - **18a. End an `all` run after landing.** Asked only when the plan's
-      `owns` include a plugin the run itself loads — a plugin installed in the
-      session that runs `/vwf:execute all`, whose edits that session goes on
-      running stale until it restarts: should an `all` run end after this
-      plan lands, yes or no? The answer is `consent.end_all_run` in
-      `index.json`; on yes (`true`), `all` ends after this plan and reports
-      "restart, then `/vwf:execute all`". When the `owns` touch no such
-      plugin it is written `false`, unasked.
+    - **18a. End an `all` run after landing.** **Stated.**
+      `consent.end_all_run` in `index.json` is always `false`, never asked: a
+      user who runs `/vwf:execute all` means to run every plan. A plan that
+      edits a plugin the run itself loads does not change it.
 
 The executor follows the plan, and asks the user at run time only what the
 plan missed — beside the run-level questions /vwf:execute all asks once,
@@ -202,8 +216,10 @@ breaks either, names one id on both lists, or names a `source` id on neither.
 
 ## G. The gate
 
-19. **Present the shape** per the planner's gate step and ask once: approve,
-    revise or abandon. Only an explicit approve writes the folder, and the
+19. **Present the shape** per the planner's gate step, every section in one
+    message with no confirmation per section, each **Stated** item and its
+    value among it, and ask once: approve, revise or abandon. *Revise* names
+    the section, or the stated item, to change. Only an explicit approve writes the folder, and the
     hand-off lands it on the integration branch and sets `status.state` to `APPROVED`. It
     asks no second yes.
 20. **The rulings review.** At self-review, once the planner's own checks are

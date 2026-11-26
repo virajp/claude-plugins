@@ -9,6 +9,8 @@ condition. Follow the *Change plans:* note where an item carries one.
 - Never batch, and never assume an answer — a batched answer hides a decision.
 - Confirm an item the survey already answered in a sentence — re-asking wastes
   the user's turn.
+- Never ask an item the checklist marks **Stated**. Write its default and show
+  it at the §5 gate, where the user changes it with *revise*.
 - Ask only what has more than one reasonable answer given the repo. Lead with
   your recommendation and why, and let the user pick or redirect.
 - Record each ruling with its rejected alternatives — a ruling recorded without

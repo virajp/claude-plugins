@@ -69,12 +69,15 @@ The first thing it does is **read before it asks**. It looks through
 base repo's [backlog project](../../plugins/vwf.md#vwfbacklog) through
 `/vwf:backlog list` if the product keeps one — the request is often an item
 already on it. Each id it covers goes into the plan's `source` list, and the
-interview asks whether this plan finishes the item or lands one piece of it: a
-finishing id goes into `backlog`, a piece id into `backlog_pieces`, with what
-remains written as a `- Bnn: <piece>` line under *Parked*. A request that takes
-the gaps of a landed plan — a plan index row whose `gaps.open` is above `0` —
-names that folder in `gaps_of`, and the hand-off sets `gaps.open` to `0` and
-adds this plan to `gaps.moved_to`; when `gh` cannot reach the project the recall
+plan finishes the item unless the request names one part of it: a finishing id
+goes into `backlog`, a piece id into `backlog_pieces`, with what remains written
+as a `- Bnn: <piece>` line under *Parked*. A landed plan's gaps close first:
+when
+a plan index row has a `gaps.open` above `0` and the request does not take those
+gaps, the planner stops here and prints the command that plans them. A request
+that takes them names that folder in `gaps_of`, and the hand-off sets
+`gaps.open` to `0` and adds this plan to `gaps.moved_to`; when `gh` cannot reach
+the project the recall
 says so and reads nothing — and `docs/memory/gaps/`, reading only the files
 whose names match the request. This matters more than it sounds: Relay's
 release-notes request turns out to be sitting in the *Parked* list of the plan
@@ -96,7 +99,7 @@ shown the plan. A hit with no owner is what becomes a stray doc edit halfway
 through the run.
 
 If your request is really several things, it says so **before** refining any of
-them, and proposes one folder per piece with an order — planned one after
+them, and states one folder per piece with an order — planned one after
 another in the same session, each piece going straight back to the interview for
 the next, with no launch line until the last. Relay's is: the CI change first,
 the contributing-guide cleanup inside it, and "switch the whole repo to a
@@ -110,15 +113,22 @@ puts two or three approaches in front of you with their trade-offs and a
 recommendation, and records the one you pick **with the alternative it
 rejected** — which is what stops the next plan re-opening the same argument.
 
-Two of the questions are the ones the run leans on most later, and they are
-worth answering carefully; a third thing is stated rather than asked:
+Many items are not asked at all. Each is a default you ruled on once, stated in
+the plan and shown at the approval gate, where you change it with *revise*: the
+wave order, `opus` on every unit, the `teams` execution mode, the gates below,
+landing on green without a prompt, and each after-landing step the survey
+proposes. When a unit needs a new package, the planner first runs
+`/stackgen:stackgen-reputation` over it and shows the verdict, then asks.
+
+Three things matter most to the run later; all three are stated rather than
+asked:
 
 - **The three gates.** The exact commands the run must pass, proposed from your
   repo's own task list and the harness capabilities whose tasks exist, in three
   tiers: the **unit
   gate** runs once before each unit's commit, the **wave gate** once after every
   wave, and the **plan gate** once over the finished tree. When your repo has
-  them, the proposal is `code:format --all`, `code:lint --all` and
+  them, the plan states `code:format --all`, `code:lint --all` and
   `code:precommit`, in that order, so the cheap check runs most often and the
   full hook pass runs once, over every file. The unit and wave lines take
   `--all`: without it, `code:format` and `code:lint` examine only the
@@ -132,9 +142,11 @@ worth answering carefully; a third thing is stated rather than asked:
   one of the units has landed does not belong there. That one goes in the unit's
   own verification. If the repo has no task runner and no stamp, the answer is
   `none`, and the plan says plainly that the wave review is then the only gate.
-- **The after-landing steps.** What happens once the branch is in. Each one is
-  recorded `run`, here, or dropped: a `run` step runs on a green landing without
-  a prompt — the yes you give now is the consent. A step you want to check first
+- **The after-landing steps.** What happens once the branch is in. Each step
+  the survey proposes is recorded `run`; only a step the survey cannot decide is
+  asked, and recorded `run` or dropped. A `run` step runs on a green landing
+  without a prompt — approving the plan is the consent. A step you want to check
+  first
   is dropped, and you run it by hand later; the run never stops to ask. No step
   ever ships a release, and a command your `.config/vwf.yaml` already lists
   under `after_landing:` is not proposed, since it runs after every landing. An
@@ -150,16 +162,14 @@ raises each project's key in `.config/bootstrap/releases.toml` through
 `bootstrap config set` — the highest level wins — and the release itself is
 always a later hand step, `/release` or your repo's own.
 
-One more consent question is asked only when the plan edits a plugin your
-session itself has loaded: **End an `all` run after landing**. Say `yes` and a
-`/vwf:execute all` run stops after this plan, telling you to restart before the
-next, since the running session would otherwise go on using the old copy.
-Relay's change touches no plugin, so the answer is written `false` without
-asking.
+Two consent keys are written without a question: `consent.merge` is `true`, so
+a green run lands without a prompt, and **End an `all` run after landing** is
+always `false`, since a `/vwf:execute all` run is meant to run every plan.
 
 ### 3. Approve the shape
 
-Nothing has been written to disk yet. The plan is presented as a shape first:
+Nothing has been written to disk yet. The plan is presented as a shape first,
+in one message, with no question per section:
 the goal and any standing decision it reverses, the assumed-decisions table, the
 unit map with each unit's owned paths, every new third-party dependency any unit
 would add, the gates, the consent block, the release levels and the parked list.
@@ -173,7 +183,8 @@ unless the map names a reason for it to wait — it edits a path an earlier unit
 creates or moves, or its verification needs an earlier unit's output. A later
 wave with no reason is a serial step the run pays for, so question it here.
 
-Then: **approve**, **revise** or **abandon**. Abandoning leaves nothing on disk
+Then: **approve**, **revise** or **abandon**. *Revise* names the section or the
+stated default to change. Abandoning leaves nothing on disk
 except a one-line note the next attempt can recall. Approving writes
 `docs/plans/2026-09-08-ci-release-notes/` — an `index.json` holding every
 structured fact (the units, the rulings, the gates, the consent, the release

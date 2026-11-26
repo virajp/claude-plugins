@@ -311,12 +311,20 @@ those plan holes is the point of the pass — fold each into the units (against
 the now-updated blueprint) rather than re-deriving blind. Skip the recall
 silently if the folder is absent.
 
+**A landed plan's gaps close first.** Read the rows of the base repo's
+`docs/plans/index.json`. When a row has a `gaps.open` above `0` and this plan
+does not take those gaps, stop before the interview (interview item 2b): name
+each such folder and its open gaps, print the planner command that plans them
+first, and write nothing. A plan that takes them puts each folder on
+`gaps_of`, unasked.
+
 ### 5. Interview
 
 Work through `${CLAUDE_PLUGIN_ROOT}/assets/plan-interview.md` top to bottom,
 one item per turn, following its *Cycle plans:* notes — the blueprint and the
 surveyor answer most items before they are reached, and an answered item is
-confirmed in a sentence, never re-asked. **Never batch** — one decision per
+confirmed in a sentence, never re-asked. An item the checklist marks
+**Stated** is never asked: write its default, and show it at the §6 gate. **Never batch** — one decision per
 turn, and never assume one.
 
 The plan is a diff — most of it is mechanical. But where the blueprint
@@ -345,9 +353,11 @@ state what it returns: `10 + max` over the `priority` of every unarchived
 plan requires none of them — and which row it stands on. Item 10a places the
 `review` unit(s) — one after the last code unit by default, an earlier one
 only on a ruling recorded in the `decisions` list. Item 10b writes
-`execution`, with its reason in the `decisions` list. Items 16–17 produce the
-consent: the landing answer and the `after_landing` steps each carrying `run` —
-a step not confirmed `run` is dropped; a cycle plan carries no release step, as
+`execution` — `teams`, unless the user asked for `solo` or a named technical
+reason forces it — with its reason in the `decisions` list. Items 16–17
+produce the consent: `merge` `true`, unasked, and the `after_landing` steps
+each carrying `run` — a step the survey proposes is `run` unasked, a step it
+cannot decide is asked, and one not confirmed `run` is dropped; a cycle plan carries no release step, as
 a release is always a hand step with `/release`. Item 18 — the **release
 levels** — is stated as a fact, never asked, as the priority is: one
 `release_levels` entry per project the units touch, `NONE` included, each level
@@ -355,27 +365,24 @@ derived from the change — breaks users → `MAJOR`, new behaviour → `MINOR`,
 → `PATCH`, no user-visible change → `NONE` — with its reason. A slice lands
 blueprint behaviour, so its levels are normally `MINOR` or `MAJOR`, but that
 rule decides, not the habit; the user changes a level at the §6 gate. Item 18a
-writes `consent.end_all_run`, the End an `all` run after landing answer: asked
-only when the units' `owns` include a plugin the run itself loads — one
-installed in the session that runs `/vwf:execute all`, which keeps running the
-stale copy until it restarts; on yes, `/vwf:execute all` ends after this plan
-and reports "restart, then `/vwf:execute all`" — and written `false` unasked
-otherwise.
+writes `consent.end_all_run` `false`, unasked, on every plan: a user who runs
+`/vwf:execute all` means to run every plan.
 
 ### 6. Present the shape — the approval gate (per chain element)
 
 **Nothing is written to disk before this gate, save a parked record (§5).**
 Present the folder's sections per
 `${CLAUDE_PLUGIN_ROOT}/assets/templates/plan-folder.md`, scaled to their
-weight and confirmed one at a time: the goal and the Slice (chain position);
+weight, in one message with no confirmation per section — each stated default
+among them, since this gate is where the user changes one: the goal and the Slice (chain position);
 the assumed decisions, every ruling with its rejected alternative and every
 drift entry; the unit map — id, wave, owns, depends-on, the reason each unit
 in a later wave waits, the failing test each names; the execution mode, with
 its reason; every new dependency
 (package, what for, which unit); the unit gate, the wave gate and the plan
 gate, the after-landing steps, the gates the orchestrator keeps, and the
-derived priority with its arithmetic; the consent, the
-End an `all` run after landing answer included; the release levels, each with
+derived priority with its arithmetic; the consent, `merge` and
+`end_all_run`; the release levels, each with
 its reason; the
 acceptance criteria the units cover; the blind spots and the visual-review
 advisory, when any; the parked list. Then wait for explicit approval. Offer:

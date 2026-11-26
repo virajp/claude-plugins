@@ -2,8 +2,9 @@
 
 When the request is really several independent pieces — two trees with no shared
 ruling, a doctrine change plus an unrelated tooling fix — say so before refining
-anything. Decompose it, agree the order, and plan one folder per piece, each
-through this whole procedure. One plan never swallows another.
+anything. Decompose it, derive the order from the dependencies, and state the
+split and the order — interview item 2 is stated, never asked. Plan one folder
+per piece, each through this whole procedure. One plan never swallows another.
 
 - A later piece that stands on an earlier one names it in its `index.json`
   `requires` list. `/vwf:execute` halts until every required plan reads
