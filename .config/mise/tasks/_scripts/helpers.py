@@ -27,6 +27,7 @@ import re
 import shlex
 import subprocess
 import sys
+import tomllib
 
 # Style
 STYLE_BOLD = "\033[1m"
@@ -468,6 +469,34 @@ def bootstrap_get(key, repo=None):
     file=sys.stderr,
   )
   sys.exit(2)
+
+
+def tool_value(tool, key, default=None):
+  """The value of the key of a tool, read directly from tools.toml of the
+  values folder, without the engine. CI has no bootstrap, so a task that runs
+  in CI reads a value of a tool with this function, not with bootstrap_get.
+
+  `[overrides.tools.<tool>]` wins over `[tools.<tool>]`. Without the key in
+  both tables, the value is default: the caller gives the value of `[defaults]`
+  in the tools.toml of the tool. The function does not apply the contributions
+  of other tools or a derived value, so a key that has them needs
+  bootstrap_get. The values folder is BOOTSTRAP_VALUES, else .config/bootstrap/
+  of the repository. A tools.toml that is missing or is not valid TOML stops
+  the task with code 2.
+  """
+  folder = os.environ.get("BOOTSTRAP_VALUES", "") or f"{os.environ.get('MISE_PROJECT_ROOT', '')}/.config/bootstrap"
+  path = f"{folder}/tools.toml"
+  try:
+    with open(path, "rb") as file:
+      values = tomllib.load(file)
+  except (OSError, tomllib.TOMLDecodeError) as error:
+    print_error(f"{path} cannot be read: {error}")
+    print_warn("- run bootstrap migrate, then commit the values folder", file=sys.stderr)
+    sys.exit(2)
+  for table in (values.get("overrides", {}).get("tools", {}).get(tool, {}), values.get("tools", {}).get(tool, {})):
+    if key in table:
+      return table[key]
+  return default
 
 
 def _alt(value, default):
