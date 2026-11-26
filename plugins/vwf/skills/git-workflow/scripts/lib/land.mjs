@@ -206,6 +206,10 @@ export function open({ repo, into, name }) {
       : `git:worktree:create failed: ${tail(create.out)}`;
     throw new LandError(left === null ? why : `${why}; ${left}`);
   }
+  // For a consumer with an old git:worktree:create, synced before bootstrap
+  // c3e3ddd: that task gives a branch cut from origin/<into> an upstream, and
+  // git:merge:<into> then refuses the branch as unpushed. A newer task cuts
+  // the branch with --no-track, and this check finds no upstream.
   if (git(main, ["rev-parse", "--abbrev-ref", "--symbolic-full-name", `${name}@{upstream}`]).ok) {
     must(main, ["branch", "--unset-upstream", name]);
   }

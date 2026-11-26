@@ -47,14 +47,12 @@ BRANCH_NAME="<declared name, or the confirmed kebab-case slug>"
 ### Create the worktree
 
 Always branch from the **integration branch** `<into>` (the Core Rules), at
-its tip on `origin`. After a fetch, cut it, and drop the upstream the task
-gives a branch cut from `origin/<into>`, so the branch stays local:
+its tip on `origin`. After a fetch, cut it. The task cuts a new branch with
+no upstream, so the branch stays local:
 
 ```bash
 git fetch origin
 mise x -- mise run git:worktree:create -- "$BRANCH_NAME" --from "origin/<into>" --no-setup
-git rev-parse --abbrev-ref --symbolic-full-name "$BRANCH_NAME@{upstream}" >/dev/null 2>&1 \
-  && git branch --unset-upstream "$BRANCH_NAME"
 cd "$(git worktree list --porcelain | awk -v b="refs/heads/$BRANCH_NAME" '/^worktree /{p=substr($0,10)} /^branch /{if ($2==b) print p}')"
 ```
 
