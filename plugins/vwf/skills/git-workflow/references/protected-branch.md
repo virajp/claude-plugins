@@ -48,8 +48,9 @@ node land.mjs finish <repo dir> --branch <branch name> --into <branch>
 
 - **`open`** records the base in `branch.<name>.vwfLandBase`, fetches, then
   runs `git:worktree:create -- <name> --from origin/<branch> --no-setup`
-  (`--from <branch>` with no remote), and drops the upstream that gives the
-  new branch. The worktree is `<repo>/.worktrees/<name>` (or `worktrees/`, as
+  (`--from <branch>` with no remote), and drops an upstream that an old
+  `git:worktree:create` (synced before bootstrap `c3e3ddd`) gives the new
+  branch. The worktree is `<repo>/.worktrees/<name>` (or `worktrees/`, as
   the task chooses). `<repo>` is the main checkout of the repo `<repo dir>` is
   in; for a submodule, that is the submodule's own work tree (the
   `core.worktree` of its git dir), never the superproject. It refuses a branch
