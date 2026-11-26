@@ -5,35 +5,82 @@
 # requires-python = ">=3.14"
 # dependencies = []
 # ///
-# MISE description="Scan the dependencies with osv-scanner"
+# MISE description="Scan the dependencies and the container images with osv-scanner"
 # MISE tools={uv="latest", python="3.14"}
 
 # USAGE flag "--debug" help="emit debug logs"
 # USAGE flag "--staged" help="do nothing: osv-scanner has no staged mode"
 
+import json
 import os
-import re
+import shutil
 import subprocess
 import sys
+import tempfile
 
 sys.dont_write_bytecode = True
 sys.path.insert(0, f"{os.environ['MISE_PROJECT_ROOT']}/.config/mise/tasks/_scripts")
 import helpers  # noqa: E402
 
 
-def submodules(root):
-  """The path of each submodule of root, nested ones included."""
-  try:
-    result = subprocess.run(
-      ["git", "-C", root, "submodule", "--quiet", "foreach", "--recursive", "echo $displaypath"],
-      stdout=subprocess.PIPE,
-      stderr=subprocess.DEVNULL,
-      text=True,
-      check=False,
-    )
-  except OSError:
+def tracked_files(root):
+  """The path of each file that git tracks in root, relative to root.
+
+  git does not list the files of a submodule, so a submodule is not in the
+  list: it is a separate repository with its own `code:sec`.
+  """
+  result = subprocess.run(
+    ["git", "-C", root, "-c", "core.quotePath=off", "ls-files", "-z"],
+    stdout=subprocess.PIPE,
+    text=True,
+    errors="surrogateescape",
+    check=False,
+  )
+  if result.returncode != 0:
+    sys.exit(result.returncode)
+  return [path for path in result.stdout.split("\0") if path]
+
+
+def compose_images(root, docker):
+  """The image of each service of .tools/docker-compose.yaml that names one.
+
+  A service with only a build has no image to scan, so it is not in the list.
+  """
+  compose = f"{root}/.tools/docker-compose.yaml"
+  if not os.path.isfile(compose):
     return []
-  return [line for line in result.stdout.split("\n") if line]
+  if docker is None:
+    helpers.print_error(".tools/docker-compose.yaml has local services, but docker is not installed.")
+    helpers.print_warn("- install docker: osv-scanner needs it to scan the images of the services")
+    sys.exit(1)
+  result = subprocess.run(
+    [docker, "compose", "-f", compose, "config", "--format", "json"],
+    stdout=subprocess.PIPE,
+    text=True,
+    check=False,
+  )
+  if result.returncode != 0:
+    helpers.print_error("docker compose cannot read .tools/docker-compose.yaml.")
+    sys.exit(result.returncode)
+  services = json.loads(result.stdout).get("services") or {}
+  return sorted({service["image"] for service in services.values() if service.get("image")})
+
+
+def save_image(docker, image, archive):
+  """Save the image to the archive, and pull it first when docker has no copy.
+
+  The task saves the image itself, and osv-scanner reads the archive. The
+  `docker save` of osv-scanner names no platform, so it fails with the
+  containerd image store for an image of another platform, for example with
+  DOCKER_DEFAULT_PLATFORM. True on success.
+  """
+  platform = os.environ.get("DOCKER_DEFAULT_PLATFORM", "")
+  save = [docker, "save", *(["--platform", platform] if platform else []), "-o", archive, image]
+  if subprocess.run(save, stderr=subprocess.DEVNULL, check=False).returncode == 0:
+    return True
+  if subprocess.run([docker, "pull", "--quiet", image], stdout=subprocess.DEVNULL, check=False).returncode != 0:
+    return False
+  return subprocess.run(save, check=False).returncode == 0
 
 
 def main():
@@ -43,31 +90,72 @@ def main():
     return 0
 
   root = os.environ["MISE_PROJECT_ROOT"]
-  # A git submodule is a separate repository with its own `code:sec`. Thus
-  # osv-scanner skips each submodule here, nested ones included.
-  excludes = []
-  for submodule in submodules(root):
-    # osv-scanner matches the regex against the full path of each directory.
-    escaped = re.sub(r"[][\\.*^$()+?{}|]", lambda m: "\\" + m.group(0), submodule)
-    excludes += ["--x-exclude", f"r:(^|/){escaped}$"]
+  files = tracked_files(root)
+  # osv-scanner applies each .gitignore above the repository too (osv-scanner
+  # issue 209). In a worktree below an ignored folder, for example .worktrees/,
+  # a recursive scan thus finds nothing. So git decides the files: the task
+  # gives each folder with a tracked file, without --recursive, and
+  # --no-ignore stops the .gitignore check of osv-scanner. The paths are
+  # relative to the root, so a large tree fits on the command line.
+  folders = sorted({os.path.dirname(path) or "." for path in files})
+
+  # osv-scanner has no parser of its own for aube-lock.yaml. The file has the
+  # format of pnpm-lock.yaml, so the pnpm parser reads it. A later aube format
+  # that the parser cannot read stops the scan with an error.
+  lockfiles = []
+  for path in files:
+    if os.path.basename(path) == "aube-lock.yaml":
+      lockfiles += ["--lockfile", f"pnpm-lock.yaml:{path}"]
+
+  config = f"{root}/.config/osv-scanner.toml"
+  verbosity = "info" if os.environ.get("usage_debug", "false") == "true" else "warn"
 
   # Without --allow-no-lockfiles, a repo with no lockfile fails with exit 128.
   helpers.print_subheader("Scanning the dependencies with osv-scanner ...")
-  verbosity = "info" if os.environ.get("usage_debug", "false") == "true" else "warn"
   result = helpers.tool(
     "osv-scanner",
     "scan",
     "source",
-    "--recursive",
     "--allow-no-lockfiles",
-    *excludes,
+    "--no-ignore",
+    *lockfiles,
     "--config",
-    f"{root}/.config/osv-scanner.toml",
+    config,
     "--verbosity",
     verbosity,
-    root,
+    "--",
+    *(folders or ["."]),
+    cwd=root,
   )
-  return result.returncode
+  code = result.returncode
+
+  # The images: the services of .tools/docker-compose.yaml, then `images` of
+  # [tools.osv-scanner], the images that the repository builds. An entry that
+  # ends in .tar is an image archive, a path from the root. Each image that the
+  # scan cannot read fails the task.
+  docker = shutil.which("docker")
+  value = helpers.tool_value("osv-scanner", "images", [])
+  images = compose_images(root, docker) + [str(image) for image in (value or [])]
+  with tempfile.TemporaryDirectory() as folder:
+    for image in images:
+      helpers.print_subheader(f"Scanning the image {image} with osv-scanner ...")
+      if image.endswith(".tar"):
+        archive = os.path.join(root, image)
+      elif docker is None:
+        helpers.print_error(f"the image {image} needs docker, but docker is not installed.")
+        code = code or 1
+        continue
+      else:
+        archive = f"{folder}/image.tar"
+        if not save_image(docker, image, archive):
+          helpers.print_error(f"docker cannot save the image {image} - build it, or pull it by hand.")
+          code = code or 1
+          continue
+      result = helpers.tool(
+        "osv-scanner", "scan", "image", "--config", config, "--verbosity", verbosity, "--archive", archive
+      )
+      code = code or result.returncode
+  return code
 
 
 if __name__ == "__main__":

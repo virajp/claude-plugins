@@ -85,17 +85,18 @@ elif ref_exists(f"refs/remotes/origin/{BRANCH}"):
   ADD = ["--track", "-b", BRANCH, WORKTREE, f"origin/{BRANCH}"]
   KIND = f"a local branch {BRANCH} that tracks origin/{BRANCH}"
   FROM_ORIGIN = True
+# --no-track on each new branch: a new branch must not track its base, because
+# git:merge:<b> reads the upstream to find unpushed commits.
 elif FROM:
-  ADD = ["-b", BRANCH, WORKTREE, FROM]
+  ADD = ["--no-track", "-b", BRANCH, WORKTREE, FROM]
   KIND = f"the new branch {BRANCH} from {FROM}"
 elif CURRENT:
-  ADD = ["-b", BRANCH, WORKTREE, "HEAD"]
+  ADD = ["--no-track", "-b", BRANCH, WORKTREE, "HEAD"]
   KIND = f"the new branch {BRANCH} from the current branch"
 else:
   BASE = helpers.default_branch()
   if not ref_exists(f"refs/heads/{BASE}") and ref_exists(f"refs/remotes/origin/{BASE}"):
     BASE = f"origin/{BASE}"
-  # --no-track: a branch cut from origin/<base> must not push to <base>.
   ADD = ["--no-track", "-b", BRANCH, WORKTREE, BASE]
   KIND = f"the new branch {BRANCH} from the default branch {BASE}"
 

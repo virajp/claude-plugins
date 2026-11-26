@@ -2,6 +2,7 @@
 # The next sync writes it again, and each change in this file is lost.
 
 [settings]
+disable_tools = [ "github:virajp/bootstrap" ]
 os = "linux"
 
 [tools]

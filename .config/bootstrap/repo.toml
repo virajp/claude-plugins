@@ -2,7 +2,7 @@
 
 format = 3
 
-bootstrap_commit = "48bb61a39b2a30dfabda27a28b1bbbdc91f42d7e"
+bootstrap_commit = "8470d680a1af38e5ba9b6019a50b78a35c503f7d"
 core_branches = [ "main", "develop" ]
 environments = [ "dev", "ci" ]
 repo_name = "claude-plugins"

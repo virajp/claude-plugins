@@ -5,7 +5,7 @@
 # requires-python = ">=3.14"
 # dependencies = []
 # ///
-# MISE description="Install the Node dependencies, then report the outdated and vulnerable ones; --upgrade upgrades them"
+# MISE description="Install the Node dependencies, then report the outdated ones, and with audit = \"package-manager\" the vulnerable ones; --upgrade upgrades them"
 # MISE hide=true
 # MISE tools={uv="latest", python="3.14"}
 # USAGE flag "--upgrade" help="upgrade the dependencies to the latest versions in their package.json ranges instead of installing from the lockfile"
@@ -72,6 +72,16 @@ if result.returncode != 0:
 helpers.print_subheader("Checking for outdated Node dependencies ...")
 # A report only: `outdated` exits 1 when a dependency is outdated.
 helpers.tool(package_manager, "outdated", "--dir", root, "--recursive", "--long")
+
+# The audit of the dependencies: `audit` of [tools.node]. With "osv-scanner"
+# (the default), code:sec:30-osv-scanner scans the lockfile, and this task does
+# no audit. With "package-manager", the package manager audits here too.
+audit = helpers.tool_value("node", "audit", "osv-scanner")
+if audit == "osv-scanner":
+  sys.exit(0)
+if audit != "package-manager":
+  helpers.print_error(f"[tools.node] audit is {audit!r}, but it must be osv-scanner or package-manager.")
+  sys.exit(2)
 
 helpers.print_subheader("Auditing Node dependencies for known vulnerabilities ...")
 # Exits 1 for a vulnerability at or above `audit.level` of the workspace file,
