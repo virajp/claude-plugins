@@ -749,8 +749,8 @@
       "id": "G2",
       "unit": "U3",
       "stage": "",
-      "text": "Follow-up owed (D40): the bootstrap config set lines at plugins/vwf/skills/setup/references/migrate-pipeline.md:121, :204 and onboard-pipeline.md:157 write values from a cloned repo with no shell-quoting rule (security engine, U7 round 2: command injection, confidence 8) · not fixed here by ruling; a backlog item and a change-plan applying the materialize.md step 4 quoting rule are owed",
-      "state": "open"
+      "text": "Follow-up owed (D40): the bootstrap config set lines at plugins/vwf/skills/setup/references/migrate-pipeline.md:121, :204 and onboard-pipeline.md:157 write values from a cloned repo with no shell-quoting rule (security engine, U7 round 2: command injection, confidence 8) · not fixed here by ruling; a backlog item and a change-plan applying the materialize.md step 4 quoting rule are owed · closed 2026-11-26: fixed by docs/plans/2026-11-23-bootstrap-value-quoting (every config set value quoted per ## Passing values)",
+      "state": "closed"
     },
     {
       "id": "G3",
