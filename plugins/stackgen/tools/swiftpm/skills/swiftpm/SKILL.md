@@ -20,6 +20,8 @@ paths:
 resolution — keep the manifest declarative and let the lockfile carry the
 exact versions.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **A `Package.resolved` inside an `.xcodeproj` is Xcode's.** The glob above
 also matches
 `<Name>.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved`,

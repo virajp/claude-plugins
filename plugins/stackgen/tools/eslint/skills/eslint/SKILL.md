@@ -2,7 +2,7 @@
 name: eslint
 version: 0.1.0
 category: development
-description: The house lint/format gate — @askviraj/linter (ESLint, bundled)
+description: The house lint/format gate — @virajp.dev/linter (ESLint, bundled)
   as
   the lint gate and dprint as the formatter. Both must pass before commit. Covers
   flat config as the only supported ESLint format, how to run each, how to scope
@@ -24,11 +24,13 @@ paths:
 
 Two independent gates, split by concern — **both must pass before a commit**:
 
-- **Lint** — `@askviraj/linter`, a self-contained ESLint CLI that bundles ESLint
-  and every plugin (TS, JSON/JSONC, CSS, HTML, Markdown, YAML, TOML, Astro). It
-  owns **correctness**.
+- **Lint** — `@virajp.dev/linter`, a self-contained ESLint CLI that bundles
+  ESLint and every plugin (TS, JSON/JSONC, CSS, HTML, Markdown, YAML, TOML,
+  Astro). It owns **correctness**.
 - **Format** — `dprint` (config in `.config/dprint.json`). It owns
   **whitespace and layout**.
+
+The repo's mise skill, .claude/skills/mise/, lists every task.
 
 Keep them apart: dprint reformats, the linter finds real problems. There are no
 formatting rules in the linter and no correctness rules in dprint — don't make
@@ -64,14 +66,13 @@ mise run code                 # every gate: format, lint, sec
 Direct invocation (what those tasks wrap):
 
 ```sh
-# Lint — defaults to the current directory. Resolve the mise-pinned binary
-# as the tasks do: a bare `linter` can be shadowed by node_modules/.bin, and
-# is not on PATH outside an activated mise.
-linter="$(mise which linter --tool npm:@askviraj/linter)"
-"$linter"
-"$linter" --fix                          # auto-fix what's mechanical
-"$linter" src/ tests/                    # limit to targets
-"$linter" --cache                        # only changed files
+# Lint — defaults to the current directory. `mise x --` runs the binary
+# mise pinned, never a node_modules/.bin copy, and works outside an
+# activated mise.
+mise x -- linter
+mise x -- linter --fix                   # auto-fix what's mechanical
+mise x -- linter src/ tests/             # limit to targets
+mise x -- linter --cache                 # only changed files
 
 # Format
 mise run code:format          # verify (CI / pre-commit)

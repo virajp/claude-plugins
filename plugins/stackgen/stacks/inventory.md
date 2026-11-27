@@ -154,7 +154,7 @@ shape of a pack is `../assets/pack-format.md`.
 | `analysis-options` | 1.0.0 | `flutter` |
 | `bash` | 1.0.0 | every repo |
 | `detekt` | 1.0.0 | `kotlin`, `android` |
-| `eslint` | 1.0.0 | `node`, `bun` |
+| `eslint` | 1.0.0 | `node`, `bun`, `linter` |
 | `gradle` | 1.0.0 | `kotlin`, `java`, `android` |
 | `kotlin` | 1.0.0 | `kotlin`, `android` |
 | `ktlint` | 1.0.0 | `kotlin`, `android` |

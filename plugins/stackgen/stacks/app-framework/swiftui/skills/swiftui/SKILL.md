@@ -21,6 +21,8 @@ paths:
 The app stack, and the entry point for its Swift codebase. Read the reference
 matching your task — one, not all of them.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 | Doing | Read |
 | --- | --- |
 | Choosing, or questioning, this stack | [Pick & trade](references/pick-and-trade.md) |

@@ -15,13 +15,14 @@ boundary the secrets contract mandates for the application.
 
 ```sh
 fnox exec -- mise run stack:up
-fnox exec -- mise run e2e:local
+fnox exec -- mise run test:e2e
 ```
 
-The wrapping is one level deep and belongs at the outermost invocation. The
-tasks it wraps — including `stack:up` and whatever readiness gate it holds —
-are stackgen's local-stack contract's business, and nothing about them changes
-because fnox is present.
+The wrapping is one level deep and belongs at the outermost invocation.
+`stack:up` is the `local_stack` task of vwf's harness contract, which the repo
+writes. The tasks it wraps — including `stack:up` and whatever readiness gate
+it holds — are stackgen's local-stack contract's business, and nothing about
+them changes because fnox is present.
 
 ## Development only
 

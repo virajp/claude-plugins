@@ -21,6 +21,8 @@ swift-format decides Swift layout, and nothing else does. It ships inside the
 Swift toolchain as `swift format`; the configuration is
 `.config/swift-format.json`, and every invocation names it.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 ## Running it
 
 Through the task library, so the gate and a developer run the same command:

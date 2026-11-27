@@ -55,10 +55,8 @@ Once mise is on the runner, install the tools the config pins — `mise install`
 in its own step, or the mise action's own install — **before** the first
 `mise run`. The repo's config sets `task.run_auto_install = false`, so a task
 installs nothing before its body runs, and a step that skips the install fails
-on a missing tool. There is no mise lock: every pin in the config is an exact
-version, so the install needs no `--locked` and resolves nothing. A tool is
-never added from the workflow with a bare `mise use`: a pin is written into
-the repo's config and reviewed there.
+on a missing tool. The pins are bootstrap's, and a tool is added with
+`bootstrap add tool` — never from the workflow with a bare `mise use`.
 
 ## The exception that is not one
 

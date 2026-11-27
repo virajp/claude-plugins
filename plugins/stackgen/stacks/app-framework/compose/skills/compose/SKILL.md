@@ -22,6 +22,8 @@ The app stack, and the entry point for its Kotlin codebase's UI and app layers.
 The language itself — null safety, coroutines, the build — is the `kotlin`
 skill's. Read the reference matching your task — one, not all of them.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 | Doing | Read |
 | --- | --- |
 | Choosing, or questioning, this stack | [Pick & trade](references/pick-and-trade.md) |

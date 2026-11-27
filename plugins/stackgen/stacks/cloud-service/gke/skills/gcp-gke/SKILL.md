@@ -20,6 +20,8 @@ private plane — is the `gcp` skill's, cited and never restated. Kubernetes' ow
 API reference belongs to Context7 at use time when Context7 is installed, else
 to the official documentation.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 Read the reference that matches what you are doing — one, not all of them.
 
 | Doing | Read |

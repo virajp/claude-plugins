@@ -23,6 +23,8 @@ error does. Moving the pin is its own change, with the whole-tree lint run and
 its fixes in the same commit — a new release adds rules, and strict mode fails
 on them.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 ## Running it
 
 Through the task library, so the gate and a developer run the same command:

@@ -26,6 +26,8 @@ paths:
 The build framework under every Android module. Each topic is its own
 reference — **read the one matching your task**, not all of them.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 AGP owns an Android module's build: its SDK levels, its manifest merge, its
 variants, its shrinking, its tests on a device. The judgment here is about
 keeping those decisions in one place and keeping the gates honest. API

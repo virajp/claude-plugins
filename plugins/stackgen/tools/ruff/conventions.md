@@ -1,6 +1,6 @@
 # Ruff — conventions
 
-Both halves of the Python gate — the linter and the formatter — are one tool.
+The Python lint gate; dprint's ruff plugin is the formatter (see the seam).
 Topic 10 of the language bundle, deliberately not a repo gate: a linter
 meaningful for exactly one toolchain belongs to that toolchain's bundle, or a
 polyglot repo acquires one gate per language.
@@ -16,13 +16,13 @@ locally.
 ## The seam with the repo formatter
 
 **This entry ships no task.** The ruff tasks, the repo formatter and the
-pre-commit hooks are bootstrap's. `mise run code:format` formats every file
-type the repo formatter has a plugin for, and ruff formats Python, without
-either knowing of the other. `mise run code:lint` runs `ruff check`. The
-hooks pass the staged files: `ruff format` narrows to the Python files it is
-given; `ruff check` stays whole-project either way, since its per-file
-settings resolve from the project root and a staged subset would answer
-differently from CI.
+pre-commit hooks are bootstrap's. `mise run code:format` formats Python
+through dprint's ruff plugin (`code:format:05-dprint`), beside every other
+file type dprint has a plugin for; ruff itself only lints.
+`mise run code:lint` runs `ruff check` (`code:lint:70-ruff`). The hooks pass
+the staged files: dprint narrows to the files it is given; `ruff check` stays
+whole-project either way, since its per-file settings resolve from the
+project root and a staged subset would answer differently from CI.
 
 ## Ahead of its bundle
 
