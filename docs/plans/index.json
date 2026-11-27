@@ -1,20 +1,4 @@
 {
   "format": 1,
-  "plans": [
-    {
-      "id": "2026-11-26-stackgen-bootstrap-tasks",
-      "folder": "docs/plans/2026-11-26-stackgen-bootstrap-tasks",
-      "kind": "change",
-      "title": "stackgen names only what a bootstrap-synced repo has: pack tasks in Python, task names fixed, generated skills name no task",
-      "target_repo": null,
-      "priority": 10,
-      "status": "RUNNING",
-      "started": "2026-11-27T17:07:55.072Z",
-      "ended": "",
-      "gaps": null,
-      "requires": [],
-      "backlog": [],
-      "backlog_pieces": []
-    }
-  ]
+  "plans": []
 }
