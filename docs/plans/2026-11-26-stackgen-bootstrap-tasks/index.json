@@ -667,6 +667,15 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D39",
+      "decision": "Q2: D7 made the eslint skill call `mise x -- linter` with a comment saying it never runs a node_modules/.bin copy, which is false when env._.path puts node_modules/.bin on PATH. Which form should plugins/stackgen/tools/eslint/skills/eslint/SKILL.md use?",
+      "ruling": "Keep `mise x -- linter` and replace the false clause with the true caveat: a @virajp.dev/linter in node_modules/.bin shadows the pinned binary, so the repo never adds it as a dependency (recommended) — D7 call form stays and the comment becomes true",
+      "rejected": "Go back to `mise which linter --tool npm:@virajp.dev/linter` for the direct call; Keep the text as it is",
+      "units": [
+        "U2"
+      ]
     }
   ],
   "stages": {

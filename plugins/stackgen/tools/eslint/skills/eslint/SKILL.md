@@ -67,8 +67,9 @@ Direct invocation (what those tasks wrap):
 
 ```sh
 # Lint — defaults to the current directory. `mise x --` runs the binary
-# mise pinned, never a node_modules/.bin copy, and works outside an
-# activated mise.
+# mise pinned and works outside an activated mise. A @virajp.dev/linter
+# in node_modules/.bin shadows the pinned binary, so the repo never adds
+# it as a dependency.
 mise x -- linter
 mise x -- linter --fix                   # auto-fix what's mechanical
 mise x -- linter src/ tests/             # limit to targets
