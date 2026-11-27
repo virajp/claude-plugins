@@ -159,7 +159,7 @@
       "status": "green",
       "started": "2026-11-27T17:10:15.477Z",
       "ended": "2026-11-27T17:34:08.082Z",
-      "commit": "76527bf1",
+      "commit": "14c54ab1",
       "rounds": 2
     },
     {
@@ -201,9 +201,9 @@
         "U3"
       ],
       "waits": "",
-      "status": "running",
+      "status": "green",
       "started": "2026-11-27T17:36:49.742Z",
-      "ended": "",
+      "ended": "2026-11-27T18:49:43.934Z",
       "commit": "",
       "rounds": 2,
       "range": {

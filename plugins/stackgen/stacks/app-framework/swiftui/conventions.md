@@ -51,11 +51,11 @@ the selected Xcode and sets `XCODE_VERSION` (`27.0`, say — the version
 `xcodebuild -version` prints). A repo that must build with one Xcode sets
 `XCODE_VERSION` in the `[env]` of
 `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every task that
-builds checks the selected Xcode against that value first, and stops with the
-fix when they differ. The same check refuses a Mac with only the
-Command Line Tools, where `xcodebuild -version` fails, and `/vwf:doctor` probes
-the same command rather than looking `xcodebuild` up on `PATH`, where that
-Mac's stub is found.
+builds checks the selected Xcode against that value first, and stops with
+the fix when they differ. The same check refuses a Mac with only the Command
+Line Tools, where `xcodebuild -version` fails, and `/vwf:doctor` probes the
+same command rather than looking `xcodebuild` up on `PATH`, where that Mac's
+stub is found.
 
 **The golden simulator comes from the same module.** `SIMULATOR_PLATFORM`
 (`iOS` by default), `SIMULATOR_DEVICE` (`iPhone 17`, say) and `SIMULATOR_OS`
