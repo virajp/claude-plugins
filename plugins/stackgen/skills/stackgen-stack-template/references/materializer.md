@@ -87,11 +87,19 @@ once.
      - **An old task without the extension is replaced.** A pack's
        `p/_project/` task is a Python uv script `<name>.py`. Where it
        lands `p/<id>/<name>.py` and `.config/mise/tasks/p/<id>/<name>`
-       — the same name, no extension, an older landing — already exists,
-       show that file in the plan as **replaced** by the `.py`, and on
-       the user's consent remove it with plain `rm`. Leaving it is not
+       — the same name, no extension — already exists **and the
+       lockfile records it**, stackgen's old landing, show that file in
+       the plan as **replaced** by the `.py`. Before removing it, resolve
+       its real path: it must stay under the repo's
+       `.config/mise/tasks/p/`, and neither the file nor any directory on
+       its path may be a symlink — else it is refused and reported. On
+       the user's consent remove it with plain `rm`, drop its lockfile
+       row and record the `.py` path in its place. Leaving it is not
        harmless: mise runs the file without the extension first, so it
-       hides the `.py` and the old task keeps running under the name.
+       hides the `.py` and the old task keeps running under the name. An
+       extension-less file the lockfile does **not** record is the
+       repo's own and takes the collision check below: a conflict, named,
+       never removed.
      - **A root path must be on the allowlist.** Only `readme.md`,
        `eslint.config.mjs`, `wrangler.jsonc` and the directory `.github/`
        — never `.github/workflows/` — may land at the repo root
