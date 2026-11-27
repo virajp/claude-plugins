@@ -88,18 +88,21 @@ once.
        `p/_project/` task is a Python uv script `<name>.py`. Where it
        lands `p/<id>/<name>.py` and `.config/mise/tasks/p/<id>/<name>`
        — the same name, no extension — already exists **and the
-       lockfile records it**, stackgen's old landing, show that file in
-       the plan as **replaced** by the `.py`. Before removing it, resolve
-       its real path: it must stay under the repo's
-       `.config/mise/tasks/p/`, and neither the file nor any directory on
-       its path may be a symlink — else it is refused and reported. On
-       the user's consent remove it with plain `rm`, drop its lockfile
-       row and record the `.py` path in its place. Leaving it is not
+       lockfile records it**, stackgen's old landing, classify it by hash
+       first: a copy that matches its landing hash is shown in the plan
+       as **replaced** by the `.py`; one that does not is shown as
+       **repo edited, replaced by the `.py`**, on a consent line of its
+       own that names the edit. Before removing it, resolve its real
+       path: no path segment below the repo root may be a symlink, and
+       the file's real path must sit under the real path of the repo's
+       `.config/mise/tasks/p/` — else it is refused and reported. On the
+       user's consent remove it with plain `rm`, drop its lockfile row
+       and record the `.py` path in its place. Leaving it is not
        harmless: mise runs the file without the extension first, so it
        hides the `.py` and the old task keeps running under the name. An
        extension-less file the lockfile does **not** record is the
-       repo's own and takes the collision check below: a conflict, named,
-       never removed.
+       repo's own and takes the collision check below: a conflict, named
+       and listed in the plan, and nothing is written to that path.
      - **A root path must be on the allowlist.** Only `readme.md`,
        `eslint.config.mjs`, `wrangler.jsonc` and the directory `.github/`
        — never `.github/workflows/` — may land at the repo root
@@ -210,8 +213,11 @@ once.
    but is **not** in the target repo's own
    `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
    repo's own file: a
-   conflict listed for the user to resolve, never a write. Anything not in
-   the lockfile is not stackgen's to touch.
+   conflict listed for the user to resolve, never a write. So is an
+   extension-less `.config/mise/tasks/p/<id>/<name>` the lockfile does
+   not record, beside a `p/<id>/<name>.py` target that does not exist
+   yet: mise would run it in place of the `.py`. Anything not in the
+   lockfile is not stackgen's to touch.
 
    **A `config/` target is checked by exactly this rule, not a softer
    one.** A repo that already has `.config/mise/tasks/p/<id>/deploy.py` and no
