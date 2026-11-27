@@ -685,5 +685,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/all-2026-11-27-2236",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-26-stackgen-bootstrap-tasks.jsonl"
+  }
 }
