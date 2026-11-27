@@ -26,8 +26,9 @@ The Xcode version is part of the build's inputs: it decides the Swift compiler,
 the SDKs and the simulators. `require_xcode` in the repo's `_scripts/xcode.py`,
 the Python module bootstrap ships, reads it as `XCODE_VERSION`. Without a
 value it takes the selected Xcode. A repo that must build with one Xcode pins
-it in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every task that
-builds checks the selected Xcode before doing any work: `xcodebuild -version`
+it in the `[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml` and
+commits it. Every task that builds checks the selected Xcode before doing any
+work: `xcodebuild -version`
 must succeed — a Mac with only the Command Line Tools fails it, since they
 carry no `xcodebuild` that can build an app — and must report the pinned
 version when there is one. On a mismatch the task stops and names both the

@@ -47,11 +47,12 @@ build afterwards to prove the file still loads.
 
 **Xcode is found, not installed.** mise cannot install Xcode. `require_xcode`
 in the repo's `_scripts/xcode.py`, the Python module bootstrap ships, finds
-the selected Xcode and sets `XCODE_VERSION` (`27.0`, say — the version `xcodebuild -version`
-prints). A repo that must build with one Xcode sets `XCODE_VERSION` in the
-`[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every
-task that builds checks the selected Xcode against that value first, and stops
-with the fix when they differ. The same check refuses a Mac with only the
+the selected Xcode and sets `XCODE_VERSION` (`27.0`, say — the version
+`xcodebuild -version` prints). A repo that must build with one Xcode sets
+`XCODE_VERSION` in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every task that
+builds checks the selected Xcode against that value first, and stops with the
+fix when they differ. The same check refuses a Mac with only the
 Command Line Tools, where `xcodebuild -version` fails, and `/vwf:doctor` probes
 the same command rather than looking `xcodebuild` up on `PATH`, where that
 Mac's stub is found.
