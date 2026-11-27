@@ -22,6 +22,8 @@ Layers on the TypeScript baseline — read that skill's standards first; this
 adds to them and replaces none of them. Astro owns the build, so a Vite plugin
 belongs inside Astro's `vite` block and nowhere else.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **Astro has two `output` values, `static` and `server`.** Four project shapes
 are built on them plus the adapter and the client directives. Read
 [Framework doctrine](references/framework-doctrine.md) before deciding which

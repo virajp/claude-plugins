@@ -157,9 +157,9 @@ interacts with the canonical — is the `head` reference.
 
 ## What this pack writes
 
-| File                                  | Is                                                                      |
-| ------------------------------------- | ----------------------------------------------------------------------- |
-| `.config/mise/tasks/p/_project/icons` | the icons task above, renamed into the project's task group as it lands |
+| File                                     | Is                                                                      |
+| ---------------------------------------- | ----------------------------------------------------------------------- |
+| `.config/mise/tasks/p/_project/icons.py` | the icons task above, renamed into the project's task group as it lands |
 
 ## What this component does not decide
 

@@ -9,8 +9,8 @@
   "gaps_of": [],
   "execution": "teams",
   "status": {
-    "state": "APPROVED",
-    "detail": "APPROVED 2026-11-27 by the user"
+    "state": "RUNNING",
+    "detail": "RUNNING since 2026-11-27T22:39 in .worktrees/all-2026-11-27-2236"
   },
   "consent": {
     "merge": true,
@@ -101,11 +101,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-27T17:10:15.405Z",
+      "ended": "2026-11-27T17:34:08.007Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U2",
@@ -153,11 +153,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-27T17:10:15.477Z",
+      "ended": "2026-11-27T17:34:08.082Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U3",
@@ -178,11 +178,11 @@
       ],
       "depends_on": [],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-27T17:10:15.549Z",
+      "ended": "2026-11-27T17:34:08.157Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 2
     },
     {
       "id": "U4",
@@ -264,8 +264,8 @@
   "waves": [
     {
       "id": "W1",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-27T17:10:15.366Z",
       "ended": ""
     },
     {
@@ -655,6 +655,15 @@
       "units": [
         "U1"
       ]
+    },
+    {
+      "id": "D38",
+      "decision": "Q1: Plan gate K1 runs each new Python pack task with `mise x -- mise run p:vwfcheck:<name> -- --help`; with mise 2026.11.14 that form passes --help to the script, which then runs. Does K1 count as green with the plain `mise run p:vwfcheck:<name> --help` form?",
+      "ruling": "Accept the plain `--help` form for K1 (recommended) — K1 passes: the unit check run showed each deploy dry-run reaching wrangler with no traceback, the scratch folder removed, and no lock file under ~/.config/mise changed",
+      "rejected": "Keep the literal `-- --help` form — K1 fails for all five tasks, so the plan cannot land until K1 in the folder is amended",
+      "units": [
+        "U1"
+      ]
     }
   ],
   "stages": {
@@ -683,8 +692,21 @@
       "ended": ""
     }
   },
-  "gaps": [],
-  "overrides": [],
+  "gaps": [
+    {
+      "id": "G1",
+      "unit": "U6",
+      "stage": "",
+      "text": "R1 finding: plugins/stackgen/tools/ruff/tool.yaml:2 summary reads one tool for both halves, which D8 falsifies; no unit file names the summary field · settled by ownership: U6 owns plugins/stackgen/tools/**/tool.yaml whole (S2 owner U6), so the finding is handed to U6 at its wave-4 dispatch",
+      "state": "closed"
+    }
+  ],
+  "overrides": [
+    {
+      "id": "O1",
+      "text": "shared worktree: all-2026-11-27-2236; hold landing"
+    }
+  ],
   "run": {
     "worktree": ".worktrees/all-2026-11-27-2236",
     "log": "~/Library/Caches/vwf/claude-plugins/2026-11-26-stackgen-bootstrap-tasks.jsonl"

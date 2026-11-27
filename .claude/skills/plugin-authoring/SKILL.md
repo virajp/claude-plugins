@@ -110,15 +110,16 @@ script, verdict or `sed`.
 `p:plugins:check`'s hook *rule* reads only the command hooks of a plugin's own
 `hooks/hooks.json`, but rule 11 covers a stackgen pack's payload scripts from
 the other end — exec bit and shebang, `bash` or `sh` only; nothing lints their
-bodies. The shebang set is narrower than a task's on purpose: a hook is wired
-into `settings.json` as a bare path, so only a shell the host can find on `PATH`
-will do. What the `stackgen-plugin` skill still owns is what those scripts are
-*for*. The host rules in full are stackgen's `assets/artifact-doctrine.md` §4.
+bodies. A task's one shebang is the uv one; a hook's set differs on purpose: a
+hook is wired into `settings.json` as a bare path, so only a shell the host can
+find on `PATH` will do. What the `stackgen-plugin` skill still owns is what
+those scripts are *for*. The host rules in full are stackgen's
+`assets/artifact-doctrine.md` §4.
 
 The payload's other two halves have rules of their own. Rule 13 covers its
-**prose**: no citation a pack or `/vwf:init` lands may be
-plugin-relative, because the file is copied into a repo where no plugin is
-installed and the path resolves to nothing without a word. Rule 4 covers its
+**prose**: no citation a pack or `/vwf:init` lands may be plugin-relative,
+because the file is copied into a repo where no plugin is installed and the
+path resolves to nothing without a word. Rule 4 covers its
 **frontmatter**, parsing every pack skill and pack agent under `stacks/*/*/`, on
 the same strict terms as a plugin's own.
 
@@ -139,9 +140,8 @@ script's path — rule 6 refuses `${CLAUDE_PLUGIN_ROOT}` across plugins.
 
 Rule 17 fails any `mise use` a plugin ships, dot directories included, unless
 the line forbids it (`never` or `bare` right before it, `is never` or `— never`
-right after). A tool is entered into the `mise.toml` of the `conf.d/` folder
-that owns it first — `zz-repo/` for a repo's own — then installed
-with `mise install`.
+right after). A tool is added with `bootstrap add tool <tool>`, never by a
+hand edit of the `conf.d/` folder's `mise.toml` and `mise install`.
 
 ## Comments in shipped config and task files
 
@@ -150,8 +150,10 @@ so its
 comments are read by every person who opens it. Keep only the comments something
 reads:
 
-- `#MISE` and `#USAGE` lines, and shebangs
-- `# shellcheck` directives
+- `#MISE` / `# MISE` and `#USAGE` / `# USAGE` lines, and shebangs
+- a uv task's PEP 723 `# /// script` block, from its opening line to its
+  closing `# ///`
+- `# shellcheck` directives and `# noqa` markers
 - `MARKED POSITION` lines, plus whatever a filler needs beside one to find its
   value
 - grype ignore-reason comments, one unit with their entry
