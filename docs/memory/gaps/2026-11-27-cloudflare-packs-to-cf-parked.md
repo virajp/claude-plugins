@@ -1,6 +1,22 @@
 GAP 2026-11-27 ★4 | plugin:stackgen | move the Cloudflare packs from Wrangler
-to `cf` | parked: planned next as its own folder that requires
-2026-11-26-stackgen-bootstrap-tasks
+to `cf` | parked: plan when `cf` 1.0.0 is GA, as its own folder that
+requires 2026-11-26-stackgen-bootstrap-tasks
+
+**Condition** The user parked this on 2026-11-27 until `cf` 1.0.0 is GA. On
+that day npm's `latest` was `1.0.0-rc.6` (2026-11-25), the first RC was
+`1.0.0-rc.0` (2026-11-16), and Cloudflare released a new RC about every day.
+Before the next plan, examine these again:
+
+- the GA checklist, <https://github.com/cloudflare/cf/issues/810>: three
+  release blockers (#801, #802, #803) and the sign-off item "Update docs for
+  supported framework and static-site paths, Astro version support";
+- <https://github.com/cloudflare/cf/issues/587> (open): `cf deploy --dry-run`
+  fails on a migrated Astro 7 Worker project;
+- the Astro statement of the docs, and the tests of `cf` at the GA tag: at
+  `cf@1.0.0-rc.6`, only Astro 5 builds in the tests
+  (`packages/cli/src/__tests__/commands/build/index.test.ts`);
+- the facts below: the builders that are missing, the rollback command, and
+  what `cf migrate` leaves to be written by hand.
 
 **Source** The change-plan interview of
 `docs/plans/2026-11-26-stackgen-bootstrap-tasks/`, decision D35. bootstrap's

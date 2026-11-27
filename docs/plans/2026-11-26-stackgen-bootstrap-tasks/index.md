@@ -92,8 +92,9 @@ open questions in one block. Its edits stay uncommitted in the worktree.
 
 ## Parked
 
-- The move of the Cloudflare packs from Wrangler to `cf` — planned next as its
-  own folder that requires this one (D35).
+- The move of the Cloudflare packs from Wrangler to `cf` — parked until `cf`
+  1.0.0 is GA, then planned as its own folder that requires this one (D35;
+  `docs/memory/gaps/2026-11-27-cloudflare-packs-to-cf-parked.md`).
 
 ## Launch
 
