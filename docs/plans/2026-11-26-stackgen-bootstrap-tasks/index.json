@@ -10,7 +10,7 @@
   "execution": "teams",
   "status": {
     "state": "RUNNING",
-    "detail": "RUNNING since 2026-11-27T22:39 in .worktrees/all-2026-11-27-2236"
+    "detail": "RUNNING — green, held to land at the end of the all run on all-2026-11-27-2236"
   },
   "consent": {
     "merge": true,
