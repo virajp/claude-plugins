@@ -145,7 +145,8 @@ from memory; it records what it asked for in the lockfile's `bootstrap:` block,
 so removal runs the matching `remove` and `stackgen-sync` diffs that block. A
 pack names its Claude plugin in a `## Claude plugins` section of its
 `conventions.md`. A repo bootstrap's shaped test refuses gets nothing landed — a
-pack's tasks source bootstrap's `_scripts/helpers` — and the remedy named is
+pack's tasks are Python uv scripts that import bootstrap's
+`_scripts/helpers.py` — and the remedy named is
 `/vwf:setup reshape`. A value only the machine can answer (`XCODE_VERSION`,
 `SIMULATOR_*`, `COMPILE_SDK`, `EMULATOR_IMAGE`) is found by bootstrap's tasks,
 or set by the repo in the `[env]` of
@@ -258,8 +259,12 @@ owning**, removed only by subtraction of the keys the lockfile recorded:
   Since 2026-10-23 the tier is an **allowlist**, and rule 11 refuses any other
   path: a project task at the
   `.config/mise/tasks/p/_project/` marked position (the three Cloudflare deploy
-  packs' `deploy` overlay, `framework/astro`'s `icons` and `framework/html`'s
-  byte-identical copy of it — rule 13 forbids a payload citing a sibling pack),
+  packs' `deploy.py` overlay, `framework/astro`'s `icons.py` and
+  `framework/html`'s byte-identical copy of it — rule 13 forbids a payload
+  citing a sibling pack; each is a Python uv script `<name>.py` in bootstrap's
+  M51 form, importing `helpers.py`, and an old extension-less task of the same
+  name is removed as replaced only when `stackgen.lock` records it — an
+  unrecorded one is a named conflict),
   a root file on the landable allowlist (the deploy packs' `wrangler.jsonc`),
   and `config/_<name>/`, pack-private and never copied. A test task
   (`.config/mise/tasks/test/`) is refused as a bootstrap tool's part — the
@@ -318,9 +323,11 @@ recommends `/vwf:setup`.
   component's conventions, in this composition's template". Never swap one path
   for another.
 - **The whole `config/` payload tier is checked before it ships.**
-  `p:plugins:check` rule 11 runs over each pack's `config/` tier: the exec bit
-  and a known shebang on every task file (mise reports a 644 task
-  as an *unknown* one rather than a permission error) and on every `hooks/*.sh`;
+  `p:plugins:check` rule 11 runs over each pack's `config/` tier: the exec bit,
+  the `<name>.py` name and the `#!/usr/bin/env -S uv run --script` shebang on
+  every task file — a Python uv script in bootstrap's M51 form (mise reports a
+  644 task as an *unknown* one rather than a permission error) — and the exec
+  bit and a known shebang on every `hooks/*.sh`;
   the **landable** tier of the root allowlist over the tier's top level — the
   vwf-owned tier never reaches the checker, so a pack shipping `CLAUDE.md` there
   is refused like any unallowlisted path — with a CI workflow refused inside
@@ -335,8 +342,8 @@ recommends `/vwf:setup`.
   full is the `plugin-authoring` skill's `references/checks.md`. Rule 15 is
   retired, with the exclusion lists it compared. Rule 17 fails any `mise use`
   the
-  plugin ships unless the line forbids it: a tool is entered into the owning
-  `conf.d/<folder>/` file first, then installed with `mise install`.
+  plugin ships unless the line forbids it: a tool is added with
+  `bootstrap add tool <tool>`, never by a hand edit of the config.
 - **Never format a payload file with this repo's dprint config.** The tier is
   excluded from it on purpose, and so are the template trees: the target repo
   formats these files with the *shipped* config, which omits settings this repo

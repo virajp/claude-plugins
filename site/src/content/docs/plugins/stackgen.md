@@ -123,7 +123,8 @@ splitting the menu into with- and without-React pairs.
 pack's conventions carry a fixed `## Head` section — the title and description a
 page states about itself, the canonical address, the OpenGraph and card set, the
 favicon links and the manifest, `robots.txt` and the sitemap — and it lands one
-file: a `p/_project/icons` task that rasterizes the whole favicon set from the
+file: a `p/_project/icons.py` task, a Python uv script, that rasterizes the
+whole favicon set from the
 product's single source mark, installing its tools one-off rather than adding a
 dependency. That is the first `config/` payload the Astro pack has ever shipped.
 What it renders comes from the blueprint: each screen's Metadata block, the
@@ -714,8 +715,9 @@ than something that rides the landing:
   `.config/bootstrap/` itself, and it records what it asked for in the
   lockfile's `bootstrap:` block. A pack names its own Claude plugin in a
   `## Claude plugins` section of its `conventions.md`. A repo that has not
-  adopted bootstrap gets nothing landed: the tasks a pack ships source
-  bootstrap's helpers. Everything else goes under `.config/`: a `config/` tree
+  adopted bootstrap gets nothing landed: the tasks a pack ships are Python uv
+  scripts that import bootstrap's `helpers.py`. Everything else goes under
+  `.config/`: a `config/` tree
   landing a root path outside the **landable** tier of the fixed allowlist is a
   pack authoring error the materializer refuses — that list also names the root
   file vwf itself writes, `CLAUDE.md`, which may sit at a shaped root and which
@@ -925,7 +927,11 @@ its name: a `config/` tree's `.config/mise/tasks/p/_project/` directory is
 itself
 a marked position, and the materializer renames it to the pinned project's
 slugged id as it copies, which is how all three Cloudflare deploy packs land
-`p:<id>:deploy`. That id is slugged by a rule the adapter's `assets/ids.md`
+`p:<id>:deploy`. Each task there is a Python uv script, `<name>.py`
+(`deploy.py`, `icons.py`). An older extension-less task of the same name, which
+mise would run first, is removed as replaced only when `stackgen.lock` records
+it; one the lockfile does not record is reported as a conflict by name. That id
+is slugged by a rule the adapter's `assets/ids.md`
 owns:
 lowercased, runs outside the slug alphabet collapsed to a single `-`, ends
 trimmed. The reason is measured rather than stylistic — the task runner reads a

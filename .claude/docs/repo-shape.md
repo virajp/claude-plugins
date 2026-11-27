@@ -169,10 +169,13 @@ one: a stack's own gates are bootstrap's.
   `skills/init/assets/<name>/` trees against init's own allowlist
   (`CONTRIBUTING.md`, `CONTRIBUTING-one-branch.md`, `SECURITY.md`,
   `licenses/`):
-  exec bit *and* a known shebang on every file under
-  `config/.config/mise/tasks/**`, because mise reports a 644 task as an
-  *unknown* one rather than a permission error and execs the file directly; the
-  same two on every `hooks/*.sh`, which the host execs from a bare path in
+  exec bit, the `<name>.py` name *and* the `#!/usr/bin/env -S uv run --script`
+  shebang on every file under `config/.config/mise/tasks/**` — a Python uv
+  script in bootstrap's M51 form, importing `helpers.py`, since a bash task
+  could source a shell library bootstrap retired — because mise reports a 644
+  task as an *unknown* one rather than a permission error and execs the file
+  directly; the exec bit and a known shebang on every `hooks/*.sh`, which the
+  host execs from a bare path in
   `settings.json`; the tier's root against the **landable** tier of the root
   allowlist, whose two allowed **directories** are `.config/` and `.github/` and
   whose sibling tier — the root file vwf writes, `CLAUDE.md` — no pack may land;
@@ -233,7 +236,8 @@ one: a stack's own gates are bootstrap's.
   under `scripts/` starts `#!/usr/bin/env node` and is executable, and no file
   calls `require(` or imports anything but a `node:` built-in or a relative
   module); and **no bare `mise use`** anywhere a plugin ships, dot directories
-  included, unless the line forbids it. The retired-vocabulary, plugin-path and
+  included, unless the line forbids it — a tool is added with
+  `bootstrap add tool <tool>`. The retired-vocabulary, plugin-path and
   bare-`mise use` rules are the three that report a **line number**, being the
   three that fire on a sentence rather than a file.
 

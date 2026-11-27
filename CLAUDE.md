@@ -190,7 +190,9 @@ inventory and check in that order — freshness before validity:
   retired and the rest keeping their numbers: the manifest (rule 1 refuses a
   version with a 13 or 17 component), the three design role skills and each
   design tool's references (rule 8), a pack's `config/` payload — under
-  `.config/` only `p/_project/` tasks, no test task, no `templates/` folder, no
+  `.config/` only `p/_project/` tasks, each a Python uv script `<name>.py`,
+  mode 755, with the `#!/usr/bin/env -S uv run --script` shebang, no test task,
+  no `templates/` folder, no
   `config/` in a tool entry, no retired key in a `pack.yaml` or `tool.yaml`
   (`tool-config:`, `machine_env:`, `values:`, `conditional:`,
   `user_mcp_servers:`, `languages:`, `lsp_servers:`, `package_manager:`,
@@ -201,7 +203,8 @@ inventory and check in that order — freshness before validity:
   platform (rule 14), a skill's node script shebanged, executable and
   dependency-free (rule
   16),
-  and no bare `mise use` anywhere a plugin ships (rule 17). Each rule in full is
+  and no bare `mise use` anywhere a plugin ships — a tool is added with
+  `bootstrap add tool` (rule 17). Each rule in full is
   the [`plugin-authoring`][auth] skill's `references/checks.md`.
 - **`p:plugins:npm-normalize-test`** — table-tests the `npm-normalize.sh` hook
   through the system sed, for both package managers.
