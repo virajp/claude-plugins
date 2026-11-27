@@ -1,0 +1,689 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "stackgen names only what a bootstrap-synced repo has: pack tasks in Python, task names fixed, generated skills name no task",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-27 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format --all"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint --all"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit",
+      "mise x -- pnpm exec vitest run",
+      "mise x -- pnpm exec tsc --noEmit -p scripts"
+    ],
+    "keeps": [
+      {
+        "id": "K1",
+        "check": "Each of the five new Python pack tasks runs in this bootstrap-synced repo: copy it to .config/mise/tasks/p/vwfcheck/<name>.py, run `mise x -- mise run p:vwfcheck:<name> -- --help`, and run each deploy task with `-- --dry-run`, `npm_config_offline=true` and no Cloudflare credentials in the environment; record the hash of each lock file under ~/.config/mise before; then delete .config/mise/tasks/p/vwfcheck/",
+        "pass": "Every --help prints the task's usage and exits 0; each deploy --dry-run prints its 'Validating the deploy (--dry-run)' subheader and then calls wrangler (any wrangler exit code after that passes), never a Python traceback or an import error before that step; after the scratch folder is removed, git status --porcelain is empty and no lock file under ~/.config/mise changed. If anything changed, K1 fails and the run reports it, reverting nothing"
+      }
+    ]
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "stackgen",
+      "level": "PATCH",
+      "reason": "Fixes shipped defects: the deploy tasks of three packs fail in a repo synced after bootstrap M48, and several skills name tasks or a package that do not exist"
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "The manual's stackgen page is reconciled with the fixed behaviour; text only"
+    },
+    {
+      "id": "vwf",
+      "level": "NONE",
+      "reason": "No file of plugins/vwf changes"
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "No file of installer/ changes"
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Pack tasks as Python uv scripts, and checker rules 11 and 17",
+      "wave": 1,
+      "file": "01-tasks-and-checker.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/stacks/cloud-service/workers-ssr/config/.config/mise/tasks/p/_project/deploy",
+        "plugins/stackgen/stacks/cloud-service/workers-ssr/config/.config/mise/tasks/p/_project/deploy.py",
+        "plugins/stackgen/stacks/cloud-service/workers-static-assets/config/.config/mise/tasks/p/_project/deploy",
+        "plugins/stackgen/stacks/cloud-service/workers-static-assets/config/.config/mise/tasks/p/_project/deploy.py",
+        "plugins/stackgen/stacks/cloud-service/containers/config/.config/mise/tasks/p/_project/deploy",
+        "plugins/stackgen/stacks/cloud-service/containers/config/.config/mise/tasks/p/_project/deploy.py",
+        "plugins/stackgen/stacks/framework/astro/config/.config/mise/tasks/p/_project/icons",
+        "plugins/stackgen/stacks/framework/astro/config/.config/mise/tasks/p/_project/icons.py",
+        "plugins/stackgen/stacks/framework/html/config/.config/mise/tasks/p/_project/icons",
+        "plugins/stackgen/stacks/framework/html/config/.config/mise/tasks/p/_project/icons.py",
+        "plugins/stackgen/stacks/cloud-service/workers-ssr/conventions.md",
+        "plugins/stackgen/stacks/cloud-service/workers-ssr/skills/workers-ssr/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/workers-ssr/skills/workers-ssr/references/pipeline.md",
+        "plugins/stackgen/stacks/cloud-service/workers-static-assets/conventions.md",
+        "plugins/stackgen/stacks/cloud-service/workers-static-assets/skills/workers-static-assets/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/workers-static-assets/skills/workers-static-assets/references/pipeline.md",
+        "plugins/stackgen/stacks/cloud-service/containers/conventions.md",
+        "plugins/stackgen/stacks/cloud-service/containers/skills/cloudflare-containers/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/containers/skills/cloudflare-containers/references/pipeline.md",
+        "plugins/stackgen/stacks/framework/astro/conventions.md",
+        "plugins/stackgen/stacks/framework/astro/skills/astro/SKILL.md",
+        "plugins/stackgen/stacks/framework/astro/skills/astro/references/head.md",
+        "plugins/stackgen/stacks/framework/html/conventions.md",
+        "plugins/stackgen/stacks/framework/html/skills/html/SKILL.md",
+        "plugins/stackgen/stacks/framework/html/skills/html/references/head.md",
+        "scripts/src/check.ts",
+        "scripts/src/check.test.ts",
+        ".claude/skills/plugin-authoring/references/checks.md",
+        ".claude/skills/plugin-authoring/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "Tool-knowledge and pack text: wrong task names, the linter tool, the ruff seam, pins, the mise-skill line",
+      "wave": 1,
+      "file": "02-tool-text.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/tools/eslint/tool.yaml",
+        "plugins/stackgen/tools/eslint/conventions.md",
+        "plugins/stackgen/tools/eslint/skills/eslint/SKILL.md",
+        "plugins/stackgen/tools/ruff/conventions.md",
+        "plugins/stackgen/stacks/ci-system/github-actions/skills/github-actions/SKILL.md",
+        "plugins/stackgen/stacks/ci-system/github-actions/skills/github-actions/references/toolchain.md",
+        "plugins/stackgen/stacks/app-framework/flutter/skills/flutter/SKILL.md",
+        "plugins/stackgen/stacks/app-framework/flutter/skills/flutter/references/testing.md",
+        "plugins/stackgen/stacks/app-framework/flutter/skills/flutter/references/integrations/firebase-auth.md",
+        "plugins/stackgen/stacks/app-framework/flutter/skills/flutter-ios/SKILL.md",
+        "plugins/stackgen/stacks/capability-provider/fnox/skills/fnox/SKILL.md",
+        "plugins/stackgen/stacks/capability-provider/fnox/skills/fnox/references/local-stack.md",
+        "plugins/stackgen/stacks/capability-provider/fnox/skills/fnox/references/access-shape.md",
+        "plugins/stackgen/stacks/capability-provider/fnox/skills/fnox/references/contract-satisfaction.md",
+        "plugins/stackgen/design-tools/claude-code/skills/design-session/SKILL.md",
+        "plugins/stackgen/stacks/app-framework/compose/skills/compose/SKILL.md",
+        "plugins/stackgen/stacks/app-framework/compose/skills/ux-gate/SKILL.md",
+        "plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/SKILL.md",
+        "plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/cloud-run/skills/gcp-cloud-run/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/email-service/skills/cloudflare-email/SKILL.md",
+        "plugins/stackgen/stacks/cloud-service/gke/skills/gcp-gke/SKILL.md",
+        "plugins/stackgen/stacks/framework/android/skills/android/SKILL.md",
+        "plugins/stackgen/stacks/framework/effect/skills/effect/SKILL.md",
+        "plugins/stackgen/tools/detekt/skills/detekt/SKILL.md",
+        "plugins/stackgen/tools/gradle/skills/gradle/SKILL.md",
+        "plugins/stackgen/tools/kotlin/skills/kotlin/SKILL.md",
+        "plugins/stackgen/tools/ktlint/skills/ktlint/SKILL.md",
+        "plugins/stackgen/tools/swift-format/skills/swift-format/SKILL.md",
+        "plugins/stackgen/tools/swift/skills/swift/SKILL.md",
+        "plugins/stackgen/tools/swiftlint/skills/swiftlint/SKILL.md",
+        "plugins/stackgen/tools/swiftpm/skills/swiftpm/SKILL.md",
+        "plugins/stackgen/tools/typescript/skills/typescript/SKILL.md",
+        "plugins/stackgen/tools/typescript/skills/ux-gate/SKILL.md",
+        "plugins/stackgen/stacks/inventory.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Generator and materializer docs: generated skills name no task, helpers.py, the NN- part form",
+      "wave": 1,
+      "file": "03-generator-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/skills/stackgen-stack-template/SKILL.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/generator.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md",
+        "plugins/stackgen/skills/stackgen-stack-template/references/bootstrap-handoff.md",
+        "plugins/stackgen/assets/output-tree.md",
+        "plugins/stackgen/assets/pack-format.md",
+        "plugins/stackgen/assets/kinds.md",
+        "plugins/stackgen/skills/stackgen-sync/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Review: the Python pack tasks, the checker change and the wave-1 text",
+      "wave": 2,
+      "file": "04-review.md",
+      "kind": "review",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0,
+      "range": {
+        "from": "",
+        "to": ""
+      }
+    },
+    {
+      "id": "U5",
+      "title": "Docs",
+      "wave": 3,
+      "file": "05-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "readme.md",
+        "CLAUDE.md",
+        ".claude/skills/stackgen-plugin/SKILL.md",
+        ".claude/docs/repo-shape.md",
+        "site/src/content/docs/plugins/stackgen.md",
+        "docs/memory/decisions/2026-11-26-mise-skill-is-bootstraps.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2",
+        "U3",
+        "U4"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U6",
+      "title": "Gates",
+      "wave": 4,
+      "file": "06-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/stackgen/stacks/**/pack.yaml",
+        "plugins/stackgen/tools/**/tool.yaml",
+        "plugins/stackgen/design-tools/**/tool.yaml",
+        "plugins/stackgen/stacks/bundles/*.md",
+        "plugins/stackgen/stacks/inventory.md"
+      ],
+      "depends_on": [
+        "U5"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W4",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "plugins/stackgen/stacks/inventory.md",
+      "why": "generated from the stacks and tools trees; regenerating mid-wave races. U2 regenerates it in wave 1 with its eslint tools: edit (D36), so the plugins-inventory pre-commit hook passes on its commit; U6 regenerates it in wave 4; the two waves never overlap",
+      "owner": "U6"
+    },
+    {
+      "id": "S2",
+      "file": "plugins/stackgen/stacks/**/pack.yaml, plugins/stackgen/tools/**/tool.yaml, plugins/stackgen/design-tools/**/tool.yaml, plugins/stackgen/stacks/bundles/*.md",
+      "why": "U6 owns the version: field of each pack.yaml and tool.yaml and the bundle pins, which move together once every text change has landed; U2 owns the tools: field of plugins/stackgen/tools/eslint/tool.yaml (D26), and waves 1 and 4 never overlap",
+      "owner": "U6"
+    },
+    {
+      "id": "S3",
+      "file": "readme.md, CLAUDE.md, .claude/skills/stackgen-plugin/SKILL.md, site/src/content/docs/plugins/stackgen.md",
+      "why": "human-facing docs that several units' changes falsify",
+      "owner": "U5"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "bootstrap M48/M51: every repo-owned task must be a Python uv script `<name>.py` that imports `helpers.py`. stackgen ships five bash pack tasks; the three deploy tasks source the retired `_scripts/helpers`. How are they fixed?",
+      "ruling": "All five to Python: rewrite all five as `deploy.py` / `icons.py` uv scripts in bootstrap's form (standard library only, imports `helpers`, mode 755), with the same names, flags and exit codes, and the same output plus M51's success line (D22). Rule 11 accepts the uv shebang and the `.py` name. Matches M51 in full.",
+      "rejected": "Rewrite only the three deploy tasks that break (the icons tasks stay bash, against M51); keep all five in bash and inline the print functions (against M51)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Some pack skills name tasks: flutter `tests:unit` and `stack:up`, fnox `dev`, `e2e:local` and `stack:up`. Which names change?",
+      "ruling": "Revised D2: `dev` and `stack:up` stay — vwf's harness contract (plugins/vwf/assets/harness.md, the `dev` and `local_stack` rows) owns them, the repo writes them, and each capability has exactly one task name; the text cites the harness contract as their source. `e2e:local` becomes `test:e2e` (the `e2e_local` capability is the `test:e2e` port) and `tests:unit` becomes `test`. The flutter firebase-auth text calls `stack:up` the harness `local_stack` task, not 'the pack's' task.",
+      "rejected": "The first D2 (name no task for `dev` and `stack:up`, point to `mise tasks`) — it disagrees with vwf's harness contract; packs ship the stack tasks; delete the passages",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "What does the generator tell a generated skill about task names?",
+      "ruling": "none, bootstrap will generate mise skill detailing the tasks it has installed — a generated skill names no task. The generator and materializer docs name `_scripts/helpers.py` and, where they state the per-tool part form, `code:lint:NN-<name>` / `code:format:NN-<name>`.",
+      "rejected": "A generated skill names the aggregate tasks and reads part names with `mise tasks`; the generator writes exact part names read from `bootstrap describe --json` (stale after a renumber)",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D3b",
+      "decision": "Does the D3 rule also cover the skills stackgen ships?",
+      "ruling": "Generated only: the rule covers generated skills. Shipped skills keep their task names, because a person reviews them and the checker can guard them. The plan fixes only the wrong names (D2) and the stale helpers text. Shipped skills say once that the repo's mise skill lists every task.",
+      "rejected": "Shipped skills also drop the bootstrap task names and point to the mise skill (a large edit across about 20 entries)",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "Who delivers the bootstrap handoff for the mise skill?",
+      "ruling": "The planner session writes the prompt file in bootstrap's docs/prompts/ before the run; no unit owns it. The units cite the skill as `.claude/skills/mise/` and assume nothing more about it.",
+      "rejected": "A unit writes it into the second repo (which /vwf:execute does not land); parked only",
+      "units": [
+        "U1",
+        "U2",
+        "U5"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "What does rule 11 enforce on a pack task?",
+      "ruling": "Python uv only: each file under a pack's `p/_project/` must be `<name>.py`, mode 755, with the `#!/usr/bin/env -S uv run --script` shebang. A bash task, which could source a retired library, then fails the check. One rule, and no list of library names to keep in step.",
+      "rejected": "Keep any known shebang and refuse a task that names a retired library (a name list to keep in step with bootstrap)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Where does the line 'the repo's mise skill lists every task' go?",
+      "ruling": "Each landed SKILL.md: one line in each SKILL.md that lands in a repo's .claude/skills/ (packs, tool knowledge, design tools) and names a task — 'The repo's mise skill, .claude/skills/mise/, lists every task.' An agent reads it where it uses the task. 'Names a task' is read per skill folder: the SKILL.md or one of its references names a mise task; the line goes in that folder's SKILL.md. stackgen's own skills do not get it (D31).",
+      "rejected": "Only the generator, materializer and stackgen-plugin docs say it",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D7",
+      "decision": "How is the eslint tool entry fixed?",
+      "ruling": "Its `tools:` list adds bootstrap's `linter` tool; the direct call becomes `mise x -- linter` (bootstrap's rule: prefix each tool call with `mise x --`); every `@askviraj/linter` name becomes `@virajp.dev/linter`, the package bootstrap's linter tool pins.",
+      "rejected": "None — the repo admits one answer (stated, not asked)",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D8",
+      "decision": "How is the ruff seam text fixed?",
+      "ruling": "dprint's ruff plugin formats Python, through `code:format:05-dprint`; ruff only lints, through `code:lint:70-ruff`. The entry ships no task.",
+      "rejected": "None — stated, not asked",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D9",
+      "decision": "How is the github-actions pin text fixed?",
+      "ruling": "bootstrap owns the pins; a tool is added with `bootstrap add tool`; the pack text states no pin policy of its own (no 'every pin is exact', no 'a pin is written into the repo's config').",
+      "rejected": "None — stated, not asked",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "Rule 17's fix message",
+      "ruling": "The message of a bare `mise use` finding points to `bootstrap add tool <tool>`, not to a hand edit of the config; the function's doc comment and checks.md say the same.",
+      "rejected": "None — stated, not asked",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "Where does the checker change land?",
+      "ruling": "Rule 11 and the five tasks land in one unit and one commit: the current rule accepts only the bash, node and python3 shebangs and the pre-commit hook runs it, so tasks committed first fail the old rule and a rule committed first fails the bash tasks.",
+      "rejected": "The checker in a later wave",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "Does the plan need a review unit?",
+      "ruling": "Yes: the plan lands runnable code — five Python tasks that land in user repos and scripts/src/check.ts. U4 covers U1, U2 and U3; its range holds U1's code, so it runs both halves.",
+      "rejected": "No review (the wave review alone)",
+      "units": [
+        "U4"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "Execution mode",
+      "ruling": "teams, by the user's choice: wave 1 holds three edit units.",
+      "rejected": "solo (recommended by the planner, since the three units share no file)",
+      "units": []
+    },
+    {
+      "id": "D14",
+      "decision": "Reversal of docs/memory/decisions/2026-10-01-repo-local-mise-skill-returns.md, which gave the repo-local mise skill to stackgen (tool-config)",
+      "ruling": "Confirmed by the user: bootstrap owns and generates the repo-local mise skill now; stackgen lands none. U5 writes docs/memory/decisions/2026-11-26-mise-skill-is-bootstraps.md recording it.",
+      "rejected": "stackgen lands the mise skill again; no mise skill at all",
+      "units": [
+        "U5"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "What does a diff not prove about the Python tasks?",
+      "ruling": "Keep K1: run each task as a scratch copy under `p:vwfcheck:*` in this synced repo with `--help`, and each deploy with `--dry-run` and no credentials; delete the copies. U1's Verification runs it.",
+      "rejected": "`python3 -m py_compile` only (proves neither the helpers import nor the flag parsing)",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Which pack and tool versions move?",
+      "ruling": "Every pack.yaml and tool.yaml whose directory holds a file this branch changed gets a PATCH bump (the version component skips 13 and 17); every bundle pin to a bumped pack moves with it; inventory.md is regenerated with `mise run p:plugins:inventory`.",
+      "rejected": "Bump only the five packs whose tasks change",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "Flutter unit-test command (D2 gap): bootstrap flutter tool ships no test part, so mise run test runs no flutter test",
+      "ruling": "Park a bootstrap item: flutter references/testing.md names `mise x -- flutter test --coverage` directly in place of `mise run tests:unit` (this amends D2 for tests:unit only). The bootstrap prompt of D4 gets one more item: the flutter tool ships a `test` part.",
+      "rejected": "`mise run test` per D2 — it runs no flutter test today; flutter test directly with no bootstrap item — the gap in bootstrap stays unrecorded",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "Deploy tasks: how to find the p:<id>:build task (rulings review gap 2)",
+      "ruling": "Query `mise tasks`: keep the bash have_task check — run `mise tasks`, read the first column after the header, match `p:<id>:build` exactly — so a TOML-defined build task still runs. Matches D1 (same behaviour).",
+      "rejected": "helpers.has_own_task — finds only an executable file task, so a TOML build task would be skipped",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "design-tools version bump (rulings review gap 3)",
+      "ruling": "Yes: U6 also bumps the tool.yaml of each design-tools/<name>/ with a changed file (design-tools/claude-code, which U2 changes for D6), as D16 says.",
+      "rejected": "No bump for a one-line pointer — breaks D16",
+      "units": [
+        "U6"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Owner of .claude/skills/plugin-authoring/SKILL.md:140-144, the old rule 17 fix (rulings review gap 4)",
+      "ruling": "U1 owns it and changes the text to D10 in the same commit as rule 17.",
+      "rejected": "U5 docs — splits one rule change across two commits",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "K1 mise flag separator (rulings review gap 1)",
+      "ruling": "K1 passes task flags after `--`: `mise x -- mise run p:vwfcheck:<name> -- --help` and `-- --dry-run`.",
+      "rejected": "No separator — mise rejects the flags",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "Task form: M51 against the bash output (round 2, gap 1)",
+      "ruling": "M51 form: each tool call goes through helpers.tool(...), helpers.print_success is the last line, and the mise lines are # MISE comments (bootstrap docs/sync/migrate.md M51, about :1581-1610). Names, flags and exit codes stay; the output gains the one success line.",
+      "rejected": "Same output as the bash with plain subprocess.run and no success line — differs from M51",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D23",
+      "decision": "An old landed bash task beside the new .py (round 2, gap 2)",
+      "ruling": "stackgen-sync and the materializer, when they land <name>.py, show an old landed task file with the same name and no extension under .config/mise/tasks/p/<id>/ as replaced, and remove it with plain rm on the user's consent: mise runs the file without the extension first, so it hides the .py.",
+      "rejected": "Leave it to the user's own M51 pass — the old file keeps hiding the new task and still sources the retired helpers",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D24",
+      "decision": "The deploy comment about have_task (round 2, gap 3)",
+      "ruling": "Reword it: the check queries mise tasks because helpers.has_own_task finds only a file task, and a build task that a repo defines in TOML must still run (D18).",
+      "rejected": "Drop it — a later editor can then switch to has_own_task and break D18",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D25",
+      "decision": "flutter testing.md, the report clause (round 2, gap 4)",
+      "ruling": "The sentence says flutter test --coverage writes coverage/lcov.info, and points to the lcov/genhtml section below it for the per-file table and the HTML report.",
+      "rejected": "Drop the clause — loses the pointer to the report",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D26",
+      "decision": "tools/eslint/tool.yaml, two owners (round 2, gap 5)",
+      "ruling": "Split by field: shared_files S2 names U6 for the version: field only; U2 owns the tools: field of plugins/stackgen/tools/eslint/tool.yaml. Waves 1 and 4 never overlap.",
+      "rejected": "U2 bumps the eslint version too — the bump rule then lives in two units",
+      "units": [
+        "U2",
+        "U6"
+      ]
+    },
+    {
+      "id": "D27",
+      "decision": "Rule 11 fixtures in check.test.ts (round 2, gap 6)",
+      "ruling": "U1 updates every fixture that writes a pack task, the ones near :471-472 and :496-501 included: a fixture meant to pass writes a .py uv task; a fixture that tests another fault keeps its file and its exact expected findings add the new rule 11 finding.",
+      "rejected": "Only the cited lines — the other exact toEqual tests then fail at the gate",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D28",
+      "decision": "fnox access-shape.md:14 citation (round 2, gap 7)",
+      "ruling": "access-shape.md:14 keeps mise run dev and gets only the note that dev is the harness contract's task; e2e:local becomes test:e2e only in the files that hold it.",
+      "rejected": "Drop the citation — the dev note then misses one file that names dev",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D29",
+      "decision": "Who supplies the deploy task (user question, 2026-11-27)",
+      "ruling": "The user confirmed that every mise task is Python. bootstrap ships no deploy task (checked at bootstrap c8e88a1: the cloudflare, gcloud and pulumi tools ship no deploy task; p:<id>:deploy is a port that plugins run and bootstrap describe reports, docs/design/cli.md:1053-1056; a [release.<project>.<kind>] table with type task can call it, docs/design/bootstrap-config.md:484-508). The packs keep supplying deploy, as Python (D1).",
+      "rejected": "Drop the pack deploy tasks as bootstrap's — bootstrap ships none",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D30",
+      "decision": "Which D1 wording the unit files quote (rulings review round 3, gap 1)",
+      "ruling": "The U1 and U3 unit files quote D1 as index.json has it: the same names, flags and exit codes, and the same output plus M51's success line (D22).",
+      "rejected": "Revert D1 and D22 to no success line",
+      "units": [
+        "U1",
+        "U3"
+      ]
+    },
+    {
+      "id": "D31",
+      "decision": "Do stackgen's own skills get the D6 line (round 3, gap 2)",
+      "ruling": "No: the D6 line goes only into skills that land in a repo's .claude/skills/ (packs, tool knowledge, design tools). stackgen's own skills (stackgen-sync, stackgen-stack-template, stackgen-stack-menu) run from the plugin and do not get it. D6 says landed.",
+      "rejected": "All of them — stack-menu would need an owner",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D32",
+      "decision": "Rule 11 assertion count (round 3, gap 3)",
+      "ruling": "Rule 11 has seven assertions after U1 Edit 4. U1 sets the count in scripts/src/check.ts (about :434) and in .claude/skills/plugin-authoring/references/checks.md (about :113).",
+      "rejected": "Fold the .py check into the shebang assertion and keep six",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D33",
+      "decision": "K1 side effects (round 3, gap 4)",
+      "ruling": "K1 leaves no change: after it removes the scratch folder, git status --porcelain is empty and no lock file under ~/.config/mise changed (hash compared before and after). If anything changed, K1 fails and the run reports it; it reverts nothing itself.",
+      "rejected": "Isolate HOME and MISE_DATA_DIR — installs python and uv again",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D34",
+      "decision": "K1 deploy dry-run pass rule (round 3, gap 5)",
+      "ruling": "Pass: the task prints its Validating the deploy (--dry-run) subheader and then calls wrangler; any wrangler exit code after that passes. K1 sets npm_config_offline=true so npx downloads nothing. Fail: a Python traceback or an import error before that step.",
+      "rejected": "A wrangler stub first on PATH that exits 0",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D35",
+      "decision": "Scope: the move from Wrangler to Cloudflare's cf CLI",
+      "ruling": "The move from Wrangler to cf (npm:cf, which bootstrap's cloudflare tool installs and whose doc says it replaces wrangler) is a second plan folder that requires this one. In this plan the ported deploy tasks keep wrangler deploy exactly as today. Astro projects stay on Wrangler in the second plan too: the cf docs say Astro 6 and later does not build with cf during the beta (https://developers.cloudflare.com/cf/get-started/first-worker/).",
+      "rejected": "One folder for both pieces; cf deploy only (cf does not read wrangler.jsonc); wait for cf GA",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D36",
+      "decision": "inventory.md after the eslint tools: edit (rulings review round 4, gap 1)",
+      "ruling": "U2 runs `mise x -- mise run p:plugins:inventory` and commits plugins/stackgen/stacks/inventory.md with its edit, so the plugins-inventory pre-commit hook passes; U6 regenerates it again in wave 4. S1 notes both.",
+      "rejected": "Move the eslint tools: edit to U6",
+      "units": [
+        "U2",
+        "U6"
+      ]
+    },
+    {
+      "id": "D37",
+      "decision": "How K1 checks the icons tasks (rulings review round 4, gap 2)",
+      "ruling": "Each icons.py gets a `# USAGE` header with no flags (M51 form), so `mise run p:<id>:icons -- --help` prints the usage and exits 0 without running the task; K1 checks the icons tasks with --help only.",
+      "rejected": "Run icons with no mark and expect its no-mark message",
+      "units": [
+        "U1"
+      ]
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
