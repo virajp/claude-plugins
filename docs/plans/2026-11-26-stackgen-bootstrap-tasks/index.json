@@ -676,6 +676,24 @@
       "units": [
         "U2"
       ]
+    },
+    {
+      "id": "D40",
+      "decision": "Q3: After the U4 closing pass, the Xcode-pin paragraph of swiftui references/build-and-signing.md (from line 29) is only partly refolded. Fix it or accept it?",
+      "ruling": "Fix — U2 makes one targeted refold of lines 29-36, followed by a narrow check (recommended)",
+      "rejected": "Accept as is",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D41",
+      "decision": "Q4: The swiftui ux-gate check line uses `mise x uv@latest python@3.14 -- uv run ...`; the repo rule says `mise x -- <tool>`, never `mise x <tool>@... --`. Keep the named-tools form?",
+      "ruling": "Replace it with `mise x -- uv run ...`, plus one sentence that the gate needs uv (bootstrap python tool) and reports `rendered: n/a` when uv is missing (recommended)",
+      "rejected": "Keep `mise x uv@latest python@3.14 --`",
+      "units": [
+        "U2"
+      ]
     }
   ],
   "stages": {

@@ -65,12 +65,12 @@ interactively.
    repo root, run a Python 3.14 snippet that puts
    `.config/mise/tasks/_scripts` on `sys.path`, imports `helpers` and then
    `xcode`, and prints what `xcode.require_xcode("ux-gate")` returns — a
-   dict of the four names that have a value. The swift tool pins neither uv
-   nor Python, so the line names both, as bootstrap runs a task file, and
-   writes no bytecode under `_scripts/`:
+   dict of the four names that have a value, and writes no bytecode under
+   `_scripts/`. The gate needs uv (bootstrap's python tool) and reports
+   `rendered: n/a` when uv is missing:
 
    ```sh
-   PYTHONDONTWRITEBYTECODE=1 mise x uv@latest python@3.14 -- uv run --quiet --no-project --python 3.14 python -B -c 'import sys; sys.path.insert(0, ".config/mise/tasks/_scripts"); import helpers, xcode; print(xcode.require_xcode("ux-gate"))'
+   PYTHONDONTWRITEBYTECODE=1 mise x -- uv run --quiet --no-project --python 3.14 python -B -c 'import sys; sys.path.insert(0, ".config/mise/tasks/_scripts"); import helpers, xcode; print(xcode.require_xcode("ux-gate"))'
    ```
 
    It exits non-zero with its message on failure. When it fails — no Xcode
