@@ -286,19 +286,23 @@ describe("hook scripts", () => {
 
 describe("the pack config tier", () => {
   const pack = "stacks/toolchain-manager/mise/config";
-  const task = `${pack}/.config/mise/tasks/p/_project/build`;
+  const task = `${pack}/.config/mise/tasks/p/_project/build.py`;
+  const uv = "#!/usr/bin/env -S uv run --script\n";
+  const notUv = (file: string) => `mise task file does not start with #!/usr/bin/env -S uv run --script: ${file}`;
+  const notPy = (file: string) =>
+    `mise task file is not named <name>.py — a task is a Python uv script in bootstrap's M51 form: ${file}`;
 
   it("accepts an executable task, and ignores the rest of the pack", () => {
-    const deploy = `${pack}/.config/mise/tasks/p/_project/deploy`;
+    const deploy = `${pack}/.config/mise/tasks/p/_project/deploy.py`;
     // The `config/` tier mirrors the repo root, so a pack ships plenty there
     // that is not a task and has no reason to be executable.
     const root = tree({
       alpha: {
         files: {
-          [task]: "#!/usr/bin/env bash\n",
+          [task]: uv,
           [`${pack}/wrangler.jsonc`]: "{}\n",
           [`${pack}/_licenses/MIT.txt`]: "MIT\n",
-          [deploy]: "#!/usr/bin/env bash\n",
+          [deploy]: uv,
           // The forge directory, which a tool discovers only from the root.
           [`${pack}/.github/ISSUE_TEMPLATE/bug.md`]: "---\nname: Bug\n---\n",
         },
@@ -316,6 +320,7 @@ describe("the pack config tier", () => {
     });
     expect(messages(check(root))).toEqual([
       `mise task file is not executable: ${task}`,
+      notUv(task),
     ]);
   });
 
@@ -374,9 +379,35 @@ describe("the pack config tier", () => {
         executable: [task],
       },
     });
-    expect(messages(check(root))).toEqual([
-      expect.stringContaining(`does not start with one of`),
-    ]);
+    expect(messages(check(root))).toEqual([notUv(task)]);
+  });
+
+  it("flags a task with a bash shebang", () => {
+    // A bash task could source a shell library bootstrap retired (M48), and
+    // it would fail only at its first run in the target repo.
+    const root = tree({
+      alpha: {
+        files: { [task]: "#!/usr/bin/env bash\n" },
+        executable: [task],
+      },
+    });
+    expect(messages(check(root))).toEqual([notUv(task)]);
+  });
+
+  it("flags a task file not named <name>.py", () => {
+    // bootstrap's M51 form: every own task is a `.py` uv script.
+    const bare = `${pack}/.config/mise/tasks/p/_project/deploy`;
+    const root = tree({
+      alpha: { files: { [bare]: uv }, executable: [bare] },
+    });
+    expect(messages(check(root))).toEqual([notPy(bare)]);
+  });
+
+  it("accepts a .py uv task", () => {
+    const root = tree({
+      alpha: { files: { [task]: uv }, executable: [task] },
+    });
+    expect(messages(check(root))).toEqual([]);
   });
 
   it("flags a file the config/ tier root does not allowlist", () => {
@@ -479,13 +510,16 @@ describe("the pack config tier", () => {
         executable: files.filter((f) => f.includes("tasks")).map((f) => `${pack}/${f}`),
       },
     });
+    const tasks = files.filter((f) => f.includes("tasks")).map((f) => `${pack}/${f}`);
     expect(messages(check(root)).sort()).toEqual(
-      files
-        .map((f) =>
+      [
+        ...files.map((f) =>
           `pack config/ tier ships ${f} — under .config/ a pack ships only `
           + ".config/mise/tasks/p/_project/; the toolchain "
           + `is bootstrap's: ${pack}/${f}`
-        )
+        ),
+        ...tasks.flatMap((t) => [notPy(t), notUv(t)]),
+      ]
         .sort(),
     );
   });
@@ -498,6 +532,8 @@ describe("the pack config tier", () => {
       alpha: { files: { [test]: "#!/usr/bin/env bash\n" }, executable: [test] },
     });
     expect(messages(check(root))).toEqual([
+      notPy(test),
+      notUv(test),
       "pack config/ tier ships .config/mise/tasks/test/golden — a test task is "
       + `a part of bootstrap's tool, never a pack's: ${test}`,
     ]);
@@ -637,7 +673,7 @@ describe("the pack config tier", () => {
     ]);
   });
 
-  // A tool is entered into the config, then installed with `mise install`;
+  // A tool is added with `bootstrap add tool <tool>`, never by a hand edit;
   // only a mention that forbids `mise use` — "never"/"bare" before it, or
   // "is never"/"— never" after it — passes, whatever else the line says.
   it("flags every mise use invocation and accepts a mention forbidding it", () => {
@@ -672,11 +708,11 @@ describe("the pack config tier", () => {
     expect(check(root)).toEqual([
       ...runs.map((_, index) => ({
         scope: `alpha:skills/a/SKILL.md:${index + 6}`,
-        message: expect.stringContaining("runs a bare `mise use`"),
+        message: "runs a bare `mise use` — add the tool with `bootstrap add tool <tool>`",
       })),
       {
         scope: "alpha:skills/a/assets/x/.config/setup.txt:1",
-        message: expect.stringContaining("runs a bare `mise use`"),
+        message: "runs a bare `mise use` — add the tool with `bootstrap add tool <tool>`",
       },
     ]);
   });
@@ -1072,6 +1108,8 @@ describe("landed citations", () => {
       [task],
     ));
     expect(messages(check(root))).toEqual([
+      `mise task file is not named <name>.py — a task is a Python uv script in bootstrap's M51 form: ${task}`,
+      `mise task file does not start with #!/usr/bin/env -S uv run --script: ${task}`,
       expect.stringContaining("expands to nothing"),
       expect.stringContaining("expands to nothing"),
       expect.stringContaining("expands to nothing"),

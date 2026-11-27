@@ -5,7 +5,7 @@ kind: app-framework
 tools:
 - flutter
 packs:
-- app-framework/flutter@2.0.0
+- app-framework/flutter@2.0.1
 platforms:
 - mobile
 - tablet

@@ -1,5 +1,5 @@
 name: ktlint
 summary: The Kotlin layout gate — ktlint through mise, formatting and checking
   every .kt and .kts file against one set of defaults kept under .config/.
-version: 1.0.0
+version: 1.0.1
 tools: [ kotlin, android ]

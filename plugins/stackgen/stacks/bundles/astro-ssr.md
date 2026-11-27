@@ -6,9 +6,9 @@ tools:
 - node
 - pnpm
 packs:
-- framework/astro@1.0.0
+- framework/astro@1.0.1
 - framework/react@generated
-- framework/effect@1.0.0
+- framework/effect@1.0.1
 platforms:
 - site
 ---

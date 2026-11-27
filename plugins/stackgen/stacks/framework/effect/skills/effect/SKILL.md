@@ -20,6 +20,8 @@ paths:
 Layers on the TypeScript baseline — read that skill's standards first; this
 adds to them and replaces none of them.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **Effect requires TypeScript with `strict` enabled and never applies to
 JavaScript.**
 

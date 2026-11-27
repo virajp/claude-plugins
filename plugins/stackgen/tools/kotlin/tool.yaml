@@ -3,5 +3,5 @@ summary: The Kotlin/JVM library baseline — standards and public-API design,
   null
   safety and the error model, coroutines and flows, kotlin.test on JUnit 5, the
   JDK toolchain, build and run, config and observability wiring.
-version: 1.0.0
+version: 1.0.1
 tools: [ kotlin, android ]

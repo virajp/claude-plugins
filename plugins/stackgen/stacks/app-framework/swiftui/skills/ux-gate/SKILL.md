@@ -12,6 +12,8 @@ model: sonnet
 vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a SwiftUI project.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 > **`invocation` must stay `both`.** A `user` skill is removed from the model's
 > context entirely and cannot be invoked by vwf — and the failure is silent, not
 > an error. vwf would see no gate and report `rendered: n/a` forever.
@@ -58,10 +60,20 @@ interactively.
    the task, this gate and CI render on the same simulator. A repo pins them,
    and `XCODE_VERSION`, in the `[env]` of
    `.config/mise/conf.d/zz-repo/mise.<env>.toml`; a value it does not pin is
-   found by the repo's `_scripts/xcode` library. Read all four as the golden
-   task does: from the repo root, in a shell under `mise x --`, source the
-   repo's task helpers and then `_scripts/xcode`, run
-   `require_xcode ux-gate`, and print the four. When it fails — no Xcode
+   found by `require_xcode` in the repo's `_scripts/xcode.py`, the Python
+   module bootstrap ships. Read all four as the golden task does: from the
+   repo root, run a Python 3.14 snippet that puts
+   `.config/mise/tasks/_scripts` on `sys.path`, imports `helpers` and then
+   `xcode`, and prints what `xcode.require_xcode("ux-gate")` returns — a
+   dict of the four names that have a value, and writes no bytecode under
+   `_scripts/`. The gate needs uv (bootstrap's python tool) and reports
+   `rendered: n/a` when uv is missing:
+
+   ```sh
+   PYTHONDONTWRITEBYTECODE=1 mise x -- uv run --quiet --no-project --python 3.14 python -B -c 'import sys; sys.path.insert(0, ".config/mise/tasks/_scripts"); import helpers, xcode; print(xcode.require_xcode("ux-gate"))'
+   ```
+
+   It exits non-zero with its message on failure. When it fails — no Xcode
    selected, an `XCODE_VERSION` the selected Xcode is not, no iPhone
    simulator available — report `rendered: n/a` with its message and run
    nothing: the golden task refuses there, and the audit below calls

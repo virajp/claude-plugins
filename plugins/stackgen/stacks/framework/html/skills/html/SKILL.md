@@ -26,6 +26,8 @@ complete HTML document written by hand, Vite serves the tree in development
 and builds it, and a stylesheet plugin goes in `vite.config.ts` because that
 is the only build config there is.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **Every page is listed in the Vite config's `input`, or it is not built.**
 That is the one fact a person editing this tree gets wrong first, and
 [Pages and navigation](references/pages-and-navigation.md) is where it is

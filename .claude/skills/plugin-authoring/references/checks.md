@@ -110,26 +110,27 @@ much smaller than the one it replaced: whole families of assertion became
    two-directions-cover-each-other-on-a-rename idiom rule 7 uses for agent
    cross-references.
 10. **The technology-free vwf guard.** Below.
-11. **A pack's `config/` payload tier is materializable as-is.** Six assertions,
-    every one of them about a file whose failure mode in the *target* repo is
-    silence rather than an error. The landed-tree assertions also run over each
-    of
-    `/vwf:init`'s asset trees (`skills/init/assets/<name>/`), whose root check
-    is
-    skipped since init picks one licence out of several there; every file in one
-    must instead sit on init's own allowlist (`CONTRIBUTING.md`,
-    `CONTRIBUTING-one-branch.md`, `SECURITY.md`, `licenses/`):
+11. **A pack's `config/` payload tier is materializable as-is.** Seven
+    assertions, every one of them about a file whose failure mode in the
+    *target* repo is silence rather than an error. The landed-tree assertions
+    also run over each of `/vwf:init`'s asset trees
+    (`skills/init/assets/<name>/`), whose root check is skipped since init picks
+    one licence out of several there; every file in one must instead sit on
+    init's own allowlist (`CONTRIBUTING.md`, `CONTRIBUTING-one-branch.md`,
+    `SECURITY.md`, `licenses/`):
     - a **task file lands executable**. `config/.config/mise/tasks/**` is a
       *file-based* task library — mise runs each file directly — so one landing
       644 fails as an **unknown task** rather than as a permission error, which
       reads as a pack that never shipped it;
-    - and **starts with a known shebang** (`bash`, `node`, `python3`). mise
-      execs the file, so a missing or exotic one is an exec-format error at the
-      first `mise run`, and the shell gate picks its dialect from the same line;
+    - and is a **Python uv script** in bootstrap's M51 form: named
+      `<name>.py`, starting with `#!/usr/bin/env -S uv run --script`. mise
+      execs the file, so a missing shebang is an exec-format error at the
+      first `mise run`, and a bash task could source a shell library bootstrap
+      retired — one form, and no list of library names to keep in step;
     - a **hook script** lands executable and shebanged too (`bash` or `sh`, a
-      narrower set because a hook is wired into `settings.json` as a bare path).
-      Same reasoning from the other end: a hook fault is the quietest fault
-      there is, since nothing downstream ever reports that it did not run;
+      set of its own because a hook is wired into `settings.json` as a bare
+      path). Same reasoning from the other end: a hook fault is the quietest
+      fault there is, since nothing downstream ever reports that it did not run;
     - the tier's **root stays allowlisted**, and inside the one forge directory
       the list admits, a **workflow file is refused**. Read the list itself off
       `PACK_CONFIG_ROOT_FILES` and `PACK_CONFIG_ROOT_DIRS` in
@@ -260,15 +261,14 @@ much smaller than the one it replaced: whole families of assertion became
     `node_modules`, so a dependency fails at the first run, on the user's
     machine, never here.
 17. **No bare `mise use` anywhere a plugin ships.** It writes a pin nobody
-    reviewed into the top-level `.config/mise.toml`, which holds settings only,
-    so a tool is entered into the `conf.d/` folder that owns it and then
-    installed with
-    `mise install`. The walk is the whole plugin root, dot segments included,
-    since a landed tree sits under one, and it reports a **line number**. Every
-    `mise use` is a finding, whatever follows it, unless the line forbids it:
-    `never` or `bare` directly before it, or `is never` / `— never` directly
-    after. So the doctrine that states the ban passes, and a mixed line that
-    also runs it does not.
+    reviewed into the top-level `.config/mise.toml`, which holds settings only.
+    A tool is added through bootstrap, with `bootstrap add tool <tool>`, never
+    by a hand edit of the config; the finding says so. The walk is the whole
+    plugin root, dot segments included, since a landed tree sits under one, and
+    it reports a **line number**. Every `mise use` is a finding, whatever
+    follows it, unless the line forbids it: `never` or `bare` directly before
+    it, or `is never` / `— never` directly after. So the doctrine that states
+    the ban passes, and a mixed line that also runs it does not.
 
 ### The plugin-root trap (rules 6 and 13)
 

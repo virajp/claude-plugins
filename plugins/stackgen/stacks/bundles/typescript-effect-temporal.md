@@ -6,7 +6,7 @@ tools:
 - node
 - pnpm
 packs:
-- framework/effect@1.0.0
+- framework/effect@1.0.1
 - framework/temporal@generated
 platforms:
 - worker

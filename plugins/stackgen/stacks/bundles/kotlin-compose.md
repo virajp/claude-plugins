@@ -6,8 +6,8 @@ tools:
 - kotlin
 - android
 packs:
-- framework/android@2.0.0
-- app-framework/compose@1.0.0
+- framework/android@2.0.1
+- app-framework/compose@1.0.1
 platforms:
 - mobile
 - tablet

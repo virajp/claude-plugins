@@ -1,10 +1,10 @@
 # The Bootstrap Handoff
 
 The toolchain of a repo — its tool pins, its generic tasks
-(`setup:deps:<tool>`, `code:format:<tool>`, `code:lint:<tool>`), its test
-tasks, its gate configs, its pre-commit hooks and its LSP servers — is not
-stackgen's. It is [bootstrap](https://github.com/virajp/bootstrap)'s: the
-repo selects tools through the `bootstrap` CLI, and bootstrap's sync writes
+(`setup:deps:NN-<name>`, `code:format:NN-<name>`, `code:lint:NN-<name>`),
+its test tasks, its gate configs, its pre-commit hooks and its LSP servers —
+is not stackgen's. It is [bootstrap](https://github.com/virajp/bootstrap)'s:
+the repo selects tools through the `bootstrap` CLI, and bootstrap's sync writes
 their files. A pack names no bootstrap tool; a bundle names the ones it
 needs under `tools:`. This file is how stackgen asks bootstrap for them.
 Every call below follows the contract in
@@ -32,8 +32,8 @@ pack names one.
    run its shaped test, `bootstrap config get repo.format --json`; on
    code 2, show the envelope's `errors` messages as bootstrap gives them
    and stop the whole landing set before anything is written: the tasks a
-   pack lands source bootstrap's `_scripts/helpers`, and they fail
-   without it.
+   pack lands are Python uv scripts that import bootstrap's
+   `_scripts/helpers.py`, and they fail without it.
 
 2. **Read the catalog:**
 

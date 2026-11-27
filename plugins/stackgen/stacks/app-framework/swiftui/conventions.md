@@ -45,21 +45,22 @@ capabilities and signing do. Prefer asking a person to make those changes in
 Xcode; edit `project.pbxproj` by hand only when that is not possible, and
 build afterwards to prove the file still loads.
 
-**Xcode is found, not installed.** mise cannot install Xcode. The repo's
-`_scripts/xcode` library, which bootstrap ships, finds the selected Xcode and
-exports `XCODE_VERSION` (`27.0`, say — the version `xcodebuild -version`
-prints). A repo that must build with one Xcode sets `XCODE_VERSION` in the
-`[env]` of `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every
-task that builds checks the selected Xcode against that value first, and stops
-with the fix when they differ. The same check refuses a Mac with only the
-Command Line Tools, where `xcodebuild -version` fails, and `/vwf:doctor` probes
-the same command rather than looking `xcodebuild` up on `PATH`, where that
-Mac's stub is found.
+**Xcode is found, not installed.** mise cannot install Xcode. `require_xcode`
+in the repo's `_scripts/xcode.py`, the Python module bootstrap ships, finds
+the selected Xcode and sets `XCODE_VERSION` (`27.0`, say — the version
+`xcodebuild -version` prints). A repo that must build with one Xcode sets
+`XCODE_VERSION` in the `[env]` of
+`.config/mise/conf.d/zz-repo/mise.<env>.toml` and commits it. Every task that
+builds checks the selected Xcode against that value first, and stops with
+the fix when they differ. The same check refuses a Mac with only the Command
+Line Tools, where `xcodebuild -version` fails, and `/vwf:doctor` probes the
+same command rather than looking `xcodebuild` up on `PATH`, where that Mac's
+stub is found.
 
-**The golden simulator comes from the same library.** `SIMULATOR_PLATFORM`
+**The golden simulator comes from the same module.** `SIMULATOR_PLATFORM`
 (`iOS` by default), `SIMULATOR_DEVICE` (`iPhone 17`, say) and `SIMULATOR_OS`
 (`27.0`) name the one simulator every golden is recorded and compared on.
-Without a value, `_scripts/xcode` picks the newest iOS runtime and its
+Without a value, `require_xcode` picks the newest iOS runtime and its
 highest-numbered plain iPhone. That choice moves when a machine installs a
 newer runtime, so a repo that commits goldens sets all three in the same
 `zz-repo` `[env]`. A Mac-only app sets `macOS`, which needs no device or OS.
@@ -97,13 +98,13 @@ this pack lands none. The rest of the toolchain is bootstrap's too:
 `Package.resolved`, `mise run setup --upgrade` moves them to the newest
 versions their ranges allow, and `mise run code` runs the format and lint
 gates. `test:golden` locates the project as the single `*.xcodeproj` at the
-repo root, refusing none or several, and checks Xcode first through the
-`_scripts/xcode` library. Package checkouts and build products go under
-`.build/`.
+repo root, refusing none or several, and checks Xcode first through
+`require_xcode` in `_scripts/xcode.py`. Package checkouts and build
+products go under `.build/`.
 
 | Task | Does |
 | --- | --- |
-| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in mise's environment, or found by `_scripts/xcode` when the repo sets none, which `--platform`, `--device` and `--os` override for one run (`--platform` never alone); `Package.resolved` is never moved; compares against the recorded goldens, `--record` records afresh and then compares, on those values only — refused with an override that moves the destination; the result bundle is `.build/golden.xcresult` |
+| `test:golden` | `xcodebuild test` on the project, limited to the snapshot target — `SnapshotTests`, or `--target` — in the project's scheme, or `--scheme`; the `-destination` is built from `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in mise's environment, or found by `require_xcode` in `_scripts/xcode.py` when the repo sets none, which `--platform`, `--device` and `--os` override for one run (`--platform` never alone); `Package.resolved` is never moved; compares against the recorded goldens, `--record` records afresh and then compares, on those values only — refused with an override that moves the destination; the result bundle is `.build/golden.xcresult` |
 
 **The goldens are swift-snapshot-testing image snapshots** of SwiftUI views,
 in the `SnapshotTests` target, recorded into the repo beside the tests that
@@ -117,10 +118,10 @@ to the reviewer.
 **Why the task is built the way it is.** The task file carries one-line
 warnings only; the reasoning is here.
 
-- `_scripts/xcode` checks `xcodebuild -version`, never a `PATH` lookup: every
-  Mac carries a `/usr/bin/xcodebuild` stub that exists and fails with only the
-  Command Line Tools selected. `find_xcodeproj` is called
-  as a command substitution, so its messages go to stderr.
+- `require_xcode` in `_scripts/xcode.py` checks `xcodebuild -version`, never a
+  `PATH` lookup: every Mac carries a `/usr/bin/xcodebuild` stub that exists and
+  fails with only the Command Line Tools selected. `find_xcodeproj`, in the
+  same module, writes its messages to stderr.
 - `test:golden` passes the record mode through xcodebuild, which strips the
   `TEST_RUNNER_` prefix and hands the rest to the tests. The library fails
   every assertion it records, so the recording run's exit status is ignored and

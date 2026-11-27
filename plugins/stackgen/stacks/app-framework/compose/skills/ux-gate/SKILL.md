@@ -14,6 +14,8 @@ vwf's UX-review stage knows a UI slice must have its screens rendered and
 scanned. It does not know how. This skill is the how, for a Jetpack Compose
 project.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 > **`invocation` must stay `both`.** A `user` skill is removed from the model's
 > context entirely and cannot be invoked by vwf — and the failure is silent, not
 > an error. vwf would see no gate and report `rendered: n/a` forever.

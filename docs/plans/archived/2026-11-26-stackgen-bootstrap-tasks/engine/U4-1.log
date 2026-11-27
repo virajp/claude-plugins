@@ -1,0 +1,27 @@
+== /code-review (high) fbc1c8c1..87c519ad ==
+[
+  {"file": "plugins/stackgen/skills/stackgen-stack-template/references/materializer.md", "line": 87, "severity": "important",
+   "summary": "The new 'an old task without the extension is replaced' rule deletes any extension-less p/<id>/<name> file beside a pack's .py, whether or not stackgen landed it. That breaks the tier's 'merges, never owns' rule and the lockfile boundary. stackgen-sync makes the same exception explicitly (SKILL.md:229 and :287). Fix: apply the replace-and-rm only when the lockfile records the extension-less path; otherwise treat it as the existing conflict case (halt and name the path).",
+   "failure_scenario": "A repo wrote its own bash .config/mise/tasks/p/web/deploy before pinning workers-static-assets, with no lockfile row. The plan shows it as 'replaced' by deploy.py; the user accepts and the hand-written task is deleted."},
+  {"file": "plugins/stackgen/stacks/app-framework/swiftui/skills/ux-gate/SKILL.md", "line": 64, "severity": "pre_existing",
+   "summary": "Step 2 still says to source the repo's task helpers and then _scripts/xcode and run require_xcode ux-gate; bootstrap M48 removed those shell libraries (helpers.py, xcode.py). swiftui/conventions.md (:49, :62, :101, :106, :120), build-and-signing.md:26 and testing.md:94 describe _scripts/xcode too.",
+   "failure_scenario": "In a repo synced past M48 the gate sources missing files, require_xcode is undefined, and the ux-gate always reports rendered: n/a."},
+  {"file": "plugins/stackgen/stacks/cloud-service/workers-static-assets/config/.config/mise/tasks/p/_project/deploy.py", "line": 37, "severity": "pre_existing",
+   "summary": "The deploy tasks read only usage_* env vars and ignore sys.argv; per D38 'mise run p:<id>:deploy -- --help' passes --help to the script, which then runs a real deploy. Same in workers-ssr and containers deploy.py. Fix: refuse unexpected argv before step 1.",
+   "failure_scenario": "With Cloudflare credentials exported, 'mise run p:web:deploy -- --help' builds and runs wrangler deploy to production."},
+  {"file": "plugins/stackgen/stacks/cloud-service/workers-static-assets/config/.config/mise/tasks/p/_project/deploy.py", "line": 26, "severity": "pre_existing",
+   "summary": "have_task parses plain 'mise tasks' output and ignores a non-zero exit; a hide=true build task or a mise tasks failure reads as 'no build task' and the deploy goes ahead with a warning. Same in all three deploy.py. Fix: use 'mise tasks info <name>' (or --hidden) and check the return code.",
+   "failure_scenario": "The build is skipped and wrangler deploy uploads stale or missing assets."},
+  {"file": "plugins/stackgen/skills/stackgen-sync/SKILL.md", "line": 147, "severity": "nit",
+   "summary": "Removing a replaced extension-less task never drops its lockfile row; when the replaced file is removed, drop its entries: row in the same lockfile write and record the .py path.",
+   "failure_scenario": "stackgen.lock still records the deleted file until a later sync."},
+  {"file": "plugins/stackgen/tools/eslint/skills/eslint/SKILL.md", "line": 70, "severity": "nit",
+   "summary": "The new comment says mise x -- runs 'the binary mise pinned, never a node_modules/.bin copy', but mise x applies env._.path, and bootstrap's node config puts node_modules/.bin there (.config/mise/conf.d/node/mise.dev.toml:6-7). Confirm ordering or drop the claim.",
+   "failure_scenario": "A dependency installs a linter bin into node_modules/.bin, and mise x -- linter runs it."},
+  {"file": "site/src/content/docs/plugins/stackgen.md", "line": 126, "severity": "nit",
+   "summary": "Docs still describe the old task form: site p/_project/icons, .claude/skills/stackgen-plugin/SKILL.md:148 (_scripts/helpers), :322 and .claude/docs/repo-shape.md:172 ('a known shebang'). U5 owns them.",
+   "failure_scenario": "Docs ship stale against the CLAUDE.md docs-ship-with-the-change rule."}
+]
+
+== /security-review fbc1c8c1..87c519ad ==
+No vulnerabilities found. Deploy tasks: every subprocess call passes an argument list, no shell=True; the project id comes from the task's own directory name inside one argv element; the credential check prints only variable names, never values; the pnpm exec wrangler / npx wrangler fallback is unchanged from bash. Icon tasks: SVG paths reach node through env vars; one node script puts the tempfile path inside a JS string literal as the bash version did (TMPDIR control out of scope); output only to fixed names under <project>/public; no eval or deserialization. check.ts rules 11 and 17: stricter linting only. Markdown prose excluded.

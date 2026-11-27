@@ -54,15 +54,15 @@ once.
    - **The repo config files a component declares** — each component's
      `config/` tree (`${CLAUDE_PLUGIN_ROOT}/assets/pack-format.md`)
      mirrors the **repo root**, not `.claude/`, so
-     `config/.config/mise/tasks/p/_project/deploy` lands at
-     `<repo>/.config/mise/tasks/p/<id>/deploy`, exactly the way `skills/`
+     `config/.config/mise/tasks/p/_project/deploy.py` lands at
+     `<repo>/.config/mise/tasks/p/<id>/deploy.py`, exactly the way `skills/`
      mirrors `.claude/skills/`. It is a **target, not a fifth artifact
      kind**: copied verbatim like every other pack file, but a **tier-2**
      one, so it is presented at its own consent line in step 3 rather
      than riding the file plan
      (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`).
 
-     **Four copy rules inside that tree**, all of them assertions rather
+     **Five copy rules inside that tree**, all of them assertions rather
      than preferences:
 
      - **`config/_<name>/` is never copied.** A leading underscore marks a
@@ -75,7 +75,7 @@ once.
        **marked position**, not a task group: rename the directory to the
        registry id of the project this stack is being pinned for,
        slugified per `${CLAUDE_PLUGIN_ROOT}/assets/ids.md` — so
-       `p/_project/deploy` lands as `p/<id>/deploy` and runs as
+       `p/_project/deploy.py` lands as `p/<id>/deploy.py` and runs as
        `p:<id>:deploy`. This is **not** the skip rule above: that one is
        about a `config/_<name>/` entry at the top of the tier, and this
        directory is nested well below it, so it is copied. An unrenamed
@@ -84,6 +84,25 @@ once.
        keeps `_scripts/` out of `mise tasks` — so forgetting the rename
        costs the task and never publishes one under a name nobody meant.
        The lockfile records the **landed** path, not the authored one.
+     - **An old task without the extension is replaced.** A pack's
+       `p/_project/` task is a Python uv script `<name>.py`. Where it
+       lands `p/<id>/<name>.py` and `.config/mise/tasks/p/<id>/<name>`
+       — the same name, no extension — already exists **and the
+       lockfile records it**, stackgen's old landing, classify it by hash
+       first: a copy that matches its landing hash is shown in the plan
+       as **replaced** by the `.py`; one that does not is shown as
+       **repo edited, replaced by the `.py`**, on a consent line of its
+       own that names the edit. Before removing it, resolve its real
+       path: no path segment below the repo root may be a symlink, and
+       the file's real path must sit under the real path of the repo's
+       `.config/mise/tasks/p/` — else it is refused and reported. On the
+       user's consent remove it with plain `rm`, drop its lockfile row
+       and record the `.py` path in its place. Leaving it is not
+       harmless: mise runs the file without the extension first, so it
+       hides the `.py` and the old task keeps running under the name. An
+       extension-less file the lockfile does **not** record is the
+       repo's own and takes the collision check below: a conflict, named
+       and listed in the plan, and nothing is written to that path.
      - **A root path must be on the allowlist.** Only `readme.md`,
        `eslint.config.mjs`, `wrangler.jsonc` and the directory `.github/`
        — never `.github/workflows/` — may land at the repo root
@@ -107,8 +126,8 @@ once.
        Cloudflare deploy packs ship one (`workers-static-assets`,
        `workers-ssr`, `containers`).
      - **A pack ships no pre-commit hook fragment and no gate.** A
-       toolchain gate, its config and its `code:lint:<tool>` or
-       `code:format:<tool>` task are bootstrap's, asked for below.
+       toolchain gate, its config and its `code:lint:NN-<name>` or
+       `code:format:NN-<name>` task are bootstrap's, asked for below.
    - **The bootstrap instructions** — the tools the bundle names that the
      repo does not select yet, each checked against
      `bootstrap catalog --json` and sent with `bootstrap add tool`.
@@ -150,7 +169,7 @@ once.
    it pins. The two cloud types joined the order
    on 2026-09-05, when the first cloud pack shipped a `config/` tree
    (`${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`). Get it backwards and
-   nothing errors: a generic `p/<id>/deploy` shadowing the deploy
+   nothing errors: a generic `p/<id>/deploy.py` shadowing the deploy
    target's would simply ship the wrong way, in a repo where the task
    still exists and still exits zero.
 
@@ -194,11 +213,14 @@ once.
    but is **not** in the target repo's own
    `.claude/stackgen/lock.yaml` — never a sibling repo's — is that
    repo's own file: a
-   conflict listed for the user to resolve, never a write. Anything not in
-   the lockfile is not stackgen's to touch.
+   conflict listed for the user to resolve, never a write. So is an
+   extension-less `.config/mise/tasks/p/<id>/<name>` the lockfile does
+   not record, beside a `p/<id>/<name>.py` target that does not exist
+   yet: mise would run it in place of the `.py`. Anything not in the
+   lockfile is not stackgen's to touch.
 
    **A `config/` target is checked by exactly this rule, not a softer
-   one.** A repo that already has `.config/mise/tasks/p/<id>/deploy` and no
+   one.** A repo that already has `.config/mise/tasks/p/<id>/deploy.py` and no
    lockfile entry for it wrote that file itself; it is a conflict, and
    overwriting it would be the one silent write this whole design exists
    to prevent. The tier **merges, never owns**: only paths this repo's

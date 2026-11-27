@@ -1,0 +1,6 @@
+== /code-review (high) 14c54ab1..c281fc8b ==
+Commit c281fc8b only re-wraps one paragraph of plugins/stackgen/stacks/app-framework/swiftui/conventions.md (lines 54-58); no words changed, every line 77 characters or fewer.
+1. [pre_existing] plugins/stackgen/stacks/app-framework/swiftui/conventions.md:56 — the paragraph says /vwf:doctor probes `xcodebuild -version` rather than looking xcodebuild up on PATH; doctor has no such check (plugins/vwf/skills/doctor/references/stack-checks.md ~166-171 only looks a tool up in the mise pins or on PATH). Same claim in plugins/stackgen/stacks/bundles/swift-swiftui.md:76-77. Fix: add the check to doctor, or remove the claim from both files.
+
+== /security-review 14c54ab1..c281fc8b ==
+NO FINDINGS. The only change re-wraps five lines of swiftui conventions.md about the Xcode version check, with the same words and no code changes.

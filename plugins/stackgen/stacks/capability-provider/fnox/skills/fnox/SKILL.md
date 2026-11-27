@@ -22,6 +22,8 @@ The development environment's secrets manager. This skill carries the
 judgment; the CLI and provider surface belong to Context7 at use time when
 Context7 is installed, else to the official documentation.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 Read the reference that matches what you are doing — one, not all of them.
 
 | Doing | Read |

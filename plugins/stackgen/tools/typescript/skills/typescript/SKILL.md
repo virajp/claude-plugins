@@ -25,6 +25,8 @@ paths:
 The single entry point for TypeScript work. Each topic is its own reference —
 **read the one matching your task**, not all of them. Start from the baseline.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **JavaScript gets the same baseline minus the type-level rules.** A `.js` file
 you are asked to edit follows the naming, import-ordering and module-hygiene
 standards as written, and is a migration candidate.

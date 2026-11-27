@@ -338,15 +338,12 @@ const PACK_HOOKS = "hooks";
 const PACK_HOOK_METADATA = /\.(?:ya?ml|json|md)$/;
 
 /**
- * The interpreters a shipped task may name. Closed on purpose: a task library
- * whose files disagree on language is one nobody can lint, and the shell gate
- * (`p:plugins:shellcheck`) picks its argument list by the same rule.
+ * The one shebang a shipped task may carry: bootstrap's M51 form, a Python uv
+ * script that imports bootstrap's `helpers.py`. One form on purpose: a bash
+ * task could source a shell library bootstrap retired, and it would fail only
+ * at its first run in the target repo.
  */
-const PACK_TASK_SHEBANGS = new Set([
-  "#!/usr/bin/env bash",
-  "#!/usr/bin/env node",
-  "#!/usr/bin/env python3",
-]);
+const PACK_TASK_SHEBANG = "#!/usr/bin/env -S uv run --script";
 
 /**
  * The interpreters a shipped hook script may name.
@@ -431,14 +428,16 @@ const PACK_CONFIG_FORGE_FENCE = join(".github", "workflows");
  * What a stackgen pack ships to run in a target repo must be materializable
  * as-is.
  *
- * Six assertions, all of them about a file whose failure mode in the target
+ * Seven assertions, all of them about a file whose failure mode in the target
  * repo is silence rather than an error:
  *
  * - a task file lands **executable** — `.config/mise/tasks/**` is a *file-based*
  *   task library, so one arriving 644 fails as an unknown task rather than as a
  *   permission error, which reads as a pack that never shipped it;
- * - and starts with a **known shebang** — mise executes the file directly, so a
- *   missing or exotic one is an exec-format error at the first `mise run`;
+ * - and is a **Python uv script** in bootstrap's M51 form — named `<name>.py`
+ *   and starting with {@link PACK_TASK_SHEBANG}: mise executes the file
+ *   directly, so a missing shebang is an exec-format error at the first
+ *   `mise run`, and a bash task could source a shell library bootstrap retired;
  * - a **hook script** lands executable and shebanged too, on the same reasoning
  *   from the other end: the materializer copies `hooks/*.sh` to
  *   `.claude/hooks/` and wires it into settings.json as a bare path, so the
@@ -479,11 +478,17 @@ function checkPackConfigTier(plugin: Plugin): Finding[] {
       if ((statSync(absolute).mode & 0o111) === 0) {
         at(`mise task file is not executable: ${path(absolute)}`);
       }
-      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
-      if (!PACK_TASK_SHEBANGS.has(shebang)) {
+      if (!absolute.endsWith(".py")) {
         at(
-          `mise task file does not start with one of `
-            + `${[...PACK_TASK_SHEBANGS].join(", ")}: ${path(absolute)}`,
+          `mise task file is not named <name>.py — a task is a Python uv `
+            + `script in bootstrap's M51 form: ${path(absolute)}`,
+        );
+      }
+      const shebang = readText(absolute).split("\n", 1)[0] ?? "";
+      if (shebang !== PACK_TASK_SHEBANG) {
+        at(
+          `mise task file does not start with ${PACK_TASK_SHEBANG}: `
+            + `${path(absolute)}`,
         );
       }
     }
@@ -2020,9 +2025,9 @@ function runsMiseUse(line: string, at: number): boolean {
 /**
  * No bare `mise use` anywhere a plugin ships.
  *
- * It writes a pin nobody reviewed into the settings-only `.config/mise.toml`,
- * so a tool is entered into the `conf.d/` folder that owns it first and
- * installed with `mise install`. The walk is the whole plugin root, dot
+ * It writes a pin nobody reviewed into the settings-only `.config/mise.toml`.
+ * A tool is added through bootstrap, with `bootstrap add tool <tool>`, never by
+ * a hand edit of the config. The walk is the whole plugin root, dot
  * segments included, since a landed tree sits under one.
  */
 function checkBareMiseUse(plugin: Plugin): Finding[] {
@@ -2034,8 +2039,8 @@ function checkBareMiseUse(plugin: Plugin): Finding[] {
       if (runs) {
         findings.push({
           scope: `${plugin.dir}:${relative(plugin.root, absolute)}:${index + 1}`,
-          message: "runs a bare `mise use` — enter the tool into the config, "
-            + "then run `mise install`",
+          message: "runs a bare `mise use` — add the tool with "
+            + "`bootstrap add tool <tool>`",
         });
       }
     }

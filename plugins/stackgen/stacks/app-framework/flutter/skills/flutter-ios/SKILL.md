@@ -20,6 +20,8 @@ paths:
 The single entry point for the iOS-native side of a Flutter app. Each topic
 lives in its own reference file — **read the one matching your task**.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 | Doing | Read |
 | --- | --- |
 | The always-on Swift baseline: `MethodChannel` handlers from `AppDelegate`, main-thread dispatch, `FlutterError` codes, optionals, typed errors, concurrency (`@MainActor` / actors / `Sendable`) | [Standards](references/standards.md) |

@@ -28,33 +28,33 @@ shape of a pack is `../assets/pack-format.md`.
 
 | Component | Name | Kind | Axis | Category | Capability | Version | Summary |
 | --------- | ---- | ---- | ---- | -------- | ---------- | ------- | ------- |
-| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 1.0.0 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
-| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 2.0.0 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
-| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 2.0.0 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
+| `app-framework/compose` | Jetpack Compose | `app-framework` | project | native-ui |  | 1.0.1 | The native Android app stack — Jetpack Compose with Material 3 on Kotlin, a ViewModel with StateFlow per screen, Hilt, Navigation Compose and Room — one codebase across phone, tablet, Wear OS and Android TV, with Android Auto through the Car App Library, its goldens rendered by Roborazzi. |
+| `app-framework/flutter` | Flutter | `app-framework` | project | cross-platform-ui |  | 2.0.1 | The cross-platform app SDK that owns the manifest, the build and the project layout — one codebase across mobile, tablet, desktop and in-car through the native edge. |
+| `app-framework/swiftui` | SwiftUI | `app-framework` | project | native-ui |  | 2.0.1 | The native Apple app stack — SwiftUI on Swift, the project a committed Xcode project, Xcode owning the build — one codebase across iPhone, iPad, Mac, CarPlay, Watch, TV and Vision. |
 | `capability-provider/audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing | audit | audit-store | 1.0.0 | An isolated, append-only audit dataset in a D1 database of its own — written through one seam and read only by the console Worker that holds the binding. |
 | `capability-provider/audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing | audit | audit-store | 1.0.0 | An isolated, append-only audit schema inside the product's own PostgreSQL — insert-only to the application's role, readable by the console's reader role under policy, and removable only by the retention purge. |
-| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 4.0.0 | The development-only secrets manager — values live in the OS keychain or behind a reference into your own cloud store, and nothing secret is ever in the repo. |
+| `capability-provider/fnox` | fnox | `capability-provider` | backing | secrets-manager |  | 4.0.1 | The development-only secrets manager — values live in the OS keychain or behind a reference into your own cloud store, and nothing secret is ever in the repo. |
 | `capability-provider/oidc` | OIDC issuer | `capability-provider` | backing | identity | third-party-auth | 1.0.0 | Identity as an open protocol rather than a product — any issuer speaking OpenID Connect, self-hosted or managed. |
 | `capability-provider/otel-lgtm` | OpenTelemetry · Grafana OTel-LGTM | `capability-provider` | backing | telemetry | distributed-tracing | 1.0.0 | The telemetry sink that needs no cloud — the product exports OTLP and an LGTM stack terminates it, run wherever the product runs. |
 | `capability-provider/temporal` | Temporal | `capability-provider` | backing | workflow | durable-workflows | 1.0.0 | Durable execution that needs no cloud — a workflow is ordinary code whose progress is persisted, so a crash, a deploy or a week-long wait resumes where it stopped. |
-| `ci-system/github-actions` | GitHub Actions | `ci-system` | cicd |  | n/a | 1.0.0 | The delivery pipeline on GitHub Actions — workflow layout, toolchain installation through mise, the gate sequence, and vwf's tag-triggered release contract. |
+| `ci-system/github-actions` | GitHub Actions | `ci-system` | cicd |  | n/a | 1.0.1 | The delivery pipeline on GitHub Actions — workflow layout, toolchain installation through mise, the gate sequence, and vwf's tag-triggered release contract. |
 | `cloud-provider/cloudflare` | Cloudflare | `cloud-provider` |  |  |  | 0.1.2 | The provider-wide judgment behind Cloudflare's private plane — the account and role model, seat-shaped billing, and why an origin reachable without the proxy makes the whole arrangement decorative. |
 | `cloud-provider/gcp` | Google Cloud | `cloud-provider` |  |  |  | 1.0.0 | The provider-wide judgment every Google Cloud service inherits — how the meter runs, how a workload gets an identity without a key, which services have emulators, and what a private plane looks like here. |
 | `cloud-service/ai-gateway` | Cloudflare AI Gateway | `cloud-provider` | backing | ai-gateway |  | 1.0.0 | One URL in front of every model call the product makes — to Workers AI or to any third-party provider — adding caching, rate limiting, logging, retries and fallbacks, and holding the upstream provider keys so the Worker never does. |
 | `cloud-service/ai-search` | Cloudflare AI Search | `cloud-provider` | backing | retrieval |  | 1.0.0 | A managed retrieval pipeline — point an instance at a bucket, a website or its own storage and it chunks, embeds, indexes and answers queries with citations, so the product gets retrieval without running the pipeline that produces it. |
 | `cloud-service/analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing | analytics |  | 1.0.0 | High-cardinality time-series written from a Worker with one non-blocking call and read back with SQL — usage metrics, per-tenant counters and service telemetry without a metrics pipeline the team runs. |
 | `cloud-service/browser-rendering` | Cloudflare Browser Rendering | `cloud-provider` | backing | browser |  | 1.0.0 | Headless Chrome as a service — a Worker drives a real browser through a binding, or any caller hits a REST endpoint for content, screenshots, PDFs and structured scrapes, so the product renders, tests and crawls without running browsers of its own. |
-| `cloud-service/cloud-run` | Cloud Run · Artifact Registry | `cloud-provider` | deploy | compute |  | 1.0.0 | Serverless containers — scale to zero, no cluster to operate, one service per deployable project. The default compute target here, and the right answer until a workload genuinely does not fit it. |
+| `cloud-service/cloud-run` | Cloud Run · Artifact Registry | `cloud-provider` | deploy | compute |  | 1.0.1 | Serverless containers — scale to zero, no cluster to operate, one service per deployable project. The default compute target here, and the right answer until a workload genuinely does not fit it. |
 | `cloud-service/cloud-sql` | Cloud SQL for PostgreSQL | `cloud-provider` | backing | sql | relational-datastore | 1.0.0 | Managed relational Postgres — the answer when the data model has real relationships, when reporting queries matter, or when the product must stay portable off this provider. |
-| `cloud-service/containers` | Cloudflare Containers | `cloud-provider` | deploy | compute |  | 1.0.0 | A Docker image running beside a Worker and addressed through a Durable Object — the deploy target for a process that needs a real filesystem, a runtime the Workers sandbox cannot host, or more CPU than an invocation is allowed, while the Worker stays the front door. |
+| `cloud-service/containers` | Cloudflare Containers | `cloud-provider` | deploy | compute |  | 1.0.1 | A Docker image running beside a Worker and addressed through a Durable Object — the deploy target for a process that needs a real filesystem, a runtime the Workers sandbox cannot host, or more CPU than an invocation is allowed, while the Worker stays the front door. |
 | `cloud-service/d1` | Cloudflare D1 | `cloud-provider` | backing | sql | relational-datastore | 1.0.0 | A serverless SQLite database bound to a Worker — relational data with read replication, sized for a per-tenant or per-product dataset rather than for one monolith. |
 | `cloud-service/durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing | stateful-compute |  | 1.0.0 | Stateful serverless — one addressable object per id, single-threaded, with its own strongly consistent SQLite storage, alarms and WebSocket coordination; where state that must be correct per key lives, which is neither the cache nor the shared database. |
-| `cloud-service/email-service` | Cloudflare Email Service | `cloud-provider` | backing | messaging | email | 1.0.0 | Transactional email a Worker sends through a binding, and inbound mail routed back into a Worker — the product's own email provider on its own domain, with the bounce, SPF and DKIM records held at the zone. |
+| `cloud-service/email-service` | Cloudflare Email Service | `cloud-provider` | backing | messaging | email | 1.0.1 | Transactional email a Worker sends through a binding, and inbound mail routed back into a Worker — the product's own email provider on its own domain, with the bounce, SPF and DKIM records held at the zone. |
 | `cloud-service/firebase-auth` | Firebase Auth · Identity Platform | `cloud-provider` | backing | identity | third-party-auth | 1.0.0 | The provider's managed identity issuer — one service under two names, the second being the same product at organization scale. Federated sign-in, verifiable ID tokens, and an emulator that stubs the provider handshake. |
 | `cloud-service/firebase-messaging` | Firebase Cloud Messaging | `cloud-provider` | backing | messaging | push-notifications | 1.0.0 | The provider's push transport to mobile and web clients — free at the service, best-effort by design, and the one service in this bundle with no emulator for delivery. |
 | `cloud-service/firebase-storage` | Cloud Storage for Firebase | `cloud-provider` | backing | object-storage | object-file-storage | 1.0.0 | The provider's object store with a client-direct path in front of it — the same buckets a server reaches, plus a security-rules layer that lets clients upload and download without a service in the middle. |
 | `cloud-service/firestore` | Firestore | `cloud-provider` | backing | document | document-datastore | 1.0.0 | The document datastore with a first-class offline emulator and a governed client-direct path — the fastest way to a working product where the data model is document-shaped. |
-| `cloud-service/gke` | GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | compute |  | 1.0.0 | Managed Kubernetes, for products that have outgrown per-service autoscaling or need workloads a request-scoped platform cannot host — taken deliberately, for a larger operational surface and a per-cluster cost floor. |
+| `cloud-service/gke` | GKE Autopilot · Artifact Registry | `cloud-provider` | deploy | compute |  | 1.0.1 | Managed Kubernetes, for products that have outgrown per-service autoscaling or need workloads a request-scoped platform cannot host — taken deliberately, for a larger operational surface and a per-cluster cost floor. |
 | `cloud-service/hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing | database-proxy |  | 1.0.0 | A connection pool and query cache between Workers and an existing Postgres or MySQL wherever it lives — the datastore stays where it is, and the Worker stops paying a cold TCP+TLS handshake per request. |
 | `cloud-service/images` | Cloudflare Images | `cloud-provider` | backing | media |  | 1.0.0 | Transform, optimize and deliver images at the edge — from objects the product already stores or from Images' own storage — the media layer a site or app reads rather than a bucket it writes. |
 | `cloud-service/kv` | Cloudflare Workers KV | `cloud-provider` | backing | key-value | cache-layer | 1.0.0 | A global, eventually consistent key-value store for read-heavy configuration, routing metadata and cached results — the cache layer a Worker reads on every request, not the datastore it writes on every one. |
@@ -65,17 +65,17 @@ shape of a pack is `../assets/pack-format.md`.
 | `cloud-service/secrets-store` | Cloudflare Secrets Store | `cloud-provider` | backing | secrets-manager |  | 1.0.0 | The account-level secrets a deployed Worker or Container reads at run time through a binding — the staging and production values, held once for the account and never in the repo, the laptop or a per-Worker secret list. |
 | `cloud-service/vectorize` | Cloudflare Vectorize | `cloud-provider` | backing | vector | search-index | 1.0.0 | A vector index bound to a Worker — similarity search over embeddings for retrieval, recommendation and classification, with namespace and metadata filtering, and the place a product's own embeddings live. |
 | `cloud-service/workers-ai` | Cloudflare Workers AI | `cloud-provider` | backing | inference |  | 1.0.0 | Serverless inference on a catalog of open models, reached from a Worker through a binding — text, embeddings, vision, speech — the product's inference provider when the model it needs is in the catalog and the request should not leave the edge to be answered. |
-| `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 1.0.0 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
-| `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 1.0.0 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
+| `cloud-service/workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy | compute |  | 1.0.1 | A Worker that runs a script in front of its own static assets — on-demand rendering at the edge, the prerendered files served by the platform, and one `wrangler deploy` for both. |
+| `cloud-service/workers-static-assets` | Cloudflare Workers Static Assets | `cloud-provider` | deploy | static-hosting |  | 1.0.1 | An assets-only Worker — the build output directory is the whole deployment. No script, no bindings, no server; the edge serves files and `wrangler deploy` uploads them. |
 | `cloud-service/workflows` | Cloudflare Workflows | `cloud-provider` | backing | orchestration | durable-workflows | 1.0.0 | Durable multi-step execution bound to a Worker — steps that retry, sleep for days and wait for an external event without holding compute, for a process that must finish once it has started. |
 | `cloud-service/zero-trust-access` | Cloudflare Zero Trust Access | `cloud-provider` | deploy | access |  | 1.0.0 | An identity-aware proxy in front of a project that must not be publicly reachable — an operator plane invisible to the internet rather than merely authenticated, whichever cloud actually hosts it. |
 | `datastore/postgres` | PostgreSQL | `database` | backing | sql | relational-datastore | 1.0.0 | The relational datastore that needs no cloud — open engine, managed equivalent everywhere, no lock-in beyond SQL itself. |
 | `deploy-target/container-image` | OCI image · any container host | `deploy-target` | deploy |  |  | 1.0.0 | Build one standard OCI image, push it to any registry, run it on any host that runs containers — portability bought by declining the managed features one cloud would otherwise supply. |
-| `framework/android` | Android | `language-bundle` | project | meta-framework |  | 2.0.0 | The Android build framework — the Android Gradle plugin owning the app or AAR module, the SDK levels its build files state, Android Lint as a gate, R8, and the emulator driven headless by Gradle Managed Devices for the E2E run. |
-| `framework/astro` | Astro | `language-bundle` | project | meta-framework |  | 1.0.0 | Astro as the content-first web framework that owns the build — file routes, content collections, islands only where interactivity demands it, and two config decisions (`output`, and whether an adapter is present) that between them give four ways to render. It covers MDX, the image pipeline, and layouts and slots, and carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data — and lands the one task that rasterizes the favicon set from the product's mark. |
+| `framework/android` | Android | `language-bundle` | project | meta-framework |  | 2.0.1 | The Android build framework — the Android Gradle plugin owning the app or AAR module, the SDK levels its build files state, Android Lint as a gate, R8, and the emulator driven headless by Gradle Managed Devices for the E2E run. |
+| `framework/astro` | Astro | `language-bundle` | project | meta-framework |  | 1.0.1 | Astro as the content-first web framework that owns the build — file routes, content collections, islands only where interactivity demands it, and two config decisions (`output`, and whether an adapter is present) that between them give four ways to render. It covers MDX, the image pipeline, and layouts and slots, and carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `framework/cloudflare-agents` | Cloudflare Agents SDK | `language-bundle` | project | agent-sdk |  | 1.0.0 | The `agents` package as the shape of a stateful, addressable agent on Workers — an `Agent` class that compiles to a Durable Object, with state that survives hibernation, its own SQLite, scheduled work and live client connections, plus the client that talks to it. |
-| `framework/effect` | Effect-TS | `language-bundle` | project | meta-framework |  | 1.0.0 | Effect as the composition and error model for a TypeScript codebase — writing effects, running them, and testing them. |
-| `framework/html` | HTML | `language-bundle` | project | document |  | 1.0.0 | A hand-authored HTML5 page tree with plain CSS and ES-module JavaScript as the whole of a static site — no framework, no components, no content model; Vite serves it in development and builds it into `./dist`, with a copy-only build as the documented opt-out. It also carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data, repeated per page since no layout owns them — and lands the one task that rasterizes the favicon set from the product's mark. |
+| `framework/effect` | Effect-TS | `language-bundle` | project | meta-framework |  | 1.0.1 | Effect as the composition and error model for a TypeScript codebase — writing effects, running them, and testing them. |
+| `framework/html` | HTML | `language-bundle` | project | document |  | 1.0.1 | A hand-authored HTML5 page tree with plain CSS and ES-module JavaScript as the whole of a static site — no framework, no components, no content model; Vite serves it in development and builds it into `./dist`, with a copy-only build as the documented opt-out. It also carries the head doctrine every page states itself through — title, description, canonical, icons, sitemap and structured data, repeated per page since no layout owns them — and lands the one task that rasterizes the favicon set from the product's mark. |
 | `stylesheet/plain-css` | Plain CSS | `stylesheet` | stylesheet | plain |  | 1.0.0 | The design system's roles as CSS custom properties and hand-authored rules in cascade layers — no build step of its own, no generated classes, and nothing between the contract and the browser. |
 | `stylesheet/stylex` | StyleX | `stylesheet` | stylesheet | compile-time |  | 1.0.0 | Styles authored as typed objects in the component's own language and compiled to atomic CSS at build — the token mapping type-checked, the cascade replaced by explicit merge order, and nothing evaluated at runtime. |
 | `stylesheet/tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet | utility |  | 1.0.0 | Utility classes generated from a token block — the design system's semantic roles declared once in CSS, and every style written at the call site as a class rather than in a stylesheet of its own. |
@@ -84,11 +84,11 @@ shape of a pack is `../assets/pack-format.md`.
 
 | Bundle | Name | Kind | Axis | Tools | Packs |
 | ------ | ---- | ---- | ---- | ----- | ----- |
-| `android-library` | Android · library | `language-bundle` | project | `kotlin`, `android` | `framework/android@2.0.0` |
-| `astro-csr` | Astro (CSR) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.0`, `framework/react@generated` |
-| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.0`, `framework/react@generated`, `framework/effect@1.0.0` |
-| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.0`, `framework/react@generated` |
-| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.0`, `framework/react@generated`, `framework/effect@1.0.0` |
+| `android-library` | Android · library | `language-bundle` | project | `kotlin`, `android` | `framework/android@2.0.1` |
+| `astro-csr` | Astro (CSR) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.1`, `framework/react@generated` |
+| `astro-hybrid` | Astro (Hybrid) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.1`, `framework/react@generated`, `framework/effect@1.0.1` |
+| `astro-ssg` | Astro (SSG) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.1`, `framework/react@generated` |
+| `astro-ssr` | Astro (SSR) | `language-bundle` | project | `node`, `pnpm` | `framework/astro@1.0.1`, `framework/react@generated`, `framework/effect@1.0.1` |
 | `audit-store-d1` | Audit store · Cloudflare D1 | `capability-provider` | backing |  | `capability-provider/audit-store-d1@1.0.0` |
 | `audit-store-postgres` | Audit store · PostgreSQL | `capability-provider` | backing |  | `capability-provider/audit-store-postgres@1.0.0` |
 | `bun` | bun · workspaces | `workspace` | repo | `bun` |  |
@@ -97,10 +97,10 @@ shape of a pack is `../assets/pack-format.md`.
 | `cloudflare-ai-search` | Cloudflare AI Search | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/ai-search@1.0.0` |
 | `cloudflare-analytics-engine` | Cloudflare Analytics Engine | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/analytics-engine@1.0.0` |
 | `cloudflare-browser-rendering` | Cloudflare Browser Rendering | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/browser-rendering@1.0.0` |
-| `cloudflare-containers` | Cloudflare Containers | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/containers@1.0.0` |
+| `cloudflare-containers` | Cloudflare Containers | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/containers@1.0.1` |
 | `cloudflare-d1` | Cloudflare D1 | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/d1@1.0.0` |
 | `cloudflare-durable-objects` | Cloudflare Durable Objects | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/durable-objects@1.0.0` |
-| `cloudflare-email-service` | Cloudflare Email Service | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/email-service@1.0.0` |
+| `cloudflare-email-service` | Cloudflare Email Service | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/email-service@1.0.1` |
 | `cloudflare-hyperdrive` | Cloudflare Hyperdrive | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/hyperdrive@1.0.0` |
 | `cloudflare-images` | Cloudflare Images | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/images@1.0.0` |
 | `cloudflare-kv` | Cloudflare Workers KV | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/kv@1.0.0` |
@@ -111,20 +111,20 @@ shape of a pack is `../assets/pack-format.md`.
 | `cloudflare-secrets-store` | Cloudflare Secrets Store | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/secrets-store@1.0.0` |
 | `cloudflare-vectorize` | Cloudflare Vectorize | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/vectorize@1.0.0` |
 | `cloudflare-workers-ai` | Cloudflare Workers AI | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workers-ai@1.0.0` |
-| `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workers-ssr@1.0.0` |
-| `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workers-static-assets@1.0.0` |
+| `cloudflare-workers-ssr` | Cloudflare Workers SSR | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workers-ssr@1.0.1` |
+| `cloudflare-workers-static` | Cloudflare Workers Static Assets | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workers-static-assets@1.0.1` |
 | `cloudflare-workflows` | Cloudflare Workflows | `cloud-provider` | backing |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/workflows@1.0.0` |
 | `cloudflare-zero-trust` | Cloudflare Zero Trust Access | `cloud-provider` | deploy |  | `cloud-provider/cloudflare@0.1.2`, `cloud-service/zero-trust-access@1.0.0` |
 | `container-generic` | OCI image · any container host | `deploy-target` | deploy |  | `deploy-target/container-image@1.0.0` |
-| `dart-flutter` | Dart · Flutter | `app-framework` | project | `flutter` | `app-framework/flutter@2.0.0` |
-| `fnox` | fnox | `capability-provider` | backing |  | `capability-provider/fnox@4.0.0` |
-| `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy |  | `cloud-provider/gcp@1.0.0`, `cloud-service/cloud-run@1.0.0` |
+| `dart-flutter` | Dart · Flutter | `app-framework` | project | `flutter` | `app-framework/flutter@2.0.1` |
+| `fnox` | fnox | `capability-provider` | backing |  | `capability-provider/fnox@4.0.1` |
+| `gcp-cloud-run` | Google Cloud · Cloud Run · Artifact Registry | `cloud-provider` | deploy |  | `cloud-provider/gcp@1.0.0`, `cloud-service/cloud-run@1.0.1` |
 | `gcp-cloud-sql` | Google Cloud · Cloud SQL | `cloud-provider` | backing |  | `cloud-provider/gcp@1.0.0`, `cloud-service/cloud-sql@1.0.0`, `cloud-service/firebase-auth@1.0.0`, `cloud-service/firebase-storage@1.0.0` |
 | `gcp-firebase` | Google Cloud · Firebase | `cloud-provider` | backing |  | `cloud-provider/gcp@1.0.0`, `cloud-service/firestore@1.0.0`, `cloud-service/firebase-auth@1.0.0`, `cloud-service/firebase-storage@1.0.0`, `cloud-service/firebase-messaging@1.0.0` |
-| `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy |  | `cloud-provider/gcp@1.0.0`, `cloud-service/gke@1.0.0` |
-| `github-actions` | GitHub Actions | `ci-system` | cicd |  | `ci-system/github-actions@1.0.0` |
-| `html` | HTML | `language-bundle` | project | `node`, `pnpm` | `framework/html@1.0.0` |
-| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `kotlin`, `android` | `framework/android@2.0.0`, `app-framework/compose@1.0.0` |
+| `gcp-gke` | Google Cloud · GKE Autopilot · Artifact Registry | `cloud-provider` | deploy |  | `cloud-provider/gcp@1.0.0`, `cloud-service/gke@1.0.1` |
+| `github-actions` | GitHub Actions | `ci-system` | cicd |  | `ci-system/github-actions@1.0.1` |
+| `html` | HTML | `language-bundle` | project | `node`, `pnpm` | `framework/html@1.0.1` |
+| `kotlin-compose` | Kotlin · Compose | `app-framework` | project | `kotlin`, `android` | `framework/android@2.0.1`, `app-framework/compose@1.0.1` |
 | `kotlin-library` | Kotlin · library | `language-bundle` | project | `kotlin` |  |
 | `npm-package` | Package registry · npm | `deploy-target` | deploy |  | `deploy-target/npm-registry@generated` |
 | `oidc` | OIDC issuer | `capability-provider` | backing |  | `capability-provider/oidc@1.0.0` |
@@ -135,15 +135,15 @@ shape of a pack is `../assets/pack-format.md`.
 | `postgres` | PostgreSQL | `database` | backing |  | `datastore/postgres@1.0.0` |
 | `stylex` | StyleX | `stylesheet` | stylesheet |  | `stylesheet/stylex@1.0.0` |
 | `swift-package` | Swift · package | `language-bundle` | project | `swift` |  |
-| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `swift` | `app-framework/swiftui@2.0.0` |
+| `swift-swiftui` | Swift · SwiftUI | `app-framework` | project | `swift` | `app-framework/swiftui@2.0.1` |
 | `tailwindcss` | Tailwind CSS | `stylesheet` | stylesheet |  | `stylesheet/tailwindcss@1.0.0` |
 | `temporal` | Temporal | `capability-provider` | backing |  | `capability-provider/temporal@1.0.0` |
-| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.0`, `framework/cloudflare-agents@1.0.0` |
-| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.0` |
-| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.0`, `framework/hono@generated` |
-| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.0`, `framework/temporal@generated` |
-| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.0` |
-| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `node`, `pnpm` | `framework/hono@generated`, `framework/effect@1.0.0`, `framework/react@generated`, `framework/refine@generated` |
+| `typescript-cloudflare-agents` | TypeScript · Cloudflare Agents · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.1`, `framework/cloudflare-agents@1.0.0` |
+| `typescript-effect-cli` | TypeScript · Effect CLI | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.1` |
+| `typescript-effect-hono` | TypeScript · Hono · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.1`, `framework/hono@generated` |
+| `typescript-effect-temporal` | TypeScript · Temporal · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.1`, `framework/temporal@generated` |
+| `typescript-effect` | TypeScript · Effect | `language-bundle` | project | `node`, `pnpm` | `framework/effect@1.0.1` |
+| `typescript-hono-refine` | TypeScript · Hono + Effect · React + Refine | `language-bundle` | project | `node`, `pnpm` | `framework/hono@generated`, `framework/effect@1.0.1`, `framework/react@generated`, `framework/refine@generated` |
 | `typescript-parseargs-cli` | TypeScript · parseArgs CLI | `language-bundle` | project | `node`, `pnpm` |  |
 | `typescript-pulumi` | TypeScript · Pulumi | `language-bundle` | project | `node`, `pnpm` | `framework/pulumi@generated` |
 
@@ -153,27 +153,27 @@ shape of a pack is `../assets/pack-format.md`.
 | ----- | ------- | ----- |
 | `analysis-options` | 1.0.0 | `flutter` |
 | `bash` | 1.0.0 | every repo |
-| `detekt` | 1.0.0 | `kotlin`, `android` |
-| `eslint` | 1.0.0 | `node`, `bun` |
-| `gradle` | 1.0.0 | `kotlin`, `java`, `android` |
-| `kotlin` | 1.0.0 | `kotlin`, `android` |
-| `ktlint` | 1.0.0 | `kotlin`, `android` |
+| `detekt` | 1.0.1 | `kotlin`, `android` |
+| `eslint` | 1.0.1 | `node`, `bun`, `linter` |
+| `gradle` | 1.0.1 | `kotlin`, `java`, `android` |
+| `kotlin` | 1.0.1 | `kotlin`, `android` |
+| `ktlint` | 1.0.1 | `kotlin`, `android` |
 | `markdown` | 1.0.0 | every repo |
 | `pnpm` | 1.0.0 | `pnpm` |
 | `pub` | 1.0.0 | `flutter` |
-| `ruff` | 1.0.0 | `python` |
-| `swift` | 1.0.0 | `swift` |
-| `swift-format` | 1.0.0 | `swift` |
-| `swiftlint` | 1.0.0 | `swift` |
-| `swiftpm` | 1.0.0 | `swift` |
+| `ruff` | 1.0.1 | `python` |
+| `swift` | 1.0.1 | `swift` |
+| `swift-format` | 1.0.1 | `swift` |
+| `swiftlint` | 1.0.1 | `swift` |
+| `swiftpm` | 1.0.1 | `swift` |
 | `tsconfig` | 1.0.0 | `node`, `bun` |
-| `typescript` | 1.0.1 | `node`, `bun` |
+| `typescript` | 1.0.2 | `node`, `bun` |
 | `uv` | 1.0.0 | `python` |
 
 ## Design tools
 
 | Tool | Name | Version |
 | ---- | ---- | ------- |
-| `claude-code` | Claude Code | 1.0.0 |
+| `claude-code` | Claude Code | 1.0.1 |
 | `lovable` | Lovable | 1.0.0 |
 | `stitch` | Google Stitch | 1.0.0 |

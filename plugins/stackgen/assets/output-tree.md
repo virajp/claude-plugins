@@ -146,15 +146,15 @@ stacks/<type>/<slug>/
 └── config/              # tree mirrors the repo root
 ```
 
-`config/.config/mise/tasks/p/_project/deploy` lands at
-`<repo>/.config/mise/tasks/p/<id>/deploy`, the same way `skills/` mirrors
+`config/.config/mise/tasks/p/_project/deploy.py` lands at
+`<repo>/.config/mise/tasks/p/<id>/deploy.py`, the same way `skills/` mirrors
 `.claude/skills/`. A tool-knowledge entry declares no `config/` tree.
 
 **What the tier covers is an allowlist**, and `p:plugins:check` rule 11
 refuses any other path — a test task among them: the test tasks are
 bootstrap's tool parts.
 
-- **A project task** — `.config/mise/tasks/p/_project/<name>`.
+- **A project task** — `.config/mise/tasks/p/_project/<name>.py`.
   `_project` is a **marked position** the materializer renames to the
   pinned project's id, not a task group. A deploy target ships its deploy
   task there (`cloud-service/workers-static-assets` was the first), and a
@@ -166,8 +166,9 @@ bootstrap's tool parts.
   `wrangler.jsonc` is the case.
 - **`config/_<name>/`** — pack-private payload, never copied.
 
-A task that a pack ships sources bootstrap's `_scripts/helpers`, so the
-repo must have adopted bootstrap before anything lands.
+A task that a pack ships is a Python uv script that imports bootstrap's
+`_scripts/helpers.py`, so the repo must have adopted bootstrap before
+anything lands.
 
 **The root allowlist** is stackgen's, and the materializer enforces it as
 a ceiling. It is the list of what may **sit** at a shaped repo's root —

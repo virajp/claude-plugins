@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/cloudflare@0.1.2
-- cloud-service/email-service@1.0.0
+- cloud-service/email-service@1.0.1
 ---
 
 # Backing — Cloudflare Email Service

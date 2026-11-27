@@ -160,7 +160,8 @@ meant.
 
 ## The icons task
 
-The pack lands one file: an `icons` task under the project's own task group,
+The pack lands one file: an `icons` task, `icons.py`, under the project's own
+task group — a Python uv script that imports bootstrap's `helpers.py` —
 rasterizing the whole set from the SVG mark. Run it by hand when the mark
 changes — never in a gate, never in the build. It is a handful of runs in a
 product's life, and a build step that shells out to a downloader is a build

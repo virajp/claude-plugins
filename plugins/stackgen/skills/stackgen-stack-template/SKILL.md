@@ -225,13 +225,15 @@ when it does not, the key is omitted and vwf draws its generic frame.
   lockfile carries are ignored by every verb but `remove:`.
 - **A landing is not confined to `.claude/`.** A pack may also declare
   repo config files in a `config/` tree that mirrors the **repo root** —
-  `config/.config/mise/tasks/p/_project/deploy` lands at
-  `<repo>/.config/mise/tasks/p/<id>/deploy`. It is a **target, not a fifth
+  `config/.config/mise/tasks/p/_project/deploy.py` lands at
+  `<repo>/.config/mise/tasks/p/<id>/deploy.py`. It is a **target, not a fifth
   artifact kind**: copied verbatim, gated on its own tier-2 consent line,
   merging rather than owning, recorded per file in the lockfile with the
   component that supplied it, and executable where mise requires it. The
-  tier holds what is specific to the repo — `p/_project/` tasks and the
-  allowlisted root files; what it may not write — a test task, a language
+  tier holds what is specific to the repo — `p/_project/` tasks, each a
+  Python uv script `<name>.py` (mode 755, the
+  `#!/usr/bin/env -S uv run --script` shebang), and the allowlisted root
+  files; what it may not write — a test task, a language
   manifest, a CI workflow, editor settings, CLAUDE.md — and the allowlist of
   what may land at the repo **root** are
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. The procedure is the

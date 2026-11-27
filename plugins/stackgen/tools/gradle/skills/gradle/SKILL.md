@@ -25,6 +25,8 @@ paths:
 The build, its dependencies and their pins. Read the reference matching your
 task.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 | Doing | Read |
 | --- | --- |
 | Running Gradle, moving its version, the Kotlin DSL, build logic | [Wrapper & build scripts](references/wrapper.md) |

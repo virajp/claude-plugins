@@ -91,9 +91,9 @@ the run's result bundle, which the task always writes to
   `SIMULATOR_PLATFORM`, `SIMULATOR_DEVICE` and `SIMULATOR_OS` in mise's
   environment, from which `test:golden` builds its destination — so
   recording, comparing, the UX gate and CI render on the same simulator.
-  Without a value, the repo's `_scripts/xcode` library picks the newest iOS
-  runtime and its highest-numbered plain iPhone, and that choice moves with
-  the machine. So pin all three in the `[env]` of
+  Without a value, `require_xcode` in the repo's `_scripts/xcode.py` picks the
+  newest iOS runtime and its highest-numbered plain iPhone, and that choice
+  moves with the machine. So pin all three in the `[env]` of
   `.config/mise/conf.d/zz-repo/mise.<env>.toml` and commit them. A Mac-only
   app pins `macOS` as its platform, which needs no device or OS.
 - **The goldens are the pinned platform's.** A simulator renders one platform,

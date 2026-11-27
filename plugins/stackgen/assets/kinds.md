@@ -102,7 +102,8 @@ recorded `n/a`, never silently absent.
    takes it)*
 9. **Compiler/toolchain config** — toolchain pinning, profiles, lint
    tables.
-10. **Lint & format gate** — wired as tasks.
+10. **Lint & format gate** — wired as tasks, covered without naming one:
+    the repo's mise skill, `.claude/skills/mise/`, names the tasks.
 11. **Config & env** — names-not-values, aligned with `environment.md`.
 12. **Observability wiring** — the language's idiomatic emission hook only
     (e.g. `tracing`), never the pipeline contract — that stays the
@@ -262,7 +263,8 @@ component in the bundle:
    output directory, and the content hash or immutable-asset rule that
    makes one deploy distinguishable from the next.
 7. **Pipeline** — release wiring behind mise tasks, satisfying vwf's
-   delivery-pipeline contract.
+   delivery-pipeline contract; covered without naming a task — the
+   repo's mise skill, `.claude/skills/mise/`, names them.
 8. **Health** — readiness/liveness wiring against vwf's `health`
    harness capability.
 
@@ -322,7 +324,8 @@ workspace adds. That is the seam working, not a mis-declared pack.
   inherit. Never a member's own internal layout — that is the language
   bundle's. Never the task library, which is bootstrap's: an
   orchestrator runs *beneath* the manager, and this kind states which
-  orchestrator exists, never what the repo's task names are. Never what a
+  orchestrator exists, never what the repo's task names are — the repo's
+  mise skill, `.claude/skills/mise/`, describes them. Never what a
   gate checks. Never the built artifact, which is the deploy axis's even
   when every member shares one build file.
 - **Facts & harness**: `harness:` is `n/a` — a workspace satisfies no vwf
@@ -472,8 +475,9 @@ none — it is a green check that means nothing.
   language bundle's, reached through the repo's task library. Never the
   cloud's deploy mechanics, which belong to `cloud-provider`.
 - **Facts & harness**: the pipeline satisfies no harness capability itself;
-  it **invokes** the repo's task names, so `harness:` is `n/a` and the task
-  names are what the component must not invent.
+  it **invokes** the repo's tasks, so `harness:` is `n/a`. The component
+  names no task and invents none: the repo's mise skill,
+  `.claude/skills/mise/`, describes them.
 - **Invocation**: the router model-invocable, since a pipeline is generated
   on request rather than while editing a file. Its references load on
   demand, one system only.
@@ -496,8 +500,9 @@ the whole of what it was.
    config, and *how* the manager itself is installed is this topic's
    business.
 3. **The gate sequence** — what runs on every push and pull request, in what
-   order, and what fails the run. Cheap gates first, and the same task names
-   the developer runs locally.
+   order, and what fails the run. Cheap gates first, and the same tasks the
+   developer runs locally — covered without naming one, since the repo's
+   mise skill, `.claude/skills/mise/`, names them.
 4. **Release triggering** — vwf's delivery-pipeline contract in this
    system's vocabulary: the `<project>-<env>-v<semver>` tag shape, branch
    validation before publish, and tested-before-release. Cited from the

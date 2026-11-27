@@ -14,6 +14,8 @@ The authoring half of the `claude-code` design tool. The three
 `design-import-*` skills beside it only **read** the canvas; this is the one
 skill that **writes** it, and it is the user's to invoke — vwf never calls it.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 **What this session produces**, under `docs/design/<project>/`:
 
 ```text

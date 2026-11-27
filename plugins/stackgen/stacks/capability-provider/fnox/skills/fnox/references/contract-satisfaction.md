@@ -11,7 +11,7 @@ repo's own task, not the application**.
 
 ```sh
 fnox exec -- mise run dev
-fnox exec -- mise run e2e:local
+fnox exec -- mise run test:e2e
 ```
 
 Satisfied by construction: fnox has no application SDK to reach for. There is

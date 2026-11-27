@@ -14,6 +14,8 @@ The seam is one line in the task runner:
 fnox exec -- mise run dev
 ```
 
+`dev` is the `dev` task of vwf's harness contract, which the repo writes.
+
 Everything the product does downstream reads `process.env` — including its
 tests, which therefore need no secrets manager at all. A test that shells out
 to fnox has moved the boundary into the product.

@@ -25,8 +25,9 @@ reason; being on the list makes it landable, not standard, and the three
 Cloudflare deploy packs ship one
 — this pack, `workers-ssr` and `containers`.
 
-**`.config/mise/tasks/p/<project-id>/deploy`**, an overlay in the
-project's own task group. It ships as `p/_project/deploy` — a marked
+**`.config/mise/tasks/p/<project-id>/deploy.py`**, an overlay in the
+project's own task group: a Python uv script that imports bootstrap's
+`helpers.py`. It ships as `p/_project/deploy.py` — a marked
 directory name, not a task — and the command that pins this stack renames
 the directory to the project's registry id. Until it is renamed the task
 is inert rather than wrong: mise ignores a task directory whose name

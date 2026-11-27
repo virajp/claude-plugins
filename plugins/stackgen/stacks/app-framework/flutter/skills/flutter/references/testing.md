@@ -96,12 +96,12 @@ the env injected through the repo's secrets manager — with fnox,
 
 ## Running & coverage
 
-`flutter test test/ --coverage` writes `coverage/lcov.info`; the
-`mise run tests:unit` task renders a per-file table and an HTML report. Coverage
-is reported on **product code only** — generated files (`*.g.dart`,
-`*.freezed.dart`, `*.gen.dart`) and non-product layers (`_shared/`,
-`components/`, `themes/`) are excluded from the gate. A clean run with every new
-service/controller/screen covered is the merge bar.
+`mise x -- flutter test --coverage` writes `coverage/lcov.info`; the
+lcov/genhtml section below turns it into a per-file table and an HTML report.
+Coverage is reported on **product code only** — generated files
+(`*.g.dart`, `*.freezed.dart`, `*.gen.dart`) and non-product layers
+(`_shared/`, `components/`, `themes/`) are excluded from the gate. A clean run
+with every new service/controller/screen covered is the merge bar.
 
 ## Reading the report (lcov + genhtml)
 

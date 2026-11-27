@@ -20,6 +20,8 @@ The single entry point for Swift package work. Each topic is its own
 reference — **read the one matching your task**, not all of them. Start from
 the baseline.
 
+The repo's mise skill, .claude/skills/mise/, lists every task.
+
 A package is a library other code builds against, so most of the judgment here
 is about the **public surface**: what a consumer can see, what it can rely on,
 and what a release is allowed to change. API reference is not here — look a

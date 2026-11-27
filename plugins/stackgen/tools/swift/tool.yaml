@@ -3,5 +3,5 @@ summary: The Swift package baseline — standards and public-API design, the
   error
   model, strict concurrency, Swift Testing, build and run, config and
   observability wiring.
-version: 1.0.0
+version: 1.0.1
 tools: [ swift ]
