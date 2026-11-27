@@ -28,15 +28,15 @@ stacks/<type>/<slug>/
 │   ├── <name>.sh        #   the script, copied into .claude/hooks/
 │   └── hooks.yaml       #   the settings.json hook entries it needs (consent-gated)
 └── config/              # optional: repo files — tree mirrors the repo root
-    ├── .config/…        #   e.g. .config/mise/tasks/p/_project/<name> (consent-gated)
+    ├── .config/…        #   e.g. .config/mise/tasks/p/_project/<name>.py (consent-gated)
     └── _<name>/…        #   pack-private payload — NEVER copied
 ```
 
 **Two sub-conventions inside `config/`**, each a different contract:
 
 - **`config/.config/…` and the root allowlist.** Everything under `config/`
-  mirrors the repo root, so `config/.config/mise/tasks/p/_project/deploy`
-  lands at `<repo>/.config/mise/tasks/p/<id>/deploy` and
+  mirrors the repo root, so `config/.config/mise/tasks/p/_project/deploy.py`
+  lands at `<repo>/.config/mise/tasks/p/<id>/deploy.py` and
   `config/wrangler.jsonc` at
   `<repo>/wrangler.jsonc`.
   A path landing at the **root** must be on the fixed allowlist
@@ -78,8 +78,8 @@ curated and tested here; generation never emits an executable — a generated
 materializer's separate settings-consent line.
 
 **`config/` is a target, not a fifth artifact kind.** It mirrors the repo
-root rather than `.claude/`, so `config/.config/mise/tasks/p/_project/deploy`
-lands at `<repo>/.config/mise/tasks/p/<id>/deploy`, behind its own consent
+root rather than `.claude/`, so `config/.config/mise/tasks/p/_project/deploy.py`
+lands at `<repo>/.config/mise/tasks/p/<id>/deploy.py`, behind its own consent
 line, and
 merging never owning — the rules, the per-file lockfile record, the
 composition order when two components write one tree, the root allowlist and
@@ -87,8 +87,10 @@ the four things the tier still may not write are
 `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`. **The tier is an allowlist**,
 and `p:plugins:check` rule 11 refuses any other path:
 
-- `config/.config/mise/tasks/p/_project/<name>` — a task of the project the
-  stack is pinned for;
+- `config/.config/mise/tasks/p/_project/<name>.py` — a task of the project the
+  stack is pinned for, a Python uv script with the
+  `#!/usr/bin/env -S uv run --script` shebang, standard library only, that
+  imports bootstrap's `_scripts/helpers.py`;
 - a root file on the allowlist of
   `${CLAUDE_PLUGIN_ROOT}/assets/output-tree.md`;
 - `config/_<name>/` — pack-private payload, never copied.
@@ -358,8 +360,10 @@ which is the grain `stackgen-sync` acts at.
   its own citations may keep the token.
 - **A landed config or task file carries only the comments something
   reads.** Under `config/` and `hooks/`, keep every comment a
-  tool or skill reads: `#MISE` and `#USAGE` lines, shebangs, `# shellcheck`
-  directives, `#PLACEHOLDER` markers, grype ignore-reason comments,
+  tool or skill reads: `#MISE` and `#USAGE` lines (`# MISE` and `# USAGE`
+  in a Python task), shebangs, a PEP 723 `# /// script` block, `# noqa`
+  and `# shellcheck` directives, `#PLACEHOLDER` markers, grype
+  ignore-reason comments,
   commented-out templates a skill fills in, and any comment a reference
   names as load-bearing. Beyond those, a comment is at most a one-line
   warning where a reader would otherwise break something non-obvious.

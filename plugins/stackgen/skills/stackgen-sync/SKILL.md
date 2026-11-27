@@ -144,7 +144,12 @@ ever happens on the user's say-so.
    `cloud-service`, later wins — and diff each file against the component the
    lockfile says supplied it. A file whose supplying component **changed** is a
    real delta, reported as such: it means precedence moved, not that the pack
-   did.
+   did. **An old task without the extension is replaced.** A pack's
+   `p/_project/` task is now a Python uv script `<name>.py`; a
+   `.config/mise/tasks/p/<id>/<name>` file with no extension, beside the
+   `<name>.py` the pack now ships, is shown as **replaced**, and is removed
+   with plain `rm` on the user's consent — mise runs the file without the
+   extension first, so it hides the `.py`.
 
 3. **Offer regeneration per generated component.** A `generated` component
    has no pack to diff against; offer to re-run the generator for that
@@ -221,8 +226,10 @@ ever happens on the user's say-so.
      `.claude/`**, into files the repo's collaborators own and read, so it
      is its own **tier-2** line listing every path, on the same
      merges-never-owns terms: only the paths this lockfile records are
-     updated or removed, and a declined line leaves the `.claude/` side
-     landed and says the tasks stay as they are;
+     updated or removed — save an extension-less task file the `.py`
+     replaces, which the line lists as replaced and removes with plain
+     `rm` — and a declined line leaves the `.claude/` side landed and says
+     the tasks stay as they are;
    - the bootstrap delta of step 2 — each instruction as it will be sent,
      on the terms of step 6 of the bootstrap handoff;
    - anything from step 4 or the conversion — the **tier-3** line, LSP
@@ -277,7 +284,10 @@ ever happens on the user's say-so.
 - **The lockfile is the boundary**, and it is the boundary **outside**
   `.claude/` too: a `.config/` file stackgen did not materialize is the
   repo's own and is never diffed, updated or removed, however exactly its
-  path matches something a pack ships. Nothing in the repo is ever
+  path matches something a pack ships — save an extension-less
+  `p/<id>/<name>` task beside the `<name>.py` a pack now ships, which is
+  shown as replaced and removed on consent, since mise would run it in
+  the `.py`'s place. Nothing in the repo is ever
   deleted without a line the user picked — a retired pack's copies stay
   until the user removes them. The lockfile is committed, so a recorded path
   that resolves outside the repo root is refused and reported, never deleted.

@@ -126,7 +126,10 @@ the composition's single consent gate and landing. Generation is
    artifacts its slice defines — skills, agents, rules, within the output
    vocabulary. It emits no language facts, no server declaration, no
    package-manager or lockfile key and no `harness`: a language's facts, its
-   server, its package manager and its tasks are bootstrap's. **Never an
+   server, its package manager and its tasks are bootstrap's. **A generated
+   skill names no task**, not even an aggregate such as `code:lint`: the
+   repo's mise skill, `.claude/skills/mise/`, which bootstrap writes,
+   describes the tasks, and the generated skill points to it. **Never an
    executable** (hook scripts are shipped only), and **no artifact ever
    contains MCP or LSP configuration**; generation never writes a config
    file or a manifest
@@ -165,7 +168,8 @@ the composition's single consent gate and landing. Generation is
    A SwiftPM name is read
    from the dependency's package URL, the host kept (`github.com` included). A
    Gradle plugin is vetted as its plugin marker coordinate. A tool pin is no
-   name the generator emits: the tools are bootstrap's.
+   name the generator emits: the tools are bootstrap's. Nor is a task name:
+   the tasks are bootstrap's, described by `.claude/skills/mise/`.
 
    Invoke `stackgen-reputation` with that list, one argument per name. It
    returns a verdict table, one row per name reading `pass`, `warn` or
