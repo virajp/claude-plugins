@@ -149,7 +149,10 @@
         "plugins/stackgen/tools/swiftpm/skills/swiftpm/SKILL.md",
         "plugins/stackgen/tools/typescript/skills/typescript/SKILL.md",
         "plugins/stackgen/tools/typescript/skills/ux-gate/SKILL.md",
-        "plugins/stackgen/stacks/inventory.md"
+        "plugins/stackgen/stacks/inventory.md",
+        "plugins/stackgen/stacks/app-framework/swiftui/conventions.md",
+        "plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/testing.md",
+        "plugins/stackgen/stacks/app-framework/swiftui/skills/swiftui/references/build-and-signing.md"
       ],
       "depends_on": [],
       "waits": "",
@@ -198,14 +201,14 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-27T17:36:49.742Z",
       "ended": "",
       "commit": "",
-      "rounds": 0,
+      "rounds": 1,
       "range": {
-        "from": "",
-        "to": ""
+        "from": "fbc1c8c1",
+        "to": "87c519ad"
       }
     },
     {
@@ -270,8 +273,8 @@
     },
     {
       "id": "W2",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-27T17:36:49.703Z",
       "ended": ""
     },
     {
@@ -698,6 +701,13 @@
       "unit": "U6",
       "stage": "",
       "text": "R1 finding: plugins/stackgen/tools/ruff/tool.yaml:2 summary reads one tool for both halves, which D8 falsifies; no unit file names the summary field · settled by ownership: U6 owns plugins/stackgen/tools/**/tool.yaml whole (S2 owner U6), so the finding is handed to U6 at its wave-4 dispatch",
+      "state": "closed"
+    },
+    {
+      "id": "G2",
+      "unit": "U2",
+      "stage": "",
+      "text": "U4 round 1 finding: swiftui ux-gate SKILL.md:63-66 and swiftui conventions.md, references/testing.md:94, references/build-and-signing.md:26 still describe the removed _scripts/helpers and _scripts/xcode shell libraries (bootstrap M48); D3b puts the stale helpers text in scope · U2 Owns widened to the three swiftui files under the plan Goal and the fix looped back to U2; the bundles/swift-swiftui.md:81 passage is handed to U6, which owns stacks/bundles/*.md",
       "state": "closed"
     }
   ],

@@ -68,7 +68,8 @@ def main():
       env={**os.environ, "MARK_SVG": src, "SQUARE_SVG": f"{tmp}/square.svg"},
     )
 
-    # One-off tools, run from the temporary directory — never repo dependencies.
+    # One-off tools, kept in the temporary directory — never repo dependencies.
+    # Each runs from the task's own directory, so mise resolves the repo's pins.
     os.makedirs(f"{tmp}/stage")
     os.makedirs(f"{tmp}/out")
 
@@ -79,9 +80,9 @@ def main():
         "pnpx",
         "sharp-cli@6",
         "--input",
-        f"stage/{stem}.svg",
+        f"{tmp}/stage/{stem}.svg",
         "--output",
-        "out",
+        f"{tmp}/out",
         "--density",
         "1200",
         "--format",
@@ -93,7 +94,6 @@ def main():
         "contain",
         "--background",
         "rgba(0,0,0,0)",
-        cwd=tmp,
       )
 
     render(src, 512, "icon-512")
@@ -103,9 +103,9 @@ def main():
     render(src, 32, "ico-32")
     render(src, 48, "ico-48")
 
-    # png-to-ico's bin drops all but its first PNG; drive the library from the temporary directory.
-    run("pnpm", "init", cwd=tmp, stdout=subprocess.DEVNULL)
-    run("pnpm", "add", "--silent", "png-to-ico@3", cwd=tmp, stdout=subprocess.DEVNULL)
+    # png-to-ico's bin drops all but its first PNG; drive the library, installed in the temporary directory.
+    run("pnpm", "--dir", tmp, "init", stdout=subprocess.DEVNULL)
+    run("pnpm", "--dir", tmp, "add", "--silent", "png-to-ico@3", stdout=subprocess.DEVNULL)
     script = (
       f"import pngToIco from '{tmp}/node_modules/png-to-ico/index.js';"
       f"const sizes = [16, 32, 48].map(s => '{tmp}/out/ico-' + s + '.png');"
