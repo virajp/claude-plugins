@@ -69,7 +69,7 @@ def main():
     )
 
     # One-off tools, kept in the temporary directory — never repo dependencies.
-    # Each runs from the task's own directory, so mise resolves the repo's pins.
+    # Each runs from the repo root (the task's dir), so mise resolves the repo's pins.
     os.makedirs(f"{tmp}/stage")
     os.makedirs(f"{tmp}/out")
 

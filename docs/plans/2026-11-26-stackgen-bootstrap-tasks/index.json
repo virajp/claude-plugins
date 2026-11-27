@@ -159,7 +159,7 @@
       "status": "green",
       "started": "2026-11-27T17:10:15.477Z",
       "ended": "2026-11-27T17:34:08.082Z",
-      "commit": "b80e113f",
+      "commit": "cf4c2c7c",
       "rounds": 2
     },
     {
@@ -205,10 +205,10 @@
       "started": "2026-11-27T17:36:49.742Z",
       "ended": "",
       "commit": "",
-      "rounds": 1,
+      "rounds": 2,
       "range": {
-        "from": "fbc1c8c1",
-        "to": "87c519ad"
+        "from": "87c519ad",
+        "to": "cf4c2c7c"
       }
     },
     {
