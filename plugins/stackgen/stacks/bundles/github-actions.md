@@ -4,7 +4,7 @@ axis: cicd
 kind: ci-system
 tools: []
 packs:
-- ci-system/github-actions@1.0.0
+- ci-system/github-actions@1.0.1
 ---
 
 # CI — GitHub Actions

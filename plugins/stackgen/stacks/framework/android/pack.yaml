@@ -3,7 +3,7 @@ summary: The Android build framework — the Android Gradle plugin owning the
   app or AAR module, the SDK levels its build files state, Android Lint as a
   gate, R8, and the emulator driven headless by Gradle Managed Devices for the
   E2E run.
-version: 2.0.0
+version: 2.0.1
 type: framework
 # No framework category names a build SDK; meta-framework is the nearest — like
 # one, AGP owns the build and the module layout inside the language's project.

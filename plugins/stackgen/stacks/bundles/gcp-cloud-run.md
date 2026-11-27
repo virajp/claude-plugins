@@ -5,7 +5,7 @@ kind: cloud-provider
 tools: []
 packs:
 - cloud-provider/gcp@1.0.0
-- cloud-service/cloud-run@1.0.0
+- cloud-service/cloud-run@1.0.1
 artifact: container-image
 ---
 

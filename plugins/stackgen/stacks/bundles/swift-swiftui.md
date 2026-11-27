@@ -5,7 +5,7 @@ kind: app-framework
 tools:
 - swift
 packs:
-- app-framework/swiftui@2.0.0
+- app-framework/swiftui@2.0.1
 platforms:
 - mobile
 - tablet
@@ -78,9 +78,10 @@ with **Kotlin · Compose** for the Android app.
   **sourcekit-lsp** ships with it and is the language server.
 - **A committed Xcode project** owns the app's targets. It is created once, by
   a person, in Xcode — no generator, and no pack lands the `.xcodeproj`; the
-  tasks call `xcodebuild` and `swift` alone. The repo's `_scripts/xcode`
-  library finds the selected Xcode as `XCODE_VERSION`, and the golden
-  simulator as the newest iOS runtime's highest-numbered plain iPhone. A
+  tasks call `xcodebuild` and `swift` alone. `require_xcode`, in the repo's
+  `_scripts/xcode.py` — the Python module bootstrap ships — finds the
+  selected Xcode as `XCODE_VERSION`, and the golden simulator as the newest
+  iOS runtime's highest-numbered plain iPhone. A
   repo overrides each in the `[env]` of
   `.config/mise/conf.d/zz-repo/mise.<env>.toml`. Every task that builds
   checks `xcodebuild -version` against a set `XCODE_VERSION` and fails fast

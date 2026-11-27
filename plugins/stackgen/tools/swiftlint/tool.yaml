@@ -1,5 +1,5 @@
 name: SwiftLint
 summary: The correctness gate for Swift — SwiftLint through mise, strict, with
   every layout rule left to swift-format.
-version: 1.0.0
+version: 1.0.1
 tools: [ swift ]

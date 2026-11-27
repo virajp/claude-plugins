@@ -2,5 +2,5 @@ name: swift-format
 summary: The Swift formatter — swift-format, built into the toolchain as
   `swift
   format`, configured once under .config/.
-version: 1.0.0
+version: 1.0.1
 tools: [ swift ]

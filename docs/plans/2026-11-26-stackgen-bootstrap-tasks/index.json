@@ -257,11 +257,11 @@
         "U5"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-27T18:57:30.888Z",
+      "ended": "2026-11-27T18:59:28.722Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -285,8 +285,8 @@
     },
     {
       "id": "W4",
-      "status": "pending",
-      "started": "",
+      "status": "running",
+      "started": "2026-11-27T18:57:30.850Z",
       "ended": ""
     }
   ],

@@ -6,7 +6,7 @@ tools:
 - kotlin
 - android
 packs:
-- framework/android@2.0.0
+- framework/android@2.0.1
 platforms:
 - packages
 ---

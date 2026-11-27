@@ -6,7 +6,7 @@ tools:
 - node
 - pnpm
 packs:
-- framework/effect@1.0.0
+- framework/effect@1.0.1
 - framework/cloudflare-agents@1.0.0
 platforms:
 - service

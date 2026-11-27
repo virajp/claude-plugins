@@ -1,5 +1,5 @@
 name: Ruff
-summary: The lint and format gate for Python — one tool for both halves, run
-  through the project's uv environment rather than a global install.
-version: 1.0.0
+summary: The lint gate for Python, run through the project's uv environment
+  rather than a global install; dprint's ruff plugin formats.
+version: 1.0.1
 tools: [ python ]
