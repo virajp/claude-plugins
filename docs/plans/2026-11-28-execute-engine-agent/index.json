@@ -135,11 +135,11 @@
         "U3"
       ],
       "waits": "",
-      "status": "pending",
-      "started": "",
-      "ended": "",
+      "status": "green",
+      "started": "2026-11-28T05:31:29.363Z",
+      "ended": "2026-11-28T05:32:26.026Z",
       "commit": "",
-      "rounds": 0
+      "rounds": 1
     }
   ],
   "waves": [
@@ -157,9 +157,9 @@
     },
     {
       "id": "W3",
-      "status": "pending",
-      "started": "",
-      "ended": ""
+      "status": "green",
+      "started": "2026-11-28T05:31:29.328Z",
+      "ended": "2026-11-28T05:32:34.832Z"
     }
   ],
   "shared_files": [
