@@ -154,16 +154,17 @@ adopting it.
   judgment decides the outcome (`product`, `blueprint`, `plan`, the
   `blueprint-reviewer` and `blueprint-coherence-reviewer` gates) or where nobody
   reviews each step — `execute` is the run command, and its `execute-runner`
-  (one per plan under `/vwf:execute all`), its `execute-coder`, the code-review
-  and security-review subagents that run at the plan's review rows, and the ux
-  subagent are all `opus` too. `sonnet` runs the remaining commands and the
-  writer/surveyor subagents, `plan-management` among them — its bookkeeping is
-  mechanical, but it reads a queue across repos; `haiku` runs the one purely
-  mechanical command (`recall`). Effort follows the same logic rather than
-  sitting at maximum everywhere: a stronger model reaches the same answer in
-  fewer reasoning tokens, so capability and effort are traded against each other
-  per surface instead of both being maxed. No gate is weakened — the review runs
-  at the plan's review rows, and config can never disable one.
+  (one per plan under `/vwf:execute all`), its `execute-coder`, the
+  `execute-engine` agents and the code-review and security-review subagents that
+  run at the plan's review rows, and the ux subagent are all `opus` too.
+  `sonnet` runs the remaining commands and the writer/surveyor subagents,
+  `plan-management` among them — its bookkeeping is mechanical, but it reads a
+  queue across repos; `haiku` runs the one purely mechanical command (`recall`).
+  Effort follows the same logic rather than sitting at maximum everywhere: a
+  stronger model reaches the same answer in fewer reasoning tokens, so
+  capability and effort are traded against each other per surface instead of
+  both being maxed. No gate is weakened — the review runs at the plan's review
+  rows, and config can never disable one.
 - **Read-heavy work is delegated to keep the orchestrator fast.** Coverage
   scans, the desired-vs-actual codebase survey, and the bulk doc writing run in
   subagents (`blueprint-surveyor`, `plan-surveyor`, `flow-writer`,
@@ -198,11 +199,12 @@ adopting it.
   gitignored, being one developer's state rather than the team's. Recall lists
   the file names and reads the ones matching the topic at hand. See
   [Memory](#memory).
-- **Leans on review engines.** `execute` runs the `/code-review` and
-  `/security-review` engines itself at each review row the plan places, over the
-  branch delta since the previous one, and hands their findings to the code- and
-  security-review stages; a reviewer falls back to its own manual review
-  dimensions when its engine is unavailable.
+- **Leans on review engines.** At each review row the plan places, `execute`
+  dispatches one `execute-engine` agent per engine — `/code-review` and
+  `/security-review` — over the branch delta since the previous one; each writes
+  its engine's report to the round's log, and `execute` hands those findings to
+  the code- and security-review stages; a reviewer falls back to its own manual
+  review dimensions when its engine is unavailable.
 
 **Fit**
 
@@ -332,7 +334,7 @@ nothing, it invokes setup in-session so
 [the materialize pass](#the-materialize-pass) lands them. Blue marks who prompts
 them. Fully internal machinery never appears in the flow: `/vwf:git-workflow` is
 invoked by the other commands for every git action, `/vwf:docs-sync` closes
-every run that changes reality (and is yours to run after ad-hoc work), the five
+every run that changes reality (and is yours to run after ad-hoc work), the six
 execute subagents and the reviewer subagents run inside their commands, and
 `handoff`/`recall` are session utilities you reach for only when a session runs
 long.)
@@ -955,14 +957,14 @@ Model and reasoning effort are **tiered per surface**, not uniform. `opus` runs
 where judgment decides the outcome or where nobody reviews each step —
 `product`, `blueprint`, `plan`, `change-plan` and `execute`, plus the
 `blueprint-reviewer`, `blueprint-coherence-reviewer`,
-`execute-runner`, `execute-coder`, the code-review and security-review subagents
-that run at the plan's review rows, and the ux subagent. `sonnet` runs the
-remaining commands — `plan-management` included — and the writer/surveyor
-subagents; `haiku` runs the one purely mechanical command (`recall`). Effort
-tracks the same logic — `high` through most of the workflow, `medium`/`low` on
-mechanical surfaces. No configuration can skip a gate: `pipeline.models` may
-re-tier a stage, but the stage always runs and any downgrade is reported at that
-gate.
+`execute-runner`, `execute-coder`, the `execute-engine` agents and the
+code-review and security-review subagents that run at the plan's review rows,
+and the ux subagent. `sonnet` runs the remaining commands — `plan-management`
+included — and the writer/surveyor subagents; `haiku` runs the one purely
+mechanical command (`recall`). Effort tracks the same logic — `high` through
+most of the workflow, `medium`/`low` on mechanical surfaces. No configuration
+can skip a gate: `pipeline.models` may re-tier a stage, but the stage always
+runs and any downgrade is reported at that gate.
 
 Under the hood each command is a **skill** (`skills/<name>/SKILL.md`) — Claude
 Code's unified skills keep the `/vwf:<name>` invocation exactly as before (this
@@ -2290,14 +2292,14 @@ checklist `change-plan` works, never batched; the blueprint and the code survey
 answer most items before they are reached. Every ruling lands in the folder's
 `decisions` list with the alternative it rejected and the unit it binds.
 One item is **review placement**: where the `review` unit goes — the row at
-which `execute` runs `/code-review` and `/security-review` plus the two
-reviewers over the branch delta. A cycle plan gets **one** by default, in its
-own wave after the last code unit and before the docs unit, covering every code
-unit; an earlier row is a ruling with its reason in the `decisions` list — a
-boundary later units build on. Every row sits in a wave strictly later than the
-units it covers, and covers every earlier-wave unit no earlier row already
-covers, of any `kind`, so the commit range it reviews and the units it covers
-are one set. No
+which `execute` runs `/code-review` and `/security-review`, each in its own
+`execute-engine` agent, plus the two reviewers over the branch delta. A cycle
+plan gets **one** by default, in its own wave after the last code unit and
+before the docs unit, covering every code unit; an earlier row is a ruling with
+its reason in the `decisions` list — a boundary later units build on. Every row
+sits in a wave strictly later than the units it covers, and covers every
+earlier-wave unit no earlier row already covers, of any `kind`, so the commit
+range it reviews and the units it covers are one set. No
 code unit triggers a review by itself, and `execute` infers no row: a plan whose
 code units no review row covers, or whose rows break either placement rule, is
 refused at its preflight. The items
@@ -2504,38 +2506,39 @@ cover the run of several plans, which no single folder can answer:
 Each rule is an **override** for this run only: the loop hands it to each runner
 in its dispatch prompt, the runner appends it as one entry of that folder's
 `overrides` list, and no folder's `consent` changes. Then it picks with `next`,
-prints one line — the folder, its
-`kind`, its priority — and dispatches one `execute-runner` subagent, handed the
-folder, the path of this skill's own file and that folder's overrides, which the
-runner reads and runs for that one folder exactly as a named run would, save
-that it asks no one itself: it relays its questions. Each runner is the fresh
-context its plan runs in, and returns five lines — `PLAN:`, `OUTCOME:`
-(`COMPLETE`, `COMPLETE with gaps`, `HELD`, `QUESTION` or `STOPPED`), `DETAIL:`
-(the
-folder's `status.detail`), `RESUME:` and `ENDS RUN:` — so the loop's context
-grows by one row per plan. On `OUTCOME: QUESTION` the five lines are followed by
-the open questions, each `QUESTION Q<n> <owner>:`, `OPTIONS Q<n>:` and
-`WHY Q<n>:`, returned once every unit the runner dispatched is back: the loop
-asks you each one, one at a time, resumes the runner with the answers — or, if
-that resume fails, dispatches a fresh runner on the folder with an `Answers:`
-block — and the runner records them and dispatches a fresh agent for each owner.
-With no one to answer, the runner records the questions as open gaps and returns
-`STOPPED`. Runners never run in parallel, and nothing is skipped past: the loop
-ends at the first `STOPPED`; after a plan whose `consent.end_all_run` is `true`,
-because it edited a plugin the loop's session has loaded and the next plan must
-start in a restarted one; once a resource-cap directive has reached the session;
-or when nothing is runnable. On a normal end it runs the landing phase, then
-prints one table, a row per plan, the stop reason, a line per after-landing
-step, and the one command that continues. A stop lands nothing by itself: the
-held plans stay on the shared branch under the stopped plan's commits, and the
-loop prints the recommended next steps — resume the stopped plan with its
+prints one line — the folder, its `kind`, its priority — and dispatches one
+`execute-runner` subagent, handed the folder, the path of this skill's own file
+and that folder's overrides, which the runner reads and runs for that one folder
+exactly as a named run would, save that it asks no one itself: it relays its
+questions. Each runner is the fresh context its plan runs in, and returns five
+lines — `PLAN:`, `OUTCOME:` (`COMPLETE`, `COMPLETE with gaps`, `HELD`,
+`QUESTION` or `STOPPED`), `DETAIL:` (the folder's `status.detail`), `RESUME:`
+and `ENDS RUN:` — so the loop's context grows by one row per plan. A skill's
+output — any skill the runner invokes, a vwf skill or a built-in — is input for
+its next step, never its reply: the runner's last message is always those lines.
+On `OUTCOME: QUESTION` the five lines are followed by the open questions, each
+`QUESTION Q<n> <owner>:`, `OPTIONS Q<n>:` and `WHY Q<n>:`, returned once every
+unit the runner dispatched is back: the loop asks you each one, one at a time,
+resumes the runner with the answers — or, if that resume fails, dispatches a
+fresh runner on the folder with an `Answers:` block — and the runner records
+them and dispatches a fresh agent for each owner. With no one to answer, the
+runner records the questions as open gaps and returns `STOPPED`. Runners never
+run in parallel, and nothing is skipped past: the loop ends at the first
+`STOPPED`; after a plan whose `consent.end_all_run` is `true`, because it edited
+a plugin the loop's session has loaded and the next plan must start in a
+restarted one; once a resource-cap directive has reached the session; or when
+nothing is runnable. On a normal end it runs the landing phase, then prints one
+table, a row per plan, the stop reason, a line per after-landing step, and the
+one command that continues. A stop lands nothing by itself: the held plans stay
+on the shared branch under the stopped plan's commits, and the loop prints the
+recommended next steps — resume the stopped plan with its
 `/vwf:execute <folder>`, whose landing merges the held plans' commits too, then
 `/vwf:execute <folder>` for each held plan, which completes its landing. A reply
-that is not those five lines is recorded `STOPPED`, never
-re-dispatched. Plain `/vwf:execute <folder>` and `next` are unchanged. Under
-`all` the subagents sit one layer deeper — the runner at one, its units and
-reviewers at two, the docs-sync surveyor at three — which is the default nesting
-limit.
+that is not those five lines is recorded `STOPPED`, never re-dispatched. Plain
+`/vwf:execute <folder>` and `next` are unchanged. Under `all` the subagents sit
+one layer deeper — the runner at one, its units, reviewers and `execute-engine`
+agents at two, the docs-sync surveyor and the agents `/code-review` starts
+inside an engine agent at three — which is the default nesting limit.
 
 **The start is one script call**, `start.mjs`, from the main checkout: the
 format test, the `next` pick or the named folder's resolve and refusals, the
@@ -2726,9 +2729,12 @@ What it does, by rule:
   planner to re-run.
 - **The review runs at the review row, and only there.** A `code` unit is TDD →
   coverage → commit, and moves on. At a `review` row the run goes
-  `engines → review ‖ security` over the row's range — the orchestrator runs the
-  `/code-review` and `/security-review` engines itself, filters their output to
-  the range, and hands each reviewer its engine's output. Every finding names a
+  `engines → review ‖ security` over the row's range — the orchestrator
+  dispatches one `execute-engine` agent per engine, `/code-review` and
+  `/security-review`, in one message; each writes its engine's report to the
+  round's log and returns one `ENGINE:` line, so the engine's closing report
+  ends only that agent's turn. The orchestrator filters each log to the range
+  and hands each reviewer its engine's output. Every finding names a
   file; the run maps it to the unit whose **commit** last touched that file on
   the branch — never read from owned paths — and re-dispatches that unit by its
   `kind`: a `code` unit's coder in fix-first mode, an `edit` unit through the
@@ -2867,7 +2873,7 @@ integration branch holds it.
 
 ```mermaid
 flowchart TD
-    W["per wave: review rows first (engines → review ‖ security, findings loop back<br/>to the unit whose commit touched the file) → edit units together → code units one at a time (TDD, commit)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
+    W["per wave: review rows first (engines, one execute-engine agent each → review ‖ security, findings loop back<br/>to the unit whose commit touched the file) → edit units together → code units one at a time (TDD, commit)"] --> R["wave review — contract only,<br/>two rounds; then the wave gate; commit per unit"]
     R --> AX["with covers — acceptance (E2E) + ux (rendered, renders kept)<br/>once, after all unit waves; then the blueprint reconcile"]
     AX --> F["fixed final waves — the docs unit (docs-sync),<br/>the gates unit"]
     F --> G{"final report — rendered from the run state in index.json,<br/>read against its consent"}
@@ -3758,10 +3764,10 @@ release levels; an `index.md` holding the prose — the goal, the facts, out of
 scope, parked; plus one `NN-<unit>.md` per subagent unit, every unit `kind`
 `edit`. A change plan gets **no review row by default** — the wave review is
 its only check; a `review` unit, the one at
-which `execute` runs `/security-review` and the security reviewer — the
-security half alone, since every change-plan unit is `edit` — is written only
-when the change lands runnable code — anything that executes rather than is
-read:
+which `execute` runs `/security-review`, in an `execute-engine` agent, and the
+security reviewer — the security half alone, since every change-plan unit is
+`edit` — is written only when the change lands runnable code — anything that
+executes rather than is read:
 shipped shell or hook scripts, build or tooling source, an installable package —
 with its reason in the `decisions` list. The row sits in a wave strictly later
 than the units it covers, and covers every earlier-wave unit no earlier row
@@ -4153,7 +4159,8 @@ start step 1; it runs none of them.)
 #    → one start script: checks, claims the row; then cuts a worktree
 #    → per code unit: code (TDD) → commit
 #    → a hole the plan left → one question to you, its answer in decisions
-#    → the plan's review row, first in its wave: engines → review ‖ security
+#    → the plan's review row, first in its wave: engines (one
+#      execute-engine agent each) → review ‖ security
 #      (findings loop back to the unit whose commit touched the file;
 #      breaking a released API is always fixed)
 #    → acceptance (E2E) + ux (rendered) once, after all units;
