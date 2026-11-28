@@ -1,0 +1,407 @@
+{
+  "format": 1,
+  "type": "vwf-change-plan",
+  "title": "A review row runs each engine in its own agent, so a runner always returns its block",
+  "requires": [],
+  "source": [],
+  "backlog": [],
+  "backlog_pieces": [],
+  "gaps_of": [],
+  "execution": "teams",
+  "status": {
+    "state": "APPROVED",
+    "detail": "APPROVED 2026-11-28 by the user"
+  },
+  "consent": {
+    "merge": true,
+    "end_all_run": true
+  },
+  "gates": {
+    "unit": [
+      "mise x -- mise run code:format --all"
+    ],
+    "wave": [
+      "mise x -- mise run code:lint --all"
+    ],
+    "plan": [
+      "mise x -- mise run code:precommit"
+    ],
+    "keeps": []
+  },
+  "after_landing": [],
+  "release_levels": [
+    {
+      "id": "vwf",
+      "level": "PATCH",
+      "reason": "fixes a shipped capability: a runner under /vwf:execute all ended its turn on an engine's report and never returned its block"
+    },
+    {
+      "id": "site",
+      "level": "PATCH",
+      "reason": "the manual's /vwf:execute passages say how the engines run, and change with the fix"
+    },
+    {
+      "id": "stackgen",
+      "level": "NONE",
+      "reason": "no stackgen file changes"
+    },
+    {
+      "id": "installer",
+      "level": "NONE",
+      "reason": "no installer file changes"
+    }
+  ],
+  "dependencies": [],
+  "units": [
+    {
+      "id": "U1",
+      "title": "Engines run in their own agent",
+      "wave": 1,
+      "file": "01-engine-agent.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/skills/execute/references/review-unit.md",
+        "plugins/vwf/assets/execute-stages.md",
+        "plugins/vwf/agents/execute-engine.md",
+        "plugins/vwf/skills/execute/references/rules.md",
+        "plugins/vwf/agents/execute-code-reviewer.md",
+        "plugins/vwf/agents/execute-security-reviewer.md",
+        "plugins/vwf/skills/execute/SKILL.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U2",
+      "title": "A skill's output is never the runner's reply",
+      "wave": 1,
+      "file": "02-runner-rule.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "plugins/vwf/agents/execute-runner.md",
+        "plugins/vwf/skills/execute/workflows/all.md"
+      ],
+      "depends_on": [],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U3",
+      "title": "Docs",
+      "wave": 2,
+      "file": "03-docs.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [
+        "site/src/content/docs/plugins/vwf.md",
+        ".claude/skills/vwf-plugin/SKILL.md",
+        ".claude/skills/vwf-plugin/references/skills-and-agents.md",
+        ".claude/docs/plugins.md",
+        "readme.md",
+        "CLAUDE.md",
+        "docs/memory/decisions/2026-11-28-engines-run-in-their-own-agent.md"
+      ],
+      "depends_on": [
+        "U1",
+        "U2"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    },
+    {
+      "id": "U4",
+      "title": "Gates",
+      "wave": 3,
+      "file": "04-gates.md",
+      "kind": "edit",
+      "model": "opus",
+      "owns": [],
+      "depends_on": [
+        "U3"
+      ],
+      "waits": "",
+      "status": "pending",
+      "started": "",
+      "ended": "",
+      "commit": "",
+      "rounds": 0
+    }
+  ],
+  "waves": [
+    {
+      "id": "W1",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W2",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    },
+    {
+      "id": "W3",
+      "status": "pending",
+      "started": "",
+      "ended": ""
+    }
+  ],
+  "shared_files": [
+    {
+      "id": "S1",
+      "file": "site/src/content/docs/plugins/vwf.md, .claude/skills/vwf-plugin/SKILL.md, .claude/skills/vwf-plugin/references/skills-and-agents.md, .claude/docs/plugins.md, readme.md, CLAUDE.md",
+      "why": "human-facing docs that U1's and U2's changes falsify",
+      "owner": "U3"
+    }
+  ],
+  "decisions": [
+    {
+      "id": "D1",
+      "decision": "How must a review row run the engines (/security-review, /code-review), which end with their own final report?",
+      "ruling": "Each engine in a subagent: the orchestrator dispatches one engine agent per engine, in one message. Each invokes its engine through Skill, writes the report verbatim to `<folder>/engine/<loop-id>-<round>.log`, and returns one status line. The engine's final report then ends only that agent's turn. Same for plain `/vwf:execute` and runners, so one path.",
+      "rejected": "Instruction only (keep the Skill call in the orchestrator and add text that engine output is data) — the engine's own instructions still tell the model to end with the report; runners only (engine agents only under `all`) — two paths to keep in step",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D2",
+      "decision": "Which agent runs an engine?",
+      "ruling": "A new vwf agent: `plugins/vwf/agents/execute-engine.md`, tools Skill, Agent, Write, Bash, Read. It invokes the named engine with its target, writes the report verbatim to the given log path, and returns one line `ENGINE: <name> <round> ok <path>` or `ENGINE: <name> <round> failed <reason>`. Under `all` it is layer 2 (the loop, the runner, the engine agent); `/code-review`'s own reviewer agents then sit at layer 3, the default nesting limit. It dispatches no agent itself; only the engine it invokes may start its own agents (D12). The layer-3 precedent is plugins/vwf/skills/execute/workflows/all.md:230-231, where the docs-sync surveyor runs at layer 3 in every all run (D15).",
+      "rejected": "The built-in general-purpose agent — the contract would live only in review-unit.md's prompt text, and the agent has every tool",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D3",
+      "decision": "The runner still invokes vwf skills through Skill (git-workflow, backlog, plan-management, handoff), and a skill's closing report could end its turn the same way. What else changes beside D1?",
+      "ruling": "Rule in the runner: execute-runner.md and all.md *Runner mode* say that a skill's output — any Skill call, a vwf skill or a built-in — is input for the next step, never the reply. After each Skill call the runner continues the run, and its last message is always the return block. The loop's rule that a reply with no block is STOPPED (all.md *The loop* step 4) stays as it is (the user's rule: fix the source, not a guard).",
+      "rejected": "Rule plus a loop resume (the loop resumes a runner once with SendMessage before it records STOPPED) — a guard; D1 only — leaves the same failure open for the vwf skills",
+      "units": [
+        "U2"
+      ]
+    },
+    {
+      "id": "D4",
+      "decision": "What happens when an engine agent fails?",
+      "ruling": "An engine agent that errors, returns no `ENGINE:` line, or returns `failed` counts as an unavailable engine under the rule review-unit.md already has: the reason is kept for the reviewers' prompt. The dispatch replaces only the wait through TaskOutput and TaskStop.",
+      "rejected": "A new failure rule for engine agents — the existing rule already says what an unavailable engine means",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D5",
+      "decision": "The cause the survey found",
+      "ruling": "review-unit.md:88 invokes the built-in engines `/code-review` and `/security-review` through the Skill tool, in the orchestrator's own turn. Their closing report ended a runner's turn, so the runner never returned its five-line block, in plans 2026-11-23-bootstrap-value-quoting and 2026-11-26-stackgen-bootstrap-tasks; each time a manual SendMessage resume let the runner finish. No text told the runner that the report is input for the next step, and no hook checks the shape of a runner's last message.",
+      "rejected": "—",
+      "units": [
+        "U1",
+        "U2"
+      ]
+    },
+    {
+      "id": "D6",
+      "decision": "Does the plan need a review unit?",
+      "ruling": "No. The plan lands no runnable code: it changes skill prose, an agent definition and docs. The wave review is the check.",
+      "rejected": "A security-only review unit — it would review prose",
+      "units": []
+    },
+    {
+      "id": "D7",
+      "decision": "What proves the fix, beyond the diff?",
+      "ruling": "No kept gate. The new agent loads only in a restarted session, so the first real proof is the next `/vwf:execute all` run that reaches a review row after a restart: the runner returns its five-line block with no manual resume.",
+      "rejected": "A scratch `all` run inside this plan — the run's session cannot load the agent it adds",
+      "units": []
+    },
+    {
+      "id": "D8",
+      "decision": "Execution mode",
+      "ruling": "teams, by the user's choice: wave 1 holds two edit units (U1 and U2). Under `/vwf:execute all` a runner runs it solo anyway, per all.md *Runner mode*.",
+      "rejected": "solo",
+      "units": []
+    },
+    {
+      "id": "D9",
+      "decision": "How the engine agent reads the worktree, not the main checkout: a subagent shell starts in the session folder",
+      "ruling": "cd first. The engine agent first runs `cd <worktree>` and `git rev-parse --show-toplevel`; a mismatch returns `ENGINE: <name> <round> failed <reason>` and invokes nothing. The in-run proof in U1 was dropped by the user's 'cut to the minimum' ruling (2026-11-28): the risk that the engine's own git commands still read the main checkout is recorded in D20, not proven in this run.",
+      "rejected": "A kept gate after landing only: no proof in this run",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D10",
+      "decision": "The engine agent's return contract (rulings review round 1, gap 1)",
+      "ruling": "`ENGINE: <name> <round> ok <path>` or `ENGINE: <name> <round> failed <reason>`: a failed engine wrote no usable log, so the reason is what the report needs. D2 and D9 match.",
+      "rejected": "Always end in the log path, with the reason written into the log",
+      "units": [
+        "U1",
+        "U2",
+        "U3"
+      ]
+    },
+    {
+      "id": "D11",
+      "decision": "A time limit on an engine agent (gap 2)",
+      "ruling": "Reversed by the user's 'cut to the minimum' ruling (2026-11-28): engine agents are dispatched in the foreground, both in one message, as unit agents are, so their one-line replies come back in the same turn. There is no 30-minute wait, no TaskStop and no TaskOutput for the engines. A hung engine hangs the run, as a hung unit agent does (D20).",
+      "rejected": "Background agents with a 30-minute wait and TaskStop: a runner cannot be shown to read a background agent's reply (all.md Runner mode: its agents' replies go to the top session); no time limit was the alternative kept.",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D12",
+      "decision": "The engine agent's tools and its ban on agents (gap 3)",
+      "ruling": "Tools: Skill, Agent, Write, Bash, Read. The agent dispatches no agent itself; only the engine it invokes may start its own agents (/code-review starts reviewer agents).",
+      "rejected": "No Agent tool: /code-review would fail in the engine agent",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D13",
+      "decision": "The observable fact that the engine read the worktree (gap 4)",
+      "ruling": "Dropped by the user's 'cut to the minimum' ruling (2026-11-28): no in-run D9 proof, so no proof base. The risk is recorded in D20, not proven in this run.",
+      "rejected": "Accept as unverified and wait for the first real all run",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D14",
+      "decision": "What the run does when the D9 check fails (gap 5)",
+      "ruling": "Dropped by the user's 'cut to the minimum' ruling (2026-11-28): no in-run D9 proof, so nothing to ask on a failed proof. The risk is recorded in D20.",
+      "rejected": "Land with an open gap",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D15",
+      "decision": "How the layer-3 claim is recorded (gap 6)",
+      "ruling": "D2 cites plugins/vwf/skills/execute/workflows/all.md:230-231 and the docs-sync surveyor, which runs at layer 3 in every all run, as the precedent. The first all run with a code-review row is the proof of layer 3, recorded as a known risk in D20.",
+      "rejected": "Add a /code-review check to U1: slower, and in a plain run it proves only layer 2",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D16",
+      "decision": "Owner of the three passages that say the orchestrator runs the engines itself (gaps 7 and 8)",
+      "ruling": "U1 owns and edits plugins/vwf/skills/execute/references/rules.md (about :34), plugins/vwf/agents/execute-code-reviewer.md (about :8) and plugins/vwf/agents/execute-security-reviewer.md (about :7): an execute-engine agent runs the engine, and the orchestrator hands over its log.",
+      "rejected": "Accept as out of scope: the passages stay partly false",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D17",
+      "decision": "The two reviewer rows of skills-and-agents.md (gap 9)",
+      "ruling": "U3's edit also rewords .claude/skills/vwf-plugin/references/skills-and-agents.md:74-75: an execute-engine agent runs the engine, and the orchestrator hands its log to the reviewer; the reviewers still run none.",
+      "rejected": "Add only the new row",
+      "units": [
+        "U3"
+      ]
+    },
+    {
+      "id": "D18",
+      "decision": "A dispatch contract for the engine stage (gap 10)",
+      "ruling": "Dropped by the user's 'cut to the minimum' ruling (2026-11-28): no sixth dispatch contract. The stage table of plugins/vwf/assets/execute-stages.md gets an `engine` row whose note points to skills/execute/references/review-unit.md and agents/execute-engine.md, as the `run` row's note does, and the count of dispatch contracts stays five.",
+      "rejected": "A note like the `run` row's, the count staying five",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D19",
+      "decision": "The form of the p:plugins:check gate line (gap 11)",
+      "ruling": "Every unit's line is `mise x -- mise run p:plugins:check`, the form of the plan's other gate lines.",
+      "rejected": "The bare `mise run p:plugins:check`",
+      "units": [
+        "U1",
+        "U2",
+        "U4"
+      ]
+    },
+    {
+      "id": "D20",
+      "decision": "Known risks of the minimal plan",
+      "ruling": "Recorded for the first real `/vwf:execute all` run that reaches a review row, not proven in this run: (a) the engine's own git commands read the worktree after the agent's cd; (b) /code-review's own agents run at layer 3 under all; (c) a hung engine hangs the run (no timer). index.md lists them under Known risks.",
+      "rejected": "Prove each in this run (the D9 check, the 30-minute TaskStop wait): the user ruled 'cut to the minimum'",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D21",
+      "decision": "plugins/vwf/skills/execute/SKILL.md names the engines and the five stage subagents (rulings review round 2, gap 5)",
+      "ruling": "U1 owns plugins/vwf/skills/execute/SKILL.md: the `review` row at about :36 says each engine runs in its own `execute-engine` agent, and the paragraph at about :39-:43 says six stage subagents and lists `execute-engine` at review rows, once per engine.",
+      "rejected": "Accept as out of scope: the skill's own entry would stay false",
+      "units": [
+        "U1"
+      ]
+    },
+    {
+      "id": "D22",
+      "decision": "plan-interview.md:110 and change-plan gates-consent.md:42 (rulings review round 2, gap 6)",
+      "ruling": "No owner. plugins/vwf/assets/plan-interview.md:110 says the review unit 'runs /code-review and /security-review', and plugins/vwf/skills/change-plan/references/gates-consent.md:42 says a review unit 'runs /security-review and the security reviewer'. Neither says the orchestrator runs an engine in its own turn, so both stay true when an execute-engine agent runs the engine.",
+      "rejected": "Widen U1 to reword them: nothing in them becomes false",
+      "units": []
+    },
+    {
+      "id": "D23",
+      "decision": "p:plugins:check as a unit or wave gate line (rulings review round 2, gap 7)",
+      "ruling": "No change. p:plugins:check runs in the pre-commit hook of each unit commit and in code:precommit at the plan tier, so a unit or wave gate line would repeat it. Each unit's Verification still names it.",
+      "rejected": "Add `mise x -- mise run p:plugins:check` to gates.unit or gates.wave",
+      "units": []
+    }
+  ],
+  "stages": {
+    "renders": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "acceptance": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "ux": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    },
+    "reconcile": {
+      "state": "pending",
+      "detail": "",
+      "started": "",
+      "ended": ""
+    }
+  },
+  "gaps": [],
+  "overrides": [],
+  "run": {}
+}
