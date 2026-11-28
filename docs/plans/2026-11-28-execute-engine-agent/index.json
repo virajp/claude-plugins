@@ -403,5 +403,8 @@
   },
   "gaps": [],
   "overrides": [],
-  "run": {}
+  "run": {
+    "worktree": ".worktrees/all-2026-11-28-1018",
+    "log": "~/Library/Caches/vwf/claude-plugins/2026-11-28-execute-engine-agent.jsonl"
+  }
 }
