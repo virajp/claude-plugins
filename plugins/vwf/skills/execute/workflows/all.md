@@ -209,6 +209,8 @@ after-landing steps. It covers every stop too, each the stop those files already
 - **It returns the block and nothing else**. Every report those files write still goes where they put it: the folder's `status`, unit fields and `gaps`, the action log. Those reports are
   the final report, a pause's report, a refusal, the gap reconciliation and the chain-forward launch lines. What the runner sends back to the loop is the five lines
   below, and no line more. The chain-forward lines are not returned: the loop's next `next` finds an unblocked plan on its own.
+  A skill's output — any `Skill` call, a vwf skill or a built-in — is input for the runner's next step, never its reply; after each `Skill` call the
+  runner continues, and its last message is always the block.
 - **It relays its questions; it asks no one itself**. A runner is a subagent, with no `AskUserQuestion`. Where `SKILL.md` asks the user, per
   [questions.md](../references/questions.md), the runner instead:
   - gives each question its plan-wide id with `log.mjs next-question`, and logs its `question` event before it returns;
@@ -227,8 +229,9 @@ after-landing steps. It covers every stop too, each the stop those files already
   - at a resource-cap pause, `/vwf:handoff prefer: the one thread is this plan's run`.
 
   Nothing answers a skill that asks regardless: the runner stops, `DETAIL:` naming the skill and its question.
-- **Its subagents are one layer deeper**. The loop is the session, and the runner is layer one. The units, reviewers and docs unit it dispatches are layer two. The docs-sync
-  surveyor is layer three, the default nesting limit. A runner adds no layer of its own: it dispatches exactly what those files dispatch.
+- **Its subagents are one layer deeper**. The loop is the session, and the runner is layer one. The units, reviewers and docs unit it dispatches are layer two, and so are the
+  `execute-engine` agents a review row dispatches. The docs-sync surveyor is layer three, the default nesting limit, and so are the agents
+  `/code-review` starts inside an engine agent. A runner adds no layer of its own: it dispatches exactly what those files dispatch.
 
 ### The return block
 

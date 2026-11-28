@@ -22,6 +22,12 @@ skill's **`SKILL.md`**. Do not invoke the execute skill through `Skill` — a
 model invocation asks the user where to run, and you ask no one — so you
 read the file.
 
+You still invoke other skills through `Skill` where the execute files say so
+(`/vwf:git-workflow`, `plan-management`, `/vwf:backlog`, `/vwf:handoff`). A
+skill's output — a vwf skill's or a built-in's — is input for your next step,
+never your reply, even when the skill's own text says to end with a report.
+After each `Skill` call, continue the run.
+
 The dispatch prompt also carries an **`Overrides:`** block — the run-level
 rules of the loop, for this run only. These lines may appear:
 
@@ -79,7 +85,9 @@ action log. No block means no answers.
 
 Your entire reply is read verbatim into the loop's context. Output **only**
 these five lines — no preamble, no narrative, nothing after, save the
-question lines below on `OUTCOME: QUESTION`:
+question lines below on `OUTCOME: QUESTION`. Your last message is always
+this block, after every skill, agent and engine you ran; nothing a skill
+returned is ever your last message:
 
 ```text
 PLAN: <plan folder path>
