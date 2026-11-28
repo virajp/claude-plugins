@@ -92,17 +92,17 @@ git-workflow's `land.mjs` (its own worktree and branch, landed with the
 that branch's `repo.branches.<b>.landing` is `pr`) before cutting
 a worktree — the same commit writing the folder's `run`, the worktree and
 action-log paths — runs each unit by its `kind` (a `code` unit through TDD and
-the coverage gate, a `review` row through the two engines plus the code and
-security reviewers over the branch delta since the last row — each later round
-over the last round's fix commits alone, the security half alone on a row
-covering `edit` units alone — the `edit` units of a wave concurrently under the
-wave review, the acceptance and UX pass and the blueprint reconcile only when
-the plan has `covers`), runs the folder's unit gate before each unit commit, its
-wave gate after each wave and its plan gate once at the end, and sets the row
-`COMPLETE` after the merge lands — moving the folder to `archived/` and
-re-pointing the row when no gap is open, leaving it live when one is, for the
-`archive` verb once the user asks in prose, raising the folder's
-`release_levels` in `.config/bootstrap/releases.toml` through
+the coverage gate, a `review` row through the two engines, each in its own
+`execute-engine` agent, plus the code and security reviewers over the branch
+delta since the last row — each later round over the last round's fix commits
+alone, the security half alone on a row covering `edit` units alone — the `edit`
+units of a wave concurrently under the wave review, the acceptance and UX pass
+and the blueprint reconcile only when the plan has `covers`), runs the folder's
+unit gate before each unit commit, its wave gate after each wave and its plan
+gate once at the end, and sets the row `COMPLETE` after the merge lands — moving
+the folder to `archived/` and re-pointing the row when no gap is open, leaving
+it live when one is, for the `archive` verb once the user asks in prose, raising
+the folder's `release_levels` in `.config/bootstrap/releases.toml` through
 `bootstrap config set`, moving an old `.config/releases.yaml` there at first
 sight, in that same commit and bumping no version — and runs each after-landing
 step without a prompt on a green landing — every one is recorded `run` at the
@@ -122,27 +122,26 @@ landing, and one question there only when a held plan recorded not to merge —
 each an override for that run only. A stop lands nothing by itself and prints
 the recommended next steps. A resume after the user stopped a run asks nothing
 first (`start.mjs`'s `open_questions.stopped_outside`). On the old markdown plan
-format — a `docs/plans/index.md` in the
-base repo, or a live folder with `index.md` and no `index.json` — `execute` and
-every `plan-management` verb stop before any change and point to
-`docs/plans/migrate.md` in this repo; no old-format copy of either skill exists.
-`init` is not a command on that line: since 2026-09-06 it is **skill-invoked**
-and runs inside setup's Step 0, or alone via `/vwf:setup reshape`. `init` shapes
-the **base repo and every member repo the product has** and `setup` sets up
-**vwf** in the base — two different things, and a repo can have either without
-the other. It resolves that set itself and takes no argument: the base per the
-membership asset (so a run started inside a member walks up and shapes the
-product), the members as the **union** of `.gitmodules` walked recursively and
-the `submodule` and `sibling` members of bootstrap's `repo.members`, deduped
-on realpath, with a path in only one of
-two present sources reported as a disagreement and never shaped, and an absent
-member offered a **clone row inside the same plan**. Mode resolves per repo from
-what its tree contains, never a flag or setup's fork — `shaped` (the shaped test
-of `assets/bootstrap-contract.md`: `bootstrap config get repo.format --json`
-answers `ok`), `old layout` (`.config/stackgen.yaml`,
-`.config/mise/conf.d/tools.toml`, `conf.d/env.toml` or a root
-`.config/mise.dev.toml`, with no such file), `source` (none of those, but a
-language manifest, a source directory, a root tool config or a `.config/`),
+format — a `docs/plans/index.md` in the base repo, or a live folder with
+`index.md` and no `index.json` — `execute` and every `plan-management` verb stop
+before any change and point to `docs/plans/migrate.md` in this repo; no
+old-format copy of either skill exists. `init` is not a command on that line:
+since 2026-09-06 it is **skill-invoked** and runs inside setup's Step 0, or
+alone via `/vwf:setup reshape`. `init` shapes the **base repo and every member
+repo the product has** and `setup` sets up **vwf** in the base — two different
+things, and a repo can have either without the other. It resolves that set
+itself and takes no argument: the base per the membership asset (so a run
+started inside a member walks up and shapes the product), the members as the
+**union** of `.gitmodules` walked recursively and the `submodule` and `sibling`
+members of bootstrap's `repo.members`, deduped on realpath, with a path in only
+one of two present sources reported as a disagreement and never shaped, and an
+absent member offered a **clone row inside the same plan**. Mode resolves per
+repo from what its tree contains, never a flag or setup's fork — `shaped` (the
+shaped test of `assets/bootstrap-contract.md`:
+`bootstrap config get repo.format --json` answers `ok`), `old layout`
+(`.config/stackgen.yaml`, `.config/mise/conf.d/tools.toml`, `conf.d/env.toml` or
+a root `.config/mise.dev.toml`, with no such file), `source` (none of those, but
+a language manifest, a source directory, a root tool config or a `.config/`),
 `blank` (none of those). **bootstrap owns the shape.** Every universal file and
 each repo's values are bootstrap's, and `init` reaches them through one step, in
 each repo, the base first: after the contract check (bootstrap 4.1.0 or newer,
@@ -151,47 +150,46 @@ question of `data.plan.pending` one at a time, and runs
 `bootstrap migrate --json --yes` with each answer as
 `--answer <tool>.<key>=<value>`, up to 3 rounds — each answer quoted per
 `## Passing values` of `assets/bootstrap-contract.md`, the rule for every value
-and every name in a key of a bootstrap call. In the base alone, the step's
-last part adds bootstrap's `virajp-plugins` tool, which gives vwf's
-`.gitignore` lines and its `vwf@virajp-plugins` entry:
+and every name in a key of a bootstrap call. In the base alone, the step's last
+part adds bootstrap's `virajp-plugins` tool, which gives vwf's `.gitignore`
+lines and its `vwf@virajp-plugins` entry:
 `bootstrap add tool virajp-plugins --json --dry-run`, then `--yes`, inside the
 same consent — skipped with a warning where `bootstrap catalog --json` lists no
 such tool, and reported *stopped* on a non-zero exit while the base goes on to
-its hygiene files, commit and forge pass. A repo is **green** when it
-passes the shaped test and `bootstrap sync --json --dry-run` lists no change;
-that read writes nothing in the repo and fetches bootstrap's clone each run,
-which the resolved-set line discloses, since the survey runs it before the
-consent. An `old layout` repo always takes the step, and `init` deletes
+its hygiene files, commit and forge pass. A repo is **green** when it passes the
+shaped test and `bootstrap sync --json --dry-run` lists no change; that read
+writes nothing in the repo and fetches bootstrap's clone each run, which the
+resolved-set line discloses, since the survey runs it before the consent. An
+`old layout` repo always takes the step, and `init` deletes
 `.config/stackgen.yaml` in each repo that reads green. A repo that fails the
 shaped test after the step stops there. `init` writes only its **hygiene
-assets** from `skills/init/assets/hygiene/` (`CONTRIBUTING.md` for a repo
-with `develop` and `main` as core branches, `CONTRIBUTING-one-branch.md` copied
-as `CONTRIBUTING.md` for a repo with one, `SECURITY.md`, the licence texts,
-with no adapter fetch and no lock record), a two-line readme
-stub, and `enforcement.kept_files` in the base's `.config/vwf.yaml`, the one key
-it writes there, in a stub (`config_format` + `enforcement`) where the file is
-missing. A hygiene asset the repo already has is kept; a struck create is a
-recorded keep. It asks **three rounds** at most — one round each for the whole
-product, a per-repo answer showing as a row inside its single round: a one-line
-brief for a `blank` or `source` repo with no readme; each repo's **visibility**,
-`public` or `private`, defaulted from the forge where the repo has an origin the
-forge CLI answers for and `private` otherwise, written nowhere in the tree; and
-its two dependent parts, 2a the licence, rows for `public` repos only, and 2b
-the security contact. There is **one plan with a section per repo and one
-consent**, answered **commit** or **commit and push**, a tree that is not clean
-stopping the run before anything is written. Landing is `/vwf:git-workflow`'s,
-members before the base with the moved **gitlinks** staged: bootstrap's sync,
-where it left one uncommitted, is the first commit, `init`'s own files the
-second, and a member on no branch is a **refused** row naming the branch to
-check out. **After the base lands comes the forge pass**, on one further consent
-for the whole product: it sets each eligible repo's default branch on the forge,
-protects each core branch of its `repo.core_branches` there — no force-push,
-no deletion, and a pull request required on each branch whose
-`repo.branches.<b>.landing` reads `pr`; a branch already protected in any form
-is left exactly as it is —
-and reaches the backlog skill's missing-project procedure for the base. Those
-three are the only forge settings it touches; a repo it could not reach is
-listed `pending`, and a forge it has no CLI for gets the by-hand list, which the
+assets** from `skills/init/assets/hygiene/` (`CONTRIBUTING.md` for a repo with
+`develop` and `main` as core branches, `CONTRIBUTING-one-branch.md` copied as
+`CONTRIBUTING.md` for a repo with one, `SECURITY.md`, the licence texts, with no
+adapter fetch and no lock record), a two-line readme stub, and
+`enforcement.kept_files` in the base's `.config/vwf.yaml`, the one key it writes
+there, in a stub (`config_format` + `enforcement`) where the file is missing. A
+hygiene asset the repo already has is kept; a struck create is a recorded keep.
+It asks **three rounds** at most — one round each for the whole product, a
+per-repo answer showing as a row inside its single round: a one-line brief for a
+`blank` or `source` repo with no readme; each repo's **visibility**, `public` or
+`private`, defaulted from the forge where the repo has an origin the forge CLI
+answers for and `private` otherwise, written nowhere in the tree; and its two
+dependent parts, 2a the licence, rows for `public` repos only, and 2b the
+security contact. There is **one plan with a section per repo and one consent**,
+answered **commit** or **commit and push**, a tree that is not clean stopping
+the run before anything is written. Landing is `/vwf:git-workflow`'s, members
+before the base with the moved **gitlinks** staged: bootstrap's sync, where it
+left one uncommitted, is the first commit, `init`'s own files the second, and a
+member on no branch is a **refused** row naming the branch to check out. **After
+the base lands comes the forge pass**, on one further consent for the whole
+product: it sets each eligible repo's default branch on the forge, protects each
+core branch of its `repo.core_branches` there — no force-push, no deletion, and
+a pull request required on each branch whose `repo.branches.<b>.landing` reads
+`pr`; a branch already protected in any form is left exactly as it is — and
+reaches the backlog skill's missing-project procedure for the base. Those three
+are the only forge settings it touches; a repo it could not reach is listed
+`pending`, and a forge it has no CLI for gets the by-hand list, which the
 hygiene assets' `CONTRIBUTING.md` keeps, naming `gh` and `glab` where vwf's
 `SKILL.md` prose may not (the init references name them, as the backlog skill
 already did). Init is **not a one-time bootstrap**: its "when it runs again"
@@ -229,24 +227,24 @@ does not select with `bootstrap add tool` and linking it with
 per `(repo, slug)` with the contract's `repo:` line; and, in the base alone,
 declaring the `addons:` in the `claude` tool's `plugins.project` with
 `bootstrap config set` and running `mise run setup:ai`. A template pinned months
-after `init` ran lands the same way; an
-**absent** axis is written `unresolved` and a pinned slug is never rewritten. On
-the spine it runs before the doctor gate, and a declined landing is the expected
-way to reach doctor's blocking *pinned, not materialized*. **It runs none of the
-foundations** — it ends by printing the chain and offering to start
-`/vwf:product`, because each of those commands resolves its own mode and reports
-what it did, which a gate inside setup could only guess at on their behalf. The
-one return trip is `/vwf:architecture`'s, which invokes `/vwf:setup` in-session
-after its own commit so the pins it just recorded get materialized. `product.md`
-(the Phase −1 outcome contract, type `vwf-product`, gated by the
-`product-reviewer`) and `architecture` (the registry) are both unconditionally
-required before `blueprint` — every **flow's** Purpose must `Serves:`-link a
-product goal anchor (entities trace to goals transitively via their `Used by:`
-flow links), which the `blueprint-reviewer` verifies and the minimalism check
-traces to. `design-system` is a second foundation, **required once the registry
-has a UI project** (some project declares a **screen platform**): `blueprint`
-halts on a flow with a Screens surface if `docs/blueprint/design-system.md` is
-missing. `environment.md` (the per-project env-var/secret catalog, type
+after `init` ran lands the same way; an **absent** axis is written `unresolved`
+and a pinned slug is never rewritten. On the spine it runs before the doctor
+gate, and a declined landing is the expected way to reach doctor's blocking
+*pinned, not materialized*. **It runs none of the foundations** — it ends by
+printing the chain and offering to start `/vwf:product`, because each of those
+commands resolves its own mode and reports what it did, which a gate inside
+setup could only guess at on their behalf. The one return trip is
+`/vwf:architecture`'s, which invokes `/vwf:setup` in-session after its own
+commit so the pins it just recorded get materialized. `product.md` (the Phase −1
+outcome contract, type `vwf-product`, gated by the `product-reviewer`) and
+`architecture` (the registry) are both unconditionally required before
+`blueprint` — every **flow's** Purpose must `Serves:`-link a product goal anchor
+(entities trace to goals transitively via their `Used by:` flow links), which
+the `blueprint-reviewer` verifies and the minimalism check traces to.
+`design-system` is a second foundation, **required once the registry has a UI
+project** (some project declares a **screen platform**): `blueprint` halts on a
+flow with a Screens surface if `docs/blueprint/design-system.md` is missing.
+`environment.md` (the per-project env-var/secret catalog, type
 `vwf-environment`) is a third foundation, **required once the registry declares
 an external integration or a secrets-manager `config`** — `setup` bootstraps it
 from the repo's existing env-var/secret usage (names only, never values) and

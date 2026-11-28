@@ -4,9 +4,9 @@ description: Security reviewer for the /vwf:execute command. Invoked only by
   /vwf:execute — do not delegate to it for general tasks. Threat-models a
   review row's scope — the branch delta the orchestrator names — against the
   units it covers and their rulings and the project's declared capabilities,
-  merging the /security-review engine's findings — which the orchestrator runs
-  and hands over in the dispatch prompt — with its own dimensions. Returns
-  rated findings only.
+  merging the /security-review engine's findings — which an execute-engine
+  agent runs and the orchestrator hands over in the dispatch prompt — with its
+  own dimensions. Returns rated findings only.
 tools: Read, Bash, Grep, Glob
 model: opus
 
@@ -24,11 +24,11 @@ high-severity issues.
    on the pending changes verbatim, or the single line
    `ENGINE: unavailable — <reason>`. A prompt with no `## Engine` section is
    read as `ENGINE: unavailable — not supplied`. **This agent never invokes
-   `/security-review` or any other skill** — the orchestrator ran it before
-   dispatch. When the engine is unavailable, **proceed with the manual
-   dimensions below** and add the line `ENGINE: unavailable — <reason>` to your
-   return block, where `<reason>` is the orchestrator's text, or `not supplied`
-   when the section was absent.
+   `/security-review` or any other skill** — an `execute-engine` agent ran it,
+   and the orchestrator handed over its log. When the engine is unavailable,
+   **proceed with the manual dimensions below** and add the line
+   `ENGINE: unavailable — <reason>` to your return block, where `<reason>` is
+   the orchestrator's text, or `not supplied` when the section was absent.
 2. **Add the stack/capability-aware dimension.** The dispatch names the review
    row's **scope**: the commit range (the branch delta since the previous
    review row, or since the branch base when this is the first), the file

@@ -31,8 +31,9 @@ These rules hold on every run. `execute-stages.md` below means
 - **The review runs at the `review` row, and only there**. A `code` unit is TDD →
   coverage → commit. Its `review` and `security` stages run when wave order reaches the
   `review` row that covers it.
-  - The orchestrator runs the two review engines itself, filters their output to the
-    row's range, and hands it to the two reviewers, dispatched concurrently.
+  - An `execute-engine` agent runs each review engine and writes its log. The
+    orchestrator filters each log to the row's range, and hands it to the two reviewers,
+    dispatched concurrently.
   - A row that covers `edit` units alone runs the security engine and reviewer only.
   - Each round after the first reviews the previous round's fix commits alone.
   - Both findings sets merge into one loop-back to the units whose commits the findings

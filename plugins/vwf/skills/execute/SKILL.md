@@ -33,14 +33,15 @@ the reports. Each unit's `kind` is the switch:
 | -------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `code`   | Passes code under TDD to the coverage gate and its commit. Implemented by `execute-coder`.                                                                                                                                                                                                                     |
 | `edit`   | Dispatched with the other `edit` units of its wave, by the unit agents, and judged by the wave review.                                                                                                                                                                                                         |
-| `review` | The planner placed it, by default once after the last code unit. Runs the two review engines and two reviewers over the branch delta since the previous review row, the security half alone when it covers `edit` units alone. Findings loop back to the owning units before it counts as done. Each later round covers the previous round's fixes alone. |
+| `review` | The planner placed it, by default once after the last code unit. Runs the two review engines, each in its own `execute-engine` agent, and two reviewers over the branch delta since the previous review row, the security half alone when it covers `edit` units alone. Findings loop back to the owning units before it counts as done. Each later round covers the previous round's fixes alone. |
 
 Acceptance and UX conformance run once after all units when the plan has
-`covers`. You own the orchestration, and dispatch the five stage subagents. These are
-`execute-coder` for `code` units, `execute-code-reviewer` and
-`execute-security-reviewer` at `review` rows, and `execute-acceptance-verifier` and
-`execute-ux-reviewer` once per plan. You also dispatch the unit agents for
-`edit` units, and the wave reviewer for every wave.
+`covers`. You own the orchestration, and dispatch the six stage subagents. These are
+`execute-coder` for `code` units, `execute-engine` at `review` rows, once per
+engine, `execute-code-reviewer` and `execute-security-reviewer` at `review`
+rows, and `execute-acceptance-verifier` and `execute-ux-reviewer` once per
+plan. You also dispatch the unit agents for `edit` units, and the wave
+reviewer for every wave.
 
 There are no per-stage human gates. Decisions come from
 [the run rules](references/rules.md). The run stops only at a runtime
