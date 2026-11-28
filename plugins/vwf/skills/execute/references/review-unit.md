@@ -85,17 +85,22 @@ is reviewed by a row that does not cover its unit.
 
 ## 2. engines
 
-In **one message**, invoke `/code-review` at high effort and `/security-review` through the `Skill` tool. Invoke `/security-review` alone on a security-only row.
+In **one message**, dispatch one `vwf:execute-engine` agent per engine (the `execute-engine` agent), each in the foreground, as unit agents are:
+`/code-review` at high effort and `/security-review`, or `/security-review` alone on a security-only row. Give each no `name` and no `isolation`. Its
+prompt carries the engine, the target (`<from>..<to>` for `/code-review`; none for `/security-review`), the worktree path, the log path
+`<folder>/engine/<loop-id>-<round>.log`, the row id and the round. An engine's own instructions end with a final report, so an engine run in the
+orchestrator's own turn would end that turn on the report; in its own agent it ends only that agent's turn.
 
 - The `/code-review` engine takes the round's range as its target, `<from>..<to>`.
 - The `/security-review` engine takes no target and reads the whole branch delta, so its output is filtered to the round's file list below.
 
-Each may run as a background task; note the task each reports. Wait on each with `TaskOutput`, blocking, up to 30 minutes from invocation. Stop an engine
-that errors or times out with `TaskStop`, and count it unavailable, keeping the reason for the prompt.
+The foreground dispatch returns each agent's one `ENGINE:` line in the same turn. An engine agent that errors, returns no `ENGINE:` line, or returns
+`failed` counts as unavailable, keeping the reason for the prompt.
 
-Save each engine's output verbatim to `<folder>/engine/<loop-id>-<round>.log` in the plan folder, committed with the folder, the on-disk record the dedupe
-below reads. The `.log` extension is deliberate: it keeps the formatter and the linter off the file at commit. The whitespace hooks may still normalise its
-line endings and trailing whitespace, which the dedupe never sees, since it matches on the `(path, line, text)` tuple.
+The engine agent saves its engine's output verbatim to `<folder>/engine/<loop-id>-<round>.log` in the plan folder, committed with the folder, the on-disk
+record the dedupe below reads; the orchestrator reads that log file for the filter below. The `.log` extension is deliberate: it keeps the formatter and the
+linter off the file at commit. The whitespace hooks may still normalise its line endings and trailing whitespace, which the dedupe never sees, since it
+matches on the `(path, line, text)` tuple.
 
 Then **filter** it:
 

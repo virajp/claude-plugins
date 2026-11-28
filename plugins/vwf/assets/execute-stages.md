@@ -24,6 +24,7 @@ skips both, each recorded `skipped` in `stages`.
 | code       | Write Code (TDD) | opus   | `execute-coder`               | per `code` unit                                                                  |
 | review     | Code Review      | opus   | `execute-code-reviewer`       | at each `review` row, ‖ `security`, after `/code-review` over the row's scope    |
 | security   | Security Review  | opus   | `execute-security-reviewer`   | at each `review` row, ‖ `review`, after `/security-review` over the row's scope  |
+| engine     | Review engine    | opus   | `execute-engine`              | at each `review` row, once per engine, before `review` and `security`            |
 | acceptance | Acceptance (E2E) | sonnet | `execute-acceptance-verifier` | once, after all units                                                            |
 | ux         | UX Conformance   | opus   | `execute-ux-reviewer`         | once, after `acceptance`                                                         |
 | run        | One whole plan   | opus   | `execute-runner`              | once per plan, dispatched only by `/vwf:execute all`, never by a plain run       |
@@ -33,6 +34,11 @@ it is the runner `/vwf:execute all` dispatches for each plan it picks, which
 follows execute's own `SKILL.md` for that one folder and dispatches the stages
 above itself.
 
+The `engine` row has no dispatch contract here either: it is the agent a
+`review` row dispatches once per engine, and its contract is
+`${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md` and
+`${CLAUDE_PLUGIN_ROOT}/agents/execute-engine.md`.
+
 `review` and `security` are **independent read-only passes over the same
 range** — neither reads the other's output. They run only at a `review` row,
 and the row's loop in `${CLAUDE_PLUGIN_ROOT}/skills/execute/references/review-unit.md`
@@ -40,17 +46,19 @@ is the one authority for it — its placement first in its wave, its range and
 `from..to`, the file list mapped to units by the commit that last touched
 each file (never Owns), the one rule for a finding on an uncovered unit's file
 (every finding routed to that unit and the widening recorded, none dropped —
-applied by the orchestrator to what the reviewers report in full), late re-runs and per-loop round counts. In outline: the
-orchestrator invokes `/code-review` (high effort) and `/security-review` in
-one message — `/security-review` alone, and the security reviewer alone, on a
-row that covers `edit` units alone — waits on each with `TaskOutput` (blocking, up to 30 minutes from
-invocation; an engine that errors or times out is stopped with `TaskStop` and
-counted unavailable, reason kept), filters each branch-scoped output to the
-row's range, and only then dispatches both reviewers in a single message so
-they run concurrently, each handed its engine's filtered output in its
-prompt. It merges their findings into **one** loop-back, each finding's unit
-re-dispatched **by its Kind**; then the next round runs, engines first, over
-the fix commits of the round before it alone.
+applied by the orchestrator to what the reviewers report in full), late
+re-runs and per-loop round counts. In outline: the orchestrator dispatches one
+`execute-engine` agent per engine, in one message and in the foreground:
+`/code-review` (high effort) and `/security-review`, or `/security-review`
+alone, with the security reviewer alone, on a row that covers `edit` units
+alone. Each engine agent writes its engine's report to the round's log and
+returns one `ENGINE:` line; an agent that errors or returns `failed` counts as
+unavailable, reason kept. The orchestrator then filters each branch-scoped
+output to the row's range, and only then dispatches both reviewers in a single
+message so they run concurrently, each handed its engine's filtered output in
+its prompt. It merges their findings into **one** loop-back, each finding's
+unit re-dispatched **by its Kind**; then the next round runs, engines first,
+over the fix commits of the round before it alone.
 Their gating is unchanged and stays per-stage (security and `[breaking-api]`
 always fixed; other review findings capped). No `code` unit runs an engine by
 itself, and the orchestrator infers no row.
